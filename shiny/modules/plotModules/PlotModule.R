@@ -150,16 +150,14 @@ PlotModuleUI <- function(id,
         zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
-        zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")
+        ##zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")  ## weird Cairo error!!!
+        ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
     }
     
-    ##output$renderbuttons <- shiny::renderUI({
-    ## button layout
     buttons <- shiny::fillRow(
         flex = c(NA,NA,NA,NA,NA,1),
         ##flex=c(NA,NA,1),
         label1,
-        ##div( class="button-group", style="display: inline-block; float: left;",
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
@@ -170,16 +168,9 @@ PlotModuleUI <- function(id,
         ),
         options.button,
         shiny::div(class='download-button', dload.button),
-        shiny::div(class='zoom-button', zoom.button),
-        ##),
+        shiny::div(class='zoom-button', title='zoom', zoom.button),
         shiny::HTML(paste("<center>",title,"</center>"))
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ##shiny::br()
-        ##inputs
-        ##selectInput("sel123","number",1:10)
     )
-    ##return(ui)
-    ##})
     
     ## ------------------------------------------------------------------------
     ## --------------- modal UI (former output$popupfig) ----------------------
@@ -204,10 +195,11 @@ PlotModuleUI <- function(id,
         }
         if(any(class(caption2)=="character")) {
             caption2 <- shiny::HTML(caption2)
+            caption2 <- shiny::div(caption2, class="caption2")                         
         }
         shiny::tagList(
                    outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE),
-                   shiny::div(caption2, class="caption2") 
+                   caption2
                )
     }
 
@@ -223,16 +215,18 @@ PlotModuleUI <- function(id,
     }
     if(any(class(caption)=="character")) {
         caption <- shiny::HTML(caption)
+        caption <- shiny::div(caption, class="caption")                 
     }
     
     shiny::fillCol(
-               flex = c(NA,NA,1,NA,0.001),
+               flex = c(NA,1,NA,0.001,NA),
                height = height.1,
                buttons,
                ##eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1-30),
-               outputFunc(ns("renderfigure"), width=width.1, height=height.1-30),               
+               ##outputFunc(ns("renderfigure"), width=width.1, height=height.1-30),
+               outputFunc(ns("renderfigure"), width=width.1, height=height.1),                              
                ##shiny::br(),
-               shiny::div(caption, class="caption"),          
+               caption,
                shiny::div(class="popup-plot",
                           shinyBS::bsModal(
                                        ns("plotPopup"),
@@ -665,7 +659,7 @@ PlotModuleServer <- function(
           ##---------------------------- RETURN VALUE --------------------------------------
           ##--------------------------------------------------------------------------------
 
-          res <- list(
+          list(
               plotfun = func,
               plotfun2 = func2,
               .tmpfiles = c(pdf=PDFFILE, html=HTMLFILE),
@@ -681,7 +675,7 @@ PlotModuleServer <- function(
               ## outputFunc = outputFunc,
               renderFunc = renderFunc
           )
-          ##return(res)
+
       }
     )
 }

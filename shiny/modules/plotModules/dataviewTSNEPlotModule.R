@@ -215,7 +215,7 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
      output$downloadPlotPNG <- downloadHandler(
          filename = function(){paste("bigomics-tSNE",'.png',sep='')},
          content = function(file){
-          ggsave(file, plot = plot_dl$plot)
+             ggsave(file, plot = plot_dl$plot)
         }
       )
      output$downloadPlotPDF <- downloadHandler(

@@ -6,11 +6,8 @@ examplePlotModuleUI <- function(id) {
     )    
     PlotModuleUI(
         NS(id,"plt"),   ## note nested NS
-        options = options,
-        ## width = 500,
-        height = 800
+        options = options
     )
-
 }
 
 examplePlotModuleServer <- function(id) {
@@ -37,12 +34,13 @@ examplePlotModuleServer <- function(id) {
             df <- plot_data()
             plot(df$x, df$y)
         }
-
+        
         ## nested module
         PlotModuleServer(
             "plt",
-            func  = plot.RENDER,
-            csvFunc = plot_data  ## downloadable data as CSV
+            func  = plot.RENDER
+            ##func2 = plot.RENDER,            
+            ##csvFunc = plot_data  ## downloadable data as CSV
         )        
     }
   )

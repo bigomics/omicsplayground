@@ -11,7 +11,9 @@ dataviewtSNEplotModuleUI3 <- function(id, height=c(600,800)) {
         outputFunc = plotOutput,
         outputFunc2 = plotOutput,        
         info.text = "Information: This is a T-SNE figure.",
-        caption = "T-SNE figure caption.",        
+        ##caption = "T-SNE figure caption.",
+        caption = NULL,
+        caption2 = NULL,        
         options = options,
         download.fmt=c("png","pdf","csv"),         
         width = c("auto","1200"),
@@ -159,10 +161,15 @@ dataviewtSNEplotModuleServer3 <- function(id, filterStates, data, label="", wate
             ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
         }
         
-        ##modal_plot.RENDER <- function() {}
+        modal_plot.RENDER <- function() {
+            plot.RENDER() +
+                guide_continuous(aes = "color", type = "steps", width = .7) +
+                theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+        }
+
         ##output$modal_plot <- renderCachedPlot({
         ##modal_plot.RENDER <- shiny::reactive({
-        modal_plot.RENDER <- function() {
+        modal_plot.RENDER.BAK <- function() {
             
             message("[dataviewtSNEplotModuleServer3] modal_plot.RENDER called")
             message("[tsne3::modal_plot.RENDER] names(plot_dl) = ",names(plot_dl))
@@ -228,13 +235,12 @@ dataviewtSNEplotModuleServer3 <- function(id, filterStates, data, label="", wate
             ##plotlib = "base",            
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
-            ##func2 = plot.RENDER,            
             csvFunc = plot_data,             ##  *** downloadable data as CSV
-            ##renderFunc = shiny::renderPlot,
+            renderFunc = shiny::renderPlot,
+            renderFunc2 = shiny::renderPlot,        
             ##renderFunc = shiny::renderCachedPlot,
-            ##renderFunc2 = shiny::renderPlot,        
             ##renderFunc2 = shiny::renderCachedPlot,        
-            res = c(96,120),                ## resolution of plots
+            res = c(96,120)*1.1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             ##label = label, title = "t-SNE clustering",
             add.watermark = watermark
