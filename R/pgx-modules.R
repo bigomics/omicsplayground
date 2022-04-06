@@ -231,9 +231,9 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 ##================================================================================
 ##================================================================================
 
-plotWidget <- function(id) {
+plotWidget <- function(id,...) {
     ns <- shiny::NS(id)
-    shiny::uiOutput(ns("widget"))
+    shiny::uiOutput(ns("widget"),...)
 }
 
 plotModule <- function(input, output, session,
