@@ -42,7 +42,6 @@ BiomarkerUI <- function(id) {
         height = 760,
         shiny::tabsetPanel(
             id=ns("tabs"),
-            shiny::tabPanel("Importance", 
                 shiny::fillCol(
                 height = 800,
                 flex = c(NA,0.05,1),
@@ -71,7 +70,7 @@ BiomarkerUI <- function(id) {
                         plotWidget(ns("pdx_boxplots"))
                     )
                 )
-            ))
+            )
         )
     )
 }
