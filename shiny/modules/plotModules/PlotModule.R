@@ -151,7 +151,7 @@ PlotModuleUI <- function(id,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
         ##zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")  ## weird Cairo error!!!
-        ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
+        zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
     }
     
     buttons <- shiny::fillRow(
@@ -167,7 +167,7 @@ PlotModuleUI <- function(id,
             tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
-        shiny::div(class='download-button', dload.button),
+        shiny::div(class='download-button', title='download', dload.button),
         shiny::div(class='zoom-button', title='zoom', zoom.button),
         shiny::HTML(paste("<center>",title,"</center>"))
     )
@@ -203,8 +203,6 @@ PlotModuleUI <- function(id,
                )
     }
 
-    ##output$widget <- shiny::renderUI({    
-    ##cat("[output$widget::renderUI] ns.zoombutton = ",ns("zoombutton"),"\n")
     mtop <- paste0("margin: 400px 20px 20px 20px;")
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2+40,"px;}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2+40,"px;}")
@@ -222,16 +220,12 @@ PlotModuleUI <- function(id,
                flex = c(NA,1,NA,0.001,NA),
                height = height.1,
                buttons,
-               ##eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1-30),
-               ##outputFunc(ns("renderfigure"), width=width.1, height=height.1-30),
                outputFunc(ns("renderfigure"), width=width.1, height=height.1),                              
-               ##shiny::br(),
                caption,
                shiny::div(class="popup-plot",
                           shinyBS::bsModal(
                                        ns("plotPopup"),
                                        title, ns("zoombutton"), size="large",
-                                       ##shiny::tagList(shiny::uiOutput(ns("popupfig")))
                                        popupfigUI()
                                    )
                           ),
@@ -248,23 +242,12 @@ PlotModuleServer <- function(
          id,
          func,
          func2=NULL,
-         ##info.text="Figure",
-         ##title="",
-         ##inputs=NULL, 
-         ##options = NULL,
-         ##label="",
-         ##caption="",
-         ##caption2=info.text, ## header=NULL,
          plotlib = "base",
          plotlib2 = plotlib,
          renderFunc = NULL,
          renderFunc2 = NULL,
          csvFunc=NULL,
-         ##no.download = FALSE,
          download.fmt=c("png","pdf"), 
-         ##just.info=FALSE,
-         ##info.width="300px",
-         ##show.maximize = TRUE,
          ##height = c(640,800),
          ##width = c("auto",1400),
          res=c(72,100),
