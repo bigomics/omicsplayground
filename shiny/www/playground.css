@@ -5,6 +5,15 @@
 ##
 */
 
+:root {
+    --hover-color:  rgb(26,110,204);
+    --hover-color: rgb(20,90,150);
+    --main-color:  rgb(10,60,100);
+    --accent-color:  rgb(255,140,0);
+    --canvas-color:rgb(255,255,255);    
+    --light-color: #eeeeee;
+}
+
 h1, .h1, h2, .h2, h3, .h3 {
     margin-top: 10px;
     margin-bottom: 5px;

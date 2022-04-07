@@ -6,12 +6,6 @@
 WgcnaInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>WGCNA Analysis.</b> Weighted correlation network analysis (WGCNA) is a gene-level cluster analysis
-        method based on pairwise correlations between genes. It allows one to define modules (clusters),
-        intramodular hubs, and network nodes with regard to module membership, to study the relationships
-        between co-expression modules.")
-        ),
         shiny::tagList(
             shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
             shiny::hr(), shiny::br(),             

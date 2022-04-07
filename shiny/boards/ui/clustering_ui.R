@@ -6,10 +6,6 @@
 ClusteringInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<h3>Clustering Analysis</h3> Discover clusters of similar genes or samples using unsupervised
-          machine learning.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information and video tutorial about this module."),

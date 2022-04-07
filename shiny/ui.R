@@ -248,6 +248,118 @@ createUI <- function(tabs)
                 "cell-tab"
             )
         ),
+        bigdash::sidebarHelp(
+            bigdash::sidebarTabHelp(
+                "home-tab",
+                "Playground",
+                "A is a self-service bioinformatics platform for interactive analysis,
+                visualization and interpretation of transcriptomics and proteomics data.
+                Life scientists can easily perform complex data analysis and visualization without coding,
+                and significantly reduce the time to discovery."
+            ),
+            bigdash::sidebarTabHelp(
+                "dataview-tab",
+                "DataView",
+                "Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
+            ),
+            bigdash::sidebarTabHelp(
+                "clustersamples-tab",
+                "Clustering Analysis",
+                "Discover clusters of similar genes or samples using unsupervised
+                machine learning."
+            ),
+            bigdash::sidebarTabHelp(
+                "wgcna-tab",
+                "Weighted Correlation",
+                "Weighted correlation network analysis (WGCNA) is a gene-level cluster analysis
+                method based on pairwise correlations between genes. It allows one to define modules (clusters),
+                intramodular hubs, and network nodes with regard to module membership, to study the relationships
+                between co-expression modules."
+            ),
+            bigdash::sidebarTabHelp(
+                "diffexpr-tab",
+                "Expression Analysis",
+                "Compare expression between
+                two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
+            ),
+            bigdash::sidebarTabHelp(
+                "corr-tab",
+                "Correlation Analysis",
+                "Compute the correlation between genes and find coregulated modules."
+            ),
+            bigdash::sidebarTabHelp(
+                "enrich-tab",
+                "Geneset Enrichment",
+                "Perform differential expression analysis on a geneset level,
+                also called geneset enrichment analysis."
+            ),
+            bigdash::sidebarTabHelp(
+                "pathway-tab",
+                "Functional Analysis",
+                "Perform specialized functional analysis
+                to understand biological functions including GO, KEGG, and drug connectivity mapping."
+            ),
+            bigdash::sidebarTabHelp(
+                "cloud-tab",
+                "Wordcloud",
+                "WordCloud analysis or 'keyword enrichment' analysis computes the
+                enrichment of keywords for the contrasts. The set of words frequently appearing in the top ranked
+                gene sets form an unbiased description of the contrast."
+            ),
+            bigdash::sidebarTabHelp(
+                "drug-tab",
+                "Drug Connectivity",
+                "Perform drug connectivity analysis
+                to see if certain drug activity or drug sensitivity signatures matches your experimental signatures.
+                Matching drug signatures to your experiments may elicudate biological functions through
+                mechanism-of-action (MOA) and known drug molecular targets."
+            ),
+            bigdash::sidebarTabHelp(
+                "isect-tab",
+                "Compare Signatures",
+                "Find genes that are commonly up/down regulated
+                between two or more signatures. Compute similarity between contrasts."
+            ),
+            bigdash::sidebarTabHelp(
+                "sig-tab",
+                "Signature Analysis",
+                "Users can test their gene signature by
+                calculating an enrichment score. Upload your own gene list, or select
+                a contrast which then takes the top differentially expressed genes as
+                signature."
+            ),
+            bigdash::sidebarTabHelp(
+                "bio-tab",
+                "Biomarker Board",
+                "Select biomarkers that can be used for
+                classification or prediction purposes. The phenotype of interest can
+                be multiple categories (classes) or patient survival data."
+            ),
+            bigdash::sidebarTabHelp(
+                "cmap-tab",
+                "Similar Experiments",
+                "Find similar experiments by correlating their signatures.
+                The main goal is to identify experiments showing similar signatures and find genes
+                that are commonly up/down regulated between experiments."
+            ),
+            bigdash::sidebarTabHelp(
+                "comp-tab",
+                "Compare Datasets",
+                "Compare expression and signatures between two datasets,
+                from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
+            ),
+            bigdash::sidebarTabHelp(
+                "tcga-tab",
+                "TCGA Analysis",
+                "Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
+            ),
+            bigdash::sidebarTabHelp(
+                "cell-tab",
+                "Single-Cell Profiling",
+                "Visualize the distribution of (inferred)
+                immune cell types, expressed genes and pathway activation."
+            )
+        ),
         bigdash::bigTabs(
             bigdash::bigTabItem(
                 "home-tab",

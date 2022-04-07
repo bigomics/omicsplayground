@@ -6,12 +6,6 @@
 DrugConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<h3>Drug Connectivity</h3> Perform drug connectivity analysis
-            to see if certain drug activity or drug sensitivity signatures matches your experimental signatures.
-            Matching drug signatures to your experiments may elicudate biological functions through
-            mechanism-of-action (MOA) and known drug molecular targets.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
                    "Show more information about this module."),

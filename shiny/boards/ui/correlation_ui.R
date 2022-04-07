@@ -6,9 +6,6 @@
 CorrelationInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Correlation Analysis.</b> Compute the correlation between genes and find coregulated modules.")
-        ),
         shiny::tagList(
             shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
             shiny::hr(), shiny::br(),             

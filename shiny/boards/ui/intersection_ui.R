@@ -8,10 +8,6 @@ message(">>> sourcing IntersectionBoard")
 IntersectionInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<h3>Compare signatures</h3>Find genes that are commonly up/down regulated
-          between two or more signatures. Compute similarity between contrasts.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module"),

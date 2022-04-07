@@ -13,12 +13,6 @@ downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
 LoadingInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Omics Playground</b> is a self-service bioinformatics platform for interactive analysis,
-          visualization and interpretation of transcriptomics and proteomics data.
-           Life scientists can easily perform complex data analysis and visualization without coding,
-            and significantly reduce the time to discovery.")
-        ),
         shinyBS::tipify( shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
                "Show more information about this module.")
     )

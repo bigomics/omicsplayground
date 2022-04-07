@@ -6,11 +6,6 @@
 BiomarkerInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Biomarker Board.</b> Select biomarkers that can be used for
-            classification or prediction purposes. The phenotype of interest can
-            be multiple categories (classes) or patient survival data.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module."),

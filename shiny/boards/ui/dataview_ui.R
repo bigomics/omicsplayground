@@ -6,9 +6,6 @@
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),

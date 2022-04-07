@@ -10,11 +10,6 @@ TcgaInputs <- function(id) {
 	
 	tagList(
 		div(
-			tags$strong("TCGA analysis (beta)."),
-			"Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
-		),
-		
-		div(
 			tags$head(
 				tags$style(
 					paste0("#", ns("genelist"), ".form-control {font-size:11px !important;padding:3px;height:200px;}")

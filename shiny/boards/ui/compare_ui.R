@@ -6,10 +6,6 @@
 CompareInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<h3>Compare Datasets</h3> Compare expression and signatures between two datasets,
-          from similar experiments or from different datatypes, e.g. transcriptomics and proteomics.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),

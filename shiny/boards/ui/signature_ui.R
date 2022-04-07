@@ -8,13 +8,6 @@ style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style
 SignatureInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Signature Analysis.</b> Users can test their gene signature by
-                calculating an enrichment score. Upload your own gene list, or select
-                a contrast which then takes the top differentially expressed genes as
-                signature."
-            )
-        ),
         shiny::tagList(
             shiny::tags$head(shiny::tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
             shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),

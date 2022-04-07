@@ -6,10 +6,6 @@
 FunctionalInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Functional analysis</b>. <br> Perform specialized functional analysis
-            to understand biological functions including GO, KEGG, and drug connectivity mapping.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("fa_info"), "Youtube", icon = shiny::icon("youtube") ),
                    "Show more information about this module."),

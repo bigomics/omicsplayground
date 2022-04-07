@@ -6,10 +6,6 @@
 SingleCellInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Single-Cell Profiling</b>. Visualize the distribution of (inferred)
-            immune cell types, expressed genes and pathway activation.")
-        ),
         shiny::tagList(
             shinyBS::tipify(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
                    "Show more information about this module."),

@@ -6,11 +6,6 @@
 ConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Similar Experiments.</b> Find similar experiments by correlating their signatures.
-          The main goal is to identify experiments showing similar signatures and find genes
-          that are commonly up/down regulated between experiments.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("cmap_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),

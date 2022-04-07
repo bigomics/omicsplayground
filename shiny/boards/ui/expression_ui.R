@@ -7,10 +7,6 @@
 ExpressionInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Differential Expression Analysis.</b> Compare expression between
-        two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),

@@ -6,10 +6,6 @@
 EnrichmentInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        tags$div(
-         HTML("<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level,
-          also called geneset enrichment analysis.")
-        ),
         shiny::tagList(
             shinyBS::tipify( shiny::actionLink(ns("gs_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),
