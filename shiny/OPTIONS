@@ -18,6 +18,7 @@ HONCHO_URL      = http://localhost:8000
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
 #BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp,view
+#BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp
 #BOARDS_DISABLED = corsa,multi,system,wgcna,ftmap,comp,tcga
 BOARDS_DISABLED = corsa,multi,system
 #BOARDS_DISABLED = view

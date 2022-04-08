@@ -116,19 +116,20 @@ DataViewBoard <- function(input, output, session, env)
         ## levels for sample filter
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
-        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-        listGenes <- data.table::as.data.table(genes)
-        names(listGenes) = '(type gene if missing!)'
-        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
-        selgene = names(sort(-fc2))[1] ## most var gene??
-        ##selgene = genes[1] ## first alphabetical 
-        sel1 = which(genes==selgene)
-        #updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene,
-        #                     options = list(maxOptions = 9999999, placeholder='gene'),
-        #                     server = TRUE)
-        shiny::updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
-        ##updateSelectInput(session,'search_gene', choices=listGenes, selected='')        
 
+        if(0) {
+            genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
+            fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+            selgene = names(sort(-fc2))[1] ## most var gene??
+            ##selgene = genes[1] ## first alphabetical 
+            shiny::updateSelectizeInput(session,'search_gene', choices=genes1, selected=selgene,
+                                        ##options = list(maxOptions = 9999999),
+                                        options = list(maxOptions = 4),                                    
+                                        ##options = list(maxOptions = 4, placeholder=NULL),
+                                        server = TRUE)
+            ##shiny::updateSelectInput(session,'search_gene', choices=genes, selected='')        
+        }
+        
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
@@ -284,7 +285,9 @@ DataViewBoard <- function(input, output, session, env)
         
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input$search_gene) && input$search_gene!="") {
+            gene <- input$search_gene
+        }
 
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
@@ -342,7 +345,9 @@ DataViewBoard <- function(input, output, session, env)
                 
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input$search_gene) && input$search_gene!="") {
+            gene <- input$search_gene
+        }
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -479,7 +484,9 @@ DataViewBoard <- function(input, output, session, env)
         
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input$search_gene) && input$search_gene!="") {
+            gene <- input$search_gene
+        }
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -1138,10 +1145,17 @@ DataViewBoard <- function(input, output, session, env)
             ## log2CPM
             pp <- rownames(ngs$X)
         }
-        ## levels for sample filter
+
+        ## genes
         genes <- sort(ngs$genes[pp,]$gene_name)
-        sel = genes[1]  ## most var gene
-        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
+        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+        genes = intersect(names(sort(-fc2)),genes) ## most var gene??
+        selgene <- genes[1]
+        dbg("[DataViewBoard.R] length(genes) = ",length(genes))
+        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene,
+                                    options = list(maxOptions = 9999999),
+                                    ##options = list(maxOptions = 20),                                    
+                                    server = TRUE)
 
     })
     
