@@ -49,8 +49,7 @@ PlotModuleUI <- function(id,
                        height = c(640,800),
                        width = c("auto",1400),
                        pdf.width = 6,
-                       pdf.height = 6                        
-                       ##res=c(72,100)
+                       pdf.height = 6
                        )
 {
     ns <- shiny::NS(id)    
@@ -151,7 +150,7 @@ PlotModuleUI <- function(id,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
         ##zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")  ## weird Cairo error!!!
-        zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
+        ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
     }
     
     buttons <- shiny::fillRow(
@@ -326,11 +325,6 @@ PlotModuleServer <- function(
                                                      htmlwidgets::saveWidget(p, HTMLFILE)
                                                      webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                                                  } else if(plotlib %in% c("ggplot","ggplot2")) {
-                                                     ##png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
-                                                     ##    pointsize=1.2*pdf.pointsize, res=72*resx)
-                                                     ##print(p)
-                                                     ##print(func())
-                                                     ##dev.off() 
                                                      ggsave(PNGFILE, plot = func(), dpi=300)
                                                  } else if(plotlib=="grid") {
                                                      p <- func()
@@ -550,7 +544,6 @@ PlotModuleServer <- function(
 
           res.1 <- res[1]
           res.2 <- res[2]
-
 
           ## width and height should actually be speficied in UI, not here.
           ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))

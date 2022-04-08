@@ -2,7 +2,7 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
-DataViewBoard <- function(input, output, session, inputData, filterStates)
+DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
@@ -34,23 +34,6 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen></iframe></center>
     ')
-
-    ##ngs <- inputData()
-    
-    ## observe inputs
-    ## !!! NEED RETHINK: Ugly (ivo 3.4.2022) !!!
-    shiny::observeEvent(input$search_gene, {
-        filterStates$search_gene <- input$search_gene
-    })
-    shiny::observeEvent(input$sample_filter, {
-        filterStates$sample_filter <- input$sample_filter
-    })
-    shiny::observeEvent(input$data_groupby, {
-        filterStates$data_groupby <- input$data_groupby
-    })
-    shiny::observeEvent(input$data_type, {
-        filterStates$data_type <- input$data_type
-    })
 
    
     ## ------- observe functions -----------
@@ -592,7 +575,7 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
 
     
     # observe inputs
-    filterStatesList <- reactive({
+    filterStates <- reactive({
         list(
             search_gene = input$search_gene,
             sample_filter = input$sample_filter,
@@ -601,8 +584,7 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
         )
     })
     
-    ##dataviewtSNEModuleServer("tSNEPlot", filterStates, ngs)
-    dataviewtSNEplotModule("tSNEPlot", filterStatesList, ngs, imgH=315, watermark=WATERMARK)    
+    dataviewTSNEPlotModuleServer("tSNEPlot", inputData, filterStates)        
     
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
