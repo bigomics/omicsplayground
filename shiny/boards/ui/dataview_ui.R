@@ -13,7 +13,7 @@ DataViewInputs <- function(id) {
             shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),
             shiny::hr(), shiny::br(),
-            shinyBS::tipify( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
+            shinyBS::tipify( shiny::selectizeInput(ns("search_gene"),"Gene:", choices=NULL),
                    "Enter a gene of interest for the analysis.", placement="top"),
             shinyBS::tipify( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
                                 choices=NULL, multiple=TRUE),
@@ -62,9 +62,8 @@ DataViewUI <- function(id) {
                             plotWidget(ns("genePlots_barplot")),
                             plotWidget(ns("genePlots_averageRankPlot")),
                             #plotWidget(ns("genePlots_tsne")),
-                            ##dataviewtSNEModuleUI(ns("tSNEPlot")),
-                            plotWidget(ns("tSNEPlot"))                            
-                        ),
+                            dataviewTSNEPlotModuleUI(ns("tSNEPlot"),height=340)
+                            ),
                         shiny::br(),
                         shiny::fillRow(
                             flex = c(1.5,2), id = "genePlots_row2",

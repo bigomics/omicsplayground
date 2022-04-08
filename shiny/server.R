@@ -6,19 +6,9 @@ server <- function(input, output, session) {
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
-
-
-    ## !!! NEED RETHINK: Ugly and not 'scalable' (ivo 3.4.2022)
-    filterStates <- reactiveValues(
-        search_gene = NULL,
-        data_samplefilter = NULL,
-        data_groupby = NULL,
-        data_type = "logCPM",
-    )
-
-    ## Logging of input/output events
     
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
+    ## Logging of input/output events    
+    ##shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
@@ -123,7 +113,7 @@ server <- function(input, output, session) {
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
         shiny::withProgress(message="initializing modules ...", value=0, {
-            if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", inputData = env[["load"]][["inputData"]], filterStates)
+            if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", inputData = env[["load"]][["inputData"]])
             if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", inputData = env[["load"]][["inputData"]])
             if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", inputData <- env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)

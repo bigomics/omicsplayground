@@ -3,26 +3,21 @@
 ## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+library(shiny)
+setwd("..")
 source("./global.R")  ## global variable
 
 load("../data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)
 
 ui = fluidPage(
-    tabView("DataView",DataViewInputs("view"),DataViewUI("view"))
+    tabView("DataView", DataViewInputs("view"), DataViewUI("view"))
+    ##tabView("Cluster samples",ClusteringInputs("clust"),ClusteringUI("clust"))
 )
 
 server = function(input, output, session) {
-
-    filterStates <- list(
-        search_gene = "ETAA1",
-        data_samplefilter = NULL,
-        data_type = "logCPM",
-        data_groupby = "condition"
-    )
-
-    inputData <- shiny::reactive(ngs)
-    shiny::callModule(DataViewBoard, "view", inputData, filterStates)
+    callModule(DataViewBoard, "view", reactive(ngs))
+    ##callModule( ClusteringBoard, "clust", reactive(ngs))    
 }
 
 shinyApp(ui, server=server, options=list(launch.browser=TRUE))

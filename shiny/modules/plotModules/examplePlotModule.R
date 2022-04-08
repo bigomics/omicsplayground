@@ -1,11 +1,14 @@
 
 examplePlotModuleUI <- function(id) {
+
     ns <- shiny::NS(id)    
     options <- tagList(
         selectInput(ns("func"),"function",c("cos","sin","exp"))
     )    
+
     PlotModuleUI(
-        NS(id,"plt"),   ## note nested NS
+        ##NS(id,"plt"),   ## note nested NS
+        ns("plt"),
         options = options
     )
 }
@@ -27,8 +30,8 @@ examplePlotModuleServer <- function(id) {
             return(df)
         })
         
-        require(pryr)
-        ##plot.RENDER %<a-% reactive({
+        ##require(pryr)
+        ##plot.RENDER %<a-% reactive({   ## for reactive plot functions
         plot.RENDER <- function(){    
             ## actual plotting
             df <- plot_data()
