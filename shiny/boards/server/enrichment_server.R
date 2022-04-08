@@ -36,8 +36,6 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     )
     
     GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
-    # I have no idea what this is // Stefan 21.03.2022
-    dragulaR::dragula(ns("subplots"))
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
