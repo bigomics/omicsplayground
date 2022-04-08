@@ -161,7 +161,7 @@ EnrichmentBoard <- function(input, output, session, env)
             shiny::div(shiny::HTML(enrichplots_caption),class="caption")
         )
     })
-    dragulaR::dragula(ns("subplots"))
+    ##dragulaR::dragula(ns("subplots"))
 
     compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
 
