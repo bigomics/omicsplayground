@@ -39,12 +39,12 @@ RUN R -e "BiocManager::install(c('edgeR','DESeq2'))"
 # Download fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-ARG TAG=master
-RUN echo Downloading $TAG branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
-    && unzip $TAG.zip \
+ARG BRANCH=master
+RUN echo Downloading $BRANCH branch
+RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
+    && unzip $BRANCH.zip \
     && rm -fr /omicsplayground  \
-    && mv omicsplayground-$TAG omicsplayground \
+    && mv omicsplayground-$BRANCH omicsplayground \
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------

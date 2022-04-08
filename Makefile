@@ -21,8 +21,8 @@ run.docker:
 	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
 build.docker:
-	@echo building docker $(TAG)
-	docker build --no-cache --build-arg TAG=$(TAG) \
+	@echo building docker $(TAG) from branch $(BRANCH) 
+	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(TAG) .
 
