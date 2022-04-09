@@ -67,6 +67,44 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
 
+    shiny::observeEvent( input$data_type, {
+        ngs = inputData()
+        if(input$data_type %in% c("counts","CPM")) {
+            pp <- rownames(ngs$counts)
+        } else {
+            ## log2CPM
+            pp <- rownames(ngs$X)
+        }
+
+        ## gene filter. 
+        genes <- sort(ngs$genes[pp,]$gene_name)
+        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+        genes = intersect(names(sort(-fc2)),genes) ## most var gene??
+        selgene <- genes[1]
+        genes1 <- unique(c(selgene,sort(genes)))
+        if(length(genes1)>1000) {
+            genes1 <- c(genes1[1:1000],"(type SYMBOL for more genes...)",genes1[1001:length(genes1)])
+        }
+        shiny::updateSelectizeInput(session,'search_gene', choices=genes1, selected=selgene,
+                                    ##options = list(maxOptions = 9999999),
+                                    options = list(maxOptions = 1001),                                    
+                                    server = TRUE)
+
+    })
+
+    last_search_gene <- reactiveVal()
+    
+    input_search_gene <- reactive({
+        if( input$search_gene %in% c("(type SYMBOL for more genes...)","")) {
+            ngs <- inputData()
+            gene1 <- last_search_gene() 
+            return(gene1)
+        }
+        last_search_gene(input$search_gene)
+        return(input$search_gene)
+    })
+
+    
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
@@ -99,7 +137,7 @@ DataViewBoard <- function(input, output, session, inputData)
         dbg("[genePlots_averageRankPlot.RENDER] reacted")
         
         gene <- ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
         samples <- colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -196,7 +234,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
 
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
@@ -254,7 +292,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -391,7 +429,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -492,7 +530,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
       gene = "KCNN4"
       gene = ngs$genes$gene_name[1]
-      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+      if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
       samples = colnames(ngs$X)
       if(!is.null(input$data_samplefilter)) {
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -612,7 +650,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
         dbg("[data_tissueplot.RENDER] reacted")
 
-        gene <- input$search_gene
+        gene <- input_search_gene()
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
         hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
 
@@ -668,7 +706,7 @@ DataViewBoard <- function(input, output, session, inputData)
         require(org.Hs.eg.db)
         gene = "A1BG-AS1"
         gene = "CD4"
-        gene <- input$search_gene
+        gene <- input_search_gene()
         gene = toupper(sub(".*:","",gene))
 
         eg = "1017"
@@ -1104,23 +1142,6 @@ DataViewBoard <- function(input, output, session, inputData)
 
     data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
 
-    shiny::observeEvent( input$data_type, {
-        ngs = inputData()
-        if(input$data_type %in% c("counts","CPM")) {
-            pp <- rownames(ngs$counts)
-        } else {
-            ## log2CPM
-            pp <- rownames(ngs$X)
-        }
-
-        ## gene filter
-        genes <- sort(ngs$genes[pp,]$gene_name)
-        sel = genes[1]  ## most var gene
-        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel,
-                                    options=list(maxOptions=99999),  ## NEED RETHINK: can slow down
-                                    server=TRUE)
-    })
-
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
@@ -1152,8 +1173,8 @@ DataViewBoard <- function(input, output, session, inputData)
 
         gene = "CD3E"
         gene = "CCR6"
-        gene = input$search_gene
-        if(is.null(gene) | gene=="" | is.na(gene)) return(NULL)
+        gene = input_search_gene()
+        if(is.null(gene) || gene=="" || is.na(gene)) return(NULL)
         ##xgene = sub(".*:","",rownames(x))
 
         ## Quickly (?) calculated correlation to selected gene
