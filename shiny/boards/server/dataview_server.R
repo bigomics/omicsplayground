@@ -51,14 +51,12 @@ DataViewBoard <- function(input, output, session, inputData)
         ## levels for sample filter
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
-        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-        listGenes <- data.table::as.data.table(genes)
-        names(listGenes) = '(type gene if missing!)'
-        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
-        selgene = names(sort(-fc2))[1] ## most var gene??
-        
-        sel1 = which(genes==selgene)
-        shiny::updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
+
+##        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
+##        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+##        selgene = names(sort(-fc2))[1] ## most var gene??        
+##        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene, server=TRUE)
+
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
@@ -1114,11 +1112,13 @@ DataViewBoard <- function(input, output, session, inputData)
             ## log2CPM
             pp <- rownames(ngs$X)
         }
-        ## levels for sample filter
+
+        ## gene filter
         genes <- sort(ngs$genes[pp,]$gene_name)
         sel = genes[1]  ## most var gene
-        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
-
+        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel,
+                                    options=list(maxOptions=99999),  ## NEED RETHINK: can slow down
+                                    server=TRUE)
     })
 
     data_rawdataTable.RENDER <- shiny::reactive({
