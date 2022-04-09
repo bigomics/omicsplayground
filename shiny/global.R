@@ -277,7 +277,7 @@ source("./boards/ui/clustering_ui.R", encoding = "UTF-8")
 source("./boards/ui/compare_ui.R", encoding = "UTF-8")
 source("./boards/ui/connectivity_ui.R", encoding = "UTF-8")
 source("./boards/ui/correlation_ui.R", encoding = "UTF-8")
-source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
+source("./boards/dataview_board/dataview_ui.R", encoding = "UTF-8")
 source("./boards/ui/drugconnectivity_ui.R", encoding = "UTF-8")
 source("./boards/ui/enrichment_ui.R", encoding = "UTF-8")
 source("./boards/ui/expression_ui.R", encoding = "UTF-8")
@@ -299,7 +299,7 @@ source("./boards/server/clustering_server.R", encoding = "UTF-8")
 source("./boards/server/compare_server.R", encoding = "UTF-8")
 source("./boards/server/connectivity_server.R", encoding = "UTF-8")
 source("./boards/server/correlation_server.R", encoding = "UTF-8")
-source("./boards/server/dataview_server.R", encoding = "UTF-8")
+source("./boards/dataview_board/dataview_server.R", encoding = "UTF-8")
 source("./boards/server/drugconnectivity_server.R", encoding = "UTF-8")
 source("./boards/server/enrichment_server.R", encoding = "UTF-8")
 source("./boards/server/expression_server.R", encoding = "UTF-8")
@@ -315,8 +315,8 @@ source("./boards/server/wgcna_server.R", encoding = "UTF-8")
 source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
 
 ## load plotModules
-source("./modules/plotModules/PlotModule.R", encoding = "UTF-8")
-source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
+source("./modules/PlotModule.R", encoding = "UTF-8")
+source("./boards/dataview_board/modules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
