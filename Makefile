@@ -17,8 +17,8 @@ show.branch:
 	@echo $(BRANCH)
 
 run.docker:
-	@echo running docker $(TAG) at port 4000
-	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
+	@echo running docker $(TAG) at port 3838
+	docker run --rm -p 3838:3838 bigomics/omicsplayground:$(TAG)
 
 build.docker:
 	@echo building docker $(TAG) from branch $(BRANCH) 
