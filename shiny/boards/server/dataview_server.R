@@ -83,7 +83,7 @@ DataViewBoard <- function(input, output, session, inputData)
         selgene <- genes[1]
         genes1 <- unique(c(selgene,sort(genes)))
         if(length(genes1)>1000) {
-            genes1 <- c(genes1[1:1000],"(type SYMBOL for more genes...)",genes1[1001:length(genes1)])
+            genes1 <- c(sort(genes1[1:1000]),"(type SYMBOL for more genes...)",genes1[1001:length(genes1)])
         }
         shiny::updateSelectizeInput(session,'search_gene', choices=genes1, selected=selgene,
                                     ##options = list(maxOptions = 9999999),
