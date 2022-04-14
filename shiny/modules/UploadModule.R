@@ -18,15 +18,7 @@ UploadModuleUI <- function(id) {
         shiny::tabPanel("BatchCorrect", shiny::uiOutput(ns("batchcorrect_UI"))),
         shiny::tabPanel("Contrasts", shiny::uiOutput(ns("contrasts_UI"))),
         shiny::tabPanel("Compute", shiny::uiOutput(ns("compute_UI")))
-    )
-    
-    if(getOption("OMICS_CLOSE", FALSE)){
-        ui <- shiny::tagList(
-            ui,
-            shiny::actionButton(ns("close"), "close")
-        )
-    }
-
+    )    
     ui
 }
 
@@ -48,19 +40,14 @@ UploadModuleServer <- function(id,
 
             ns <- session$ns
             ## ns <- shiny::NS(id)
-
-            observeEvent(input$close, {
-                session$close()
-            })
             
-            dbg("[UploadModuleServer] called!")
-            
+            dbg("[UploadModuleServer] called!")            
             dbg("[UploadModuleServer] limits.samples = ",limits['samples'])
             dbg("[UploadModuleServer] limits.comparisons = ",limits['comparisons'])
             dbg("[UploadModuleServer] limits.genes   = ",limits['genes'])
             dbg("[UploadModuleServer] limits.genesets = ",limits['genesets'])
             dbg("[UploadModuleServer] limits.datasets = ",limits['datasets'])
-
+            
             ## Some 'global' reactive variables used in this file
             uploaded <- shiny::reactiveValues()
 
@@ -161,17 +148,43 @@ UploadModuleServer <- function(id,
             ##============================== TABS =================================
             ##=====================================================================            
 
-            ## !!!!!!!!!!!!! does not work !!!!!!!!!!!!!!!
-            shiny::observeEvent( uploaded, {
-                files.needed = c("counts.csv","samples.csv","contrasts.csv")
-                if(all(files.needed %in% names(uploaded))) {
-                    shiny::showTab("tabs", "Contrasts")
-                    shiny::showTab("tabs", "Compute")                    
-                } else {
-                    shiny::hideTab("tabs", "Contrasts")
-                    shiny::hideTab("tabs", "Compute")                    
-                }                
-            })
+            if(1) {
+                ## Hide/show tabpanels upon available data like a wizard dialog
+                ##shiny::observeEvent( names(uploaded), {
+                shiny::observe({                                    
+                    has.upload <- Vectorize(function(f) {
+                        ( f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
+                    })
+                    need2 = c("counts.csv","samples.csv")                
+                    need3 = c("counts.csv","samples.csv","contrasts.csv")
+                    if(all(has.upload(need3))) {
+                        shiny::showTab("tabs", "Contrasts")
+                        shiny::showTab("tabs", "Compute")
+                        if(input$advanced_mode) {
+                            shiny::showTab("tabs", "Normalize")                            
+                            shiny::showTab("tabs", "BatchCorrect")
+                        }
+                        ##shinyjs::enable(selector = '.navbar-nav a[data-value="Contrasts"')
+                        ##shinyjs::enable(selector = '.navbar-nav a[data-value="Compute"')        
+                    } else if(all(has.upload(need2))) {
+                        if(input$advanced_mode) {
+                            shiny::showTab("tabs", "Normalize")
+                            shiny::showTab("tabs", "BatchCorrect")
+                        }
+                        shiny::showTab("tabs", "Contrasts")
+                        shiny::hideTab("tabs", "Compute")
+                        ##shinyjs::ensable(selector = '.navbar-nav a[data-value="Contrasts"')
+                        ##shinyjs::disable(selector = '.navbar-nav a[data-value="Compute"')                        
+                    } else {
+                        shiny::hideTab("tabs", "Normalize")
+                        shiny::hideTab("tabs", "BatchCorrect")
+                        shiny::hideTab("tabs", "Contrasts")
+                        shiny::hideTab("tabs", "Compute")
+                        ##shinyjs::disable(selector = '.navbar-nav a[data-value="Contrasts"')
+                        ##shinyjs::disable(selector = '.navbar-nav a[data-value="Compute"')                        
+                    }                    
+                })
+            }
             
             ##=====================================================================
             ##======================= UI OBSERVERS ================================
@@ -190,11 +203,6 @@ UploadModuleServer <- function(id,
             ##=====================================================================
             ##================== DATA LOADING OBSERVERS ===========================
             ##=====================================================================            
-
-            fn="../../exampledata/counts.csv"
-            fn="../../exampledata/counts2.csv"
-            fn="../../exampledata/samples.csv"
-            fn="../../exampledata/contrasts.csv"
             
             checkDupRows <- function(F, fn, alert=TRUE) {
                 rn <- setdiff(F[[1]],c("","NA",NA))
