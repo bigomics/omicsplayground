@@ -5,23 +5,21 @@
 
 FunctionalInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("fa_info"), "Youtube", icon = shiny::icon("youtube") ),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
-                   "Select the contrast corresponding to the comparison of interest.",
-                   placement="top"),
-            shinyBS::tipify( shiny::actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Show/hide advanced options", placement="top"),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "input.fa_options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    shinyBS::tipify(shiny::checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
-                           "Click to filter the significant entries in the tables.")
-                )
+    bigdash::tabSettings(
+        shinyBS::tipify( shiny::actionLink(ns("fa_info"), "Youtube", icon = shiny::icon("youtube") ),
+                "Show more information about this module."),
+        shiny::hr(), shiny::br(),             
+        shinyBS::tipify( shiny::selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
+                "Select the contrast corresponding to the comparison of interest.",
+                placement="top"),
+        shinyBS::tipify( shiny::actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                "Show/hide advanced options", placement="top"),
+        shiny::br(),
+        shiny::conditionalPanel(
+            "input.fa_options % 2 == 1", ns=ns,
+            shiny::tagList(
+                shinyBS::tipify(shiny::checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
+                        "Click to filter the significant entries in the tables.")
             )
         )
     )

@@ -5,19 +5,16 @@
 
 DrugConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
-                   "Select the contrast corresponding to the comparison of interest.",
-                   placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
-                   "Select type of drug enrichment analysis: activity or sensitivity (if available).",
-                   placement="top"),
-           
-        )
+    bigdash::tabSettings(
+        shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
+                "Show more information about this module."),
+        shiny::hr(), shiny::br(),             
+        shinyBS::tipify( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
+                "Select the contrast corresponding to the comparison of interest.",
+                placement="top"),
+        shinyBS::tipify( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
+                "Select type of drug enrichment analysis: activity or sensitivity (if available).",
+                placement="top")
     )
 }
 

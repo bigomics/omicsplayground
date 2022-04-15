@@ -5,28 +5,25 @@
 
 CorrelationInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::tagList(
-            shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
-            shiny::hr(), shiny::br(),             
+    bigdash::tabSettings(
+        shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
+        shiny::hr(), shiny::br(),             
 
-            ## data set parameters
-            shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
-                   "Choose a gene for the correlation analysis.", placement="top"),
-            shiny::br(),
-            shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
-                            "Filter gene features.", placement="top"),
-            shiny::conditionalPanel(
-                       "input.cor_features == '<custom>'", ns=ns,
-                       shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
-                                                             NULL, value = NULL,
-                                                             height = "100px", width = "100%", 
-                                                             rows=5, placeholder="Paste your custom gene list"),
-                                       "Paste a custom list of genes to be used as features.",
-                                       placement="top")
-                   ),                    
-            shiny::br()
-        )
+        ## data set parameters
+        shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
+                "Choose a gene for the correlation analysis.", placement="top"),
+        shiny::br(),
+        shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
+                        "Filter gene features.", placement="top"),
+        shiny::conditionalPanel(
+                    "input.cor_features == '<custom>'", ns=ns,
+                    shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
+                                                            NULL, value = NULL,
+                                                            height = "100px", width = "100%", 
+                                                            rows=5, placeholder="Paste your custom gene list"),
+                                    "Paste a custom list of genes to be used as features.",
+                                    placement="top")
+                )
     )
 }
 

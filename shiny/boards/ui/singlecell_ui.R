@@ -5,28 +5,26 @@
 
 SingleCellInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::tagList(
-            shinyBS::tipify(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
-                   "Show more information about this module."),
-            shiny::hr(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("options"), "Options",
-                               icon=icon("cog", lib = "glyphicon")),
-                   "Toggle options", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns, 
-                shiny::tagList(
-                    shinyBS::tipify(shiny::selectInput(ns("samplefilter"),"Filter samples:",
-                                       choices=NULL, multiple=TRUE),
-                           "Filter relevant samples (cells).",
-                           placement="top", options = list(container = "body")),
-                    
-                    shinyBS::tipify(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
-                                       selected="default"),
-                           "Specify a layout for the figures: t-SNE or PCA-based layout.",
-                           placement="top", options = list(container = "body"))
-                )
+    bigdash::tabSettings(
+        shinyBS::tipify(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
+                "Show more information about this module."),
+        shiny::hr(),br(),
+        shinyBS::tipify( shiny::actionLink(ns("options"), "Options",
+                            icon=icon("cog", lib = "glyphicon")),
+                "Toggle options", placement="top"),
+        shiny::br(),br(),
+        shiny::conditionalPanel(
+            "input.options % 2 == 1", ns=ns, 
+            shiny::tagList(
+                shinyBS::tipify(shiny::selectInput(ns("samplefilter"),"Filter samples:",
+                                    choices=NULL, multiple=TRUE),
+                        "Filter relevant samples (cells).",
+                        placement="top", options = list(container = "body")),
+                
+                shinyBS::tipify(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
+                                    selected="default"),
+                        "Specify a layout for the figures: t-SNE or PCA-based layout.",
+                        placement="top", options = list(container = "body"))
             )
         )
     )

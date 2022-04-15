@@ -5,35 +5,33 @@
 
 ConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("cmap_info"), "Info", icon = shiny::icon("info-circle")),
-                   "Show more information about this module"),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns('cmap_contrast'),'Contrast:',
-                                choices=NULL, multiple=FALSE),
-                   "Select the contrast that you want to compare.",
-                   placement="right", options = list(container = "body")
-                   ),
-            shinyBS::tipify( shiny::selectInput(ns('cmap_sigdb'),"Signature DB:", choices=NULL),
-                   "Select reference signature database.",
-                   placement="right", options = list(container = "body")),
-            shiny::br(),
-            shinyBS::tipify( shiny::actionLink(ns("cmap_options"), "Options", icon=icon("cog", lib="glyphicon")),
-                   "Toggle advanced options.",
-                   placement="right", options = list(container = "body")),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "input.cmap_options % 2 == 1", ns=ns,
-                shinyBS::tipify(
-                    shiny::checkboxInput( ns('cmap_hideclustcontrasts'),"hide cluster contrasts", TRUE),
-                    "Hide cluster contrasts.",
-                    placement="right", options = list(container = "body")),
-                shinyBS::tipify(
-                    shiny::checkboxInput(ns("cmap_abs_score"),"abs.score",TRUE),
-                    "Use absolute score value",
-                    placement="right", options = list(container = "body"))
-            )
+    bigdash::tabSettings(
+        shinyBS::tipify( shiny::actionLink(ns("cmap_info"), "Info", icon = shiny::icon("info-circle")),
+                "Show more information about this module"),
+        shiny::hr(), shiny::br(),             
+        shinyBS::tipify( shiny::selectInput(ns('cmap_contrast'),'Contrast:',
+                            choices=NULL, multiple=FALSE),
+                "Select the contrast that you want to compare.",
+                placement="right", options = list(container = "body")
+                ),
+        shinyBS::tipify( shiny::selectInput(ns('cmap_sigdb'),"Signature DB:", choices=NULL),
+                "Select reference signature database.",
+                placement="right", options = list(container = "body")),
+        shiny::br(),
+        shinyBS::tipify( shiny::actionLink(ns("cmap_options"), "Options", icon=icon("cog", lib="glyphicon")),
+                "Toggle advanced options.",
+                placement="right", options = list(container = "body")),
+        shiny::br(),
+        shiny::conditionalPanel(
+            "input.cmap_options % 2 == 1", ns=ns,
+            shinyBS::tipify(
+                shiny::checkboxInput( ns('cmap_hideclustcontrasts'),"hide cluster contrasts", TRUE),
+                "Hide cluster contrasts.",
+                placement="right", options = list(container = "body")),
+            shinyBS::tipify(
+                shiny::checkboxInput(ns("cmap_abs_score"),"abs.score",TRUE),
+                "Use absolute score value",
+                placement="right", options = list(container = "body"))
         )
     )
 }

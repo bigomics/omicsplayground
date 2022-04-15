@@ -8,71 +8,64 @@
 TcgaInputs <- function(id) {
 	ns <- NS(id)
 	
-	tagList(
-		div(
-			tags$head(
-				tags$style(
-					paste0("#", ns("genelist"), ".form-control {font-size:11px !important;padding:3px;height:200px;}")
-				)
+	bigdash::tabSettings(
+		shinyBS::tipify(
+			actionLink(ns("tcga_info"), "Info", icon = icon("info-circle")),
+			"Show more information about this module"
+		),
+		
+		hr(),
+		br(),
+		
+		shinyBS::tipify(
+			radioButtons(
+				ns("sigtype"),
+				"Signature type:",
+				choices = c("contrast","genelist"),
+				selected = "contrast",
+				inline = TRUE
 			),
+			"number of top genes to show",
+			placement = "right",
+			options = list(container = "body")
+		),
+		
+		conditionalPanel(
+			"input.sigtype == 'contrast'",
+			ns = ns,
 			shinyBS::tipify(
-				actionLink(ns("tcga_info"), "Info", icon = icon("info-circle")),
-				"Show more information about this module"
-			),
-			
-			hr(),
-			br(),
-			
-			shinyBS::tipify(
-				radioButtons(
-					ns("sigtype"),
-					"Signature type:",
-					choices = c("contrast","genelist"),
-					selected = "contrast",
-					inline = TRUE
-				),
-				"number of top genes to show",
+				selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
+				"Select the contrast that you want to correlate with survival.",
 				placement = "right",
 				options = list(container = "body")
 			),
-			
-			conditionalPanel(
-				"input.sigtype == 'contrast'",
-				ns = ns,
-				shinyBS::tipify(
-					selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
-					"Select the contrast that you want to correlate with survival.",
-					placement = "right",
-					options = list(container = "body")
-				),
-			),
-			
-			conditionalPanel(
-				"input.sigtype == 'genelist'",
-				ns = ns,
-				shinyBS::tipify(
-					textAreaInput(
-						ns("genelist"),
-						NULL,
-						value = NULL,
-						height = "100px",
-						width = "100%",
-						rows = 4,
-						placeholder = "Paste your custom gene list"
-					),
-					"Paste a custom list of genes to be used as features.",
-					placement = "bottom"
-				)
-			),
-			
-			br(),
-			
+		),
+		
+		conditionalPanel(
+			"input.sigtype == 'genelist'",
+			ns = ns,
 			shinyBS::tipify(
-				actionLink(ns("tcga_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-				"Toggle advanced options.",
-				placement = "top",
-				options = list(container = "body")
+				textAreaInput(
+					ns("genelist"),
+					NULL,
+					value = NULL,
+					height = "100px",
+					width = "100%",
+					rows = 4,
+					placeholder = "Paste your custom gene list"
+				),
+				"Paste a custom list of genes to be used as features.",
+				placement = "bottom"
 			)
+		),
+		
+		br(),
+		
+		shinyBS::tipify(
+			actionLink(ns("tcga_options"), "Options", icon = icon("cog", lib = "glyphicon")),
+			"Toggle advanced options.",
+			placement = "top",
+			options = list(container = "body")
 		)
 	)
 }
