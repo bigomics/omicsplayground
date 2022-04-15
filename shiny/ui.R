@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
@@ -96,6 +102,7 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
         gtag,   ## Google Tags???
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
+        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "fonts.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         sever::useSever(),
@@ -105,7 +112,7 @@ createUI <- function(tabs)
         ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
-        shiny::div(class='label label-info current-user',id='authentication-user')        
+        shiny::div(class='label label-info current-user',id='authentication-user')   
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL

@@ -7,7 +7,6 @@ server <- function(input, output, session) {
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
     
-
     ## Logging of input/output events
     shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
     

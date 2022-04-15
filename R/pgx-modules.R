@@ -231,11 +231,11 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 ##================================================================================
 ##================================================================================
 
-plotWidget <- function(id) {
+plotWidget <- function(id,...) {
     ns <- shiny::NS(id)
-    shiny::uiOutput(ns("widget"))
+    shiny::uiOutput(ns("widget"),...)
 }
-    
+
 plotModule <- function(input, output, session,
                        func, func2=NULL,
                        info.text="Figure", title="",
@@ -640,8 +640,8 @@ plotModule <- function(input, output, session,
     res.1 <- res[1]
     res.2 <- res[2]
     ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
-    width.1 <- ifnotchar.int(width[1])
-    width.2 <- ifnotchar.int(width[2])
+    width.1  <- ifnotchar.int(width[1])
+    width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
     
