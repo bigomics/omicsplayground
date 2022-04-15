@@ -6,6 +6,7 @@
 library(shiny)
 setwd("..")
 source("./global.R")  ## global variable
+source("./modules/plotModules/examplePlotModule.R")  ## example
 
 load("../data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)
