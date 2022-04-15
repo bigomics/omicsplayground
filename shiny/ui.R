@@ -163,6 +163,7 @@ createUI <- function(tabs)
             )
         ),
         sidebar = bigdash::sidebar(
+            "Menu",
             bigdash::sidebarItem(
                 "Home",
                 "home-tab"
@@ -248,6 +249,9 @@ createUI <- function(tabs)
                 "cell-tab"
             )
         ),
+        settings = bigdash::settings(
+            "Settings"
+        ), 
         bigdash::sidebarHelp(
             bigdash::sidebarTabHelp(
                 "home-tab",

@@ -12,9 +12,8 @@ downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
 
 LoadingInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shinyBS::tipify( shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
-               "Show more information about this module.")
+    bigdash::tabSettings(
+        shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
     )
 }
 
