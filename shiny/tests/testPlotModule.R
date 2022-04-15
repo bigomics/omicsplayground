@@ -8,22 +8,23 @@ setwd("..")
 source("./global.R")  ## global variable
 source("./modules/plotModules/examplePlotModule.R")  ## example
 
-load("../data/example-data.pgx",verbose=1)
-ngs = pgx.initialize(ngs)
+load("../data/example-data.pgx", verbose = 1)
+#load("../data/GSE72056-scmelanoma.pgx", verbose = 1)
+ngs <- pgx.initialize(ngs)
 
 ui = fluidPage(
     fillRow(
         height = 600,
         examplePlotModuleUI("example"),
-        dataviewTSNEPlotModuleUI("tsne1", height=c(600,800)),
-        dataviewTSNEPlotModuleUI("tsne2", height=c(600,800))
+        dataviewTSNEPlotModuleUI("tsne1", height = c(600,800)),
+        dataviewTSNEPlotModuleUI("tsne2", height = c(600,800))
     )
 )
 
 server = function(input, output, session) {
 
-    examplePlotModuleServer("example")
-
+    # examplePlotModuleServer("example")
+     
     filterStates <- list(
         search_gene = "ETAA1",
         data_samplefilter = NULL,
@@ -33,7 +34,7 @@ server = function(input, output, session) {
 
     dataviewTSNEPlotModuleServer(
         "tsne1", reactive(ngs), filterStates, 
-        watermark=FALSE
+        watermark = FALSE
     )
 
     filterStates2 <- list(
@@ -45,8 +46,9 @@ server = function(input, output, session) {
 
     dataviewTSNEPlotModuleServer(
         "tsne2", reactive(ngs), filterStates2, 
-        watermark=FALSE
+        watermark = FALSE
     )    
 }
 
-shinyApp(ui, server=server, options=list(launch.browser=TRUE))
+#shinyApp(ui, server = server, options = list(launch.browser = TRUE))
+shinyApp(ui, server = server)
