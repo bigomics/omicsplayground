@@ -17,18 +17,20 @@ message("\n")
 
 ## should we migrate all OPTIONS into this file??
 
-Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
-Sys.setlocale("LC_TIME","en_US.UTF-8")
+if(Sys.info()["sysname"] != "Windows") {
+    Sys.setlocale("LC_TIME","en_US.UTF-8")
+}
+
 ##Sys.setlocale("LC_ALL", "C")  ## really??
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
-options(shiny.fullstacktrace=TRUE)
+options(shiny.fullstacktrace = TRUE)
 reticulate::use_miniconda('r-reticulate')
 
 message("[MAIN] reading global.R ...")
-##OPG     = "~/Playground/omicsplayground"
 OPG       = ".."
+OPG       = sub("/omicsplayground/.*","/omicsplayground",getwd())
 RDIR      = file.path(OPG,"R")
 FILES     = file.path(OPG,"lib")
 FILESX    = file.path(OPG,"libx")
@@ -77,6 +79,11 @@ message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
 
+if(file.exists("Renviron.site")) {
+    message("Loading local Renviron.site")    
+    readRenviron("Renviron.site")
+}
+
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
 envcat("PLAYGROUND_AUTHENTICATION")
@@ -112,15 +119,13 @@ message("**************** READ FUNCTIONS ****************")
 message("************************************************")
 
 source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
-source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
 source(file.path(RDIR,"ggplot-theme.R"))
 
 
-if(0) {    
-    ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
@@ -263,13 +268,6 @@ ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
-
-# boards <- dir("boards", pattern="Board.R$")
-# boards
-# for(m in boards) {
-#     message("[MAIN] loading board ",m)
-#     source(paste0("boards/",m))
-# }
 
 # load ui for each board
 source("./boards/ui/biomarker_ui.R", encoding = "UTF-8")

@@ -7,33 +7,38 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-## Speed up installation
-options(repos = c(CRAN = "http://cran.rstudio.com"))
-options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
-##options(pkgType="source")
+options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+
+if(0) {
+    ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
+    options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+    source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) 
+}
+
 options(Ncpus=8L)
 
 install.packages("devtools")
-install.packages("BiocManager", version="3.10")
+install.packages("BiocManager")
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
-    if(force || !pkg %in% installed.packages()) {
+    if(force || !pkg %in% rownames(installed.packages())) {
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
             pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
-            try(install.packages(pkg1,repos=NULL,type="source"))
+            try(install.packages(pkg1,repos=NULL,type="source",force=force))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
-            try(BiocManager::install(pkg, dependencies=NA,
-                                     ask=FALSE, update=FALSE))
+            try(BiocManager::install(
+                 pkg, dependencies=NA,force=force,ask=FALSE,update=FALSE))
             if(!require(pkg, character.only=TRUE)){
                 cat("retrying to install",pkg,"from CRAN...\n")
-                try(install.packages(pkg, dependencies=NA,
-                                     ask=FALSE, update=FALSE))
+                try(install.packages(
+                    pkg, dependencies=NA, force=force, ask=FALSE, update=FALSE))
             }
         }
     } else {
@@ -41,13 +46,18 @@ install.pkg <- function(pkg, force=FALSE) {
     }
 }
 install.pkgs <- function(pkgs, force=FALSE) {
+    pkgs <- sort(unique(pkgs))
     for(pkg in pkgs) install.pkg(pkg, force=force)
 }
 remove.pkg <- function(pkg) {
-    if(pkg %in% installed.packages()) remove.packages(pkg)
+    if(pkg %in% rownames(installed.packages())) try(remove.packages(pkg))
 }
 remove.pkgs <- function(pkgs, force=FALSE) {
-    for(pkg in pkgs) remove.pkg(pkg)
+    pkgs <- sort(unique(pkgs))
+    for(pkg in pkgs) {
+        cat("removing",pkg,"\n")        
+        remove.pkg(pkg)
+    }
 }
 
 autoscan.pkgs <- function() {
@@ -58,37 +68,27 @@ autoscan.pkgs <- function() {
 
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
+
+    pkg <- gsub(".*[rR]:","",pkg)  ## strip filename
+    pkg <- grep("^[#]",pkg,invert=TRUE,value=TRUE)  ## no comments
     
     pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
     pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
     pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
-    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)
-
-    pkg <- unique(pkg)
+    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)  ## skip commented out
+    pkg <- grep("^[a-z]",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
+    pkg <- grep("[a-z.]*",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out        
+    pkg <- setdiff(pkg,c(""))
+    pkg <- sort(unique(pkg))
     pkg
 }
-
-
-
-BIG.NOTUSED <- c(
-    "reactome.db", ## >2GB!!!
-    "BH","PCSF",
-    "DeMixT", ## purify
-    "RNAseqData.HNRNPC.bam.chr14",
-    ##"org.Mm.eg.db",
-    "tximportData"
-    ##"EnsDb.Hsapiens.v86",
-    ##"EnsDb.Mmusculus.v79",
-    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
-    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
-)
 
 PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
     ## "infercnv","pathview",
-    "mygene","diptest")
+    "mygene","diptest","edgeR","DESeq2")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -96,7 +96,7 @@ PKG.MANUAL <- c(
 
 base.pkg = c("shiny","flexdashboard","shinydashboard",
              "shinydashboardPlus",'R.utils','shinythemes')
-install.pkgs(base.pkg)
+install.pkgs(base.pkg, force=TRUE)
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
@@ -116,7 +116,7 @@ pkg.needed <- c('umap', 'corrplot', 'wordcloud', 'wordcloud2', 'optparse', 'doco
 
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
-install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
+install.pkgs( setdiff(pkg.used,PKG.MANUAL) )
 
 r.pkg <- c('TxDb.Hsapiens.UCSC.hg19.knownGene',
            'TxDb.Mmusculus.UCSC.mm10.knownGene')
@@ -135,6 +135,7 @@ file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org")
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))
+install.packages("https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz")
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
@@ -196,8 +197,20 @@ reticulate::use_miniconda('r-reticulate')
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages??
 ##---------------------------------------------------------------------
-BIG.NOTUSED
-## remove.pkgs(BIG.NOTUSED)
+BIG.NOTUSED <- c(
+    "reactome.db", ## >2GB!!!
+    "BH","PCSF","terra",
+    "DeMixT", ## purify
+    "RNAseqData.HNRNPC.bam.chr14",
+    "RSpectra",
+    ##"org.Mm.eg.db",
+    "tximportData"
+    ##"EnsDb.Hsapiens.v86",
+    ##"EnsDb.Mmusculus.v79",
+    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
+    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
+)
+remove.pkgs(BIG.NOTUSED)
 
 
 if(0) {
@@ -235,6 +248,28 @@ if(0) {
         
     lisc1[grep("AGPL|GPL-3",lisc1[,"License"]),]
 
+    ## Using binary packages from RStudio
+    options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+    source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+    options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/jammy/latest"))
+    ##options(repos = c(REPO_NAME = "https://stat.ethz.ch/CRAN/"))
+    ##options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
+    remove.packages("shiny")
+    install.packages("shiny")
+    packageVersion('shiny')
     
+    remove.packages("dplyr")
+    install.packages("dplyr")
+    packageVersion('dplyr')
+
+    remove.packages("stringi")
+    install.packages("stringi")
+    packageVersion('stringi')
+
+    BiocManager::install("dplyr", dependencies=NA, ask=FALSE, update=FALSE, force=TRUE)
+    install.pkg("dplyr")
     
 }

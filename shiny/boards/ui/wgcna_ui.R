@@ -75,13 +75,13 @@ WgcnaUI <- function(id) {
                     plotWidget(ns('umap')),
                     plotWidget(ns('moduleGraph'))
                 )
-        )),
+            )),
             shiny::tabPanel("Modules",
                 shiny::fillCol(
                 flex = c(NA, 0.05, 2, 0.07, 1),
                 height = 700,
                 tags$div(
-                HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module–trait analysis identifies modules that are significantly
+                HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module-trait analysis identifies modules that are significantly
                 associated with the measured clinical traits by quantifying the association as the correlation of the
                 eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated
                 to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of
@@ -101,7 +101,7 @@ WgcnaUI <- function(id) {
                     shiny::br(),
                     tableWidget(ns("enrichTable"))
                 )
-        )),
+            )),
             shiny::tabPanel("Eigengenes",
                 shiny::fillCol(
                 flex = c(NA,0.04,2),
