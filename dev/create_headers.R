@@ -6,7 +6,8 @@ create_headers <- function(path='R', hdr.file="R/00Headers.R") {
 
     ## exclude some files
     rfiles <- setdiff(rfiles,hdr.file)
-    rfiles <- grep("global.R|00Headers.R",rfiles,invert=TRUE,value=TRUE)
+    rfiles <- grep("global.R|00Headers.R|requirements.R",
+                   rfiles,invert=TRUE,value=TRUE)
     
     write('# Generated automatically: do not edit by hand', hdr.file, append=FALSE)    
     i=1
