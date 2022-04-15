@@ -2,6 +2,15 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
+
+#' DataView module server function
+#'
+#' @description A shiny Module (server code).
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#' @param inputData Reactive expression that provides the input ngs/pgx data object 
+#'
+#' @export 
 DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE

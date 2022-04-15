@@ -3,6 +3,14 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+
+#' DataView module UI Input function
+#'
+#' @description A shiny Module. Renders the input parts (sidebar contents) for the module.
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
@@ -34,6 +42,13 @@ DataViewInputs <- function(id) {
     )
 }
 
+#' DataView module UI output function
+#'
+#' @description Renders the output part for the module as tabsetPanel object
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tabsetPanel(
