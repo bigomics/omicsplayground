@@ -71,6 +71,7 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(ggplot2)
+library(concaveman)
 
 source("utils/utils.R", local = TRUE)
 
@@ -121,6 +122,7 @@ source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
+source(file.path(RDIR,"ggplot-theme.R"))
 
 
 if(0) {
@@ -310,6 +312,11 @@ source("./boards/server/user_server.R", encoding = "UTF-8")
 source("./boards/server/wgcna_server.R", encoding = "UTF-8")
 source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
 
+## load plotModules
+source("./modules/plotModules/PlotModule.R", encoding = "UTF-8")
+source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
+
+##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
 if(0 && DEV && dir.exists("modulesx")) {
     ## Very early development modules/boards (ALWAYS SHOW FOR DEV)
