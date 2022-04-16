@@ -23,3 +23,5 @@ Encoding: UTF-8
 Language: en-US
 LazyData: true
 RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)

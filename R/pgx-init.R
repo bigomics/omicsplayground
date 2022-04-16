@@ -9,12 +9,6 @@
 ##-----------------------------------------------------------------------------
 ## GLOBAL variables
 ##-----------------------------------------------------------------------------
-if(0) {
-    RDIR='~/Playground/omicsplayground/R'
-    FILES='~/Playground/omicsplayground/lib'
-    source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
-}
-source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
 INIT.FILE <- file.path(OPG,"cache/global-init.rda") ## avoid rw permission
