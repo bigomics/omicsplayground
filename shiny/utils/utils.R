@@ -29,7 +29,6 @@ dbg <- function(...) {
 	message(paste0("DBG ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
-
 ## Parse access logs
 ACCESS.LOG <- NULL
 if(0) {
@@ -41,19 +40,6 @@ if(0) {
     ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get="playground")
     names(ACCESS.LOG)
     sum(ACCESS.LOG$visitors$count)
-}
-
-##-----------------------------------------------------
-## Initialize ORCA server (DEPRECATED)
-##-----------------------------------------------------
-## see: pgx-module.R
-ORCA <- NULL
-if(FALSE && getOption("OMICS_ORCA_RUN", TRUE)){
-    ORCA <- initOrca(launch=TRUE) 
-    class(ORCA)
-    if(is.null(ORCA)) {
-        stop("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
-    }
 }
 
 
@@ -145,59 +131,61 @@ toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
 }
 
 
-sever_screen <- shiny::tagList(
-    shiny::tags$h1(
-        "Houston, we have a problem", style = "color:white;font-family:lato;"
-    ),
-    shiny::p("You have been disconnected!", style="font-size:15px;"),
-    shiny::br(),
-    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
-                          width=500,height=250)),
-    shiny::div(
-        id="logSub",
-##        shiny::textAreaInput(
-##               inputId = "logMsg",
-##               label = "",
-##               width = "100%", height="80px",
-##               value = "If this was a crash, please help and describe here the last thing you did."
-##        ),
-        shiny::br(),
-        shiny::tags$a(
-            onClick = "sendLog()", 
-            class = "btn btn-sm btn-warning", 
-            "Send error to developers"
-        )
-    ),
-    shiny::div(
-        id="logSubbed",
-        style="display:none;",
-        shiny::p("Mission Control has been notified. Thank you!", style="font-size:15px;")
-    ),
-    shiny::br(),
-    shiny::div(
-        id="sever-reload-btn",
-        sever::reload_button("Relaunch", class = "info"),
-        style="display:none;"             
-    )
-)
-
 ##======================================================================
-##==================== FUNCTIONS =======================================
+##======================== SEVER =======================================
 ##======================================================================
 
-sever_screen0 <- shiny::tagList(
-    shiny::tags$h1(
-      "Houston, we have a problem", style="color:white;font-family:lato;"
-    ),
-    shiny::p("You have been disconnected!", style="font-size:15px;"),
-    shiny::br(),
-    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
+sever_screen <- function() {
+    shiny::tagList(
+               shiny::tags$h1(
+                               "Houston, we have a problem", style = "color:white;font-family:lato;"
+                           ),
+               shiny::p("You have been disconnected!", style="font-size:15px;"),
+               shiny::br(),
+               shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
+                                     width=500,height=250)),
+               shiny::div(
+                          id="logSub",
+                          ##        shiny::textAreaInput(
+                          ##               inputId = "logMsg",
+                          ##               label = "",
+                          ##               width = "100%", height="80px",
+                          ##               value = "If this was a crash, please help and describe here the last thing you did."
+                          ##        ),
+                          shiny::br(),
+                          shiny::tags$a(
+                                          onClick = "sendLog()", 
+                                          class = "btn btn-sm btn-warning", 
+                                          "Send error to developers"
+                                      )
+                      ),
+               shiny::div(
+                          id="logSubbed",
+                          style="display:none;",
+                          shiny::p("Mission Control has been notified. Thank you!", style="font-size:15px;")
+                      ),
+               shiny::br(),
+               shiny::div(
+                          id="sever-reload-btn",
+                          sever::reload_button("Relaunch", class = "info"),
+                          style="display:none;"             
+                      )
+           )
+}
+
+sever_screen0 <- function() {
+    shiny::tagList(
+               shiny::tags$h1(
+                               "Houston, we have a problem", style="color:white;font-family:lato;"
+                           ),
+               shiny::p("You have been disconnected!", style="font-size:15px;"),
+               shiny::br(),
+               shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
                           width=500,height=250)),
-    shiny::br(),
-    sever::reload_button("Relaunch", class = "info")
-)
-
-
+               shiny::br(),
+               sever::reload_button("Relaunch", class = "info")
+           )
+}
 
 
 sever_screen2 <- function(session_id) {

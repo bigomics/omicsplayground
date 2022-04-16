@@ -325,6 +325,7 @@ FeatureMapBoard <- function(input, output, session, inputData)
         ##plotlib = 'ggplot',
         title = "GENE MAP", label="a",
         func = geneUMAP.RENDER,
+        plotlib = 'base',
         ##outputFunc = "function(x,...) shiny::plotOutput(x,brush='geneUMAP_brush',...)",        
         outputFunc = sub("XXX",ns("geneUMAP_brush"),"function(x,...)plotOutput(x,brush='XXX',...)"),
         func2 = geneUMAP.RENDER2, 

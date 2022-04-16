@@ -43,9 +43,9 @@ id="GSE100035"
 id="GSE102908"
 id="GSE102908"
 id="GSE141499"
-ARCHSH5 = file.path(FILESX,"human_matrix.h5")
+##ARCHSH5 = file.path(FILESX,"human_matrix.h5")
 
-pgx.getGEOseries <- function(id, archs.h5=ARCHSH5, convert.hugo=TRUE)
+pgx.getGEOseries <- function(id, archs.h5="human_matrix.h5", convert.hugo=TRUE)
 {
     ##
     ## Highly automagic download of GEO datasets from different

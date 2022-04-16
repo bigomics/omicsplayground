@@ -231,11 +231,11 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 ##================================================================================
 ##================================================================================
 
-plotWidget <- function(id) {
+plotWidget <- function(id,...) {
     ns <- shiny::NS(id)
-    shiny::uiOutput(ns("widget"))
+    shiny::uiOutput(ns("widget"),...)
 }
-    
+
 plotModule <- function(input, output, session,
                        func, func2=NULL,
                        info.text="Figure", title="",
@@ -640,8 +640,8 @@ plotModule <- function(input, output, session,
     res.1 <- res[1]
     res.2 <- res[2]
     ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
-    width.1 <- ifnotchar.int(width[1])
-    width.2 <- ifnotchar.int(width[2])
+    width.1  <- ifnotchar.int(width[1])
+    width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
     
@@ -700,23 +700,34 @@ plotModule <- function(input, output, session,
         }
         list( outputFunc=outputFunc, renderFunc=renderFunc )
     }
-
-    if(is.null(outputFunc) && is.null(renderFunc)) {
+    
+    if(is.null(outputFunc) || is.null(renderFunc)) {
         out1 <- getOutputRenderFunc(plotlib, outputFunc, renderFunc)
         outputFunc = out1$outputFunc
         renderFunc = out1$renderFunc
     }
 
-    if(is.null(outputFunc2) && is.null(renderFunc2) &&
-       plotlib2 != plotlib ) {    
+    if((is.null(outputFunc2) || is.null(renderFunc2)) && plotlib2 != plotlib ) {    
         out2 <- getOutputRenderFunc(plotlib2, outputFunc2, renderFunc2)
         outputFunc2 = out2$outputFunc
         renderFunc2 = out2$renderFunc
     }
-    if(is.null(outputFunc2) && is.null(renderFunc2) &&
-       plotlib2 == plotlib ) {    
-        outputFunc2 = outputFunc
-        renderFunc2 = renderFunc
+
+    if((is.null(outputFunc2) || is.null(renderFunc2)) && plotlib2 == plotlib ) {    
+        if(is.null(outputFunc2) && !is.null(outputFunc)) outputFunc2 = outputFunc
+        if(is.null(renderFunc2) && !is.null(renderFunc)) renderFunc2 = renderFunc
+    }
+    
+    if(0) {
+        dbg("[plotModule] title=",title)
+        dbg("[plotModule] plotlib=",plotlib)
+        dbg("[plotModule] plotlib2=",plotlib2)
+        dbg("[plotModule] outputFunc=",outputFunc)
+        dbg("[plotModule] outputFunc2=",outputFunc2)
+        dbg("[plotModule] renderFunc=",renderFunc)
+        dbg("[plotModule] renderFunc2=",renderFunc2)
+        dbg("[plotModule] is.null.renderFunc=",is.null(renderFunc))
+        dbg("[plotModule] is.null.renderFunc2=",is.null(renderFunc2))
     }
     
     ##outputFunc <- sub(".*::","",outputFunc)
@@ -763,7 +774,7 @@ plotModule <- function(input, output, session,
             ##p1.base
         }, res=res.1)
     }
-
+        
     if(!is.null(func2) && plotlib2=="base") {
         render2 <- shiny::renderPlot({
             func2()
@@ -775,6 +786,17 @@ plotModule <- function(input, output, session,
     if(!is.null(func2) && plotlib2=="image") {
         render2 <- shiny::renderImage(func2(), deleteFile=FALSE)
     }
+    if(grepl("renderCachedPlot",renderFunc)) {
+        render <- shiny::renderCachedPlot(
+            func(), cacheKeyExpr = {list(csvFunc())}, res=res.1
+        )
+    }
+    if(grepl("renderCachedPlot",renderFunc2)) {
+        render2 <- shiny::renderCachedPlot(
+            func2(), cacheKeyExpr = {list(csvFunc())}, res=res.2
+        )
+    }
+
     if(is.null(render)) {
         render <- eval(parse(text=renderFunc))(func())
     }
@@ -783,7 +805,7 @@ plotModule <- function(input, output, session,
     }
     
     output$renderfigure <- render
-    output$renderpopup  <- render
+    output$renderpopup  <- render2
 
     output$popupfig <- shiny::renderUI({
         w <- width.2

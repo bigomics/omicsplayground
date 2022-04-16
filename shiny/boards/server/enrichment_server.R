@@ -36,8 +36,6 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     )
     
     GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
-    # I have no idea what this is // Stefan 21.03.2022
-    dragulaR::dragula(ns("subplots"))
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -86,11 +84,6 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
     
-    ##star.symbols <- function(n) {
-    ##    if(n==0) return("")
-    ##    paste(rep("\u2605",n),collapse="")
-    ##}
-
     selected_gsetmethods <- shiny::reactive({
         ngs <- inputData()
         shiny::req(ngs)
@@ -198,11 +191,7 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
             fx[is.na(fx)] = 0
             
             is.sig <- (qv <= fdr & abs(fx) >= lfc)
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='\u2605')
-            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols)
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')            
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='★')
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#9733;')
+            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='\u2605')
             names(stars) <- rownames(mx)
             
             ##------------ calculate META parameters ----------------

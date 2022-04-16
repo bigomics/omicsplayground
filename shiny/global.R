@@ -3,32 +3,42 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-#########################################################################
-##                                                                     ##
-##              Main application for Omics Playground                  ##
-##                                                                     ##
-#########################################################################
 
-message("\n\n")
-message("###############################################################")
-message("##################### OMICS PLAYGROUND ########################")
-message("###############################################################")
-message("\n")
+message("\n\n\n")
+message("  ___            _          ____  _                                              _ ")
+message(" / _ \\ _ __ ___ (_) ___ ___|  _ \\| | __ _ _   _  __ _ _ __ ___  _   _ _ __    __| |")
+message("| | | | '_ ` _ \\| |/ __/ __| |_) | |/ _` | | | |/ _` | '__/ _ \\| | | | '_ \\  / _` |")
+message("| |_| | | | | | | | (__\\__ \\  __/| | (_| | |_| | (_| | | | (_) | |_| | | | || (_| |")
+message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \\__,_|_| |_| \\__,_|")
+message("                                          |___/ |___/                              ")
+message("\n\n\n")
+
+
+message("[INIT] reading global.R ...")
 
 ## should we migrate all OPTIONS into this file??
+if(Sys.info()["sysname"] != "Windows") {
+    Sys.setlocale("LC_TIME","en_US.UTF-8")
+}
 
-Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
-Sys.setlocale("LC_TIME","en_US.UTF-8")
 ##Sys.setlocale("LC_ALL", "C")  ## really??
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
+##options(warnPartialMatchDollar = TRUE)
+##options(warnPartialMatchArgs = TRUE)    
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
+options(shiny.fullstacktrace = TRUE)
 reticulate::use_miniconda('r-reticulate')
 
-message("[MAIN] reading global.R ...")
-##OPG     = "~/Playground/omicsplayground"
-OPG       = ".."
+get_pkg_root <- function() {
+    pwd <- strsplit(getwd(),split='/')[[1]]
+    paste(pwd[1:max(grep("omicsplayground",pwd))],collapse='/')
+}
+
+## Set folders
+OPG       = get_pkg_root()
 RDIR      = file.path(OPG,"R")
+APPDIR    = file.path(OPG,"shiny")
 FILES     = file.path(OPG,"lib")
 FILESX    = file.path(OPG,"libx")
 PGX.DIR   = file.path(OPG,"data")
@@ -36,21 +46,13 @@ SIGDB.DIR = file.path(OPG,"libx/sigdb")
 
 AUTHENTICATION = "none"
 WATERMARK = FALSE
-DEBUG     = FALSE
-DEV       = dir.exists('/home/kwee')
-##DEV     = FALSE
+DEV       = FALSE
 DEBUG     = TRUE
 TIMEOUT   = 0
 
+## Allow API like calls
 ALLOW_URL_QUERYSTRING = FALSE
 ALLOW_URL_QUERYSTRING = TRUE
-
-if(0 && DEV) {
-  ## being pedantic... (https://adv-r.hadley.nz)
-  options(warnPartialMatchDollar = TRUE)
-  options(warnPartialMatchArgs = TRUE)    
-  DEBUG  = TRUE
-}
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
@@ -58,6 +60,10 @@ USERNAME   = "anonymous"
 if(SHINYPROXY) USERNAME = Sys.getenv("SHINYPROXY_USERNAME")
 
 main.start_time <- Sys.time()
+
+if(DEV) {
+    message('!!!!!!!!!!!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!!!!!!!!!!!')
+}
 
 WORKDIR = getwd()
 message(">>>>> working directory = ",WORKDIR)
@@ -68,12 +74,18 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(ggplot2)
+library(concaveman)
 
-source("utils/utils.R", local = TRUE)
+source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
+
+if(file.exists("Renviron.site")) {
+    message("Loading local Renviron.site")    
+    readRenviron("Renviron.site")
+}
 
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
@@ -99,34 +111,23 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
-DEV = (DEV && dir.exists("modulesx")) 
-##DEV = FALSE
-if(DEV) {
-    message('!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!')
-}
-
 message("\n************************************************")
 message("**************** READ FUNCTIONS ****************")
 message("************************************************")
 
 source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
-source(file.path(RDIR,"pgx-files.R"))     ## file functions
-source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
-
-
-if(0) {    
-    ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/bojkova2020-sarscov2-RC2.pgx")
-    load("../data/gtex-aging-n40svaNnm.pgx")
-    load("../data/axel-test3.pgx")        
-    ngs = pgx.initialize(ngs)
-}
+source(file.path(RDIR,"ggplot-theme.R"))
 
 message("\n************************************************")
-message("************* parsing OPTIONS file *************")
+message("**************** LOAD LIBRARIES ****************")
+message("************************************************")
+
+load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
+
+
+message("\n************************************************")
+message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
@@ -145,7 +146,7 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
     opt$AUTHENTICATION = "none"
     ## opt$ENABLE_USERDIR = FALSE
-    ## stop("[MAIN] FATAL Missing firebase.rds file")
+    ## stop("[INIT] FATAL Missing firebase.rds file")
 }
 
 ## copy to global.R environment
@@ -156,9 +157,62 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
 
+message("\n************************************************")
+message("*********** READ MODULES/BOARDS ****************")
+message("************************************************")
+
+
+BOARDS <- c("load","view","clust","expr","enrich","isect","func",
+            "word","drug","sig","scell","cor","bio","cmap","ftmap",
+            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
+if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
+if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
+
+ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
+DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
+ENABLED  <- ENABLED & !DISABLED
+ENABLED
+
+# load UI for each board
+boards_ui <- dir(file.path(APPDIR,"boards/ui"), pattern="_ui.R$",full.names=TRUE)
+for(b in boards_ui) {
+    message("[INIT] loading UI module ",basename(b))
+    source(b, encoding = "UTF-8")
+}
+
+# load server for each board
+boards_srv <- dir(file.path(APPDIR,"boards/server"), pattern="_server.R$",full.names=TRUE)
+for(b in boards_srv) {
+    message("[INIT] loading server module ",basename(b))
+    source(b, encoding = "UTF-8")
+}
+
+## loading modules
+modules <- dir(file.path(APPDIR,"modules"), pattern="Module.R$", full.names=TRUE)
+modules
+for(m in modules) {
+    message("[INIT] loading module ",basename(m))
+    source(m, encoding = "UTF-8")
+}
+
+## load plotModules
+source(file.path(APPDIR,"modules/plotModules/PlotModule.R"), encoding = "UTF-8")
+source(file.path(APPDIR,"modules/plotModules/dataviewTSNEPlotModule.R"), encoding = "UTF-8")
+
+## disable connectivity map if we have no signature database folder
+has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
+has.sigdb
+if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
+
+## Main tab titles
+MAINTABS = c("DataView","Clustering","Expression","Enrichment",
+             "Signature","CellProfiling","DEV")
+
+
+## --------------------------------------------------------------------
+## --------------------- HANDLER MANAGER ------------------------------
 ## --------------------------------------------------------------------
 ## add handlerManager for log/crash reports
-## --------------------------------------------------------------------
 
 
 http.resp <- getFromNamespace("httpResponse", "shiny")
@@ -166,31 +220,31 @@ http.resp <- getFromNamespace("httpResponse", "shiny")
 logHandler <- function(http.req){
   
 
-    dbg("[MAIN.logHandler] >>>>> called! <<<<<")
-    ##dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
-    dbg("[MAIN.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
+    dbg("[INIT.logHandler] >>>>> called! <<<<<")
+    ##dbg("[INIT.logHandler] names(http.req) = ",sort(names(http.req)))
+    dbg("[INIT.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
     
     if(!http.req$PATH_INFO == "/log") {
         return()
     }
     
     query <- shiny::parseQueryString(http.req$QUERY_STRING)
-    dbg("[MAIN.logHandler] names(query) = ",names(query))
-    dbg("[MAIN.logHandler] query$msg = ",query$msg)
+    dbg("[INIT.logHandler] names(query) = ",names(query))
+    dbg("[INIT.logHandler] query$msg = ",query$msg)
     
     if(is.null(query$msg)) {
-        dbg("[MAIN.logHandler] msg is NULL!")
+        dbg("[INIT.logHandler] msg is NULL!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
-        dbg("[MAIN.logHandler] msg is empty!")        
+        dbg("[INIT.logHandler] msg is empty!")        
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
-        dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
+        dbg("[INIT.logHandler] missing HONCHO_TOKEN!")        
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
@@ -208,7 +262,7 @@ logHandler <- function(http.req){
     log.file
     
     if(length(log.file)==0) {
-        dbg("[MAIN.logHandler] could not resolve log file for session ID = ",id)
+        dbg("[INIT.logHandler] could not resolve log file for session ID = ",id)
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
@@ -238,104 +292,14 @@ handlerManager <- getFromNamespace("handlerManager", "shiny")
 handlerManager$removeHandler("/log")
 handlerManager$addHandler(logHandler, "/log")
 
-## --------------------------------------------------------------------
-## ----------------- READ MODULES/BOARDS ------------------------------
-## --------------------------------------------------------------------
 
-modules <- dir("modules", pattern="Module.R$")
-modules
-for(m in modules) {
-    message("[MAIN] loading module ",m)
-    source(paste0("modules/",m))
-}
+message("\n\n")
+message("=================================================================")
+message("=================== GLOBAL INIT DONE ============================")
+message("=================================================================")
+message("\n\n")
 
-BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-            "word","drug","sig","scell","cor","bio","cmap","ftmap",
-            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
-if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
-if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
-
-ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
-DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
-ENABLED  <- ENABLED & !DISABLED
-ENABLED
-
-# boards <- dir("boards", pattern="Board.R$")
-# boards
-# for(m in boards) {
-#     message("[MAIN] loading board ",m)
-#     source(paste0("boards/",m))
-# }
-
-# load ui for each board
-source("./boards/ui/biomarker_ui.R", encoding = "UTF-8")
-source("./boards/ui/clustering_ui.R", encoding = "UTF-8")
-source("./boards/ui/compare_ui.R", encoding = "UTF-8")
-source("./boards/ui/connectivity_ui.R", encoding = "UTF-8")
-source("./boards/ui/correlation_ui.R", encoding = "UTF-8")
-source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
-source("./boards/ui/drugconnectivity_ui.R", encoding = "UTF-8")
-source("./boards/ui/enrichment_ui.R", encoding = "UTF-8")
-source("./boards/ui/expression_ui.R", encoding = "UTF-8")
-source("./boards/ui/featuremap_ui.R", encoding = "UTF-8")
-source("./boards/ui/functional_ui.R", encoding = "UTF-8")
-source("./boards/ui/intersection_ui.R", encoding = "UTF-8")
-source("./boards/ui/loading_ui.R", encoding = "UTF-8")
-source("./boards/ui/signature_ui.R", encoding = "UTF-8")
-source("./boards/ui/singlecell_ui.R", encoding = "UTF-8")
-source("./boards/ui/tcga_ui.R", encoding = "UTF-8")
-source("./boards/ui/user_ui.R", encoding = "UTF-8")
-source("./boards/ui/wgcna_ui.R", encoding = "UTF-8")
-source("./boards/ui/wordcloud_ui.R", encoding = "UTF-8")
-
-
-# load server for each board
-source("./boards/server/biomarker_server.R", encoding = "UTF-8")
-source("./boards/server/clustering_server.R", encoding = "UTF-8")
-source("./boards/server/compare_server.R", encoding = "UTF-8")
-source("./boards/server/connectivity_server.R", encoding = "UTF-8")
-source("./boards/server/correlation_server.R", encoding = "UTF-8")
-source("./boards/server/dataview_server.R", encoding = "UTF-8")
-source("./boards/server/drugconnectivity_server.R", encoding = "UTF-8")
-source("./boards/server/enrichment_server.R", encoding = "UTF-8")
-source("./boards/server/expression_server.R", encoding = "UTF-8")
-source("./boards/server/featuremap_server.R", encoding = "UTF-8")
-source("./boards/server/functional_server.R", encoding = "UTF-8")
-source("./boards/server/intersection_server.R", encoding = "UTF-8")
-source("./boards/server/loading_server.R", encoding = "UTF-8")
-source("./boards/server/signature_server.R", encoding = "UTF-8")
-source("./boards/server/singlecell_server.R", encoding = "UTF-8")
-source("./boards/server/tcga_server.R", encoding = "UTF-8")
-source("./boards/server/user_server.R", encoding = "UTF-8")
-source("./boards/server/wgcna_server.R", encoding = "UTF-8")
-source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
-
-
-##ENABLED[c("wgcna","system","multi")] <- FALSE
-ENABLED[c("system","multi","corsa")] <- FALSE 
-if(0 && DEV && dir.exists("modulesx")) {
-    ## Very early development modules/boards (ALWAYS SHOW FOR DEV)
-    ##
-    xboards <- dir("modulesx", pattern="Board.R$")
-    xboards
-    m=xboards[1]
-    for(m in xboards) {
-        message("[MAIN] loading DEVELOPMENT modules ",m)
-        source(paste0("modulesx/",m))
-    }
-    ENABLED[] <- TRUE  ## enable all modules
-    boards <- unique(c(boards, xboards))
-}
-ENABLED
-
-## disable connectivity map if we have no signature database folder
-has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
-has.sigdb
-if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
-
-MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","DEV")
-
+## Calculate init time
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[MAIN] main init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[INIT] main init time = ",main.init_time," ",attr(main.init_time,"units"))

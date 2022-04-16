@@ -2,6 +2,15 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
+
+#' DataView module server function
+#'
+#' @description A shiny Module (server code).
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#' @param inputData Reactive expression that provides the input ngs/pgx data object 
+#'
+#' @export 
 DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
@@ -35,6 +44,7 @@ DataViewBoard <- function(input, output, session, inputData)
         allowfullscreen></iframe></center>
     ')
 
+   
     ## ------- observe functions -----------
     shiny::observeEvent( input$data_info, {
         shiny::showModal(shiny::modalDialog(
@@ -42,7 +52,7 @@ DataViewBoard <- function(input, output, session, inputData)
             shiny::HTML(data_infotext),
             easyClose = TRUE, size="l"))
     })
-
+    
     ## update filter choices upon change of data set
     shiny::observe({
         ngs <- inputData()
@@ -51,14 +61,12 @@ DataViewBoard <- function(input, output, session, inputData)
         ## levels for sample filter
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
-        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-        listGenes <- data.table::as.data.table(genes)
-        names(listGenes) = '(type gene if missing!)'
-        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
-        selgene = names(sort(-fc2))[1] ## most var gene??
-        
-        sel1 = which(genes==selgene)
-        shiny::updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
+
+##        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
+##        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+##        selgene = names(sort(-fc2))[1] ## most var gene??        
+##        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene, server=TRUE)
+
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
@@ -69,6 +77,44 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
 
+    shiny::observeEvent( input$data_type, {
+        ngs = inputData()
+        if(input$data_type %in% c("counts","CPM")) {
+            pp <- rownames(ngs$counts)
+        } else {
+            ## log2CPM
+            pp <- rownames(ngs$X)
+        }
+
+        ## gene filter. 
+        genes <- sort(ngs$genes[pp,]$gene_name)
+        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+        genes = intersect(names(sort(-fc2)),genes) ## most var gene??
+        selgene <- genes[1]
+        genes1 <- unique(c(selgene,sort(genes)))
+        if(length(genes1)>1000) {
+            genes1 <- c(sort(genes1[1:1000]),"(type SYMBOL for more genes...)",genes1[1001:length(genes1)])
+        }
+        shiny::updateSelectizeInput(session,'search_gene', choices=genes1, selected=selgene,
+                                    ##options = list(maxOptions = 9999999),
+                                    options = list(maxOptions = 1001),                                    
+                                    server = TRUE)
+
+    })
+
+    last_search_gene <- reactiveVal()
+    
+    input_search_gene <- reactive({
+        if( input$search_gene %in% c("(type SYMBOL for more genes...)","")) {
+            ngs <- inputData()
+            gene1 <- last_search_gene() 
+            return(gene1)
+        }
+        last_search_gene(input$search_gene)
+        return(input$search_gene)
+    })
+
+    
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
@@ -85,7 +131,6 @@ DataViewBoard <- function(input, output, session, inputData)
     data_geneInfo_text = paste0('For more information about the the selected gene, follow the hyperlinks to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
     data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
 
-
     ##----------------------------------------------------------------------
     ##                     Average Rank plot
     ##----------------------------------------------------------------------
@@ -101,7 +146,7 @@ DataViewBoard <- function(input, output, session, inputData)
         dbg("[genePlots_averageRankPlot.RENDER] reacted")
         
         gene <- ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
         samples <- colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -144,6 +189,8 @@ DataViewBoard <- function(input, output, session, inputData)
         label="c", title="Average rank",
         add.watermark = WATERMARK
     )
+
+    
     
     ##----------------------------------------------------------------------
     ##                     Correlation plot
@@ -196,9 +243,8 @@ DataViewBoard <- function(input, output, session, inputData)
         ngs <- inputData()
         shiny::req(ngs)
 
-        gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
 
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
@@ -254,9 +300,8 @@ DataViewBoard <- function(input, output, session, inputData)
         shiny::req(ngs)
         shiny::req(input$data_groupby,input$search_gene,input$data_type)
 
-        gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
         samples = colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -383,225 +428,209 @@ DataViewBoard <- function(input, output, session, inputData)
     ## t-SNE
     ##----------------------------------------------------------------------
 
-    genePlots_tsne.RENDER <- shiny::reactive({
+    # genePlots_tsne.RENDER <- shiny::reactive({
 
 
-        ngs <- inputData()
-        shiny::req(ngs)
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
 
-        dbg("[genePlots_tsne.RENDER] reacted")
+    #     dbg("[genePlots_tsne.RENDER] reacted")
 
-        gene = "KCNN4"
-        gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-        samples = colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-        nsamples = length(samples)
+    #     gene <- ngs$genes$gene_name[1]
+    #     if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+    #     samples <- colnames(ngs$X)
+    #     if(!is.null(input$data_samplefilter)) {
+    #         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    #     }
+    #     nsamples = length(samples)
 
-        ## precompute
-        pp=rownames(ngs$genes)[1]
-        pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+    #     ## precompute
+    #     pp <- rownames(ngs$genes)[1]
+    #     pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
 
-        gx = NULL
-        ylab = NULL
-        if(input$data_type=="counts") {
-            gx = ngs$counts[pp,samples]
-            ylab="expression (counts)"
-        } else if(input$data_type=="CPM") {
-            gx = 2**ngs$X[pp,samples]
-            ylab="expression (CPM)"
-        } else if(input$data_type=="logCPM") {
-            gx = ngs$X[pp,samples]
-            ylab="expression (log2CPM)"
-        }
+    #     gx <- NULL
+    #     ylab <- NULL
+    #     if(input$data_type == "counts") {
+    #         gx <- ngs$counts[pp,samples]
+    #         ylab <- "expression (counts)"
+    #     } else if(input$data_type == "CPM") {
+    #         gx <- 2**ngs$X[pp,samples] ## TODO: is that correct with two asterisks??
+    #         ylab <- "expression (CPM)"
+    #     } else if(input$data_type == "logCPM") {
+    #         gx <- ngs$X[pp,samples]
+    #         ylab <- "expression (log2CPM)"
+    #     }
 
-        ##par(mar=c(12,2,2,1), mgp=c(2.1,0.8,0), oma=c(3,0.5,1.5,0.3))
+    #     pos <- ngs$tsne2d[samples,]
 
-        pos <- ngs$tsne2d[samples,]
+    #     fc1 <- tanh(0.99 * scale(gx)[,1])
+    #     fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+    #     ##fc1 <- tanh(0.99 * gx/sd(gx))
+    #     fc2 <- (fc1 - min(fc1))
 
-        cex1 <- 1.8*c(1.6,1.0,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-        klrpal = colorRampPalette(c("blue3", "aliceblue", "grey85", "lavenderblush", "red3"))(16)
-        klrpal = colorRampPalette(c("grey80", "grey50", "red3"))(16)
+    #     jj2 <- order(abs(fc1))
 
-        fc1 <- tanh(0.99 * scale(gx)[,1])
-        fc1 <- tanh(0.99 * scale(gx,center=FALSE)[,1])
-        ##fc1 <- tanh(0.99 * gx/sd(gx))
-        fc2 <- (fc1 - min(fc1))
-        klr1 = klrpal[1 + round(15*fc2/max(abs(fc2)))]
-        klr1 = paste0(gplots::col2hex(klr1),"88")
+    #     ## determine how to do grouping for group labels
+    #     groupby <- input$data_groupby
+    #     grp <- NULL
+    #     if(groupby != "<ungrouped>") {
+    #         grp <- factor(ngs$samples[samples, groupby])
+    #     } 
+    #     data <- data.frame(pos[jj2,])
+    #     data$grp <- grp
+    #     data$fc2 <- fc2
 
-        jj2 <- order(abs(fc1))
+    #     fig <-
+    #       ggplot(data, aes(tSNE.x, tSNE.y)) +
+    #         labs(x = "tSNE1", y = "tSNE2") +
+    #         scale_color_continuous(name = "Expression") +
+    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
+    #         theme_omics(axis_num = "xy", legendnum = TRUE)
 
-        ## determine how to do grouping for group labels
-        groupby <- input$data_groupby
-        grp <- NULL
-        if(groupby != "<ungrouped>") {
-            grp <- factor(ngs$samples[samples, groupby])
-        }
+    #     if (!is.null(grp)) {
+    #       fig <- fig +
+    #         ggforce::geom_mark_hull(
+    #           aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+    #           color = "grey33", 
+    #           size = .4,
+    #           alpha = .33 / length(unique(data$grp)),
+    #           expand = unit(2.7, "mm"), 
+    #           con.cap = unit(.01, "mm"), 
+    #           con.colour = "grey33", 
+    #           label.buffer = unit(2, "mm"),
+    #           label.fontsize = 12.5, 
+    #           label.fontface = "plain"
+    #         ) +
+    #         geom_point(aes(color = fc2), size = 1.5) +
+    #         scale_x_continuous(expand = c(.4, .4)) +
+    #         scale_y_continuous(expand = c(.4, .4)) +
+    #         scale_fill_discrete(guide = "none")
+    #     } else {
+    #       fig <- fig +
+    #         geom_point(aes(color = fc2), size = 2) +
+    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines")))
+    #    }
 
-        data <- data.frame(pos[jj2,])
-        data$grp <- grp
+    #    gridExtra::grid.arrange(fig)
 
-        ## TODO: does currently not render in app, throws `need finite 'xlim' values` error
-        ## NOTE: for now I have removed the individual color to use colors for the ellipses
-       fig <-
-         ggplot(data, aes(tSNE.x, tSNE.y)) +
-          labs(x = "tSNE1", y = "tSNE2") +
-          theme_bw(base_size = 13)
+    #     dbg("[genePlots_tsne.RENDER] done")
 
-       if (!is.null(grp)) {
-         if(input$show_cluster == 'yes') {
-         fig <- fig +
-           ggforce::geom_mark_hull(
-             aes(fill = grp, label = grp, color = grp,
-                 color = after_scale(colorspace::desaturate(color, .3)),
-                 fill = after_scale(colorspace::desaturate(color, .5))),
-             expand = unit(2.7, "mm"), con.cap = unit(.01, "mm"),
-             label.buffer = unit(2, "mm"), alpha = .15,
-             label.fontsize = 12.5, label.fontface = "plain"
-           ) +
-           geom_point(aes(color = grp), size = 1.5) +
-           scale_x_continuous(expand = c(.4, .4)) +
-           scale_y_continuous(expand = c(.4, .4)) +
-           scale_color_discrete(guide = "none") +
-           scale_fill_discrete(guide = "none")
-         } else {
-           fig <- fig +
-             geom_point(aes(color = grp), size = 2) +
-             scale_color_discrete(name = NULL)
-         }
-       } else {
-         fig <- fig +
-           #geom_point(aes(color = expression), size = 2)
-           geom_point(size = 2)
-       }
+    # })
 
-       gridExtra::grid.arrange(fig)
+    # genePlots_tsne_max.RENDER <- shiny::reactive({
 
-        dbg("[genePlots_tsne.RENDER] done")
 
+    #   ngs <- inputData()
+    #   shiny::req(ngs)
+
+    #   dbg("[genePlots_tsne.RENDER] reacted")
+
+    #   gene <- "KCNN4"
+    #   gene <- ngs$genes$gene_name[1]
+    #   if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+    #   samples <- colnames(ngs$X)
+    #   if(!is.null(input$data_samplefilter)) {
+    #     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    #   }
+    #   nsamples = length(samples)
+      
+    #   ## precompute
+    #   pp <- rownames(ngs$genes)[1]
+    #   pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+      
+    #   gx <- NULL
+    #   ylab <- NULL
+    #   if(input$data_type == "counts") {
+    #     gx <- ngs$counts[pp,samples]
+    #     ylab <- "expression (counts)"
+    #   } else if(input$data_type == "CPM") {
+    #     gx <- 2**ngs$X[pp,samples]
+    #     ylab <- "expression (CPM)"
+    #   } else if(input$data_type == "logCPM") {
+    #     gx <- ngs$X[pp,samples]
+    #     ylab <- "expression (log2CPM)"
+    #   }
+      
+    #   pos <- ngs$tsne2d[samples,]
+      
+    #   fc1 <- tanh(0.99 * scale(gx)[,1])
+    #   fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+    #   ##fc1 <- tanh(0.99 * gx/sd(gx))
+    #   fc2 <- (fc1 - min(fc1))
+      
+    #   jj2 <- order(abs(fc1))
+
+    #   ## determine how to do grouping for group labels
+    #   groupby <- input$data_groupby
+    #   grp <- NULL
+    #   if(groupby != "<ungrouped>") {
+    #     grp <- factor(ngs$samples[samples, groupby])
+    #   }
+      
+    #   data <- data.frame(pos[jj2,])
+    #   data$grp <- grp
+    #   data$fc2 <- fc2
+
+    #   fig <-
+    #     ggplot(data, aes(tSNE.x, tSNE.y)) +
+    #     labs(x = "tSNE1", y = "tSNE2") +
+    #     scale_color_continuous(name = "Expression") +
+    #     guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
+    #     theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+
+    #   if (!is.null(grp)) {
+    #     fig <- fig +
+    #       ggforce::geom_mark_hull(
+    #         aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+    #         color = "grey33", 
+    #         size = .8,
+    #         alpha = .33 / length(unique(data$grp)),
+    #         expand = unit(3.4, "mm"), 
+    #         con.cap = unit(.01, "mm"), 
+    #         con.colour = "grey33", 
+    #         label.buffer = unit(3, "mm"),
+    #         label.fontsize = 22, 
+    #         label.fontface = "plain"
+    #       ) +
+    #       geom_point(aes(color = fc2), size = 3.5) +
+    #       scale_x_continuous(expand = c(.15, .15)) +
+    #       scale_y_continuous(expand = c(.15, .15)) +
+    #       scale_fill_discrete(guide = "none")
+        
+    #   } else {
+    #     fig <- fig +
+    #       geom_point(aes(color = fc2), size = 4.5)
+    #   }
+
+    #   gridExtra::grid.arrange(fig)
+
+    #   dbg("[genePlots_tsne.RENDER] done")
+    # })
+
+    # shiny::callModule(
+    #     plotModule, "genePlots_tsne",
+    #     #plotlib = "ggplot",
+    #     func = genePlots_tsne.RENDER,
+    #     func2 = genePlots_tsne_max.RENDER,
+    #     info.text = genePlots_tsne_text,
+    #     height = imgH, pdf.width = 6, pdf.height = 6,
+    #     label = "d", title = "t-SNE clustering",
+    #     add.watermark = WATERMARK
+    # )
+
+    
+    # observe inputs
+    filterStates <- reactive({
+        list(
+            search_gene = input$search_gene,
+            sample_filter = input$sample_filter,
+            data_groupby = input$data_groupby,
+            data_type = input$data_type
+        )
     })
-
-    genePlots_tsne_max.RENDER <- shiny::reactive({
-
-
-      ngs <- inputData()
-      shiny::req(ngs)
-
-      dbg("[genePlots_tsne.RENDER] reacted")
-
-      gene = "KCNN4"
-      gene = ngs$genes$gene_name[1]
-      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-      samples = colnames(ngs$X)
-      if(!is.null(input$data_samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-      }
-      nsamples = length(samples)
-
-      ## precompute
-      pp=rownames(ngs$genes)[1]
-      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-
-      gx = NULL
-      ylab = NULL
-      if(input$data_type=="counts") {
-        gx = ngs$counts[pp,samples]
-        ylab="expression (counts)"
-      } else if(input$data_type=="CPM") {
-        gx = 2**ngs$X[pp,samples]
-        ylab="expression (CPM)"
-      } else if(input$data_type=="logCPM") {
-        gx = ngs$X[pp,samples]
-        ylab="expression (log2CPM)"
-      }
-
-      ##par(mar=c(12,2,2,1), mgp=c(2.1,0.8,0), oma=c(3,0.5,1.5,0.3))
-
-      pos <- ngs$tsne2d[samples,]
-
-      cex1 <- 1.8*c(1.6,1.0,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-      klrpal = colorRampPalette(c("blue3", "aliceblue", "grey85", "lavenderblush", "red3"))(16)
-      klrpal = colorRampPalette(c("grey80", "grey50", "red3"))(16)
-
-      fc1 <- tanh(0.99 * scale(gx)[,1])
-      fc1 <- tanh(0.99 * scale(gx,center=FALSE)[,1])
-      ##fc1 <- tanh(0.99 * gx/sd(gx))
-      fc2 <- (fc1 - min(fc1))
-      klr1 = klrpal[1 + round(15*fc2/max(abs(fc2)))]
-      klr1 = paste0(gplots::col2hex(klr1),"88")
-
-      jj2 <- order(abs(fc1))
-
-      ## determine how to do grouping for group labels
-      groupby <- input$data_groupby
-      grp <- NULL
-      if(groupby != "<ungrouped>") {
-        grp <- factor(ngs$samples[samples, groupby])
-      }
-
-      data <- data.frame(pos[jj2,])
-      data$grp <- grp
-
-      ## TODO: does currently not render in app, throws `need finite 'xlim' values` error
-      ## NOTE: for now I have removed the individual color to use colors for the ellipses
-      fig <-
-        ggplot(data, aes(tSNE.x, tSNE.y)) +
-        labs(x = "tSNE1", y = "tSNE2") +
-        theme_bw(base_size = 13)
-
-      if (!is.null(grp)) {
-        if(input$show_cluster == 'yes') {
-          fig <- fig +
-            ggforce::geom_mark_hull(
-              aes(fill = grp, label = grp, color = grp,
-                  color = after_scale(colorspace::desaturate(color, .3)),
-                  fill = after_scale(colorspace::desaturate(color, .5))),
-              expand = unit(3.4, "mm"), con.cap = unit(.01, "mm"),
-              label.buffer = unit(3, "mm"), alpha = .15,
-              label.fontsize = 22, label.fontface = "plain"
-            ) +
-            geom_point(aes(color = grp), size = 3.5) +
-            scale_x_continuous(expand = c(.15, .15)) +
-            scale_y_continuous(expand = c(.15, .15)) +
-            scale_color_discrete(guide = "none") +
-            scale_fill_discrete(guide = "none")
-        } else {
-          fig <- fig +
-            geom_point(aes(color = grp), size = 4.5) +
-            scale_color_discrete(name = NULL)
-        }
-      } else {
-        fig <- fig +
-          #geom_point(aes(color = expression), size = 4.5)
-          geom_point(size = 4.5)
-      }
-
-      gridExtra::grid.arrange(fig)
-
-      dbg("[genePlots_tsne.RENDER] done")
-
-    })
-
-    genePlots_tsne.opts <- shiny::tagList(
-      shiny::radioButtons(ns('show_cluster'), 'show cluster?', c('yes', 'no'),
-                          inline = TRUE)
-    )
-
-    shiny::callModule(
-        plotModule, "genePlots_tsne",
-        #plotlib = "ggplot",
-        func = genePlots_tsne.RENDER,
-        func2 = genePlots_tsne_max.RENDER,
-        options = genePlots_tsne.opts,
-        info.text = genePlots_tsne_text,
-        height = imgH, pdf.width = 6, pdf.height = 6,
-        label = "d", title = "t-SNE clustering",
-        add.watermark = WATERMARK
-    )
-
+    
+    dataviewTSNEPlotModuleServer("tSNEPlot", inputData, filterStates)        
+    
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
     ##----------------------------------------------------------------------
@@ -614,7 +643,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
         dbg("[data_tissueplot.RENDER] reacted")
 
-        gene <- input$search_gene
+        gene <- input_search_gene()
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
         hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
 
@@ -670,7 +699,7 @@ DataViewBoard <- function(input, output, session, inputData)
         require(org.Hs.eg.db)
         gene = "A1BG-AS1"
         gene = "CD4"
-        gene <- input$search_gene
+        gene <- input_search_gene()
         gene = toupper(sub(".*:","",gene))
 
         eg = "1017"
@@ -782,7 +811,7 @@ DataViewBoard <- function(input, output, session, inputData)
         func = counts_tab_barplot.RENDER,
         func2 = counts_tab_barplot.RENDER,
         info.text = counts_tab_barplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
         label="a",title='Total counts',
         add.watermark = WATERMARK
     )
@@ -803,9 +832,9 @@ DataViewBoard <- function(input, output, session, inputData)
         if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)); xaxt="n"}
         cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
         boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4),
-                ##col=rgb(0.2,0.5,0.8,0.3), #col="grey70",
-                ##main="counts distribution", cex.main=1.6,
-                ## cex.names=res$cx1+0.1,
+                ## col=rgb(0.2,0.5,0.8,0.3), #col="grey70",
+                ## main="counts distribution", cex.main=1.6,
+                ## cex.names=res$cx1+0.1,
                 names = names.arg, cex.axis=cex.names,#border=rgb(0.2,0.5,0.8,0.8),
                 border = 	rgb(0.824,0.824,0.824,0.9),xaxt=xaxt,
                 las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
@@ -860,7 +889,7 @@ DataViewBoard <- function(input, output, session, inputData)
         func = counts_tab_histplot.RENDER,
         func2 = counts_tab_histplot.RENDER,
         info.text = counts_tab_histplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
         label="c", title='Counts histogram',
         add.watermark = WATERMARK
     )
@@ -1106,21 +1135,6 @@ DataViewBoard <- function(input, output, session, inputData)
 
     data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
 
-    shiny::observeEvent( input$data_type, {
-        ngs = inputData()
-        if(input$data_type %in% c("counts","CPM")) {
-            pp <- rownames(ngs$counts)
-        } else {
-            ## log2CPM
-            pp <- rownames(ngs$X)
-        }
-        ## levels for sample filter
-        genes <- sort(ngs$genes[pp,]$gene_name)
-        sel = genes[1]  ## most var gene
-        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
-
-    })
-
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
@@ -1152,8 +1166,8 @@ DataViewBoard <- function(input, output, session, inputData)
 
         gene = "CD3E"
         gene = "CCR6"
-        gene = input$search_gene
-        if(is.null(gene) | gene=="" | is.na(gene)) return(NULL)
+        gene = input_search_gene()
+        if(is.null(gene) || gene=="" || is.na(gene)) return(NULL)
         ##xgene = sub(".*:","",rownames(x))
 
         ## Quickly (?) calculated correlation to selected gene

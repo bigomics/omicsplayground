@@ -54,7 +54,10 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     Matrix::head(acc)
     
     ## Extract visiting period
-    Sys.setlocale("LC_TIME","en_US.UTF-8")    
+    ## if the operating system is not windows set the timezone to LC_TIME
+    if(Sys.info()["sysname"] != "Windows") {
+        Sys.setlocale("LC_TIME","en_US.UTF-8")
+    }   
     ##Sys.setlocale("LC_TIME","C") ## just to make sure
     acc$date <- gsub("[:].*|\\[","",as.character(acc[,"date"]))
     acc$date <- as.Date(acc$date, format = "%d/%b/%Y")
@@ -221,7 +224,7 @@ pgx.readOptions <- function(file = "./OPTIONS") {
     is.bool <- sapply(opt, function(x) all(tolower(x) %in% c("true","false")))
     is.bool
     opt[is.bool] <- sapply(opt[is.bool], function(x) tolower(x) %in% c("true"))
-    names(opt) <- gsub("^[ ]*|[ ]*$","",names(opt))
+    names(opt) <- trimws(names(opt))
     opt
 }
 
@@ -643,4 +646,3 @@ pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
 
     pgxinfo
 }
-

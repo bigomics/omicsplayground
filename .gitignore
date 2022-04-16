@@ -36,13 +36,20 @@ Icon?
 Thumbs.db
 
 data/*.pgx
+data/*.pgx_
+!data/example-data.pgx
 data/*.csv
+logs/*.rds
+/logs/
 
+# Sensitive files #
+####################
 firebase.rds
 test-firestore.R
 .httr-oauth
 bigomics-extra.js
-google-analytics.html
 .Rproj.user
 omicsplayground.Rproj
-/logs/
+Renviron.site
+.Rdata
+inst/doc

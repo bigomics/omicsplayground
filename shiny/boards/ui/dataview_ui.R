@@ -3,6 +3,14 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+
+#' DataView module UI Input function
+#'
+#' @description A shiny Module. Renders the input parts (sidebar contents) for the module.
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
@@ -29,6 +37,13 @@ DataViewInputs <- function(id) {
     )
 }
 
+#' DataView module UI output function
+#'
+#' @description Renders the output part for the module as tabsetPanel object
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tabsetPanel(
@@ -56,8 +71,9 @@ DataViewUI <- function(id) {
                             height = 355, ## width=1600,
                             plotWidget(ns("genePlots_barplot")),
                             plotWidget(ns("genePlots_averageRankPlot")),
-                            plotWidget(ns("genePlots_tsne"))
-                        ),
+                            #plotWidget(ns("genePlots_tsne")),
+                            dataviewTSNEPlotModuleUI(ns("tSNEPlot"),height=340)
+                            ),
                         shiny::br(),
                         shiny::fillRow(
                             flex = c(1.5,2), id = "genePlots_row2",

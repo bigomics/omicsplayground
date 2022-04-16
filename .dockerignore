@@ -1,0 +1,10 @@
+./.github/*
+./docker
+./build/*
+./ext/*
+./logs/*
+./exampledata/*
+./cache/*
+./lib/*
+./.git/*
+./data/*

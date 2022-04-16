@@ -1,25 +1,35 @@
-server <- function(input, output, session) {
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
+#' The main application Server-side logic
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @export
+app_server <- function(input, output, session) {
     
-    message("\n========================================================")
-    message("===================== SERVER ===========================")
-    message("========================================================\n")
+    message("\n=======================================================================")
+    message("================================ SERVER =================================")
+    message("=======================================================================\n")
+
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
-    ##dbg("[SERVER] 0: names(session) = ",names(session))
-
+    
     ## Logging of input/output events
-    ##shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
     shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
     if(1 && has.honcho) {
-        ##sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+        ##sever::sever(sever_screen(), bg_color = "#000000") ## lightblue=2780e3
         sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
         ## No honcho, no email....
-        sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
+        sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
     
     setwd(WORKDIR)  ## for some reason it can change!!
@@ -55,12 +65,7 @@ server <- function(input, output, session) {
                 updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
                                     value = "CSV FILE DESCRIPTION")                
             }
-
-            ## not yet...
-            ##if(!is.null(query[['pgxdir']])) {
-            ##    pgx_dir <- query[['pgxdir']]
-            ##}
-        
+            
         })
 
     }
@@ -91,13 +96,7 @@ server <- function(input, output, session) {
     observeEvent( env[["load"]]$loaded(), {
 
         env.loaded <- env[["load"]]$loaded()
-        message("[SERVER:env.loaded] env.loaded = ",env.loaded)                                    
-        
-        ## on.exit({
-        ##     message("[SERVER:env.loaded] on.exit::removing Modal")                        
-        ##     Sys.sleep(4*modules_loaded)  
-        ##     shiny::removeModal()  ## remove modal from LoadingBoard            
-        ## })
+        message("[SERVER:env.loaded] env.loaded = ",env.loaded)    
 
         if(env[["load"]]$loaded()==0){
             message("[SERVER:env.loaded] env.loaded = FALSE")                                    
@@ -441,7 +440,6 @@ server <- function(input, output, session) {
             )
         )
 
-
         if(!all(grepl("\\@", emails))) {
             session$sendCustomMessage(
                 "referral-global-error", 
@@ -508,7 +506,6 @@ server <- function(input, output, session) {
             )
             return()
         }
-
         # remove modal
         removeModal()
     })
@@ -522,12 +519,6 @@ server <- function(input, output, session) {
         dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")        
         session$close()
-        if(0) {
-            ## Return non-zero value so docker swarm can catch and restart
-            ## the container upon on-failure
-            dbg("[SERVER:quit] force stopping App... ")                
-            stopApp(99)
-        }
     })
     
     ## This code will be run after the client has disconnected
@@ -548,10 +539,4 @@ server <- function(input, output, session) {
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
-
-
-
-    ## log(NULL)  ## force crash!!
-
-    
 }
