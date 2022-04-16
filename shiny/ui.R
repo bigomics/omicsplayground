@@ -25,18 +25,9 @@ TABVIEWS <- list(
     "comp"   = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))
 )
 
-if(DEV) {
-    if(ENABLED["corsa"]) TABVIEWS$corsa = tabView("CORSA (dev)",CorsaInputs("corsa"),
-                                                  CorsaUI("corsa"))
-    if(ENABLED["system"]) TABVIEWS$system = tabView("Systems analysis (dev)",
-                                                    SystemInputs("system"),SystemUI("system"))
-    if(ENABLED["multi"]) TABVIEWS$multi = tabView("Multi-level (dev)", MultiLevelInputs("multi"),
-                                                  MultiLevelUI("multi"))
-}
-
-names(TABVIEWS)
-TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
-names(TABVIEWS)
+##names(TABVIEWS)
+##TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
+##names(TABVIEWS)
 
 #-------------------------------------------------------
 ## Build USERMENU
@@ -135,6 +126,7 @@ createUI <- function(tabs)
         names(tablist) <- NULL
         do.call( navbarMenu, c(tablist, title=title, icon=icon) )
     }
+    
     ##tablist <- TABVIEWS[tabs]
     tablist <- list()
     i=1

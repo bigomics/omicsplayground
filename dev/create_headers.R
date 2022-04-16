@@ -8,7 +8,8 @@ create_headers <- function(path='R', hdr.file="R/00Headers.R") {
 
     ## exclude some files
     rfiles <- setdiff(rfiles,hdr.file)
-    excl.files <- c("global.R","00Headers.R","requirements.R","app.R",
+    excl.files <- c("global.R","00Headers.R","requirements.R",
+                    "app.R","server.R","ui.R",
                     "pgx-init.R","pgx-include.R")
     rfiles <- grep(paste(excl.files,collapse="|"),rfiles,invert=TRUE,value=TRUE)
     

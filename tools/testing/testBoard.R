@@ -4,10 +4,12 @@
 ##
 
 library(shiny)
-setwd("..")
-source("./global.R")  ## global variable
 
-load("../data/example-data.pgx",verbose=1)
+## RUN FROM root folder!
+
+source("shiny/global.R")  ## global variable
+
+load("data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)
 
 ui = fluidPage(

@@ -17,8 +17,7 @@ if(0) {
 source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
-INIT.FILE <- file.path(FILES,"global-init.rda")
-INIT.FILE <- "../cache/global-init.rda" ## avoid rw permission
+INIT.FILE <- file.path(OPG,"cache/global-init.rda") ## avoid rw permission
 ##unlink(INIT.FILE)
 INIT.FILE
 
