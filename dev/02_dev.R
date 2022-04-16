@@ -53,12 +53,11 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("omicsplayground")
-usethis::use_vignette("omicsplayground-quickstart")
+usethis::use_vignette("introduction")
+##usethis::use_vignette("quickstart")
 
 ## ERROR!!! seems running out of disk space...
 devtools::build_vignettes()          ## builds vignettes, copy to doc
-
 devtools::document()                 ## builds Rd in man folder
 devtools::build_manual(path='doc')   ## builds PDF reference manual
 
