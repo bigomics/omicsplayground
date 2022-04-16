@@ -50,3 +50,5 @@ bigomics-extra.js
 .Rproj.user
 omicsplayground.Rproj
 Renviron.site
+.Rdata
+inst/doc

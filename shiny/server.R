@@ -13,11 +13,11 @@ server <- function(input, output, session) {
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
     if(1 && has.honcho) {
-        ##sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+        ##sever::sever(sever_screen(), bg_color = "#000000") ## lightblue=2780e3
         sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
         ## No honcho, no email....
-        sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
+        sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
     
     setwd(WORKDIR)  ## for some reason it can change!!

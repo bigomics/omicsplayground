@@ -1,3 +1,5 @@
+
+path='R';hdr.file="R/00Headers.R"
 create_headers <- function(path='R', hdr.file="R/00Headers.R") {
 
     message("Creating header file: ",hdr.file)
@@ -6,10 +8,11 @@ create_headers <- function(path='R', hdr.file="R/00Headers.R") {
 
     ## exclude some files
     rfiles <- setdiff(rfiles,hdr.file)
-    rfiles <- grep("global.R|00Headers.R|requirements.R",
-                   rfiles,invert=TRUE,value=TRUE)
+    excl.files <- c("global.R","00Headers.R","requirements.R","app.R",
+                    "pgx-init.R","pgx-include.R")
+    rfiles <- grep(paste(excl.files,collapse="|"),rfiles,invert=TRUE,value=TRUE)
     
-    write('# Generated automatically: do not edit by hand', hdr.file, append=FALSE)    
+    write('# Generated automatically: do not edit by hand!\n', hdr.file, append=FALSE)    
     i=1
     for(i in 1:length(rfiles)) {
         code <- readLines(rfiles[i])

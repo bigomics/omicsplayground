@@ -13,7 +13,7 @@
 
 
 ## set to package root!!
-setwd("~/R/golem/testpackage/")  
+setwd("~/Playground/omicsplayground/")  ## set to package root!!
 
 ## Test your app
 

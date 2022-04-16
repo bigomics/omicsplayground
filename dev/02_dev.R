@@ -11,7 +11,7 @@
 #### CURRENT FILE: DEV SCRIPT #####
 ###################################
 
-setwd("~/R/golem/testpackage/")  ## set to package root!!
+setwd("~/Playground/omicsplayground/")  ## set to package root!!
 
 # Hack for subfolders
 source("dev/create_headers.R")
@@ -24,13 +24,13 @@ file.show('NAMESPACE')
 
 ## Add modules ----
 ## Create a module infrastructure in R/
-golem::add_module(name = "module1", with_test = TRUE) # Name of the module
-golem::add_module(name = "module2", export=TRUE, with_test = TRUE) # Name of the module
+#golem::add_module(name = "module1", with_test = TRUE) # Name of the module
+#golem::add_module(name = "module2", export=TRUE, with_test = TRUE) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
-golem::add_fct("helpers", with_test = TRUE)
-golem::add_utils("helpers", with_test = TRUE)
+#golem::add_fct("helpers", with_test = TRUE)
+#golem::add_utils("helpers", with_test = TRUE)
 
 ## External resources
 ## Creates .js and .css files at inst/app/www
@@ -50,12 +50,13 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("testpackage")
-usethis::use_vignette("testpackage-howto")
-devtools::build_vignettes()     ## builds vignettes in doc folder
-devtools::build_manual(path='doc')    ## builds PDF reference 
-devtools::document()            ## builds Rd in man folder
+usethis::use_vignette("omicsplayground")
+usethis::use_vignette("omicsplayground-quickstart")
 
+## NEED RETHINK: seems running out of disk space...
+##devtools::build_vignettes()          ## builds vignettes, copy to doc folder
+devtools::document()                 ## builds Rd in man folder
+devtools::build_manual(path='doc')   ## builds PDF reference 
 
 ## Code Coverage----
 ## Set the code coverage service ("codecov" or "coveralls")
