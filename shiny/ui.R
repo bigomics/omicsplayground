@@ -20,27 +20,12 @@ app_ui <- function() {
 
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {
-        upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='show_plans()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
         upgrade.tab <- bigdash::navbarDropdownItem(
             "Upgrade",
             onClick = "show_plans()"
         )
     }
 
-    user.menu <- shiny::navbarMenu(
-        ##title="User",
-        title=icon("user-circle","fa"),                     
-        user.tab,
-        upgrade.tab,
-        "----",
-        shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation</a>")),
-        shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-        shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
-        shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
-        "----",         
-        logout.tab,
-        stop.tab
-    )
     gtag2 <- NULL
     if(Sys.getenv("OMICS_GOOGLE_TAG")!="") {
         ## Add Google Tag manager body code
