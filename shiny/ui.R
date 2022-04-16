@@ -11,7 +11,6 @@ app_ui <- function() {
     )
 
     ## conditionally add if firebase authentication is enabled
-    stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</a>"))
     if(opt$AUTHENTICATION == "shinyproxy") {
         ## For ShinyProxy we need to redirect to /logout for clean session
         ## logout. Then we need a redirect to the /login page.
