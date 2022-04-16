@@ -54,7 +54,7 @@ usethis::use_vignette("omicsplayground")
 usethis::use_vignette("omicsplayground-quickstart")
 
 ## NEED RETHINK: seems running out of disk space...
-##devtools::build_vignettes()          ## builds vignettes, copy to doc folder
+devtools::build_vignettes()          ## builds vignettes, copy to doc folder
 devtools::document()                 ## builds Rd in man folder
 devtools::build_manual(path='doc')   ## builds PDF reference 
 

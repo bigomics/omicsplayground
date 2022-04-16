@@ -3,11 +3,6 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-#########################################################################
-##                                                                     ##
-##              Main application for Omics Playground                  ##
-##                                                                     ##
-#########################################################################
 
 message("\n\n\n")
 message("  ___            _          ____  _                                              _ ")
@@ -18,8 +13,10 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
-## should we migrate all OPTIONS into this file??
 
+message("[INIT] reading global.R ...")
+
+## should we migrate all OPTIONS into this file??
 if(Sys.info()["sysname"] != "Windows") {
     Sys.setlocale("LC_TIME","en_US.UTF-8")
 }
@@ -38,11 +35,7 @@ get_pkg_root <- function() {
     paste(pwd[1:max(grep("omicsplayground",pwd))],collapse='/')
 }
 
-message("[MAIN] reading global.R ...")
-
 ## Set folders
-OPG       = ".."
-OPG       = sub("/omicsplayground/.*","/omicsplayground",getwd())
 OPG       = get_pkg_root()
 RDIR      = file.path(OPG,"R")
 APPDIR    = file.path(OPG,"shiny")
@@ -153,7 +146,7 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
     opt$AUTHENTICATION = "none"
     ## opt$ENABLE_USERDIR = FALSE
-    ## stop("[MAIN] FATAL Missing firebase.rds file")
+    ## stop("[INIT] FATAL Missing firebase.rds file")
 }
 
 ## copy to global.R environment
@@ -183,14 +176,14 @@ ENABLED
 # load UI for each board
 boards_ui <- dir(file.path(APPDIR,"boards/ui"), pattern="_ui.R$",full.names=TRUE)
 for(b in boards_ui) {
-    message("[MAIN] loading UI module ",basename(b))
+    message("[INIT] loading UI module ",basename(b))
     source(b, encoding = "UTF-8")
 }
 
 # load server for each board
 boards_srv <- dir(file.path(APPDIR,"boards/server"), pattern="_server.R$",full.names=TRUE)
 for(b in boards_srv) {
-    message("[MAIN] loading server module ",basename(b))
+    message("[INIT] loading server module ",basename(b))
     source(b, encoding = "UTF-8")
 }
 
@@ -198,7 +191,7 @@ for(b in boards_srv) {
 modules <- dir(file.path(APPDIR,"modules"), pattern="Module.R$", full.names=TRUE)
 modules
 for(m in modules) {
-    message("[MAIN] loading module ",basename(m))
+    message("[INIT] loading module ",basename(m))
     source(m, encoding = "UTF-8")
 }
 
@@ -227,31 +220,31 @@ http.resp <- getFromNamespace("httpResponse", "shiny")
 logHandler <- function(http.req){
   
 
-    dbg("[MAIN.logHandler] >>>>> called! <<<<<")
-    ##dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
-    dbg("[MAIN.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
+    dbg("[INIT.logHandler] >>>>> called! <<<<<")
+    ##dbg("[INIT.logHandler] names(http.req) = ",sort(names(http.req)))
+    dbg("[INIT.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
     
     if(!http.req$PATH_INFO == "/log") {
         return()
     }
     
     query <- shiny::parseQueryString(http.req$QUERY_STRING)
-    dbg("[MAIN.logHandler] names(query) = ",names(query))
-    dbg("[MAIN.logHandler] query$msg = ",query$msg)
+    dbg("[INIT.logHandler] names(query) = ",names(query))
+    dbg("[INIT.logHandler] query$msg = ",query$msg)
     
     if(is.null(query$msg)) {
-        dbg("[MAIN.logHandler] msg is NULL!")
+        dbg("[INIT.logHandler] msg is NULL!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
-        dbg("[MAIN.logHandler] msg is empty!")        
+        dbg("[INIT.logHandler] msg is empty!")        
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
-        dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
+        dbg("[INIT.logHandler] missing HONCHO_TOKEN!")        
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
@@ -269,7 +262,7 @@ logHandler <- function(http.req){
     log.file
     
     if(length(log.file)==0) {
-        dbg("[MAIN.logHandler] could not resolve log file for session ID = ",id)
+        dbg("[INIT.logHandler] could not resolve log file for session ID = ",id)
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
@@ -309,4 +302,4 @@ message("\n\n")
 ## Calculate init time
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[MAIN] main init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[INIT] main init time = ",main.init_time," ",attr(main.init_time,"units"))

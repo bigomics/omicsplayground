@@ -1,6 +1,6 @@
 Package: omicsplayground
 Title: Visual self-service analytics platform for big omics data
-Version: 0.0.0.9000
+Version: 3.0.00001
 Authors@R: person('BigOmics Analytics SA', '(Switzerland)', email = 'hello@bigomics.ch', role = c('cre', 'aut'))
 Description: Omics Playground is a comprehensive self-service analytics platform for the visualization, analytics and exploration of Big Omics Data. It allows biologists to apply a multitude of state-of-the-art analysis tools to their own data to explore and discover underlying biology without coding.
 License: GPL (>= 3)
