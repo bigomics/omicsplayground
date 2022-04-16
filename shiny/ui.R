@@ -35,9 +35,9 @@ app_ui <- function(request) {
     ##TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
     ##names(TABVIEWS)
 
-                                        #-------------------------------------------------------
+    ##-------------------------------------------------------
     ## Build USERMENU
-                                        #-------------------------------------------------------
+    ##-------------------------------------------------------
     user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
     ##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
@@ -72,9 +72,9 @@ app_ui <- function(request) {
 
     createUI <- function(tabs)
     {
-        message("\n======================================================")
-        message("======================= UI ===========================")
-        message("======================================================\n")
+        message("\n=======================================================================")
+        message("================================ UI ===================================")
+        message("=======================================================================\n")
 
         version <- scan("../VERSION", character())[1]
         TITLE = paste(opt$TITLE,version)

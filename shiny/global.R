@@ -9,11 +9,14 @@
 ##                                                                     ##
 #########################################################################
 
-message("\n\n")
-message("###############################################################")
-message("##################### OMICS PLAYGROUND ########################")
-message("###############################################################")
-message("\n")
+message("\n\n\n")
+message("  ___            _          ____  _                                              _ ")
+message(" / _ \\ _ __ ___ (_) ___ ___|  _ \\| | __ _ _   _  __ _ _ __ ___  _   _ _ __    __| |")
+message("| | | | '_ ` _ \\| |/ __/ __| |_) | |/ _` | | | |/ _` | '__/ _ \\| | | | '_ \\  / _` |")
+message("| |_| | | | | | | | (__\\__ \\  __/| | (_| | |_| | (_| | | | (_) | |_| | | | || (_| |")
+message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \\__,_|_| |_| \\__,_|")
+message("                                          |___/ |___/                              ")
+message("\n\n\n")
 
 ## should we migrate all OPTIONS into this file??
 
@@ -131,7 +134,7 @@ load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
 
 
 message("\n************************************************")
-message("************* parsing OPTIONS file *************")
+message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
@@ -159,6 +162,58 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
+
+
+message("\n************************************************")
+message("*********** READ MODULES/BOARDS ****************")
+message("************************************************")
+
+
+BOARDS <- c("load","view","clust","expr","enrich","isect","func",
+            "word","drug","sig","scell","cor","bio","cmap","ftmap",
+            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
+if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
+if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
+
+ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
+DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
+ENABLED  <- ENABLED & !DISABLED
+ENABLED
+
+# load UI for each board
+boards_ui <- dir(file.path(APPDIR,"boards/ui"), pattern="_ui.R$",full.names=TRUE)
+for(b in boards_ui) {
+    message("[MAIN] loading UI module ",basename(b))
+    source(b, encoding = "UTF-8")
+}
+
+# load server for each board
+boards_srv <- dir(file.path(APPDIR,"boards/server"), pattern="_server.R$",full.names=TRUE)
+for(b in boards_srv) {
+    message("[MAIN] loading server module ",basename(b))
+    source(b, encoding = "UTF-8")
+}
+
+## loading modules
+modules <- dir(file.path(APPDIR,"modules"), pattern="Module.R$", full.names=TRUE)
+modules
+for(m in modules) {
+    message("[MAIN] loading module ",basename(m))
+    source(m, encoding = "UTF-8")
+}
+
+## load plotModules
+source(file.path(APPDIR,"modules/plotModules/PlotModule.R"), encoding = "UTF-8")
+source(file.path(APPDIR,"modules/plotModules/dataviewTSNEPlotModule.R"), encoding = "UTF-8")
+
+## disable connectivity map if we have no signature database folder
+has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
+has.sigdb
+if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
+
+## Main tab titles
+MAINTABS = c("DataView","Clustering","Expression","Enrichment",
+             "Signature","CellProfiling","DEV")
 
 
 ## --------------------------------------------------------------------
@@ -244,64 +299,14 @@ handlerManager <- getFromNamespace("handlerManager", "shiny")
 handlerManager$removeHandler("/log")
 handlerManager$addHandler(logHandler, "/log")
 
-## --------------------------------------------------------------------
-## ----------------- READ MODULES/BOARDS ------------------------------
-## --------------------------------------------------------------------
-
-BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-            "word","drug","sig","scell","cor","bio","cmap","ftmap",
-            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
-if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
-if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
-
-ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
-DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
-ENABLED  <- ENABLED & !DISABLED
-ENABLED
-
-# load UI for each board
-boards_ui <- dir(file.path(APPDIR,"boards/ui"), pattern="_ui.R$",full.names=TRUE)
-for(b in boards_ui) {
-    message("[MAIN] loading UI module ",basename(b))
-    source(b, encoding = "UTF-8")
-}
-
-# load server for each board
-boards_srv <- dir(file.path(APPDIR,"boards/server"), pattern="_server.R$",full.names=TRUE)
-for(b in boards_srv) {
-    message("[MAIN] loading server module ",basename(b))
-    source(b, encoding = "UTF-8")
-}
-
-## loading modules
-modules <- dir(file.path(APPDIR,"modules"), pattern="Module.R$", full.names=TRUE)
-modules
-for(m in modules) {
-    message("[MAIN] loading module ",basename(m))
-    source(m, encoding = "UTF-8")
-}
-
-## load plotModules
-source(file.path(APPDIR,"modules/plotModules/PlotModule.R"), encoding = "UTF-8")
-source(file.path(APPDIR,"modules/plotModules/dataviewTSNEPlotModule.R"), encoding = "UTF-8")
-
-## disable connectivity map if we have no signature database folder
-has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
-has.sigdb
-if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
-
-## Main tab titles
-MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","DEV")
-
-## Calculate init time
-main.init_time <- round(Sys.time() - main.start_time,digits=4)
-main.init_time
-message("[MAIN] main init time = ",main.init_time," ",attr(main.init_time,"units"))
-
 
 message("\n\n")
 message("=================================================================")
 message("=================== GLOBAL INIT DONE ============================")
 message("=================================================================")
 message("\n\n")
+
+## Calculate init time
+main.init_time <- round(Sys.time() - main.start_time,digits=4)
+main.init_time
+message("[MAIN] main init time = ",main.init_time," ",attr(main.init_time,"units"))
