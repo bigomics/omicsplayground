@@ -551,13 +551,13 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     topEnrichedFreq_text = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
     
     topEnrichedFreq.opts = shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
+        withTooltip( shiny::radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
                              c(5,10,15),inline=TRUE, selected=15),
                "Number of top genesets to consider for counting the gene frequency."),
-        shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_gsetweight'),
+        withTooltip( shiny::checkboxInput(ns('gs_enrichfreq_gsetweight'),
                               "Weight by geneset size", TRUE),
                "Weight by (inverse) gene set size."), 
-        shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_fcweight'),
+        withTooltip( shiny::checkboxInput(ns('gs_enrichfreq_fcweight'),
                               "Weight by FC", TRUE),
                "Weight by fold-change of current contrast.")         
     )
@@ -1006,7 +1006,7 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
         height = c(imgH,750),
         width = c('auto',900),        
         options = shiny::tagList(
-            shinyBS::tipify( shiny::checkboxInput(
+            withTooltip( shiny::checkboxInput(
                 ns('gs_ungroup1'),'ungroup samples',FALSE),
                 "Ungroup samples in the plot", placement="top",
                 options = list(container = "body"))),
@@ -1024,7 +1024,7 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
         res = c(78,100),
         height = imgH,
         options = shiny::tagList(
-            shinyBS::tipify( shiny::checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
+            withTooltip( shiny::checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
                    "Ungroup samples in the plot", placement="top",
                    options = list(container = "body"))),
         title = "Expression barplot", label="c",
@@ -1603,9 +1603,9 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     gseatable_text = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
 
     gseatable_opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
+        withTooltip( shiny::checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
                "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.", placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
+        withTooltip(shiny::checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
                "Show all q-values of each individual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )

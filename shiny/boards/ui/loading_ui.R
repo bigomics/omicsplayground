@@ -51,24 +51,24 @@ LoadingUI <- function(id) {
                                     shiny::br(),
                                     shiny::conditionalPanel(
                                         "output.rowselected != 0", ns=ns,
-                                        shinyBS::tipify( shiny::actionButton(ns("loadbutton"),label="Load",class="load-button"),
+                                        withTooltip( shiny::actionButton(ns("loadbutton"),label="Load",class="load-button"),
                                         "Click to load the selected dataset.", placement="bottom"),
-                                        shinyBS::tipify( shiny::downloadButton(
+                                        withTooltip( shiny::downloadButton(
                                             ns("downloadpgx"), label=NULL, ## icon=icon("download"),
                                             style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
                                         ),"Download PGX file (binary).", placement="bottom"),
-                                        shinyBS::tipify( downloadButton2(
+                                        withTooltip( downloadButton2(
                                             ns("downloadzip"), label=NULL, icon=icon("file-csv"),
                                             style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
                                         ),"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
                                         placement="bottom"),
-                                        shinyBS::tipify( shiny::actionButton(
+                                        withTooltip( shiny::actionButton(
                                             ns("deletebutton"), label=NULL, icon=icon("trash"),
                                             style='padding:2px 1px 1px 1px; font-size:140%; color: #B22222; width:30px;'
                                         ),"Delete the selected dataset.", placement="bottom")
                                     ),
                                     shiny::br(),shiny::br(),
-                                    shinyBS::tipify( shiny::actionLink(ns("showfilter"), "show filters",
+                                    withTooltip( shiny::actionLink(ns("showfilter"), "show filters",
                                                                     icon=icon("cog", lib = "glyphicon")),
                                         "Show dataset filters.", placement="top"),
                                     shiny::br(),br(),

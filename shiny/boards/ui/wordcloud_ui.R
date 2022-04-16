@@ -6,19 +6,19 @@
 WordCloudInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        shinyBS::tipify( shiny::actionLink(ns("wc_info"), "Youtube", icon = shiny::icon("youtube") ),
+        withTooltip( shiny::actionLink(ns("wc_info"), "Youtube", icon = shiny::icon("youtube") ),
                 "Show more information about this module."),
         shiny::hr(), shiny::br(),             
-        shinyBS::tipify( shiny::selectInput(ns("wc_contrast"),"Contrast:", choices=NULL),
+        withTooltip( shiny::selectInput(ns("wc_contrast"),"Contrast:", choices=NULL),
                 "Select the contrast corresponding to the comparison of interest.",
                 placement="top"),
-        shinyBS::tipify( shiny::actionLink(ns("wc_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+        withTooltip( shiny::actionLink(ns("wc_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                 "Show/hide advanced options", placement="top"),
         shiny::br(),
         shiny::conditionalPanel(
             "input.wc_options % 2 == 1", ns=ns,
             shiny::tagList(
-                shinyBS::tipify(shiny::checkboxInput(ns('wc_normalize'),'normalize activation matrix',TRUE),
+                withTooltip(shiny::checkboxInput(ns('wc_normalize'),'normalize activation matrix',TRUE),
                         "Click to 'normalize' the coloring of an activation matrices.")
             )
         )

@@ -9,7 +9,7 @@ TcgaInputs <- function(id) {
 	ns <- NS(id)
 	
 	bigdash::tabSettings(
-		shinyBS::tipify(
+		withTooltip(
 			actionLink(ns("tcga_info"), "Info", icon = icon("info-circle")),
 			"Show more information about this module"
 		),
@@ -17,7 +17,7 @@ TcgaInputs <- function(id) {
 		hr(),
 		br(),
 		
-		shinyBS::tipify(
+		withTooltip(
 			radioButtons(
 				ns("sigtype"),
 				"Signature type:",
@@ -33,7 +33,7 @@ TcgaInputs <- function(id) {
 		conditionalPanel(
 			"input.sigtype == 'contrast'",
 			ns = ns,
-			shinyBS::tipify(
+			withTooltip(
 				selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
 				"Select the contrast that you want to correlate with survival.",
 				placement = "right",
@@ -44,7 +44,7 @@ TcgaInputs <- function(id) {
 		conditionalPanel(
 			"input.sigtype == 'genelist'",
 			ns = ns,
-			shinyBS::tipify(
+			withTooltip(
 				textAreaInput(
 					ns("genelist"),
 					NULL,
@@ -61,7 +61,7 @@ TcgaInputs <- function(id) {
 		
 		br(),
 		
-		shinyBS::tipify(
+		withTooltip(
 			actionLink(ns("tcga_options"), "Options", icon = icon("cog", lib = "glyphicon")),
 			"Toggle advanced options.",
 			placement = "top",

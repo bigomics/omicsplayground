@@ -822,16 +822,16 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
 
     cumFCplot.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('cumFCplot_absfc'),'Absolute foldchange',FALSE),
+        withTooltip( shiny::checkboxInput(ns('cumFCplot_absfc'),'Absolute foldchange',FALSE),
                "Take the absolute foldchange for calculating the cumulative sum.",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_order'),'Order:',
+        withTooltip( shiny::radioButtons(ns('cumFCplot_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
                              choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))
-        ## shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
+        ## withTooltip( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
         ##                      selected=10, inline=TRUE),
         ##        "How many closest profiles to consider for calculating the cumulative sum.",
         ##        placement="right", options = list(container = "body"))
@@ -976,16 +976,16 @@ ConnectivityBoard <- function(input, output, session, inputData)
     
     
     cumEnrichmentPlot.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('cumgsea_absfc'),'Absolute foldchange',FALSE),
+        withTooltip( shiny::checkboxInput(ns('cumgsea_absfc'),'Absolute foldchange',FALSE),
                "Take the absolute foldchange for calculating the cumulative sum.",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::radioButtons(ns('cumgsea_order'),'Order:',
+        withTooltip( shiny::radioButtons(ns('cumgsea_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
                              choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))        
-        ## shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
+        ## withTooltip( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
         ##                      selected=10, inline=TRUE),
         ##        "How many closest profiles to consider for calculating the cumulative sum.",
         ##        placement="right", options = list(container = "body"))
@@ -1255,22 +1255,22 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
     
     connectivityMap.opts = shiny::tagList(
-        shinyBS::tipify(shiny::radioButtons(
+        withTooltip(shiny::radioButtons(
             ##"Choose the plot layout: t-SNE, PCA or UMAP",
             ns('cmap_layout'),"Layout:",c("pca","tsne","volcano"), selected="tsne", inline=TRUE),
             "Choose the plot layout: t-SNE, PCA, or volcano-type",
             placement="right", options = list(container = "body")),
-        shinyBS::tipify(shiny::sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 1, 0, step=0.01),
+        withTooltip(shiny::sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 1, 0, step=0.01),
                "Threshold the points by minimum score",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify(shiny::radioButtons(
+        withTooltip(shiny::radioButtons(
             ns('cmap_cmapcolorby'),"Color by:", c("score","dataset","hallmark"),
             inline=TRUE), "Color the points by score, dataset or hallmark",
             placement="right", options = list(container = "body")),
-        shinyBS::tipify(shiny::sliderInput(ns('cmap_scoregamma'),"Color gamma:", 0.1, 2, 0.5, step=0.1),
+        withTooltip(shiny::sliderInput(ns('cmap_scoregamma'),"Color gamma:", 0.1, 2, 0.5, step=0.1),
                "Gamma for color adjustments",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::checkboxGroupInput(
+        withTooltip( shiny::checkboxGroupInput(
             ns('cmap_plotoptions'),"Other options:",
             choiceValues = c("label","grouped","3D","dark","large"),
             choiceNames = c("show label","group by dataset","3D plot", "dark mode",
@@ -1412,11 +1412,11 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
     
     leadingEdgeGraph.opts <- shiny::tagList(
-        shinyBS::tipify( shiny::sliderInput(ns("LEgraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
+        withTooltip( shiny::sliderInput(ns("LEgraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
                "Threshold value for edges."),
-        shinyBS::tipify( shiny::radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
+        withTooltip( shiny::radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
                "Number of simlar experiments to consider."),
-        shinyBS::tipify( shiny::radioButtons(ns("LEgraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
+        withTooltip( shiny::radioButtons(ns("LEgraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
                              selected="cumFC", inline=TRUE),
                "Parameter for node size.")        
     )
@@ -1573,14 +1573,14 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
     
     enrichmentGraph.opts <- shiny::tagList(
-        shinyBS::tipify( shiny::sliderInput(ns("enrichGraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
+        withTooltip( shiny::sliderInput(ns("enrichGraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
                "Threshold value for edges."),
-        shinyBS::tipify( shiny::radioButtons(ns("enrichGraph_ntop"),"N-neighbours:",c(5,10,25,100),
+        withTooltip( shiny::radioButtons(ns("enrichGraph_ntop"),"N-neighbours:",c(5,10,25,100),
                              selected=10, inline=TRUE),
                "Number of simlar experiments to consider."),
-        shinyBS::tipify( shiny::checkboxInput(ns("enrichGraph_oddweighting"),"Odd ratio weighting",FALSE),
+        withTooltip( shiny::checkboxInput(ns("enrichGraph_oddweighting"),"Odd ratio weighting",FALSE),
                "Odds ratio weighting."),
-        shinyBS::tipify( shiny::radioButtons(ns("enrichGraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
+        withTooltip( shiny::radioButtons(ns("enrichGraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
                              selected="cumFC", inline=TRUE),
                "Parameter for node size.")        
     )
@@ -1843,7 +1843,7 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
     
     cmapPairsPlot.opts = shiny::tagList(
-        shinyBS::tipify( shiny::selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
+        withTooltip( shiny::selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
     )
 
     cmapPairsPlot_info = "The <strong>Pairs</strong> panel provides pairwise scatterplots of differential expression profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over."

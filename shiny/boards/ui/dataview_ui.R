@@ -6,23 +6,23 @@
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
+        withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
                 "Show more information about this module."),
         shiny::hr(), shiny::br(),
-        shinyBS::tipify( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
+        withTooltip( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
                 "Enter a gene of interest for the analysis.", placement="top"),
-        shinyBS::tipify( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
+        withTooltip( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
                             choices=NULL, multiple=TRUE),
                 "Filter the relevant samples for the analysis.", placement="top"),
-        shinyBS::tipify( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+        withTooltip( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
                 "Select phenotype for grouping the samples.", placement="top"),
         shiny::br(),
-        shinyBS::tipify( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+        withTooltip( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                 "Toggle advanced options.", placement="top"),
         shiny::br(),br(),
         shiny::conditionalPanel(
             "input.data_options % 2 == 1", ns=ns,
-            shinyBS::tipify( shiny::radioButtons(ns('data_type'),'Data type:',
+            withTooltip( shiny::radioButtons(ns('data_type'),'Data type:',
                                     choices=c("counts","logCPM"), selected="logCPM", inline=TRUE),
                     "Choose an input data type for the analysis.", placement="bottom")
         )

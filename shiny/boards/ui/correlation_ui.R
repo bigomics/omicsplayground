@@ -10,14 +10,14 @@ CorrelationInputs <- function(id) {
         shiny::hr(), shiny::br(),             
 
         ## data set parameters
-        shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
+        withTooltip( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
                 "Choose a gene for the correlation analysis.", placement="top"),
         shiny::br(),
-        shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
+        withTooltip( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
                         "Filter gene features.", placement="top"),
         shiny::conditionalPanel(
                     "input.cor_features == '<custom>'", ns=ns,
-                    shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
+                    withTooltip( shiny::textAreaInput(ns("cor_customfeatures"),
                                                             NULL, value = NULL,
                                                             height = "100px", width = "100%", 
                                                             rows=5, placeholder="Paste your custom gene list"),

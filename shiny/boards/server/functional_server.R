@@ -484,7 +484,7 @@ FunctionalBoard <- function(input, output, session, inputData, selected_gxmethod
     )
 
     kegg_actmap.opts = shiny::tagList(
-        shinyBS::tipify(shiny::checkboxInput(ns('kegg_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+        withTooltip(shiny::checkboxInput(ns('kegg_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
     )
     shiny::callModule(
         plotModule,
@@ -817,9 +817,9 @@ FunctionalBoard <- function(input, output, session, inputData, selected_gxmethod
     GO_info1 = "The <strong>Gene Ontology</strong> (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse."
 
     GO_network.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns("GO_prunetree"), "Prune tree", TRUE),
+        withTooltip( shiny::checkboxInput(ns("GO_prunetree"), "Prune tree", TRUE),
                "Prune the tree with only significant branches."),
-        shinyBS::tipify( shiny::checkboxInput(ns("GO_colorclusters"), "Color clusters", FALSE),
+        withTooltip( shiny::checkboxInput(ns("GO_colorclusters"), "Color clusters", FALSE),
                "Highlight clusters with different colors.")
     )
 
@@ -840,7 +840,7 @@ FunctionalBoard <- function(input, output, session, inputData, selected_gxmethod
     ##output <- attachModule(output, GO_network_module)
 
     GO_actmap.opts = shiny::tagList(
-        shinyBS::tipify(shiny::checkboxInput(ns('go_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+        withTooltip(shiny::checkboxInput(ns('go_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
     )
     go_info = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile."
     

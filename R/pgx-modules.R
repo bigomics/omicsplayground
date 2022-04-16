@@ -315,7 +315,7 @@ plotModule <- function(input, output, session,
         zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
-        zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")
+        zoom.button <- withTooltip(zoom.button, "Maximize", placement="right")
     }
     
     ##output$renderbuttons <- shiny::renderUI({

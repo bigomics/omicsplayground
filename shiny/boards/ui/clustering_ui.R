@@ -6,14 +6,14 @@
 ClusteringInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        shinyBS::tipify( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
+        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
                 "Show more information and video tutorial about this module."),
         shiny::hr(), shiny::br(),             
-        shinyBS::tipify( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
+        withTooltip( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                 "Select a family of features.", placement="top"),
         shiny::conditionalPanel(
             "input.hm_features == '<custom>'", ns=ns,
-            shinyBS::tipify( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
+            withTooltip( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
                                     height = "150px", width = "100%", 
                                     rows=5, placeholder="Paste your custom gene list"),
                     "Paste a custom list of genes to be used as features.",
@@ -24,26 +24,26 @@ ClusteringInputs <- function(id) {
             tipifyR( shiny::selectInput(ns("hm_contrast"), NULL, choices=NULL),
                     "Select contrast to be used as signature.")
         ),
-        shinyBS::tipify( shiny::selectInput(ns('hm_group'),'Group by:',choices=NULL),
+        withTooltip( shiny::selectInput(ns('hm_group'),'Group by:',choices=NULL),
                 "Group the samples by condition.", 
                 placement="top", options = list(container = "body")),
-        shinyBS::tipify( shiny::selectInput(ns("hm_samplefilter"),"Filter samples:",
+        withTooltip( shiny::selectInput(ns("hm_samplefilter"),"Filter samples:",
                             choices=NULL, multiple=TRUE),
                 "Filter the relevant samples for the analysis.",
                 placement="top", options = list(container = "body")),            
-        shinyBS::tipify( shiny::actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+        withTooltip( shiny::actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                 "Toggle advanced options.", placement="top"),
         shiny::br(),
         shiny::conditionalPanel(
             "input.hm_options % 2 == 1", ns=ns,
             shiny::tagList(
-                        shinyBS::tipify( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
+                        withTooltip( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
                                         "Specify the level analysis: gene or geneset level.",
                                         placement="top", options = list(container = "body")),
-                        shinyBS::tipify( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
+                        withTooltip( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
                                         "Exclude genes on X/Y chromosomes.", 
                                         placement="top", options = list(container = "body")),
-                        shinyBS::tipify( shiny::checkboxInput(ns('hm_filterMitoRibo'),
+                        withTooltip( shiny::checkboxInput(ns('hm_filterMitoRibo'),
                                                                 'exclude mito/ribo genes',FALSE),
                                         "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
                                         placement="top", options = list(container = "body"))

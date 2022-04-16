@@ -7,16 +7,16 @@ BiomarkerInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
         shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
+            withTooltip( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module."),
             shiny::hr(), shiny::br(),             
-            shinyBS::tipify(shiny::selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
+            withTooltip(shiny::selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
                    "Select the target variable for biomarker selection.",placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
+            withTooltip( shiny::selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
                    "Select a filter for the features.", placement="top"),
             shiny::conditionalPanel(
                 "input.pdx_filter == '<custom>'", ns=ns,
-                shinyBS::tipify(
+                withTooltip(
                     shiny::div(class='gene-list',
                         shiny::textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
                                       height = "100px", width = "100%",                                       
@@ -24,7 +24,7 @@ BiomarkerInputs <- function(id) {
                     "Paste a custom gene list to be used as features.", placement="top")
             ),
             shiny::br(),
-            shinyBS::tipify(shiny::actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
+            withTooltip(shiny::actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
                    "Click to start biomarker computation.", placement="right")
         )
     )

@@ -522,7 +522,7 @@ CompareBoard <- function(input, output, session, inputData)
     })
     
     genecorr.opts <- shiny::tagList(
-        shinyBS::tipify( shiny::selectInput(ns('colorby'),'Color by:',choices=NULL, multiple=FALSE),
+        withTooltip( shiny::selectInput(ns('colorby'),'Color by:',choices=NULL, multiple=FALSE),
                "Color samples by phenotype.",
                placement="right", options = list(container = "body")
                )

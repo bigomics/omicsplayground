@@ -72,7 +72,7 @@ TcgaBoard <- function(input, output, session, input_data, selected_gxmethods, se
 	})
 	
 	tcga_tcgasurv_opts <- tagList(
-		shinyBS::tipify(
+		withTooltip(
 			checkboxInput(ns("tcga_surv_deceasedonly"), "deceased only", FALSE),
 			paste(
 				"Only include deceased cases in survival analysis,",
@@ -83,7 +83,7 @@ TcgaBoard <- function(input, output, session, input_data, selected_gxmethods, se
 			options = list(container = "body")
 		),
 		
-		shinyBS::tipify(
+		withTooltip(
 			radioButtons(ns("tcga_tcgasurv_ntop"), "N cor genes:", c(25, 100, 250, 1000), selected = 100, inline = TRUE),
 			"Number of top genes for calculating the correlation.",
 			placement = "left",
