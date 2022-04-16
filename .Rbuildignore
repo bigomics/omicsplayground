@@ -5,7 +5,8 @@
 dev_history.R
 ^dev$
 ^logs$
-^ext
+^ext$
+^tools$
 $run_dev.*
 ^LICENSE\.md$
 ^CODE_OF_CONDUCT\.md$

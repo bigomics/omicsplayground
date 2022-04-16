@@ -56,10 +56,11 @@ usethis::use_test("app")
 usethis::use_vignette("omicsplayground")
 usethis::use_vignette("omicsplayground-quickstart")
 
-## NEED RETHINK: seems running out of disk space...
-devtools::build_vignettes()          ## builds vignettes, copy to doc folder
+## ERROR!!! seems running out of disk space...
+devtools::build_vignettes()          ## builds vignettes, copy to doc
+
 devtools::document()                 ## builds Rd in man folder
-devtools::build_manual(path='doc')   ## builds PDF reference 
+devtools::build_manual(path='doc')   ## builds PDF reference manual
 
 ## Code Coverage----
 ## Set the code coverage service ("codecov" or "coveralls")
