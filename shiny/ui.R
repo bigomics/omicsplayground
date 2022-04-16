@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-#' The application User-Interface
+#' The main application User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
@@ -56,19 +56,19 @@ app_ui <- function(request) {
     }
 
     user.menu <- shiny::navbarMenu(
-                            ##title="User",
-                            title=icon("user-circle","fa"),                     
-                            user.tab,
-                            upgrade.tab,
-                            "----",
-                            shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation</a>")),
-                            shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-                            shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
-                            shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
-                            "----",         
-                            logout.tab,
-                            stop.tab
-                        )
+         ##title="User",
+         title=icon("user-circle","fa"),                     
+         user.tab,
+         upgrade.tab,
+         "----",
+         shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation</a>")),
+         shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
+         shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
+         shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
+         "----",         
+         logout.tab,
+         stop.tab
+    )
 
     createUI <- function(tabs)
     {

@@ -4,7 +4,7 @@
 ##
 
 
-#' The main application server-side
+#' The main application Server-side logic
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.

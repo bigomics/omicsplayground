@@ -20,6 +20,9 @@ create_headers(c('R','shiny'), hdr.file='R/00Headers.R')
 ## Dependencies ----
 ## Amend DESCRIPTION with dependencies read from package code parsing
 attachment::att_amend_desc()
+
+## Update NAMESPACE
+roxygen2::roxygenize()               ## writing NAMESPACE
 file.show('NAMESPACE')
 
 ## Add modules ----

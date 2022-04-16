@@ -336,6 +336,9 @@ source('R/pgx-vizpanels.R',local=TRUE)
 source('R/pgx-wordcloud.R',local=TRUE)
 
 
+source('R/setdirs.R',local=TRUE)
+
+
 source('R/ui-code.R',local=TRUE)
 
 
@@ -517,7 +520,7 @@ source('shiny/modules/TimerModule.R',local=TRUE)
 
 source('shiny/modules/UploadModule.R',local=TRUE)
 
-#' The main application server-side
+#' The main application Server-side logic
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
@@ -525,16 +528,13 @@ source('shiny/modules/UploadModule.R',local=TRUE)
 app_server <- function(){}
 source('shiny/server.R',local=TRUE)
 
-#' The application User-Interface
+#' The main application User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @export
 app_ui <- function(){}
 source('shiny/ui.R',local=TRUE)
-
-
-source('shiny/utils/setdirs.R',local=TRUE)
 
 
 source('shiny/utils/utils.R',local=TRUE)
