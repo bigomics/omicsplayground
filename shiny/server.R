@@ -1,4 +1,15 @@
-server <- function(input, output, session) {
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
+#' The main application server-side
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @export
+app_server <- function(input, output, session) {
     
     message("\n========================================================")
     message("===================== SERVER ===========================")

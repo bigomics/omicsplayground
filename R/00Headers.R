@@ -327,6 +327,9 @@ source('R/pgx-singlecell.R',local=TRUE)
 source('R/pgx-tcga.R',local=TRUE)
 
 
+source('R/pgx-ui.R',local=TRUE)
+
+
 source('R/pgx-vizpanels.R',local=TRUE)
 
 
@@ -342,7 +345,141 @@ source('R/xcr-graph.r',local=TRUE)
 source('R/xcr-math.r',local=TRUE)
 
 
-source('shiny/boards/ui/test.R',local=TRUE)
+source('shiny/boards/server/biomarker_server.R',local=TRUE)
+
+
+source('shiny/boards/server/clustering_server.R',local=TRUE)
+
+
+source('shiny/boards/server/compare_server.R',local=TRUE)
+
+
+source('shiny/boards/server/connectivity_server.R',local=TRUE)
+
+
+source('shiny/boards/server/correlation_server.R',local=TRUE)
+
+#' DataView module server function
+#'
+#' @description A shiny Module (server code).
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#' @param inputData Reactive expression that provides the input ngs/pgx data object 
+#'
+#' @export 
+DataViewBoard <- function(){}
+source('shiny/boards/server/dataview_server.R',local=TRUE)
+
+
+source('shiny/boards/server/drugconnectivity_server.R',local=TRUE)
+
+
+source('shiny/boards/server/enrichment_server.R',local=TRUE)
+
+
+source('shiny/boards/server/expression_server.R',local=TRUE)
+
+
+source('shiny/boards/server/featuremap_server.R',local=TRUE)
+
+
+source('shiny/boards/server/functional_server.R',local=TRUE)
+
+
+source('shiny/boards/server/intersection_server.R',local=TRUE)
+
+
+source('shiny/boards/server/loading_server.R',local=TRUE)
+
+
+source('shiny/boards/server/signature_server.R',local=TRUE)
+
+
+source('shiny/boards/server/singlecell_server.R',local=TRUE)
+
+
+source('shiny/boards/server/tcga_server.R',local=TRUE)
+
+
+source('shiny/boards/server/user_server.R',local=TRUE)
+
+
+source('shiny/boards/server/wgcna_server.R',local=TRUE)
+
+
+source('shiny/boards/server/wordcloud_server.R',local=TRUE)
+
+
+source('shiny/boards/ui/biomarker_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/clustering_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/compare_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/connectivity_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/correlation_ui.R',local=TRUE)
+
+#' DataView module UI Input function
+#'
+#' @description A shiny Module. Renders the input parts (sidebar contents) for the module.
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
+DataViewInputs <- function(){}
+#' DataView module UI output function
+#'
+#' @description Renders the output part for the module as tabsetPanel object
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
+DataViewUI <- function(){}
+source('shiny/boards/ui/dataview_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/drugconnectivity_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/enrichment_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/expression_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/featuremap_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/functional_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/intersection_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/loading_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/signature_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/singlecell_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/tcga_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/user_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/wgcna_ui.R',local=TRUE)
+
+
+source('shiny/boards/ui/wordcloud_ui.R',local=TRUE)
 
 
 source('shiny/modules/AuthenticationModule.R',local=TRUE)
@@ -363,9 +500,6 @@ source('shiny/modules/NormalizeCountsModule.R',local=TRUE)
 source('shiny/modules/PlotModule.R',local=TRUE)
 
 
-source('shiny/modules/plotModules/dataviewTSNEPlotModule-SR.R',local=TRUE)
-
-
 source('shiny/modules/plotModules/dataviewTSNEPlotModule.R',local=TRUE)
 
 
@@ -383,11 +517,24 @@ source('shiny/modules/TimerModule.R',local=TRUE)
 
 source('shiny/modules/UploadModule.R',local=TRUE)
 
+#' The main application server-side
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @export
+app_server <- function(){}
+source('shiny/server.R',local=TRUE)
 
-source('shiny/tests/testBoard.R',local=TRUE)
+#' The application User-Interface
+#'
+#' @param request Internal parameter for `{shiny}`.
+#'     DO NOT REMOVE.
+#' @export
+app_ui <- function(){}
+source('shiny/ui.R',local=TRUE)
 
 
-source('shiny/tests/testPlotModule.R',local=TRUE)
+source('shiny/utils/setdirs.R',local=TRUE)
 
 
 source('shiny/utils/utils.R',local=TRUE)

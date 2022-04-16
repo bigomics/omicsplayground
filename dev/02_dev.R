@@ -11,7 +11,7 @@
 #### CURRENT FILE: DEV SCRIPT #####
 ###################################
 
-setwd("~/Playground/omicsplayground/")  ## set to package root!!
+setwd("~/Playground/omicsplayground3/")  ## set to package root!!
 
 # Hack for subfolders
 source("dev/create_headers.R")

@@ -10,6 +10,7 @@
 ## GLOBAL variables
 ##-----------------------------------------------------------------------------
 
+if(0) {
 ## Caching the init files
 INIT.FILE <- file.path(OPG,"cache/global-init.rda") ## avoid rw permission
 ##unlink(INIT.FILE)
@@ -126,7 +127,7 @@ if(1 && file.exists(INIT.FILE)) {
     message("Creating global init took: ", round(Sys.time() - t0), " seconds")
     message("[INIT] saving INIT file ", INIT.FILE)    
     save( list=newvars, file=INIT.FILE)
-    
+}    
 }
 
 pgx.initialize <- function(pgx) {
