@@ -1,0 +1,3 @@
+This folder 'extdata' contains data from external databases or sources
+that are used in the app. Some R packages are included for specific
+versions.
