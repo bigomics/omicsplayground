@@ -89,9 +89,6 @@ envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
 
-## --------------------------------------------------------------------
-## -------------------------- INIT ------------------------------------
-## --------------------------------------------------------------------
 
 message("\n***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")
@@ -102,20 +99,24 @@ message("RDIR =",RDIR)
 message("FILES =",FILES)
 message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
+message("APPDIR =",APPDIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
 message("\n************************************************")
-message("************* SOURCING FUNCTIONS ****************")
+message("************* SOURCING FUNCTIONS ***************")
 message("************************************************")
 
-##source(file.path(RDIR,"pgx-include.R"))  ## lots of libraries and source()
-source(file.path(RDIR,"00Headers.R"))      ## lots of libraries and source()
+## MAIN SOURCING FUNCTION. SOURCES ALL R/SHINY CODE.
+source(file.path(RDIR,"00Headers.R"))   ## lots of libraries and source...
+
+## You can add here new files explicitly, but eventually 00Headers.R
+## should contains all files. Update using .../dev/02_dev.R script.
 source(file.path(RDIR,"auth.R"))
 source(file.path(RDIR,"ggplot-theme.R"))
 
 
 message("\n************************************************")
-message("*************** LOADING LIBRARIES **************")
+message("*************** LOADING SYSTEM DATA ************")
 message("************************************************")
 
 load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
