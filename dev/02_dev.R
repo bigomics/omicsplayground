@@ -12,14 +12,16 @@
 ###################################
 
 setwd("~/Playground/omicsplayground3/")  ## set to package root!!
+usethis::proj_set()
+here::here()
 
 # Hack for subfolders
 source("dev/create_headers.R")
-create_headers(c('R','shiny'), hdr.file='R/00Headers.R')
+create_headers(c('R','shiny'), add.header=TRUE, excl=c("pgx-include.R","global.R"))
 
 ## Dependencies ----
 ## Amend DESCRIPTION with dependencies read from package code parsing
-attachment::att_amend_desc()
+##attachment::att_amend_desc()  ## last error 17.04.2022 (missing or mispelled)
 
 ## Update NAMESPACE
 roxygen2::roxygenize()               ## writing NAMESPACE
@@ -53,7 +55,7 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("introduction")
+usethis::use_vignette("omicsplayground-vignette","OmicsPlayground Vignette")
 ##usethis::use_vignette("quickstart")
 
 ## ERROR!!! seems running out of disk space...
@@ -61,49 +63,4 @@ devtools::build_vignettes()          ## builds vignettes, copy to doc
 devtools::document()                 ## builds Rd in man folder
 devtools::build_manual(path='doc')   ## builds PDF reference manual
 
-## Code Coverage----
-## Set the code coverage service ("codecov" or "coveralls")
-usethis::use_coverage()
 
-# Create a summary readme for the testthat subdirectory
-##remotes::install_github('yonicd/covrpage')
-covrpage::covrpage()
-
-## CI ----
-## Use this part of the script if you need to set up a CI
-## service for your application
-##
-## (You'll need GitHub there)
-usethis::use_github()
-
-# GitHub Actions
-usethis::use_github_action()
-# Chose one of the three
-# See https://usethis.r-lib.org/reference/use_github_action.html
-usethis::use_github_action_check_release()
-usethis::use_github_action_check_standard()
-usethis::use_github_action_check_full()
-# Add action for PR
-usethis::use_github_action_pr_commands()
-
-# Travis CI
-usethis::use_travis()
-usethis::use_travis_badge()
-
-# AppVeyor
-usethis::use_appveyor()
-usethis::use_appveyor_badge()
-
-# Circle CI
-usethis::use_circleci()
-usethis::use_circleci_badge()
-
-# Jenkins
-usethis::use_jenkins()
-
-# GitLab CI
-usethis::use_gitlab_ci()
-
-# You're now set! ----
-# go to dev/03_deploy.R
-rstudioapi::navigateToFile("dev/03_deploy.R")

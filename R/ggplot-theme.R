@@ -244,6 +244,8 @@ theme_omics <- function(style = "default", base_size = 15,
 }
 
 
+#' Discrete guide
+#'
 #' A nicely styled legend for categorical aesthetics (color, fill, shape,
 #' size and alpha)
 #'

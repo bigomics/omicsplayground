@@ -1,10 +1,6 @@
-get_pkg_root <- function() {
-    pwd <- strsplit(getwd(),split='/')[[1]]
-    paste(pwd[1:max(grep("omicsplayground",pwd))],collapse='/')
-}
 
-## Set folders
-OPG       <<- get_pkg_root()
+## Set folders in global environment
+OPG       <<- pkgload::pkg_path()  ## search DESCRIPTION file
 RDIR      <<- file.path(OPG,"R")
 APPDIR    <<- file.path(OPG,"shiny")
 FILES     <<- file.path(OPG,"lib")

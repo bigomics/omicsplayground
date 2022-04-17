@@ -6,8 +6,9 @@
 library(shiny)
 
 ## RUN FROM root folder!
-
+setwd(pkgload::pkg_path())
 source("shiny/global.R")  ## global variable
+source("R/00Headers.R")  ## global variable
 
 load("data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)

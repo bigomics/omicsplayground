@@ -30,13 +30,8 @@ options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
 reticulate::use_miniconda('r-reticulate')
 
-get_pkg_root <- function() {
-    pwd <- strsplit(getwd(),split='/')[[1]]
-    paste(pwd[1:max(grep("omicsplayground",pwd))],collapse='/')
-}
-
 ## Set folders
-OPG       = get_pkg_root()
+OPG       = pkgload::pkg_path()   ## search DESCRIPTION file
 RDIR      = file.path(OPG,"R")
 APPDIR    = file.path(OPG,"shiny")
 FILES     = file.path(OPG,"lib")
@@ -112,15 +107,16 @@ message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
 message("\n************************************************")
-message("**************** READ FUNCTIONS ****************")
+message("************* READING FUNCTIONS ****************")
 message("************************************************")
 
-source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
+##source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
+source(file.path(RDIR,"00Headers.R"))      ## lots of libraries and source()
 source(file.path(RDIR,"auth.R"))
 source(file.path(RDIR,"ggplot-theme.R"))
 
 message("\n************************************************")
-message("**************** LOAD LIBRARIES ****************")
+message("*************** LOADING LIBRARIES **************")
 message("************************************************")
 
 load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
@@ -130,8 +126,9 @@ message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
-if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
-opt <- pgx.readOptions(file="OPTIONS")
+opt.file <- file.path(APPDIR,"OPTIONS")
+if(!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
+opt <- pgx.readOptions(file=opt.file)
 
 ## Check and set authentication method
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
