@@ -16,12 +16,10 @@ message("\n\n\n")
 
 message("[INIT] reading global.R ...")
 
-## should we migrate all OPTIONS into this file??
 if(Sys.info()["sysname"] != "Windows") {
     Sys.setlocale("LC_TIME","en_US.UTF-8")
 }
 
-##Sys.setlocale("LC_ALL", "C")  ## really??
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 ##options(warnPartialMatchDollar = TRUE)
 ##options(warnPartialMatchArgs = TRUE)    
