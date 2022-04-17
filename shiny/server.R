@@ -113,49 +113,49 @@ app_server <- function(input, output, session) {
 
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
+        loadModule <- function(...) {
+            id <- list(...)[[2]]
+            if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
+        }
+
         shiny::withProgress(message="initializing modules ...", value=0, {
-            if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", inputData = env[["load"]][["inputData"]])
-            if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", inputData = env[["load"]][["inputData"]])
-            if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", inputData <- env[["load"]][["inputData"]])    
+            loadModule( DataViewBoard, "view", inputData = env[["load"]][["inputData"]] )
+            loadModule( ClusteringBoard, "clust", inputData = env[["load"]][["inputData"]] )
+            loadModule( FeatureMapBoard, "ftmap", inputData <- env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)
-            if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", inputData <- env[["load"]][["inputData"]])
-            if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard,
-                                                                        "enrich",
-                                                                        inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func",
-                                                                        inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                                                                        selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                                                                        selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
+            loadModule( ExpressionBoard, "expr", inputData <- env[["load"]][["inputData"]])
+            loadModule( EnrichmentBoard, "enrich",
+                       inputData = env[["load"]][["inputData"]],
+                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
+            loadModule( FunctionalBoard, "func", inputData = env[["load"]][["inputData"]],
+                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
+                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
+            loadModule( WordCloudBoard, "word", inputData = env[["load"]][["inputData"]],
+                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
+                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
             shiny::incProgress(0.4)
-            if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", inputData = env[["load"]][["inputData"]])
-            if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                                                                        selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", 
-                                                                        inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", inputData = env[["load"]][["inputData"]])
+            loadModule( DrugConnectivityBoard, "drug", inputData = env[["load"]][["inputData"]])
+            loadModule( IntersectionBoard, "isect", inputData = env[["load"]][["inputData"]],
+                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
+                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
+            loadModule( SignatureBoard, "sig", 
+                       inputData = env[["load"]][["inputData"]],
+                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
+            loadModule( CorrelationBoard, "cor", inputData = env[["load"]][["inputData"]])
             shiny::incProgress(0.6)            
-            if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
-            if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard,
-                                                                        "cmap",
-                                                                        inputData = env[["load"]][["inputData"]])
-            if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", inputData <- env[["load"]][["inputData"]])
+            loadModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
+            loadModule( ConnectivityBoard, "cmap",
+                       inputData = env[["load"]][["inputData"]])
+            loadModule( SingleCellBoard, "scell", inputData <- env[["load"]][["inputData"]])
             shiny::incProgress(0.8)
-            if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard,
-                                                                        "tcga",
-                                                                        inputData = env[["load"]][["inputData"]])
-            if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])
-            if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", inputData = env[["load"]][["inputData"]])
+            loadModule( TcgaBoard, "tcga", inputData = env[["load"]][["inputData"]])
+            loadModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])
+            loadModule( CompareBoard, "comp", inputData = env[["load"]][["inputData"]])
             if(DEV) {            
-                if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
-                if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
-                if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
-                env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
+                loadModule( CorsaBoard, "corsa", env)
+                loadModule( SystemBoard, "system", env)
+                loadModule( MultiLevelBoard, "multi", env)
+                loadModule( QuestionBoard, "qa", lapse = -1)
             }
         })
         message("[SERVER:env.loaded] --------- done! ----------")

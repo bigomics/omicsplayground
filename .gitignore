@@ -6,6 +6,7 @@
 .Renviron
 .Rproj.user
 *.Rproj
+*.Rd2pdf*
 
 # Backup files
 ######################
