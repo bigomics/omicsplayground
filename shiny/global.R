@@ -70,8 +70,8 @@ library(shinyBS)
 library(grid)
 library(ggplot2)
 library(concaveman)
-
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
+
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -107,13 +107,14 @@ message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
 message("\n************************************************")
-message("************* READING FUNCTIONS ****************")
+message("************* SOURCING FUNCTIONS ****************")
 message("************************************************")
 
-##source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
+##source(file.path(RDIR,"pgx-include.R"))  ## lots of libraries and source()
 source(file.path(RDIR,"00Headers.R"))      ## lots of libraries and source()
 source(file.path(RDIR,"auth.R"))
 source(file.path(RDIR,"ggplot-theme.R"))
+
 
 message("\n************************************************")
 message("*************** LOADING LIBRARIES **************")
@@ -169,32 +170,6 @@ ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
-
-# load UI for each board
-boards_ui <- dir(file.path(APPDIR,"boards/ui"), pattern="_ui.R$",full.names=TRUE)
-for(b in boards_ui) {
-    message("[INIT] loading UI module ",basename(b))
-    source(b, encoding = "UTF-8")
-}
-
-# load server for each board
-boards_srv <- dir(file.path(APPDIR,"boards/server"), pattern="_server.R$",full.names=TRUE)
-for(b in boards_srv) {
-    message("[INIT] loading server module ",basename(b))
-    source(b, encoding = "UTF-8")
-}
-
-## loading modules
-modules <- dir(file.path(APPDIR,"modules"), pattern="Module.R$", full.names=TRUE)
-modules
-for(m in modules) {
-    message("[INIT] loading module ",basename(m))
-    source(m, encoding = "UTF-8")
-}
-
-## load plotModules
-source(file.path(APPDIR,"modules/plotModules/PlotModule.R"), encoding = "UTF-8")
-source(file.path(APPDIR,"modules/plotModules/dataviewTSNEPlotModule.R"), encoding = "UTF-8")
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0

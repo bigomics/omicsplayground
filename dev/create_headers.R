@@ -38,7 +38,7 @@ create_headers <- function(path='R', add.header=TRUE, add.source=TRUE, excl.file
         }
         if(add.source) {
             fn  <- paste0("file.path(PKG,\'",rfiles[i],"\')")
-            src <- paste0("source(",fn,",local=TRUE)")
+            src <- paste0("source(",fn,",encoding='UTF-8')")
             write(src, out.file, append=TRUE)
         }
     }
