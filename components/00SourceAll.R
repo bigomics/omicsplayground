@@ -72,8 +72,6 @@ if(!file.exists('00SourceAll.R')) {
   source('base/R/ui-code.R',encoding='UTF-8')
   source('base/R/xcr-graph.r',encoding='UTF-8')
   source('base/R/xcr-math.r',encoding='UTF-8')
-  source('board.biomarker.SAVE/R/biomarker_server.R',encoding='UTF-8')
-  source('board.biomarker.SAVE/R/biomarker_ui.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_server.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_ui.R',encoding='UTF-8')
   source('board.clustering/R/clustering_server.R',encoding='UTF-8')
@@ -112,4 +110,5 @@ if(!file.exists('00SourceAll.R')) {
   source('board.wgcna/R/wgcna_ui.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_server.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_ui.R',encoding='UTF-8')
+  message('done! (sourcing all code...)')
 }

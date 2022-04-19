@@ -113,5 +113,6 @@ create_SourceAll <- function(path='R',
       write(src, out.file, append=TRUE)
     }
   }
+  write("  message('done! (sourcing all code)')", out.file, append=TRUE)    
   write("}", out.file, append=TRUE)      
 }
