@@ -11,55 +11,39 @@
 #### CURRENT FILE: ON START SCRIPT #####
 ########################################
 
-setwd("~/Playground/omicsplayground/")  ## set to package root!!
 
-## Fill the DESCRIPTION ----
+## Copy DESCRIPTION ----
 ## Add meta data about your application
 ##
 ## /!\ Note: if you want to change the name of your app during development,
 ## either re-run this function, call golem::set_golem_name(), or don't forget
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
-golem::fill_desc(
-  pkg_name = "omicsplayground", # The Name of the package containing the App
-  pkg_title = "Visual self-service analytics platform for big omics data", 
-  pkg_description = "Omics Playground is a comprehensive self-service analytics platform for the visualization, analytics and exploration of Big Omics Data. It allows biologists to apply a multitude of state-of-the-art analysis tools to their own data to explore and discover underlying biology without coding.",
-  author_first_name = "BigOmics Analytics SA", # Your First Name
-  author_last_name = "(Switzerland)", # Your Last Name
-  author_email = "hello@bigomics.ch", # Your Email
-  repo_url = "https://github.com/bigomics/omicsplayground" 
-)
+golem::detach_all_attached()
+rm(list=ls(all.names = TRUE))
 
-## Set {golem} options ----
-golem::set_golem_options()
+source("dev-utils.R")
+appdir <- get_app_root() 
+setwd(appdir)
+appdir
 
-## Create Common Files ----
-## See ?usethis for more information
-#usethis::use_gpl3_license() # You can set another license here
-#usethis::use_readme_rmd(open = FALSE)
-# Note that `contact` is required since usethis version 2.1.5
-# If your {usethis} version is older, you can remove that param
-#usethis::use_code_of_conduct(contact = "Golem User")
-#usethis::use_lifecycle_badge("Experimental")
-#usethis::use_news_md(open = FALSE)
+dir.pkg <- dir("components", full.names=TRUE)
+dir.pkg
 
-## Use git ----
-usethis::use_git()
+desc <- readLines("dev/description.component")
 
-## Init Testing Infrastructure ----
-## Create a template for tests
-golem::use_recommended_tests()
+for(d in dir.pkg) {
+  setwd(file.path(appdir,d))
+  desc[1] <- paste("Package:", paste0("omics.",basename(d)))
+  desc[2] <- paste("Title: OmicsPlayground",toupper(basename(d)),"component package")  
+  write( desc, file="DESCRIPTION")  
+}
 
-## Favicon ----
-# If you want to change the favicon (default is golem's one)
-#golem::use_favicon() # path = "path/to/ico". Can be an online file.
-golem::remove_favicon() # Uncomment to remove the default favicon
 
-## Add helper functions ----
-golem::use_utils_ui(with_test = TRUE)
-golem::use_utils_server(with_test = TRUE)
-
-# You're now set! ----
-
-# go to dev/02_dev.R
-rstudioapi::navigateToFile("dev/02_dev.R")
+## Create global "source_all" file
+setwd(appdir)
+create_SourceAll('components',add.comments=FALSE)
+##create_headers('R', add.source=FALSE)
+##create_allcode('R') 
+source("components/00SourceAll.R")
+source("components/00SourceAll.R",chdir=TRUE)
