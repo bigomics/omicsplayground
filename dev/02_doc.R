@@ -17,7 +17,7 @@ rm(list=ls(all.names = TRUE))
 
 ## Create documentaion ----------------------------------
 source("dev-utils.R")
-appdir <- get_app_root() 
+appdir <- get_appdir() 
 setwd(appdir)
 appdir
 wd="components/base"

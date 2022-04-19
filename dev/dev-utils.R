@@ -1,6 +1,6 @@
 ##appdir="~/R/golem/omics.app";wd="packages/board1"
 
-get_app_root <- function() {
+get_appdir <- function() {
     wd <- strsplit(getwd(),split='/')[[1]]
     root.files <- c(".git",".dockerignore")
     chk <- rep(NA,length(wd))

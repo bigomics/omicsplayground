@@ -81,7 +81,7 @@ message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
 
 if(file.exists("Renviron.site")) {
-    message("Loading local Renviron.site")    
+    message("Loading local Renviron.site...")    
     readRenviron("Renviron.site")
 }
 
@@ -93,7 +93,6 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
-
 
 message("\n***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")

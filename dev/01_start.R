@@ -23,27 +23,25 @@ golem::detach_all_attached()
 rm(list=ls(all.names = TRUE))
 
 source("dev-utils.R")
-appdir <- get_app_root() 
+appdir <- get_appdir() 
 setwd(appdir)
 appdir
 
-dir.pkg <- dir("components", full.names=TRUE)
+dir.pkg <- list.dirs("components", full.names=TRUE, recursive=FALSE)
 dir.pkg
 
 desc <- readLines("dev/description.component")
 
 for(d in dir.pkg) {
-  setwd(file.path(appdir,d))
-  desc[1] <- paste("Package:", paste0("omics.",basename(d)))
-  desc[2] <- paste("Title: OmicsPlayground",toupper(basename(d)),"component package")  
-  write( desc, file="DESCRIPTION")  
+    setwd(file.path(appdir,d))
+    desc[1] <- paste("Package:", paste0("omics.",basename(d)))
+    desc[2] <- paste("Title: OmicsPlayground",toupper(basename(d)),"component package")  
+    write( desc, file="DESCRIPTION")  
 }
 
 
 ## Create global "source_all" file
 setwd(appdir)
-create_SourceAll('components',add.comments=FALSE)
-##create_headers('R', add.source=FALSE)
-##create_allcode('R') 
+source("dev/create_source_all.R",chdir=TRUE)
 source("components/00SourceAll.R")
 source("components/00SourceAll.R",chdir=TRUE)

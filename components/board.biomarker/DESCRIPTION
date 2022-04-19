@@ -6,4 +6,3 @@ Description: Omics Playground component package.
 License: (see main LICENSE file)
 URL: https://github.com/bigomics/omicsplayground
 BugReports: https://github.com/bigomics/omicsplayground/issues
-RoxygenNote: 7.1.2
