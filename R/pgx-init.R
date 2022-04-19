@@ -9,16 +9,10 @@
 ##-----------------------------------------------------------------------------
 ## GLOBAL variables
 ##-----------------------------------------------------------------------------
-if(0) {
-    RDIR='~/Playground/omicsplayground/R'
-    FILES='~/Playground/omicsplayground/lib'
-    source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
-}
-source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
+if(0) {
 ## Caching the init files
-INIT.FILE <- file.path(FILES,"global-init.rda")
-INIT.FILE <- "../cache/global-init.rda" ## avoid rw permission
+INIT.FILE <- file.path(OPG,"cache/global-init.rda") ## avoid rw permission
 ##unlink(INIT.FILE)
 INIT.FILE
 
@@ -133,7 +127,7 @@ if(1 && file.exists(INIT.FILE)) {
     message("Creating global init took: ", round(Sys.time() - t0), " seconds")
     message("[INIT] saving INIT file ", INIT.FILE)    
     save( list=newvars, file=INIT.FILE)
-    
+}    
 }
 
 pgx.initialize <- function(pgx) {

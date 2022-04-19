@@ -444,7 +444,7 @@ DrugConnectivityBoard <- function(input, output, session, inputData)
     
     ##---------- DSEA Activation map plotting module
     dsea_moaplot.opts = shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
+        withTooltip( shiny::radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
                "Select plot type of MOA analysis: by class description or by target gene.")
     )
     shiny::callModule(
@@ -464,7 +464,7 @@ DrugConnectivityBoard <- function(input, output, session, inputData)
 
     ##-------- Activation map plotting module
     dsea_actmap.opts = shiny::tagList(
-        shinyBS::tipify(shiny::checkboxInput(ns('dsea_normalize'),'normalize activation matrix',FALSE), "Normalize columns of the activation matrix.")
+        withTooltip(shiny::checkboxInput(ns('dsea_normalize'),'normalize activation matrix',FALSE), "Normalize columns of the activation matrix.")
     )
     shiny::callModule(
         plotModule,
@@ -482,7 +482,7 @@ DrugConnectivityBoard <- function(input, output, session, inputData)
 
     ##--------buttons for table
     dsea_table.opts = shiny::tagList(
-        shinyBS::tipify(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
+        withTooltip(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
                "Show only annotated drugs.")
     )  
     dsea_table <- shiny::callModule(

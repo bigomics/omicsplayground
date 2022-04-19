@@ -1,0 +1,27 @@
+Package: omicsplayground
+Title: Visual self-service analytics platform for big omics data
+Version: 3.0.00001
+Authors@R: person('BigOmics Analytics SA', '(Switzerland)', email = 'hello@bigomics.ch', role = c('cre', 'aut'))
+Description: Omics Playground is a comprehensive self-service analytics platform for the visualization, analytics and exploration of Big Omics Data. It allows biologists to apply a multitude of state-of-the-art analysis tools to their own data to explore and discover underlying biology without coding.
+License: GPL (>= 3)
+URL: https://github.com/bigomics/omicsplayground
+BugReports: https://github.com/bigomics/omicsplayground/issues
+Imports: 
+    config (>= 0.3.1),
+    golem (>= 0.3.2),
+    shiny (>= 1.7.1),
+    stringr
+Suggests: 
+    knitr,
+    rmarkdown,
+    spelling,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)

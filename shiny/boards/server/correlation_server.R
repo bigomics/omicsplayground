@@ -491,7 +491,7 @@ CorrelationBoard <- function(input, output, session, inputData)
     })
 
     cor_scatter.opts <- shiny::tagList(
-        shinyBS::tipify( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
+        withTooltip( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
                         "Variable to split and color by groups.", placement="top"),
         shiny::checkboxInput(ns("corscatter.swapaxis"),"swap axes")
         ## shiny::selectInput(ns("corscatter.colorby"),"color by:", choices=NULL),        
@@ -918,7 +918,7 @@ CorrelationBoard <- function(input, output, session, inputData)
     # })
 
     # corGSEA_plots_opts = shiny::tagList(
-    #     shinyBS::tipify( shiny::selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
+    #     withTooltip( shiny::selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
     #            "Specify a reference set to be used in the annotation.",
     #            placement="left",options = list(container = "body"))
     # )

@@ -6,19 +6,12 @@
 */
 
 :root {
-    --main-color:  #2780e3;
-    --hover-color: #1967be;
-    --dark-color:  #0A3C64;
-    /* --canvas-color:rgba(240,248,255,20); */
+    --hover-color:  rgb(26,110,204);
+    --hover-color: rgb(20,90,150);
+    --main-color:  rgb(10,60,100);
+    --accent-color:  rgb(255,140,0);
     --canvas-color:rgb(255,255,255);    
-    /*  --light-color: rgb(220, 235, 245); */
-    --light-color: #dde6f0;
-}
-
-body {
-    /* font-family: Arial; */
-    font-size: 13px;
-    font-weight: 400;    
+    --light-color: #eeeeee;
 }
 
 h1, .h1, h2, .h2, h3, .h3 {
@@ -83,40 +76,6 @@ a {
     margin-top: -3px;
 }
 
-/* logo */
-#navbar-logo {
-    margin-left: -0px;
-    margin-top: -23px;
-}
-
-
-/* upper navigation bar */
-.navbar {
-    margin-bottom: 4px !important;
-}
-
-.navbar-fixed-top {
-    z-index: 0;
-}
-
-.navbar-default {
-    color:rgb(220,220,220);
-    /*    background: var(--main-color); */
-    background: #2780e3;
-}
-
-.navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
-    background: var(--hover-color) !important;
-}
-
-.navbar .navbar-nav > .active > a {
-    background: var(--hover-color) !important;
-}
-
-#logout {
-    margin-top: -30px;
-}
-
 /* ---------------------------- playground -------------------------- */
 
 /* value boxes */
@@ -138,16 +97,6 @@ a {
 
 .white-link:hover {
     text-decoration: underline;
-}
-
-/* sidebar */
-#sidebar.well {
-    background: var(--light-color);
-    border-radius: 0px;
-    font-size: 12px;
-    height: 1200px;
-    margin: -8px 0px 0px -5px;
-    padding: 30px 15px 30px 15px;
 }
 
 #datainfo {

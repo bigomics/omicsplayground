@@ -1,0 +1,10 @@
+#!/bin/bash
+
+##xvfb-run -a /usr/local/bin/orca-1.3.1.AppImage --appimage-extract-and-run --no-sandbox "$@"
+
+## From: https://github.com/plotly/orca
+#xvfb-run -a /usr/local/bin/orca-1.3.1.AppImage "$@"
+
+# From: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-discuss/NpsDdbtSRsU
+xvfb-run -a --server-args='-screen 0 1024x768x24' /usr/local/bin/orca-1.3.1.AppImage --appimage-extract-and-run --no-sandbox "$@"
+

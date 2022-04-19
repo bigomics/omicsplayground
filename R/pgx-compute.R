@@ -4,8 +4,6 @@
 ##
 
 
-source(file.path(RDIR,"ngs-functions.R"))
-
 if(0) {
     X=NULL;is.logx=NULL;do.cluster=TRUE;auto.scale=TRUE;only.known=TRUE
     max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;

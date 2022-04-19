@@ -1,0 +1,12 @@
+This folder (.../lib) should contain only internal data that is needed
+by the app. Traditionally R packages would put it as R/sysdata.rda but
+because we have many data objects we are putting it in a separate
+folder for now.
+
+The folder 'lib-raw' contains any original data and scripts that were
+used to create the data in this folder. See also the scripts in the
+folder .../tools/build. Note the similarity to 'data' and 'data-raw'
+folders in R packages.
+
+Eventually, this folder should only contains processed data as *.rda
+or *.rds objects, as is recommended by R packaging.

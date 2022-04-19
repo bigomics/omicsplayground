@@ -23,13 +23,13 @@ run.docker:
 build.base:
 	@echo building docker BASE
 	docker build --no-cache \
-		-f docker/Dockerfile.base \
+		-f dev/docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground:base .
 
 build.docker:
 	@echo building docker $(TAG)
 	docker build --no-cache --build-arg TAG=$(TAG) \
-		-f docker/Dockerfile \
+		-f dev/docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(TAG) .
 
 bash.docker:

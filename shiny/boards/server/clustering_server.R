@@ -646,12 +646,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     ##if(DEV) topmodes <- c("sd","specific","pca")
     
     hm_splitmap_opts = shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
+        withTooltip( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
                              choices=c("ComplexHeatmap","iHeatmap"),
                              selected="ComplexHeatmap", inline=TRUE, width='100%'),
                "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
                placement="right",options = list(container = "body")),
-        shinyBS::tipify( shiny::radioButtons(
+        withTooltip( shiny::radioButtons(
             ns("hm_splitby"), "Split samples by:", inline=TRUE,
             ## selected="phenotype",
             choices=c("none","phenotype","gene")),
@@ -659,38 +659,38 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                placement="right",options = list(container = "body")),
         shiny::conditionalPanel(
             "input.hm_splitby != 'none'", ns=ns,
-            shinyBS::tipify( shiny::selectInput(ns("hm_splitvar"), NULL, choices=""),
+            withTooltip( shiny::selectInput(ns("hm_splitvar"), NULL, choices=""),
                    "Specify phenotype or gene for splitting the columns of the heatmap.",
                    placement="right",options = list(container = "body")),
         ),
         shiny::fillRow(
             height = 50,
-            shinyBS::tipify( shiny::selectInput(ns('hm_topmode'),'Top mode:',topmodes, width='100%'),
+            withTooltip( shiny::selectInput(ns('hm_topmode'),'Top mode:',topmodes, width='100%'),
                    "Specify the criteria for selecting top features to be shown in the heatmap.",
                    placement = "right", options = list(container = "body")),
-            shinyBS::tipify( shiny::selectInput(ns('hm_ntop'),'Top N:',c(50,150,500),selected=50),
+            withTooltip( shiny::selectInput(ns('hm_ntop'),'Top N:',c(50,150,500),selected=50),
                    "Select the number of top features in the heatmap.",
                    placement="right", options = list(container = "body")),
-            shinyBS::tipify( shiny::selectInput(ns('hm_clustk'),'K:',1:6,selected=4),
+            withTooltip( shiny::selectInput(ns('hm_clustk'),'K:',1:6,selected=4),
                    "Select the number of gene clusters.",
                    placement="right", options = list(container = "body"))
         ),
         ##br(),
-        shinyBS::tipify( shiny::radioButtons(
+        withTooltip( shiny::radioButtons(
             ns('hm_scale'), 'Scale:', choices=c('relative','absolute','BMC'), inline=TRUE),
             ## ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
             "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
             placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::checkboxInput(
+        withTooltip( shiny::checkboxInput(
             ns('hm_legend'), 'show legend', value=TRUE), "Show or hide the legend.",
             placement="right", options = list(container = "body")),
         shiny::fillRow(
             height = 50,
             ## shiny::checkboxInput(ns("hm_labRow"),NULL),
-            shinyBS::tipify( shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width='100%'),
+            withTooltip( shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width='100%'),
                    "Specify the row label size. Set to 0 to suppress row labels.",
                    placement="right",options = list(container = "body")),
-            shinyBS::tipify( shiny::numericInput(ns("hm_cexCol"), "cexCol:", 1, 0, 1.4, 0.1, width='100%'),
+            withTooltip( shiny::numericInput(ns("hm_cexCol"), "cexCol:", 1, 0, 1.4, 0.1, width='100%'),
                    "Specify the column label size. Set to 0 to suppress column labels.",
                    placement="right", options = list(container = "body"))            
         ),
@@ -1230,7 +1230,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
 
     hm_parcoord_opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('hm_pcscale'),'Scale values',TRUE),
+        withTooltip( shiny::checkboxInput(ns('hm_pcscale'),'Scale values',TRUE),
                "Scale expression values to mean=0 and SD=1.",
                placement="right",options = list(container = "body"))
     )
@@ -1524,18 +1524,18 @@ displays the expression levels of selected genes across all conditions in the an
     })
 
     clustannot_plots_opts = shiny::tagList(
-        shinyBS::tipify( shiny::selectInput(ns("xann_level"), "Reference level:",
+        withTooltip( shiny::selectInput(ns("xann_level"), "Reference level:",
                             choices=c("gene","geneset","phenotype"),
                             selected="geneset", width='80%'),
                "Select the level of an anotation analysis.",
                placement="left", options = list(container = "body")),
         shiny::conditionalPanel(
             "input.xann_level == 'geneset'", ns=ns,
-            shinyBS::tipify( shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
+            withTooltip( shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
                    "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
                    placement="left", options = list(container = "body"))
         ),
-        shinyBS::tipify( shiny::selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
+        withTooltip( shiny::selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
                "Specify a reference set to be used in the annotation.",
                placement="left",options = list(container = "body"))
     )
@@ -1849,7 +1849,7 @@ displays the expression levels of selected genes across all conditions in the an
 
 
     clust_featureRank.opts =  shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons( ns('clust_featureRank_method'),'Method:',
+        withTooltip( shiny::radioButtons( ns('clust_featureRank_method'),'Method:',
                              choices=c("p-value","correlation","meta"),
                              inline=TRUE),
                "Choose ranking method: p-value based or correlation-based.",

@@ -3,37 +3,47 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+
+#' DataView module UI Input function
+#'
+#' @description A shiny Module. Renders the input parts (sidebar contents) for the module.
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        tags$div(
-         HTML("<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables.")
-        ),
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),
-            shinyBS::tipify( shiny::selectizeInput(ns("search_gene"),"Gene:", choices=NULL),
-                   "Enter a gene of interest for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
-                                choices=NULL, multiple=TRUE),
-                   "Filter the relevant samples for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
-                   "Select phenotype for grouping the samples.", placement="top"),
-            shiny::br(),
-            shinyBS::tipify( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.data_options % 2 == 1", ns=ns,
-                shinyBS::tipify( shiny::radioButtons(ns('data_type'),'Data type:',
-                                     choices=c("counts","logCPM"), selected="logCPM", inline=TRUE),
-                       "Choose an input data type for the analysis.", placement="bottom")
-            )
+    bigdash::tabSettings(
+        withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
+                "Show more information about this module."),
+        shiny::hr(), shiny::br(),
+        withTooltip( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
+                "Enter a gene of interest for the analysis.", placement="top"),
+        withTooltip( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
+                            choices=NULL, multiple=TRUE),
+                "Filter the relevant samples for the analysis.", placement="top"),
+        withTooltip( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+                "Select phenotype for grouping the samples.", placement="top"),
+        shiny::br(),
+        withTooltip( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                "Toggle advanced options.", placement="top"),
+        shiny::br(),br(),
+        shiny::conditionalPanel(
+            "input.data_options % 2 == 1", ns=ns,
+            withTooltip( shiny::radioButtons(ns('data_type'),'Data type:',
+                                    choices=c("counts","logCPM"), selected="logCPM", inline=TRUE),
+                    "Choose an input data type for the analysis.", placement="bottom")
         )
     )
 }
 
+#' DataView module UI output function
+#'
+#' @description Renders the output part for the module as tabsetPanel object
+#'
+#' @param id Internal parameters for {shiny}.
+#' #'
+#' @export 
 DataViewUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tabsetPanel(

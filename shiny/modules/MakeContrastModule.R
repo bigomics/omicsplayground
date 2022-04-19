@@ -120,7 +120,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                     ##"After creating the groups, press this button to add the comparison to the table."a),
                                     shiny::br()
                                 ),
-                                shinyBS::tipify(
+                                withTooltip(
                                     shiny::uiOutput(ns("createcomparison"),
                                              style="font-size:13px; height: 280px; overflow-y: scroll;"),
                                     "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
@@ -135,7 +135,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     shiny::fillRow(
                         height = 24,
                         flex = c(NA,0.05,NA,NA,1),
-                        shinyBS::tipify(
+                        withTooltip(
                             shiny::actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
                                          class="small-button"),
                             "If you are feeling lucky, try this to automatically create contrasts.",
@@ -501,7 +501,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             })
             
             pcaplot.opts = shiny::tagList(
-                shinyBS::tipify( shiny::selectInput( ns("pcaplot.method"), "Method:",
+                withTooltip( shiny::selectInput( ns("pcaplot.method"), "Method:",
                                     choices = c("pca","tsne","umap"),
                                     width = '100%'),"Choose clustering method.",
                        placement="right", options = list(container = "body"))

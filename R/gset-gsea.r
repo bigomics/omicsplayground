@@ -177,7 +177,7 @@ gsea.fitAllContrasts <- function( X, gmt, design, contr.matrix, output_dir,
     return(outputs)
 }
 
-##X=xx;y=yy
+
 run.GSEA <- function( X, y, gmt, output.dir=NULL, fdr=0.25, set.min=15,
                      set.max=500, topgs=100, nperm=1000, permute="phenotype",
                      scoring="weighted", do.leading.edge=FALSE, rpt.label="gsea",

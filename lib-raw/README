@@ -1,0 +1,4 @@
+This folder 'lib-raw' contains any original data and scripts that are
+used to create the processed data in the 'lib' folder. See also some
+scripts in the folder .../tools/build. Note the similarity to 'data'
+and 'data-raw' folders in R packages.

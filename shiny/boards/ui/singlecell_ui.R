@@ -5,32 +5,26 @@
 
 SingleCellInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        tags$div(
-         HTML("<b>Single-Cell Profiling</b>. Visualize the distribution of (inferred)
-            immune cell types, expressed genes and pathway activation.")
-        ),
-        shiny::tagList(
-            shinyBS::tipify(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
-                   "Show more information about this module."),
-            shiny::hr(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("options"), "Options",
-                               icon=icon("cog", lib = "glyphicon")),
-                   "Toggle options", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns, 
-                shiny::tagList(
-                    shinyBS::tipify(shiny::selectInput(ns("samplefilter"),"Filter samples:",
-                                       choices=NULL, multiple=TRUE),
-                           "Filter relevant samples (cells).",
-                           placement="top", options = list(container = "body")),
-                    
-                    shinyBS::tipify(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
-                                       selected="default"),
-                           "Specify a layout for the figures: t-SNE or PCA-based layout.",
-                           placement="top", options = list(container = "body"))
-                )
+    bigdash::tabSettings(
+        withTooltip(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
+                "Show more information about this module."),
+        shiny::hr(),br(),
+        withTooltip( shiny::actionLink(ns("options"), "Options",
+                            icon=icon("cog", lib = "glyphicon")),
+                "Toggle options", placement="top"),
+        shiny::br(),br(),
+        shiny::conditionalPanel(
+            "input.options % 2 == 1", ns=ns, 
+            shiny::tagList(
+                withTooltip(shiny::selectInput(ns("samplefilter"),"Filter samples:",
+                                    choices=NULL, multiple=TRUE),
+                        "Filter relevant samples (cells).",
+                        placement="top", options = list(container = "body")),
+                
+                withTooltip(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
+                                    selected="default"),
+                        "Specify a layout for the figures: t-SNE or PCA-based layout.",
+                        placement="top", options = list(container = "body"))
             )
         )
     )
@@ -150,10 +144,10 @@ SingleCellUI <- function(id) {
             #         of ligand-receptor genes as a graph..")
             #     ),
             #     shiny::inputPanel(
-            #         shinyBS::tipify( shiny::selectInput(ns("italk_groups"),NULL, choices=""),
+            #         withTooltip( shiny::selectInput(ns("italk_groups"),NULL, choices=""),
             #             "Select the phenotype parameter to divide samples into groups.",
             #             placement="right"),
-            #         shinyBS::tipify( shiny::selectInput(ns("italk_category"),NULL,
+            #         withTooltip( shiny::selectInput(ns("italk_category"),NULL,
             #                             choices=c('cytokine','growth factor','checkpoint','other')),
             #             "Select the gene category for finding L/R pairs.",
             #             placement="right")

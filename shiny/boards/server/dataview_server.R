@@ -2,6 +2,15 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
+
+#' DataView module server function
+#'
+#' @description A shiny Module (server code).
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#' @param inputData Reactive expression that provides the input ngs/pgx data object 
+#'
+#' @export 
 DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
@@ -1293,7 +1302,7 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
     data_phenoHeatmap_opts <- shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")
     )
 
@@ -1326,7 +1335,7 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
     data_phenotypeAssociation_opts <- shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")
     )
 
@@ -1433,7 +1442,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
 
     data_contrastTable_opts = shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns('data_ctbygroup'),
+        withTooltip( shiny::radioButtons(ns('data_ctbygroup'),
                              "Show by:", choices=c("sample","group")),
                "Show contrasts by group or by samples.",
                placement="right", options = list(container = "body"))

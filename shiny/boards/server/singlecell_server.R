@@ -303,17 +303,17 @@ SingleCellBoard <- function(input, output, session, inputData)
     })
 
     icp.opts = shiny::tagList(
-        shinyBS::tipify(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
+        withTooltip(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
+        withTooltip(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::radioButtons(ns("sortby"),"Sort by:",
+        withTooltip(shiny::radioButtons(ns("sortby"),"Sort by:",
                             choices=c("probability","name"), inline=TRUE),
                "Sort by name or probability.", placement="top",
                options = list(container = "body")),
-        shinyBS::tipify(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
+        withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
                "Choose layout.", 
@@ -432,7 +432,7 @@ SingleCellBoard <- function(input, output, session, inputData)
 
 
     phenoplot.opts <- shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
+        withTooltip( shiny::radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
                "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
     )
 
@@ -603,16 +603,16 @@ SingleCellBoard <- function(input, output, session, inputData)
     message("[SingleCellBoard::mapping.plotFUNC] 1")
     
     mapping.opts = shiny::tagList(
-        shinyBS::tipify(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
+        withTooltip(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
                "Specify the plot type: dotmap, or heatmap.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("refset2"), "reference:", choices=NULL),
+        withTooltip(shiny::selectInput(ns("refset2"), "reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("dcmethod2"),"method:", choices=NULL),
+        withTooltip(shiny::selectInput(ns("dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("group2"), "group by:", "group", selected = NULL),
+        withTooltip(shiny::selectInput(ns("group2"), "group by:", "group", selected = NULL),
                "Group the samples/cells by grouping factor.",
                placement="top", options=list(container="body"))
     )
@@ -852,13 +852,13 @@ SingleCellBoard <- function(input, output, session, inputData)
 
 
     crosstab.opts <- shiny::tagList(
-        shinyBS::tipify(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+        withTooltip(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
                            "Choose a predefined phenotype group on the x-axis.",
                            placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+        withTooltip(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose a predefined phenotype group on the y-axis.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+        withTooltip(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
                "Visualize the expression barplot of a gene by specifying the gene name.",
                placement="top", options = list(container = "body"))
         ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
@@ -1035,17 +1035,17 @@ SingleCellBoard <- function(input, output, session, inputData)
     })
 
     markersplot.opts = shiny::tagList(
-        shinyBS::tipify(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
+        withTooltip(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
                "Specify the level of the marker analysis: gene or gene set level.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
+        withTooltip(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
                            multiple=FALSE),
                "Select a particular functional group for the analysis.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::textInput(ns("mrk_search"),"Filter:"),
+        withTooltip(shiny::textInput(ns("mrk_search"),"Filter:"),
                "Filter markers by a specific keywords.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
+        withTooltip(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
                             choices=c("intensity","name"), inline=TRUE),
                "Sort by name or intensity.", placement="top",
                options = list(container = "body"))
@@ -1113,10 +1113,10 @@ SingleCellBoard <- function(input, output, session, inputData)
     })
 
     cyto.opts = shiny::tagList(
-        shinyBS::tipify(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+        withTooltip(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
                "Select your prefered gene on the x-axis.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+        withTooltip(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose your prefered gene on the y-axis.",
                placement="top", options = list(container = "body"))
     )
@@ -1217,13 +1217,13 @@ SingleCellBoard <- function(input, output, session, inputData)
     # })
 
     # cna.opts = shiny::tagList(
-    #     shinyBS::tipify(shiny::radioButtons(ns("cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
+    #     withTooltip(shiny::radioButtons(ns("cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
     #            "Select the computational method for CNV inference. The <tt>sma40</tt> method uses a fast moving average of the relative expression values with a window of 40 genes. <tt>inferCNV</tt> uses the method inferCNV of the Trinity CTAT Project (warning: this method is very slow!)."),
-    #     shinyBS::tipify(shiny::selectInput(ns("cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
+    #     withTooltip(shiny::selectInput(ns("cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
     #            "Select what annotation variable to show together with the heatmap", placement = "top"),
     #     ##checkboxGroupInput('cnaoptions','',c("bin20"), inline=TRUE),
     #     ##radioButtons('cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
-    #     shinyBS::tipify(shiny::radioButtons(ns("cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
+    #     withTooltip(shiny::radioButtons(ns("cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
     #            "Select how to order the vertical (sample) axis: clustering or according the loading of the first principal component.")
     # )
 
@@ -1404,7 +1404,7 @@ SingleCellBoard <- function(input, output, session, inputData)
 #         title = "Ligand-Receptor plot", label="a",
 #         info.text = italk_LRPlot_info,
 #         options = shiny::tagList(
-#             shinyBS::tipify( shiny::selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
+#             withTooltip( shiny::selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
 #                                 choices=c(10,15,25,50,75,100),selected=25),
 #                    "Select the maximum number of LR pairs to include in the LR plot.",
 #                    placement="top")
@@ -1439,7 +1439,7 @@ SingleCellBoard <- function(input, output, session, inputData)
 #         title = "NetView", label="c",
 #         info.text = italk_netview_info,
 #         options = shiny::tagList(
-#             shinyBS::tipify( shiny::selectInput(ns("italk_netview_topgenes"),"top genes",
+#             withTooltip( shiny::selectInput(ns("italk_netview_topgenes"),"top genes",
 #                                 choices=c(10,25,50,75,100),selected=50),
 #                    "Select the number of topgenes to search for ligand-receptor pairs.",
 #                    placement="top" )

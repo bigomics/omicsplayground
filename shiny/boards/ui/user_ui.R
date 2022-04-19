@@ -5,10 +5,9 @@
 
 UserInputs <- function(id) {
     ns <- shiny::NS(id)
-    shiny::tagList(
-               HTML("<h3>User Settings</h3><br><br>"),
-               shiny::uiOutput(ns("description"))
-           )
+    bigdash::tabSettings(
+        shiny::uiOutput(ns("description"))
+    )
 }
 
 UserUI <- function(id) {

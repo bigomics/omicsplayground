@@ -753,11 +753,11 @@ infotext =
     })
 
     overlapScorePlot.opts = shiny::tagList(
-        shinyBS::tipify(shiny::radioButtons(ns("overlapScorePlot_ntop"),
+        withTooltip(shiny::radioButtons(ns("overlapScorePlot_ntop"),
                             "Number of features",c(60,120,250),inline=TRUE),
                "Specify the number to top features to show.",
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::checkboxInput(ns("overlapScorePlot_shownames"),
+        withTooltip(shiny::checkboxInput(ns("overlapScorePlot_shownames"),
                              "Show feature names",TRUE),
                "Select to show/hide the feature names in the plot.",
                placement="top", options = list(container = "body"))
@@ -907,11 +907,11 @@ infotext =
     markers_caption = "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
     
     markers.opts = shiny::tagList(
-        shinyBS::tipify(shiny::radioButtons(ns("markers_sortby"),"Sort by:",
+        withTooltip(shiny::radioButtons(ns("markers_sortby"),"Sort by:",
                             choices=c("correlation","probability","name"), inline=TRUE),
                "Sort by correlation, probability or name.", placement="top",
                options = list(container = "body")),
-        shinyBS::tipify(shiny::radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
+        withTooltip(shiny::radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
                "Choose layout.", 

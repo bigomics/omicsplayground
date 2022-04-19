@@ -6,6 +6,7 @@
 .Renviron
 .Rproj.user
 *.Rproj
+*.Rd2pdf*
 
 # Backup files
 ######################
@@ -37,6 +38,7 @@ Thumbs.db
 
 data/*.pgx
 data/*.pgx_
+!data/example-data.pgx
 data/*.csv
 logs/*.rds
 /logs/
@@ -50,3 +52,5 @@ bigomics-extra.js
 .Rproj.user
 omicsplayground.Rproj
 Renviron.site
+.Rdata
+inst/doc

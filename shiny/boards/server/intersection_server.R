@@ -623,7 +623,7 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
     })
 
     scatterPlotMatrix.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns("splom_highlight"),"Highlight genes",TRUE),
+        withTooltip( shiny::checkboxInput(ns("splom_highlight"),"Highlight genes",TRUE),
                "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool.")
         ##tipify( shiny::selectInput(ns("splom_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
@@ -748,10 +748,10 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
         ##    shiny::checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
         shiny::fillRow(
             flex=c(1,1), ## height=80,       
-            shinyBS::tipify( shiny::selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
+            withTooltip( shiny::selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
                    "Threshold for false discovery rate",
                    placement="right", options = list(container = "body")),
-            shinyBS::tipify( shiny::selectInput(ns("lfc"),"logFC threshold",
+            withTooltip( shiny::selectInput(ns("lfc"),"logFC threshold",
                                 choices = c(0,0.1,0.2,0.5,1,2,5),
                                 selected = 0.2),
                    "Threshold for fold-change (log2 scale)",
@@ -1023,9 +1023,9 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
     })
 
     pairsPlot.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns("pairsplot_labelgenes"),"Label genes",TRUE),
+        withTooltip( shiny::checkboxInput(ns("pairsplot_labelgenes"),"Label genes",TRUE),
                "Label genes on the plots."),
-        shinyBS::tipify( shiny::checkboxInput(ns("pairsplot_showselected"),"Show selected",TRUE),
+        withTooltip( shiny::checkboxInput(ns("pairsplot_showselected"),"Show selected",TRUE),
                "Show selected genes.")
         ##tipify( shiny::selectInput(ns("pairs_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
@@ -1093,11 +1093,11 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
     })
     
     FoldchangeHeatmap.opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('FoldchangeHeatmap_allfc'), "show all contrasts", TRUE),
+        withTooltip( shiny::checkboxInput(ns('FoldchangeHeatmap_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
-        shinyBS::tipify( shiny::checkboxInput(ns('FoldchangeHeatmap_cluster'), "cluster genes", FALSE),
+        withTooltip( shiny::checkboxInput(ns('FoldchangeHeatmap_cluster'), "cluster genes", FALSE),
                "Cluster genes (columns)."),
-        shinyBS::tipify( shiny::radioButtons(ns('FoldchangeHeatmap_annotype'), "annotation type",
+        withTooltip( shiny::radioButtons(ns('FoldchangeHeatmap_annotype'), "annotation type",
                              c("boxplot","barplot"), inline=TRUE),
                "Plot type of column annotation.")
         )
@@ -1260,11 +1260,11 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
     ctcorrplot.opts = shiny::tagList(
         ##tipify( shiny::checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
         ##"Show correlation values in cells."),
-        shinyBS::tipify( shiny::checkboxInput(ns('ctcorrplot_allfc'), "show all contrasts", TRUE),
+        withTooltip( shiny::checkboxInput(ns('ctcorrplot_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
         ##tipify( shiny::checkboxInput('ctcorrplot_fixed', "fix heatmap", FALSE),
         ##       "Fix heatmap layout when changing number of top genes"),
-        shinyBS::tipify( shiny::radioButtons(ns('ctcorrplot_ntop'), "number of top genes",
+        withTooltip( shiny::radioButtons(ns('ctcorrplot_ntop'), "number of top genes",
                              c("100","1000","all"),
                              selected="1000", inline=TRUE),
                "Number of top genes to compute correlation values.") 

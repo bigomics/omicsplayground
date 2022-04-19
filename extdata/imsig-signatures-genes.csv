@@ -1,0 +1,785 @@
+Table S1,,,,,
+Genes defined by ImSig used for deconvolution of blood and tissue datasets,,,,,
+ImSig cell type,Gene Symbol,Gene Name,ENTREZID,ImSigBlood,ImSigTissue
+B cells,ABCB4,"ATP-binding cassette, sub-family B (MDR/TAP), member 4",5244,Blood,
+B cells,ADAM28,ADAM metallopeptidase domain 28,10863,Blood,
+B cells,AFF3,"AF4/FMR2 family, member 3",3899,Blood,Tissue
+B cells,BANK1,B-cell scaffold protein with ankyrin repeats 1,55024,Blood,Tissue
+B cells,BCL11A,B-cell CLL/lymphoma 11A (zinc finger protein),53335,Blood,
+B cells,BLK,"BLK proto-oncogene, Src family tyrosine kinase",640,Blood,Tissue
+B cells,BTLA,B and T lymphocyte associated,151888,Blood,Tissue
+B cells,CCR6,chemokine (C-C motif) receptor 6,1235,Blood,Tissue
+B cells,CD180,CD180 molecule,4064,,Tissue
+B cells,CD19,CD19 molecule,930,Blood,Tissue
+B cells,CD200,CD200 molecule,4345,Blood,
+B cells,CD22,CD22 molecule,933,Blood,Tissue
+B cells,CD37,CD37 molecule,951,,Tissue
+B cells,CD72,CD72 molecule,971,Blood,Tissue
+B cells,CD79A,"CD79a molecule, immunoglobulin-associated alpha",973,Blood,Tissue
+B cells,CD79B,"CD79b molecule, immunoglobulin-associated beta",974,Blood,Tissue
+B cells,CDCA7L,cell division cycle associated 7-like,55536,Blood,
+B cells,CR2,complement component (3d/Epstein Barr virus) receptor 2,1380,Blood,Tissue
+B cells,E2F5,"E2F transcription factor 5, p130-binding",1875,Blood,
+B cells,EBF1,early B-cell factor 1,1879,Blood,Tissue
+B cells,FAM129C,"family with sequence similarity 129, member C",199786,Blood,Tissue
+B cells,FCRL1,Fc receptor-like 1,115350,Blood,Tissue
+B cells,FCRL2,Fc receptor-like 2,79368,,Tissue
+B cells,FCRL3,Fc receptor-like 3,115352,,Tissue
+B cells,FCRL5,Fc receptor-like 5,83416,,Tissue
+B cells,FCRLA,Fc receptor-like A,84824,Blood,Tissue
+B cells,GNG7,"guanine nucleotide binding protein (G protein), gamma 7",2788,Blood,
+B cells,HLA-DOB,"major histocompatibility complex, class II, DO beta",3112,Blood,Tissue
+B cells,IGHV5-78,immunoglobulin heavy variable 5-78 (pseudogene),28387,,Tissue
+B cells,KIAA0125,KIAA0125,9834,Blood,Tissue
+B cells,KLHL14,kelch-like family member 14,57565,Blood,
+B cells,LINC00926,long intergenic non-protein coding RNA 926,283663,Blood,Tissue
+B cells,LOC100507616,uncharacterized LOC100507616,100507616,,Tissue
+B cells,LY9,lymphocyte antigen 9,4063,,Tissue
+B cells,MACROD2,MACRO domain containing 2,140733,Blood,
+B cells,MS4A1,"membrane-spanning 4-domains, subfamily A, member 1",931,Blood,Tissue
+B cells,NT5E,"5'-nucleotidase, ecto (CD73)",4907,Blood,
+B cells,OSBPL10,oxysterol binding protein-like 10,114884,Blood,
+B cells,P2RX5,"purinergic receptor P2X, ligand-gated ion channel, 5",5026,Blood,Tissue
+B cells,PAX5,paired box 5,5079,Blood,Tissue
+B cells,PCDH9,protocadherin 9,5101,Blood,
+B cells,PNOC,prepronociceptin,5368,Blood,Tissue
+B cells,POU2F2,POU class 2 homeobox 2,5452,,Tissue
+B cells,PTPRK,"protein tyrosine phosphatase, receptor type, K",5796,Blood,
+B cells,QRSL1,glutaminyl-tRNA synthase (glutamine-hydrolyzing)-like 1,55278,Blood,
+B cells,RAB30,"RAB30, member RAS oncogene family",27314,Blood,
+B cells,RALGPS2,Ral GEF with PH domain and SH3 binding motif 2,55103,Blood,
+B cells,S1PR4,sphingosine-1-phosphate receptor 4,8698,,Tissue
+B cells,SNX22,sorting nexin 22,79856,,Tissue
+B cells,SNX29P1,sorting nexin 29 pseudogene 1,100652781,Blood,
+B cells,SPIB,Spi-B transcription factor (Spi-1/PU.1 related),6689,Blood,
+B cells,STAP1,signal transducing adaptor family member 1,26228,Blood,Tissue
+B cells,STRBP,spermatid perinuclear RNA binding protein,55342,Blood,
+B cells,TCF4,transcription factor 4,6925,Blood,
+B cells,TCL1A,T-cell leukemia/lymphoma 1A,8115,Blood,Tissue
+B cells,TLR10,toll-like receptor 10,81793,Blood,Tissue
+B cells,TSPAN13,tetraspanin 13,27075,Blood,
+B cells,VPREB3,pre-B lymphocyte 3,29802,Blood,Tissue
+Cell cycle,ANLN,"anillin, actin binding protein",54443,Blood,Tissue
+Cell cycle,ASPM,"asp (abnormal spindle) homolog, microcephaly associated (Drosophila)",259266,Blood,Tissue
+Cell cycle,AURKA,aurora kinase A,6790,Blood,Tissue
+Cell cycle,AURKB,aurora kinase B,9212,,Tissue
+Cell cycle,BIRC5,baculoviral IAP repeat containing 5,332,,Tissue
+Cell cycle,BUB1,BUB1 mitotic checkpoint serine/threonine kinase,699,Blood,Tissue
+Cell cycle,BUB1B,BUB1 mitotic checkpoint serine/threonine kinase B,701,Blood,Tissue
+Cell cycle,CASC5,cancer susceptibility candidate 5,57082,Blood,Tissue
+Cell cycle,CCNA2,cyclin A2,890,Blood,Tissue
+Cell cycle,CCNB1,cyclin B1,891,Blood,Tissue
+Cell cycle,CCNB2,cyclin B2,9133,Blood,Tissue
+Cell cycle,CCNE2,cyclin E2,9134,Blood,Tissue
+Cell cycle,CDC20,cell division cycle 20,991,Blood,Tissue
+Cell cycle,CDC6,cell division cycle 6,990,Blood,Tissue
+Cell cycle,CDCA2,cell division cycle associated 2,157313,Blood,Tissue
+Cell cycle,CDCA3,cell division cycle associated 3,83461,,Tissue
+Cell cycle,CDCA5,cell division cycle associated 5,113130,,Tissue
+Cell cycle,CDCA7,cell division cycle associated 7,83879,Blood,Tissue
+Cell cycle,CDCA8,cell division cycle associated 8,55143,,Tissue
+Cell cycle,CDK1,cyclin-dependent kinase 1,983,Blood,Tissue
+Cell cycle,CDKN3,cyclin-dependent kinase inhibitor 3,1033,Blood,Tissue
+Cell cycle,CDT1,chromatin licensing and DNA replication factor 1,81620,,Tissue
+Cell cycle,CENPA,centromere protein A,1058,,Tissue
+Cell cycle,CENPE,"centromere protein E, 312kDa",1062,Blood,Tissue
+Cell cycle,CENPF,"centromere protein F, 350/400kDa",1063,Blood,Tissue
+Cell cycle,CENPL,centromere protein L,91687,,Tissue
+Cell cycle,CEP55,centrosomal protein 55kDa,55165,Blood,Tissue
+Cell cycle,CKS1B,CDC28 protein kinase regulatory subunit 1B,1163,,Tissue
+Cell cycle,DEPDC1,DEP domain containing 1,55635,,Tissue
+Cell cycle,DEPDC1B,DEP domain containing 1B,55789,Blood,Tissue
+Cell cycle,DLGAP5,"discs, large (Drosophila) homolog-associated protein 5",9787,Blood,Tissue
+Cell cycle,DONSON,downstream neighbor of SON,29980,,Tissue
+Cell cycle,DTL,denticleless E3 ubiquitin protein ligase homolog (Drosophila),51514,Blood,Tissue
+Cell cycle,E2F8,E2F transcription factor 8,79733,Blood,Tissue
+Cell cycle,ECT2,epithelial cell transforming 2,1894,,Tissue
+Cell cycle,EZH2,enhancer of zeste 2 polycomb repressive complex 2 subunit,2146,Blood,Tissue
+Cell cycle,FAM72C,"family with sequence similarity 72, member C",554282,Blood,Tissue
+Cell cycle,FANCI,"Fanconi anemia, complementation group I",55215,,Tissue
+Cell cycle,FBXO5,F-box protein 5,26271,Blood,Tissue
+Cell cycle,FOXM1,forkhead box M1,2305,,Tissue
+Cell cycle,GINS1,GINS complex subunit 1 (Psf1 homolog),9837,Blood,Tissue
+Cell cycle,GINS2,GINS complex subunit 2 (Psf2 homolog),51659,Blood,Tissue
+Cell cycle,GMNN,"geminin, DNA replication inhibitor",51053,Blood,Tissue
+Cell cycle,HJURP,Holliday junction recognition protein,55355,Blood,Tissue
+Cell cycle,HMGB3,high mobility group box 3,3149,,Tissue
+Cell cycle,HMMR,hyaluronan-mediated motility receptor (RHAMM),3161,Blood,Tissue
+Cell cycle,KIAA0101,KIAA0101,9768,Blood,Tissue
+Cell cycle,KIF11,kinesin family member 11,3832,Blood,Tissue
+Cell cycle,KIF14,kinesin family member 14,9928,Blood,Tissue
+Cell cycle,KIF15,kinesin family member 15,56992,Blood,Tissue
+Cell cycle,KIF18B,kinesin family member 18B,146909,,Tissue
+Cell cycle,KIF20A,kinesin family member 20A,10112,Blood,Tissue
+Cell cycle,KIF2C,kinesin family member 2C,11004,,Tissue
+Cell cycle,KIF4A,kinesin family member 4A,24137,Blood,Tissue
+Cell cycle,MAD2L1,MAD2 mitotic arrest deficient-like 1 (yeast),4085,Blood,Tissue
+Cell cycle,MCM10,minichromosome maintenance complex component 10,55388,,Tissue
+Cell cycle,MCM2,minichromosome maintenance complex component 2,4171,Blood,Tissue
+Cell cycle,MCM4,minichromosome maintenance complex component 4,4173,Blood,Tissue
+Cell cycle,MCM6,minichromosome maintenance complex component 6,4175,,Tissue
+Cell cycle,MELK,maternal embryonic leucine zipper kinase,9833,Blood,Tissue
+Cell cycle,MKI67,marker of proliferation Ki-67,4288,,Tissue
+Cell cycle,MND1,meiotic nuclear divisions 1 homolog (S. cerevisiae),84057,,Tissue
+Cell cycle,MTFR2,mitochondrial fission regulator 2,113115,,Tissue
+Cell cycle,NCAPG,"non-SMC condensin I complex, subunit G",64151,,Tissue
+Cell cycle,NCAPG2,"non-SMC condensin II complex, subunit G2",54892,,Tissue
+Cell cycle,NDC80,NDC80 kinetochore complex component,10403,Blood,Tissue
+Cell cycle,NEK2,NIMA-related kinase 2,4751,Blood,Tissue
+Cell cycle,NUF2,"NUF2, NDC80 kinetochore complex component",83540,Blood,Tissue
+Cell cycle,NUSAP1,nucleolar and spindle associated protein 1,51203,Blood,Tissue
+Cell cycle,OIP5,Opa interacting protein 5,11339,Blood,Tissue
+Cell cycle,PARPBP,PARP1 binding protein,55010,Blood,Tissue
+Cell cycle,PBK,PDZ binding kinase,55872,Blood,Tissue
+Cell cycle,PCNA,proliferating cell nuclear antigen,5111,Blood,Tissue
+Cell cycle,PLK4,polo-like kinase 4,10733,Blood,Tissue
+Cell cycle,POLE2,"polymerase (DNA directed), epsilon 2, accessory subunit",5427,,Tissue
+Cell cycle,POLQ,"polymerase (DNA directed), theta",10721,,Tissue
+Cell cycle,PTTG1,pituitary tumor-transforming 1,9232,Blood,Tissue
+Cell cycle,RACGAP1,Rac GTPase activating protein 1,29127,Blood,Tissue
+Cell cycle,RAD51,RAD51 recombinase,5888,Blood,Tissue
+Cell cycle,RAD51AP1,RAD51 associated protein 1,10635,Blood,Tissue
+Cell cycle,RRM1,ribonucleotide reductase M1,6240,,Tissue
+Cell cycle,RRM2,ribonucleotide reductase M2,6241,Blood,Tissue
+Cell cycle,SHCBP1,SHC SH2-domain binding protein 1,79801,,Tissue
+Cell cycle,SKA1,spindle and kinetochore associated complex subunit 1,220134,,Tissue
+Cell cycle,SMC2,structural maintenance of chromosomes 2,10592,,Tissue
+Cell cycle,SPC25,"SPC25, NDC80 kinetochore complex component",57405,,Tissue
+Cell cycle,STIL,SCL/TAL1 interrupting locus,6491,Blood,Tissue
+Cell cycle,STMN1,stathmin 1,3925,,Tissue
+Cell cycle,TCF19,transcription factor 19,6941,,Tissue
+Cell cycle,TK1,"thymidine kinase 1, soluble",7083,Blood,Tissue
+Cell cycle,TOP2A,topoisomerase (DNA) II alpha 170kDa,7153,Blood,Tissue
+Cell cycle,TPX2,"TPX2, microtubule-associated",22974,Blood,Tissue
+Cell cycle,TRIP13,thyroid hormone receptor interactor 13,9319,,Tissue
+Cell cycle,TTK,TTK protein kinase,7272,Blood,Tissue
+Cell cycle,TYMS,thymidylate synthetase,7298,Blood,Tissue
+Cell cycle,UBE2C,ubiquitin-conjugating enzyme E2C,11065,,Tissue
+Cell cycle,UHRF1,ubiquitin-like with PHD and ring finger domains 1,29128,Blood,Tissue
+Cell cycle,ZWILCH,zwilch kinetochore protein,55055,,Tissue
+Cell cycle,ZWINT,ZW10 interacting kinetochore protein,11130,Blood,Tissue
+Interferon signalling,APOL1,"apolipoprotein L, 1",8542,Blood,Tissue
+Interferon signalling,APOL6,"apolipoprotein L, 6",80830,Blood,Tissue
+Interferon signalling,BATF2,"basic leucine zipper transcription factor, ATF-like 2",116071,Blood,Tissue
+Interferon signalling,BST2,bone marrow stromal cell antigen 2,684,Blood,Tissue
+Interferon signalling,C19orf66,chromosome 19 open reading frame 66,55337,,Tissue
+Interferon signalling,C5orf56,chromosome 5 open reading frame 56,441108,,Tissue
+Interferon signalling,CMPK2,"cytidine monophosphate (UMP-CMP) kinase 2, mitochondrial",129607,Blood,Tissue
+Interferon signalling,CMTR1,cap methyltransferase 1,23070,Blood,
+Interferon signalling,DDX58,DEAD (Asp-Glu-Ala-Asp) box polypeptide 58,23586,Blood,Tissue
+Interferon signalling,DDX60,DEAD (Asp-Glu-Ala-Asp) box polypeptide 60,55601,Blood,Tissue
+Interferon signalling,DHX58,DEXH (Asp-Glu-X-His) box polypeptide 58,79132,Blood,Tissue
+Interferon signalling,DTX3L,"deltex 3 like, E3 ubiquitin ligase",151636,Blood,Tissue
+Interferon signalling,EIF2AK2,eukaryotic translation initiation factor 2-alpha kinase 2,5610,Blood,
+Interferon signalling,EPSTI1,epithelial stromal interaction 1 (breast),94240,Blood,Tissue
+Interferon signalling,FBXO6,F-box protein 6,26270,Blood,Tissue
+Interferon signalling,GBP1,"guanylate binding protein 1, interferon-inducible",2633,Blood,Tissue
+Interferon signalling,GBP4,guanylate binding protein 4,115361,Blood,Tissue
+Interferon signalling,HELZ2,"helicase with zinc finger 2, transcriptional coactivator",85441,Blood,Tissue
+Interferon signalling,HERC5,HECT and RLD domain containing E3 ubiquitin protein ligase 5,51191,Blood,Tissue
+Interferon signalling,HERC6,HECT and RLD domain containing E3 ubiquitin protein ligase family member 6,55008,Blood,Tissue
+Interferon signalling,HESX1,HESX homeobox 1,8820,Blood,
+Interferon signalling,HSH2D,hematopoietic SH2 domain containing,84941,,Tissue
+Interferon signalling,IFI16,"interferon, gamma-inducible protein 16",3428,Blood,Tissue
+Interferon signalling,IFI35,interferon-induced protein 35,3430,Blood,Tissue
+Interferon signalling,IFI44,interferon-induced protein 44,10561,Blood,Tissue
+Interferon signalling,IFI44L,interferon-induced protein 44-like,10964,Blood,Tissue
+Interferon signalling,IFI6,"interferon, alpha-inducible protein 6",2537,Blood,Tissue
+Interferon signalling,IFIH1,interferon induced with helicase C domain 1,64135,Blood,Tissue
+Interferon signalling,IFIT1,interferon-induced protein with tetratricopeptide repeats 1,3434,Blood,Tissue
+Interferon signalling,IFIT2,interferon-induced protein with tetratricopeptide repeats 2,3433,Blood,Tissue
+Interferon signalling,IFIT3,interferon-induced protein with tetratricopeptide repeats 3,3437,Blood,Tissue
+Interferon signalling,IFIT5,interferon-induced protein with tetratricopeptide repeats 5,24138,,Tissue
+Interferon signalling,IFITM1,interferon induced transmembrane protein 1,8519,,Tissue
+Interferon signalling,IRF7,interferon regulatory factor 7,3665,Blood,Tissue
+Interferon signalling,IRF9,interferon regulatory factor 9,10379,Blood,Tissue
+Interferon signalling,ISG15,ISG15 ubiquitin-like modifier,9636,Blood,Tissue
+Interferon signalling,LAMP3,lysosomal-associated membrane protein 3,27074,,Tissue
+Interferon signalling,LAP3,leucine aminopeptidase 3,51056,Blood,Tissue
+Interferon signalling,LGALS3BP,"lectin, galactoside-binding, soluble, 3 binding protein",3959,Blood,
+Interferon signalling,LY6E,"lymphocyte antigen 6 complex, locus E",4061,Blood,
+Interferon signalling,MOV10,Mov10 RISC complex RNA helicase,4343,Blood,
+Interferon signalling,MX1,MX dynamin-like GTPase 1,4599,Blood,Tissue
+Interferon signalling,MX2,MX dynamin-like GTPase 2,4600,Blood,Tissue
+Interferon signalling,OAS1,"2'-5'-oligoadenylate synthetase 1, 40/46kDa",4938,Blood,
+Interferon signalling,OAS2,"2'-5'-oligoadenylate synthetase 2, 69/71kDa",4939,Blood,Tissue
+Interferon signalling,OAS3,"2'-5'-oligoadenylate synthetase 3, 100kDa",4940,Blood,Tissue
+Interferon signalling,OASL,2'-5'-oligoadenylate synthetase-like,8638,Blood,Tissue
+Interferon signalling,PARP10,"poly (ADP-ribose) polymerase family, member 10",84875,,Tissue
+Interferon signalling,PARP12,"poly (ADP-ribose) polymerase family, member 12",64761,Blood,Tissue
+Interferon signalling,PARP14,"poly (ADP-ribose) polymerase family, member 14",54625,Blood,Tissue
+Interferon signalling,PARP9,"poly (ADP-ribose) polymerase family, member 9",83666,Blood,Tissue
+Interferon signalling,PHF11,PHD finger protein 11,51131,Blood,Tissue
+Interferon signalling,PML,promyelocytic leukemia,5371,Blood,Tissue
+Interferon signalling,PSMB9,"proteasome (prosome, macropain) subunit, beta type, 9",5698,,Tissue
+Interferon signalling,RNF213,ring finger protein 213,57674,Blood,Tissue
+Interferon signalling,RSAD2,radical S-adenosyl methionine domain containing 2,91543,Blood,Tissue
+Interferon signalling,RTP4,receptor (chemosensory) transporter protein 4,64108,Blood,Tissue
+Interferon signalling,SAMD9,sterile alpha motif domain containing 9,54809,Blood,Tissue
+Interferon signalling,SAMD9L,sterile alpha motif domain containing 9-like,219285,Blood,Tissue
+Interferon signalling,SERPING1,"serpin peptidase inhibitor, clade G (C1 inhibitor), member 1",710,Blood,
+Interferon signalling,SHISA5,shisa family member 5,51246,,Tissue
+Interferon signalling,SIGLEC1,"sialic acid binding Ig-like lectin 1, sialoadhesin",6614,Blood,Tissue
+Interferon signalling,SP110,SP110 nuclear body protein,3431,Blood,Tissue
+Interferon signalling,SPATS2L,"spermatogenesis associated, serine-rich 2-like",26010,Blood,
+Interferon signalling,STAT1,"signal transducer and activator of transcription 1, 91kDa",6772,Blood,Tissue
+Interferon signalling,STAT2,"signal transducer and activator of transcription 2, 113kDa",6773,Blood,Tissue
+Interferon signalling,TAP1,"transporter 1, ATP-binding cassette, sub-family B (MDR/TAP)",6890,Blood,Tissue
+Interferon signalling,TDRD7,tudor domain containing 7,23424,Blood,
+Interferon signalling,TNFSF10,"tumor necrosis factor (ligand) superfamily, member 10",8743,Blood,
+Interferon signalling,TOR1B,"torsin family 1, member B (torsin B)",27348,Blood,
+Interferon signalling,TRAFD1,TRAF-type zinc finger domain containing 1,10906,Blood,Tissue
+Interferon signalling,TRIM21,tripartite motif containing 21,6737,,Tissue
+Interferon signalling,TRIM22,tripartite motif containing 22,10346,Blood,Tissue
+Interferon signalling,TRIM5,tripartite motif containing 5,85363,Blood,Tissue
+Interferon signalling,TRIM6,tripartite motif containing 6,117854,Blood,
+Interferon signalling,UBE2L6,ubiquitin-conjugating enzyme E2L 6,9246,Blood,Tissue
+Interferon signalling,USP18,ubiquitin specific peptidase 18,11274,Blood,Tissue
+Interferon signalling,XAF1,XIAP associated factor 1,54739,Blood,Tissue
+Interferon signalling,ZNFX1,"zinc finger, NFX1-type containing 1",57169,Blood,Tissue
+Macrophages,ADAMDEC1,"ADAM-like, decysin 1",27299,N/A,Tissue
+Macrophages,ADORA3,adenosine A3 receptor,140,N/A,Tissue
+Macrophages,AOAH,acyloxyacyl hydrolase (neutrophil),313,N/A,Tissue
+Macrophages,ARRB2,"arrestin, beta 2",409,N/A,Tissue
+Macrophages,ATP8B4,"ATPase, class I, type 8B, member 4",79895,N/A,Tissue
+Macrophages,BCL2A1,BCL2-related protein A1,597,N/A,Tissue
+Macrophages,C1orf54,chromosome 1 open reading frame 54,79630,N/A,Tissue
+Macrophages,C1QA,"complement component 1, q subcomponent, A chain",712,N/A,Tissue
+Macrophages,C1QB,"complement component 1, q subcomponent, B chain",713,N/A,Tissue
+Macrophages,C2,complement component 2,717,N/A,Tissue
+Macrophages,C3AR1,complement component 3a receptor 1,719,N/A,Tissue
+Macrophages,C5AR1,complement component 5a receptor 1,728,N/A,Tissue
+Macrophages,CCR1,chemokine (C-C motif) receptor 1,1230,N/A,Tissue
+Macrophages,CCRL2,chemokine (C-C motif) receptor-like 2,9034,N/A,Tissue
+Macrophages,CD163,CD163 molecule,9332,N/A,Tissue
+Macrophages,CD300A,CD300a molecule,11314,N/A,Tissue
+Macrophages,CD4,CD4 molecule,920,N/A,Tissue
+Macrophages,CD68,CD68 molecule,968,N/A,Tissue
+Macrophages,CD74,"CD74 molecule, major histocompatibility complex, class II invariant chain",972,N/A,Tissue
+Macrophages,CD86,CD86 molecule,942,N/A,Tissue
+Macrophages,CECR1,"cat eye syndrome chromosome region, candidate 1",51816,N/A,Tissue
+Macrophages,CLEC7A,"C-type lectin domain family 7, member A",64581,N/A,Tissue
+Macrophages,CMKLR1,chemokine-like receptor 1,1240,N/A,Tissue
+Macrophages,CSF1R,colony stimulating factor 1 receptor,1436,N/A,Tissue
+Macrophages,CTSB,cathepsin B,1508,N/A,Tissue
+Macrophages,CTSS,cathepsin S,1520,N/A,Tissue
+Macrophages,CYBB,"cytochrome b-245, beta polypeptide",1536,N/A,Tissue
+Macrophages,CYTH4,cytohesin 4,27128,N/A,Tissue
+Macrophages,DPYD,dihydropyrimidine dehydrogenase,1806,N/A,Tissue
+Macrophages,EMR2,"egf-like module containing, mucin-like, hormone receptor-like 2",30817,N/A,Tissue
+Macrophages,FCER1G,"Fc fragment of IgE, high affinity I, receptor for; gamma polypeptide",2207,N/A,Tissue
+Macrophages,FCGR1A,"Fc fragment of IgG, high affinity Ia, receptor (CD64)",2209,N/A,Tissue
+Macrophages,FCGR1B,"Fc fragment of IgG, high affinity Ib, receptor (CD64)",2210,N/A,Tissue
+Macrophages,FCGR2A,"Fc fragment of IgG, low affinity IIa, receptor (CD32)",2212,N/A,Tissue
+Macrophages,FCGR3B,"Fc fragment of IgG, low affinity IIIb, receptor (CD16b)",2215,N/A,Tissue
+Macrophages,FPR3,formyl peptide receptor 3,2359,N/A,Tissue
+Macrophages,GPNMB,glycoprotein (transmembrane) nmb,10457,N/A,Tissue
+Macrophages,HK3,hexokinase 3 (white cell),3101,N/A,Tissue
+Macrophages,HLA-DRB6,"major histocompatibility complex, class II, DR beta 6 (pseudogene)",3128,N/A,Tissue
+Macrophages,IFI30,"interferon, gamma-inducible protein 30",10437,N/A,Tissue
+Macrophages,IGSF6,"immunoglobulin superfamily, member 6",10261,N/A,Tissue
+Macrophages,ITGAM,"integrin, alpha M (complement component 3 receptor 3 subunit)",3684,N/A,Tissue
+Macrophages,ITGAX,"integrin, alpha X (complement component 3 receptor 4 subunit)",3687,N/A,Tissue
+Macrophages,ITGB2,"integrin, beta 2 (complement component 3 receptor 3 and 4 subunit)",3689,N/A,Tissue
+Macrophages,LAIR1,leukocyte-associated immunoglobulin-like receptor 1,3903,N/A,Tissue
+Macrophages,LAPTM5,lysosomal protein transmembrane 5,7805,N/A,Tissue
+Macrophages,LILRB4,"leukocyte immunoglobulin-like receptor, subfamily B (with TM and ITIM domains), member 4",11006,N/A,Tissue
+Macrophages,LIPA,"lipase A, lysosomal acid, cholesterol esterase",3988,N/A,Tissue
+Macrophages,LY96,lymphocyte antigen 96,23643,N/A,Tissue
+Macrophages,MAN2B1,"mannosidase, alpha, class 2B, member 1",4125,N/A,Tissue
+Macrophages,MFSD1,major facilitator superfamily domain containing 1,64747,N/A,Tissue
+Macrophages,MNDA,myeloid cell nuclear differentiation antigen,4332,N/A,Tissue
+Macrophages,MS4A4A,"membrane-spanning 4-domains, subfamily A, member 4A",51338,N/A,Tissue
+Macrophages,MS4A7,"membrane-spanning 4-domains, subfamily A, member 7",58475,N/A,Tissue
+Macrophages,MSR1,macrophage scavenger receptor 1,4481,N/A,Tissue
+Macrophages,MYO1F,myosin IF,4542,N/A,Tissue
+Macrophages,NCKAP1L,NCK-associated protein 1-like,3071,N/A,Tissue
+Macrophages,NPL,N-acetylneuraminate pyruvate lyase (dihydrodipicolinate synthase),80896,N/A,Tissue
+Macrophages,NR1H3,"nuclear receptor subfamily 1, group H, member 3",10062,N/A,Tissue
+Macrophages,PLA2G7,"phospholipase A2, group VII (platelet-activating factor acetylhydrolase, plasma)",7941,N/A,Tissue
+Macrophages,PLEKHO2,"pleckstrin homology domain containing, family O member 2",80301,N/A,Tissue
+Macrophages,SCPEP1,serine carboxypeptidase 1,59342,N/A,Tissue
+Macrophages,SLAMF8,SLAM family member 8,56833,N/A,Tissue
+Macrophages,SLC15A3,"solute carrier family 15 (oligopeptide transporter), member 3",51296,N/A,Tissue
+Macrophages,SLC31A2,"solute carrier family 31 (copper transporter), member 2",1318,N/A,Tissue
+Macrophages,SLCO2B1,"solute carrier organic anion transporter family, member 2B1",11309,N/A,Tissue
+Macrophages,SNX10,sorting nexin 10,29887,N/A,Tissue
+Macrophages,SPI1,Spi-1 proto-oncogene,6688,N/A,Tissue
+Macrophages,TBXAS1,thromboxane A synthase 1 (platelet),6916,N/A,Tissue
+Macrophages,TLR8,toll-like receptor 8,51311,N/A,Tissue
+Macrophages,TMEM140,transmembrane protein 140,55281,N/A,Tissue
+Macrophages,TNFAIP2,"tumor necrosis factor, alpha-induced protein 2",7127,N/A,Tissue
+Macrophages,TNFRSF1B,"tumor necrosis factor receptor superfamily, member 1B",7133,N/A,Tissue
+Macrophages,TNFSF13B,"tumor necrosis factor (ligand) superfamily, member 13b",10673,N/A,Tissue
+Macrophages,TRPV2,"transient receptor potential cation channel, subfamily V, member 2",51393,N/A,Tissue
+Macrophages,TYMP,thymidine phosphorylase,1890,N/A,Tissue
+Macrophages,TYROBP,TYRO protein tyrosine kinase binding protein,7305,N/A,Tissue
+Macrophages,VSIG4,V-set and immunoglobulin domain containing 4,11326,N/A,Tissue
+Monocytes,AGTRAP,angiotensin II receptor-associated protein,57085,,Tissue
+Monocytes,AIF1,allograft inflammatory factor 1,199,Blood,Tissue
+Monocytes,ANKRD50,ankyrin repeat domain 50,57182,Blood,
+Monocytes,ASGR1,asialoglycoprotein receptor 1,432,Blood,
+Monocytes,C10orf54,chromosome 10 open reading frame 54,64115,,Tissue
+Monocytes,CALML4,calmodulin-like 4,91860,Blood,
+Monocytes,CD14,CD14 molecule,929,Blood,Tissue
+Monocytes,CD1D,CD1d molecule,912,Blood,
+Monocytes,CD300LF,CD300 molecule-like family member f,146722,,Tissue
+Monocytes,CD302,CD302 molecule,9936,Blood,
+Monocytes,CD33,CD33 molecule,945,Blood,Tissue
+Monocytes,CD36,CD36 molecule (thrombospondin receptor),948,Blood,
+Monocytes,CD93,CD93 molecule,22918,Blood,Tissue
+Monocytes,CFP,complement factor properdin,5199,Blood,
+Monocytes,CPVL,"carboxypeptidase, vitellogenic-like",54504,Blood,
+Monocytes,CSTA,cystatin A (stefin A),1475,Blood,
+Monocytes,CTSD,cathepsin D,1509,,Tissue
+Monocytes,DMXL2,Dmx-like 2,23312,Blood,
+Monocytes,EMILIN2,elastin microfibril interfacer 2,84034,,Tissue
+Monocytes,EPB41L3,erythrocyte membrane protein band 4.1-like 3,23136,Blood,
+Monocytes,FAM198B,"family with sequence similarity 198, member B",51313,Blood,
+Monocytes,FCN1,ficolin (collagen/fibrinogen domain containing) 1,2219,,Tissue
+Monocytes,FES,"FES proto-oncogene, tyrosine kinase",2242,,Tissue
+Monocytes,FGR,"FGR proto-oncogene, Src family tyrosine kinase",2268,,Tissue
+Monocytes,GNS,glucosamine (N-acetyl)-6-sulfatase,2799,,Tissue
+Monocytes,GRN,granulin,2896,,Tissue
+Monocytes,HCK,"HCK proto-oncogene, Src family tyrosine kinase",3055,,Tissue
+Monocytes,HMOX1,heme oxygenase (decycling) 1,3162,,Tissue
+Monocytes,IRAK3,interleukin-1 receptor-associated kinase 3,11213,Blood,
+Monocytes,KCTD12,potassium channel tetramerization domain containing 12,115207,Blood,
+Monocytes,KIAA0930,KIAA0930,23313,,Tissue
+Monocytes,LDLRAD3,low density lipoprotein receptor class A domain containing 3,143458,Blood,
+Monocytes,LILRA1,"leukocyte immunoglobulin-like receptor, subfamily A (with TM domain), member 1",11024,Blood,
+Monocytes,LILRA6,"leukocyte immunoglobulin-like receptor, subfamily A (with TM domain), member 6",79168,,Tissue
+Monocytes,LILRB2,"leukocyte immunoglobulin-like receptor, subfamily B (with TM and ITIM domains), member 2",10288,,Tissue
+Monocytes,LILRB3,"leukocyte immunoglobulin-like receptor, subfamily B (with TM and ITIM domains), member 3",11025,,Tissue
+Monocytes,LRRC25,leucine rich repeat containing 25,126364,,Tissue
+Monocytes,LST1,leukocyte specific transcript 1,7940,,Tissue
+Monocytes,NFAM1,NFAT activating protein with ITAM motif 1,150372,,Tissue
+Monocytes,NLRC4,"NLR family, CARD domain containing 4",58484,Blood,
+Monocytes,NOTCH2,notch 2,4853,,Tissue
+Monocytes,PILRA,paired immunoglobin-like type 2 receptor alpha,29992,,Tissue
+Monocytes,PLXDC2,plexin domain containing 2,84898,,Tissue
+Monocytes,PLXNB2,plexin B2,23654,Blood,
+Monocytes,PRAM1,PML-RARA regulated adaptor molecule 1,84106,,Tissue
+Monocytes,PSAP,prosaposin,5660,,Tissue
+Monocytes,PYCARD,PYD and CARD domain containing,29108,,Tissue
+Monocytes,RHOG,ras homolog family member G,391,,Tissue
+Monocytes,S100Z,S100 calcium binding protein Z,170591,Blood,
+Monocytes,SERPINA1,"serpin peptidase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 1",5265,,Tissue
+Monocytes,SLC24A4,"solute carrier family 24 (sodium/potassium/calcium exchanger), member 4",123041,Blood,
+Monocytes,SLC7A7,"solute carrier family 7 (amino acid transporter light chain, y+L system), member 7",9056,Blood,Tissue
+Monocytes,TGFBI,"transforming growth factor, beta-induced, 68kDa",7045,,Tissue
+Monocytes,THEMIS2,thymocyte selection associated family member 2,9473,,Tissue
+Monocytes,TIMP2,TIMP metallopeptidase inhibitor 2,7077,,Tissue
+Monocytes,TMEM170B,transmembrane protein 170B,100113407,Blood,
+Monocytes,TPP1,tripeptidyl peptidase I,1200,,Tissue
+Monocytes,VCAN,versican,1462,Blood,Tissue
+Neutrophils,ABHD5,abhydrolase domain containing 5,51099,Blood,
+Neutrophils,ACSL1,acyl-CoA synthetase long-chain family member 1,2180,,Tissue
+Neutrophils,ALPK1,alpha-kinase 1,80216,,Tissue
+Neutrophils,AQP9,aquaporin 9,366,,Tissue
+Neutrophils,BASP1,"brain abundant, membrane attached signal protein 1",10409,,Tissue
+Neutrophils,BCL6,B-cell CLL/lymphoma 6,604,,Tissue
+Neutrophils,CD97,CD97 molecule,976,,Tissue
+Neutrophils,CEP19,centrosomal protein 19kDa,84984,,Tissue
+Neutrophils,CFLAR,CASP8 and FADD-like apoptosis regulator,8837,,Tissue
+Neutrophils,CLEC4E,"C-type lectin domain family 4, member E",26253,Blood,
+Neutrophils,CPPED1,calcineurin-like phosphoesterase domain containing 1,55313,Blood,
+Neutrophils,CREB5,cAMP responsive element binding protein 5,9586,Blood,
+Neutrophils,CRISPLD2,cysteine-rich secretory protein LCCL domain containing 2,83716,Blood,
+Neutrophils,CSF3R,colony stimulating factor 3 receptor (granulocyte),1441,Blood,Tissue
+Neutrophils,CXCR1,chemokine (C-X-C motif) receptor 1,3577,Blood,
+Neutrophils,CXCR2,chemokine (C-X-C motif) receptor 2,3579,Blood,Tissue
+Neutrophils,DENND5A,DENN/MADD domain containing 5A,23258,,Tissue
+Neutrophils,DGAT2,diacylglycerol O-acyltransferase 2,84649,Blood,
+Neutrophils,DYSF,dysferlin,8291,Blood,Tissue
+Neutrophils,FAM65B,"family with sequence similarity 65, member B",9750,,Tissue
+Neutrophils,FCGR2C,"Fc fragment of IgG, low affinity IIc, receptor for (CD32) (gene/pseudogene)",9103,,Tissue
+Neutrophils,FPR1,formyl peptide receptor 1,2357,Blood,Tissue
+Neutrophils,FPR2,formyl peptide receptor 2,2358,Blood,
+Neutrophils,FRAT2,frequently rearranged in advanced T-cell lymphomas 2,23401,Blood,
+Neutrophils,GLT1D1,glycosyltransferase 1 domain containing 1,144423,Blood,Tissue
+Neutrophils,GPR97,G protein-coupled receptor 97,222487,Blood,Tissue
+Neutrophils,IFITM2,interferon induced transmembrane protein 2,10581,,Tissue
+Neutrophils,IL17RA,interleukin 17 receptor A,23765,,Tissue
+Neutrophils,KCNJ15,"potassium inwardly-rectifying channel, subfamily J, member 15",3772,Blood,
+Neutrophils,KCNJ2,"potassium inwardly-rectifying channel, subfamily J, member 2",3759,,Tissue
+Neutrophils,KIAA0247,KIAA0247,9766,,Tissue
+Neutrophils,LILRA2,"leukocyte immunoglobulin-like receptor, subfamily A (with TM domain), member 2",11027,,Tissue
+Neutrophils,LIMK2,LIM domain kinase 2,3985,Blood,Tissue
+Neutrophils,LIN7A,lin-7 homolog A (C. elegans),8825,Blood,
+Neutrophils,LINC01002,long intergenic non-protein coding RNA 1002,399844,,Tissue
+Neutrophils,LRRC4,leucine rich repeat containing 4,64101,Blood,
+Neutrophils,MANSC1,MANSC domain containing 1,54682,Blood,
+Neutrophils,MBOAT7,membrane bound O-acyltransferase domain containing 7,79143,Blood,
+Neutrophils,MGAM,maltase-glucoamylase (alpha-glucosidase),8972,,Tissue
+Neutrophils,MMP25,matrix metallopeptidase 25,64386,Blood,
+Neutrophils,MOB3A,MOB kinase activator 3A,126308,,Tissue
+Neutrophils,MRVI1,murine retrovirus integration site 1 homolog,10335,Blood,
+Neutrophils,MSRB1,methionine sulfoxide reductase B1,51734,Blood,
+Neutrophils,NAMPT,nicotinamide phosphoribosyltransferase,10135,,Tissue
+Neutrophils,NCF4,"neutrophil cytosolic factor 4, 40kDa",4689,Blood,Tissue
+Neutrophils,NFE2,"nuclear factor, erythroid 2",4778,Blood,
+Neutrophils,P2RY13,"purinergic receptor P2Y, G-protein coupled, 13",53829,Blood,
+Neutrophils,PADI2,"peptidyl arginine deiminase, type II",11240,,Tissue
+Neutrophils,PHC2,polyhomeotic homolog 2 (Drosophila),1912,Blood,Tissue
+Neutrophils,PHF21A,PHD finger protein 21A,51317,,Tissue
+Neutrophils,PLXNC1,plexin C1,10154,,Tissue
+Neutrophils,PREX1,"phosphatidylinositol-3,4,5-trisphosphate-dependent Rac exchange factor 1",57580,,Tissue
+Neutrophils,RALB,v-ral simian leukemia viral oncogene homolog B,5899,,Tissue
+Neutrophils,REPS2,RALBP1 associated Eps domain containing 2,9185,Blood,
+Neutrophils,RNF149,ring finger protein 149,284996,,Tissue
+Neutrophils,S100A8,S100 calcium binding protein A8,6279,,Tissue
+Neutrophils,S100A9,S100 calcium binding protein A9,6280,,Tissue
+Neutrophils,SLC22A4,"solute carrier family 22 (organic cation/zwitterion transporter), member 4",6583,Blood,
+Neutrophils,SLC25A37,"solute carrier family 25 (mitochondrial iron transporter), member 37",51312,,Tissue
+Neutrophils,SNORD89,"small nucleolar RNA, C/D box 89",692205,,Tissue
+Neutrophils,SSH2,slingshot protein phosphatase 2,85464,,Tissue
+Neutrophils,STAT3,signal transducer and activator of transcription 3 (acute-phase response factor),6774,,Tissue
+Neutrophils,STAT5B,signal transducer and activator of transcription 5B,6777,,Tissue
+Neutrophils,STEAP4,STEAP family member 4,79689,Blood,
+Neutrophils,STX3,syntaxin 3,6809,Blood,
+Neutrophils,THBD,thrombomodulin,7056,,Tissue
+Neutrophils,TLR2,toll-like receptor 2,7097,,Tissue
+Neutrophils,TLR4,toll-like receptor 4,7099,,Tissue
+Neutrophils,TMEM154,transmembrane protein 154,201799,,Tissue
+Neutrophils,TNFRSF1A,"tumor necrosis factor receptor superfamily, member 1A",7132,,Tissue
+Neutrophils,VNN2,vanin 2,8875,Blood,
+NK cells,C1orf21,chromosome 1 open reading frame 21,81563,Blood,
+NK cells,CD160,CD160 molecule,11126,Blood,
+NK cells,CD247,CD247 molecule,919,Blood,
+NK cells,CEP78,centrosomal protein 78kDa,84131,Blood,
+NK cells,CTSW,cathepsin W,1521,Blood,
+NK cells,ENPP5,ectonucleotide pyrophosphatase/phosphodiesterase 5 (putative),59084,Blood,
+NK cells,FGFBP2,fibroblast growth factor binding protein 2,83888,Blood,
+NK cells,GNLY,granulysin,10578,Blood,
+NK cells,GPR56,G protein-coupled receptor 56,9289,Blood,
+NK cells,GZMA,"granzyme A (granzyme 1, cytotoxic T-lymphocyte-associated serine esterase 3)",3001,Blood,
+NK cells,GZMB,"granzyme B (granzyme 2, cytotoxic T-lymphocyte-associated serine esterase 1)",3002,Blood,
+NK cells,GZMH,"granzyme H (cathepsin G-like 2, protein h-CCPX)",2999,Blood,
+NK cells,HOPX,HOP homeobox,84525,Blood,
+NK cells,IL2RB,"interleukin 2 receptor, beta",3560,Blood,
+NK cells,KIR2DL1,"killer cell immunoglobulin-like receptor, two domains, long cytoplasmic tail, 1",3802,,Tissue
+NK cells,KIR2DL2,"killer cell immunoglobulin-like receptor, two domains, long cytoplasmic tail, 2",3803,,Tissue
+NK cells,KIR2DL3,"killer cell immunoglobulin-like receptor, two domains, long cytoplasmic tail, 3",3804,,Tissue
+NK cells,KIR2DL4,"killer cell immunoglobulin-like receptor, two domains, long cytoplasmic tail, 4",3805,,Tissue
+NK cells,KIR2DL5A,"killer cell immunoglobulin-like receptor, two domains, long cytoplasmic tail, 5A",57292,,Tissue
+NK cells,KIR2DS1,"killer cell immunoglobulin-like receptor, two domains, short cytoplasmic tail, 1",3806,,Tissue
+NK cells,KIR2DS2,"killer cell immunoglobulin-like receptor, two domains, short cytoplasmic tail, 2",100132285,,Tissue
+NK cells,KIR2DS3,"killer cell immunoglobulin-like receptor, two domains, short cytoplasmic tail, 3",3808,,Tissue
+NK cells,KIR2DS5,"killer cell immunoglobulin-like receptor, two domains, short cytoplasmic tail, 5",3810,,Tissue
+NK cells,KIR3DL1,"killer cell immunoglobulin-like receptor, three domains, long cytoplasmic tail, 1",3811,,Tissue
+NK cells,KIR3DL2,"killer cell immunoglobulin-like receptor, three domains, long cytoplasmic tail, 2",3812,,Tissue
+NK cells,KIR3DL3,killer cell immunoglobulin-like receptor three domains long cytoplasmic tail 3,100133046,,Tissue
+NK cells,KLRC2,"killer cell lectin-like receptor subfamily C, member 2",3822,,Tissue
+NK cells,KLRC3,"killer cell lectin-like receptor subfamily C, member 3",3823,,Tissue
+NK cells,KLRC4,"killer cell lectin-like receptor subfamily C, member 4",8302,,Tissue
+NK cells,KLRC4-KLRK1,KLRC4-KLRK1 readthrough,100528032,Blood,
+NK cells,KLRD1,"killer cell lectin-like receptor subfamily D, member 1",3824,Blood,Tissue
+NK cells,KLRF1,"killer cell lectin-like receptor subfamily F, member 1",51348,Blood,
+NK cells,KLRK1,"killer cell lectin-like receptor subfamily K, member 1",22914,Blood,
+NK cells,LOC100505501,uncharacterized LOC100505501,100505501,Blood,
+NK cells,MATK,megakaryocyte-associated tyrosine kinase,4145,Blood,
+NK cells,MYBL1,v-myb avian myeloblastosis viral oncogene homolog-like 1,4603,Blood,
+NK cells,PDGFD,platelet derived growth factor D,80310,Blood,
+NK cells,PHLDB2,"pleckstrin homology-like domain, family B, member 2",90102,Blood,
+NK cells,PRF1,perforin 1 (pore forming protein),5551,Blood,Tissue
+NK cells,PRSS23,"protease, serine, 23",11098,Blood,
+NK cells,PTGDR,prostaglandin D2 receptor (DP),5729,Blood,
+NK cells,PTPN4,"protein tyrosine phosphatase, non-receptor type 4 (megakaryocyte)",5775,Blood,
+NK cells,PYHIN1,"pyrin and HIN domain family, member 1",149628,Blood,
+NK cells,S1PR5,sphingosine-1-phosphate receptor 5,53637,Blood,
+NK cells,SAMD3,sterile alpha motif domain containing 3,154075,Blood,Tissue
+NK cells,SH2D1B,SH2 domain containing 1B,117157,,Tissue
+NK cells,SPON2,"spondin 2, extracellular matrix protein",10417,Blood,
+NK cells,TBX21,T-box 21,30009,Blood,Tissue
+NK cells,TGFBR3,"transforming growth factor, beta receptor III",7049,Blood,
+NK cells,TOX,thymocyte selection-associated high mobility group box,9760,Blood,
+NK cells,YPEL1,yippee-like 1 (Drosophila),29799,Blood,
+Plasma cells,ALG14,"ALG14, UDP-N-acetylglucosaminyltransferase subunit",199857,Blood,
+Plasma cells,CD38,CD38 molecule,952,Blood,
+Plasma cells,CEP128,centrosomal protein 128kDa,145508,Blood,
+Plasma cells,EAF2,ELL associated factor 2,55840,Blood,
+Plasma cells,GLCCI1,glucocorticoid induced transcript 1,113263,Blood,
+Plasma cells,GUSBP11,"glucuronidase, beta pseudogene 11",91316,Blood,Tissue
+Plasma cells,IGH,immunoglobulin heavy locus,3492,,Tissue
+Plasma cells,IGHA1,immunoglobulin heavy constant alpha 1,3493,Blood,
+Plasma cells,IGHD,immunoglobulin heavy constant delta,3495,Blood,
+Plasma cells,IGHG3,immunoglobulin heavy constant gamma 3 (G3m marker),3502,Blood,Tissue
+Plasma cells,IGHM,immunoglobulin heavy constant mu,3507,Blood,
+Plasma cells,IGJ,"immunoglobulin J polypeptide, linker protein for immunoglobulin alpha and mu polypeptides",3512,Blood,Tissue
+Plasma cells,IGKC,immunoglobulin kappa constant,3514,Blood,Tissue
+Plasma cells,IGKV1D-13,immunoglobulin kappa variable 1D-13,28902,Blood,Tissue
+Plasma cells,IGLC1,immunoglobulin lambda constant 1 (Mcg marker),3537,Blood,Tissue
+Plasma cells,IGLJ3,immunoglobulin lambda joining 3,28831,Blood,Tissue
+Plasma cells,IGLL3P,"immunoglobulin lambda-like polypeptide 3, pseudogene",91353,Blood,Tissue
+Plasma cells,IGLV@,immunoglobulin lambda variable cluster,3546,Blood,Tissue
+Plasma cells,IGLV1-44,immunoglobulin lambda variable 1-44,28823,Blood,Tissue
+Plasma cells,ITM2C,integral membrane protein 2C,81618,Blood,
+Plasma cells,MYO1D,myosin ID,4642,Blood,
+Plasma cells,MZB1,marginal zone B and B1 cell-specific protein,51237,Blood,Tissue
+Plasma cells,PDIA5,"protein disulfide isomerase family A, member 5",10954,Blood,
+Plasma cells,PPAPDC1B,phosphatidic acid phosphatase type 2 domain containing 1B,84513,Blood,
+Plasma cells,PRDX4,peroxiredoxin 4,10549,Blood,
+Plasma cells,SEC11C,SEC11 homolog C (S. cerevisiae),90701,Blood,
+Plasma cells,SPATS2,"spermatogenesis associated, serine-rich 2",65244,Blood,
+Plasma cells,TNFRSF17,"tumor necrosis factor receptor superfamily, member 17",608,Blood,Tissue
+Plasma cells,TPD52,tumor protein D52,7163,Blood,
+Plasma cells,TRAM2,translocation associated membrane protein 2,9697,Blood,
+Plasma cells,TXNDC5,thioredoxin domain containing 5 (endoplasmic reticulum),81567,Blood,Tissue
+Platelets,ABLIM3,"actin binding LIM protein family, member 3",22885,Blood,N/A
+Platelets,ALOX12,arachidonate 12-lipoxygenase,239,Blood,N/A
+Platelets,ARHGAP6,Rho GTPase activating protein 6,395,Blood,N/A
+Platelets,ASAP2,"ArfGAP with SH3 domain, ankyrin repeat and PH domain 2",8853,Blood,N/A
+Platelets,BEND2,BEN domain containing 2,139105,Blood,N/A
+Platelets,CALD1,caldesmon 1,800,Blood,N/A
+Platelets,CLEC1B,"C-type lectin domain family 1, member B",51266,Blood,N/A
+Platelets,CTDSPL,"CTD (carboxy-terminal domain, RNA polymerase II, polypeptide A) small phosphatase-like",10217,Blood,N/A
+Platelets,CTTN,cortactin,2017,Blood,N/A
+Platelets,DNM3,dynamin 3,26052,Blood,N/A
+Platelets,EGF,epidermal growth factor,1950,Blood,N/A
+Platelets,ELOVL7,ELOVL fatty acid elongase 7,79993,Blood,N/A
+Platelets,ENDOD1,endonuclease domain containing 1,23052,Blood,N/A
+Platelets,FHL1,four and a half LIM domains 1,2273,Blood,N/A
+Platelets,GNAZ,"guanine nucleotide binding protein (G protein), alpha z polypeptide",2781,Blood,N/A
+Platelets,GUCY1A3,"guanylate cyclase 1, soluble, alpha 3",2982,Blood,N/A
+Platelets,GUCY1B3,"guanylate cyclase 1, soluble, beta 3",2983,Blood,N/A
+Platelets,ITGB5,"integrin, beta 5",3693,Blood,N/A
+Platelets,JAM3,junctional adhesion molecule 3,83700,Blood,N/A
+Platelets,LOC100130938,uncharacterized LOC100130938,100130938,Blood,N/A
+Platelets,LTBP1,latent transforming growth factor beta binding protein 1,4052,Blood,N/A
+Platelets,MFAP3L,microfibrillar-associated protein 3-like,9848,Blood,N/A
+Platelets,MMRN1,multimerin 1,22915,Blood,N/A
+Platelets,MYLK,myosin light chain kinase,4638,Blood,N/A
+Platelets,PCSK6,proprotein convertase subtilisin/kexin type 6,5046,Blood,N/A
+Platelets,PDE5A,"phosphodiesterase 5A, cGMP-specific",8654,Blood,N/A
+Platelets,PEAR1,platelet endothelial aggregation receptor 1,375033,Blood,N/A
+Platelets,PLOD2,"procollagen-lysine, 2-oxoglutarate 5-dioxygenase 2",5352,Blood,N/A
+Platelets,PROS1,protein S (alpha),5627,Blood,N/A
+Platelets,PRTFDC1,phosphoribosyl transferase domain containing 1,56952,Blood,N/A
+Platelets,PTGS1,prostaglandin-endoperoxide synthase 1 (prostaglandin G/H synthase and cyclooxygenase),5742,Blood,N/A
+Platelets,RHOBTB1,Rho-related BTB domain containing 1,9886,Blood,N/A
+Platelets,SELP,"selectin P (granule membrane protein 140kDa, antigen CD62)",6403,Blood,N/A
+Platelets,SH3BGRL2,SH3 domain binding glutamate-rich protein like 2,83699,Blood,N/A
+Platelets,SLC24A3,"solute carrier family 24 (sodium/potassium/calcium exchanger), member 3",57419,Blood,N/A
+Platelets,SPX,spexin hormone,80763,Blood,N/A
+Platelets,STON2,stonin 2,85439,Blood,N/A
+Platelets,TDRP,testis development related protein,157695,Blood,N/A
+Platelets,TGFB1I1,transforming growth factor beta 1 induced transcript 1,7041,Blood,N/A
+Platelets,TNFSF4,"tumor necrosis factor (ligand) superfamily, member 4",7292,Blood,N/A
+Platelets,TRBV27,T cell receptor beta variable 27,28560,Blood,N/A
+Platelets,WASF3,"WAS protein family, member 3",10810,Blood,N/A
+T cells,ABLIM1,actin binding LIM protein 1,3983,Blood,
+T cells,ADTRP,androgen-dependent TFPI-regulating protein,84830,Blood,
+T cells,AMICA1,"adhesion molecule, interacts with CXADR antigen 1",120425,,Tissue
+T cells,APBB1IP,"amyloid beta (A4) precursor protein-binding, family B, member 1 interacting protein",54518,,Tissue
+T cells,ARHGAP15,Rho GTPase activating protein 15,55843,,Tissue
+T cells,ARHGAP25,Rho GTPase activating protein 25,9938,,Tissue
+T cells,ARHGAP9,Rho GTPase activating protein 9,64333,,Tissue
+T cells,BCL11B,B-cell CLL/lymphoma 11B (zinc finger protein),64919,Blood,
+T cells,BIN2,bridging integrator 2,51411,,Tissue
+T cells,BTK,Bruton agammaglobulinemia tyrosine kinase,695,,Tissue
+T cells,C12orf57,chromosome 12 open reading frame 57,113246,Blood,
+T cells,C1orf162,chromosome 1 open reading frame 162,128346,,Tissue
+T cells,CAMK4,calcium/calmodulin-dependent protein kinase IV,814,Blood,
+T cells,CCL19,chemokine (C-C motif) ligand 19,6363,,Tissue
+T cells,CCR7,chemokine (C-C motif) receptor 7,1236,Blood,Tissue
+T cells,CD2,CD2 molecule,914,,Tissue
+T cells,CD27,CD27 molecule,939,Blood,Tissue
+T cells,CD28,CD28 molecule,940,Blood,Tissue
+T cells,CD3D,"CD3d molecule, delta (CD3-TCR complex)",915,Blood,Tissue
+T cells,CD3E,"CD3e molecule, epsilon (CD3-TCR complex)",916,Blood,Tissue
+T cells,CD3G,"CD3g molecule, gamma (CD3-TCR complex)",917,Blood,Tissue
+T cells,CD48,CD48 molecule,962,,Tissue
+T cells,CD5,CD5 molecule,921,Blood,
+T cells,CD52,CD52 molecule,1043,,Tissue
+T cells,CD6,CD6 molecule,923,Blood,Tissue
+T cells,CD8A,CD8a molecule,925,,Tissue
+T cells,CD96,CD96 molecule,10225,Blood,Tissue
+T cells,CDR2,"cerebellar degeneration-related protein 2, 62kDa",1039,Blood,
+T cells,CORO1A,"coronin, actin binding protein, 1A",11151,,Tissue
+T cells,CRTAM,cytotoxic and regulatory T cell molecule,56253,,Tissue
+T cells,CXCL9,chemokine (C-X-C motif) ligand 9,4283,,Tissue
+T cells,CXCR6,chemokine (C-X-C motif) receptor 6,10663,,Tissue
+T cells,CYTIP,cytohesin 1 interacting protein,9595,,Tissue
+T cells,DGKA,"diacylglycerol kinase, alpha 80kDa",1606,Blood,
+T cells,DOCK10,dedicator of cytokinesis 10,55619,,Tissue
+T cells,DOCK2,dedicator of cytokinesis 2,1794,,Tissue
+T cells,DOCK8,dedicator of cytokinesis 8,81704,,Tissue
+T cells,DOCK9,dedicator of cytokinesis 9,23348,Blood,
+T cells,DPEP2,dipeptidase 2,64174,,Tissue
+T cells,EPHX2,"epoxide hydrolase 2, cytoplasmic",2053,Blood,
+T cells,EVI2A,ecotropic viral integration site 2A,2123,,Tissue
+T cells,EVI2B,ecotropic viral integration site 2B,2124,,Tissue
+T cells,FAM102A,"family with sequence similarity 102, member A",399665,Blood,
+T cells,FAM26F,"family with sequence similarity 26, member F",441168,,Tissue
+T cells,FLI1,"Fli-1 proto-oncogene, ETS transcription factor",2313,,Tissue
+T cells,FLT3LG,fms-related tyrosine kinase 3 ligand,2323,Blood,
+T cells,FYB,FYN binding protein,2533,,Tissue
+T cells,FYN,"FYN proto-oncogene, Src family tyrosine kinase",2534,,Tissue
+T cells,GAB3,GRB2-associated binding protein 3,139716,,Tissue
+T cells,GIMAP2,"GTPase, IMAP family member 2",26157,,Tissue
+T cells,GIMAP4,"GTPase, IMAP family member 4",55303,,Tissue
+T cells,GIMAP5,"GTPase, IMAP family member 5",55340,,Tissue
+T cells,GIMAP6,"GTPase, IMAP family member 6",474344,,Tissue
+T cells,GIMAP7,"GTPase, IMAP family member 7",168537,,Tissue
+T cells,GMFG,"glia maturation factor, gamma",9535,,Tissue
+T cells,GPR171,G protein-coupled receptor 171,29909,,Tissue
+T cells,GPR18,G protein-coupled receptor 18,2841,,Tissue
+T cells,GPRASP1,G protein-coupled receptor associated sorting protein 1,9737,Blood,
+T cells,GZMK,granzyme K (granzyme 3; tryptase II),3003,,Tissue
+T cells,HCST,hematopoietic cell signal transducer,10870,,Tissue
+T cells,HMHA1,histocompatibility (minor) HA-1,23526,,Tissue
+T cells,HVCN1,hydrogen voltage-gated channel 1,84329,,Tissue
+T cells,ICOS,inducible T-cell co-stimulator,29851,,Tissue
+T cells,IL10RA,"interleukin 10 receptor, alpha",3587,,Tissue
+T cells,IL16,interleukin 16,3603,,Tissue
+T cells,IL23A,"interleukin 23, alpha subunit p19",51561,Blood,Tissue
+T cells,IL7R,interleukin 7 receptor,3575,Blood,Tissue
+T cells,INPP4B,"inositol polyphosphate-4-phosphatase, type II, 105kDa",8821,Blood,
+T cells,ITGAL,"integrin, alpha L (antigen CD11A (p180), lymphocyte function-associated antigen 1; alpha polypeptide)",3683,,Tissue
+T cells,ITK,IL2-inducible T-cell kinase,3702,Blood,Tissue
+T cells,KLHL6,kelch-like family member 6,89857,,Tissue
+T cells,KLRB1,"killer cell lectin-like receptor subfamily B, member 1",3820,,Tissue
+T cells,LAT,linker for activation of T cells,27040,Blood,
+T cells,LCK,"LCK proto-oncogene, Src family tyrosine kinase",3932,Blood,
+T cells,LCP1,lymphocyte cytosolic protein 1 (L-plastin),3936,,Tissue
+T cells,LDLRAP1,low density lipoprotein receptor adaptor protein 1,26119,Blood,
+T cells,LEF1,lymphoid enhancer-binding factor 1,51176,Blood,
+T cells,LRRN3,leucine rich repeat neuronal 3,54674,Blood,
+T cells,LY86,lymphocyte antigen 86,9450,,Tissue
+T cells,MAL,"mal, T-cell differentiation protein",4118,Blood,
+T cells,NCF1B,neutrophil cytosolic factor 1B pseudogene,654816,,Tissue
+T cells,NELL2,NEL-like 2 (chicken),4753,Blood,
+T cells,NLRC3,"NLR family, CARD domain containing 3",197358,,Tissue
+T cells,NOG,noggin,9241,Blood,
+T cells,NOSIP,nitric oxide synthase interacting protein,51070,Blood,
+T cells,NR3C2,"nuclear receptor subfamily 3, group C, member 2",4306,Blood,
+T cells,OXNAD1,oxidoreductase NAD-binding domain containing 1,92106,Blood,
+T cells,PARVG,"parvin, gamma",64098,,Tissue
+T cells,PASK,PAS domain containing serine/threonine kinase,23178,Blood,
+T cells,PCED1B,PC-esterase domain containing 1B,91523,Blood,
+T cells,PIK3IP1,phosphoinositide-3-kinase interacting protein 1,113791,Blood,
+T cells,PLEKHB1,"pleckstrin homology domain containing, family B (evectins) member 1",58473,Blood,
+T cells,PRKCH,"protein kinase C, eta",5583,,Tissue
+T cells,PRKCQ,"protein kinase C, theta",5588,Blood,
+T cells,PRKCQ-AS1,PRKCQ antisense RNA 1,439949,Blood,
+T cells,PSTPIP1,proline-serine-threonine phosphatase interacting protein 1,9051,,Tissue
+T cells,PTPRCAP,"protein tyrosine phosphatase, receptor type, C-associated protein",5790,,Tissue
+T cells,PVRIG,poliovirus receptor related immunoglobulin domain containing,79037,,Tissue
+T cells,RASGRF2,Ras protein-specific guanine nucleotide-releasing factor 2,5924,Blood,
+T cells,RASSF5,Ras association (RalGDS/AF-6) domain family member 5,83593,,Tissue
+T cells,RCAN3,RCAN family member 3,11123,Blood,
+T cells,RCSD1,RCSD domain containing 1,92241,,Tissue
+T cells,RGS18,regulator of G-protein signaling 18,64407,,Tissue
+T cells,RHOH,ras homolog family member H,399,,Tissue
+T cells,RNF157,ring finger protein 157,114804,Blood,
+T cells,SASH3,SAM and SH3 domain containing 3,54440,,Tissue
+T cells,SCML4,sex comb on midleg-like 4 (Drosophila),256380,Blood,
+T cells,SH2D1A,SH2 domain containing 1A,4068,,Tissue
+T cells,SIRPG,signal-regulatory protein gamma,55423,Blood,Tissue
+T cells,SLA,Src-like-adaptor,6503,,Tissue
+T cells,SP140,SP140 nuclear body protein,11262,,Tissue
+T cells,SPOCK2,"sparc/osteonectin, cwcv and kazal-like domains proteoglycan (testican) 2",9806,Blood,
+T cells,STMN3,stathmin-like 3,50861,Blood,
+T cells,TARP,TCR gamma alternate reading frame protein,445347,,Tissue
+T cells,TBC1D10C,"TBC1 domain family, member 10C",374403,,Tissue
+T cells,TCF7,"transcription factor 7 (T-cell specific, HMG-box)",6932,Blood,
+T cells,TESPA1,"thymocyte expressed, positive selection associated 1",9840,Blood,
+T cells,THEM4,thioesterase superfamily member 4,117145,Blood,
+T cells,TMEM204,transmembrane protein 204,79652,Blood,
+T cells,TNFRSF25,"tumor necrosis factor receptor superfamily, member 25",8718,Blood,
+T cells,TNFRSF9,"tumor necrosis factor receptor superfamily, member 9",3604,,Tissue
+T cells,TRABD2A,TraB domain containing 2A,129293,Blood,
+T cells,TRAC,T cell receptor alpha constant,28755,Blood,Tissue
+T cells,TRAF3IP3,TRAF3 interacting protein 3,80342,,Tissue
+T cells,TRAT1,T cell receptor associated transmembrane adaptor 1,50852,Blood,Tissue
+T cells,TRBC1,T cell receptor beta constant 1,28639,Blood,
+T cells,TRGC2,T cell receptor gamma constant 2,6967,,Tissue
+T cells,TRGV9,T cell receptor gamma variable 9,6983,,Tissue
+T cells,UBASH3A,ubiquitin associated and SH3 domain containing A,53347,Blood,Tissue
+Translational activity,EEF1A1,eukaryotic translation elongation factor 1 alpha 1,1915,Blood,Tissue
+Translational activity,EEF1B2,eukaryotic translation elongation factor 1 beta 2,1933,Blood,Tissue
+Translational activity,EEF1D,eukaryotic translation elongation factor 1 delta (guanine nucleotide exchange protein),1936,Blood,Tissue
+Translational activity,EEF1G,eukaryotic translation elongation factor 1 gamma,1937,Blood,Tissue
+Translational activity,EIF3D,"eukaryotic translation initiation factor 3, subunit D",8664,Blood,Tissue
+Translational activity,EIF3E,"eukaryotic translation initiation factor 3, subunit E",3646,Blood,Tissue
+Translational activity,EIF3F,"eukaryotic translation initiation factor 3, subunit F",8665,Blood,Tissue
+Translational activity,EIF3G,"eukaryotic translation initiation factor 3, subunit G",8666,Blood,Tissue
+Translational activity,EIF3H,"eukaryotic translation initiation factor 3, subunit H",8667,Blood,Tissue
+Translational activity,EIF3K,"eukaryotic translation initiation factor 3, subunit K",27335,Blood,Tissue
+Translational activity,FAU,Finkel-Biskis-Reilly murine sarcoma virus (FBR-MuSV) ubiquitously expressed,2197,Blood,Tissue
+Translational activity,GNB2L1,"guanine nucleotide binding protein (G protein), beta polypeptide 2-like 1",10399,Blood,Tissue
+Translational activity,NACA,nascent polypeptide-associated complex alpha subunit,4666,Blood,Tissue
+Translational activity,PFDN5,prefoldin subunit 5,5204,Blood,Tissue
+Translational activity,RPL10,ribosomal protein L10,6134,Blood,Tissue
+Translational activity,RPL10L,ribosomal protein L10-like,140801,Blood,Tissue
+Translational activity,RPL11,ribosomal protein L11,6135,Blood,Tissue
+Translational activity,RPL12,ribosomal protein L12,6136,Blood,Tissue
+Translational activity,RPL13,ribosomal protein L13,6137,Blood,Tissue
+Translational activity,RPL13A,ribosomal protein L13a,23521,Blood,Tissue
+Translational activity,RPL14,ribosomal protein L14,9045,Blood,Tissue
+Translational activity,RPL15,ribosomal protein L15,6138,Blood,Tissue
+Translational activity,RPL17,ribosomal protein L17,6139,Blood,Tissue
+Translational activity,RPL18,ribosomal protein L18,6141,Blood,Tissue
+Translational activity,RPL18A,ribosomal protein L18a,6142,Blood,Tissue
+Translational activity,RPL19,ribosomal protein L19,6143,Blood,Tissue
+Translational activity,RPL21,ribosomal protein L21,6144,Blood,Tissue
+Translational activity,RPL22,ribosomal protein L22,6146,Blood,Tissue
+Translational activity,RPL23,ribosomal protein L23,9349,Blood,Tissue
+Translational activity,RPL23A,ribosomal protein L23a,6147,Blood,Tissue
+Translational activity,RPL24,ribosomal protein L24,6152,Blood,Tissue
+Translational activity,RPL27,ribosomal protein L27,6155,Blood,Tissue
+Translational activity,RPL27A,ribosomal protein L27a,6157,Blood,Tissue
+Translational activity,RPL28,ribosomal protein L28,6158,Blood,Tissue
+Translational activity,RPL29,ribosomal protein L29,6159,Blood,Tissue
+Translational activity,RPL3,ribosomal protein L3,6122,Blood,Tissue
+Translational activity,RPL30,ribosomal protein L30,6156,Blood,Tissue
+Translational activity,RPL31,ribosomal protein L31,6160,Blood,Tissue
+Translational activity,RPL32,ribosomal protein L32,6161,Blood,Tissue
+Translational activity,RPL34,ribosomal protein L34,6164,Blood,Tissue
+Translational activity,RPL35,ribosomal protein L35,11224,Blood,Tissue
+Translational activity,RPL35A,ribosomal protein L35a,6165,Blood,Tissue
+Translational activity,RPL36A,ribosomal protein L36a,6173,Blood,Tissue
+Translational activity,RPL37,ribosomal protein L37,6167,Blood,Tissue
+Translational activity,RPL37A,ribosomal protein L37a,6168,Blood,Tissue
+Translational activity,RPL38,ribosomal protein L38,6169,Blood,Tissue
+Translational activity,RPL39,ribosomal protein L39,6170,Blood,Tissue
+Translational activity,RPL4,ribosomal protein L4,6124,Blood,Tissue
+Translational activity,RPL5,ribosomal protein L5,6125,Blood,Tissue
+Translational activity,RPL6,ribosomal protein L6,6128,Blood,Tissue
+Translational activity,RPL7,ribosomal protein L7,6129,Blood,Tissue
+Translational activity,RPL7A,ribosomal protein L7a,6130,Blood,Tissue
+Translational activity,RPL8,ribosomal protein L8,6132,Blood,Tissue
+Translational activity,RPL9,ribosomal protein L9,6133,Blood,Tissue
+Translational activity,RPLP0,"ribosomal protein, large, P0",6175,Blood,Tissue
+Translational activity,RPLP2,"ribosomal protein, large, P2",6181,Blood,Tissue
+Translational activity,RPS10,ribosomal protein S10,6204,Blood,Tissue
+Translational activity,RPS11,ribosomal protein S11,6205,Blood,Tissue
+Translational activity,RPS13,ribosomal protein S13,6207,Blood,Tissue
+Translational activity,RPS14,ribosomal protein S14,6208,Blood,Tissue
+Translational activity,RPS15,ribosomal protein S15,6209,Blood,Tissue
+Translational activity,RPS15A,ribosomal protein S15a,6210,Blood,Tissue
+Translational activity,RPS16,ribosomal protein S16,6217,Blood,Tissue
+Translational activity,RPS17,ribosomal protein S17,6218,Blood,Tissue
+Translational activity,RPS18,ribosomal protein S18,6222,Blood,Tissue
+Translational activity,RPS19,ribosomal protein S19,6223,Blood,Tissue
+Translational activity,RPS2,ribosomal protein S2,6187,Blood,Tissue
+Translational activity,RPS20,ribosomal protein S20,6224,Blood,Tissue
+Translational activity,RPS21,ribosomal protein S21,6227,Blood,Tissue
+Translational activity,RPS23,ribosomal protein S23,6228,Blood,Tissue
+Translational activity,RPS25,ribosomal protein S25,6230,Blood,Tissue
+Translational activity,RPS27A,ribosomal protein S27a,6233,Blood,Tissue
+Translational activity,RPS28,ribosomal protein S28,6234,Blood,Tissue
+Translational activity,RPS29,ribosomal protein S29,6235,Blood,Tissue
+Translational activity,RPS3,ribosomal protein S3,6188,Blood,Tissue
+Translational activity,RPS3A,ribosomal protein S3A,6189,Blood,Tissue
+Translational activity,RPS5,ribosomal protein S5,6193,Blood,Tissue
+Translational activity,RPS6,ribosomal protein S6,6194,Blood,Tissue
+Translational activity,RPS7,ribosomal protein S7,6201,Blood,Tissue
+Translational activity,RPS8,ribosomal protein S8,6202,Blood,Tissue
+Translational activity,RPS9,ribosomal protein S9,6203,Blood,Tissue
+Translational activity,RPSA,ribosomal protein SA,3921,Blood,Tissue
+Translational activity,SNHG6,small nucleolar RNA host gene 6 (non-protein coding),641638,Blood,Tissue
+Translational activity,SNHG8,small nucleolar RNA host gene 8 (non-protein coding),100093630,Blood,Tissue
+Translational activity,SNRPD2,small nuclear ribonucleoprotein D2 polypeptide 16.5kDa,6633,Blood,Tissue
+Translational activity,UXT,"ubiquitously-expressed, prefoldin-like chaperone",8409,Blood,Tissue
