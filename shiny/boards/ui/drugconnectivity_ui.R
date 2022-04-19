@@ -5,25 +5,16 @@
 
 DrugConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        tags$div(
-         HTML("<h3>Drug Connectivity</h3> Perform drug connectivity analysis
-            to see if certain drug activity or drug sensitivity signatures matches your experimental signatures.
-            Matching drug signatures to your experiments may elicudate biological functions through
-            mechanism-of-action (MOA) and known drug molecular targets.")
-        ),
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
-                   "Select the contrast corresponding to the comparison of interest.",
-                   placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
-                   "Select type of drug enrichment analysis: activity or sensitivity (if available).",
-                   placement="top"),
-           
-        )
+    bigdash::tabSettings(
+        withTooltip( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
+                "Show more information about this module."),
+        shiny::hr(), shiny::br(),             
+        withTooltip( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
+                "Select the contrast corresponding to the comparison of interest.",
+                placement="top"),
+        withTooltip( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
+                "Select type of drug enrichment analysis: activity or sensitivity (if available).",
+                placement="top")
     )
 }
 

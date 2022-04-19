@@ -1302,7 +1302,7 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
     data_phenoHeatmap_opts <- shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")
     )
 
@@ -1335,7 +1335,7 @@ DataViewBoard <- function(input, output, session, inputData)
     })
 
     data_phenotypeAssociation_opts <- shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")
     )
 
@@ -1442,7 +1442,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
 
     data_contrastTable_opts = shiny::tagList(
-        shinyBS::tipify( shiny::radioButtons(ns('data_ctbygroup'),
+        withTooltip( shiny::radioButtons(ns('data_ctbygroup'),
                              "Show by:", choices=c("sample","group")),
                "Show contrasts by group or by samples.",
                placement="right", options = list(container = "body"))

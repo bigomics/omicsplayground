@@ -5,35 +5,29 @@
 
 IntersectionInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        tags$div(
-         HTML("<h3>Compare signatures</h3>Find genes that are commonly up/down regulated
-          between two or more signatures. Compute similarity between contrasts.")
-        ),
-        shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module"),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
-                   "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
-                   placement="top"),
+    bigdash::tabSettings(
+        withTooltip( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
+                "Show more information about this module"),
+        shiny::hr(), shiny::br(),             
+        withTooltip( shiny::selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
+                "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
+                placement="top"),
 
-            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
+        withTooltip( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                "Toggle advanced options.", placement="top"),
+        shiny::br(),br(),
+        shiny::conditionalPanel(
+            "input.options % 2 == 1", ns=ns,
+            withTooltip( shiny::radioButtons(ns("level"),"Level:",
+                                    choices=c("gene","geneset"), inline=TRUE),
+                    "Select feature level: gene or geneset", placement="top"),                
+            withTooltip( shiny::selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
+                    "Filter features", placement="top"),
             shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns,
-                shinyBS::tipify( shiny::radioButtons(ns("level"),"Level:",
-                                     choices=c("gene","geneset"), inline=TRUE),
-                       "Select feature level: gene or geneset", placement="top"),                
-                shinyBS::tipify( shiny::selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
-                       "Filter features", placement="top"),
-                shiny::conditionalPanel(
-                    "input.filter == '<custom>'", ns=ns,
-                    shinyBS::tipify( shiny::textAreaInput(ns("customlist"), NULL, value = NULL,
-                                          rows=5, placeholder="Paste your custom gene list"),
-                           "Paste a custom list of genes to highlight.", placement="bottom")
-                )
+                "input.filter == '<custom>'", ns=ns,
+                withTooltip( shiny::textAreaInput(ns("customlist"), NULL, value = NULL,
+                                        rows=5, placeholder="Paste your custom gene list"),
+                        "Paste a custom list of genes to highlight.", placement="bottom")
             )
         )
     )

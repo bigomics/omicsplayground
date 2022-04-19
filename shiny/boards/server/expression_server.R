@@ -769,10 +769,10 @@ ExpressionBoard <- function(input, output, session, inputData)
 
     ##plots_boxplot
     plots_boxplot_opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
+        withTooltip( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
                "Group expression values by conditions.",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
+        withTooltip( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
                "Show logarithmic (log2CPM) expression values.",
                placement="right", options = list(container = "body"))
     )
@@ -848,13 +848,13 @@ ExpressionBoard <- function(input, output, session, inputData)
     })
         
     topgenes_opts = shiny::tagList(
-        shinyBS::tipify( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
+        withTooltip( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
                "Logarithmic scale the counts (abundance levels).",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
+        withTooltip( shiny::checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
                "Ungroup samples in the plot",
                placement="right", options = list(container = "body")),
-        shinyBS::tipify( shiny::checkboxInput(ns('gx_showothers'),'show others',FALSE),
+        withTooltip( shiny::checkboxInput(ns('gx_showothers'),'show others',FALSE),
                "Show the 'others' class (if any)",
                placement="right", options = list(container = "body"))
         )
@@ -1323,10 +1323,10 @@ ExpressionBoard <- function(input, output, session, inputData)
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     genetable_opts = shiny::tagList(
-        shinyBS::tipify(shiny::checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
+        withTooltip(shiny::checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),
-        shinyBS::tipify(shiny::checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
+        withTooltip(shiny::checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
                "Show q-values of each indivivual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )
@@ -1517,7 +1517,7 @@ ExpressionBoard <- function(input, output, session, inputData)
     fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
     
     fctable_opts <- shiny::tagList(
-      shinyBS::tipify( shiny::checkboxInput(ns('fctable_showq'),'show q-values',TRUE),
+      withTooltip( shiny::checkboxInput(ns('fctable_showq'),'show q-values',TRUE),
                       "Show q-values next to FC values.",
                       placement="right", options = list(container = "body"))
     )

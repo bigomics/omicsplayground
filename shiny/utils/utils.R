@@ -44,19 +44,19 @@ if(0) {
 
 
 tipify2 <- function(...) {
-	shinyBS::tipify(..., placement="top", options = list(container = "body"))
+	withTooltip(..., placement="top", options = list(container = "body"))
 }
 tipifyL <- function(...) {
-	shinyBS::tipify(..., placement="left", options = list(container = "body"))
+	withTooltip(..., placement="left", options = list(container = "body"))
 }
 tipifyR <- function(...) {
-	shinyBS::tipify(..., placement="right", options = list(container = "body"))
+	withTooltip(..., placement="right", options = list(container = "body"))
 }
 tipifyT <- function(...) {
-	shinyBS::tipify(..., placement="top", options = list(container = "body"))
+	withTooltip(..., placement="top", options = list(container = "body"))
 }
 tipifyB <- function(...) {
-	shinyBS::tipify(..., placement="bottom", options = list(container = "body"))
+	withTooltip(..., placement="bottom", options = list(container = "body"))
 }
 
 # TODO: this function isn't being used
@@ -243,3 +243,24 @@ all.plotly.buttons = c(
 	"resetViews","toggleSpikelines",
 	"resetViewMapbox","zoomInMapbox","zoomOutMapbox"
 )
+
+withTooltip <- function(
+  el,
+  title,
+  placement = "bottom",
+  trigger = NULL,
+  options = NULL
+) {
+  if(!is.null(trigger))
+    warning("`trigger` is ignored, used to be in shinyBS::tippify")
+    
+  if(!is.null(options))
+    warning("`options` is ignored, used to be in shinyBS::tippify")
+
+  htmltools::tagAppendAttributes(
+    el,
+    title = title,
+    `data-bs-placement` = placement,
+    `data-bs-toggle` = "tooltip"
+  )
+}

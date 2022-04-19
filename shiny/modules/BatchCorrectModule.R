@@ -247,13 +247,13 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                                selected=sel.par, multiple=TRUE),
             "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings."),
           
-          ## shinyBS::tipify(                    
+          ## withTooltip(                    
           ##   shiny::radioButtons(ns("bc_strength"), NULL,
           ##                       c("low","medium","strong"), inline=TRUE),
           ##   "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options.", 
           ##   placement="left", options=list(container="body")),                    
 
-##          shinyBS::tipify( shiny::actionLink(ns("bc_options"), "Advanced",
+##          withTooltip( shiny::actionLink(ns("bc_options"), "Advanced",
 ##                                             icon=icon("cog", lib = "glyphicon")),
 ##                          "Toggle advanced options.", 
 ##                          placement="left", options=list(container="body")),
@@ -265,7 +265,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
 ##          shiny::conditionalPanel(
 ##            "input.bc_methods == 'limma'", ns=ns,
-            shinyBS::tipify(
+            withTooltip(
               shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                  selected=batch.par, multiple=TRUE),
               "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
@@ -274,7 +274,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
               ),
 
           
-          shinyBS::tipify(
+          withTooltip(
             ##shiny::checkboxGroupInput(
             shiny::radioButtons(                
               ns('bc_methods'),'Unsupervised correction:',
@@ -283,12 +283,12 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             placement="left", options=list(container="body")
           ),
                     
-          shinyBS::tipify( shiny::radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
+          withTooltip( shiny::radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
                                                sel=200, inline=TRUE),
                           "Maximum number of genes in heatmap",
                           placement="left", options=list(container = "body")),
           
-          shinyBS::tipify( shiny::radioButtons(ns("bc_maptype"), "Heatmap type:",
+          withTooltip( shiny::radioButtons(ns("bc_maptype"), "Heatmap type:",
                                                c("topSD","PCA"), inline=TRUE),
                               "Type of heatmap: top SD or PCA.",
                           placement="left", options=list(container="body"))
