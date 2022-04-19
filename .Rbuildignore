@@ -14,6 +14,3 @@ $run_dev.*
 ^Meta$
 ^README\.Rmd$
 ^.#.*
-^renv$
-^renv\.lock$
-^\.github$
