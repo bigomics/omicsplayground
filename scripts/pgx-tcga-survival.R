@@ -28,7 +28,7 @@ colnames(X) = case.id
 rownames(X) = genes
 
 dim(X)
-gx.hist(log2(pmax(X[,1:40]))
+gx.hist(log2(pmax(X[,1:40])))
 summary(colSums(X))
 gx.hist( log2(pmax(X[,1:40]/1000,1)))
 
