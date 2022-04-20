@@ -69,6 +69,8 @@ library(grid)
 library(ggplot2)
 library(concaveman)
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
+source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
+source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
 
 
 message("***********************************************")
