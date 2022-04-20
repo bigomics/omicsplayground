@@ -1,0 +1,8 @@
+Package: bigomics.board.functional
+Title: OmicsPlayground BOARD.FUNCTIONAL component package
+Version: 3.0.0.9000
+Authors@R: person('BigOmics Analytics SA', email = 'hello@bigomics.ch', role = c('cph'))
+Description: Omics Playground component package.
+License: (see main LICENSE file)
+URL: https://github.com/bigomics/omicsplayground
+BugReports: https://github.com/bigomics/omicsplayground/issues

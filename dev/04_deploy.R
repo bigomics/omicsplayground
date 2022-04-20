@@ -12,35 +12,29 @@
 ######################################
 
 
+# Detach all loaded components and clean your environment
+golem::detach_all_attached()
+rm(list=ls(all.names = TRUE))
+
 ## set to package root!!
-setwd("~/Playground/omicsplayground/")  ## set to package root!!
+source("dev-utils.R")
+appdir <- get_appdir() 
+setwd(appdir)
+appdir
+wd="components/base"
 
-## Test your app
+remove.packages("omics.base")
+remove.packages("omics.app")
+remove.packages("omics.board.biomarker")
 
-## Run checks ----
-## Check the package before sending to prod
-devtools::check()
-#rhub::check_for_cran()
+## Create ---------------------------------------------------------------
 
-# Deploy
+system("make clean.force")
+pkg.build("components/base", appdir)
+pkg.build("components/app", appdir)
+pkg.build("components/board.biomarker", appdir)
 
-## Local, CRAN or Package Manager ----
-## This will build a tar.gz that can be installed locally,
-## sent to CRAN, or to a package manager
-devtools::build()
-
-## RStudio ----
-## If you want to deploy on RStudio related platforms
-golem::add_rstudioconnect_file()
-golem::add_shinyappsio_file()
-golem::add_shinyserver_file()
-
-## Docker ----
-## If you want to deploy via a generic Dockerfile
-golem::add_dockerfile()
-
-## If you want to deploy to ShinyProxy
-golem::add_dockerfile_shinyproxy()
-
-## If you want to deploy to Heroku
-golem::add_dockerfile_heroku()
+setwd(appdir)
+install.packages("components/omics.base_0.0.0.9000.tar.gz")
+install.packages("components/omics.app_0.0.0.9000.tar.gz")
+install.packages("components/omics.board.biomarker_0.0.0.9000.tar.gz")
