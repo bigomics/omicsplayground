@@ -34,7 +34,7 @@ desc <- readLines("dev/description.component")
 
 for(d in dir.pkg) {
     setwd(file.path(appdir,d))
-    desc[1] <- paste("Package:", paste0("omics.",basename(d)))
+    desc[1] <- paste("Package:", paste0("bigomics.",basename(d)))
     desc[2] <- paste("Title: OmicsPlayground",toupper(basename(d)),"component package")  
     write( desc, file="DESCRIPTION")  
 }
