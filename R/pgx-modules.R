@@ -312,8 +312,9 @@ plotModule <- function(input, output, session,
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
     if(show.maximize) {        
-        zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
-                                    icon=icon("window-maximize"),
+        zoom.button <- modalTrigger(ns("zoombutton"),
+            ns("plotpopup"),
+                                    icon("window-maximize"),
                                     class="btn-circle-xs")
         zoom.button <- withTooltip(zoom.button, "Maximize", placement="right")
     }
@@ -867,9 +868,8 @@ plotModule <- function(input, output, session,
             shiny::br(),
             shiny::div(caption, class="caption"),          
             shiny::div(class="popup-plot",
-                shinyBS::bsModal(ns("plotPopup"), title, size="l",
-                        ns("zoombutton"),
-                        shiny::tagList(shiny::uiOutput(ns("popupfig")))
+                modalUI(ns("plotPopup"), title, size="l",
+                        shiny::uiOutput(ns("popupfig"))
                         )
                 )
         )
@@ -944,9 +944,12 @@ tableModule <- function(input, output, session,
     }
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
 
-    zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
-                                       icon=icon("window-maximize"),
-                                       class="btn-circle-xs")    
+    zoom.button <- modalTrigger(
+        ns("zoombutton"),
+        ns("tablePopup"),
+        icon("window-maximize"),
+        class="btn-circle-xs"
+    )
     
     buttons <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
@@ -1041,14 +1044,12 @@ tableModule <- function(input, output, session,
                    ##DT::renderDataTable(func()),
                    ##verbatimTextOutput(ns("zoomstatus"))
                    shiny::div(class="popup-table",
-                              shinyBS::bsModal(
-                                           id = ns("tablePopup"),
-                                           title = title,
-                                           size = "l",
-                                           trigger = ns("zoombutton"),
-                                           ##tagList(shiny::renderPlot(plot(sin)))
-                                           shiny::tagList(shiny::uiOutput(ns("popuptable")))
-                                       ))            
+                              modalUI(
+                                id = ns("tablePopup"),
+                                title = title,
+                                size = "lg",
+                                shiny::uiOutput(ns("popuptable"))
+                            ))            
                )
     })
     

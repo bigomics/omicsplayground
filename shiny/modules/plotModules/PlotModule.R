@@ -146,8 +146,9 @@ PlotModuleUI <- function(id,
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
     if(1 && show.maximize) {        
-        zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
-                                    icon=icon("window-maximize"),
+        zoom.button <- modalTrigger(ns("zoombutton"),
+            ns("plotPopup"),
+                                    icon("window-maximize"),
                                     class="btn-circle-xs")
         ##zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")  ## weird Cairo error!!!
         ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
@@ -222,12 +223,13 @@ PlotModuleUI <- function(id,
                outputFunc(ns("renderfigure"), width=width.1, height=height.1),                              
                caption,
                shiny::div(class="popup-plot",
-                          shinyBS::bsModal(
-                                       ns("plotPopup"),
-                                       title, ns("zoombutton"), size="large",
-                                       popupfigUI()
-                                   )
-                          ),
+                          modalUI(
+                                ns("plotPopup"),
+                                title, 
+                                size="lg",
+                                popupfigUI()
+                            )
+                ),
                shiny::tagList(
                           shiny::tags$head(shiny::tags$style(modaldialog.style)),
                           shiny::tags$head(shiny::tags$style(modalbody.style)),            
