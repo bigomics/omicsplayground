@@ -8,7 +8,7 @@ run:
 	R -e "shiny::runApp('components/app/R',launch.browser=TRUE,port=3838)"
 
 run.headless:
-	R -e "shiny::runApp('shiny',launch.browser=FALSE,port=3838,host='0.0.0.0')"
+	R -e "shiny::runApp('components/app/R',launch.browser=FALSE,port=3838,host='0.0.0.0')"
 
 clean:
 	find . -name '.#*' -o -name '#*' -o -name '*~'
@@ -39,7 +39,7 @@ build.docker:
 
 bash.docker:
 	@echo bash into docker $(TAG)
-	docker run -it bigomics/omicsplayground:$(TAG) /bin/bash
+	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
 
 doc: FORCE

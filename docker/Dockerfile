@@ -44,7 +44,7 @@ ARG TAG=master
 RUN echo Downloading $TAG branch
 RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
     && unzip $TAG.zip \
-    && rm -fr /omicsplayground  \
+    && rm -fr /omicsplayground*  \
     && mv omicsplayground-$TAG omicsplayground \
     && chmod -R ugo+rwX /omicsplayground 
 
