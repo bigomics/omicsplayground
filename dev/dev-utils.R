@@ -74,7 +74,7 @@ create_SourceAll <- function(path='R',
   rfiles <- list.files(path, pattern='.[rR]$', recursive=TRUE, full.names=TRUE)
 
   ## exclude some files
-  rfiles <- setdiff(rfiles,out.file)    
+  rfiles <- setdiff(rfiles, out.file)    
   excl.files <- c(excl.files,"global.R","app.R")   ## skip 'executable' files
   rfiles <- rfiles[!basename(rfiles) %in% excl.files]
 

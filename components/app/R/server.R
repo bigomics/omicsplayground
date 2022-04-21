@@ -18,8 +18,9 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
+
     
-    ## Logging of input/output events
+    ## Logging of input/output events -------------------------------------
     log.path <- "../logs/"
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
@@ -34,8 +35,8 @@ app_server <- function(input, output, session) {
         ## No honcho, no email....
         sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
-    
-    setwd(WORKDIR)  ## for some reason it can change!!
+
+    setwd(WORKDIR)  ## for some reason it can change!! (defined in global.R)
     dbg("[SERVER] 1: getwd = ",getwd())
     
     server.start_time  <- Sys.time()
@@ -51,7 +52,6 @@ app_server <- function(input, output, session) {
     
     ## Parse and show URL query string
     if(ALLOW_URL_QUERYSTRING) {
-        
         observe({
             query <- parseQueryString(session$clientData$url_search)
             if(length(query)>0) {
@@ -77,10 +77,11 @@ app_server <- function(input, output, session) {
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
+
     env <- list()  ## communication "environment"
+
     
-    ## Modules needed from the start
-        
+    ## Modules needed from the start        
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
                                 pgx_dir = pgx_dir,
@@ -120,13 +121,13 @@ app_server <- function(input, output, session) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
-
+        
         shiny::withProgress(message="initializing modules ...", value=0, {
             loadModule( DataViewBoard, "view", pgxdata = env[["load"]][["inputData"]] )
-            loadModule( ClusteringBoard, "clust", inputData = env[["load"]][["inputData"]] )
-            loadModule( FeatureMapBoard, "ftmap", inputData <- env[["load"]][["inputData"]])    
+            loadModule( ClusteringBoard, "clust", inputData=env[["load"]][["inputData"]] )
+            loadModule( FeatureMapBoard, "ftmap", inputData=env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)
-            loadModule( ExpressionBoard, "expr", inputData <- env[["load"]][["inputData"]])
+            loadModule( ExpressionBoard, "expr", inputData=env[["load"]][["inputData"]])
             loadModule( EnrichmentBoard, "enrich",
                        inputData = env[["load"]][["inputData"]],
                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
@@ -149,7 +150,7 @@ app_server <- function(input, output, session) {
             loadModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
             loadModule( ConnectivityBoard, "cmap",
                        inputData = env[["load"]][["inputData"]])
-            loadModule( SingleCellBoard, "scell", inputData <- env[["load"]][["inputData"]])
+            loadModule( SingleCellBoard, "scell", inputData = env[["load"]][["inputData"]])
             shiny::incProgress(0.8)
             loadModule( TcgaBoard, "tcga", inputData = env[["load"]][["inputData"]])
             loadModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])

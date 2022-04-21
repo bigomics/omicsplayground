@@ -30,7 +30,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics')"
 RUN R -e "remotes::install_github('bigomics/bigdash')" 
-RUN R -e "install.packages(c('shinylogs','shinycssloaders','concaveman','ggtext'))"
+RUN R -e "install.packages(c('shinylogs','shinycssloaders','concaveman','ggtext','sass'))"
 RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz')"
 RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-14.tar.gz')"
 # RUN R -e "BiocManager::install(c('edgeR','DESeq2'))"
