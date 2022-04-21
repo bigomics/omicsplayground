@@ -43,10 +43,11 @@ WORKDIR /
 ARG TAG=master
 RUN echo Downloading $TAG branch
 RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
-    && unzip $TAG.zip \
     && rm -fr /omicsplayground*  \
+    && unzip $TAG.zip \
     && mv omicsplayground-$TAG omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground 
+    && chmod -R ugo+rwX /omicsplayground \
+    && rm $TAG.zip   
 
 #------------------------------------------------------------
 # Copy any extra data sets into Docker image
