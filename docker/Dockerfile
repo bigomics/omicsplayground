@@ -53,7 +53,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
 WORKDIR /omicsplayground
 ## RUN R -e "setwd('scripts');source('build-datasets.R')"
 ## COPY data/geiger2016-arginine.pgx data/
-RUN R -e "setwd('data');source('init.R')"
+## RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
@@ -65,4 +65,5 @@ WORKDIR /omicsplayground
 
 EXPOSE 3838
 #CMD ["/usr/bin/shiny-server.sh"]
-CMD ["R", "-e", "shiny::runApp('shiny', port=3838, host='0.0.0.0', launch.browser=FALSE)"]
+#CMD ["R", "-e", "shiny::runApp('shiny', port=3838, host='0.0.0.0', launch.browser=FALSE)"]
+CMD ["R", "-e", "shiny::runApp('components/app/R',launch.browser=TRUE,port=3838)"]
