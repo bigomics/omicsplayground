@@ -268,17 +268,17 @@ server = function(input, output, session) {
     ##dbg("[SERVER] 0: names(session) = ",names(session))
 
     ## Logging of input/output events
-    ##shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
+    log.path <- "../logs/"
+    log.path <- file.path(OPG,"logs")
+    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
 
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
     if(1 && has.honcho) {
-        ##sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
         sever::sever(sever_screen2(session$token), bg_color = "#000000")
     } else {
         ## No honcho, no email....
-        sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
+        sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
 
     setwd(WORKDIR)  ## for some reason it can change!!
