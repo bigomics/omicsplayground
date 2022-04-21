@@ -4,11 +4,14 @@ ifeq ($(BRANCH),'develop')
   TAG=develop
 endif
 
-run:
+run: sass
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
 
 run.headless:
 	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"
+
+sass:
+	Rscript dev/sass.R
 
 clean:
 	find . -name '.#*' -o -name '#*' -o -name '*~'
