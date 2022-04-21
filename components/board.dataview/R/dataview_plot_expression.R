@@ -41,8 +41,8 @@ dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark
            
              dbg("[dataview_expressionplot_server:plot_data] reacted! ")
 
-            ngs <- pgxdata()
-            shiny::req(ngs)
+            pgx <- pgxdata()
+            shiny::req(pgx)
             shiny::req(parent.input$data_groupby,
                        parent.input$search_gene,
                        parent.input$data_type)
@@ -50,9 +50,9 @@ dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark
             dbg("[dataview_expressionplot_server:plot_data] calling... ")
             
             search_gene <- parent.input$search_gene
-            samples = colnames(ngs$X)
+            samples = colnames(pgx$X)
             if(!is.null(parent.input$data_samplefilter)) {
-                samples <- selectSamplesFromSelectedLevels(ngs$Y, parent.input$data_samplefilter)
+                samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             }
             nsamples = length(samples)
             
@@ -60,20 +60,20 @@ dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark
             grp <- rep(NA,length(samples))
             grpvar <- parent.input$data_groupby
             if(grpvar != "<ungrouped>") {
-                grp  = factor(as.character(ngs$Y[samples,grpvar]))
+                grp  = factor(as.character(pgx$Y[samples,grpvar]))
             }
 
-            pp <- rownames(ngs$genes)[match(search_gene, ngs$genes$gene_name)]            
+            pp <- rownames(pgx$genes)[match(search_gene, pgx$genes$gene_name)]            
             gx = NULL
             ylab = NULL
             if(parent.input$data_type=="counts") {
-                gx = ngs$counts[pp,samples]
+                gx = pgx$counts[pp,samples]
                 ylab="expression (counts)"
             } else if(parent.input$data_type=="CPM") {
-                gx = 2**ngs$X[pp,samples]
+                gx = 2**pgx$X[pp,samples]
                 ylab="expression (CPM)"
             } else if(parent.input$data_type=="logCPM") {
-                gx = ngs$X[pp,samples]
+                gx = pgx$X[pp,samples]
                 ylab="expression (log2CPM)"
             }
             

@@ -34,15 +34,15 @@ dataview_plot_tissue_server <- function(id, pgxdata, parent.input, watermark=FAL
 
             dbg("[dataview_tissueplot_server:plot_data] reacted!")
             
-            ngs <- pgxdata()
-            shiny::req(ngs)
+            pgx <- pgxdata()
+            shiny::req(pgx)
             if(is.null(parent.input$data_type)) return(NULL)
             
             dbg("[dataview_tissueplot_server:plot_data] called..")
             
             gene <- parent.input$search_gene
-            pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-            hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
+            pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
+            hgnc.gene = toupper(as.character(pgx$genes[pp,"gene_name"]))
 
             tx = tissue.klr = NULL
             if( hgnc.gene %in% rownames(TISSUE)) {

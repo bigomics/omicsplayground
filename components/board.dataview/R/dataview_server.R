@@ -12,7 +12,7 @@
 #' @param session 
 #' @param pgxdata 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#' @param pgxData Reactive expression that provides the input ngs/pgx data object 
+#' @param pgxdata Reactive expression that provides the input pgx data object 
 #'
 #' @export 
 DataViewBoard <- function(input, output, session, pgxdata)
@@ -59,35 +59,35 @@ DataViewBoard <- function(input, output, session, pgxdata)
     
     ## update filter choices upon change of data set
     shiny::observe({
-        ngs <- pgxdata()
-        shiny::req(ngs)
+        pgx <- pgxdata()
+        shiny::req(pgx)
 
         ## levels for sample filter
-        levels = getLevels(ngs$Y)
+        levels = getLevels(pgx$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
 
-        grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
+        grps <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
         grps <- c("<ungrouped>",grps)
         if("group" %in% grps) selgrp = "group"
-        if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
+        if(nrow(pgx$samples)<=20) selgrp = "<ungrouped>"
         shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
     })
 
 
     shiny::observeEvent( input$data_type, {
-        ngs = pgxdata()
+        pgx = pgxdata()
         if(input$data_type %in% c("counts","CPM")) {
-            pp <- rownames(ngs$counts)
+            pp <- rownames(pgx$counts)
         } else {
             ## log2CPM
-            pp <- rownames(ngs$X)
+            pp <- rownames(pgx$X)
         }
 
         ## gene filter. 
-        genes <- sort(ngs$genes[pp,]$gene_name)
-        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
+        genes <- sort(pgx$genes[pp,]$gene_name)
+        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
         genes = intersect(names(sort(-fc2)),genes) ## most var gene??
         selgene <- genes[1]
         genes1 <- unique(c(selgene,sort(genes)))
@@ -105,7 +105,7 @@ DataViewBoard <- function(input, output, session, pgxdata)
     
     input_search_gene <- reactive({
         if( input$search_gene %in% c("(type SYMBOL for more genes...)","")) {
-            ngs <- pgxdata()
+            pgx <- pgxdata()
             gene1 <- last_search_gene() 
             return(gene1)
         }
@@ -144,23 +144,23 @@ DataViewBoard <- function(input, output, session, pgxdata)
     ##================================================================================
     
     getCountsTable <- shiny::reactive({
-        ngs = pgxdata()
-        shiny::req(ngs)
+        pgx = pgxdata()
+        shiny::req(pgx)
 
-        shiny::validate(shiny::need("counts" %in% names(ngs), "no 'counts' in object."))
+        shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
         subtt=NULL
 
-        samples = colnames(ngs$X)
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        samples = colnames(pgx$X)
+        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples = length(samples)
-        if("counts" %in% names(ngs)) {
-            counts = ngs$counts[,samples,drop=FALSE]
+        if("counts" %in% names(pgx)) {
+            counts = pgx$counts[,samples,drop=FALSE]
         } else {
             cat("WARNING:: no counts table. estimating from X\n")
-            counts = pmax(2**ngs$X - 1,0)
-            k = grep("lib.size",colnames(ngs$samples))[1]
+            counts = pmax(2**pgx$X - 1,0)
+            k = grep("lib.size",colnames(pgx$samples))[1]
             if(length(k)>0) {
-                libsize = ngs$samples[colnames(counts),k]
+                libsize = pgx$samples[colnames(counts),k]
                 libsize
                 counts = t(t(counts) * libsize)
             }
@@ -172,7 +172,7 @@ DataViewBoard <- function(input, output, session, pgxdata)
 
         ##if(input$data_sampling=="grouped") {
         grpvar <- input$data_groupby
-        gr = ngs$Y[samples,grpvar]
+        gr = pgx$Y[samples,grpvar]
         grps = sort(unique(gr))
         ##if(input$data_grouped && length(grps)>1 ) {
         if(input$data_groupby != "<ungrouped>" && length(grps)>1) {
@@ -197,8 +197,8 @@ DataViewBoard <- function(input, output, session, pgxdata)
         colnames(counts) <- substring(colnames(counts),1,24)
 
         gset <- list()
-        gg = ngs$genes[rownames(counts),]$gene_name
-        tt = ngs$genes[rownames(counts),]$gene_title
+        gg = pgx$genes[rownames(counts),]$gene_name
+        tt = pgx$genes[rownames(counts),]$gene_title
         g1 <- gg[grep("^rpl|^rps",gg,ignore.case=TRUE)]
         g2 <- gg[grep("^mrpl|^mrps",gg,ignore.case=TRUE)]
         g3 <- gg[grep("^MT-",gg,ignore.case=TRUE)]
@@ -291,30 +291,30 @@ DataViewBoard <- function(input, output, session, pgxdata)
 
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = pgxdata()
-        shiny::req(ngs)
+        pgx = pgxdata()
+        shiny::req(pgx)
         shiny::req(input$data_groupby)
 
         dbg("[data_rawdataTable.RENDER] reacted")
 
-        pp <- rownames(ngs$X)
+        pp <- rownames(pgx$X)
         if(input$data_type=="counts") {
-            ##x <- ngs$counts[pp,]
-            x <- ngs$counts
+            ##x <- pgx$counts[pp,]
+            x <- pgx$counts
         } else if(input$data_type=="CPM") {
-            ##x <- 2**ngs$X
-            ##x <- edgeR::cpm(ngs$counts[pp,], log=FALSE)
-            x <- edgeR::cpm(ngs$counts, log=FALSE)
+            ##x <- 2**pgx$X
+            ##x <- edgeR::cpm(pgx$counts[pp,], log=FALSE)
+            x <- edgeR::cpm(pgx$counts, log=FALSE)
         } else {
             ## log2CPM
-            x <- ngs$X
+            x <- pgx$X
         }
         x0=x
 
         ##------------------ select samples
         dbg("[data_rawdataTable.RENDER] select samples")
-        samples <- colnames(ngs$X)
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        samples <- colnames(pgx$X)
+        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         samples <- intersect(colnames(x),samples)
         x <- x[,samples,drop=FALSE]
 
@@ -329,8 +329,8 @@ DataViewBoard <- function(input, output, session, pgxdata)
         rho = sdx = avg = NULL
         if(input$data_type == "logCPM") {
             k=1
-            logx <- ngs$X[rownames(x),]
-            xgenes <- ngs$genes[rownames(x),"gene_name"]
+            logx <- pgx$X[rownames(x),]
+            xgenes <- pgx$genes[rownames(x),"gene_name"]
             k <- which(xgenes==gene)
             rho = cor( t(logx[,samples]), logx[k,samples], use="pairwise")[,1]
             rho = round(rho[rownames(x)], digits=3)
@@ -344,16 +344,16 @@ DataViewBoard <- function(input, output, session, pgxdata)
         group <- NULL
         grpvar <- input$data_groupby
 
-        if(grpvar %in% colnames(ngs$Y)) {
-            group = ngs$Y[colnames(x),grpvar]
+        if(grpvar %in% colnames(pgx$Y)) {
+            group = pgx$Y[colnames(x),grpvar]
         }
         if(length(samples)>500 && grpvar=="<ungrouped>") {
             ##grpvar="group"
-            group <- ngs$model.parameters$group
+            group <- pgx$model.parameters$group
         }
         do.grouped <- (grpvar!="<ungrouped>")
         if(do.grouped && !is.null(group) ) {
-            ##group = ngs$Y[colnames(x),grpvar]
+            ##group = pgx$Y[colnames(x),grpvar]
             allgroups = sort(unique(group))
             newx = c()
             for(gr in allgroups) {
@@ -374,7 +374,7 @@ DataViewBoard <- function(input, output, session, pgxdata)
 
         dbg("[data_rawdataTable.RENDER] create dataframe")
         ##rownames(x) = sub(".*:","",rownames(x))
-        xgenes <- ngs$genes[rownames(x),"gene_name"]
+        xgenes <- pgx$genes[rownames(x),"gene_name"]
         gene.title <- GENE.TITLE[toupper(xgenes)]
         gene.title <- substring(gene.title,1,50)
         if(is.null(rho)) {
@@ -457,11 +457,11 @@ DataViewBoard <- function(input, output, session, pgxdata)
     
     ## data_phenotypeAssociation.RENDER <- shiny::reactive({
 
-    ##     ngs = pgxdata()
-    ##     shiny::req(ngs)
+    ##     pgx = pgxdata()
+    ##     shiny::req(pgx)
     ##     dbg("[data_phenotypeAssociation.RENDER] reacted")
-    ##     annot <- ngs$samples
-    ##     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    ##     annot <- pgx$samples
+    ##     samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
     ##     annot <- annot[samples,,drop=FALSE]
     ##     pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
     ##     dbg("[data_phenotypeAssociation.RENDER] done")
@@ -471,12 +471,12 @@ DataViewBoard <- function(input, output, session, pgxdata)
     
     data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = pgxdata()
-        shiny::req(ngs)
+        pgx = pgxdata()
+        shiny::req(pgx)
         
         dt <- NULL
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        dt <- ngs$samples[samples,,drop=FALSE]
+        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        dt <- pgx$samples[samples,,drop=FALSE]
         DT::datatable( dt,
                       class = 'compact cell-border stripe hover',
                       rownames = TRUE,
@@ -509,22 +509,22 @@ DataViewBoard <- function(input, output, session, pgxdata)
 
     data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = pgxdata()
-        shiny::req(ngs)
+        pgx = pgxdata()
+        shiny::req(pgx)
 
         dbg("[data_contrastTable.RENDER] reacted")
 
         ##if(is.null(input$data_samplefilter)) return(NULL)
         dt <- NULL
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        names(ngs$model.parameters)
+        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        names(pgx$model.parameters)
         if(input$data_ctbygroup=="group") {
-            ct <- ngs$model.parameters$contr.matrix
-            ##kk <- which(rownames(ct) %in% ngs$samples[samples,"group"])
-            kk <- which(rownames(ct) %in% ngs$model.parameters$group[samples])
+            ct <- pgx$model.parameters$contr.matrix
+            ##kk <- which(rownames(ct) %in% pgx$samples[samples,"group"])
+            kk <- which(rownames(ct) %in% pgx$model.parameters$group[samples])
             dt <- ct[kk,,drop=FALSE]
         } else {
-            dt <- ngs$model.parameters$exp.matrix[samples,,drop=FALSE]
+            dt <- pgx$model.parameters$exp.matrix[samples,,drop=FALSE]
         }
         dt <- sign(dt)
         colnames(dt) <- sub("[_. ]vs[_. ]","\nvs ",colnames(dt))
@@ -574,15 +574,15 @@ DataViewBoard <- function(input, output, session, pgxdata)
     ##================================================================================
 
     datatable_timings.RENDER <- shiny::reactive({
-        ngs <- pgxdata()
-        shiny::req(ngs)
+        pgx <- pgxdata()
+        shiny::req(pgx)
 
         dbg("[datatable_timings.RENDER] reacted")
 
-        ##if(is.null(ngs$timings)) return(NULL)
+        ##if(is.null(pgx$timings)) return(NULL)
         D <- data.frame()
-        if(!is.null(ngs$timings)) {
-            D <- round(ngs$timings[,1:3],digits=3)
+        if(!is.null(pgx$timings)) {
+            D <- round(pgx$timings[,1:3],digits=3)
             D <- apply(D, 2, function(x) tapply(x, rownames(D), sum))
             catg <- gsub("^\\[|\\].*","",rownames(D))
             metd <- gsub("^.*\\]","",rownames(D))
@@ -604,12 +604,12 @@ DataViewBoard <- function(input, output, session, pgxdata)
     )
 
     datatable_objectdims.RENDER <- shiny::reactive({
-        ngs <- pgxdata()
-        shiny::req(ngs)
+        pgx <- pgxdata()
+        shiny::req(pgx)
 
-        dims1 <- lapply( ngs, dim)
-        lens <- sapply( ngs, length)
-        dims2 <- t(sapply( ngs[which(!sapply(dims1,is.null)) ], dim))
+        dims1 <- lapply( pgx, dim)
+        lens <- sapply( pgx, length)
+        dims2 <- t(sapply( pgx[which(!sapply(dims1,is.null)) ], dim))
         kk <- which(sapply(dims1,is.null))
         dims2 <- rbind(dims2, cbind(lens[kk],0))
         colnames(dims2) = c("nrows","ncols")
@@ -630,11 +630,11 @@ DataViewBoard <- function(input, output, session, pgxdata)
     )
 
     datatable_objectsize.RENDER <- shiny::reactive({
-        ngs <- pgxdata()
-        shiny::req(ngs)
-        objsize <- sapply(ngs,object.size)
+        pgx <- pgxdata()
+        shiny::req(pgx)
+        objsize <- sapply(pgx,object.size)
         objsize <- round( objsize/1e6, digits=2)
-        D = data.frame( object=names(ngs), "size.Mb"=objsize, check.names=FALSE)
+        D = data.frame( object=names(pgx), "size.Mb"=objsize, check.names=FALSE)
         DT::datatable( D, rownames=FALSE,
                       options = list(dom='t', pageLength = 50),
                       class = 'compact cell-border stripe hover') %>%

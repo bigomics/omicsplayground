@@ -36,12 +36,12 @@ dataview_plot_phenoheatmap_server <- function(id, pgxdata, parent.input, waterma
         ## extract data from pgx object
         plot_data  <- shiny::reactive({
 
-            ngs = pgxdata()
-            shiny::req(ngs)
+            pgx = pgxdata()
+            shiny::req(pgx)
             dbg("[data_phenoHeatmap.RENDER] reacted")
 
-            annot <- ngs$samples
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, parent.input$data_samplefilter)
+            annot <- pgx$samples
+            samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             annot <- annot[samples,,drop=FALSE]
             do.clust <- input$data_phenoclustsamples
 

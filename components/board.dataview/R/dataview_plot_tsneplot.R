@@ -44,35 +44,35 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)
                         
-            ngs <- pgxdata()            
+            pgx <- pgxdata()            
             gene <- parent.input$search_gene
-            samples <- colnames(ngs$X)
+            samples <- colnames(pgx$X)
             sfilt <- parent.input$data_samplefilter
             if(!is.null(sfilt)) {
-                samples <- selectSamplesFromSelectedLevels(ngs$Y, sfilt)
+                samples <- selectSamplesFromSelectedLevels(pgx$Y, sfilt)
             }
             nsamples = length(samples)
             
             ## precompute
-            pp <- rownames(ngs$genes)[1]
-            sel <- match(gene,ngs$genes$gene_name)
-            pp <- rownames(ngs$genes)[sel]
+            pp <- rownames(pgx$genes)[1]
+            sel <- match(gene,pgx$genes$gene_name)
+            pp <- rownames(pgx$genes)[sel]
             
             gx <- NULL
             ylab <- NULL
             
             if(parent.input$data_type == "counts") {
-                gx <- ngs$counts[pp,samples]
+                gx <- pgx$counts[pp,samples]
                 ylab <- "expression (counts)"
             } else if(parent.input$data_type == "CPM") {
-                gx <- 2**ngs$X[pp,samples]
+                gx <- 2**pgx$X[pp,samples]
                 ylab <- "expression (CPM)"
             } else if(parent.input$data_type == "logCPM") {
-                gx <- ngs$X[pp,samples]
+                gx <- pgx$X[pp,samples]
                 ylab <- "expression (log2CPM)"
             }
             
-            pos <- ngs$tsne2d[samples,]
+            pos <- pgx$tsne2d[samples,]
             
             fc1 <- tanh(0.99 * scale(gx)[,1])
             fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
@@ -87,8 +87,8 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
             grp <- NULL
             filt.groupby <- parent.input$data_groupby
             
-            if(!is.null(filt.groupby) && filt.groupby %in% colnames(ngs$samples)) {
-                grp <- factor(ngs$samples[samples, filt.groupby])
+            if(!is.null(filt.groupby) && filt.groupby %in% colnames(pgx$samples)) {
+                grp <- factor(pgx$samples[samples, filt.groupby])
                 data$grp <- grp
             }
             

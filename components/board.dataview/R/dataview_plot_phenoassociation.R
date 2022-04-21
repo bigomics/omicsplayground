@@ -35,10 +35,10 @@ dataview_plot_phenoassociation_server <- function(id, pgxdata, parent.input, wat
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
-            ngs = pgxdata()
-            shiny::req(ngs)
-            annot <- ngs$samples
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, parent.input$data_samplefilter)
+            pgx = pgxdata()
+            shiny::req(pgx)
+            annot <- pgx$samples
+            samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             annot <- annot[samples,,drop=FALSE]
             list(annot = annot)
         })
