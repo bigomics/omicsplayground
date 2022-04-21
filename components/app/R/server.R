@@ -20,7 +20,10 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: SESSION = ",session$token)
     
     ## Logging of input/output events
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
+    log.path <- "../logs/"
+    log.path <- file.path(OPG,"logs")
+    dbg("[SERVER] shinylog log path = ",log.path)
+    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""

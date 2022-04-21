@@ -1,0 +1,525 @@
+html {
+  h1, 
+  h2,
+  h3 {
+      margin-top: 10px;
+      margin-bottom: 5px;
+  }
+
+  .content {
+      min-height: 800px;
+  }
+
+  [class*="col-lg-"],[class*="col-md-"],
+  [class*="col-sm-"],[class*="col-xs-"]{
+      padding: 4px !important;
+  }
+
+  .control-label {
+      margin-bottom: 0px;
+      margin-top: 2px;
+  }
+
+
+  /* ---------------------------- template specfic -------------------------- */
+
+  a {
+      color: $main; 
+      text-decoration: none;
+  }
+
+  /* space in innner tabpanes */
+  .tabbable .tab-content {
+      /* margin: -12px -12px -12px -12px; */
+      padding: 15px 20px; 
+  }
+
+  .tabbable .nav-tabs {
+      padding: 0px;
+      margin: 4px 0px;
+      border-radius: 0px;
+  }
+
+  .nav-tabs>li>a {
+      margin: 0px 0px;
+      padding: 6px 12px;
+      border-radius: 0px;
+  }
+
+  .nav-tabs>li.active {
+      border-top: 3px solid $main;
+      margin-top: -3px;
+  }
+
+  /* ---------------------------- playground -------------------------- */
+
+  /* value boxes */
+
+  .box {
+      border-top: 0px !important;
+  }
+
+  #datainfo {
+      background: #fcfcfc;
+      font-size: 12px;
+      padding: 20px 10px;
+      line-height: 1em;
+  }
+
+  .well {
+      font-size: 12px;
+  }
+
+
+  /* tooltips */
+  .tooltip-inner {
+      background-color: #e0e0e0FF;
+      background-color: #fcfca0FF; 
+      color: #3f3f3fFF; 
+      border: 1px solid #9f9f9fFF;
+      opacity: 1;
+      text-align: left;    
+  }
+
+  .tooltip-arrow-inner {
+    background-color: #e0e0e0;
+    color: #e0e0e0;
+    border: 1px solid #e0e0e0;
+  }
+
+  .code { 
+    color: #1f1f1fFF;
+    background-color: #F9F9F9FF;
+    font-weight: 400;
+  }
+
+  .gene-info-output {
+      font-size: 0.9em;
+      background-color: #dde6f0BB;
+      padding: 20px 10px 10px 10px;
+      overflow: auto;
+      height: 680px;
+  }
+
+  .modal-body .gene-info-output {
+      height: auto;
+  }
+
+  .datatables {
+      font-size: 12px;
+      line-height: '70%';
+  }
+
+  .dataTables_filter {
+      float: left !important;
+      text-align: left !important;
+  }
+
+  .bg-cover-image {
+      background-color: #dde6f0;
+      background-color: #fff;
+  }
+
+  .fa, .fas {
+      line-height: 0px;  
+  }
+
+  .fa-gear {
+      color: #DDDDDD;
+  }
+
+  .btn-circle-xs, .btn-circle-xs:focus {
+      background: #FFFFFF;
+      color: #FFFFFF;
+      color: #EEE;
+      color: #DDD;
+      text-shadow: 0 0 0px #ccc;    
+      border: 0px;
+      border-radius: 3px !important;
+  }
+
+  .btn-circle-xs:hover {
+      color: #444;
+      border: 0px;
+      border-radius: 3px;
+  }
+
+  .module-label {
+      color: #AAA;
+      font-family: "Arial";
+      font-size: 18px;
+      font-weight: 600;
+      padding-right: 8px;
+  }
+
+  .chart-wrapper .chart-notes {
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.3em;
+  }
+
+  .caption,.caption2 {
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.1em;
+      position: relative;
+      padding-top: 0px;
+      padding-bottom: 0px;
+      bottom: 0px;
+  }
+
+  .caption2 {
+      padding: 20px 0px 20px 0px;
+      font-size: 16px;    
+  }
+
+  .table-caption {
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.1em;
+      position: relative;
+      padding: 5px 0px 10px 0px;
+      bottom: 0px;
+  }
+
+  .shiny-options-group {
+      margin-top: -10px;
+      margin-top: 4px !important;
+  }
+
+
+  .shiny-input-container .form-control {
+      height: 26px;
+  }
+
+  /* text input area (e.g. signature module) */
+  .form-control {
+      font-size: 12px !important; 
+      line-height: 1.1 !important;
+      padding: 3px 5px;
+  }
+
+  .shiny-flow-layout {
+      margin: 0px 0px -17px 0px;
+      font-color: #888;
+      font-size: 0.9em;
+  }
+
+  .shiny-input-panel {
+      background-color: #fff;
+      border: 0px solid #ddd;
+      padding: 5px 8px 18px 8px;
+  /*    font-size: 10px !important; */
+  }
+
+  .shiny-input-panel .form-group {
+      margin-bottom: -13px;
+      margin-top: 4px;
+  }
+
+  .form-group {
+      margin-top: 0px;
+      margin-bottom: 10px;
+      margin-bottom: 4px;
+  }
+
+  .shiny-input-panel .checkbox, .shiny-input-panel .input[type="checkbox"] {
+      font-size: 10px !important;
+      margin-top: -1px;
+      margin-bottom: 10px;    
+  }
+
+  .radio, .checkbox {
+      position: relative;
+      display: block;
+      margin-top: 0px;
+      margin-bottom: 0px;
+  }
+
+  .radio label, .checkbox label {
+      min-height: 20px;
+      margin: 2px 0 2px 0;    
+  }
+
+  input[type="checkbox"], input[type="radio"] {
+      margin: 0px 0 0 0px;
+  }
+
+  .selectize-input {
+      padding: 0px 4px 0px 4px !important;
+      min-height: 26px !important;
+  }
+
+  .selectize-input.has-items {
+      padding: 0px 4px 0px 4px !important;
+      min-height: 26px !important;
+  }
+
+  .selectize-input .item {
+      padding: 2px 0px 0px 0px;
+  }
+
+  .current-data {
+      position: fixed;
+      font-weight: 200;
+      font-size: 18px;
+      color: rgba(255,255,255,100);
+      top: 12px;
+      right: 40px;
+      z-index: 9999;
+  }
+
+  .current-user {
+      position: fixed;
+      font-weight: 200;
+      font-size: 10px;
+      color: rgba(255,255,255,100);
+      top: 1px;
+      right: 1px;
+      z-index: 9999;
+  }
+
+  /* ------------------- buttons -------------- */
+  .run-button,.load-button {
+      outline: none;
+      border-color: #1967be;
+      box-shadow: 0 0 5px #1967be;
+  }
+
+
+  .action-button .fab .fa {
+      font-size: 16px;
+      margin-top: 0px;
+  }
+
+  .btn-social-icon {
+      padding: 0px;
+      width:  28px;
+      height: 24px;
+  }
+
+  #social-buttons {
+      position: fixed;
+      font-weight: 300;
+      font-size: 30px !important;
+      color: #FFFFFF88;
+      bottom: 10px;
+      left: 10px;
+      z-index: 9999;
+  }
+
+  .radioGroupButtons {
+      margin-top: -3px;
+      margin-bottom: -3px;
+  }
+
+  .dropdown-menu {
+      background: #EFEEEE;
+      font-size: 0.9em;
+  }
+
+  .dropdown-menu > li > a {
+      padding: 0px 20px;
+      margin: 4px 0px;
+  }
+
+  .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+      color: #333;
+  }
+
+
+  .btn, .btn-default {
+    padding: 4px 12px;
+    font-size: 12px;
+    margin: 0px;
+    border-radius: 3px;
+  }
+
+  .modal-footer .btn {
+      margin-left: 5px;
+      margin-bottom: 0;
+      font-size: 14px;
+  }
+
+  .btn:hover, 
+  .btn:focus, 
+  .btn:active, 
+  .btn:active:hover {
+      border: 1px solid;
+  }
+
+  .red-button {
+      color: white;
+      background-color: #e45c00;
+      background-image: none;
+      border: 0px; 
+      padding: 8px 12px;
+  }
+
+  .red-button:hover, 
+  .red-button:focus, 
+  .red-button:active, 
+  .red-button:active:hover {
+      background-color: #b44c00;    
+  }
+
+
+  .blue-button {
+      color: white;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+  }
+
+  .blue-button:hover, 
+  .blue-button:focus, 
+  .blue-button:active,
+  .blue-button:active:hover {
+      background-color: #286090;
+      border-color: #204d74;
+  }
+
+  /* splash screen */
+  #modal-splash {
+      height: 32rem;
+      width: 100%;
+      background-color: $primary;
+      padding: 0px !important;
+  }
+
+  #particles-target {
+      position: absolute;
+      top: 0px;
+      width: 100%;
+      height: 500px;
+  }
+
+  #splash-title {
+      position: absolute;
+      top: 40px;
+      left: 5%;
+      width: 90%;
+      font-family: Lato;
+      color: white;
+      text-align: center;
+  }
+
+  #splash-panel {
+      position: absolute;
+      top: 280px;
+      left: 38%;
+      width: 24%;
+      font-family: Lato;
+      color: white;
+      text-align: center;
+  }
+
+  #splash-panel .form-group {
+      margin-bottom: 5px;
+  }
+
+  #splash-login .btn {
+      padding: 3px 6px;
+      height: 26px;
+  }
+
+  #splash-warning {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      width: 200px;
+      margin-left: -100px;
+      text-align: center;
+  }
+
+  #splash-logo {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      height: 24px;
+  }
+
+  /* ---------- modal dialogs ------------- */
+  .modal-dialog {
+      width: 900px;
+      top: 0px;
+  }
+  .modal-dialog.modal-lg {
+      width: 1400px;
+      top: 0px;	       
+  }
+  .modal-dialog.modal-sm {
+      width: 400px;
+      top: 100px;	           
+  }
+
+  .modal-content {
+      border:0;
+  }
+
+  .modal-backdrop {
+      background-color: #000;
+      background-color: #FFF;
+  }
+
+  .modal-backdrop.in {
+      opacity: 0.5;
+      opacity: 0.85;
+  }
+
+  .bg-cover-image {
+    background-color: #fff;
+  }
+
+  .popup-plot .modal-body {
+      /* padding: 20px; */
+  }
+
+  .popup-plot .modal-footer {
+      display: none;
+  }
+
+  .footer{
+      position:absolute;
+      right:0;
+      left:0;
+      bottom:0;
+      padding:3rem 1rem;
+      text-align:center;
+      font-size:0.8em;
+  }
+
+  .action-text #sig_example1 #sig_example2 #sig_example3 {
+      font-size: 0.9em;
+      color: #2244AA;
+      background-color: transparent;
+      border-style: none;
+      padding: 0
+  }
+
+  .action-text #sig_example1 #sig_example2 #sig_example3 {
+      font-size: 0.9em;
+      background-color: $light;
+      border-style: none;
+      padding: 0
+  }
+
+  #firebaseAuth {
+      position: absolute;
+      top:32rem;
+      padding-left: 15rem;
+      padding-right: 15rem;
+  }
+
+  #firebaseBtns{
+      padding-left: 21rem;
+  }
+
+  #emailLinkWrapper{
+      display: none;
+      padding-left: 20rem;
+  }
+
+  .white {
+      color: white;
+  }
+}

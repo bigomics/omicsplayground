@@ -720,13 +720,13 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 
     div.button <- div(
         id="splash-buttons",
-        actionButton(ns("login_btn"),login.text,class="red-button")
+        actionButton(ns("login_btn"),login.text,class="btn-warning")
     )
     if(with.register) {
         div.button <- div(
             id="splash-buttons",
-            actionButton(ns("login_btn"),login.text,class="red-button"),
-            actionButton(ns("register_btn"),"Register",class="red-button")
+            actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
+            actionButton(ns("register_btn"),"Register",class="btn-primary")
         )
     }
     
@@ -765,23 +765,49 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
 
     div.footer = shiny::modalButton("Dismiss")
     if(buttons) {
-        div.footer = shiny::tagList(
-            shiny::actionButton(ns("action1"),"Read-the-docs", icon=icon("book"),
-                         onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
-            shiny::actionButton(ns("action2"),"Watch tutorials", icon=icon("youtube"),
-                         onclick="window.open('https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A','_blank')"),
-            shiny::actionButton(ns("action3"),"Get the source", icon=icon("github"),
-                         onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
-            shiny::actionButton(ns("action4"),"Docker image", icon=icon("docker"),
-                         onclick="window.open('https://hub.docker.com/r/bigomics/omicsplayground','_blank')"),
-            shiny::actionButton(ns("action5"),"User forum", icon=icon("users"),
-                         onclick="window.open('https://groups.google.com/d/forum/omicsplayground','_blank')"),
-            ##actionButton(ns("action_beer"),"Buy us a beer!", icon=icon("beer"),
-            ##             onclick="window.open('https://www.buymeacoffee.com/bigomics','_blank
-            shiny::actionButton(ns("action_beer"),"Buy us a coffee!", icon=icon("coffee"),
-                         onclick="window.open('https://www.buymeacoffee.com/bigomics','_blank')")
-            ## shiny::modalButton("Let's start!")
-            ## shiny::actionButton(ns("action_play"), "Let's play!", class="red-button")
+        div.footer = shiny::div(
+            shiny::tags$a(
+                icon("book"),
+                "Read-the-docs", 
+                class = "btn btn-outline-primary mb-2",
+                href = "https://omicsplayground.readthedocs.io",
+                target = "_blank"
+            ),
+            shiny::tags$a(
+                icon("youtube"),
+                "Watch tutorials",
+                class = "btn btn-outline-primary mb-2",
+                href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
+                target = "_blank"
+            ),
+            shiny::tags$a(
+                icon("github"),
+                "Get the source", 
+                class = "btn btn-outline-primary mb-2",
+                href = "https://github.com/bigomics/omicsplayground",
+                target = "_blank"
+            ),
+            shiny::tags$a(
+                icon("docker"),
+                "Docker image", 
+                class = "btn btn-outline-primary mb-2",
+                href = "https://hub.docker.com/r/bigomics/omicsplayground",
+                target = "_blank"
+            ),
+            shiny::tags$a(
+                icon("users"),
+                "User forum", 
+                class = "btn btn-outline-primary mb-2",
+                href = "https://groups.google.com/d/forum/omicsplayground",
+                target = "_blank"
+            ),
+            shiny::tags$a(
+                icon("coffee"),
+                "Buy us a coffee!",
+                class = "btn btn-outline-primary mb-2",
+                href = "https://www.buymeacoffee.com/bigomics",
+                target = "_blank"
+            )
         )
     }
     if(!footer) {
@@ -792,6 +818,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
     m <- shiny::modalDialog(
         id = "modal-splash",
+        class = "bg-primary",
         shiny::div(
             id="particles-target",
             ##img(src = base64enc::dataURI(file="www/splash.png"),
@@ -802,7 +829,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             ##firebase::useFirebaseUI(),
             shiny::br(),
             shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
-            style="height: 500px; width: 100%;"                
+            style="height: 32rem; width: 100%;"                
         ),
         footer = div.footer,
         particlesjs::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),

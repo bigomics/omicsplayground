@@ -899,7 +899,7 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
         gtag,   ## Google Tags???
-        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
+        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         sever::useSever(),
