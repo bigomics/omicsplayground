@@ -13,6 +13,7 @@
 #' @export 
 DataViewInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
+
     bigdash::tabSettings(
         withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
                 "Show more information about this module."),
@@ -46,6 +47,9 @@ DataViewInputs <- function(id) {
 #' @export 
 DataViewUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
+
+    imgH <- 340
+
     shiny::tabsetPanel(
         id = ns("tabs"),
         shiny::tabPanel("Plots",
@@ -62,24 +66,23 @@ DataViewUI <- function(id) {
                 shiny::br(),
                 shiny::fillRow(
                     flex = c(1,0.06,5),
-                    plotWidget(ns("data_geneInfo")),
+                    dataview_module_geneinfo_ui(ns("geneinfo")),
                     shiny::br(),
                     shiny::fillCol(
                         flex = c(1,0.2,1),
                         shiny::fillRow(
                             flex = c(1.5,1,1), id = "genePlots_row1",
                             height = 355, ## width=1600,
-                            plotWidget(ns("genePlots_barplot")),
-                            plotWidget(ns("genePlots_averageRankPlot")),
-                            #plotWidget(ns("genePlots_tsne")),
-                            dataviewTSNEPlotModuleUI(ns("tSNEPlot"),height=340)
+                            dataview_plot_expression_ui(ns("expressionplot"),height=imgH),
+                            dataview_plot_averagerank_ui(ns("averagerankplot"),height=imgH),
+                            dataview_plot_tsne_ui(ns("tsneplot"),height=imgH)       
                             ),
                         shiny::br(),
                         shiny::fillRow(
                             flex = c(1.5,2), id = "genePlots_row2",
                             height = 355, ## width=1600,
-                            plotWidget(ns("genePlots_correlationplot")),
-                            plotWidget(ns("data_tissueplot"))
+                            dataview_plot_correlation_ui(ns("correlationplot"),height=imgH),
+                            dataview_plot_tissue_ui(ns("tissueplot"),height=imgH),
                         )
                     )
                 )
@@ -98,14 +101,15 @@ DataViewUI <- function(id) {
                 shiny::br(),
                 shiny::fillRow(
                     flex = c(1,1,1), id = "counts_tab_row1", height=355,
-                    plotWidget(ns("counts_tab_barplot")),
-                    plotWidget(ns("counts_tab_boxplot")),
-                    plotWidget(ns("counts_tab_histplot"))
+                    ##plotWidget(ns("counts_tab_barplot")),
+                    dataview_plot_totalcounts_ui(ns("counts_total"), height=imgH),
+                    dataview_plot_boxplot_ui(ns("counts_boxplot"), height=imgH),
+                    dataview_plot_histogram_ui(ns("counts_histplot"), height=imgH)                    
                 ),
                 shiny::fillRow(
                     flex = c(1,1), id = "counts_tab_row2", height=355,
-                    plotWidget(ns("counts_tab_abundanceplot")),
-                    plotWidget(ns("counts_tab_average_countplot"))
+                    dataview_plot_abundance_ui(ns("counts_abundance"), height=imgH),
+                    dataview_plot_averagecounts_ui(ns("counts_averagecounts"), height=imgH)
                 )
             )),
         shiny::tabPanel("Counts",
@@ -133,10 +137,13 @@ DataViewUI <- function(id) {
                 ),
                 shiny::br(),
                 shiny::fillRow(
-                    flex = c(2,0.07,1),
-                    shiny::div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
+                    flex = c(2.5,0.07,1),
+                    shiny::div(
+                               ##plotWidget(ns("data_phenoHeatmap")),
+                               dataview_plot_phenoheatmap_ui(ns("phenoheatmap")),
+                               style="overflow-y: auto;"),
                     shiny::br(),
-                    plotWidget(ns("data_phenotypeAssociation"))
+                    dataview_plot_phenoassociation_ui(ns("phenoassociation"),height=imgH)                    
                 ),
                 tableWidget(ns("data_sampleTable"))
             )),

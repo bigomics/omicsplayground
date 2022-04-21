@@ -1,0 +1,134 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+dataview_plot_correlation_ui <- function(id, label='', height=c(600,800)) {
+
+  ns <- shiny::NS(id)
+  info_text = "Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively."
+  
+  PlotModuleUI(
+    ns("pltsrv"),
+    title = "Top correlated genes",
+    label = label,
+    outputFunc = plotOutput,
+    outputFunc2 = plotOutput,        
+    info.text = info_text,
+    caption = NULL,
+    caption2 = NULL,        
+    options = NULL,
+    download.fmt=c("png","pdf","csv"),         
+    width = c("auto","1200"),
+    height = height
+  )
+  
+}
+
+dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+{
+  moduleServer( id, function(input, output, session) {
+    
+    getTopCorrelatedGenes <- function(ngs, gene, n=30, samples=NULL) {
+      
+      ## precompute
+      if(is.null(samples)) samples = colnames(ngs$X)
+      samples <- intersect(samples, colnames(ngs$X))
+      pp=rownames(ngs$genes)[1]
+      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+
+      ## corr always in log.scale and restricted to selected samples subset
+      ## should match exactly the rawtable!!
+      if(pp %in% rownames(ngs$X)) {
+        rho <- cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
+      } else if(pp %in% rownames(ngs$counts)) {
+        x0 <- logCPM(ngs$counts[,samples])
+        x1 <- x0[pp,]
+        rho <- cor(t(x0), x1, use="pairwise")[,1]
+      } else {
+        rho <- rep(0, nrow(ngs$genes))
+        names(rho) <- rownames(ngs$genes)
+      }
+
+      rho[is.na(rho)] <- 0
+      jj = head(order(-abs(rho)),30)
+      jj <- c(head(order(-rho),15), tail(order(-rho),15))
+      top.rho = rho[jj]
+
+      gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
+      gx1 <- (gx1 / max(gx1))
+      klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
+                                   alpha = TRUE)(16))[1+round(15*gx1) ]
+      klr1[which(is.na(klr1))] <- rgb(0.2,0.5,0.8,0.1)
+
+      names(top.rho) = sub(".*:","",names(top.rho))
+
+      res = list(
+        top.rho = top.rho,
+        gene = gene,
+        klr1 = klr1
+      )
+      return(res)
+    }
+
+    plot_data <- shiny::reactive({
+
+      ngs <- pgxdata()
+      shiny::req(ngs)
+      shiny::req(parent.input)             
+      if(class(parent.input)[1]=="reactiveExpr") {
+        parent.input <- parent.input()
+      }
+      gene = parent.input$search_gene
+
+      shiny::req(ngs)
+      shiny::req(gene)      
+
+      samples = colnames(ngs$X)
+      samplefilter <- parent.input$data_samplefilter
+      if(!is.null(samplefilter)) {
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
+      }
+
+      res <- getTopCorrelatedGenes(ngs, gene=gene, n=30, samples=samples)
+      res
+    })
+
+    plot.RENDER <- function() {
+      res <- plot_data()
+      par(mar=c(4.3,3.0,1,1), mgp=c(2.0,0.6,0))
+      barplot(res$top.rho, col=res$klr1, ## horiz=TRUE,
+              las = 3,  
+              main = paste(res$gene),
+              ylab="correlation (r)",
+              cex.names = 0.85, cex.main = 1, cex.axis = 0.9,
+              col.main="#7f7f7f", border=NA)
+      legend("topright", legend=c("expr high","expr low"),
+             fill=c("#3380CCCC","#3380CC40"),
+             cex=0.8, y.intersp=0.85)
+    }
+    
+    modal_plot.RENDER <- function() {
+      plot.RENDER()
+    }
+    
+    PlotModuleServer(
+      "pltsrv",
+      plotlib = "base",
+      plotlib2 = "base",
+      func = plot.RENDER,
+      func2 = modal_plot.RENDER,
+      csvFunc = plot_data,   ##  *** downloadable data as CSV
+      renderFunc = shiny::renderPlot,
+      renderFunc2 = shiny::renderPlot,        
+##    renderFunc = shiny::renderCachedPlot,
+##    renderFunc2 = shiny::renderCachedPlot,        
+      res = c(96,120)*1,                ## resolution of plots
+      pdf.width = 6, pdf.height = 6,
+      add.watermark = watermark
+    )
+
+  })  ## end of moduleServer
+}
+
+

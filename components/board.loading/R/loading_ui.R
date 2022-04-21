@@ -45,7 +45,7 @@ LoadingUI <- function(id) {
                             flex = c(1,0.1,4.5),
                             shiny::wellPanel(
                                 shiny::tagList(
-                                    shinyalert::useShinyalert(),
+                                    ## shinyalert::useShinyalert(),
                                     shiny::p(shiny::strong("Dataset info:")),
                                     shiny::div(shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
                                     shiny::br(),

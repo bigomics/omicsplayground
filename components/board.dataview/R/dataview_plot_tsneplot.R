@@ -1,0 +1,238 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+dataview_plot_tsne_ui <- function(id, label='', height=c(600,800)) {
+
+    ns <- shiny::NS(id)
+
+    ## options (hamburger menu)
+    options <- tagList(
+        actionButton(ns("button1"),"some action")
+    )
+
+    info_text = paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the <code>search_gene</code> dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
+    
+    PlotModuleUI(
+        ns("pltmod"),
+        outputFunc = plotOutput,
+        outputFunc2 = plotOutput,        
+        info.text = info_text,
+        ##caption = "T-SNE figure caption.",
+        caption = NULL,
+        caption2 = NULL,        
+        options = options,
+        download.fmt=c("png","pdf","csv"),         
+        width = c("auto","1200"),
+        height = height,
+        label = label,
+        title = "t-SNE clustering"
+    )
+    
+}
+
+dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+{
+    moduleServer( id, function(input, output, session) {
+        
+        plot_dl <- reactiveValues()
+        
+        plot_data <- shiny::reactive({
+            
+            shiny::req(pgxdata)
+            shiny::req(parent.input)
+            shiny::req(parent.input$search_gene)
+                        
+            ngs <- pgxdata()            
+            gene <- parent.input$search_gene
+            samples <- colnames(ngs$X)
+            sfilt <- parent.input$data_samplefilter
+            if(!is.null(sfilt)) {
+                samples <- selectSamplesFromSelectedLevels(ngs$Y, sfilt)
+            }
+            nsamples = length(samples)
+            
+            ## precompute
+            pp <- rownames(ngs$genes)[1]
+            sel <- match(gene,ngs$genes$gene_name)
+            pp <- rownames(ngs$genes)[sel]
+            
+            gx <- NULL
+            ylab <- NULL
+            
+            if(parent.input$data_type == "counts") {
+                gx <- ngs$counts[pp,samples]
+                ylab <- "expression (counts)"
+            } else if(parent.input$data_type == "CPM") {
+                gx <- 2**ngs$X[pp,samples]
+                ylab <- "expression (CPM)"
+            } else if(parent.input$data_type == "logCPM") {
+                gx <- ngs$X[pp,samples]
+                ylab <- "expression (log2CPM)"
+            }
+            
+            pos <- ngs$tsne2d[samples,]
+            
+            fc1 <- tanh(0.99 * scale(gx)[,1])
+            fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+            ##fc1 <- tanh(0.99 * gx/sd(gx))
+            fc2 <- (fc1 - min(fc1))            
+            jj2 <- order(abs(fc1))
+            
+            data <- data.frame(pos[jj2,])
+            colnames(data) <- c("pos_x", "pos_y")
+            data$fc2 <- fc2
+            
+            grp <- NULL
+            filt.groupby <- parent.input$data_groupby
+            
+            if(!is.null(filt.groupby) && filt.groupby %in% colnames(ngs$samples)) {
+                grp <- factor(ngs$samples[samples, filt.groupby])
+                data$grp <- grp
+            }
+            
+            return(data)
+        })
+
+        plot.RENDER <- function() {        
+            
+            data <- plot_data()
+            fig_base <- 
+                ggplot(data, aes(pos_x, pos_y)) +
+                labs(x = "tSNE1", y = "tSNE2") +
+                scale_color_viridis_c(
+                    option = "rocket", 
+                    direction = -1, 
+                    begin = .05, end = .97,
+                    limits = c(0, 1),
+                    labels = function(x) sprintf("%1.2f", x),
+                    name = "Expression"
+                ) +
+                guide_continuous(aes = "color", type = "steps", width = .4) +
+                theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
+            
+            plot_dl$base <- fig_base
+            
+            if (!is.null(plot_data()$grp)) {
+                fig <- fig_base +
+                    ggforce::geom_mark_hull(
+                                 aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+                                 color = "grey33", 
+                                 size = .4,
+                                 alpha = .33 / length(unique(plot_data()$grp)),
+                                 expand = unit(2.7, "mm"), 
+                                 con.cap = unit(.01, "mm"), 
+                                 con.colour = "grey33", 
+                                 label.buffer = unit(2, "mm"),
+                                 label.fontsize = 12.5, 
+                                 label.fontface = "plain"
+                             ) +
+                    geom_point(
+                        aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
+                            fill = after_scale(color)), 
+                        size = 1.8, 
+                        shape = 21, 
+                        stroke = .5
+                    ) +
+                    scale_x_continuous(expand = c(.4, .4)) +
+                    scale_y_continuous(expand = c(.4, .4)) +
+                    scale_fill_discrete(guide = "none")
+                
+            } else {
+                fig <- fig_base +
+                    geom_point(
+                        aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
+                            fill = after_scale(color)), 
+                        size = 2.3, 
+                        shape = 21, 
+                        stroke = .5
+                    )
+            }
+            
+            plot_dl$plot <- fig
+            fig
+        }
+        
+        modal_plot.RENDER <- function() {
+            plot.RENDER() +
+                guide_continuous(aes = "color", type = "steps", width = .7) +
+                theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+        }
+
+        ##modal_plot.RENDER <- shiny::reactive({
+        modal_plot.RENDER.BAK <- function() {
+            
+            if(is.null(class(plot_dl$base))) {
+                message("[tsne3::modal_plot.RENDER] call plot.RENDER ")
+                tmp <- plot.RENDER()
+            }
+            
+            fig_base <- plot_dl$base +
+                ##fig_base <- plot_dl$plot +         
+                guide_continuous(aes = "color", type = "steps", width = .7) +
+                theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+            
+            if (!is.null(plot_data()$grp)) {
+                fig <- fig_base #+
+                                        # ggforce::geom_mark_hull(
+                                        #   aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+                                        #   color = "grey33", 
+                                        #   size = .8,
+                                        #   alpha = .33 / length(unique(plot_data()$grp)),
+                                        #   expand = unit(3.4, "mm"), 
+                                        #   con.cap = unit(.01, "mm"), 
+                                        #   con.colour = "grey33", 
+                                        #   label.buffer = unit(2, "mm"),
+                                        #   label.fontsize = 22, 
+                                        #   label.fontface = "plain"
+                                        # ) +
+                                        # geom_point(
+                                        #   aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
+                                        #       fill = after_scale(color)), 
+                                        #   size = 1.8, 
+                                        #   shape = 21, 
+                                        #   stroke = .5
+                                        # ) +
+                                        # scale_x_continuous(expand = c(.15, .15)) +
+                                        # scale_y_continuous(expand = c(.15, .15)) +
+                                        # scale_fill_discrete(guide = "none")
+                
+            } else {
+                fig <- fig_base #+
+                                        # geom_point(
+                                        #   aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
+                                        #       fill = after_scale(color)), 
+                                        #   size = 4.7, 
+                                        #   shape = 21, 
+                                        #   stroke = .5
+                                        # )
+            }
+            fig
+            ##gridExtra::grid.arrange(fig)
+        }
+        ##})        
+        ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
+        
+        PlotModuleServer(
+            "pltmod",
+            plotlib = "ggplot",
+            plotlib2 = "ggplot",
+            func = plot.RENDER,
+            func2 = modal_plot.RENDER,
+            csvFunc = plot_data,             ##  *** downloadable data as CSV
+            renderFunc = shiny::renderPlot,
+            renderFunc2 = shiny::renderPlot,        
+            ##renderFunc = shiny::renderCachedPlot,
+            ##renderFunc2 = shiny::renderCachedPlot,        
+            res = c(96,120)*1,                ## resolution of plots
+            pdf.width = 6, pdf.height = 6,
+            ##label = label, title = "t-SNE clustering",
+            add.watermark = watermark
+        )
+        
+    })  ## end of moduleServer
+}
+
+
+

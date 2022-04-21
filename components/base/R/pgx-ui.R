@@ -15,7 +15,7 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
         shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
         shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
         shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}")),        
-        shinyalert::useShinyalert(),
+        ##shinyalert::useShinyalert(),
         miniUI::gadgetTitleBar(title),
         miniUI::miniContentPanel(moduleUI(id))
     )
@@ -45,8 +45,8 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     ui = shiny::fluidPage(
         shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
         shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
-        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}")),
-        shinyalert::useShinyalert()
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}"))
+        ##shinyalert::useShinyalert()
     )    
     server = function(input, output, session)
     {

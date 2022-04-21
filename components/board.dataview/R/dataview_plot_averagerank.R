@@ -1,0 +1,108 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+dataview_plot_averagerank_ui <- function(id, label='', height=c(600,800)) {
+
+    ns <- shiny::NS(id)
+    info_text = paste0('Ranking of the average expression of the selected gene.')
+    
+    PlotModuleUI(
+        ns("pltsrv"),
+        title = "Average rank",
+        label = label,
+        outputFunc = plotOutput,
+        outputFunc2 = plotOutput,        
+        info.text = info_text,
+        caption = NULL,
+        caption2 = NULL,        
+        options = NULL,
+        download.fmt=c("png","pdf","csv"),         
+        width = c("auto","1200"),
+        height = height
+    )
+    
+}
+
+dataview_plot_averagerank_server <- function(id, pgxData, parent.input, watermark=FALSE)
+{
+    moduleServer( id, function(input, output, session) {
+        
+        plot_data <- shiny::reactive({
+
+            dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
+
+            ngs <- pgxData()
+            shiny::req(ngs)
+            shiny::req(parent.input)
+            shiny::req(parent.input$search_gene)                         
+
+            dbg("[dataview_averagerankplot_server:plot_data] calling.. ")
+
+            gene <- parent.input$search_gene
+            samples <- colnames(ngs$X)
+            if(!is.null(parent.input$data_samplefilter)) {
+                samples <- selectSamplesFromSelectedLevels(ngs$Y, parent.input$data_samplefilter)
+            }
+            nsamples <- length(samples)
+        
+            if(parent.input$data_type=="counts") {
+                mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
+                ylab = "expression (counts)"
+            }
+            if(parent.input$data_type=="logCPM") {
+                mean.fc <- sort(rowMeans(ngs$X[,samples,drop=FALSE]),decreasing=TRUE)
+                ylab = "expression (log2CPM)"
+            }
+
+            sel <- which(sub(".*:","",names(mean.fc))==gene)
+            
+            list(
+                df = data.frame(mean.fc=mean.fc),
+                sel = sel,
+                gene = gene,
+                ylab = ylab
+            )
+        })
+
+        plot.RENDER <- function() {
+            pd <- plot_data()
+            req(pd)
+            mean.fc <- pd$df$mean.fc
+            sel <- pd$sel
+            gene <- pd$gene
+            ylab <- pd$ylab
+
+            par(mar=c(2.3,3.0,1,1), mgp=c(2.0,0.6,0))            
+            base::plot( mean.fc, type="h", lwd=0.4,
+                       col="#bbd4ee", cex.axis=0.9,
+                       ylab=ylab, xlab="ordered genes", xaxt="n")
+            points( sel, mean.fc[sel], type="h", lwd=2, col="black")
+            text( sel, mean.fc[sel], gene, pos=3, cex=0.9)
+        }
+           
+        modal_plot.RENDER <- function() {
+            plot.RENDER()
+        }
+        
+        PlotModuleServer(
+            "pltsrv",
+            plotlib = "base",
+            plotlib2 = "base",
+            func = plot.RENDER,
+            func2 = modal_plot.RENDER,
+            csvFunc = plot_data,   ##  *** downloadable data as CSV
+            renderFunc = shiny::renderPlot,
+            renderFunc2 = shiny::renderPlot,        
+            ##renderFunc = shiny::renderCachedPlot,
+            ##renderFunc2 = shiny::renderCachedPlot,        
+            res = c(96,120)*1,                ## resolution of plots
+            pdf.width = 6, pdf.height = 6,
+            add.watermark = watermark
+        )
+
+    })  ## end of moduleServer
+}
+
+

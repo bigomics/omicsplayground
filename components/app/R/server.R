@@ -119,7 +119,7 @@ app_server <- function(input, output, session) {
         }
 
         shiny::withProgress(message="initializing modules ...", value=0, {
-            loadModule( DataViewBoard, "view", inputData = env[["load"]][["inputData"]] )
+            loadModule( DataViewBoard, "view", pgxdata = env[["load"]][["inputData"]] )
             loadModule( ClusteringBoard, "clust", inputData = env[["load"]][["inputData"]] )
             loadModule( FeatureMapBoard, "ftmap", inputData <- env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)

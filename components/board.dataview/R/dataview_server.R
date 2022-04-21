@@ -7,11 +7,15 @@
 #'
 #' @description A shiny Module (server code).
 #'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param pgxdata 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#' @param inputData Reactive expression that provides the input ngs/pgx data object 
+#' @param pgxData Reactive expression that provides the input ngs/pgx data object 
 #'
 #' @export 
-DataViewBoard <- function(input, output, session, inputData)
+DataViewBoard <- function(input, output, session, pgxdata)
 {
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
@@ -55,17 +59,12 @@ DataViewBoard <- function(input, output, session, inputData)
     
     ## update filter choices upon change of data set
     shiny::observe({
-        ngs <- inputData()
+        ngs <- pgxdata()
         shiny::req(ngs)
 
         ## levels for sample filter
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
-
-##        genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-##        fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
-##        selgene = names(sort(-fc2))[1] ## most var gene??        
-##        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene, server=TRUE)
 
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
@@ -78,7 +77,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
 
     shiny::observeEvent( input$data_type, {
-        ngs = inputData()
+        ngs = pgxdata()
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(ngs$counts)
         } else {
@@ -106,7 +105,7 @@ DataViewBoard <- function(input, output, session, inputData)
     
     input_search_gene <- reactive({
         if( input$search_gene %in% c("(type SYMBOL for more genes...)","")) {
-            ngs <- inputData()
+            ngs <- pgxdata()
             gene1 <- last_search_gene() 
             return(gene1)
         }
@@ -116,886 +115,36 @@ DataViewBoard <- function(input, output, session, inputData)
 
     
     ##================================================================================
-    ##========================= FUNCTIONS ============================================
+    ##=========================== MODULES ============================================
     ##================================================================================
 
+    ## dbg("[***dataview_server] names.input = ",names(input))    
+    dataview_module_geneinfo_server("geneinfo", pgxdata, input)
 
-    ##----------------------------------------------------------------------
-    ##                     Info messages
-    ##----------------------------------------------------------------------
+    ## first tab
+    dataview_plot_averagerank_server("averagerankplot", pgxdata, input)            
+    dataview_plot_tsne_server("tsneplot", pgxdata, input)        
+    dataview_plot_correlation_server("correlationplot", pgxdata, input)
+    dataview_plot_tissue_server("tissueplot", pgxdata, input)            
+    dataview_plot_expression_server("expressionplot", pgxdata, input)
 
-    genePlots_tsne_text=paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the ',dropdown_search_gene, ' dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
-    genePlots_barplot_text=paste0('Expression barplot of grouped samples (or cells) for the gene selected in the ',dropdown_search_gene,'. Samples (or cells) in the barplot can be ungrouped by setting the ',menu_grouped, ' under the main <i>Options</i>.')
-    genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively.')
-    genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
-    data_geneInfo_text = paste0('For more information about the the selected gene, follow the hyperlinks to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
-    data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
-
-    ##----------------------------------------------------------------------
-    ##                     Average Rank plot
-    ##----------------------------------------------------------------------
-    MARGINS1 = c(7,3.5,2,1)
-
-    genePlots_averageRankPlot.RENDER <- shiny::reactive({
-
-
-        ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        shiny::req(ngs)
-
-        dbg("[genePlots_averageRankPlot.RENDER] reacted")
-        
-        gene <- ngs$genes$gene_name[1]
-        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
-        samples <- colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-        nsamples <- length(samples)
-        
-        if(input$data_type=="counts") {
-            mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
-            ylab="expression (counts)"
-        }
-        if(input$data_type=="logCPM") {
-            mean.fc <- sort(rowMeans(ngs$X[,samples,drop=FALSE]),decreasing=TRUE)
-            ylab="expression (log2CPM)"
-        }
-
-        j <- which(sub(".*:","",names(mean.fc))==gene)
-
-        mar <- MARGINS1
-        mar[4] <- 0
-        par(mar=mar, mgp=c(2.1,0.8,0))
-        par(mar=c(2.3,3.0,2,2), mgp=c(2.0,0.6,0))
-        ##MARGINS1
-        base::plot( mean.fc, type="h", lwd=0.4,
-                   col="#bbd4ee", cex.axis=0.9,
-                   ylab=ylab, xlab="ordered genes", xaxt="n")
-        points( j, mean.fc[j], type="h", lwd=2, col="black")
-        text( j, mean.fc[j], gene, pos=3, cex=0.9)
-
-        dbg("[genePlots_averageRankPlot.RENDER] done")
-
-    })
-   
-    shiny::callModule(
-        plotModule, id="genePlots_averageRankPlot",
-        func = genePlots_averageRankPlot.RENDER,
-        func2 = genePlots_averageRankPlot.RENDER,
-        info.text = genePlots_averageRankPlot_text,
-        height = imgH, ## width = '100%',
-        pdf.width=6, pdf.height=6,
-        label="c", title="Average rank",
-        add.watermark = WATERMARK
-    )
-
+    ## second tab
+    dataview_plot_totalcounts_server("counts_total", pgxdata, input, getCountsTable)
+    dataview_plot_boxplot_server("counts_boxplot", pgxdata, input, getCountsTable)
+    dataview_plot_histogram_server("counts_histplot", pgxdata, input, getCountsTable)
+    dataview_plot_abundance_server("counts_abundance", pgxdata, input, getCountsTable)
+    dataview_plot_averagecounts_server("counts_averagecounts", pgxdata, input, getCountsTable)
     
+    ## fourth tab
+    dataview_plot_phenoheatmap_server("phenoheatmap", pgxdata, input)
+    dataview_plot_phenoassociation_server("phenoassociation", pgxdata, input)    
     
-    ##----------------------------------------------------------------------
-    ##                     Correlation plot
-    ##----------------------------------------------------------------------
-
-    getTopCorrelatedGenes <- function(ngs, gene, n=30, samples=NULL) {
-
-        ## precompute
-        if(is.null(samples)) samples = colnames(ngs$X)
-        samples <- intersect(samples, colnames(ngs$X))
-        pp=rownames(ngs$genes)[1]
-        pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-
-        ## corr always in log.scale and restricted to selected samples subset
-        ## should match exactly the rawtable!!
-        if(pp %in% rownames(ngs$X)) {
-            rho <- cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
-        } else if(pp %in% rownames(ngs$counts)) {
-            x0 <- logCPM(ngs$counts[,samples])
-            x1 <- x0[pp,]
-            rho <- cor(t(x0), x1, use="pairwise")[,1]
-        } else {
-            rho <- rep(0, nrow(ngs$genes))
-            names(rho) <- rownames(ngs$genes)
-        }
-
-        rho[is.na(rho)] <- 0
-        jj = head(order(-abs(rho)),30)
-        jj <- c(head(order(-rho),15), tail(order(-rho),15))
-        top.rho = rho[jj]
-
-        gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
-        gx1 <- (gx1 / max(gx1))
-        klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
-                                     alpha = TRUE)(16))[1+round(15*gx1) ]
-        klr1[which(is.na(klr1))] <- rgb(0.2,0.5,0.8,0.1)
-
-        names(top.rho) = sub(".*:","",names(top.rho))
-        offset = min(top.rho)*0.95
-        offset = 0
-
-        dbg("[genePlots_correlationplot_data()] done")
-
-        res = list(top.rho=top.rho, offset=offset, klr1=klr1)
-        return(res)
-    }
-
-    genePlots_correlationplot.RENDER <- shiny::reactive({
-
-        ngs <- inputData()
-        shiny::req(ngs)
-
-        gene = ngs$genes$gene_name[1]
-        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
-
-        samples = colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-
-        res <- getTopCorrelatedGenes(ngs, gene=gene, n=30, samples=samples)
-        ## res = genePlots_correlationplot_data()
-
-        mar = MARGINS1
-        par(mar=mar, mgp=c(2.1,0.8,0))
-        barplot(res$top.rho - res$offset, col=res$klr1, ## horiz=TRUE,
-                las = 3,#main=paste("top correlated genes\nwith",gene),
-                main = paste(gene),
-                offset = res$offset, ylab="correlation (r)",
-                ## names.arg=rep(NA,length(top.rho)),
-                cex.names = 0.85, cex.main = 1, cex.axis = 0.9,
-                col.main="#7f7f7f", border=NA)
-        ##text( (1:length(top.rho) - 0.5)*1.2, offset, names(top.rho),
-        ##col="black", cex=0.75, srt=90, pos=3, offset=0.4, font=1)
-        legend("topright", legend=c("expr high","expr low"),
-               ##fill=c("grey30","grey80"),
-               fill=c("#3380CCCC","#3380CC40"),
-               cex=0.8, y.intersp=0.85)
-
-        dbg("[genePlots_correlationplot.RENDER] done")
-
-    })
-
-    ##genePlots_correlationplot_module <- plotModule(
-    ##    id="genePlots_correlationplot", ns=ns,
-    shiny::callModule(
-        plotModule, "genePlots_correlationplot",
-        func = genePlots_correlationplot.RENDER,
-        func2 = genePlots_correlationplot.RENDER,
-        info.text=genePlots_correlationplot_text,
-        height = imgH, pdf.width=6, pdf.height=6,
-        label="e", title="Top correlated genes",
-        add.watermark = WATERMARK
-    )
-    ##output <- attachModule(output, genePlots_correlationplot_module)
-
-    ##----------------------------------------------------------------------
-    ##                     Bar/box plot
-    ##----------------------------------------------------------------------
+    ##================================================================================
+    ##========================= FUNCTIONS ============================================
+    ##================================================================================
     
-    genePlots_barplot.RENDER <- shiny::reactive({
-
-
-        cat("[dataview] genePlots_barplot.RENDER reacted\n")
-
-        ngs <- inputData()
-        shiny::req(ngs)
-        shiny::req(input$data_groupby,input$search_gene,input$data_type)
-
-        gene = ngs$genes$gene_name[1]
-        if(!is.null(input_search_gene()) && input_search_gene()!="") gene <- input_search_gene()
-        samples = colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-        nsamples = length(samples)
-
-        grpvar=1
-        grpvar <- input$data_groupby
-        ##grp  = factor(ngs$Y[samples,grpvar])
-        grp  = factor(as.character(ngs$Y[samples,grpvar]))
-        klr0 = COLORS
-        klr  = klr0[as.integer(grp)]
-
-        ## precompute
-        pp=rownames(ngs$genes)[1]
-        pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-
-        gx = NULL
-        ylab = NULL
-        if(input$data_type=="counts") {
-            gx = ngs$counts[pp,samples]
-            ylab="expression (counts)"
-        } else if(input$data_type=="CPM") {
-            gx = 2**ngs$X[pp,samples]
-            ylab="expression (CPM)"
-        } else if(input$data_type=="logCPM") {
-            gx = ngs$X[pp,samples]
-            ylab="expression (log2CPM)"
-        }
-
-        mar=MARGINS1
-        par(mar=mar, mgp=c(2.1,0.8,0))
-
-        BLUE = col=rgb(0.2,0.5,0.8,0.8)
-        bee.cex = ifelse(length(gx)>500,0.1,0.2)
-        bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
-
-        ##if(input$data_grouped) {
-        if(input$data_groupby != "<ungrouped>") {
-            nnchar = nchar(paste(unique(grp),collapse=''))
-            srt = ifelse(nnchar < 20, 0, 35)
-            srt
-            ngrp <- length(unique(grp))
-            cx1 = ifelse( ngrp < 10, 1, 0.8)
-            cx1 = ifelse( ngrp > 20, 0.6, cx1)
-            ##cx1 = ifelse( ngrp > 10, 0.6, 0.9)
-            if(input$geneplot_type == 'bar') {
-                gx.b3plot(
-                    gx, grp, las=3, main=gene, ylab=ylab,
-                    cex.main=1, col.main="#7f7f7f",
-                    bar=TRUE, border=NA, ## bee = ifelse(length(gx) < 500,TRUE,FALSE),
-                    bee.cex = bee.cex, ## sig.stars=TRUE, max.stars=5,
-                    xlab="", names.cex=cx1, srt=srt,
-                    ## col=klr0[ii],
-                    col = rgb(0.4,0.6,0.85,0.85)
-                )
-            } else if(input$geneplot_type == 'violin') {
-                ##vioplot::vioplot( gx ~ grp, main = gene, cex.main=1.0,
-                ##                 ylab = ylab, xlab='',
-                ##                 col = rgb(0.2,0.5,0.8,0.8))
-                pgx.violinPlot(gx, grp, main = gene, cex.main=1,
-                               xlab = '', ylab = ylab,
-                               ##vcol = rgb(0.2,0.5,0.8,0.8),
-                               vcol = rgb(0.4,0.6,0.85,0.85),
-                               srt = srt)
-
-            } else {
-                boxplot(
-                    gx ~ grp, main = gene, cex.main=1.0,
-                    ylab = ylab, xlab='', xaxt='n',
-                    col =  rgb(0.4,0.6,0.85,0.85)
-                )
-                yy <- sort(unique(grp))
-                text(x = 1:length(yy),
-                     y = par("usr")[3] - 0.03*diff(range(gx)),
-                     labels = yy,
-                     xpd = NA,
-                     srt = srt,
-                     adj = ifelse(srt==0, 0.5, 0.965),
-                     cex = cx1)
-            }
-
-
-
-        }  else {
-            jj <- 1:length(gx)
-            sorting="no"
-            if(sorting == "decr")  jj <- order(-gx)
-            if(sorting == "inc")  jj <- order(gx)
-            tt=""
-            barplot(gx[jj], col=BLUE, ##col=klr[jj],
-                    las = 3, cex.names = 0.8,
-                    ylab = ylab, xlab = tt,
-                    main = gene, cex.main=1, col.main="#7f7f7f", border=NA,
-                    names.arg = rep(NA,length(gx)) )
-            if(length(gx)<100) {
-                cx1 = ifelse(length(gx) > 20, 0.8, 0.9)
-                cx1 = ifelse(length(gx) > 40, 0.6, cx1)
-                cx1 = ifelse(length(gx) < 10, 1, cx1)
-                text((1:length(gx)-0.5)*1.2, -0.04*max(gx), names(gx)[jj],
-                     las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
-            }
-        }
-    })
-
-    genePlots_barplot.opts <- shiny::tagList(
-        shiny::radioButtons(ns('geneplot_type'),'plot type (grouped)', c('bar','violin','box'),
-                     inline=TRUE)
-    )
-
-    shiny::callModule(
-        plotModule, "genePlots_barplot",
-        func = genePlots_barplot.RENDER,
-        func2 = genePlots_barplot.RENDER,
-        options = genePlots_barplot.opts,
-        info.text = genePlots_barplot_text,
-        height = imgH,
-        pdf.width = 7, pdf.height = 5,
-        label="b", title="Abundance/expression",
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ## t-SNE
-    ##----------------------------------------------------------------------
-
-    # genePlots_tsne.RENDER <- shiny::reactive({
-
-
-    #     ngs <- inputData()
-    #     shiny::req(ngs)
-
-    #     dbg("[genePlots_tsne.RENDER] reacted")
-
-    #     gene <- ngs$genes$gene_name[1]
-    #     if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-    #     samples <- colnames(ngs$X)
-    #     if(!is.null(input$data_samplefilter)) {
-    #         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-    #     }
-    #     nsamples = length(samples)
-
-    #     ## precompute
-    #     pp <- rownames(ngs$genes)[1]
-    #     pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-
-    #     gx <- NULL
-    #     ylab <- NULL
-    #     if(input$data_type == "counts") {
-    #         gx <- ngs$counts[pp,samples]
-    #         ylab <- "expression (counts)"
-    #     } else if(input$data_type == "CPM") {
-    #         gx <- 2**ngs$X[pp,samples] ## TODO: is that correct with two asterisks??
-    #         ylab <- "expression (CPM)"
-    #     } else if(input$data_type == "logCPM") {
-    #         gx <- ngs$X[pp,samples]
-    #         ylab <- "expression (log2CPM)"
-    #     }
-
-    #     pos <- ngs$tsne2d[samples,]
-
-    #     fc1 <- tanh(0.99 * scale(gx)[,1])
-    #     fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
-    #     ##fc1 <- tanh(0.99 * gx/sd(gx))
-    #     fc2 <- (fc1 - min(fc1))
-
-    #     jj2 <- order(abs(fc1))
-
-    #     ## determine how to do grouping for group labels
-    #     groupby <- input$data_groupby
-    #     grp <- NULL
-    #     if(groupby != "<ungrouped>") {
-    #         grp <- factor(ngs$samples[samples, groupby])
-    #     } 
-    #     data <- data.frame(pos[jj2,])
-    #     data$grp <- grp
-    #     data$fc2 <- fc2
-
-    #     fig <-
-    #       ggplot(data, aes(tSNE.x, tSNE.y)) +
-    #         labs(x = "tSNE1", y = "tSNE2") +
-    #         scale_color_continuous(name = "Expression") +
-    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
-    #         theme_omics(axis_num = "xy", legendnum = TRUE)
-
-    #     if (!is.null(grp)) {
-    #       fig <- fig +
-    #         ggforce::geom_mark_hull(
-    #           aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-    #           color = "grey33", 
-    #           size = .4,
-    #           alpha = .33 / length(unique(data$grp)),
-    #           expand = unit(2.7, "mm"), 
-    #           con.cap = unit(.01, "mm"), 
-    #           con.colour = "grey33", 
-    #           label.buffer = unit(2, "mm"),
-    #           label.fontsize = 12.5, 
-    #           label.fontface = "plain"
-    #         ) +
-    #         geom_point(aes(color = fc2), size = 1.5) +
-    #         scale_x_continuous(expand = c(.4, .4)) +
-    #         scale_y_continuous(expand = c(.4, .4)) +
-    #         scale_fill_discrete(guide = "none")
-    #     } else {
-    #       fig <- fig +
-    #         geom_point(aes(color = fc2), size = 2) +
-    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines")))
-    #    }
-
-    #    gridExtra::grid.arrange(fig)
-
-    #     dbg("[genePlots_tsne.RENDER] done")
-
-    # })
-
-    # genePlots_tsne_max.RENDER <- shiny::reactive({
-
-
-    #   ngs <- inputData()
-    #   shiny::req(ngs)
-
-    #   dbg("[genePlots_tsne.RENDER] reacted")
-
-    #   gene <- "KCNN4"
-    #   gene <- ngs$genes$gene_name[1]
-    #   if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-    #   samples <- colnames(ngs$X)
-    #   if(!is.null(input$data_samplefilter)) {
-    #     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-    #   }
-    #   nsamples = length(samples)
-      
-    #   ## precompute
-    #   pp <- rownames(ngs$genes)[1]
-    #   pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-      
-    #   gx <- NULL
-    #   ylab <- NULL
-    #   if(input$data_type == "counts") {
-    #     gx <- ngs$counts[pp,samples]
-    #     ylab <- "expression (counts)"
-    #   } else if(input$data_type == "CPM") {
-    #     gx <- 2**ngs$X[pp,samples]
-    #     ylab <- "expression (CPM)"
-    #   } else if(input$data_type == "logCPM") {
-    #     gx <- ngs$X[pp,samples]
-    #     ylab <- "expression (log2CPM)"
-    #   }
-      
-    #   pos <- ngs$tsne2d[samples,]
-      
-    #   fc1 <- tanh(0.99 * scale(gx)[,1])
-    #   fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
-    #   ##fc1 <- tanh(0.99 * gx/sd(gx))
-    #   fc2 <- (fc1 - min(fc1))
-      
-    #   jj2 <- order(abs(fc1))
-
-    #   ## determine how to do grouping for group labels
-    #   groupby <- input$data_groupby
-    #   grp <- NULL
-    #   if(groupby != "<ungrouped>") {
-    #     grp <- factor(ngs$samples[samples, groupby])
-    #   }
-      
-    #   data <- data.frame(pos[jj2,])
-    #   data$grp <- grp
-    #   data$fc2 <- fc2
-
-    #   fig <-
-    #     ggplot(data, aes(tSNE.x, tSNE.y)) +
-    #     labs(x = "tSNE1", y = "tSNE2") +
-    #     scale_color_continuous(name = "Expression") +
-    #     guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-    #     theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
-
-    #   if (!is.null(grp)) {
-    #     fig <- fig +
-    #       ggforce::geom_mark_hull(
-    #         aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-    #         color = "grey33", 
-    #         size = .8,
-    #         alpha = .33 / length(unique(data$grp)),
-    #         expand = unit(3.4, "mm"), 
-    #         con.cap = unit(.01, "mm"), 
-    #         con.colour = "grey33", 
-    #         label.buffer = unit(3, "mm"),
-    #         label.fontsize = 22, 
-    #         label.fontface = "plain"
-    #       ) +
-    #       geom_point(aes(color = fc2), size = 3.5) +
-    #       scale_x_continuous(expand = c(.15, .15)) +
-    #       scale_y_continuous(expand = c(.15, .15)) +
-    #       scale_fill_discrete(guide = "none")
-        
-    #   } else {
-    #     fig <- fig +
-    #       geom_point(aes(color = fc2), size = 4.5)
-    #   }
-
-    #   gridExtra::grid.arrange(fig)
-
-    #   dbg("[genePlots_tsne.RENDER] done")
-    # })
-
-    # shiny::callModule(
-    #     plotModule, "genePlots_tsne",
-    #     #plotlib = "ggplot",
-    #     func = genePlots_tsne.RENDER,
-    #     func2 = genePlots_tsne_max.RENDER,
-    #     info.text = genePlots_tsne_text,
-    #     height = imgH, pdf.width = 6, pdf.height = 6,
-    #     label = "d", title = "t-SNE clustering",
-    #     add.watermark = WATERMARK
-    # )
-
-    
-    # observe inputs
-    filterStates <- reactive({
-        list(
-            search_gene = input$search_gene,
-            sample_filter = input$sample_filter,
-            data_groupby = input$data_groupby,
-            data_type = input$data_type
-        )
-    })
-    
-    dataviewTSNEPlotModuleServer("tSNEPlot", inputData, filterStates)        
-    
-    ##----------------------------------------------------------------------
-    ##  Tissue expression plot
-    ##----------------------------------------------------------------------
-
-    data_tissueplot.RENDER  <- shiny::reactive({
-
-        ngs <- inputData()
-        shiny::req(ngs)
-        if(is.null(input$data_type)) return(NULL)
-
-        dbg("[data_tissueplot.RENDER] reacted")
-
-        gene <- input_search_gene()
-        pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-        hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
-
-
-        par(mar=c(6,4,1,1), mgp=c(2.2,0.8,0))
-        mar=MARGINS1
-        par(mar=mar, mgp=c(1.5,0.5,0))
-
-        if( hgnc.gene %in% rownames(TISSUE)) {
-            tx = TISSUE[hgnc.gene,]
-            grp = TISSUE.grp[names(tx)]
-            tissue.klr = COLORS[grp]
-            ylab="expression (TPM)"
-            if(input$data_type=="logCPM") {
-                ylab = "expression (log2TPM)"
-                tx = log(1 + tx)
-            }
-            jj <- 1:length(tx)
-            sorting="no"
-            if(sorting=="decr") jj <- order(-tx)
-            if(sorting=="inc") jj <- order(tx)
-
-            barplot(tx[jj], las=3, main=hgnc.gene, cex.main=1, col.main="#7f7f7f",
-                    col = tissue.klr[jj], border=NA,ylab=ylab, cex.names=0.9,
-                    names.arg=rep(NA,length(tx)))
-                                        #title(main="tissue expression", line=-0.3, cex.main=1.1)
-            text((1:length(tx)-0.5)*1.2, -0.04*max(tx), names(tx)[jj], las=3,
-                 cex=0.85, pos=2, adj=0, offset=0, srt=55, xpd=TRUE)
-
-        } else {
-            frame()
-        }
-
-        dbg("[data_tissueplot.RENDER] done")
-
-    })
-
-    shiny::callModule(
-        plotModule, "data_tissueplot",
-        func = data_tissueplot.RENDER,
-        func2 = data_tissueplot.RENDER,
-        info.text = data_tissueplot_text,
-        height = imgH, pdf.width=9, pdf.height=6,
-        label="f", title="Tissue expression",
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ## Gene information
-    ##----------------------------------------------------------------------
-
-    data_geneInfo.RENDER  <- shiny::reactive({
-        require(org.Hs.eg.db)
-        gene = "A1BG-AS1"
-        gene = "CD4"
-        gene <- input_search_gene()
-        gene = toupper(sub(".*:","",gene))
-
-        eg = "1017"
-        eg = names(which(as.list(org.Hs.egSYMBOL)==gene))
-        eg <- mget(gene, envir=org.Hs.egSYMBOL2EG, ifnotfound=NA)[[1]]
-        if(is.na(eg)) eg <- mget(gene, envir=org.Hs.egALIAS2EG, ifnotfound=NA)[[1]]
-        eg
-        eg = eg[1]
-        if(is.null(eg) || length(eg)==0) return(NULL)
-
-        output = "(gene info not available)"
-        if(length(eg)>0 && !is.na(eg)) {
-            ##as.list(org.Hs.eg.db::org.Hs.egSYMBOL)[[eg]]
-            info <- getHSGeneInfo(eg)  ## defined in pgx-functions.R
-            info$summary <- '(no info available)'
-            if(FALSE && input$data_geneinfo) {
-                suppressWarnings(suppressMessages(
-                    info2 <- try(getMyGeneInfo(eg, fields="summary"))
-                ))
-                if(!any(class(info2) == 'try-error')) {
-                    info <- c(info, info2)  ## defined in pgx-functions.R
-                }
-            }
-            if(gene %in% names(GENE.SUMMARY)) {
-                info$summary <- GENE.SUMMARY[gene]
-                info$summary <- gsub('Publication Note.*|##.*','',info$summary)
-            }
-
-            ## reorder
-            nn <- intersect(c("symbol","name","map_location","summary",names(info)),names(info))
-            info <- info[nn]
-            info$symbol <- paste0(info$symbol,'<br>')
-
-            output <- c()
-            for(i in 1:length(info)) {
-                xx <- paste(info[[i]], collapse=", ")
-                output[[i]] <- paste0("<b>",names(info)[i],"</b>: ",xx)
-            }
-            output <- paste(output, collapse="<p>")
-        }    
-        shiny::wellPanel(shiny::HTML(output))
-    })
-
-    shiny::callModule(
-        plotModule, "data_geneInfo",
-        title = "Gene info", label="a",
-        plotlib = "generic",
-        func = data_geneInfo.RENDER,
-        func2 = data_geneInfo.RENDER,
-        renderFunc = "renderUI", outputFunc = "htmlOutput",
-        just.info = FALSE, no.download = TRUE,
-        info.text = data_geneInfo_text,
-        height = c(fullH,600), width=c('auto',800),
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ##                     Interface
-    ##----------------------------------------------------------------------
-    
-
-    ##----------------------------------------------------------------------
-    ##                     Info messages for Counts
-    ##----------------------------------------------------------------------
-
-    counts_tab_barplot_text=paste0('Barplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
-    counts_tab_boxplot_text=paste0('Boxplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
-    counts_tab_histplot_text=paste0('Histogram of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
-    counts_tab_abundanceplot_text=paste0('Barplot showing the percentage of counts in terms of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
-    counts_tab_average_countplot_text=paste0('Barplot showing the average count levels of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
-
-
-    ##----------------------------------------------------------------------
-    ##                     Count information barplot
-    ##----------------------------------------------------------------------
-    MARGINS2 = c(9,3.5,2,0.5)
-    MARGINS2 = c(8,3.5,2,0.5)
-
-    counts_tab_barplot.RENDER <- shiny::reactive({
-        res = getCountsTable()
-        if(is.null(res)) return(NULL)
-        shiny::req(input$data_groupby)
-                                        #par(mar=c(20,6,10,6), mgp=c(2.2,0.8,0))
-        par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-
-        ylab = "counts (million)"
-        if(input$data_groupby!="<ungrouped>") {
-            ylab = "average group counts (million)"
-        }
-        subtt0=""
-        if(!is.null(res$subtt)) subtt0 <- paste0("\n(",paste(res$subtt,collapse=","),")")
-        ## ---- xlab ------ ###
-        names.arg = names(res$total.counts)
-        if( length(names.arg) > 20){ names.arg = "" }
-        cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-        ## ---- xlab ------ ###
-        barplot(res$total.counts/1e6, las=3, border = NA,
-                ##main=paste("total counts",subtt0), cex.main=1.7,
-                col=rgb(0.2,0.5,0.8,0.8), #col="grey40",
-                                        #cex.names=res$cx1+0.01, cex.lab=1, ylab=ylab,
-                cex.names=cex.names, cex.lab=1, ylab=ylab,
-                ylim=c(0,max(res$total.counts)/1e6)*1.1,
-                names.arg=names.arg)
-    })
-
-    shiny::callModule(
-        plotModule, "counts_tab_barplot",
-        func = counts_tab_barplot.RENDER,
-        func2 = counts_tab_barplot.RENDER,
-        info.text = counts_tab_barplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
-        label="a",title='Total counts',
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ##                     Count information boxplot
-    ##----------------------------------------------------------------------
-
-    counts_tab_boxplot.RENDER <- shiny::reactive({
-        res = getCountsTable()
-        if(is.null(res)) return(NULL)
-        ##par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )
-        par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-        ## ---- xlab ------ ###
-        xaxt="l"
-        names.arg = colnames(res$log2counts[res$jj,])
-        if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)); xaxt="n"}
-        cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-        boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4),
-                ## col=rgb(0.2,0.5,0.8,0.3), #col="grey70",
-                ## main="counts distribution", cex.main=1.6,
-                ## cex.names=res$cx1+0.1,
-                names = names.arg, cex.axis=cex.names,#border=rgb(0.2,0.5,0.8,0.8),
-                border = 	rgb(0.824,0.824,0.824,0.9),xaxt=xaxt,
-                las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
-    })
-
-    shiny::callModule(
-        plotModule, "counts_tab_boxplot",
-        func = counts_tab_boxplot.RENDER,
-        func2 = counts_tab_barplot.RENDER,
-        info.text = counts_tab_boxplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
-        label="b", title='Counts distribution',
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ##                     Count information histogram
-    ##----------------------------------------------------------------------
-
-    counts_tab_histplot.RENDER <- shiny::reactive({
-        res = getCountsTable()
-        if(is.null(res)) return(NULL)
-                                        #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )
-        par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-
-        n=1000
-        gx.hist <- function(gx, n=1000, main="",ylim=NULL) {
-            jj <- 1:nrow(gx)
-            if(length(jj)>n) jj <- sample(jj,n,replace=TRUE)
-            h0 <- hist(as.vector(c(gx[jj],min(gx),max(gx))),
-                       breaks=120, main=main, border=FALSE,
-                                        #col=rgb(0.2,0.5,0.8,0.5),
-                       col="grey",
-                       freq=FALSE, ## ylim=ylim,
-                       xlim=c(min(gx),max(gx)),
-                       xlab="expression (log2)",
-                       ##cex.names=res$cx1+0.1,
-                       cex.lab=1)
-            i = 1
-            for(i in 1:ncol(gx)) {
-                h1 <- hist(gx[jj,i], breaks=h0$breaks,plot=FALSE)
-                ##lines( h0$mids, h1$density, col=i+1 )
-                lines( h0$mids, h1$density, col="black", lwd=0.5 )
-            }
-        }
-        gx.hist(gx=res$log2counts[res$jj,], n=2000) #, main="histogram")
-    })
-
-    shiny::callModule(
-        plotModule, "counts_tab_histplot",
-        func = counts_tab_histplot.RENDER,
-        func2 = counts_tab_histplot.RENDER,
-        info.text = counts_tab_histplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
-        label="c", title='Counts histogram',
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ##  Count information abundance of major gene types
-    ##----------------------------------------------------------------------
-
-    counts_tab_abundanceplot.RENDER <- shiny::reactive({
-        res = getCountsTable()
-        if(is.null(res)) return(NULL)
-                                        #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
-        par(mar=c(6,4,0,4))
-        par(mar=c(7,4,0,2))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-
-        klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$prop.counts))
-
-        ## ----------- gene type counts
-        ymax = max(colSums(res$prop.counts, na.rm=TRUE))
-        ## ---- xlab ------ ###
-        names.arg = colnames(res$prop.counts)
-        if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
-        cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-        ## ---- xlab ------ ###
-        barplot(res$prop.counts, las=3, #main="abundance of major gene types", cex.main=1.6,
-                                        #cex.names=res$cx1+0.04,
-                cex.lab=1.0, border = NA,
-                ylim = c(0,ymax)*1.6, ylab = "abundance (%)",
-                names.arg = names.arg, cex.names = cex.names,
-                col = klr)
-        leg <- legend("topleft", legend=rev(rownames(res$prop.counts)),
-                                        #fill=rev(grey.colors(nrow(res$prop.counts))),
-                      fill=rev(klr),cex=1, y.intersp=0.75, bty="n", plot = FALSE)
-        leftx <- leg$rect$left*0.9
-        rightx <- leg$rect$right*0.9
-        topy <- leg$rect$top
-        bottomy <- leg$rect$bottom
-        legend(x = c(leftx, rightx), y = c(topy, bottomy),
-               legend=rev(rownames(res$prop.counts)),
-                                        #fill=rev(grey.colors(nrow(res$prop.counts))),
-               fill=rev(klr), bty="n", cex=0.9, y.intersp=0.75)
-
-    })
-
-    shiny::callModule(
-        plotModule, "counts_tab_abundanceplot",
-        func = counts_tab_abundanceplot.RENDER,
-        func2 = counts_tab_abundanceplot.RENDER,
-        info.text = counts_tab_abundanceplot_text,
-        height=imgH, pdf.width=10, pdf.height=6, ## res=50,
-        label="d", title='Abundance of major gene types',
-        add.watermark = WATERMARK
-    )
-
-    ##----------------------------------------------------------------------
-    ## Count information average count by gene type
-    ##----------------------------------------------------------------------
-    counts_tab_average_countplot.RENDER <- shiny::reactive({
-        res = getCountsTable()
-        if(is.null(res)) return(NULL)
-                                        #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
-        par(mar=c(6,4,0,4))
-        par(mar=c(7,4,0,2))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-
-        klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
-                                alpha = TRUE)(nrow(res$avg.counts))
-        ## klr <- grey.colors(nrow(res$avg.counts))
-
-        ## ---- xlab ------ ###
-        names.arg = colnames(res$avg.counts)
-        if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
-        cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-        ## ---- xlab ------ ###
-        ymax = max(colSums(res$avg.counts, na.rm=TRUE))
-        barplot(res$avg.counts, las=3, #main="average counts by gene type", cex.main=1.6,
-                                        #cex.names=res$cx1+0.04,
-                border=NA, cex.lab=1.0,
-                names.arg=names.arg, cex.names=cex.names,
-                ylim=c(0,ymax)*1.6, ylab="average count", col=klr)
-        leg <- legend("topleft", legend=rev(rownames(res$avg.counts)),
-                                        #fill=rev(grey.colors(nrow(res$avg.counts))),
-                      fill=rev(klr), cex=1, y.intersp=0.75, bty="n", plot = FALSE)
-        leftx <- leg$rect$left*0.9
-        rightx <- leg$rect$right*0.9
-        topy <- leg$rect$top
-        bottomy <- leg$rect$bottom
-        legend(x = c(leftx, rightx), y = c(topy, bottomy),
-               legend=rev(rownames(res$avg.counts)),
-                                        #fill=rev(grey.colors(nrow(res$avg.counts))),
-               fill=rev(klr), cex=0.9, y.intersp=0.75, bty="n")
-    })
-
-    shiny::callModule(
-        plotModule, "counts_tab_average_countplot",
-        func = counts_tab_average_countplot.RENDER,
-        func2 = counts_tab_average_countplot.RENDER,
-        info.text = counts_tab_average_countplot_text,
-        height=imgH, pdf.width=10, pdf.height=6, ##res=50,
-        label="e", title='Average count by gene type',
-        add.watermark = WATERMARK
-    )
-
     getCountsTable <- shiny::reactive({
-        ngs = inputData()
+        ngs = pgxdata()
         shiny::req(ngs)
 
         shiny::validate(shiny::need("counts" %in% names(ngs), "no 'counts' in object."))
@@ -1119,14 +268,19 @@ DataViewBoard <- function(input, output, session, inputData)
             colnames(avg.counts) <- substring(colnames(avg.counts),1,30)
         }
 
-        res = list(total.counts=total.counts,subtt=subtt, cx1=cx1,
-                   log2counts=log2counts, jj=jj, prop.counts=prop.counts,
-                   avg.counts=avg.counts)
-
+        res = list(
+            total.counts = total.counts,
+            subtt = subtt,
+            cx1 = cx1,
+            log2counts = log2counts,
+            jj = jj,
+            prop.counts = prop.counts,
+            avg.counts = avg.counts
+        )
     })
 
     ##================================================================================
-    ##======================  Raw counts/abundance table =============================
+    ##===============================  TABLES ========================================
     ##================================================================================
 
     dropdown_search_gene='<code>Search gene</code>'
@@ -1137,7 +291,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = inputData()
+        ngs = pgxdata()
         shiny::req(ngs)
         shiny::req(input$data_groupby)
 
@@ -1281,85 +435,43 @@ DataViewBoard <- function(input, output, session, inputData)
     ##================================= Samples ======================================
     ##================================================================================
 
-    data_phenoHeatmap.RENDER <- shiny::reactive({
-        ngs = inputData()
-        shiny::req(ngs)
-        dbg("[data_phenoHeatmap.RENDER] reacted")
 
-        annot <- ngs$samples
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        annot <- annot[samples,,drop=FALSE]
-        annot.ht <- ifelse( ncol(annot) > 10, 5, 6)
-        annot.ht <- ifelse( ncol(annot) > 20, 4, annot.ht)
-        annot.ht <- ifelse( ncol(annot) > 30, 3, annot.ht)
 
-        do.clust <- input$data_phenoclustsamples
-        plt <- pgx.plotPhenotypeMatrix0(
-            annot, annot.ht=annot.ht, cluster.samples=do.clust)
-        ## plt <- plt %>% plotly::config(displayModeBar = FALSE)
-        dbg("[data_phenoHeatmap.RENDER] reacted] done!")
-        plt
-    })
+    ## data_phenoHeatmap_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
 
-    data_phenoHeatmap_opts <- shiny::tagList(
-        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
-               "Cluster samples.", placement="top")
-    )
+    ## shiny::callModule(
+    ##     plotModule,
+    ##     id = "data_phenoHeatmap", label="a",
+    ##     func = data_phenoHeatmap.RENDER,
+    ##     func2 = data_phenoHeatmap.RENDER,
+    ##     ## plotlib = "iheatmapr",
+    ##     title = "Phenotype clustering",
+    ##     info.text = data_phenoHeatmap_info,
+    ##     options = data_phenoHeatmap_opts,
+    ##     height = c(360,600), width = c('auto',1200),
+    ##     res=c(68,75), pdf.width=10, pdf.height=6,
+    ##     add.watermark = WATERMARK
+    ## )
 
-    data_phenoHeatmap_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
 
-    shiny::callModule(
-        plotModule,
-        id = "data_phenoHeatmap", label="a",
-        func = data_phenoHeatmap.RENDER,
-        func2 = data_phenoHeatmap.RENDER,
-        ## plotlib = "iheatmapr",
-        title = "Phenotype clustering",
-        info.text = data_phenoHeatmap_info,
-        options = data_phenoHeatmap_opts,
-        height = c(360,600), width = c('auto',1200),
-        res=c(68,75), pdf.width=10, pdf.height=6,
-        add.watermark = WATERMARK
-    )
+    
+    ## data_phenotypeAssociation.RENDER <- shiny::reactive({
 
-    data_phenotypeAssociation.RENDER <- shiny::reactive({
+    ##     ngs = pgxdata()
+    ##     shiny::req(ngs)
+    ##     dbg("[data_phenotypeAssociation.RENDER] reacted")
+    ##     annot <- ngs$samples
+    ##     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    ##     annot <- annot[samples,,drop=FALSE]
+    ##     pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
+    ##     dbg("[data_phenotypeAssociation.RENDER] done")
+    ## })
 
-        ngs = inputData()
-        shiny::req(ngs)
-        dbg("[data_phenotypeAssociation.RENDER] reacted")
-        annot <- ngs$samples
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        annot <- annot[samples,,drop=FALSE]
-        pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
-        dbg("[data_phenotypeAssociation.RENDER] done")
-    })
 
-    data_phenotypeAssociation_opts <- shiny::tagList(
-        withTooltip( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
-               "Cluster samples.", placement="top")
-    )
-
-    data_phenotypeAssociation_caption = "<b>Phenotype association matrix.</b> Clustered heatmap of phenotype association. The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'."
-    data_phenotypeAssociation_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlated' variables. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continous pairs, Pearson's correlation test is used."
-
-    shiny::callModule(
-        plotModule,
-        id = "data_phenotypeAssociation", label="b",
-        func = data_phenotypeAssociation.RENDER,
-        func2 = data_phenotypeAssociation.RENDER,
-        ## plotlib = "iheatmapr",
-        info.text = data_phenotypeAssociation_info,
-        title = "Phenotype association",
-        ##info.text = "Sample information table with information about phenotype of samples.",
-        options = data_phenotypeAssociation_opts,
-        height = c(360,700), width = c('auto',900), res=c(72,75),
-        pdf.width=8, pdf.height=6,
-        add.watermark = WATERMARK
-    )
-
+    
     data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = inputData()
+        ngs = pgxdata()
         shiny::req(ngs)
         
         dt <- NULL
@@ -1397,7 +509,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
     data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ngs = inputData()
+        ngs = pgxdata()
         shiny::req(ngs)
 
         dbg("[data_contrastTable.RENDER] reacted")
@@ -1462,7 +574,7 @@ DataViewBoard <- function(input, output, session, inputData)
     ##================================================================================
 
     datatable_timings.RENDER <- shiny::reactive({
-        ngs <- inputData()
+        ngs <- pgxdata()
         shiny::req(ngs)
 
         dbg("[datatable_timings.RENDER] reacted")
@@ -1492,7 +604,7 @@ DataViewBoard <- function(input, output, session, inputData)
     )
 
     datatable_objectdims.RENDER <- shiny::reactive({
-        ngs <- inputData()
+        ngs <- pgxdata()
         shiny::req(ngs)
 
         dims1 <- lapply( ngs, dim)
@@ -1518,7 +630,7 @@ DataViewBoard <- function(input, output, session, inputData)
     )
 
     datatable_objectsize.RENDER <- shiny::reactive({
-        ngs <- inputData()
+        ngs <- pgxdata()
         shiny::req(ngs)
         objsize <- sapply(ngs,object.size)
         objsize <- round( objsize/1e6, digits=2)
@@ -1537,4 +649,5 @@ DataViewBoard <- function(input, output, session, inputData)
         options = NULL, title='Object sizes',
         info.text = datatable_objectsize_text
     )
+
 }

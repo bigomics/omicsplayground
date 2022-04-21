@@ -49,7 +49,7 @@ app_ui <- function() {
             shinyjs::useShinyjs(),
             sever::useSever(),
             shinylogs::use_tracking(),
-            shinyalert::useShinyalert(),  # Set up shinyalert
+            ##shinyalert::useShinyalert(),  # Set up shinyalert
             firebase::useFirebase(firestore = TRUE),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
             # shiny::div(shiny::textOutput("current_dataset"), class='current-data'),

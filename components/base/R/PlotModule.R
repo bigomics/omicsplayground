@@ -518,7 +518,8 @@ PlotModuleServer <- function(
                                          filename = "data.csv",
                                          content = function(file) {
                                              shiny::withProgress({
-                                                 data <- csvFunc()                    
+                                                 data <- csvFunc()
+                                                 if(is.list(data)) data <- data[[1]]
                                                  ##file.copy(CSVFILE, file, overwrite=TRUE)
                                                  write.csv(data, file=file)
                                              }, message="exporting to CSV", value=0.8)

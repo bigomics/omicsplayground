@@ -5,10 +5,8 @@ appdir <- get_appdir()
 setwd(appdir)
 appdir
 
-
 setwd(appdir)
 create_SourceAll('components',add.comments=FALSE)
-
 
 if(0) {
     ##create_allcode('R') 

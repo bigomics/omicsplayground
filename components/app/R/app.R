@@ -904,7 +904,7 @@ createUI <- function(tabs)
         shinyjs::useShinyjs(),
         sever::useSever(),
         shinylogs::use_tracking(),
-        shinyalert::useShinyalert(),  # Set up shinyalert
+        ##shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
         ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
