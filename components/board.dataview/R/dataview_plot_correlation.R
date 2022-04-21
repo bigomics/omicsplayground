@@ -29,25 +29,25 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
 {
   moduleServer( id, function(input, output, session) {
     
-    getTopCorrelatedGenes <- function(ngs, gene, n=30, samples=NULL) {
+    getTopCorrelatedGenes <- function(pgx, gene, n=30, samples=NULL) {
       
       ## precompute
-      if(is.null(samples)) samples = colnames(ngs$X)
-      samples <- intersect(samples, colnames(ngs$X))
-      pp=rownames(ngs$genes)[1]
-      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+      if(is.null(samples)) samples = colnames(pgx$X)
+      samples <- intersect(samples, colnames(pgx$X))
+      pp=rownames(pgx$genes)[1]
+      pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
 
       ## corr always in log.scale and restricted to selected samples subset
       ## should match exactly the rawtable!!
-      if(pp %in% rownames(ngs$X)) {
-        rho <- cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
-      } else if(pp %in% rownames(ngs$counts)) {
-        x0 <- logCPM(ngs$counts[,samples])
+      if(pp %in% rownames(pgx$X)) {
+        rho <- cor(t(pgx$X[,samples]), pgx$X[pp,samples], use="pairwise")[,1]
+      } else if(pp %in% rownames(pgx$counts)) {
+        x0 <- logCPM(pgx$counts[,samples])
         x1 <- x0[pp,]
         rho <- cor(t(x0), x1, use="pairwise")[,1]
       } else {
-        rho <- rep(0, nrow(ngs$genes))
-        names(rho) <- rownames(ngs$genes)
+        rho <- rep(0, nrow(pgx$genes))
+        names(rho) <- rownames(pgx$genes)
       }
 
       rho[is.na(rho)] <- 0
@@ -55,7 +55,7 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
       jj <- c(head(order(-rho),15), tail(order(-rho),15))
       top.rho = rho[jj]
 
-      gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
+      gx1 <- sqrt(rowSums(pgx$X[names(top.rho),samples]**2,na.rm=TRUE))
       gx1 <- (gx1 / max(gx1))
       klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
                                    alpha = TRUE)(16))[1+round(15*gx1) ]
@@ -73,24 +73,24 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
 
     plot_data <- shiny::reactive({
 
-      ngs <- pgxdata()
-      shiny::req(ngs)
+      pgx <- pgxdata()
+      shiny::req(pgx)
       shiny::req(parent.input)             
       if(class(parent.input)[1]=="reactiveExpr") {
         parent.input <- parent.input()
       }
       gene = parent.input$search_gene
 
-      shiny::req(ngs)
+      shiny::req(pgx)
       shiny::req(gene)      
 
-      samples = colnames(ngs$X)
+      samples = colnames(pgx$X)
       samplefilter <- parent.input$data_samplefilter
       if(!is.null(samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
+        samples <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
       }
 
-      res <- getTopCorrelatedGenes(ngs, gene=gene, n=30, samples=samples)
+      res <- getTopCorrelatedGenes(pgx, gene=gene, n=30, samples=samples)
       res
     })
 

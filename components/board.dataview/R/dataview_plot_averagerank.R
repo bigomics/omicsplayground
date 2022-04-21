@@ -33,26 +33,26 @@ dataview_plot_averagerank_server <- function(id, pgxData, parent.input, watermar
 
             dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
 
-            ngs <- pgxData()
-            shiny::req(ngs)
+            pgx <- pgxData()
+            shiny::req(pgx)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)                         
 
             dbg("[dataview_averagerankplot_server:plot_data] calling.. ")
 
             gene <- parent.input$search_gene
-            samples <- colnames(ngs$X)
+            samples <- colnames(pgx$X)
             if(!is.null(parent.input$data_samplefilter)) {
-                samples <- selectSamplesFromSelectedLevels(ngs$Y, parent.input$data_samplefilter)
+                samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             }
             nsamples <- length(samples)
         
             if(parent.input$data_type=="counts") {
-                mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
+                mean.fc <- sort(rowMeans(pgx$counts[,samples,drop=FALSE]),decreasing=TRUE)
                 ylab = "expression (counts)"
             }
             if(parent.input$data_type=="logCPM") {
-                mean.fc <- sort(rowMeans(ngs$X[,samples,drop=FALSE]),decreasing=TRUE)
+                mean.fc <- sort(rowMeans(pgx$X[,samples,drop=FALSE]),decreasing=TRUE)
                 ylab = "expression (log2CPM)"
             }
 
