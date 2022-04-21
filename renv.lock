@@ -4,7 +4,7 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://packagemanager.rstudio.com/all/latest"
+        "URL": "https://cloud.r-project.org"
       }
     ]
   },
@@ -776,6 +776,7 @@
         "htmltools",
         "lattice",
         "latticeExtra",
+        "nnet",
         "rpart",
         "survival",
         "viridis"
@@ -1424,6 +1425,7 @@
         "Biobase",
         "BiocGenerics",
         "MASS",
+        "boot",
         "nnls"
       ]
     },
@@ -1704,10 +1706,10 @@
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "bigdash",
-      "RemoteUsername": "BigOmics",
+      "RemoteUsername": "bigomics",
       "RemoteRef": "HEAD",
-      "RemoteSha": "11192452f2542797f37c27d0057ac0bf42bc20a6",
-      "Hash": "4445ab3d3545cf5377f61bfeca4d59fe",
+      "RemoteSha": "042dd9a79a437b4e9d422b9747a07e1e213d1bd8",
+      "Hash": "9a12b197935afa4c0dbd98d9ae4d4ac9",
       "Requirements": [
         "bslib",
         "htmltools",
@@ -1801,6 +1803,14 @@
         "cluster",
         "igraph"
       ]
+    },
+    "boot": {
+      "Package": "boot",
+      "Version": "1.3-28",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0baa960e3b49c6176a4f42addcbacc59",
+      "Requirements": []
     },
     "brew": {
       "Package": "brew",
@@ -1923,6 +1933,7 @@
         "maptools",
         "mgcv",
         "nlme",
+        "nnet",
         "pbkrtest",
         "quantreg"
       ]
@@ -2739,6 +2750,7 @@
         "ggplot2",
         "lmtest",
         "magrittr",
+        "nnet",
         "timeDate",
         "tseries",
         "urca",
@@ -3810,6 +3822,7 @@
         "Matrix",
         "Rcpp",
         "RcppEigen",
+        "boot",
         "lattice",
         "minqa",
         "nlme",
@@ -4157,6 +4170,14 @@
       "Requirements": [
         "testthat"
       ]
+    },
+    "nnet": {
+      "Package": "nnet",
+      "Version": "7.3-17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cb1d8d9f300a7e536b89c8a88c53f610",
+      "Requirements": []
     },
     "nnls": {
       "Package": "nnls",

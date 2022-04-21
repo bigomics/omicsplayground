@@ -533,12 +533,14 @@ LoadingBoard <- function(input, output, session, pgx_dir,
 
     ## shinyWidgets::useShinydashboard()
     vbox <- function(value, label) {
-        shinydashboard::box(
-            shiny::h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
-            shiny::h5(label, style="margin: 0 0 0 20px; font-weight: 400; color: white; padding-bottom: 25px"),
-            ##h1(value, style="font-weight: 800; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
-            ##h5(label, style="margin: 0 0 0 20px; font-weight: 400; padding-bottom: 25px"),
-            width="100%", class="vbox")
+        div(
+            class = "valuebox w-100 border",
+            div(
+                class = "valuebox-box bg-primary",
+                h1(value, class = "valuebox-value"),
+                h5(label, class = "valuebox-label")
+            )
+        )
     }
 
     output$valuebox1 <- shiny::renderUI({
@@ -629,7 +631,6 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                       rownames=TRUE,
                       extensions = c('Scroller'),
                       selection = list(mode='single', target='row', selected=1),
-                      ## filter = "top",
                       fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip',
