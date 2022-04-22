@@ -3,7 +3,7 @@
 ##
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
-TcgaBoard <- function(input, output, session, input_data, selected_gxmethods, selected_gsetmethods) {
+TcgaBoard <- function(input, output, session, inputData) {
 	ns <- session$ns
 	fullH <- 800
 	tabH <- "70vh"
@@ -27,7 +27,7 @@ TcgaBoard <- function(input, output, session, input_data, selected_gxmethods, se
 	})
 	
 	observe({
-		ngs <- input_data()
+		ngs <- inputData()
 		if (is.null(ngs)) return(NULL)
 		comparisons <- colnames(ngs$model.parameters$contr.matrix)
 		comparisons <- sort(comparisons)
@@ -41,7 +41,7 @@ TcgaBoard <- function(input, output, session, input_data, selected_gxmethods, se
 			return(NULL)
 		}
 		
-		ngs <- input_data()
+		ngs <- inputData()
 		req(ngs)
 		
 		if (input$sigtype == "contrast") {
