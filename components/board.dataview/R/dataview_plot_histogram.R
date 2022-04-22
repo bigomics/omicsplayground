@@ -26,7 +26,7 @@ dataview_plot_histogram_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_histogram_server <- function(id, pgxdata, parent.input,
+dataview_plot_histogram_server <- function(id, parent.input,
                                             getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {

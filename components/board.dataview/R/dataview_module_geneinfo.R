@@ -33,7 +33,7 @@ dataview_module_geneinfo_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_module_geneinfo_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_module_geneinfo_server <- function(id, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 

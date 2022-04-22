@@ -25,7 +25,7 @@ dataview_plot_correlation_ui <- function(id, label='', height=c(600,800)) {
   
 }
 
-dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
   moduleServer( id, function(input, output, session) {
     
@@ -73,7 +73,7 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
 
     plot_data <- shiny::reactive({
 
-      pgx <- pgxdata()
+      ## pgx <- pgxdata()
       shiny::req(pgx)
       shiny::req(parent.input)             
       if(class(parent.input)[1]=="reactiveExpr") {

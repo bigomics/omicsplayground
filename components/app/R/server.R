@@ -80,18 +80,34 @@ app_server <- function(input, output, session) {
 
     env <- list()  ## communication "environment"
 
-    
+    ## *** EXPERIMENTAL *** global reactive value replacing env list
+    ## above create session global reactiveValue from list
+    pgx <- reactiveValues()
+           
     ## Modules needed from the start        
     env[["load"]] <- shiny::callModule(
-                                LoadingBoard, "load",
-                                pgx_dir = pgx_dir,
-                                limits = limits,
-                                enable_userdir = opt$ENABLE_USERDIR,                                
-                                authentication = authentication,
-                                enable_upload = opt$ENABLE_UPLOAD,
-                                enable_delete = opt$ENABLE_DELETE,                                 
-                                enable_save = opt$ENABLE_SAVE
-                                )   
+        LoadingBoard, "load",
+        pgx_dir = pgx_dir,
+        limits = limits,
+        enable_userdir = opt$ENABLE_USERDIR,                                
+        authentication = authentication,
+        enable_upload = opt$ENABLE_UPLOAD,
+        enable_delete = opt$ENABLE_DELETE,                                 
+        enable_save = opt$ENABLE_SAVE
+    )   
+
+    ## *** EXPERIMENTAL *** Using reactiveValues, modules can access
+    ## the active PGX object with just pgx, without using 'pgx <-
+    ## inputData()'. Also pgx is now read/writable instead of
+    ## read-only.
+    observeEvent( env$load$inputData(), {
+        message("*** EXPERIMENTAL *** copying env$load$inputData -> reactivevalue pgx")
+        pgxdata <- env$load$inputData()  ## react on new data
+        for(i in 1:length(pgxdata)) {
+            pgx[[names(pgxdata)[i]]] <- pgxdata[[i]]
+        }
+    })
+    
     env[["user"]] <- shiny::callModule(UserBoard, "user", user = env[["load"]][["auth"]])
     ##shinyjs::runjs("logout()")    
 
@@ -115,15 +131,15 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        ## load other modules if
-        message("[SERVER:env.loaded] --------- calling shiny modules ----------")
+        ## load other modules if not yet loaded
+        message("[SERVER] --------- calling shiny modules ----------")
         loadModule <- function(...) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
         
         shiny::withProgress(message="initializing modules ...", value=0, {
-            loadModule( DataViewBoard, "view", pgxdata = env[["load"]][["inputData"]] )
+            DataViewBoard("view", pgx=pgx)            
             loadModule( ClusteringBoard, "clust", inputData=env[["load"]][["inputData"]] )
             loadModule( FeatureMapBoard, "ftmap", inputData=env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)

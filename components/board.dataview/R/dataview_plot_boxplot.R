@@ -20,7 +20,7 @@ dataview_plot_boxplot_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_boxplot_server <- function(id, pgxdata, parent.input, getCountsTable, watermark=FALSE)
+dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
