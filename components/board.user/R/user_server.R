@@ -4,8 +4,10 @@
 ##
 
 
-UserBoard <- function(input, output, session, user)
+UserBoard <- function(id, user)
 {
+  moduleServer(id, function(input, output, session)
+  {    
     ns <- session$ns ## NAMESPACE
     dbg("[UserBoard] >>> initializing UserBoard...")
 
@@ -181,4 +183,5 @@ UserBoard <- function(input, output, session, user)
         enable_beta = reactive({ as.logical(input$enable_beta) })
     )
     return(res)
+  })    
 }
