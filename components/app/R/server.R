@@ -88,6 +88,7 @@ app_server <- function(input, output, session) {
     env$load <- LoadingBoard(
         id = "load",
         pgx_dir = pgx_dir,
+        pgx = pgx,
         limits = limits,
         enable_userdir = opt$ENABLE_USERDIR,                                
         authentication = authentication,
@@ -100,14 +101,32 @@ app_server <- function(input, output, session) {
     ## the active PGX object with just pgx, without using 'pgx <-
     ## inputData()'. Also pgx is now read/writable instead of
     ## read-only.
-    observeEvent( env$load$inputData(), {
-        message("*** EXPERIMENTAL *** copying env$load$inputData -> reactivevalue pgx")
-        pgxdata <- env$load$inputData()  ## react on new data
-        for(i in 1:length(pgxdata)) {
-            pgx[[names(pgxdata)[i]]] <- pgxdata[[i]]
+    if(0) {
+        observeEvent( env$load$inputData(), {
+            message("*** EXPERIMENTAL *** copying env$load$inputData -> reactivevalue pgx")
+            pgxdata <- env$load$inputData()  ## react on new data
+            for(i in 1:length(pgxdata)) {
+                pgx[[names(pgxdata)[i]]] <<- pgxdata[[i]]
+            }
+        })
+    }
+
+    ## If user is logged off, we clear the data
+    observeEvent(env$load$auth$logged(), {
+        is.logged <- env$load$auth$logged()
+        length.pgx <- length(isolate(names(pgx)))
+        message("*** EXPERIMENTAL *** is.logged = ",is.logged)
+        message("*** EXPERIMENTAL *** length.pgx = ",length.pgx)                        
+        if(!is.logged && length.pgx>0) 
+{            message("*** EXPERIMENTAL *** clearing reactivevalue pgx!")        
+            for(i in 1:length(pgx)) {
+                pgx[[names(pgx)[i]]] <<- NULL
+            }
+            pgx <<- reactiveValues()
         }
     })
     
+    ## User board
     env$user <- UserBoard("user", user = env$load$auth)
 
     ## Modules needed after dataset is loaded (deferred)

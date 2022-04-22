@@ -4,7 +4,8 @@
 ##
 
 LoadingBoard <- function(id,
-                         pgx_dir, 
+                         pgx_dir,
+                         pgx,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
@@ -437,25 +438,33 @@ LoadingBoard <- function(id,
         dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
         
         if(!auth$logged()) {
+            dbg("[LoadingBoard::inputData] clearing currentPGX(NULL) ")            
             currentPGX(NULL)  ## set NULL
             return(NULL)
         }
         
-        pgx <- currentPGX()            
-        
-        if(!is.null(pgx)) {
-            dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name)
-            dbg("[LoadingBoard::inputData] tracemem(ngs) = ",tracemem(pgx))
+        curpgx <- currentPGX()                    
+        if(!is.null(curpgx)) {
+            dbg("[LoadingBoard::inputData] pgx$name = ",curpgx$name)
+            dbg("[LoadingBoard::inputData] tracemem(ngs) = ",tracemem(curpgx))
+
+            ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
+            ## session environment.
+            dbg("[LoadingBoard::inputData] **** copying current pgx to session.pgx  ****")        
+            for(i in 1:length(curpgx)) {
+                pgx[[names(curpgx)[i]]] <- curpgx[[i]]
+            }
+
         }
         
-        return(pgx)
+        
+        return(curpgx)
     })
     
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
         logged <- auth$logged()
-            
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
     
