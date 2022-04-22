@@ -85,8 +85,8 @@ app_server <- function(input, output, session) {
     pgx <- reactiveValues()
            
     ## Modules needed from the start        
-    env[["load"]] <- shiny::callModule(
-        LoadingBoard, "load",
+    env$load <- LoadingBoard(
+        id = "load",
         pgx_dir = pgx_dir,
         limits = limits,
         enable_userdir = opt$ENABLE_USERDIR,                                
@@ -108,8 +108,7 @@ app_server <- function(input, output, session) {
         }
     })
     
-    env[["user"]] <- shiny::callModule(UserBoard, "user", user = env[["load"]][["auth"]])
-    ##shinyjs::runjs("logout()")    
+    env$user <- UserBoard("user", user = env$load$auth)
 
     ## Modules needed after dataset is loaded (deferred)
     modules_loaded <- FALSE
