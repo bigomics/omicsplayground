@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dataview_plot_tsne_ui <- function(id, label='', height=c(600,800)) {
+dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
 
     ns <- shiny::NS(id)
 
@@ -19,12 +19,9 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(600,800)) {
         outputFunc = plotOutput,
         outputFunc2 = plotOutput,        
         info.text = info_text,
-        ##caption = "T-SNE figure caption.",
-        caption = NULL,
-        caption2 = NULL,        
         options = options,
         download.fmt=c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        width = c("auto","100%"),
         height = height,
         label = label,
         title = "t-SNE clustering"

@@ -9,8 +9,6 @@ dataview_plot_phenoassociation_ui <- function(id, label='', height=c(600,800)) {
 
     info_text = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlated' variables. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continous pairs, Pearson's correlation test is used."
 
-    caption = "<b>Phenotype association matrix.</b> Clustered heatmap of phenotype association. The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'."
-
     opts <- shiny::tagList(
         withTooltip( shiny::checkboxInput(ns('phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")
@@ -21,10 +19,9 @@ dataview_plot_phenoassociation_ui <- function(id, label='', height=c(600,800)) {
         title = "Phenotype association",
         label = label,
         info.text = info_text,
-        caption = caption,
         options = opts,
         download.fmt = c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        width = c("auto","100%"),
         height = height
     )
     
