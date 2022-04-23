@@ -29,7 +29,7 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -37,8 +37,9 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
         
         plot_data <- shiny::reactive({
            
-            dbg("[dataview_expressionplot_server:plot_data] reacted! ")
+             dbg("[dataview_expressionplot_server:plot_data] reacted! ")
 
+            pgx <- pgxdata()
             shiny::req(pgx)
             shiny::req(parent.input$data_groupby,
                        parent.input$search_gene,

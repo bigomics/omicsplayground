@@ -24,7 +24,7 @@ dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_tissue_server <- function(id, pgxdata, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -32,6 +32,7 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
 
             dbg("[dataview_tissueplot_server:plot_data] reacted!")
             
+            pgx <- pgxdata()
             shiny::req(pgx)
             if(is.null(parent.input$data_type)) return(NULL)
             
