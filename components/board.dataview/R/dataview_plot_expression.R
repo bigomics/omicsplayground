@@ -21,11 +21,9 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
         outputFunc = plotOutput,
         outputFunc2 = plotOutput,        
         info.text = info_text,
-        caption = NULL,
-        caption2 = NULL,        
         options = opts,
         download.fmt=c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        ##width = c("auto","100%"),
         height = height
     )
     

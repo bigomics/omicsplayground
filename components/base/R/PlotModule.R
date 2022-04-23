@@ -24,7 +24,7 @@ if(0) {
     just.info=FALSE
     info.width="300px"
     show.maximize = TRUE
-    height = c(640800)
+    height = c(640,800)
     width = c("auto",1400)
     pdf.width = 6
     pdf.height = 6                        
@@ -46,8 +46,8 @@ PlotModuleUI <- function(id,
                        just.info=FALSE,
                        info.width="300px",
                        show.maximize = TRUE,
-                       height = c(640,800),
-                       width = c("auto",1400),
+                       height = c(400,800),
+                       width = c("auto","100%"),
                        pdf.width = 6,
                        pdf.height = 6
                        )
@@ -55,11 +55,10 @@ PlotModuleUI <- function(id,
     ns <- shiny::NS(id)    
 
     if(is.null(plotlib2)) plotlib2 <- plotlib    
-
-
     if(length(height)==1) height <- c(height,800)
     if(length(width)==1)  width  <- c(width,1200)
-    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
+    ##ifnotchar.int <- function(s) ifelse(grepl("[%]|auto|vh|vw|vmin|vmax",s),s,as.integer(s))
+    ifnotchar.int <- function(s) suppressWarnings(ifelse(!is.na(as.integer(s)),as.integer(s),s))
     width.1  <- ifnotchar.int(width[1])
     width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
@@ -204,9 +203,9 @@ PlotModuleUI <- function(id,
                )
     }
 
-    mtop <- paste0("margin: 400px 20px 20px 20px;")
-    modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2+40,"px;}")
-    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2+40,"px;}")
+    modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,"px;}")
+    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"px; padding:60px 300px;}")
+    modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")    
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
     
     if(any(class(caption)=="reactive")) {
@@ -227,13 +226,14 @@ PlotModuleUI <- function(id,
                           modalUI(
                                 ns("plotPopup"),
                                 title, 
-                                size="lg",
+                                size="fullscreen",
                                 popupfigUI()
                             )
                           ),
                shiny::tagList(
                           shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                          shiny::tags$head(shiny::tags$style(modalbody.style)),            
+                          shiny::tags$head(shiny::tags$style(modalbody.style)),
+                          shiny::tags$head(shiny::tags$style(modalcontent.style)),
                           shiny::tags$head(shiny::tags$style(modalfooter.none))
                       )
            )
@@ -550,11 +550,11 @@ PlotModuleServer <- function(
           res.2 <- res[2]
 
           ## width and height should actually be speficied in UI, not here.
-          ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
-          width = c(800,800)
+          ifnotchar.int <- function(s) ifelse(grepl("[%]$|auto|vmin|vh|vw|vmax",s),s,as.integer(s))
+          ##width = c(800,800)
+          ##height = c(400,800)
           width.1  <- ifnotchar.int(width[1])
           width.2  <- ifnotchar.int(width[2])
-          height = c(500,800)
           height.1 <- ifnotchar.int(height[1])
           height.2 <- ifnotchar.int(height[2])
           

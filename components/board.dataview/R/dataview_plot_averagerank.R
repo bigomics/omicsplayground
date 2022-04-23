@@ -15,11 +15,9 @@ dataview_plot_averagerank_ui <- function(id, label='', height=c(600,800)) {
         outputFunc = plotOutput,
         outputFunc2 = plotOutput,        
         info.text = info_text,
-        caption = NULL,
-        caption2 = NULL,        
         options = NULL,
         download.fmt=c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        width = c("auto","100%"),
         height = height
     )
     

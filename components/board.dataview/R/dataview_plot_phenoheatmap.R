@@ -23,7 +23,7 @@ dataview_plot_phenoheatmap_ui <- function(id, label='', height=c(600,800)) {
         info.text = info_text,
         options = opts,
         download.fmt = c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        width = c("auto","100%"),
         height = height
     )
     

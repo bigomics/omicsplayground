@@ -23,7 +23,7 @@ modalUI <- function(
   id,
   title,
   ...,
-  size = c("default", "sm", "lg", "xl"),
+  size = c("default", "sm", "lg", "xl","fullscreen"),
   footer = tags$div(
     class = "modal-footer",
     tags$button(
@@ -35,17 +35,16 @@ modalUI <- function(
   )
 ){
   size <- match.arg(size)
-  size_cl <- ""
 
-  if(size == "sm")
-    size_cl <- "modal-sm"
-
-  if(size == "lg")
-    size_cl <- "modal-lg"
-
-  if(size == "xl")
-    size_cl <- "modal-xl"
-
+  size_cl <- switch(
+      size,
+      "sm" = "modal-sm",
+      "lg" = "modal-lg",
+      "xl" = "modal-xl",
+      "fullscreen" = "modal-fullscreen",
+      ""
+  )
+  
   tags$div(
     class = "modal fade",
     id = id,
