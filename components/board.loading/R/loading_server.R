@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-LoadingBoard <- function(id,
-                         pgx_dir, 
+LoadingBoard <- function(input, output, session, pgx_dir, 
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
@@ -14,8 +13,6 @@ LoadingBoard <- function(id,
                          enable_userdir = TRUE,
                          authentication="none")
 {
-  moduleServer(id, function(input, output, session) {
-
     ns <- session$ns ## NAMESPACE
     dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
@@ -790,5 +787,4 @@ LoadingBoard <- function(id,
         ##usermode = shiny::reactive({ USERMODE() })
     )
     return(res)
-  })  ## end of moduleServer      
 }

@@ -23,7 +23,7 @@ dataview_plot_averagerank_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_averagerank_server <- function(id, pgxData, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
         
@@ -31,7 +31,7 @@ dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FA
 
             dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
 
-            ##pgx <- pgxData()
+            pgx <- pgxData()
             shiny::req(pgx)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)                         

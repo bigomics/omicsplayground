@@ -29,14 +29,14 @@ dataview_plot_phenoheatmap_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_phenoheatmap_server <- function(id, pgxdata, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         ## extract data from pgx object
         plot_data  <- shiny::reactive({
 
-            ##pgx = pgxdata()
+            pgx = pgxdata()
             shiny::req(pgx)
             dbg("[data_phenoHeatmap.RENDER] reacted")
 
