@@ -13,12 +13,11 @@ dataview_module_geneinfo_ui <- function(id, label='', height=c(600,800)) {
     a_KEGG="<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
     a_GO="<a href='http://geneontology.org/'>Gene Ontology</a>"
 
-    
     info_text = paste0('For more information about the the selected gene, follow the hyperlinks to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
         
     PlotModuleUI(
         ns("mod"),
-        title = "Abundance/expression",
+        title = "Gene information",
         label = label,
         outputFunc = htmlOutput,
         outputFunc2 = htmlOutput,        

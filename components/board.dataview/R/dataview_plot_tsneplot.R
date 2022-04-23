@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dataview_plot_tsne_ui <- function(id, label='', height=c(600,800)) {
+dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
 
     ns <- shiny::NS(id)
 
@@ -19,12 +19,9 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(600,800)) {
         outputFunc = plotOutput,
         outputFunc2 = plotOutput,        
         info.text = info_text,
-        ##caption = "T-SNE figure caption.",
-        caption = NULL,
-        caption2 = NULL,        
         options = options,
         download.fmt=c("png","pdf","csv"),         
-        width = c("auto","1200"),
+        width = c("auto","100%"),
         height = height,
         label = label,
         title = "t-SNE clustering"
@@ -157,7 +154,7 @@ dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
         modal_plot.RENDER <- function() {
             plot.RENDER() +
                 guide_continuous(aes = "color", type = "steps", width = .7) +
-                theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+                theme_omics(base_size = 30, axis_num = "xy", legendnum = TRUE)
         }
 
         ##modal_plot.RENDER <- shiny::reactive({
@@ -225,7 +222,7 @@ dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
             renderFunc2 = shiny::renderPlot,        
             ##renderFunc = shiny::renderCachedPlot,
             ##renderFunc2 = shiny::renderCachedPlot,        
-            res = c(96,120)*1,                ## resolution of plots
+            res = c(100,300)*1,              ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             ##label = label, title = "t-SNE clustering",
             add.watermark = watermark
