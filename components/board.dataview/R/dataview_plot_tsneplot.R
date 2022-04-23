@@ -42,6 +42,8 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
             shiny::req(parent.input$search_gene)
                         
             pgx <- pgxdata()            
+            req(pgx)
+
             gene <- parent.input$search_gene
             samples <- colnames(pgx$X)
             sfilt <- parent.input$data_samplefilter
@@ -95,6 +97,8 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
         plot.RENDER <- function() {        
             
             data <- plot_data()
+            req(data)
+            
             fig_base <- 
                 ggplot(data, aes(pos_x, pos_y)) +
                 labs(x = "tSNE1", y = "tSNE2") +

@@ -451,8 +451,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
-        logged <- auth$logged()
-            
+        logged <- isolate(auth$logged()) ## avoid reloading when logout/login            
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
     

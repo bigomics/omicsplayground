@@ -79,7 +79,7 @@ app_server <- function(input, output, session) {
     ##-------------------------------------------------------------
 
     env <- list()  ## communication "environment"
-
+    
     
     ## Modules needed from the start        
     env[["load"]] <- shiny::callModule(
