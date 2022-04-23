@@ -1,7 +1,21 @@
 
-/* layout */
+/* sidebar */
 .sidebar-expanded {
     min-width: 15rem;
+}
+
+#sidebar-help-container {
+    width: 14rem;
+}
+
+#sidebar-container {
+    background-color: rgba(0,0,0,0.03);
+}
+
+
+/* settings */
+#settings-container {
+    background-color: rgba(0,0,0,0.03);
 }
 
 .settings-expanded {
@@ -10,8 +24,4 @@
 
 .settings-collapsed {
     width: 4rem;
-}
-
-#sidebar-help-container {
-    width: 14rem;
 }
