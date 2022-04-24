@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-CorrelationBoard <- function(input, output, session, inputData)
+CorrelationBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     
     fullH = 800  ## full height of page
@@ -20,6 +22,7 @@ CorrelationBoard <- function(input, output, session, inputData)
     
 
     ## Currently not used Stefan 17.03.22
+    ## Please leave in. These are some experimental new modules (IK 25.04.22)
 
     # corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
 
@@ -52,6 +55,7 @@ CorrelationBoard <- function(input, output, session, inputData)
     # })
 
     ## Currently not used Stefan 17.03.22
+    ## Please leave in. These are some experimental new modules (IK 25.04.22)    
 
     # corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
     
@@ -883,6 +887,8 @@ CorrelationBoard <- function(input, output, session, inputData)
     })
 
     ## Currently not used in the UI Stefan 17.03.2022
+    ## Please leave in. These are some experimental new modules (IK 25.04.22)
+    
     # corGSEA_plots.RENDER <- shiny::reactive({
 
     #     res = getCorrelationGSEA()
@@ -941,6 +947,8 @@ CorrelationBoard <- function(input, output, session, inputData)
     ## output <- attachModule(output, corGSEA_plots_module)
 
     ## Currently not used in the UI Stefan 17.03.2022
+    ## Please leave in. These are some experimental new modules (IK 25.04.22)
+    
     # corGSEA_table.RENDER <- shiny::reactive({
         
     #     res = getCorrelationGSEA()
@@ -1490,5 +1498,7 @@ CorrelationBoard <- function(input, output, session, inputData)
         res = c(80,95),
         add.watermark = WATERMARK
     )
-    
+
+
+  })    
 } ## end of Board

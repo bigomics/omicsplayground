@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-WordCloudBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
+WordCloudBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     fullH = 750
     rowH = 660  ## row height of panel
@@ -48,7 +50,7 @@ WordCloudBoard <- function(input, output, session, inputData, selected_gxmethods
         } else {
             dbg("**** CALCULATING WORDCLOUD ****\n")
             progress <- shiny::Progress$new()
-            res <- pgx.calculateWordFreq(ngs, progress=progress, pg.unit=1)
+            res <- pgx.calculateWordCloud(ngs, progress=progress, pg.unit=1)                    
             on.exit(progress$close())    
         }
         return(res)
@@ -586,4 +588,6 @@ WordCloudBoard <- function(input, output, session, inputData, selected_gxmethods
         res=72,
         add.watermark = WATERMARK
     )
+
+  })
 }

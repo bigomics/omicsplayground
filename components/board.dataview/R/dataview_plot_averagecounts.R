@@ -44,7 +44,8 @@ dataview_plot_averagecounts_server <- function(id, parent.input,
         plot.RENDER <- function() {
             
             res <- plot_data()
-
+            shiny::req(res)
+            
             par(mar=c(8,3.5,2,0.5), mgp=c(2.2,0.8,0))
 
             klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),

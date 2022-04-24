@@ -35,6 +35,8 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
             
         plot.RENDER <- function() {
             res <- plot_data()
+            shiny::req(res)
+            
             par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
             ## ---- xlab ------ ###
             xaxt="l"

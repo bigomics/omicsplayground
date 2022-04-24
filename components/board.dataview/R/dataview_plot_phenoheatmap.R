@@ -37,7 +37,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=F
         plot_data  <- shiny::reactive({
 
             ##pgx = pgxdata()
-            shiny::req(pgx)
+            shiny::req(pgx$X)
             dbg("[data_phenoHeatmap.RENDER] reacted")
 
             annot <- pgx$samples
@@ -54,7 +54,8 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=F
             
         plot.RENDER <- function() {
             res <- plot_data()
-
+            shiny::req(res)
+            
             annot.ht <- ifelse(ncol(res$annot) > 10, 5, 6)
             annot.ht <- ifelse(ncol(res$annot) > 20, 4, annot.ht)
             annot.ht <- ifelse(ncol(res$annot) > 30, 3, annot.ht)

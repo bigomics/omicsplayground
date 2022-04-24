@@ -82,13 +82,13 @@ app_server <- function(input, output, session) {
 
     ## *** EXPERIMENTAL *** global reactive value replacing env list
     ## above create session global reactiveValue from list
-    pgx <- reactiveValues()
-           
+    PGX <- reactiveValues()
+    
     ## Modules needed from the start        
     env$load <- LoadingBoard(
         id = "load",
         pgx_dir = pgx_dir,
-        pgx = pgx,
+        pgx = PGX,
         limits = limits,
         enable_userdir = opt$ENABLE_USERDIR,                                
         authentication = authentication,
@@ -103,10 +103,10 @@ app_server <- function(input, output, session) {
     ## read-only.
     if(0) {
         observeEvent( env$load$inputData(), {
-            message("*** EXPERIMENTAL *** copying env$load$inputData -> reactivevalue pgx")
+            message("[server.R] *** EXPERIMENTAL *** copying env$load$inputData -> reactivevalue pgx")
             pgxdata <- env$load$inputData()  ## react on new data
             for(i in 1:length(pgxdata)) {
-                pgx[[names(pgxdata)[i]]] <<- pgxdata[[i]]
+                PGX[[names(pgxdata)[i]]] <<- pgxdata[[i]]
             }
         })
     }
@@ -114,16 +114,24 @@ app_server <- function(input, output, session) {
     ## If user is logged off, we clear the data
     observeEvent(env$load$auth$logged(), {
         is.logged <- env$load$auth$logged()
-        length.pgx <- length(isolate(names(pgx)))
-        message("*** EXPERIMENTAL *** is.logged = ",is.logged)
-        message("*** EXPERIMENTAL *** length.pgx = ",length.pgx)                        
-        if(!is.logged && length.pgx>0) 
-{            message("*** EXPERIMENTAL *** clearing reactivevalue pgx!")        
-            for(i in 1:length(pgx)) {
-                pgx[[names(pgx)[i]]] <<- NULL
+        length.pgx <- length(names(PGX))
+        dbg("[server.R] *** EXPERIMENTAL *** is.logged = ",is.logged)
+        dbg("[server.R] *** EXPERIMENTAL *** length.pgx = ",length.pgx)
+        dbg("[server.R] *** EXPERIMENTAL *** names.pgx = ",names(PGX))                                
+
+        if(!is.logged && length.pgx>0) {
+            message("*** EXPERIMENTAL *** clearing reactivevalue pgx!")        
+            for(i in 1:length.pgx) {
+                PGX[[names(PGX)[i]]] <<- NULL
             }
-            pgx <<- reactiveValues()
+            dbg("[server.R] *** EXPERIMENTAL *** is.null.pgx = ",is.null(PGX))
+            dbg("[server.R] *** EXPERIMENTAL *** sapply(pgx,is.null) = ",sapply(PGX,is.null))            
         }
+        if(!is.logged) {
+            message("[server.R] *** EXPERIMENTAL *** resetting reactivevalue pgx!")        
+            ## pgx <- reactiveValues()
+        }
+        message("[server.R] *** EXPERIMENTAL *** done")                
     })
     
     ## User board
@@ -151,51 +159,55 @@ app_server <- function(input, output, session) {
 
         ## load other modules if not yet loaded
         message("[SERVER] --------- calling shiny modules ----------")
+        dbg("[SERVER] names(pgx) = ",names(PGX))        
+
         loadModule <- function(...) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
         
-        shiny::withProgress(message="initializing modules ...", value=0, {
-            DataViewBoard("view", pgx=pgx)            
-            loadModule( ClusteringBoard, "clust", inputData=env[["load"]][["inputData"]] )
-            loadModule( FeatureMapBoard, "ftmap", inputData=env[["load"]][["inputData"]])    
-            shiny::incProgress(0.2)
-            loadModule( ExpressionBoard, "expr", inputData=env[["load"]][["inputData"]])
-            loadModule( EnrichmentBoard, "enrich",
-                       inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            loadModule( FunctionalBoard, "func", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            loadModule( WordCloudBoard, "word", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            shiny::incProgress(0.4)
-            loadModule( DrugConnectivityBoard, "drug", inputData = env[["load"]][["inputData"]])
-            loadModule( IntersectionBoard, "isect", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            loadModule( SignatureBoard, "sig", 
-                       inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            loadModule( CorrelationBoard, "cor", inputData = env[["load"]][["inputData"]])
-            shiny::incProgress(0.6)            
-            loadModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
-            loadModule( ConnectivityBoard, "cmap",
-                       inputData = env[["load"]][["inputData"]])
-            loadModule( SingleCellBoard, "scell", inputData = env[["load"]][["inputData"]])
-            shiny::incProgress(0.8)
-            loadModule( TcgaBoard, "tcga", inputData = env[["load"]][["inputData"]])
-            loadModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])
-            loadModule( CompareBoard, "comp", inputData = env[["load"]][["inputData"]])
-            if(DEV) {            
-                loadModule( CorsaBoard, "corsa", env)
-                loadModule( SystemBoard, "system", env)
-                loadModule( MultiLevelBoard, "multi", env)
-                loadModule( QuestionBoard, "qa", lapse = -1)
-            }
+        ## TEMPORARY SOLUTION
+        inputData <- reactive({
+            if(all(sapply(PGX,is.null))) return(NULL)
+            PGX
         })
+
+        
+        shiny::withProgress(message="initializing modules ...", value=0, {
+
+            DataViewBoard("view", pgx=PGX)            
+
+            ## *** DEVNOTE *** board below still need refactoring
+            ClusteringBoard("clust", pgx=PGX)
+            shiny::incProgress(0.2)
+
+            ExpressionBoard("expr", inputData=inputData) -> env$expr
+            FeatureMapBoard("ftmap", inputData=inputData)
+            EnrichmentBoard("enrich", inputData = inputData,
+                            selected_gxmethods = env$expr$selected_gxmethods
+                            ) -> env$enrich
+            FunctionalBoard("func", inputData = inputData,
+                            selected_gsetmethods = env$enrich$selected_gsetmethods)
+            WordCloudBoard("word", inputData = inputData)
+            shiny::incProgress(0.4)
+            DrugConnectivityBoard("drug", inputData = inputData)
+            IntersectionBoard("isect", inputData = inputData,
+                       selected_gxmethods = env$expr$selected_gxmethods,
+                       selected_gsetmethods = env$enrich$selected_gsetmethods)
+            SignatureBoard("sig", inputData = inputData,
+                           selected_gxmethods = env$expr$selected_gxmethods)
+            CorrelationBoard("cor", inputData = inputData)
+            shiny::incProgress(0.6)            
+            BiomarkerBoard("bio", inputData = inputData)
+            ConnectivityBoard("cmap", inputData = inputData)
+            SingleCellBoard("scell", inputData = inputData)
+            shiny::incProgress(0.8)
+            TcgaBoard("tcga", inputData = inputData)
+            WgcnaBoard("wgcna", inputData = inputData)
+            CompareBoard("comp", inputData = inputData)
+            
+        })
+
         message("[SERVER:env.loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
@@ -212,8 +224,7 @@ app_server <- function(input, output, session) {
    
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
-        pgx <- env[["load"]][["inputData"]]()
-        name <- gsub(".*\\/|[.]pgx$","",pgx$name)
+        name <- gsub(".*\\/|[.]pgx$","",PGX$name)
         if(length(name)==0) name = "(no data)"
         name
     })
@@ -221,16 +232,25 @@ app_server <- function(input, output, session) {
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
-    shiny::observe({
+    shiny::observeEvent({
+        env[["load"]][["auth"]]$logged()        
+        env[["user"]]$enable_beta()
+        PGX$name
+    },{
+
+        message("[SERVER] !!! dataset changed. reconfiguring triggered!")
         
         ## trigger on change dataset
-        pgx  <- env[["load"]]$inputData() 
+        ##pgx  <- env[["load"]]$inputData() 
+
+        ## show beta feauture
         show.beta <- env[["user"]]$enable_beta()
         dbg("[SERVER] show.beta = ",show.beta)
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
+        is.logged <- env[["load"]][["auth"]]$logged()
         
         ## hide all main tabs until we have an object
-        if(is.null(pgx)) {
+        if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
             toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
@@ -260,13 +280,14 @@ app_server <- function(input, output, session) {
         
         ## Dynamically show upon availability in pgx object
         toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
-        tabRequire(pgx, "connectivity", "maintabs", "Find similar experiments")
-        tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
-        tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
-        tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
+        tabRequire(PGX, "connectivity", "maintabs", "Find similar experiments")
+        tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
+        tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
+        tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
         toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))                    
 
         message("[SERVER] reconfiguring menu done.")        
+
     })
     
     ##-------------------------------------------------------------

@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-SignatureBoard <- function(input, output, session, inputData, selected_gxmethods)
+SignatureBoard <- function(id, inputData, selected_gxmethods)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
 
     fullH = 800   ## full height of page
@@ -1091,4 +1093,6 @@ infotext =
         title = "Genes in signature", label="b",
         height = c(360,700)
     )
+
+  })
 }  ## end-of-Board

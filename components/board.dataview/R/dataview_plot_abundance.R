@@ -44,6 +44,7 @@ dataview_plot_abundance_server <- function(id, parent.input,
         plot.RENDER <- function() {
 
             res <- plot_data()
+            shiny::req(res)            
             
             klr <- colorRampPalette(
                 c(rgb(0.2,0.5,0.8,0.8),

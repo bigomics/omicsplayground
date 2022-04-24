@@ -50,6 +50,7 @@ dataview_plot_totalcounts_server <- function(id, parent.input, getCountsTable, w
         plot.RENDER <- function() {
 
             res <- plot_data()
+            shiny::req(res)
             
             ## ---- xlab ------ ###
             names.arg = names(res$total.counts)

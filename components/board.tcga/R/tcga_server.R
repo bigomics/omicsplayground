@@ -3,7 +3,10 @@
 ##
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
-TcgaBoard <- function(input, output, session, inputData) {
+TcgaBoard <- function(id, inputData)
+{
+    moduleServer(id, function(input, output, session)
+    {
 	ns <- session$ns
 	fullH <- 800
 	tabH <- "70vh"
@@ -108,4 +111,7 @@ TcgaBoard <- function(input, output, session, inputData) {
 		res = c(80, 85),
 		add.watermark = WATERMARK
 	)
+
+
+    })
 }

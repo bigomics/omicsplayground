@@ -3,8 +3,11 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FunctionalBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
+FunctionalBoard <- function(id, inputData, selected_gsetmethods)
 {
+  moduleServer(id, function(input, output, session)
+  {
+
     ns <- session$ns ## NAMESPACE
     fullH = 750
     rowH = 660  ## row height of panel
@@ -1008,6 +1011,6 @@ FunctionalBoard <- function(input, output, session, inputData, selected_gxmethod
         )
     })
 
-
+  }) ## end-of-moduleServer
 
 }

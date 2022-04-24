@@ -39,7 +39,7 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
            
             dbg("[dataview_expressionplot_server:plot_data] reacted! ")
 
-            shiny::req(pgx)
+            shiny::req(pgx$X)
             shiny::req(parent.input$data_groupby,
                        parent.input$search_gene,
                        parent.input$data_type)
@@ -92,6 +92,8 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
         plot.RENDER <- function() {
             
             pd  <- plot_data()
+            shiny::req(pd)
+
             df <- pd[['df']]
             
             par(mar=c(7,3.5,2,1), mgp=c(2.1,0.8,0))

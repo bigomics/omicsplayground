@@ -4,8 +4,11 @@
 ##
 
 
-WgcnaBoard <- function(input, output, session, inputData)
+WgcnaBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
+
     ns <- session$ns ## NAMESPACE
     fullH = 700  ## full height of page
     rowH1 = 250  ## row 1 height
@@ -1240,4 +1243,7 @@ WgcnaBoard <- function(input, output, session, inputData)
         pdf.width=12, pdf.height=9, res=c(85,90),
         add.watermark = WATERMARK
     )
+
+    return(NULL)  
+  })
 } ## end of Board

@@ -14,7 +14,8 @@
 ##DataViewBoard <- function(input, output, session, id, pgx)
 DataViewBoard <- function(id, pgx)
 {
-  moduleServer(id, function(input, output, session) {
+  moduleServer(id, function(input, output, session)
+  {
 
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
@@ -59,7 +60,7 @@ DataViewBoard <- function(id, pgx)
     ## update filter choices upon change of data set
     shiny::observe({
         ##pgx <- pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$Y, pgx$samples)
 
         ## levels for sample filter
         levels = getLevels(pgx$Y)
@@ -75,7 +76,11 @@ DataViewBoard <- function(id, pgx)
     })
 
 
-    shiny::observeEvent( input$data_type, {
+      shiny::observeEvent({
+          input$data_type
+          pgx$X
+          pgx$counts
+      }, {
         ##pgx = pgxdata()
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(pgx$counts)
@@ -97,7 +102,6 @@ DataViewBoard <- function(id, pgx)
                                     ##options = list(maxOptions = 9999999),
                                     options = list(maxOptions = 1001),                                    
                                     server = TRUE)
-
     })
 
     last_search_gene <- reactiveVal()
@@ -132,7 +136,7 @@ DataViewBoard <- function(id, pgx)
     dataview_plot_histogram_server("counts_histplot", input, getCountsTable)
     dataview_plot_abundance_server("counts_abundance", input, getCountsTable)
     dataview_plot_averagecounts_server("counts_averagecounts", input, getCountsTable)
-    
+   
     ## fourth tab
     dataview_plot_phenoheatmap_server("phenoheatmap", pgx, input)
     dataview_plot_phenoassociation_server("phenoassociation", pgx, input)    
@@ -143,7 +147,7 @@ DataViewBoard <- function(id, pgx)
     
     getCountsTable <- shiny::reactive({
         ## pgx = pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$X,pgx$Y,pgx$samples)
 
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
         subtt=NULL
@@ -290,8 +294,8 @@ DataViewBoard <- function(id, pgx)
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ## pgx = pgxdata()   ## NOT NEEDED ANYMORE!!!
-        shiny::req(pgx)
-        shiny::req(input$data_groupby)
+        shiny::req(pgx$X,pgx$Y,pgx$genes,pgx$model.parameters)
+        shiny::req(input$data_type, input$data_groupby)
 
         dbg("[data_rawdataTable.RENDER] reacted")
 
@@ -456,7 +460,7 @@ DataViewBoard <- function(id, pgx)
     ## data_phenotypeAssociation.RENDER <- shiny::reactive({
 
     ##     pgx = pgxdata()
-    ##     shiny::req(pgx)
+    ##     shiny::req(pgx$X)
     ##     dbg("[data_phenotypeAssociation.RENDER] reacted")
     ##     annot <- pgx$samples
     ##     samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
@@ -466,11 +470,10 @@ DataViewBoard <- function(id, pgx)
     ## })
 
 
-    
     data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ## pgx = pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$Y,pgx$samples)
         
         dt <- NULL
         samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
@@ -508,7 +511,7 @@ DataViewBoard <- function(id, pgx)
     data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ## pgx = pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$Y,pgx$model.parameters)
 
         dbg("[data_contrastTable.RENDER] reacted")
 
@@ -573,7 +576,7 @@ DataViewBoard <- function(id, pgx)
 
     datatable_timings.RENDER <- shiny::reactive({
         ## pgx <- pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$timings)
 
         dbg("[datatable_timings.RENDER] reacted")
 
@@ -603,7 +606,7 @@ DataViewBoard <- function(id, pgx)
 
     datatable_objectdims.RENDER <- shiny::reactive({
         ## pgx <- pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$X)
 
         dims1 <- lapply( pgx, dim)
         lens <- sapply( pgx, length)
@@ -629,7 +632,7 @@ DataViewBoard <- function(id, pgx)
 
     datatable_objectsize.RENDER <- shiny::reactive({
         ## pgx <- pgxdata()
-        shiny::req(pgx)
+        shiny::req(pgx$name)
         objsize <- sapply(pgx,object.size)
         objsize <- round( objsize/1e6, digits=2)
         D = data.frame( object=names(pgx), "size.Mb"=objsize, check.names=FALSE)

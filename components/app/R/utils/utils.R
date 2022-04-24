@@ -10,6 +10,17 @@
 #########################################################################
 
 
+req2 <- function(x) {
+    if("reactivevalues" %in% class(x)) {        
+        if(length(names(x))==0) return(req(FALSE))
+        return(req(all(!sapply(x,is.null))))
+    }
+    if("reactive" %in% class(x)) {
+        return(req(x,x()))
+    }
+    req(x)
+}
+
 envcat <- function(var) {
 	message(var," = ",Sys.getenv(var))
 }

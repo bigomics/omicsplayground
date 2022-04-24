@@ -32,7 +32,7 @@ dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FA
             dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
 
             ##pgx <- pgxData()
-            shiny::req(pgx)
+            shiny::req(pgx$X,pgx$Y)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)                         
 
@@ -67,6 +67,7 @@ dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FA
         plot.RENDER <- function() {
             pd <- plot_data()
             req(pd)
+            
             mean.fc <- pd$df$mean.fc
             sel <- pd$sel
             gene <- pd$gene

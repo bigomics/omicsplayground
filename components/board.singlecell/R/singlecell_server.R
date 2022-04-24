@@ -4,8 +4,11 @@
 ##
 
 
-SingleCellBoard <- function(input, output, session, inputData)
+SingleCellBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
+
     ns <- session$ns ## NAMESPACE
     
     fullH = 750  ## full height of panel
@@ -1733,4 +1736,6 @@ SingleCellBoard <- function(input, output, session, inputData)
     # )
     
     return(NULL)
+
+  })
 }

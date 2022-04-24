@@ -32,7 +32,7 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
 
             dbg("[dataview_tissueplot_server:plot_data] reacted!")
             
-            shiny::req(pgx)
+            shiny::req(pgx$X)
             if(is.null(parent.input$data_type)) return(NULL)
             
             dbg("[dataview_tissueplot_server:plot_data] called..")
@@ -74,6 +74,8 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
         
         plot.RENDER <- function() {
             pdat <- plot_data()
+            shiny::req(pdat)
+
             df   <- pdat$df
             ylab <- pdat$ylab
             gene <- pdat$gene
