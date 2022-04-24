@@ -15,8 +15,8 @@ LoadingBoard <- function(id,
                          enable_userdir = TRUE,
                          authentication="none")
 {
-  moduleServer(id, function(input, output, session) {
-
+  moduleServer(id, function(input, output, session) 
+  {
     ns <- session$ns ## NAMESPACE
     dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
@@ -464,7 +464,7 @@ LoadingBoard <- function(id,
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
-        logged <- auth$logged()
+        logged <- isolate(auth$logged()) ## avoid reloading when logout/login            
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
     
@@ -799,5 +799,5 @@ LoadingBoard <- function(id,
         ##usermode = shiny::reactive({ USERMODE() })
     )
     return(res)
-  })  ## end of moduleServer      
+  })
 }

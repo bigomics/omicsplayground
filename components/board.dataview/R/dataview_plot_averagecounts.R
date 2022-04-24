@@ -26,7 +26,7 @@ dataview_plot_averagecounts_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_averagecounts_server <- function(id, parent.input,
+dataview_plot_averagecounts_server <- function(id, pgxdata, parent.input,
                                                  getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {

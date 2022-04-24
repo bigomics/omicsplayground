@@ -7,15 +7,16 @@
 #'
 #' @description A shiny Module (server code).
 #'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param pgxdata 
 #' @param id,input,output,session Internal parameters for {shiny}.
 #' @param pgxdata Reactive expression that provides the input pgx data object 
 #'
 #' @export 
-##DataViewBoard <- function(input, output, session, id, pgx)
-DataViewBoard <- function(id, pgx)
+DataViewBoard <- function(input, output, session, pgxdata)
 {
-  moduleServer(id, function(input, output, session) {
-
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
     imgH = 315  ## height of images
@@ -58,7 +59,7 @@ DataViewBoard <- function(id, pgx)
     
     ## update filter choices upon change of data set
     shiny::observe({
-        ##pgx <- pgxdata()
+        pgx <- pgxdata()
         shiny::req(pgx)
 
         ## levels for sample filter
@@ -76,7 +77,7 @@ DataViewBoard <- function(id, pgx)
 
 
     shiny::observeEvent( input$data_type, {
-        ##pgx = pgxdata()
+        pgx = pgxdata()
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(pgx$counts)
         } else {
@@ -104,6 +105,7 @@ DataViewBoard <- function(id, pgx)
     
     input_search_gene <- reactive({
         if( input$search_gene %in% c("(type SYMBOL for more genes...)","")) {
+            pgx <- pgxdata()
             gene1 <- last_search_gene() 
             return(gene1)
         }
@@ -117,32 +119,32 @@ DataViewBoard <- function(id, pgx)
     ##================================================================================
 
     ## dbg("[***dataview_server] names.input = ",names(input))    
-    dataview_module_geneinfo_server("geneinfo", input)
+    dataview_module_geneinfo_server("geneinfo", pgxdata, input)
 
     ## first tab
-    dataview_plot_averagerank_server("averagerankplot", pgx, input)            
-    dataview_plot_tsne_server("tsneplot", pgx, input)        
-    dataview_plot_correlation_server("correlationplot", pgx, input)
-    dataview_plot_tissue_server("tissueplot", pgx, input)            
-    dataview_plot_expression_server("expressionplot", pgx, input)
+    dataview_plot_averagerank_server("averagerankplot", pgxdata, input)            
+    dataview_plot_tsne_server("tsneplot", pgxdata, input)        
+    dataview_plot_correlation_server("correlationplot", pgxdata, input)
+    dataview_plot_tissue_server("tissueplot", pgxdata, input)            
+    dataview_plot_expression_server("expressionplot", pgxdata, input)
 
     ## second tab
-    dataview_plot_totalcounts_server("counts_total", input, getCountsTable)
-    dataview_plot_boxplot_server("counts_boxplot", input, getCountsTable)
-    dataview_plot_histogram_server("counts_histplot", input, getCountsTable)
-    dataview_plot_abundance_server("counts_abundance", input, getCountsTable)
-    dataview_plot_averagecounts_server("counts_averagecounts", input, getCountsTable)
+    dataview_plot_totalcounts_server("counts_total", pgxdata, input, getCountsTable)
+    dataview_plot_boxplot_server("counts_boxplot", pgxdata, input, getCountsTable)
+    dataview_plot_histogram_server("counts_histplot", pgxdata, input, getCountsTable)
+    dataview_plot_abundance_server("counts_abundance", pgxdata, input, getCountsTable)
+    dataview_plot_averagecounts_server("counts_averagecounts", pgxdata, input, getCountsTable)
     
     ## fourth tab
-    dataview_plot_phenoheatmap_server("phenoheatmap", pgx, input)
-    dataview_plot_phenoassociation_server("phenoassociation", pgx, input)    
+    dataview_plot_phenoheatmap_server("phenoheatmap", pgxdata, input)
+    dataview_plot_phenoassociation_server("phenoassociation", pgxdata, input)    
     
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
     
     getCountsTable <- shiny::reactive({
-        ## pgx = pgxdata()
+        pgx = pgxdata()
         shiny::req(pgx)
 
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
@@ -289,7 +291,7 @@ DataViewBoard <- function(id, pgx)
 
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()   ## NOT NEEDED ANYMORE!!!
+        pgx = pgxdata()
         shiny::req(pgx)
         shiny::req(input$data_groupby)
 
@@ -469,7 +471,7 @@ DataViewBoard <- function(id, pgx)
     
     data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()
+        pgx = pgxdata()
         shiny::req(pgx)
         
         dt <- NULL
@@ -507,7 +509,7 @@ DataViewBoard <- function(id, pgx)
 
     data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()
+        pgx = pgxdata()
         shiny::req(pgx)
 
         dbg("[data_contrastTable.RENDER] reacted")
@@ -572,7 +574,7 @@ DataViewBoard <- function(id, pgx)
     ##================================================================================
 
     datatable_timings.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+        pgx <- pgxdata()
         shiny::req(pgx)
 
         dbg("[datatable_timings.RENDER] reacted")
@@ -602,7 +604,7 @@ DataViewBoard <- function(id, pgx)
     )
 
     datatable_objectdims.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+        pgx <- pgxdata()
         shiny::req(pgx)
 
         dims1 <- lapply( pgx, dim)
@@ -628,7 +630,7 @@ DataViewBoard <- function(id, pgx)
     )
 
     datatable_objectsize.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+        pgx <- pgxdata()
         shiny::req(pgx)
         objsize <- sapply(pgx,object.size)
         objsize <- round( objsize/1e6, digits=2)
@@ -647,6 +649,5 @@ DataViewBoard <- function(id, pgx)
         options = NULL, title='Object sizes',
         info.text = datatable_objectsize_text
     )
-      
-  }) ## end of moduleServer
+
 }

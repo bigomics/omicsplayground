@@ -128,7 +128,7 @@ app_server <- function(input, output, session) {
     
     ## User board
     env$user <- UserBoard("user", user = env$load$auth)
-
+  
     ## Modules needed after dataset is loaded (deferred)
     modules_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
@@ -149,15 +149,15 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        ## load other modules if not yet loaded
-        message("[SERVER] --------- calling shiny modules ----------")
+        ## load other modules if
+        message("[SERVER:env.loaded] --------- calling shiny modules ----------")
         loadModule <- function(...) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
         
         shiny::withProgress(message="initializing modules ...", value=0, {
-            DataViewBoard("view", pgx=pgx)            
+            loadModule( DataViewBoard, "view", pgxdata = env[["load"]][["inputData"]] )
             loadModule( ClusteringBoard, "clust", inputData=env[["load"]][["inputData"]] )
             loadModule( FeatureMapBoard, "ftmap", inputData=env[["load"]][["inputData"]])    
             shiny::incProgress(0.2)
