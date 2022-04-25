@@ -29,7 +29,13 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_expression_server <- function(id,
+                                            pgx,
+                                            r.gene = reactive(""),
+                                            r.samples = reactive(""),
+                                            r.data_type = reactive("counts"),            
+                                            r.data_groupby = reactive(""),
+                                            watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -38,34 +44,33 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
         plot_data <- shiny::reactive({
 
             shiny::req(pgx$X)
-            shiny::req(parent.input$data_groupby,
-                       parent.input$search_gene,
-                       parent.input$data_type)
+            shiny::req(r.gene(), r.data_type())
             
-            search_gene <- parent.input$search_gene
-            samples = colnames(pgx$X)
-            if(!is.null(parent.input$data_samplefilter)) {
-                samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
-            }
-            nsamples = length(samples)
+            ## dereference reactives
+            gene <- r.gene()
+            samples <- r.samples()
+            data_type <- r.data_type()                      
+            groupby <- r.data_groupby()
+
+            if(samples[1]=="") samples <- colnames(pgx$X)
+            if(gene=="") genes <- rownames(pgx$X)[1]            
             
             grpvar=1
             grp <- rep(NA,length(samples))
-            grpvar <- parent.input$data_groupby
-            if(grpvar != "<ungrouped>") {
-                grp  = factor(as.character(pgx$Y[samples,grpvar]))
+            if(groupby != "<ungrouped>") {
+                grp  = factor(as.character(pgx$Y[samples,groupby]))
             }
 
-            pp <- rownames(pgx$genes)[match(search_gene, pgx$genes$gene_name)]            
+            pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]            
             gx = NULL
             ylab = NULL
-            if(parent.input$data_type=="counts") {
+            if(data_type=="counts") {
                 gx = pgx$counts[pp,samples]
                 ylab="expression (counts)"
-            } else if(parent.input$data_type=="CPM") {
+            } else if(data_type=="CPM") {
                 gx = 2**pgx$X[pp,samples]
                 ylab="expression (CPM)"
-            } else if(parent.input$data_type=="logCPM") {
+            } else if(data_type=="logCPM") {
                 gx = pgx$X[pp,samples]
                 ylab="expression (log2CPM)"
             }
@@ -73,13 +78,13 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
             pd <- list(
                 df = data.frame(
                     x = gx,
-                    group = grp,
-                    samples = samples
+                    samples = samples,
+                    group = grp
                 ),
                 geneplot_type = input$geneplot_type,
-                data_groupby = parent.input$data_groupby,
+                groupby = groupby,
                 ylab = ylab,
-                gene = search_gene
+                gene = gene
             )
             return(pd)
         })
@@ -98,8 +103,7 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
             bee.cex = ifelse(length(df$x)>500,0.1,0.2)
             bee.cex = c(0.3,0.1,0.05)[cut(length(df$x),c(0,100,500,99999))]
             
-            ##if(parent.input$data_grouped) {
-            if(pd$data_groupby != "<ungrouped>") {
+            if(pd$groupby != "<ungrouped>") {
                 nnchar = nchar(paste(unique(df$group),collapse=''))
                 srt = ifelse(nnchar < 20, 0, 35)
                 ngrp <- length(unique(df$group))
@@ -212,7 +216,7 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
             renderFunc2 = shiny::renderPlot,        
             ##renderFunc = shiny::renderCachedPlot,
             ##renderFunc2 = shiny::renderCachedPlot,        
-            res = c(96,120)*1,                ## resolution of plots
+            res = c(100,170)*1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )

@@ -48,7 +48,7 @@ DataViewInputs <- function(id) {
 DataViewUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 
-    imgH <- 340
+    imgH <- c(320,600)   ## heights for small and fullscreen image
 
     shiny::tabsetPanel(
         id = ns("tabs"),
@@ -138,9 +138,7 @@ DataViewUI <- function(id) {
                 shiny::br(),
                 shiny::fillRow(
                     flex = c(2.5,0.07,1),
-                    shiny::div(
-                               ##plotWidget(ns("data_phenoHeatmap")),
-                               dataview_plot_phenoheatmap_ui(ns("phenoheatmap")),
+                    shiny::div(dataview_plot_phenoheatmap_ui(ns("phenoheatmap"),height=imgH),
                                style="overflow-y: auto;"),
                     shiny::br(),
                     dataview_plot_phenoassociation_ui(ns("phenoassociation"),height=imgH)                    

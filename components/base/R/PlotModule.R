@@ -240,6 +240,8 @@ PlotModuleUI <- function(id,
 
 }
 
+
+
 PlotModuleServer <- function(
          id,
          func,
@@ -252,7 +254,7 @@ PlotModuleServer <- function(
          download.fmt=c("png","pdf"), 
          ##height = c(640,800),
          ##width = c("auto",1400),
-         res=c(72,100),
+         res=c(100,170),
          download.pdf = NULL,
          download.png = NULL,
          download.html = NULL,

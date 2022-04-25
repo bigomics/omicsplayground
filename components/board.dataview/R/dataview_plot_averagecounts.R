@@ -85,7 +85,7 @@ dataview_plot_averagecounts_server <- function(id, parent.input,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
             renderFunc = shiny::renderPlot,
             renderFunc2 = shiny::renderPlot,        
-            res = c(96,120)*1,                ## resolution of plots
+            res = c(100,170),                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )

@@ -32,7 +32,9 @@ dataview_module_geneinfo_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_module_geneinfo_server <- function(id, parent.input, watermark=FALSE)
+dataview_module_geneinfo_server <- function(id,
+                                            r.gene = reactive(""),
+                                            watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -41,10 +43,8 @@ dataview_module_geneinfo_server <- function(id, parent.input, watermark=FALSE)
         info_data <- shiny::reactive({
 
             require(org.Hs.eg.db)
-            gene = "A1BG-AS1"
-            gene = "CD4"
-            gene <- parent.input$search_gene
-            req(parent.input, gene)
+            gene <- r.gene()
+            req(gene)
             
             gene = toupper(sub(".*:","",gene))
             eg = "1017"

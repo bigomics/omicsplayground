@@ -7,7 +7,8 @@
 dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
 
     ns <- shiny::NS(id)
-    info_text = paste("Tissue expression for the selected gene in the tissue expression ",a_GTEx," dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering.")
+    info_text = paste("Tissue expression for the selected gene in the tissue expression ",
+                      a_GTEx," dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering.")
     
     PlotModuleUI(
         ns("pltmod"),
@@ -24,16 +25,19 @@ dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
             
             shiny::req(pgx$X)
-            if(is.null(parent.input$data_type)) return(NULL)
+            shiny::req(r.gene(), r.data_type())
+
+            ## dereference reactive
+            gene <- r.gene()
+            data_type <- r.data_type()            
             
-            gene <- parent.input$search_gene
             pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
             hgnc.gene = toupper(as.character(pgx$genes[pp,"gene_name"]))
 
@@ -43,7 +47,7 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
                 grp = TISSUE.grp[names(tx)]
                 tissue.klr = COLORS[grp]
                 ylab="expression (TPM)"
-                if(parent.input$data_type=="logCPM") {
+                if(data_type=="logCPM") {
                     ylab = "expression (log2TPM)"
                     tx = log(1 + tx)
                 }
@@ -58,6 +62,7 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
 
             list(
                 df = data.frame(
+                    tissue = names(tx),
                     x = tx,
                     color = tissue.klr
                 ),
@@ -75,14 +80,13 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
             df   <- pdat$df
             ylab <- pdat$ylab
             gene <- pdat$gene
-            if(is.null(df$x)) return(NULL)
 
             par(mar=c(6,4,1,1), mgp=c(1.5,0.5,0))
             barplot(df$x, las=3, main=gene, cex.main=1, col.main="#7f7f7f",
                     col = df$color, border=NA,ylab=ylab, cex.names=0.9,
                     names.arg=rep(NA,length(df$x)))
 
-            text((1:length(df$x)-0.5)*1.2, -0.04*max(df$x), names(df$x), las=3,
+            text((1:length(df$x)-0.5)*1.2, -0.04*max(df$x), df$tissue, las=3,
                  cex=0.85, pos=2, adj=0, offset=0, srt=55, xpd=TRUE)
 
         }
@@ -93,17 +97,13 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
         
         PlotModuleServer(
             "pltmod",
-            plotlib = "base",
-            plotlib2 = "base",
+            csvFunc = plot_data,   ##  *** downloadable data as CSV
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
-            csvFunc = plot_data,   ##  *** downloadable data as CSV
-            ##renderFunc = shiny::renderPlot,
-            ##renderFunc2 = shiny::renderPlot,        
             renderFunc = shiny::renderCachedPlot,
             renderFunc2 = shiny::renderCachedPlot,        
-            res = c(96,120)*1,                ## resolution of plots
-            pdf.width = 6, pdf.height = 6,
+            res = c(100,170),                ## resolution of plots
+            pdf.width = 8, pdf.height = 4,
             add.watermark = watermark
         )
 

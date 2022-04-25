@@ -18,8 +18,8 @@ dataview_plot_phenoheatmap_ui <- function(id, label='', height=c(600,800)) {
         ns("pltmod"),
         title = "Phenotype clustering",
         label = label,
-##        outputFunc = plotOutput,
-##        outputFunc2 = plotOutput,        
+##      outputFunc = plotOutput,
+##      outputFunc2 = plotOutput,        
         info.text = info_text,
         options = opts,
         download.fmt = c("png","pdf","csv"),         
@@ -79,7 +79,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=F
             csvFunc = plot_data,   ##  *** downloadable data as CSV
             renderFunc = shiny::renderPlot,
             renderFunc2 = shiny::renderPlot,        
-            res = c(96,120)*0.85,                ## resolution of plots
+            res = c(60,120),                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )

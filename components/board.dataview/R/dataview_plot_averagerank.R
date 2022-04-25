@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dataview_plot_averagerank_ui <- function(id, label='', height=c(600,800)) {
+dataview_plot_averagerank_ui <- function(id, label='', height=c(350,600)) {
 
     ns <- shiny::NS(id)
     info_text = paste0('Ranking of the average expression of the selected gene.')
@@ -23,37 +23,36 @@ dataview_plot_averagerank_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_averagerank_server <- function(id,
+                                             pgx,
+                                             r.gene = reactive(""),
+                                             r.samples = reactive(""),
+                                             r.data_type = reactive("counts"),            
+                                             watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
         
         plot_data <- shiny::reactive({
 
-            dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
-
             shiny::req(pgx$X,pgx$Y)
-            shiny::req(parent.input)
-            shiny::req(parent.input$search_gene)                         
+            shiny::req(r.gene())                         
 
-            dbg("[dataview_averagerankplot_server:plot_data] calling.. ")
+            ## dereference reactives
+            gene <- r.gene()
+            samples <- r.samples()
+            data_type <- r.data_type()                      
 
-            gene <- parent.input$search_gene
-            samples <- colnames(pgx$X)
-            if(!is.null(parent.input$data_samplefilter)) {
-                samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
-            }
-            nsamples <- length(samples)
-        
-            if(parent.input$data_type=="counts") {
+            nsamples <- length(samples)       
+            if(data_type=="counts") {
                 mean.fc <- sort(rowMeans(pgx$counts[,samples,drop=FALSE]),decreasing=TRUE)
                 ylab = "expression (counts)"
             }
-            if(parent.input$data_type=="logCPM") {
+            if(data_type=="logCPM") {
                 mean.fc <- sort(rowMeans(pgx$X[,samples,drop=FALSE]),decreasing=TRUE)
                 ylab = "expression (log2CPM)"
             }
 
-            sel <- which(sub(".*:","",names(mean.fc))==gene)
+            sel <- which(sub(".*:","",names(mean.fc)) == gene)
             
             list(
                 df = data.frame(mean.fc=mean.fc),
@@ -95,7 +94,7 @@ dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FA
             renderFunc2 = shiny::renderPlot,        
             ##renderFunc = shiny::renderCachedPlot,
             ##renderFunc2 = shiny::renderCachedPlot,        
-            res = c(96,120)*1,                ## resolution of plots
+            res = c(100,170)*1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )

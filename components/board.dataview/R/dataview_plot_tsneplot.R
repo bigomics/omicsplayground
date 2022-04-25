@@ -3,15 +3,12 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
-
+dataview_plot_tsne_ui <- function(id, label='', height=c(350,600)) {
     ns <- shiny::NS(id)
-
     ## options (hamburger menu)
     options <- tagList(
         actionButton(ns("button1"),"some action")
     )
-
     info_text = paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the <code>search_gene</code> dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
     
     PlotModuleUI(
@@ -29,7 +26,14 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
     
 }
 
-dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_tsne_server <- function(id,
+                                      pgx,
+                                      r.gene = reactive(""),
+                                      r.samples = reactive(""),
+                                      r.data_type = reactive("counts"),            
+                                      r.data_groupby = reactive(""),
+                                      watermark=FALSE
+                                      )
 {
     moduleServer( id, function(input, output, session) {
         
@@ -38,32 +42,36 @@ dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
         plot_data <- shiny::reactive({
             
             shiny::req(pgx$X,pgx$Y,pgx$genes,pgx$counts,pgx$samples,pgx$tsne2d)
-            shiny::req(parent.input)
-            shiny::req(parent.input$search_gene)
                         
-            gene <- parent.input$search_gene
-            samples <- colnames(pgx$X)
-            sfilt <- parent.input$data_samplefilter
-            if(!is.null(sfilt)) {
-                samples <- selectSamplesFromSelectedLevels(pgx$Y, sfilt)
-            }
-            nsamples = length(samples)
+##            gene <- parent.input$search_gene
+##            samplefilter <- parent.input$data_samplefilter
+##            data_type <- parent.input$data_type            
+##            data_groupby <- parent.input$data_groupby
+
+            ## dereference reactives
+            gene <- r.gene()
+            samples <- r.samples()
+            data_type <- r.data_type()                      
+            data_groupby <- r.data_groupby()
+            shiny::req(gene,data_type)
+
+            if(samples[1]=="") samples <- colnames(pgx$X)
             
             ## precompute
-            pp <- rownames(pgx$genes)[1]
+            pp  <- rownames(pgx$genes)[1]
             sel <- match(gene,pgx$genes$gene_name)
-            pp <- rownames(pgx$genes)[sel]
+            pp  <- rownames(pgx$genes)[ifelse(is.na(sel),1,sel)]
             
             gx <- NULL
             ylab <- NULL
             
-            if(parent.input$data_type == "counts") {
+            if(data_type == "counts") {
                 gx <- pgx$counts[pp,samples]
                 ylab <- "expression (counts)"
-            } else if(parent.input$data_type == "CPM") {
+            } else if(data_type == "CPM") {
                 gx <- 2**pgx$X[pp,samples]
                 ylab <- "expression (CPM)"
-            } else if(parent.input$data_type == "logCPM") {
+            } else if(data_type == "logCPM") {
                 gx <- pgx$X[pp,samples]
                 ylab <- "expression (log2CPM)"
             }
@@ -81,7 +89,7 @@ dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
             data$fc2 <- fc2
             
             grp <- NULL
-            filt.groupby <- parent.input$data_groupby
+            filt.groupby <- data_groupby
             
             if(!is.null(filt.groupby) && filt.groupby %in% colnames(pgx$samples)) {
                 grp <- factor(pgx$samples[samples, filt.groupby])

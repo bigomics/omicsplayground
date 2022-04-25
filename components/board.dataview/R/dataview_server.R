@@ -7,10 +7,6 @@
 #'
 #' @description A shiny Module (server code).
 #'
-#' @param input 
-#' @param output 
-#' @param session 
-#' @param pgx 
 #' @param id,input,output,session Internal parameters for {shiny}.
 #' @param pgx Reactive expression that provides the input pgx data object 
 #'
@@ -122,15 +118,61 @@ DataViewBoard <- function(id, pgx)
     ##=========================== MODULES ============================================
     ##================================================================================
 
+    ## get selected samples after sample filtering
+    selected_samples <- reactive({
+        samples <- colnames(pgx$X)
+        if(!is.null(input$data_samplefilter)) {
+            samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        }
+        samples
+    })
+    
     ## dbg("[***dataview_server] names.input = ",names(input))    
-    dataview_module_geneinfo_server("geneinfo", input)
+    dataview_module_geneinfo_server(
+        "geneinfo", 
+        r.gene  = reactive(input$search_gene)
+    )
 
     ## first tab
-    dataview_plot_averagerank_server("averagerankplot", pgx, input)            
-    dataview_plot_tsne_server("tsneplot", pgx, input)        
-    dataview_plot_correlation_server("correlationplot", pgx, input)
-    dataview_plot_tissue_server("tissueplot", pgx, input)            
-    dataview_plot_expression_server("expressionplot", pgx, input)
+    dataview_plot_tsne_server(
+        "tsneplot",
+        pgx,
+        r.gene         = reactive(input$search_gene),
+        r.samples      = selected_samples,
+        r.data_type    = reactive(input$data_type),            
+        r.data_groupby = reactive(input$data_groupby)
+    )        
+
+    dataview_plot_averagerank_server(
+        "averagerankplot",
+        pgx,
+        r.gene         = reactive(input$search_gene),
+        r.samples      = selected_samples,
+        r.data_type    = reactive(input$data_type)            
+    )            
+
+    dataview_plot_correlation_server(
+        "correlationplot",
+        pgx,
+        r.gene    = reactive(input$search_gene),
+        r.samples = selected_samples
+    )
+
+    dataview_plot_tissue_server(
+        "tissueplot",
+        pgx,
+        r.gene         = reactive(input$search_gene),
+        r.data_type    = reactive(input$data_type)            
+    )            
+
+    dataview_plot_expression_server(
+        "expressionplot",
+        pgx,
+        r.gene         = reactive(input$search_gene),
+        r.samples      = selected_samples,
+        r.data_type    = reactive(input$data_type),            
+        r.data_groupby = reactive(input$data_groupby)
+    )
 
     ## second tab
     dataview_plot_totalcounts_server("counts_total", input, getCountsTable)

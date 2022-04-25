@@ -23,16 +23,29 @@ dataview_plot_correlation_ui <- function(id, label='', height=c(600,800)) {
   
 }
 
-dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_correlation_server <- function(id,
+                                             pgx,
+                                             r.gene    = reactive(""),
+                                             r.samples = reactive(NULL),
+                                             watermark=FALSE)
 {
   moduleServer( id, function(input, output, session) {
     
+
+    plot_data <- shiny::reactive({
+      shiny::req(pgx$X,pgx$Y)
+      shiny::req(r.gene())             
+      samples <- r.samples()
+      gene <- r.gene()
+      res <- getTopCorrelatedGenes(pgx, gene=gene, n=30, samples=samples)
+      res
+    })
+
     getTopCorrelatedGenes <- function(pgx, gene, n=30, samples=NULL) {
-      
+        
       ## precompute
       if(is.null(samples)) samples = colnames(pgx$X)
       samples <- intersect(samples, colnames(pgx$X))
-      pp=rownames(pgx$genes)[1]
       pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
 
       ## corr always in log.scale and restricted to selected samples subset
@@ -69,28 +82,6 @@ dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FA
       return(res)
     }
 
-    plot_data <- shiny::reactive({
-
-      shiny::req(pgx$X)
-      shiny::req(parent.input)             
-      if(class(parent.input)[1]=="reactiveExpr") {
-        parent.input <- parent.input()
-      }
-      gene = parent.input$search_gene
-
-      shiny::req(pgx$X)
-      shiny::req(gene)      
-
-      samples = colnames(pgx$X)
-      samplefilter <- parent.input$data_samplefilter
-      if(!is.null(samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
-      }
-
-      res <- getTopCorrelatedGenes(pgx, gene=gene, n=30, samples=samples)
-      res
-    })
-
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
@@ -122,7 +113,7 @@ dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FA
       renderFunc2 = shiny::renderPlot,        
 ##    renderFunc = shiny::renderCachedPlot,
 ##    renderFunc2 = shiny::renderCachedPlot,        
-      res = c(96,120)*1,                ## resolution of plots
+      res = c(100,170),                ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
