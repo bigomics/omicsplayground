@@ -2466,26 +2466,6 @@
         "proxy"
       ]
     },
-    "echarts4r": {
-      "Package": "echarts4r",
-      "Version": "0.4.3.9000",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1f0c1f4843eb79d14b38109052c902ef",
-      "Requirements": [
-        "broom",
-        "corrplot",
-        "countrycode",
-        "dplyr",
-        "htmltools",
-        "htmlwidgets",
-        "jsonlite",
-        "purrr",
-        "rstudioapi",
-        "scales",
-        "shiny"
-      ]
-    },
     "edgeR": {
       "Package": "edgeR",
       "Version": "3.36.0",
