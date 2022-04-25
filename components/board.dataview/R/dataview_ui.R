@@ -87,15 +87,6 @@ DataViewUI <- function(id) {
                           )
                       )
                     )
-<<<<<<< HEAD
-                    )),
-    shiny::tabPanel("QC",
-                    shiny::fillCol(
-                      flex = c(NA,0.04,1,1),
-                      height = 750,
-                      tags$div(
-                        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
-=======
                 )
             )
         ),
@@ -106,14 +97,10 @@ DataViewUI <- function(id) {
                 height = 750,
                 tags$div(
                     HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
->>>>>>> 30de2e25aeb569a1ff40eaf7d69e3d2f32159b55
                     the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
                     <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
                     the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
                     Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
-<<<<<<< HEAD
-                    ),
-=======
                 ),
                 shiny::br(),
                 bigdash::swappable(
@@ -175,7 +162,6 @@ DataViewUI <- function(id) {
                     flex = c(2.5,0.07,1),
                     shiny::div(dataview_plot_phenoheatmap_ui(ns("phenoheatmap"),height=imgH),
                                style="overflow-y: auto;"),
->>>>>>> 30de2e25aeb569a1ff40eaf7d69e3d2f32159b55
                     shiny::br(),
                     shiny::fillRow(
                       flex = c(1,1,1), id = "counts_tab_row1", height=355,
