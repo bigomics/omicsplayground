@@ -187,6 +187,11 @@ app_server <- function(input, output, session) {
         message("[SERVER:env.loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
+
+        session$sendCustomMessage(
+            "show-tabs",
+            list()
+        )
     })
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))

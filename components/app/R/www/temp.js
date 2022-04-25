@@ -275,3 +275,32 @@ Shiny.addCustomMessageHandler('referral-global-error', function(msg) {
 		$('#referral-global-error').html('');
 	}, 5000);
 });
+
+$(() => {
+	$('.sidebar-content')
+		.children()
+		.each((index, el) => {
+			if($(el).hasClass('collapse'))
+				return;
+
+			if(index == 0){
+				$(el).show();
+				return;
+			} 
+			
+			$(el).hide();
+		});
+});
+
+Shiny.addCustomMessageHandler('show-tabs', function(msg) {
+	setTimeout(() => {
+		$('.sidebar-content')
+			.children()
+			.each((index, el) => {
+				if($(el).hasClass('collapse'))
+					return;
+
+				$(el).show();
+			});
+	}, 1000);
+});

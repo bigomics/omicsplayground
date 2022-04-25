@@ -1,15 +1,8 @@
 html {
-  h1, 
-  h2,
-  h3 {
-      margin-top: 10px;
-      margin-bottom: 5px;
-  }
   
   .content {
       min-height: 800px;
   }
-
 
   [class*="col-lg-"],[class*="col-md-"],
   [class*="col-sm-"],[class*="col-xs-"]{
@@ -21,12 +14,13 @@ html {
       margin-top: 2px;
   }
 
-
   /* ---------------------------- template specfic -------------------------- */
 
-  a {
-      color: $main; 
-      text-decoration: none;
+  body {
+    a {
+        color: $main; 
+        text-decoration: none;
+    }
   }
 
   /* space in innner tabpanes */
@@ -95,169 +89,84 @@ html {
   }
 
   .gene-info-output {
-      font-size: 0.9em;
-      background-color: #dde6f0BB;
-      padding: 20px 10px 10px 10px;
-      overflow: auto;
-      height: 680px;
+    font-size: 0.9em;
+    background-color: #dde6f0BB;
+    padding: 20px 10px 10px 10px;
+    overflow: auto;
+    height: 680px;
   }
 
   .modal-body .gene-info-output {
-      height: auto;
+    height: auto;
   }
 
   .datatables {
-      font-size: 12px;
-      line-height: '70%';
+    font-size: 12px;
+    line-height: '70%';
   }
 
   .dataTables_filter {
-      float: left !important;
-      text-align: left !important;
+    float: left !important;
+    text-align: left !important;
   }
 
   .bg-cover-image {
-      background-color: #dde6f0;
-      background-color: #fff;
-  }
-
-  .fa, .fas {
-      line-height: 0px;  
-  }
-
-  .fa-gear {
-      color: #DDDDDD;
+    background-color: #dde6f0;
+    background-color: #fff;
   }
 
   .btn-circle-xs, .btn-circle-xs:focus {
-      background: #FFFFFF;
-      color: #FFFFFF;
-      color: #EEE;
-      color: #DDD;
-      text-shadow: 0 0 0px #ccc;    
-      border: 0px;
-      border-radius: 3px !important;
+    background: #FFFFFF;
+    color: #FFFFFF;
+    color: #EEE;
+    color: #DDD;
+    text-shadow: 0 0 0px #ccc;    
+    border: 0px;
+    border-radius: 3px !important;
   }
 
   .btn-circle-xs:hover {
-      color: #444;
-      border: 0px;
-      border-radius: 3px;
+    color: #444;
+    border: 0px;
+    border-radius: 3px;
   }
 
   .module-label {
-      color: #AAA;
-      font-family: "Arial";
-      font-size: 18px;
-      font-weight: 600;
-      padding-right: 8px;
+    color: #AAA;
+    font-family: "Arial";
+    font-size: 18px;
+    font-weight: 600;
+    padding-right: 8px;
   }
 
   .chart-wrapper .chart-notes {
-      font-size: 11px;
-      font-weight: 400;
-      line-height: 1.3em;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3em;
   }
 
   .caption,.caption2 {
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.1em;
-      position: relative;
-      padding-top: 0px;
-      padding-bottom: 0px;
-      bottom: 0px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.1em;
+    position: relative;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    bottom: 0px;
   }
 
   .caption2 {
-      padding: 4rem 0 1rem 0;
-      font-size: 25px;    
+    padding: 4rem 0 1rem 0;
+    font-size: 25px;    
   }
 
   .table-caption {
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.1em;
-      position: relative;
-      padding: 5px 0px 10px 0px;
-      bottom: 0px;
-  }
-
-  .shiny-options-group {
-      margin-top: -10px;
-      margin-top: 4px !important;
-  }
-
-
-  .shiny-input-container .form-control {
-      height: 26px;
-  }
-
-  /* text input area (e.g. signature module) */
-  .form-control {
-      font-size: 12px !important; 
-      line-height: 1.1 !important;
-      padding: 3px 5px;
-  }
-
-  .shiny-flow-layout {
-      margin: 0px 0px -17px 0px;
-      font-color: #888;
-      font-size: 0.9em;
-  }
-
-  .shiny-input-panel {
-      background-color: #fff;
-      border: 0px solid #ddd;
-      padding: 5px 8px 18px 8px;
-  /*    font-size: 10px !important; */
-  }
-
-  .shiny-input-panel .form-group {
-      margin-bottom: -13px;
-      margin-top: 4px;
-  }
-
-  .form-group {
-      margin-top: 0px;
-      margin-bottom: 10px;
-      margin-bottom: 4px;
-  }
-
-  .shiny-input-panel .checkbox, .shiny-input-panel .input[type="checkbox"] {
-      font-size: 10px !important;
-      margin-top: -1px;
-      margin-bottom: 10px;    
-  }
-
-  .radio, .checkbox {
-      position: relative;
-      display: block;
-      margin-top: 0px;
-      margin-bottom: 0px;
-  }
-
-  .radio label, .checkbox label {
-      min-height: 20px;
-      margin: 2px 0 2px 0;    
-  }
-
-  input[type="checkbox"], input[type="radio"] {
-      margin: 0px 0 0 0px;
-  }
-
-  .selectize-input {
-      padding: 0px 4px 0px 4px !important;
-      min-height: 26px !important;
-  }
-
-  .selectize-input.has-items {
-      padding: 0px 4px 0px 4px !important;
-      min-height: 26px !important;
-  }
-
-  .selectize-input .item {
-      padding: 2px 0px 0px 0px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.1em;
+    position: relative;
+    padding: 5px 0px 10px 0px;
+    bottom: 0px;
   }
 
   .current-data {
@@ -312,24 +221,9 @@ html {
   }
 
   .radioGroupButtons {
-      margin-top: -3px;
-      margin-bottom: -3px;
+    margin-top: -3px;
+    margin-bottom: -3px;
   }
-
-  .dropdown-menu {
-      background: #EFEEEE;
-      font-size: 0.9em;
-  }
-
-  .dropdown-menu > li > a {
-      padding: 0px 20px;
-      margin: 4px 0px;
-  }
-
-  .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
-      color: #333;
-  }
-
 
   .btn, .btn-default {
     padding: 4px 12px;
@@ -348,45 +242,45 @@ html {
   .btn:focus, 
   .btn:active, 
   .btn:active:hover {
-      border: 1px solid;
+    border: 1px solid;
   }
 
   .red-button {
-      color: white;
-      background-color: #e45c00;
-      background-image: none;
-      border: 0px; 
-      padding: 8px 12px;
+    color: white;
+    background-color: #e45c00;
+    background-image: none;
+    border: 0px; 
+    padding: 8px 12px;
   }
 
   .red-button:hover, 
   .red-button:focus, 
   .red-button:active, 
   .red-button:active:hover {
-      background-color: #b44c00;    
+    background-color: #b44c00;    
   }
 
 
   .blue-button {
-      color: white;
-      background-color: #337ab7;
-      border-color: #2e6da4;
+    color: white;
+    background-color: #337ab7;
+    border-color: #2e6da4;
   }
 
   .blue-button:hover, 
   .blue-button:focus, 
   .blue-button:active,
   .blue-button:active:hover {
-      background-color: #286090;
-      border-color: #204d74;
+    background-color: #286090;
+    border-color: #204d74;
   }
 
   /* splash screen */
   #modal-splash {
-      height: 32rem;
-      width: 100%;
-      background-color: $primary;
-      padding: 0px !important;
+    height: 32rem;
+    width: 100%;
+    background-color: $primary;
+    padding: 0px !important;
   }
 
   #particles-target {
@@ -442,25 +336,12 @@ html {
   }
 
   /* ---------- modal dialogs ------------- */
-  .modal-dialog {
-      width: 870px;
-      top: 0px;
-  }
-  .modal-dialog.modal-lg {
-      width: 1400px;
-  }
-  .modal-dialog.modal-sm {
-      width: 400px;
-      top: 100px;	           
-  }
-
   .modal-content {
-      border:0;
+    border:0;
   }
 
   .modal-backdrop {
-      background-color: #FFF;
-      background-color: #000;
+    background-color: #000;
   }
 
   .modal-backdrop.in {
@@ -470,10 +351,6 @@ html {
 
   .bg-cover-image {
     background-color: #fff;
-  }
-
-  .popup-plot .modal-body {
-      /* padding: 20px; */
   }
 
   .popup-plot .modal-footer {

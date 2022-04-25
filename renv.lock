@@ -1708,8 +1708,8 @@
       "RemoteRepo": "bigdash",
       "RemoteUsername": "bigomics",
       "RemoteRef": "HEAD",
-      "RemoteSha": "91420de646a10bb9a9373c03bbc4996562cbb558",
-      "Hash": "219c802af8c8c4abef9ffc21f46730bc",
+      "RemoteSha": "31d5586f764c4c5bebe96474bf6237f717d8bfd8",
+      "Hash": "db896c5bddd9e42711138f4215389c44",
       "Requirements": [
         "bslib",
         "htmltools",
@@ -2106,14 +2106,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "fcf11a91936fd5047b2ee9bc00595e36",
-      "Requirements": []
-    },
-    "countrycode": {
-      "Package": "countrycode",
-      "Version": "1.3.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "a1c9e131c5cbefd641e6aa56f16dfede",
       "Requirements": []
     },
     "cowplot": {
@@ -3819,18 +3811,6 @@
         "zoo"
       ]
     },
-    "lobstr": {
-      "Package": "lobstr",
-      "Version": "1.1.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3354c874f6008f7f1e418526df8ecd8a",
-      "Requirements": [
-        "Rcpp",
-        "crayon",
-        "rlang"
-      ]
-    },
     "locfit": {
       "Package": "locfit",
       "Version": "1.5-9.5",
@@ -4642,19 +4622,6 @@
       "Repository": "CRAN",
       "Hash": "50b405c6419e921b9e9360cc9ebbcf2d",
       "Requirements": []
-    },
-    "pryr": {
-      "Package": "pryr",
-      "Version": "0.1.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3fb39bed6e21e21cdb79a3203c6a198e",
-      "Requirements": [
-        "Rcpp",
-        "codetools",
-        "lobstr",
-        "stringr"
-      ]
     },
     "ps": {
       "Package": "ps",
@@ -5596,16 +5563,6 @@
         "htmltools",
         "jsonlite",
         "nanotime",
-        "shiny"
-      ]
-    },
-    "shinythemes": {
-      "Package": "shinythemes",
-      "Version": "1.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "30f0ebc41feba25691073626ff5e2cf4",
-      "Requirements": [
         "shiny"
       ]
     },
