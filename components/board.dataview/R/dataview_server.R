@@ -154,8 +154,8 @@ DataViewBoard <- function(id, pgx)
     dataview_plot_correlation_server(
         "correlationplot",
         pgx,
-        r.gene    = reactive(input$search_gene),
-        r.samples = selected_samples
+        r.gene         = reactive(input$search_gene),
+        r.samples      = selected_samples
     )
 
     dataview_plot_tissue_server(
