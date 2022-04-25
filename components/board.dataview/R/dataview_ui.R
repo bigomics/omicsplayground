@@ -85,10 +85,9 @@ DataViewUI <- function(id) {
                           dataview_plot_correlation_ui(ns("correlationplot"),height=imgH),
                           dataview_plot_tissue_ui(ns("tissueplot"),height=imgH),
                           )
-                      )
-                    )
-                )
-            )
+                     )
+                 )
+             )
         ),
         shiny::tabPanel(
             "QC",
