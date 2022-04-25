@@ -10,7 +10,7 @@ run: sass
 run.headless:
 	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"
 
-sass:
+sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
 
@@ -52,7 +52,7 @@ doc: FORCE
 install: FORCE
 	Rscript dev/03_install.R
 
-renv:
+renv: FORCE
 	R -e "renv::activate();renv::restore()"
 
 FORCE: ;
