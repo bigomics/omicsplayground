@@ -103,7 +103,7 @@ DataViewUI <- function(id) {
                 ),
                 shiny::br(),
                 bigdash::swappable(
-                    ns("swap"),
+                    ns("swap_qc"),
                     shiny::fillRow(
                         flex = c(1,1,1), id = "counts_tab_row1", height=355,
                         bigdash::swappableItem(
