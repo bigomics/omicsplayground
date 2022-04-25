@@ -36,9 +36,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=F
         ## extract data from pgx object
         plot_data  <- shiny::reactive({
 
-            ##pgx = pgxdata()
-            shiny::req(pgx$X)
-            dbg("[data_phenoHeatmap.RENDER] reacted")
+            shiny::req(pgx$X,pgx$Y)
 
             annot <- pgx$samples
             samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
@@ -48,8 +46,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=F
             list(
                 annot = annot,
                 do.clust = do.clust
-            )
-            
+            )            
         })
             
         plot.RENDER <- function() {

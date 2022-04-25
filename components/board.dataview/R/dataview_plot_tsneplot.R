@@ -31,17 +31,16 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
 
 dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
-    moduleServer(id, function(input, output, session) {
+    moduleServer( id, function(input, output, session) {
         
         plot_dl <- reactiveValues()
         
         plot_data <- shiny::reactive({
             
-            shiny::req(pgx$X)
+            shiny::req(pgx$X,pgx$Y,pgx$genes,pgx$counts,pgx$samples,pgx$tsne2d)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)
                         
-            ## pgx <- pgxdata()            
             gene <- parent.input$search_gene
             samples <- colnames(pgx$X)
             sfilt <- parent.input$data_samplefilter

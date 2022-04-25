@@ -3,11 +3,11 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
 UserBoard <- function(id, user)
 {
   moduleServer(id, function(input, output, session)
-  {    
+  {
+
     ns <- session$ns ## NAMESPACE
     dbg("[UserBoard] >>> initializing UserBoard...")
 
@@ -183,5 +183,6 @@ UserBoard <- function(id, user)
         enable_beta = reactive({ as.logical(input$enable_beta) })
     )
     return(res)
-  })    
+
+  })
 }

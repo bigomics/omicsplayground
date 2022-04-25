@@ -29,13 +29,9 @@ dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
-
-            dbg("[dataview_tissueplot_server:plot_data] reacted!")
             
             shiny::req(pgx$X)
             if(is.null(parent.input$data_type)) return(NULL)
-            
-            dbg("[dataview_tissueplot_server:plot_data] called..")
             
             gene <- parent.input$search_gene
             pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]

@@ -36,15 +36,11 @@ dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FAL
         dbg("[dataview_expressionplot_server] created!")
         
         plot_data <- shiny::reactive({
-           
-            dbg("[dataview_expressionplot_server:plot_data] reacted! ")
 
             shiny::req(pgx$X)
             shiny::req(parent.input$data_groupby,
                        parent.input$search_gene,
                        parent.input$data_type)
-            
-            dbg("[dataview_expressionplot_server:plot_data] calling... ")
             
             search_gene <- parent.input$search_gene
             samples = colnames(pgx$X)

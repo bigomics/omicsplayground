@@ -31,7 +31,6 @@ dataview_plot_averagerank_server <- function(id, pgx, parent.input, watermark=FA
 
             dbg("[dataview_averagerankplot_server:plot_data] reacted! ")
 
-            ##pgx <- pgxData()
             shiny::req(pgx$X,pgx$Y)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)                         

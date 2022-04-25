@@ -71,7 +71,6 @@ dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FA
 
     plot_data <- shiny::reactive({
 
-      ## pgx <- pgxdata()
       shiny::req(pgx$X)
       shiny::req(parent.input)             
       if(class(parent.input)[1]=="reactiveExpr") {

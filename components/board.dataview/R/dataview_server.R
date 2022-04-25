@@ -7,16 +7,18 @@
 #'
 #' @description A shiny Module (server code).
 #'
+#' @param input 
+#' @param output 
+#' @param session 
+#' @param pgx 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#' @param pgxdata Reactive expression that provides the input pgx data object 
+#' @param pgx Reactive expression that provides the input pgx data object 
 #'
 #' @export 
-##DataViewBoard <- function(input, output, session, id, pgx)
 DataViewBoard <- function(id, pgx)
 {
   moduleServer(id, function(input, output, session)
   {
-
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
     imgH = 315  ## height of images
@@ -59,7 +61,7 @@ DataViewBoard <- function(id, pgx)
     
     ## update filter choices upon change of data set
     shiny::observe({
-        ##pgx <- pgxdata()
+
         shiny::req(pgx$Y, pgx$samples)
 
         ## levels for sample filter
@@ -81,7 +83,7 @@ DataViewBoard <- function(id, pgx)
           pgx$X
           pgx$counts
       }, {
-        ##pgx = pgxdata()
+
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(pgx$counts)
         } else {
@@ -136,7 +138,7 @@ DataViewBoard <- function(id, pgx)
     dataview_plot_histogram_server("counts_histplot", input, getCountsTable)
     dataview_plot_abundance_server("counts_abundance", input, getCountsTable)
     dataview_plot_averagecounts_server("counts_averagecounts", input, getCountsTable)
-   
+
     ## fourth tab
     dataview_plot_phenoheatmap_server("phenoheatmap", pgx, input)
     dataview_plot_phenoassociation_server("phenoassociation", pgx, input)    
@@ -146,7 +148,6 @@ DataViewBoard <- function(id, pgx)
     ##================================================================================
     
     getCountsTable <- shiny::reactive({
-        ## pgx = pgxdata()
         shiny::req(pgx$X,pgx$Y,pgx$samples)
 
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
@@ -293,7 +294,7 @@ DataViewBoard <- function(id, pgx)
 
     data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()   ## NOT NEEDED ANYMORE!!!
+
         shiny::req(pgx$X,pgx$Y,pgx$genes,pgx$model.parameters)
         shiny::req(input$data_type, input$data_groupby)
 
@@ -437,42 +438,8 @@ DataViewBoard <- function(id, pgx)
     ##================================= Samples ======================================
     ##================================================================================
 
-
-
-    ## data_phenoHeatmap_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
-
-    ## shiny::callModule(
-    ##     plotModule,
-    ##     id = "data_phenoHeatmap", label="a",
-    ##     func = data_phenoHeatmap.RENDER,
-    ##     func2 = data_phenoHeatmap.RENDER,
-    ##     ## plotlib = "iheatmapr",
-    ##     title = "Phenotype clustering",
-    ##     info.text = data_phenoHeatmap_info,
-    ##     options = data_phenoHeatmap_opts,
-    ##     height = c(360,600), width = c('auto',1200),
-    ##     res=c(68,75), pdf.width=10, pdf.height=6,
-    ##     add.watermark = WATERMARK
-    ## )
-
-
-    
-    ## data_phenotypeAssociation.RENDER <- shiny::reactive({
-
-    ##     pgx = pgxdata()
-    ##     shiny::req(pgx$X)
-    ##     dbg("[data_phenotypeAssociation.RENDER] reacted")
-    ##     annot <- pgx$samples
-    ##     samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
-    ##     annot <- annot[samples,,drop=FALSE]
-    ##     pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
-    ##     dbg("[data_phenotypeAssociation.RENDER] done")
-    ## })
-
-
     data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()
         shiny::req(pgx$Y,pgx$samples)
         
         dt <- NULL
@@ -510,7 +477,7 @@ DataViewBoard <- function(id, pgx)
 
     data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
-        ## pgx = pgxdata()
+
         shiny::req(pgx$Y,pgx$model.parameters)
 
         dbg("[data_contrastTable.RENDER] reacted")
@@ -575,7 +542,7 @@ DataViewBoard <- function(id, pgx)
     ##================================================================================
 
     datatable_timings.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+
         shiny::req(pgx$timings)
 
         dbg("[datatable_timings.RENDER] reacted")
@@ -605,7 +572,7 @@ DataViewBoard <- function(id, pgx)
     )
 
     datatable_objectdims.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+
         shiny::req(pgx$X)
 
         dims1 <- lapply( pgx, dim)
@@ -631,8 +598,9 @@ DataViewBoard <- function(id, pgx)
     )
 
     datatable_objectsize.RENDER <- shiny::reactive({
-        ## pgx <- pgxdata()
+
         shiny::req(pgx$name)
+
         objsize <- sapply(pgx,object.size)
         objsize <- round( objsize/1e6, digits=2)
         D = data.frame( object=names(pgx), "size.Mb"=objsize, check.names=FALSE)
@@ -650,6 +618,5 @@ DataViewBoard <- function(id, pgx)
         options = NULL, title='Object sizes',
         info.text = datatable_objectsize_text
     )
-      
-  }) ## end of moduleServer
+  })
 }
