@@ -29,23 +29,18 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_expression_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         dbg("[dataview_expressionplot_server] created!")
         
         plot_data <- shiny::reactive({
-           
-             dbg("[dataview_expressionplot_server:plot_data] reacted! ")
 
-            pgx <- pgxdata()
-            shiny::req(pgx)
+            shiny::req(pgx$X)
             shiny::req(parent.input$data_groupby,
                        parent.input$search_gene,
                        parent.input$data_type)
-            
-            dbg("[dataview_expressionplot_server:plot_data] calling... ")
             
             search_gene <- parent.input$search_gene
             samples = colnames(pgx$X)
@@ -93,6 +88,8 @@ dataview_plot_expression_server <- function(id, pgxdata, parent.input, watermark
         plot.RENDER <- function() {
             
             pd  <- plot_data()
+            shiny::req(pd)
+
             df <- pd[['df']]
             
             par(mar=c(7,3.5,2,1), mgp=c(2.1,0.8,0))

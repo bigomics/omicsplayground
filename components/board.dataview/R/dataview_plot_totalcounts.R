@@ -25,7 +25,7 @@ dataview_plot_totalcounts_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_totalcounts_server <- function(id, pgxdata, parent.input, getCountsTable, watermark=FALSE)
+dataview_plot_totalcounts_server <- function(id, parent.input, getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -50,6 +50,7 @@ dataview_plot_totalcounts_server <- function(id, pgxdata, parent.input, getCount
         plot.RENDER <- function() {
 
             res <- plot_data()
+            shiny::req(res)
             
             ## ---- xlab ------ ###
             names.arg = names(res$total.counts)

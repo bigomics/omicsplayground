@@ -29,16 +29,14 @@ dataview_plot_phenoheatmap_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_phenoheatmap_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_phenoheatmap_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         ## extract data from pgx object
         plot_data  <- shiny::reactive({
 
-            pgx = pgxdata()
-            shiny::req(pgx)
-            dbg("[data_phenoHeatmap.RENDER] reacted")
+            shiny::req(pgx$X,pgx$Y)
 
             annot <- pgx$samples
             samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
@@ -48,13 +46,13 @@ dataview_plot_phenoheatmap_server <- function(id, pgxdata, parent.input, waterma
             list(
                 annot = annot,
                 do.clust = do.clust
-            )
-            
+            )            
         })
             
         plot.RENDER <- function() {
             res <- plot_data()
-
+            shiny::req(res)
+            
             annot.ht <- ifelse(ncol(res$annot) > 10, 5, 6)
             annot.ht <- ifelse(ncol(res$annot) > 20, 4, annot.ht)
             annot.ht <- ifelse(ncol(res$annot) > 30, 3, annot.ht)

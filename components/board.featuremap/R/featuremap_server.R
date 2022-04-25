@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FeatureMapBoard <- function(input, output, session, inputData)
+FeatureMapBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
 
     fullH = 800  ## full height of page
@@ -770,10 +772,9 @@ FeatureMapBoard <- function(input, output, session, inputData)
         height = c(280,750), width=c('auto',1400)
     )
     
-
-    
-    ## ========================================================================
-    ## ========================================================================
-    ## ========================================================================
-
+  }) ## end of serverModule
 } ## end of Board
+
+## ========================================================================
+## ========================= END OF FILE ==================================
+## ========================================================================

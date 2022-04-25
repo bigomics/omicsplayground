@@ -18,7 +18,6 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
-
     
     ## Logging of input/output events -------------------------------------
     log.path <- "../logs/"
@@ -51,7 +50,7 @@ app_server <- function(input, output, session) {
     pgx_dir <- PGX.DIR
     
     ## Parse and show URL query string
-    if(ALLOW_URL_QUERYSTRING) {
+    if(0 && ALLOW_URL_QUERYSTRING) {
         observe({
             query <- parseQueryString(session$clientData$url_search)
             if(length(query)>0) {
@@ -70,9 +69,8 @@ app_server <- function(input, output, session) {
             }
             
         })
-
+        dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
     }
-    dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
     
     ##-------------------------------------------------------------
     ## Call modules
@@ -80,29 +78,51 @@ app_server <- function(input, output, session) {
 
     env <- list()  ## communication "environment"
     
+    ## *** EXPERIMENTAL *** global reactive value replacing env list
+    ## above create session global reactiveValue from list
+    PGX <- reactiveValues()
     
     ## Modules needed from the start        
-    env[["load"]] <- shiny::callModule(
-                                LoadingBoard, "load",
-                                pgx_dir = pgx_dir,
-                                limits = limits,
-                                enable_userdir = opt$ENABLE_USERDIR,                                
-                                authentication = authentication,
-                                enable_upload = opt$ENABLE_UPLOAD,
-                                enable_delete = opt$ENABLE_DELETE,                                 
-                                enable_save = opt$ENABLE_SAVE
-                                )   
-    env[["user"]] <- shiny::callModule(UserBoard, "user", user = env[["load"]][["auth"]])
-    ##shinyjs::runjs("logout()")    
+    env$load <- LoadingBoard(
+        id = "load",
+        pgx_dir = pgx_dir,
+        pgx = PGX,
+        limits = limits,
+        enable_userdir = opt$ENABLE_USERDIR,                                
+        authentication = authentication,
+        enable_upload = opt$ENABLE_UPLOAD,
+        enable_delete = opt$ENABLE_DELETE,                                 
+        enable_save = opt$ENABLE_SAVE
+    )   
 
+    ## If user is logged off, we clear the data
+    observeEvent(env$load$auth$logged(), {
+        is.logged <- env$load$auth$logged()
+        length.pgx <- length(names(PGX))
+
+        if(!is.logged && length.pgx>0) {
+            message("*** EXPERIMENTAL *** clearing reactivevalue pgx!")        
+            for(i in 1:length.pgx) {
+                PGX[[names(PGX)[i]]] <<- NULL
+            }
+        }
+        if(!is.logged) {
+            message("[server.R] *** EXPERIMENTAL *** resetting reactivevalue pgx!")        
+            ## pgx <- reactiveValues()
+        }
+        message("[server.R] *** EXPERIMENTAL *** done")                
+    })
+    
+    ## User board
+    UserBoard("user", user = env$load$auth) -> env$user
+    
     ## Modules needed after dataset is loaded (deferred)
     modules_loaded <- FALSE
-    observeEvent( env[["load"]]$loaded(), {
+    observeEvent( env$load$loaded(), {        
 
-        env.loaded <- env[["load"]]$loaded()
+        env.loaded <- env$load$loaded()
         message("[SERVER:env.loaded] env.loaded = ",env.loaded)    
-
-        if(env[["load"]]$loaded()==0){
+        if(env$load$loaded()==0){
             message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
@@ -115,53 +135,56 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        ## load other modules if
-        message("[SERVER:env.loaded] --------- calling shiny modules ----------")
+        ## load other modules if not yet loaded
+        message("[SERVER] --------- calling shiny modules ----------")
+        dbg("[SERVER] names(pgx) = ",names(PGX))        
+
         loadModule <- function(...) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
         
-        shiny::withProgress(message="initializing modules ...", value=0, {
-            loadModule( DataViewBoard, "view", pgxdata = env[["load"]][["inputData"]] )
-            loadModule( ClusteringBoard, "clust", inputData=env[["load"]][["inputData"]] )
-            loadModule( FeatureMapBoard, "ftmap", inputData=env[["load"]][["inputData"]])    
-            shiny::incProgress(0.2)
-            loadModule( ExpressionBoard, "expr", inputData=env[["load"]][["inputData"]])
-            loadModule( EnrichmentBoard, "enrich",
-                       inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            loadModule( FunctionalBoard, "func", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            loadModule( WordCloudBoard, "word", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            shiny::incProgress(0.4)
-            loadModule( DrugConnectivityBoard, "drug", inputData = env[["load"]][["inputData"]])
-            loadModule( IntersectionBoard, "isect", inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                       selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
-            loadModule( SignatureBoard, "sig", 
-                       inputData = env[["load"]][["inputData"]],
-                       selected_gxmethods = env[["expr"]][["selected_gxmethods"]])
-            loadModule( CorrelationBoard, "cor", inputData = env[["load"]][["inputData"]])
-            shiny::incProgress(0.6)            
-            loadModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
-            loadModule( ConnectivityBoard, "cmap",
-                       inputData = env[["load"]][["inputData"]])
-            loadModule( SingleCellBoard, "scell", inputData = env[["load"]][["inputData"]])
-            shiny::incProgress(0.8)
-            loadModule( TcgaBoard, "tcga", inputData = env[["load"]][["inputData"]])
-            loadModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])
-            loadModule( CompareBoard, "comp", inputData = env[["load"]][["inputData"]])
-            if(DEV) {            
-                loadModule( CorsaBoard, "corsa", env)
-                loadModule( SystemBoard, "system", env)
-                loadModule( MultiLevelBoard, "multi", env)
-                loadModule( QuestionBoard, "qa", lapse = -1)
-            }
+        ## TEMPORARY SOLUTION
+        inputData <- reactive({
+            if(all(sapply(PGX,is.null))) return(NULL)
+            PGX
         })
+
+        
+        shiny::withProgress(message="initializing modules ...", value=0, {
+            DataViewBoard("view", pgx=PGX)            
+
+            ## *** DEVNOTE *** board below still need refactoring
+            ClusteringBoard("clust", pgx=PGX)
+            shiny::incProgress(0.2)
+
+            ExpressionBoard("expr", inputData=inputData) -> env$expr
+            FeatureMapBoard("ftmap", inputData=inputData)
+            EnrichmentBoard("enrich", inputData = inputData,
+                            selected_gxmethods = env$expr$selected_gxmethods
+                            ) -> env$enrich
+            FunctionalBoard("func", inputData = inputData,
+                            selected_gsetmethods = env$enrich$selected_gsetmethods)
+            WordCloudBoard("word", inputData = inputData)
+            shiny::incProgress(0.4)
+            DrugConnectivityBoard("drug", inputData = inputData)
+            IntersectionBoard("isect", inputData = inputData,
+                              selected_gxmethods = env$expr$selected_gxmethods,
+                              selected_gsetmethods = env$enrich$selected_gsetmethods)
+            SignatureBoard("sig", inputData = inputData,
+                           selected_gxmethods = env$expr$selected_gxmethods)
+            CorrelationBoard("cor", inputData = inputData)
+            shiny::incProgress(0.6)            
+            BiomarkerBoard("bio", inputData = inputData)
+            ConnectivityBoard("cmap", inputData = inputData)
+            SingleCellBoard("scell", inputData = inputData)
+            shiny::incProgress(0.8)
+            TcgaBoard("tcga", inputData = inputData)
+            WgcnaBoard("wgcna", inputData = inputData)
+            CompareBoard("comp", inputData = inputData)
+            
+        })
+
         message("[SERVER:env.loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
@@ -172,14 +195,13 @@ app_server <- function(input, output, session) {
     
     output$current_user <- shiny::renderText({
         ## trigger on change of user
-        user <- env[["load"]][["auth"]]$email()
+        user <- env$load$auth$email()
         user
     })
-   
+    
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
-        pgx <- env[["load"]][["inputData"]]()
-        name <- gsub(".*\\/|[.]pgx$","",pgx$name)
+        name <- gsub(".*\\/|[.]pgx$","",PGX$name)
         if(length(name)==0) name = "(no data)"
         name
     })
@@ -187,16 +209,25 @@ app_server <- function(input, output, session) {
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
-    shiny::observe({
+    shiny::observeEvent({
+        env$load$auth$logged()        
+        env$user$enable_beta()
+        PGX$name
+    }, {
+
+        message("[SERVER] !!! dataset changed. reconfiguring triggered!")
         
         ## trigger on change dataset
-        pgx  <- env[["load"]]$inputData() 
-        show.beta <- env[["user"]]$enable_beta()
+        ##pgx  <- env$load$inputData() 
+
+        ## show beta feauture
+        show.beta <- env$user$enable_beta()
         dbg("[SERVER] show.beta = ",show.beta)
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
+        is.logged <- env$load$auth$logged()
         
         ## hide all main tabs until we have an object
-        if(is.null(pgx)) {
+        if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
             toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
@@ -226,13 +257,14 @@ app_server <- function(input, output, session) {
         
         ## Dynamically show upon availability in pgx object
         toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
-        tabRequire(pgx, "connectivity", "maintabs", "Find similar experiments")
-        tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
-        tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
-        tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
+        tabRequire(PGX, "connectivity", "maintabs", "Find similar experiments")
+        tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
+        tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
+        tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
         toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))                    
 
         message("[SERVER] reconfiguring menu done.")        
+
     })
     
     ##-------------------------------------------------------------
@@ -242,7 +274,7 @@ app_server <- function(input, output, session) {
     tm.warned <- FALSE
     shiny::observe({
         ## trigger on change of USER
-        auth <- env[["load"]][["auth"]]
+        auth <- env$load$auth
         level <- auth$level()
         message("[SERVER] user LEVEL = ",level)
         logged <- auth$logged()
@@ -286,9 +318,9 @@ app_server <- function(input, output, session) {
                 message("[SERVER] timed out warning!!!")
                 shinyalert::closeAlert()
                 shinyalert::shinyalert(
-                    title = "Warning!",
-                    text = "Your FREE session is expiring soon."
-                )
+                                title = "Warning!",
+                                text = "Your FREE session is expiring soon."
+                            )
                 tm.warned <<- TRUE
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
@@ -349,11 +381,11 @@ app_server <- function(input, output, session) {
                                 icon = icon("paper-plane")
                             ),
                             tags$a(
-                                class = "btn btn-danger",
-                                icon("times"),
-                                "Close",
-                                onClick = HTML(js.cb)
-                            )
+                                     class = "btn btn-danger",
+                                     icon("times"),
+                                     "Close",
+                                     onClick = HTML(js.cb)
+                                 )
                         )
                     )
                 )
@@ -365,74 +397,74 @@ app_server <- function(input, output, session) {
     })
 
     observeEvent(input$sendRefs, {
-        # check inputs
+                                        # check inputs
         input_errors <- FALSE
 
-        # check emails
+                                        # check emails
         if(input$email1 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "email1",
-                    message = "Missing email"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "email1",
+                            message = "Missing email"
+                        )
+                    )
             input_errors <- TRUE
         }
 
         if(input$email2 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "email2",
-                    message = "Missing email"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "email2",
+                            message = "Missing email"
+                        )
+                    )
             input_errors <- TRUE
         }
 
         if(input$email3 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "email3",
-                    message = "Missing email"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "email3",
+                            message = "Missing email"
+                        )
+                    )
             input_errors <- TRUE
         }
 
-        # check names
+                                        # check names
         if(input$name1 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "name1",
-                    message = "Missing name"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "name1",
+                            message = "Missing name"
+                        )
+                    )
             input_errors <- TRUE
         }
         
         if(input$name2 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "name2",
-                    message = "Missing name"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "name2",
+                            message = "Missing name"
+                        )
+                    )
             input_errors <- TRUE
         }
 
         if(input$name3 == "") {
             session$sendCustomMessage(
-                "referral-input-error", 
-                list(
-                    target = "name3",
-                    message = "Missing name"
-                )
-            )
+                        "referral-input-error", 
+                        list(
+                            target = "name3",
+                            message = "Missing name"
+                        )
+                    )
             input_errors <- TRUE
         }
 
@@ -446,72 +478,72 @@ app_server <- function(input, output, session) {
 
         if(!all(grepl("\\@", emails))) {
             session$sendCustomMessage(
-                "referral-global-error", 
-                list(
-                    message = "Must enter valid email addresses"
-                )
-            )
+                        "referral-global-error", 
+                        list(
+                            message = "Must enter valid email addresses"
+                        )
+                    )
             input_errors <- TRUE
         }
 
         if(length(unique(emails)) < 3) {
             session$sendCustomMessage(
-                "referral-global-error", 
-                list(
-                    message = "Must enter different email addresses"
-                )
-            )
+                        "referral-global-error", 
+                        list(
+                            message = "Must enter different email addresses"
+                        )
+                    )
             input_errors <- TRUE
         }
 
         if(input_errors)
             return()
 
-        # send emails
-        body <- list(
-            referrer = "The user",
-            referrals = list(
-                list(
-                    name = input$name1,
-                    email = input$email1
-                ),
-                list(
-                    name = input$name2,
-                    email = input$email2
-                ),
-                list(
-                    name = input$name3,
-                    email = input$email3
+                                        # send emails
+            body <- list(
+                referrer = "The user",
+                referrals = list(
+                    list(
+                        name = input$name1,
+                        email = input$email1
+                    ),
+                    list(
+                        name = input$name2,
+                        email = input$email2
+                    ),
+                    list(
+                        name = input$name3,
+                        email = input$email3
+                    )
                 )
             )
-        )
-        token <- Sys.getenv("HONCHO_TOKEN", "")
-        uri <- sprintf("%s/referral?token=%s", opt$HONCHO_URL, token)
-        response <- httr::POST(
-            uri,
-            body = body,
-            encode = "json"
-        )
+            token <- Sys.getenv("HONCHO_TOKEN", "")
+            uri <- sprintf("%s/referral?token=%s", opt$HONCHO_URL, token)
+            response <- httr::POST(
+                                  uri,
+                                  body = body,
+                                  encode = "json"
+                              )
 
-        # check response
-        content <- httr::content(response)
-        all_good <- lapply(content, function(ref) {
-            return(ref$success)
-        }) %>% 
-            unlist() %>% 
-            all()
-        
-        if(!all_good) {
-            session$sendCustomMessage(
-                "referral-global-error", 
-                list(
-                    message = "One or more of these email address was erroneous"
-                )
-            )
-            return()
-        }
-        # remove modal
-        removeModal()
+                                        # check response
+            content <- httr::content(response)
+            all_good <- lapply(content, function(ref) {
+                return(ref$success)
+            }) %>% 
+                unlist() %>% 
+                all()
+            
+            if(!all_good) {
+                session$sendCustomMessage(
+                            "referral-global-error", 
+                            list(
+                                message = "One or more of these email address was erroneous"
+                            )
+                        )
+                return()
+            }
+                                        # remove modal
+            removeModal()
     })
     
     ##-------------------------------------------------------------
@@ -543,4 +575,5 @@ app_server <- function(input, output, session) {
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
+
 }

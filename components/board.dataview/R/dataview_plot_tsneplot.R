@@ -29,7 +29,7 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(350,800)) {
     
 }
 
-dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_tsne_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
         
@@ -37,13 +37,10 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
         
         plot_data <- shiny::reactive({
             
-            shiny::req(pgxdata)
+            shiny::req(pgx$X,pgx$Y,pgx$genes,pgx$counts,pgx$samples,pgx$tsne2d)
             shiny::req(parent.input)
             shiny::req(parent.input$search_gene)
                         
-            pgx <- pgxdata()            
-            req(pgx)
-
             gene <- parent.input$search_gene
             samples <- colnames(pgx$X)
             sfilt <- parent.input$data_samplefilter
@@ -97,7 +94,7 @@ dataview_plot_tsne_server <- function(id, pgxdata, parent.input, watermark=FALSE
         plot.RENDER <- function() {        
             
             data <- plot_data()
-            req(data)
+            shiny::req(data)
             
             fig_base <- 
                 ggplot(data, aes(pos_x, pos_y)) +

@@ -7,7 +7,7 @@ if(!file.exists('00SourceAll.R')) {
   message('Note: sourcing all code...')
 
   rfiles <- list.files('.',pattern='[.][rR]$', recursive=TRUE, full.names=TRUE)
-  excl.files <- c("00SourceAll.R","global.R","app.R")
+  excl.files <- c("00SourceAll.R","global.R","app.R","server.R","ui.R")
   rfiles <- rfiles[!basename(rfiles) %in% excl.files]  ## exclude this file...
   for(f in rfiles) {
       source(f,encoding='UTF-8',local=FALSE)      

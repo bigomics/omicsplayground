@@ -23,7 +23,7 @@ dataview_plot_correlation_ui <- function(id, label='', height=c(600,800)) {
   
 }
 
-dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_correlation_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
   moduleServer( id, function(input, output, session) {
     
@@ -71,15 +71,14 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
 
     plot_data <- shiny::reactive({
 
-      pgx <- pgxdata()
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(parent.input)             
       if(class(parent.input)[1]=="reactiveExpr") {
         parent.input <- parent.input()
       }
       gene = parent.input$search_gene
 
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(gene)      
 
       samples = colnames(pgx$X)
@@ -94,6 +93,8 @@ dataview_plot_correlation_server <- function(id, pgxdata, parent.input, watermar
 
     plot.RENDER <- function() {
       res <- plot_data()
+      shiny::req(res)
+        
       par(mar=c(4.3,3.0,1,1), mgp=c(2.0,0.6,0))
       barplot(res$top.rho, col=res$klr1, ## horiz=TRUE,
               las = 3,  

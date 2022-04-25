@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-BiomarkerBoard <- function(input, output, session, inputData)
+BiomarkerBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     
     fullH = 800  ## full height of panel
@@ -592,4 +594,7 @@ BiomarkerBoard <- function(input, output, session, inputData)
         height = 320, res=90,
         add.watermark = WATERMARK
     )
+
+
+  })
 } ## end-of-Board

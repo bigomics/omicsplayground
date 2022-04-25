@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-IntersectionBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
+IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetmethods)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     fullH = 800       # row height of panel 
 
@@ -81,12 +83,6 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-
-    ## selected_gxmethods <- shiny::reactive({
-    ##     ##sel <- SEL.GXMETHODS()
-    ##     shiny::req(sel)
-    ##     sel
-    ## })
     
     getFoldChangeMatrix <- shiny::reactive({
         ## 
@@ -1688,5 +1684,5 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
         info.text = ctGseaTable.info,
         height = c(225,750), width=c('100%',1500)
     )
-    
+  })    
 } ## end-of-Board 

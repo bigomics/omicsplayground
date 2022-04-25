@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethods)
+EnrichmentBoard <- function(id, inputData, selected_gxmethods)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     
     fullH = 800
@@ -1789,4 +1791,5 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     outx <- list(selected_gsetmethods=selected_gsetmethods)
     return(outx)
 
+  }) ## end of moduleServer    
 } ## end-of-Board

@@ -4,8 +4,11 @@
 ##
 
 
-ConnectivityBoard <- function(input, output, session, inputData)
+ConnectivityBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
+      
     ns <- session$ns ## NAMESPACE
     fullH = 750       # row height of panel
     tabH = '70vh'
@@ -1977,5 +1980,6 @@ ConnectivityBoard <- function(input, output, session, inputData)
         height = c(480,550), width = c('auto',1400),
         res = c(90,90),
         add.watermark = WATERMARK
-    )
+     )
+  })      
 } ## end-of-Board 

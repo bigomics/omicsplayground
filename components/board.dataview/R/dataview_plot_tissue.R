@@ -24,19 +24,14 @@ dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_tissue_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_tissue_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
-
-            dbg("[dataview_tissueplot_server:plot_data] reacted!")
             
-            pgx <- pgxdata()
-            shiny::req(pgx)
+            shiny::req(pgx$X)
             if(is.null(parent.input$data_type)) return(NULL)
-            
-            dbg("[dataview_tissueplot_server:plot_data] called..")
             
             gene <- parent.input$search_gene
             pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
@@ -75,6 +70,8 @@ dataview_plot_tissue_server <- function(id, pgxdata, parent.input, watermark=FAL
         
         plot.RENDER <- function() {
             pdat <- plot_data()
+            shiny::req(pdat)
+
             df   <- pdat$df
             ylab <- pdat$ylab
             gene <- pdat$gene

@@ -27,13 +27,12 @@ dataview_plot_phenoassociation_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_phenoassociation_server <- function(id, pgxdata, parent.input, watermark=FALSE)
+dataview_plot_phenoassociation_server <- function(id, pgx, parent.input, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
-            pgx = pgxdata()
-            shiny::req(pgx)
+            shiny::req(pgx$X,pgx$Y)
             annot <- pgx$samples
             samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             annot <- annot[samples,,drop=FALSE]
@@ -42,6 +41,7 @@ dataview_plot_phenoassociation_server <- function(id, pgxdata, parent.input, wat
             
         plot.RENDER <- function() {
             res <- plot_data()
+            shiny::req(res)            
             pq <- pgx.testPhenoCorrelation(res$annot, plot=TRUE)
         }
         

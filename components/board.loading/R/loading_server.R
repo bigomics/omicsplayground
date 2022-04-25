@@ -3,7 +3,9 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-LoadingBoard <- function(input, output, session, pgx_dir, 
+LoadingBoard <- function(id,
+                         pgx_dir,
+                         pgx,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
@@ -13,10 +15,12 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                          enable_userdir = TRUE,
                          authentication="none")
 {
+  moduleServer(id, function(input, output, session) 
+  {
     ns <- session$ns ## NAMESPACE
     dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
-    loadedDataset <- shiny::reactiveVal(0)
+    loadedDataset <- shiny::reactiveVal(0)  ## counts/trigger dataset upload
     
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
@@ -88,20 +92,15 @@ LoadingBoard <- function(input, output, session, pgx_dir,
 
 ')
     
-    ##-----------------------------------------------------------------------------
-    ## Show current dataset on each page
-    ##-----------------------------------------------------------------------------
-    curDataSet <- shiny::reactive({
-        ngs <- inputData()
-        if(is.null(ngs)) return(NULL)
-        dname <- gsub("^.*/|[.]pgx","",ngs$name)
-        shiny::HTML("<div class='current-data'>",dname,"</div>")
-    })
-    output$current_dataset <- shiny::renderText({ curDataSet() })
 
     ##-----------------------------------------------------------------------------
     ## User interface
     ##-----------------------------------------------------------------------------
+
+    currentSection <- shiny::reactive({
+        cdata <- session$clientData
+        sub("section-","",cdata[["url_hash"]])
+    })
 
     output$rowselected <- shiny::reactive({
         !is.null(selectedPGX()) && length(selectedPGX())>0
@@ -249,7 +248,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     ##=============================================================================
     ##========================== OBSERVE/REACT ====================================
     ##=============================================================================
-    pgxfile="geiger2016-arginine"
+    ##pgxfile="geiger2016-arginine"
 
     loadPGX <- function(pgxfile) {
         
@@ -259,20 +258,13 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx         
         pgxdir <- getPGXDIR()
         
-        message("[LoadingBoard::loadPGX] pgxdir = ",pgxdir)
-        
         pgx.path <- pgxdir[file.exists(file.path(pgxdir,pgxfile))][1]
-
-        message("[LoadingBoard::loadPGX] pgx.path = ",pgx.path)
-        
         pgxfile1 = file.path(pgx.path,pgxfile)
         pgxfile1
-        message("[LoadingBoard::loadPGX] pgxfile1 = ",pgxfile1)
         
         ngs <- NULL
-        pgx <- NULL
+        ##pgx <- NULL
         if(file.exists(pgxfile1)) {
-            message("[LoadingBoard::loadPGX] loading ",pgxfile)
             shiny::withProgress(message="Loading data...", value=0.33, {            
                 load(pgxfile1,verbose=0)
             })
@@ -283,11 +275,15 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         if(!is.null(ngs)) {
             ngs$name <- pgxfile
             return(ngs)
+        } else {
+            message("[LoadingBoard::loadPGX] ***ERROR*** ngs/pgx object empty ")
+            return(NULL)
         }
-        if(!is.null(pgx)) {
-            pgx$name <- pgxfile            
-            return(pgx)
-        }
+##        if(!is.null(pgx)) {
+##            pgx$name <- pgxfile            
+##            return(pgx)
+##        }
+
     }
     
     output$downloadpgx <- shiny::downloadHandler(
@@ -313,7 +309,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
             sub("pgx$","zip",selectedPGX())
         },
         content = function(file) {
-            ## ngs <- currentPGX()  ## current dataset
+
             pgxfile <- selectedPGX()
             cat("[LoadingBoard::downloadZIP] pgxfile = ",pgxfile,"\n")            
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
@@ -388,65 +384,10 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         }
     })
     
-    ##=================================================================================
-    ##=============================== MODAL DIALOGS ===================================
-    ##=================================================================================
-    
-    ## particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
-    ## beer_count=0
-    ## shiny::observeEvent( input$action_beer, {
-    ##     dbg("buy beer button action\n")
-    ##     beer_count <<- beer_count + 1    
-    ##     USER$logged <- TRUE
-    ##     USER$name   <- "beer buddy"
-    ##     shiny::removeModal()
-    ##     ##alert("Wow. Thanks buddy!")
-    ##     shinyWidgets::sendSweetAlert(
-    ##         session=session, title="Wow. Thanks buddy!",
-    ##         text = "Free entrance for you!", type = "info")
-    ##     ##Sys.sleep(4);removeModal()
-    ## })
-
-    currentSection <- shiny::reactive({
-        cdata <- session$clientData
-        sub("section-","",cdata[["url_hash"]])
-    })
-
-    ##=================================================================================
-    ##========================= USER AUTHENTICATION ===================================
-    ##=================================================================================
-
-    ## USER <- shiny::reactiveValues( logged = FALSE, name="anonymous")
     
     ##================================================================================
-    ##====================== INPUT DATA REACTIVE OBJECT ==============================
+    ##========================== LOAD DATA FROM LIST =================================
     ##================================================================================
-
-    currentPGX <- shiny::reactiveVal(NULL)
-    
-    ##inputData <- shiny::eventReactive( reload(), {
-    inputData <- shiny::reactive({
-        ## This is wrapper function that loads the ngs object. It also
-        ## checks if the user is logged in.
-        ##  
-        dbg("[LoadingBoard::inputData] !!! reacted !!!\n")
-        dbg("[LoadingBoard::inputData] authentication=",authentication,"\n")
-        dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
-        
-        if(!auth$logged()) {
-            currentPGX(NULL)  ## set NULL
-            return(NULL)
-        }
-        
-        pgx <- currentPGX()            
-        
-        if(!is.null(pgx)) {
-            dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name)
-            dbg("[LoadingBoard::inputData] tracemem(ngs) = ",tracemem(pgx))
-        }
-        
-        return(pgx)
-    })
     
     load_react <- reactive({
         btn <- input$loadbutton
@@ -479,58 +420,163 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         
         ## check if file is there
         if(is.na(pgxfile) || is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) {
-            message("[LoadingBoard@loadbutton] ERROR file not found : ",pgxfile,"\n")
+            message("[LoadingBoard@load_react] ERROR file not found : ",pgxfile,"\n")
             return(NULL)
         }
 
         ## During loading show loading pop-up modal
         pgx.showCartoonModal()
+
+        ##---------------------------------------------------------------------
+        ##----------------- Loaded PGX object ---------------------------------
+        ##---------------------------------------------------------------------
         
-        dbg("[LoadingBoard::<loadbutton>] loading pgxfile = ",pgxfile)
-        pgx <- loadPGX(pgxfile)
-        dbg("[LoadingBoard::<loadbutton>] is.null(pgx) = ",is.null(pgx))
+        dbg("[LoadingBoard@load_react] loading pgxfile = ",pgxfile)
+        loaded_pgx <- loadPGX(pgxfile)
+        dbg("[LoadingBoard@load_react] is.null(pgx) = ",is.null(loaded_pgx))
         
-        if(is.null(pgx)) {
-            message("[LoadingBoard@loadbutton] ERROR loading PGX file ",pgxfile,"\n")
+        if(is.null(loaded_pgx)) {
+            message("[LoadingBoard@load_react] ERROR loading PGX file ",pgxfile,"\n")
             beepr::beep(10)
-            ##if(loadedDataset()) shiny::removeModal()  ## why??
             shiny::removeModal()            
             return(NULL)
         }
         
-        ##----------------- update input --------------------------------------
-        dbg("[LoadingBoard::<loadbutton>] initializing PGX object")
-        pgx <- pgx.initialize(pgx)
-        dbg("[LoadingBoard::<loadbutton>] initialization done!")        
-        if(is.null(pgx)) {
-            cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
+        ##----------------- update PGX object ---------------------------------
+        dbg("[LoadingBoard@load_react] initializing PGX object")
+        loaded_pgx <- pgx.initialize(loaded_pgx)
+        dbg("[LoadingBoard@load_react] initialization done!")        
+
+
+        if(is.null(loaded_pgx)) {
+            cat("[LoadingBoard@load_react] ERROR in object initialization\n")
             beepr::beep(10)
             shiny::showNotification("ERROR in object initialization!\n")
-            ##if(loadedDataset()) shiny::removeModal()
             shiny::removeModal()            
             return(NULL)
         }
-        pgx$name <- sub("[.]pgx$","",pgxfile)  ## always use filename
+        loaded_pgx$name <- sub("[.]pgx$","",pgxfile)  ## always use filename
         
+        ##----------------- update input --------------------------------------
         loadedDataset(loadedDataset()+1)   ## notify new data uploaded
-        currentPGX(pgx)
+        
+        ## ***NEW*** update PGX from session
+        if(1) {
+            dbg("[LoadingBoard@load_react] pgx$name = ",loaded_pgx$name)
+            dbg("[LoadingBoard@load_react] tracemem(ngs) = ",tracemem(loaded_pgx))
+
+            ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
+            ## session environment.
+            dbg("[LoadingBoard@load_react] **** copying current pgx to session.pgx  ****")        
+            for(i in 1:length(loaded_pgx)) {
+                pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
+            }
+        }
 
         ##----------------- remove modal on exit?? -------------------------
         ##Sys.sleep(3)
-        ##if(loadedDataset()) shiny::removeModal()
         ##shiny::removeModal()            
-
+        remove(loaded_pgx)
+        gc()
+        
     })
     ##}, ignoreNULL=FALSE )
     ##}, ignoreNULL=TRUE )
 
 
+    ##================================================================================
+    ##====================== NEW DATA UPLOAD =========================================
+    ##================================================================================
+
+    if(enable_upload) {
+
+        uploaded_pgx <- UploadModuleServer(
+            id = "upload_panel",
+            FILES = FILES,
+            pgx.dirRT = shiny::reactive(getPGXDIR()),
+            height = 720,
+            ## limits = c(samples=20, comparisons=20, genes=8000),
+            limits = limits
+        )
+        
+        shiny::observeEvent( uploaded_pgx(), {
+            
+            dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+            new_pgx <- uploaded_pgx()
+            
+            dbg("[observe::uploaded_pgx] initializing PGX object")
+            new_pgx <- pgx.initialize(new_pgx)
+            
+            ## update Session PGX
+            dbg("[LoadingBoard@load_react] **** copying current pgx to session.pgx  ****")        
+            for(i in 1:length(new_pgx)) {
+                pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
+            }
+
+            DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)            
+
+            savedata_button <- NULL
+            if(enable_save) {                
+
+                dbg("[LoadingBoard] observeEvent:savedata reacted")        
+                ## -------------- save PGX file/object ---------------
+                pgxname <- sub("[.]pgx$","",new_pgx$name)
+                pgxname <- gsub("^[./-]*","",pgxname)  ## prevent going to parent folder
+                pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
+                pgxname
+                
+                pgxdir  <- getPGXDIR()
+                fn <- file.path(pgxdir,pgxname)
+                fn <- iconv(fn, from = '', to = 'ASCII//TRANSLIT')
+                
+                ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                ## Note: Currently we use 'ngs' as object name but want to go
+                ## towards 'pgx' as standard name. Actually saving as RDS
+                ## should be better.
+                ngs=new_pgx
+                save(ngs, file=fn)
+
+                remove(ngs)
+                remove(new_pgx)
+                
+
+                message("[LoadingBoard::@savedata] updating PGXINFO")                    
+                pgx.initDatasetFolder(pgxdir, force=FALSE, verbose=TRUE)
+                reload_pgxdir(reload_pgxdir()+1)
+            }
+            
+            ## shiny::removeModal()
+            msg1 <- "<b>Ready!</b>"
+            ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+            beepr::beep(10)  ## short beep
+            
+            if(enable_save) {
+                msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
+            } else {
+                msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
+            }
+            loadedDataset(loadedDataset()+1)  ## notify new data uploaded
+
+            showModal(
+                modalDialog(
+                    HTML(msg1),
+                    title = NULL,
+                    size = "s",
+                    footer = tagList(
+                        ## savedata_button,
+                        ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
+                        modalButton("Start!")
+                    )
+                ))
+            updateTabsetPanel(session, "tabs",  selected = "Datasets")
+        })
+
+    }
+
     ## ================================================================================
     ## =============================== VALUE BOXES UI =================================
     ## ================================================================================
 
-
-    ## shinyWidgets::useShinydashboard()
     vbox <- function(value, label) {
         div(
             class = "valuebox w-100 border",
@@ -659,131 +705,15 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         title = "Datasets",
         height = 640, width = c('100%',1600),
     )
-
-    ##================================================================================
-    ## Upload new data
-    ##================================================================================
-    if(enable_upload) {
-
-        uploaded_pgx <- UploadModuleServer(
-            id = "upload_panel",
-            FILES = FILES,
-            pgx.dirRT = shiny::reactive(getPGXDIR()),
-            height = 720,
-            ## limits = c(samples=20, comparisons=20, genes=8000),
-            limits = limits
-        )
-        
-        shiny::observeEvent( uploaded_pgx(), {
-            
-            dbg("[observe::uploaded_pgx] uploaded PGX detected!")
-            pgx <- uploaded_pgx()
-            
-            dbg("[observe::uploaded_pgx] initializing PGX object")
-            pgx <- pgx.initialize(pgx)
-            
-            ## update CurrentPGX
-            currentPGX(pgx)
-            DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)
-            
-            savedata_button <- NULL
-            if(enable_save) {                
-
-                dbg("[LoadingBoard] observeEvent:savedata reacted")        
-                ## -------------- save PGX file/object ---------------
-                ##pgx <- currentPGX()
-                pgxname <- sub("[.]pgx$","",pgx$name)
-                pgxname <- gsub("^[./-]*","",pgxname)  ## prevent going to parent folder
-                pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
-                pgxname
-                
-                pgxdir  <- getPGXDIR()
-
-                dbg("[LoadingBoard] 2a: pgxname = ",pgxname)
-                dbg("[LoadingBoard] 2a: pgxdir = ",pgxdir)
-                
-                fn <- file.path(pgxdir,pgxname)
-
-                dbg("[LoadingBoard] 2a: fn=",fn)
-                
-                ## make "safe" name
-                fn <- iconv(fn, from = '', to = 'ASCII//TRANSLIT')
-                
-                dbg("[LoadingBoard] 2b: fn=",fn)
-
-                ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                ## Note: Currently we use 'ngs' as object name but want to go
-                ## towards 'pgx' as standard name. Actually saving as RDS
-                ## should be better.
-                ngs=pgx
-                save(ngs, file=fn)
-                remove(ngs)
-
-                dbg("[LoadingBoard] 2c:")
-                
-                if(1) {
-                    message("[LoadingBoard::@savedata] updating PGXINFO")                    
-                    pgx.initDatasetFolder(pgxdir, force=FALSE, verbose=TRUE)
-                } else {
-                    message("[LoadingBoard::@savedata] updating PGXINFO file")
-                    old.info <- getPGXINFO()
-                    new.info <- pgx.updateInfoPGX(old.info, pgx, remove.old=TRUE)
-                    pgxdir <- getPGXDIR()[1] ## first folder!!
-                    info.file <- file.path(pgxdir, "datasets-info.csv")  
-                    Sys.chmod(info.file, mode="0666")
-                    write.csv(new.info, file=info.file)
-                    message("[LoadingBoard::@savedata] saved PGXINFO file!")                
-                }
-
-                dbg("[LoadingBoard] 2d:")
-                
-                ##PGXINFO(new.info)
-                ##touchtable(touchtable()+1)  ## refresh table
-                reload_pgxdir(reload_pgxdir()+1)
-            }
-
-            dbg("[LoadingBoard] 3:")
-            
-            ## shiny::removeModal()
-            msg1 <- "<b>Ready!</b>"
-            ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-            beepr::beep(10)  ## short beep
-
-            dbg("[LoadingBoard] 4:")
-            
-            if(enable_save) {
-                msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
-            } else {
-                msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
-            }
-            loadedDataset(loadedDataset()+1)  ## notify new data uploaded
-
-            showModal(
-                modalDialog(
-                    HTML(msg1),
-                    title = NULL,
-                    size = "s",
-                    footer = tagList(
-                        ## savedata_button,
-                        ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                        modalButton("Start!")
-                    )
-                ))
-            updateTabsetPanel(session, "tabs",  selected = "Datasets")
-        })
-
-    }
-
     
     ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------
     res <- list(
         loaded = loadedDataset,
-        inputData = inputData,
         auth = auth
-        ##inputData = currentPGX,
         ##usermode = shiny::reactive({ USERMODE() })
     )
     return(res)
+  })
 }

@@ -3,8 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-DrugConnectivityBoard <- function(input, output, session, inputData)
+DrugConnectivityBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
     ns <- session$ns ## NAMESPACE
     
     fullH = 750
@@ -828,4 +830,6 @@ DrugConnectivityBoard <- function(input, output, session, inputData)
         title = "CONNECTIVITY TABLE",
         height = c(380,740)
     )
+
+  })
 }

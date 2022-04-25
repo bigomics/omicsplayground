@@ -24,7 +24,7 @@ dataview_plot_histogram_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_histogram_server <- function(id, pgxdata, parent.input,
+dataview_plot_histogram_server <- function(id, parent.input,
                                             getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
@@ -67,6 +67,7 @@ dataview_plot_histogram_server <- function(id, pgxdata, parent.input,
         
         plot.RENDER <- function() {
             res <- plot_data()
+            shiny::req(res)
             par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
             hh <- gx.hist(gx=res$log2counts, n=2000) #, main="histogram")
         }

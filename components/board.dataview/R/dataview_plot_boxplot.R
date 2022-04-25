@@ -20,7 +20,7 @@ dataview_plot_boxplot_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_boxplot_server <- function(id, pgxdata, parent.input, getCountsTable, watermark=FALSE)
+dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -35,6 +35,8 @@ dataview_plot_boxplot_server <- function(id, pgxdata, parent.input, getCountsTab
             
         plot.RENDER <- function() {
             res <- plot_data()
+            shiny::req(res)
+            
             par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
             ## ---- xlab ------ ###
             xaxt="l"

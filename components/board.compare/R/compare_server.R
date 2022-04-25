@@ -3,8 +3,11 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-CompareBoard <- function(input, output, session, inputData)
+CompareBoard <- function(id, inputData)
 {
+  moduleServer(id, function(input, output, session)
+  {
+
     ns <- session$ns ## NAMESPACE
     fullH = 770 # row height of panel
     tabH = '70vh'
@@ -669,4 +672,6 @@ CompareBoard <- function(input, output, session, inputData)
         height = c(235,750),
         width = c("auto",1600)
     )
+
+  })
 } ## end-of-Board
