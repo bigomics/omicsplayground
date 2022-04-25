@@ -119,6 +119,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.user/R/user_ui.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_server.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_ui.R',encoding='UTF-8')
+  source('board.wordcloud/R/plot_wordtsne.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_server.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_ui.R',encoding='UTF-8')
   message('done! (sourcing all code)')
