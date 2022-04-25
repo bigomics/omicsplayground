@@ -68,4 +68,4 @@ WORKDIR /omicsplayground
 EXPOSE 3838
 #CMD ["/usr/bin/shiny-server.sh"]
 #CMD ["R", "-e", "shiny::runApp('shiny',port=3838,host='0.0.0.0',launch.browser=FALSE)"]
-CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0,0,0,0')"]
+CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
