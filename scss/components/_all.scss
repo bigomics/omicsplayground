@@ -170,8 +170,8 @@ html {
   }
 
   .caption2 {
-      padding: 4rem 0 1rem 0;
-      font-size: 25px;    
+      padding: 2.5rem 0 2rem 0;
+      font-size: 24px;    
   }
 
   .table-caption {
@@ -402,6 +402,7 @@ html {
       left: 5%;
       width: 90%;
       font-family: Lato;
+      line-height: 1.9em;
       color: white;
       text-align: center;
   }
@@ -445,6 +446,7 @@ html {
   .modal-dialog {
       width: 870px;
       top: 0px;
+      box-shadow: 10px 10px 30px #999;      
   }
   .modal-dialog.modal-lg {
       width: 1400px;
@@ -459,12 +461,11 @@ html {
   }
 
   .modal-backdrop {
-      background-color: #FFF;
       background-color: #000;
+      background-color: #FFF;
   }
 
-  .modal-backdrop.in {
-      opacity: 0.5;
+  .modal-backdrop.show, .modal-backdrop.in {
       opacity: 0.85;
   }
 

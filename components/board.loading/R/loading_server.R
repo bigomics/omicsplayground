@@ -303,7 +303,6 @@ LoadingBoard <- function(id,
             sub("pgx$","zip",selectedPGX())
         },
         content = function(file) {
-
             pgxfile <- selectedPGX()
             cat("[LoadingBoard::downloadZIP] pgxfile = ",pgxfile,"\n")            
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
@@ -317,16 +316,19 @@ LoadingBoard <- function(id,
             exp.matrix <- contrastAsLabels(exp.matrix) ## new recommended style
             exp.matrix[is.na(exp.matrix)] <- ""
             
-            write.csv(ngs$counts,  file=file.path(tmp2, "counts.csv"))
+            write.csv(round(ngs$counts,digits=2), file=file.path(tmp2, "counts.csv"))
             write.csv(ngs$samples, file=file.path(tmp2, "samples.csv"))
-            write.csv(exp.matrix, file=file.path(tmp2, "contrasts.csv"))
+            write.csv(exp.matrix,  file=file.path(tmp2, "contrasts.csv"))
+            write.csv(round(ngs$X,digits=4), file=file.path(tmp2, "normalized.csv"))
+          
             zipfile <- tempfile(fileext = ".zip")
             zip::zip(zipfile,
-                     files=paste0(pgxname,"/",c("counts.csv","samples.csv","contrasts.csv")),
+                     files=paste0(pgxname,"/",c("counts.csv","samples.csv","contrasts.csv","normalized.csv")),
                      root=tmp)
             ## zip::zip_list(zipfile)
             cat("[LoadingBoard::downloadZIP] zipfile = ",zipfile)                        
             file.copy(zipfile,file)
+            remove(ngs); gc();
         }
     )
     
@@ -691,13 +693,16 @@ LoadingBoard <- function(id,
 
     })
 
-    pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
+    info_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
 
     pgxtable <- shiny::callModule(
         tableModule, id = "pgxtable",
         func = pgxTable.RENDER,
         title = "Datasets",
-        height = 640, width = c('100%',1600),
+        height = c(640,750),
+        width = c('100%','100%'),
+        info.text = info_text,
+        caption2 = info_text
     )
     
     ##------------------------------------------------

@@ -55,21 +55,21 @@ WordCloudUI <- function(id) {
                     height = 660,
                     shiny::fillRow(
                         flex = c(1.2,0.05,1,0.05,1),
-                        plotWidget(ns("enrich_gseaplots")),
+                        plotWidget(ns("gseaplots")),
                         shiny::br(),
-                        plotWidget(ns("enrich_wordcloud")),
+                        plotWidget(ns("wordcloud")),
                         shiny::br(),
-                        plotWidget(ns("enrich_wordtsne"))
+                        plotWidget(ns("wordtsne"))
                     ),
                     shiny::br(),
                     shiny::fillRow(
                         flex=c(1,0.08,1),
-                        tableWidget(ns("wordcloud_enrichmentTable")),
+                        tableWidget(ns("enrichmentTable")),
                         shiny::br(),
-                        tableWidget(ns("wordcloud_leadingEdgeTable"))
+                        tableWidget(ns("leadingEdgeTable"))
                     )
                 ),
-                plotWidget(ns("wordcloud_actmap"))
+                plotWidget(ns("actmap"))
             )
         ))
         )

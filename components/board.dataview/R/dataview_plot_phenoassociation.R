@@ -27,14 +27,14 @@ dataview_plot_phenoassociation_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_phenoassociation_server <- function(id, pgx, parent.input, watermark=FALSE)
+dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
-        plot_data  <- shiny::reactive({
+      plot_data  <- shiny::reactive({
             shiny::req(pgx$X,pgx$Y)
+            samples <- r.samples()
             annot <- pgx$samples
-            samples <- selectSamplesFromSelectedLevels(pgx$Y, parent.input$data_samplefilter)
             annot <- annot[samples,,drop=FALSE]
             list(annot = annot)
         })

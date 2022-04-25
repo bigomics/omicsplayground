@@ -25,70 +25,75 @@ dataview_plot_totalcounts_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_totalcounts_server <- function(id, parent.input, getCountsTable, watermark=FALSE)
+dataview_plot_totalcounts_server <- function(id,
+                                             getCountsTable,
+                                             r.data_groupby = reactive(""),
+                                             watermark=FALSE)
 {
-    moduleServer( id, function(input, output, session) {
+  moduleServer( id, function(input, output, session) {
+    
+    plot_data  <- shiny::reactive({
+      
+      data_groupby <- r.data_groupby()
+      
+      tbl = getCountsTable()
+      req(tbl)
+      
+      ylab = "counts (million)"
+      if(data_groupby != "<ungrouped>") {
+        ylab = "average group counts (million)"
+      }
+      
+      res <- list(
+        total.counts = tbl$total.counts,
+        ylab = ylab
+      )
+      return(res)
+    })
+    
 
-        plot_data  <- shiny::reactive({
+    plot.RENDER <- function() {
 
-            tbl = getCountsTable()
-            req(tbl)
-            
-            ylab = "counts (million)"
-            if(parent.input$data_groupby != "<ungrouped>") {
-                ylab = "average group counts (million)"
-            }
-            
-            res <- list(
-                total.counts = tbl$total.counts,
-                ylab = ylab
-            )
-            return(res)
-        })
-        
+      res <- plot_data()
+      shiny::req(res)
+      
+      ## ---- xlab ------ ###
+      names.arg = names(res$total.counts)
+      if( length(names.arg) > 20){ names.arg = "" }
+      cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+      
+      par(mar=c(8,4,2,0.5), mgp=c(2.2,0.8,0))
+      barplot(
+        res$total.counts/1e6, las=3, border = NA,
+        col=rgb(0.2,0.5,0.8,0.8), 
+        cex.names = cex.names,
+        cex.lab = 1,
+        ylab = res$ylab,
+        ylim = c(0,max(res$total.counts)/1e6)*1.1,
+        names.arg = names.arg
+      )
 
-        plot.RENDER <- function() {
+    }
+    
+    modal_plot.RENDER <- function() {
+      plot.RENDER()
+    }
+    
+    PlotModuleServer(
+      "pltmod",
+      plotlib = "base",
+      plotlib2 = "base",
+      func = plot.RENDER,
+      func2 = modal_plot.RENDER,
+      csvFunc = plot_data,   ##  *** downloadable data as CSV
+      renderFunc = shiny::renderPlot,
+      renderFunc2 = shiny::renderPlot,        
+      res = c(96,120)*1,                ## resolution of plots
+      pdf.width = 6, pdf.height = 6,
+      add.watermark = watermark
+    )
 
-            res <- plot_data()
-            shiny::req(res)
-            
-            ## ---- xlab ------ ###
-            names.arg = names(res$total.counts)
-            if( length(names.arg) > 20){ names.arg = "" }
-            cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-            
-            par(mar=c(8,4,2,0.5), mgp=c(2.2,0.8,0))
-            barplot(
-                res$total.counts/1e6, las=3, border = NA,
-                col=rgb(0.2,0.5,0.8,0.8), 
-                cex.names = cex.names,
-                cex.lab = 1,
-                ylab = res$ylab,
-                ylim = c(0,max(res$total.counts)/1e6)*1.1,
-                names.arg = names.arg
-            )
-
-        }
-        
-        modal_plot.RENDER <- function() {
-            plot.RENDER()
-        }
-        
-        PlotModuleServer(
-            "pltmod",
-            plotlib = "base",
-            plotlib2 = "base",
-            func = plot.RENDER,
-            func2 = modal_plot.RENDER,
-            csvFunc = plot_data,   ##  *** downloadable data as CSV
-            renderFunc = shiny::renderPlot,
-            renderFunc2 = shiny::renderPlot,        
-            res = c(96,120)*1,                ## resolution of plots
-            pdf.width = 6, pdf.height = 6,
-            add.watermark = watermark
-        )
-
-    })  ## end of moduleServer
+  })  ## end of moduleServer
 }
 
 

@@ -118,6 +118,7 @@ initOrca <- function(launch=TRUE) {
     return(orca.server)
 }
 
+
 ##;format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
                          scale = NULL, width = NULL, height = NULL, server=NULL)
@@ -868,7 +869,7 @@ plotModule <- function(input, output, session,
             shiny::br(),
             shiny::div(caption, class="caption"),          
             shiny::div(class="popup-plot",
-                modalUI(ns("plotPopup"), title, size="l",
+                modalUI(ns("plotPopup"), title, size="fullscreen",
                         shiny::uiOutput(ns("popupfig"))
                         )
                 )
@@ -900,7 +901,7 @@ plotModule <- function(input, output, session,
 }
 
 ##================================================================================
-##================================================================================
+##======================= TABLE MODULE ===========================================
 ##================================================================================
 
 
@@ -911,11 +912,11 @@ tableWidget <- function(id) {
 
 tableModule <- function(input, output, session, 
                         func, func2=NULL, info.text="Info text",
-                        title=NULL, label=NULL,
+                        title=NULL, label=NULL, server=TRUE, 
                         caption=NULL, caption2=caption,
-                        server=TRUE, filename="data.csv", ##inputs=NULL, 
+                        csvFunc=NULL, filename="data.csv", ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
-                        width="100%", height="auto",
+                        width=c("100%","100%"), height=c("auto","auto"),
                         options = NULL, info.width="300px"
                         )
 {
@@ -984,17 +985,24 @@ tableModule <- function(input, output, session,
     download.csv <- shiny::downloadHandler(
         filename = filename,
         content = function(file) {
-            dt <- func()
-            write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
-            file.copy(CSVFILE, file, overwrite=TRUE)
+          if(!is.null(csvFunc)) {
+            dt <- csvFunc()
+          } else {
+            dt <- func()$x$data
+          }
+          ##write.csv(dt, file=CSVFILE, row.names=FALSE)
+          ##file.copy(CSVFILE, file, overwrite=TRUE)
+          write.csv(dt, file=file, row.names=FALSE)
         }
     )
     output$csv <- download.csv
     
     if(is.null(func2)) func2 <- func
-    if(length(height)==1) height <- c(height,700)
-    if(length(width)==1)  width  <- c(width,1280)
-    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
+    if(length(height)==1) height <- c(height,height)
+    if(length(width)==1)  width  <- c(width,width)
+    ##ifnotchar.int <- function(s) ifelse(grepl("[%]$|auto|vmin|vh|vw|vmax",s),s,as.integer(s))
+    ifnotchar.int <- function(s) suppressWarnings(
+      ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
     width.1  <- ifnotchar.int(width[1])
     width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
@@ -1018,16 +1026,14 @@ tableModule <- function(input, output, session,
         }
         shiny::tagList(
             shiny::div( caption2, class="caption2"),            
-            DT::DTOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
+            DT::DTOutput(ns("datatable2"), width=width.2, height=height.2)
         )
     })
     
     output$widget <- shiny::renderUI({
 
-        ##modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2+40,"px;}")
-        ##modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2+40,"px;}")
-        modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2,"px;}")
-        modalbody.style   <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,"px;}")
+        modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2,";}")
+        modalbody.style   <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,";}")
         modalfooter.none  <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
         div.caption <- NULL
         if(!is.null(caption)) div.caption <- shiny::div(caption, class="table-caption")
@@ -1038,16 +1044,13 @@ tableModule <- function(input, output, session,
                    shiny::tags$head(shiny::tags$style(modalbody.style)),
                    shiny::tags$head(shiny::tags$style(modalfooter.none)),
                    buttons,
-                   ##uiOutput(ns("renderbuttons")),
                    div.caption,
                    DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
-                   ##DT::renderDataTable(func()),
-                   ##verbatimTextOutput(ns("zoomstatus"))
                    shiny::div(class="popup-table",
                               modalUI(
                                 id = ns("tablePopup"),
                                 title = title,
-                                size = "lg",
+                                size = "fullscreen",
                                 shiny::uiOutput(ns("popuptable"))
                             ))            
                )

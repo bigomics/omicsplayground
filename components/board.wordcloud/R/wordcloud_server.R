@@ -46,7 +46,7 @@ WordCloudBoard <- function(id, pgx)
     ##------------- Functions for WordCloud -------------------------
     ##---------------------------------------------------------------
 
-    enrich_getWordFreqResults <- shiny::reactive({
+    getWordFreqResults <- shiny::reactive({
         shiny::req(pgx$gset.meta)
         if("wordcloud" %in% names(pgx)) {
             res <- pgx$wordcloud
@@ -62,9 +62,9 @@ WordCloudBoard <- function(id, pgx)
         return(res)
     })
 
-    enrich_getCurrentWordEnrichment <- shiny::reactive({
+    getCurrentWordEnrichment <- shiny::reactive({
 
-        res <- enrich_getWordFreqResults()
+        res <- getWordFreqResults()
         shiny::req(res, input$wc_contrast)
 
         contr=1
@@ -75,14 +75,14 @@ WordCloudBoard <- function(id, pgx)
         
         ## update selectors
         words <- sort(res$gsea[[1]]$word)
-        shiny::updateSelectInput(session, "enrich_wordcloud_exclude", choices=words)
+        shiny::updateSelectInput(session, "wordcloud_exclude", choices=words)
         
         return(topFreq)
     })
 
-    enrich_wordtsne.RENDER <- shiny::reactive({
+    wordtsne.RENDER <- shiny::reactive({
 
-        topFreq <- enrich_getCurrentWordEnrichment()
+        topFreq <- getCurrentWordEnrichment()
 
         df <- topFreq
         klr = ifelse( df$padj<=0.05, "red", "grey")    
@@ -96,7 +96,7 @@ WordCloudBoard <- function(id, pgx)
         ##cex=2.5
         
 
-        if(input$enrich_wordtsne_algo=="tsne") {
+        if(input$wordtsne_algo=="tsne") {
             p <- ggplot2::ggplot(df, ggplot2::aes(tsne.x, tsne.y, label=label))
         } else {
             p <- ggplot2::ggplot(df, ggplot2::aes(umap.x, umap.y, label=label))
@@ -116,9 +116,9 @@ WordCloudBoard <- function(id, pgx)
         return(p)
     })
 
-    enrich_wordtsne.PLOTLY <- shiny::reactive({
+    wordtsne.PLOTLY <- shiny::reactive({
 
-        topFreq <- enrich_getCurrentWordEnrichment()
+        topFreq <- getCurrentWordEnrichment()
         
         df <- topFreq
         klr = ifelse( df$padj<=0.05, "red", "grey")    
@@ -133,7 +133,7 @@ WordCloudBoard <- function(id, pgx)
         df$abs.NES <- abs(df$NES)**2
         
 
-        if(input$enrich_wordtsne_algo=="tsne") {
+        if(input$wordtsne_algo=="tsne") {
             pos = cbind( x=df$tsne.x, y=df$tsne.y)
         } else {
             pos = cbind( x=df$umap.x, y=df$umap.y)
@@ -187,15 +187,15 @@ WordCloudBoard <- function(id, pgx)
         return(plt)
     })
 
-    enrich_wordcloud.RENDER <- shiny::reactive({
+    wordcloud.RENDER <- shiny::reactive({
 
-        topFreq <- enrich_getCurrentWordEnrichment()
+        topFreq <- getCurrentWordEnrichment()
         df <- topFreq
         
         excl.words <- ""
-        excl.words <- input$enrich_wordcloud_exclude
-        ##cat("<enrich_wordcloud> 0: excl.words=",excl.words,"\n")
-        ##cat("<enrich_wordcloud> 0: len.excl.words=",length(excl.words),"\n")
+        excl.words <- input$wordcloud_exclude
+        ##cat("<wordcloud> 0: excl.words=",excl.words,"\n")
+        ##cat("<wordcloud> 0: len.excl.words=",length(excl.words),"\n")
         if(length(excl.words)>0) {
             df <- df[ which(!df$word %in% excl.words), ]
         }
@@ -205,7 +205,7 @@ WordCloudBoard <- function(id, pgx)
         size <- 10*abs(cex1 * cex2)**1
         minsize <- tail(sort(size),250)[1]
 
-        color.pal = input$enrich_wordcloud_colors
+        color.pal = input$wordcloud_colors
         
 
 
@@ -224,10 +224,10 @@ WordCloudBoard <- function(id, pgx)
         
     })
 
-    enrich_gseaplots.RENDER <- shiny::reactive({
+    gseaplots.RENDER <- shiny::reactive({
         
-        res <- enrich_getWordFreqResults()        
-        topFreq <- enrich_getCurrentWordEnrichment()
+        res <- getWordFreqResults()        
+        topFreq <- getCurrentWordEnrichment()
 
         shiny::req(res, topFreq)
 
@@ -272,7 +272,7 @@ WordCloudBoard <- function(id, pgx)
 
     wordcloud_enrichmentTable.RENDER <- shiny::reactive({    
 
-        df <- enrich_getCurrentWordEnrichment()
+        df <- getCurrentWordEnrichment()
         shiny::req(df)
         df <- df[,c("word","pval","padj","ES","NES","size")]
         
@@ -303,7 +303,7 @@ WordCloudBoard <- function(id, pgx)
 
         shiny::req(pgx$gset.meta, input$wc_contrast)
 
-        df <- enrich_getCurrentWordEnrichment()
+        df <- getCurrentWordEnrichment()
         sel.row <- wordcloud_enrichmentTable$rows_selected()
         shiny::req(df, sel.row)
         
@@ -378,7 +378,7 @@ WordCloudBoard <- function(id, pgx)
     
     wordcloud_actmap.RENDER <- shiny::reactive({
 
-        res <- enrich_getWordFreqResults()   
+        res <- getWordFreqResults()   
         score <- sapply(res$gsea, function(x) x$NES)
         rownames(score) <- res$gsea[[1]]$word
         
@@ -393,7 +393,7 @@ WordCloudBoard <- function(id, pgx)
 
     wordcloud_actmap.RENDER2 <- shiny::reactive({
 
-        res <- enrich_getWordFreqResults()   
+        res <- getWordFreqResults()   
         score <- sapply(res$gsea, function(x) x$NES)
         rownames(score) <- res$gsea[[1]]$word
         
@@ -413,73 +413,73 @@ WordCloudBoard <- function(id, pgx)
 
 
 
-    enrich_wordtsne_info = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword."
+    wordtsne_info = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword."
 
-    enrich_wordtsne_options = shiny::tagList(
-        withTooltip(shiny::radioButtons(ns("enrich_wordtsne_algo"),"Clustering algorithm:",
+    wordtsne_options = shiny::tagList(
+        withTooltip(shiny::radioButtons(ns("wordtsne_algo"),"Clustering algorithm:",
                             choices=c("tsne","umap"),inline=TRUE),
                "Choose a clustering algorithm: t-SNE or UMAP.")
     )
     
     shiny::callModule(
         plotModule,
-        id = "enrich_wordtsne", label="c", 
-        ##plotlib="ggplot", func=enrich_wordtsne.RENDER,
-        plotlib="plotly", func=enrich_wordtsne.PLOTLY, 
-        info.text = enrich_wordtsne_info,
-        options = enrich_wordtsne_options,
+        id = "wordtsne", label="c", 
+        ##plotlib="ggplot", func=wordtsne.RENDER,
+        plotlib="plotly", func=wordtsne.PLOTLY, 
+        info.text = wordtsne_info,
+        options = wordtsne_options,
         pdf.width=8, pdf.height=8, pdf.pointsize=13,
         height = 0.5*rowH, res=72,
-        ##datacsv = enrich_getWordFreq,
+        ##datacsv = getWordFreq,
         title = "Word t-SNE",
         add.watermark = WATERMARK
     )
 
 
-    enrich_wordcloud_opts = shiny::tagList(
-        withTooltip(shiny::selectInput(ns("enrich_wordcloud_exclude"),"Exclude words:", choices=NULL, multiple=TRUE),
+    wordcloud_opts = shiny::tagList(
+        withTooltip(shiny::selectInput(ns("wordcloud_exclude"),"Exclude words:", choices=NULL, multiple=TRUE),
                "Paste a keyword to exclude it from the plot.", placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("enrich_wordcloud_colors"),"Colors:", choices=c("Blues","Greys","Accent","Dark2"),
+        withTooltip(shiny::selectInput(ns("wordcloud_colors"),"Colors:", choices=c("Blues","Greys","Accent","Dark2"),
                            multiple=FALSE),
                "Choose a set of colors.", placement="top", options = list(container = "body"))
     )
 
     shiny::callModule(
         plotModule,
-        id = "enrich_wordcloud", label="b",
-        func = enrich_wordcloud.RENDER, 
-        func2 = enrich_wordcloud.RENDER, 
+        id = "wordcloud", label="b",
+        func = wordcloud.RENDER, 
+        func2 = wordcloud.RENDER, 
         plotlib="base", renderFunc="renderPlot", outputFunc="plotOutput",
         ##plotlib="htmlwidget", renderFunc="renderWordcloud2", outputFunc="wordcloud2Output",
         ##plotlib="htmlwidget", renderFunc="renderd3Cloud", outputFunc="d3CloudOutput",
         ##download.fmt = NULL,
         info.text = "<strong>Word cloud.</strong> Word cloud of the most enriched keywords for the data set. Select a keyword in the 'Enrichment table'. In the plot settings, users can exclude certain words from the figure, or choose the color palette. The sizes of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description.",
-        options = enrich_wordcloud_opts,
+        options = wordcloud_opts,
         pdf.width=6, pdf.height=6, 
         height = 0.5*rowH, res=72,
         title = "Word cloud",
         add.watermark = WATERMARK
     )
 
-    enrich_gseaplots_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
+    gseaplots_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
 
 <br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
 
-    ##myTextInput('enrich_gseaplots_keywords','Keyword:',"cell cycle"),
-    enrich_gseaplots_opts = shiny::tagList(
-        withTooltip( shiny::textInput(ns('enrich_gseaplots_keywords'),'Keyword:',"cell cycle"),
+    ##myTextInput('gseaplots_keywords','Keyword:',"cell cycle"),
+    gseaplots_opts = shiny::tagList(
+        withTooltip( shiny::textInput(ns('gseaplots_keywords'),'Keyword:',"cell cycle"),
                "Paste a keyword such as 'apoptosis', 'replication' or 'cell cycle'.",
                placement="top", options = list(container = "body"))
     )
-    ## enrich_gseaplots_opts = shiny::textInput('enrich_gseaplots_keywords','Keyword:',"cell cycle")
+    ## gseaplots_opts = shiny::textInput('gseaplots_keywords','Keyword:',"cell cycle")
     shiny::callModule(
         plotModule,
-        id = "enrich_gseaplots", label="a", 
+        id = "gseaplots", label="a", 
         plotlib = "base",
-        func = enrich_gseaplots.RENDER,
-        func2 = enrich_gseaplots.RENDER,
-        info.text = enrich_gseaplots_info,
-        ## options = enrich_gseaplots_opts,
+        func = gseaplots.RENDER,
+        func2 = gseaplots.RENDER,
+        info.text = gseaplots_info,
+        ## options = gseaplots_opts,
         pdf.width=6, pdf.height=6,
         height = 0.5*rowH, res=90,
         title = "Enrichment plots",

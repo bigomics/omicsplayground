@@ -31,7 +31,7 @@ dataview_plot_tsne_server <- function(id,
                                       r.gene = reactive(""),
                                       r.samples = reactive(""),
                                       r.data_type = reactive("counts"),            
-                                      r.data_groupby = reactive(""),
+                                      r.groupby = reactive(""),
                                       watermark=FALSE
                                       )
 {
@@ -46,13 +46,13 @@ dataview_plot_tsne_server <- function(id,
 ##            gene <- parent.input$search_gene
 ##            samplefilter <- parent.input$data_samplefilter
 ##            data_type <- parent.input$data_type            
-##            data_groupby <- parent.input$data_groupby
+##            groupby <- parent.input$groupby
 
             ## dereference reactives
             gene <- r.gene()
             samples <- r.samples()
             data_type <- r.data_type()                      
-            data_groupby <- r.data_groupby()
+            groupby <- r.groupby()
             shiny::req(gene,data_type)
 
             if(samples[1]=="") samples <- colnames(pgx$X)
@@ -89,7 +89,7 @@ dataview_plot_tsne_server <- function(id,
             data$fc2 <- fc2
             
             grp <- NULL
-            filt.groupby <- data_groupby
+            filt.groupby <- groupby
             
             if(!is.null(filt.groupby) && filt.groupby %in% colnames(pgx$samples)) {
                 grp <- factor(pgx$samples[samples, filt.groupby])

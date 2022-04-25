@@ -25,8 +25,9 @@ dataview_plot_abundance_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_abundance_server <- function(id, parent.input,
-                                           getCountsTable, watermark=FALSE)
+dataview_plot_abundance_server <- function(id, 
+                                           getCountsTable,
+                                           watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
@@ -63,7 +64,7 @@ dataview_plot_abundance_server <- function(id, parent.input,
                     col = klr)
             leg <- legend("topleft", legend=rev(rownames(res$prop.counts)),
                           fill=rev(klr),cex=1, y.intersp=0.75, bty="n", plot = FALSE)
-            leftx <- leg$rect$left*0.9
+            leftx  <- leg$rect$left*0.9
             rightx <- leg$rect$right*0.9
             topy <- leg$rect$top
             bottomy <- leg$rect$bottom
@@ -85,7 +86,7 @@ dataview_plot_abundance_server <- function(id, parent.input,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
             renderFunc = shiny::renderPlot,
             renderFunc2 = shiny::renderPlot,        
-            res = c(100,170),                ## resolution of plots
+            res = c(90,170),                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )

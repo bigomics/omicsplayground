@@ -57,13 +57,14 @@ PlotModuleUI <- function(id,
     if(is.null(plotlib2)) plotlib2 <- plotlib    
     if(length(height)==1) height <- c(height,800)
     if(length(width)==1)  width  <- c(width,1200)
+
     ##ifnotchar.int <- function(s) ifelse(grepl("[%]|auto|vh|vw|vmin|vmax",s),s,as.integer(s))
-    ifnotchar.int <- function(s) suppressWarnings(ifelse(!is.na(as.integer(s)),as.integer(s),s))
+    ifnotchar.int <- function(s) suppressWarnings(
+      ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
     width.1  <- ifnotchar.int(width[1])
     width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
-    height.2 <- ifnotchar.int(height[2])    
-
+    height.2 <- ifnotchar.int(height[2])            
     
     getOutputFunc <- function(plotlib)
     {
@@ -200,11 +201,11 @@ PlotModuleUI <- function(id,
         shiny::tagList(
                    outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE),
                    caption2
-               )
+        )
     }
 
-    modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,"px;}")
-    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"px; padding:60px 300px;}")
+    modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
+    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:60px 300px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")    
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
     

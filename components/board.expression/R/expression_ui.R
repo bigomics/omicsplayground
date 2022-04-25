@@ -17,7 +17,7 @@ ExpressionInputs <- function(id) {
         shiny::fillRow( flex=c(1,1),
                 withTooltip( shiny::selectInput(ns("gx_fdr"),"FDR", choices=c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1), selected=0.2),
                         "Set the false discovery rate (FDR) threshold.", placement="top"),
-                withTooltip( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
+                withTooltip( shiny::selectInput(ns("gx_lfc"),"logFC",
                                     choices=c(0,0.1,0.2,0.5,1,2,5), selected=0),
                         "Set the logarithmic fold change (logFC) threshold.", placement="top")
                 ),
