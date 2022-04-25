@@ -265,18 +265,20 @@ html {
       font-weight: 200;
       font-size: 18px;
       color: rgba(255,255,255,100);
+      color: rgba(0,0,0,100);      
       top: 12px;
-      right: 40px;
+      left: 45%;      
       z-index: 9999;
   }
 
   .current-user {
       position: fixed;
       font-weight: 200;
-      font-size: 10px;
+      font-size: 11px;
       color: rgba(255,255,255,100);
+      color: rgba(0,0,0,100);
       top: 1px;
-      right: 1px;
+      right: 20px;
       z-index: 9999;
   }
 
@@ -441,12 +443,11 @@ html {
 
   /* ---------- modal dialogs ------------- */
   .modal-dialog {
-      width: 900px;
+      width: 870px;
       top: 0px;
   }
   .modal-dialog.modal-lg {
       width: 1400px;
-      top: 0px;	       
   }
   .modal-dialog.modal-sm {
       width: 400px;
@@ -458,8 +459,8 @@ html {
   }
 
   .modal-backdrop {
-      background-color: #000;
       background-color: #FFF;
+      background-color: #000;
   }
 
   .modal-backdrop.in {

@@ -833,7 +833,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
         ),
         footer = div.footer,
         particlesjs::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
-        size="m", easyClose=easyClose, fade=fade
+        size="xl", easyClose=easyClose, fade=fade
     ) ## end of modalDialog
     
     return(m)

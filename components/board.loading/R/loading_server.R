@@ -147,8 +147,6 @@ LoadingBoard <- function(id,
         email <- auth$email()
         email <- gsub(".*\\/","",email)
         pdir <- pgx_dir  ## from module input
-        dbg("[LoadingBoard::getPGXDIR] pgx_dir = ",pgx_dir)
-        dbg("[LoadingBoard::getPGXDIR] pdir = ",pdir)        
 
         ##USERDIR=FALSE
         if(enable_userdir) {
@@ -173,8 +171,6 @@ LoadingBoard <- function(id,
         info <- NULL
         pdir <- getPGXDIR()
         info <- pgx.scanInfoFile(pdir, file="datasets-info.csv", verbose=TRUE )
-        dbg("[LoadingBoard:getPGXINFO] pdir = ",pdir)
-        dbg("[LoadingBoard:getPGXINFO] dim.info = ",dim(info))            
         if(is.null(info)) {
             aa <- rep(NA,9)
             names(aa) = c("dataset","datatype","description","nsamples",
@@ -187,8 +183,6 @@ LoadingBoard <- function(id,
     getFilteredPGXINFO <- shiny::reactive({ 
         
         ## get the filtered table of pgx datasets
-        dbg("[LoadingBoard:getFilteredPGXINFO] reacted")
-
         req(auth)
         if(!auth$logged()) {
             dbg("[LoadingBoard:getFilteredPGXINFO] user not logged in! not showing table!")            

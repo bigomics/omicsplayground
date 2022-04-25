@@ -147,7 +147,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
             shiny::br()
         ),
         footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
-            size="m", easyClose=FALSE, fade=TRUE))
+            size="l", easyClose=FALSE, fade=TRUE))
 
 }
 

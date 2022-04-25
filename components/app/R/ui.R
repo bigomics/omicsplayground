@@ -52,7 +52,7 @@ app_ui <- function() {
             ##shinyalert::useShinyalert(),  # Set up shinyalert
             firebase::useFirebase(firestore = TRUE),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-            # shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
+            shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
             shiny::div(class='label label-info current-user',id='authentication-user')        
         )
         
@@ -60,7 +60,6 @@ app_ui <- function() {
             shinybusy::busy_start_up(
                 text = "\nPrepping your Omics Playground...", mode = "auto",
                 background="#2780e3", color="#ffffff",
-                ##loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))
                 loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
             )
         )
