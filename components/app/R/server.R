@@ -165,7 +165,7 @@ app_server <- function(input, output, session) {
                             ) -> env$enrich
             FunctionalBoard("func", inputData = inputData,
                             selected_gsetmethods = env$enrich$selected_gsetmethods)
-            WordCloudBoard("word", inputData = inputData)
+            WordCloudBoard("word", pgx = PGX)
             shiny::incProgress(0.4)
             DrugConnectivityBoard("drug", inputData = inputData)
             IntersectionBoard("isect", inputData = inputData,
