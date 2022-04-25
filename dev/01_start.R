@@ -23,6 +23,7 @@ golem::detach_all_attached()
 rm(list=ls(all.names = TRUE))
 
 source("dev-utils.R")
+source("dev/dev-utils.R")
 appdir <- get_appdir() 
 setwd(appdir)
 appdir

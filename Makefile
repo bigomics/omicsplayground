@@ -12,6 +12,7 @@ run.headless:
 
 sass:
 	Rscript dev/sass.R
+	Rscript dev/create_source_all.R
 
 clean:
 	find . -name '.#*' -o -name '#*' -o -name '*~'
@@ -51,5 +52,7 @@ doc: FORCE
 install: FORCE
 	Rscript dev/03_install.R
 
+renv:
+	R -e "renv::activate();renv::restore()"
 
 FORCE: ;
