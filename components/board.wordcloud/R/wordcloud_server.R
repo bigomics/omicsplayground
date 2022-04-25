@@ -36,11 +36,8 @@ WordCloudBoard <- function(id, pgx)
     })
     
     shiny::observe({
-
-        shiny::req(pgx$model.parameters)
-        
-        ct <- colnames(pgx$model.parameters$contr.matrix)
-        ##ct <- c(ct,"<sd>")
+        shiny::req(pgx$gset.meta)
+        ct <- names(pgx$gset.meta$meta)
         ct <- sort(ct)
         shiny::updateSelectInput(session, "wc_contrast", choices=ct )
     })

@@ -144,20 +144,20 @@ app_server <- function(input, output, session) {
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
         
-        ## TEMPORARY SOLUTION
+        ## TEMPORARY SOLUTION. All modules should use PGX eventually.
         inputData <- reactive({
             if(all(sapply(PGX,is.null))) return(NULL)
             PGX
         })
-
         
         shiny::withProgress(message="initializing modules ...", value=0, {
-            DataViewBoard("view", pgx=PGX)            
 
-            ## *** DEVNOTE *** board below still need refactoring
+            DataViewBoard("view", pgx=PGX)            
             ClusteringBoard("clust", pgx=PGX)
+            WordCloudBoard("word", pgx=PGX)
             shiny::incProgress(0.2)
 
+            ## *** DEVNOTE *** board below still need refactoring
             ExpressionBoard("expr", inputData=inputData) -> env$expr
             FeatureMapBoard("ftmap", inputData=inputData)
             EnrichmentBoard("enrich", inputData = inputData,
@@ -165,7 +165,6 @@ app_server <- function(input, output, session) {
                             ) -> env$enrich
             FunctionalBoard("func", inputData = inputData,
                             selected_gsetmethods = env$enrich$selected_gsetmethods)
-            WordCloudBoard("word", pgx = PGX)
             shiny::incProgress(0.4)
             DrugConnectivityBoard("drug", inputData = inputData)
             IntersectionBoard("isect", inputData = inputData,
