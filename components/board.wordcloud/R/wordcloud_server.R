@@ -3,10 +3,11 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-WordCloudBoard <- function(id, inputData)
+WordCloudBoard <- function(id, pgx)
 {
   moduleServer(id, function(input, output, session)
   {
+
     ns <- session$ns ## NAMESPACE
     fullH = 750
     rowH = 660  ## row height of panel
@@ -21,6 +22,11 @@ WordCloudBoard <- function(id, inputData)
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
+
+      
+    ##================================================================================
+    ##======================= OBSERVE FUNCTIONS ======================================
+    ##================================================================================
     
     shiny::observeEvent( input$wc_info, {
         shiny::showModal(shiny::modalDialog(
@@ -30,9 +36,10 @@ WordCloudBoard <- function(id, inputData)
     })
     
     shiny::observe({
-        ngs <- inputData()
-        shiny::req(ngs)
-        ct <- colnames(ngs$model.parameters$contr.matrix)
+
+        shiny::req(pgx$model.parameters)
+        
+        ct <- colnames(pgx$model.parameters$contr.matrix)
         ##ct <- c(ct,"<sd>")
         ct <- sort(ct)
         shiny::updateSelectInput(session, "wc_contrast", choices=ct )
@@ -43,15 +50,17 @@ WordCloudBoard <- function(id, inputData)
     ##---------------------------------------------------------------
 
     enrich_getWordFreqResults <- shiny::reactive({
-        ngs <- inputData()
-        shiny::req(ngs)
-        if("wordcloud" %in% names(ngs)) {
-            res <- ngs$wordcloud
+        shiny::req(pgx$gset.meta)
+        if("wordcloud" %in% names(pgx)) {
+            res <- pgx$wordcloud
         } else {
             dbg("**** CALCULATING WORDCLOUD ****\n")
             progress <- shiny::Progress$new()
-            res <- pgx.calculateWordCloud(ngs, progress=progress, pg.unit=1)                    
+            res <- pgx.calculateWordCloud(pgx, progress=progress, pg.unit=1)                    
             on.exit(progress$close())    
+
+            ## save in object??
+            pgx[["wordcloud"]] <- res
         }
         return(res)
     })
@@ -220,79 +229,31 @@ WordCloudBoard <- function(id, inputData)
 
     enrich_gseaplots.RENDER <- shiny::reactive({
         
-        dbg("enrich_gseaplots.RENDER: reacted")
-        ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        
         res <- enrich_getWordFreqResults()        
         topFreq <- enrich_getCurrentWordEnrichment()
 
-        shiny::req(ngs, res, topFreq)
-        ##req(input$wordcloud_enrichmentTable_rows_selected)
+        shiny::req(res, topFreq)
 
-        dbg("enrich_gseaplots.RENDER: 1")
-        
-        ## get gset meta foldchange-matrix
-        ##S <- sapply(ngs$gset.meta$meta, function(x) x$meta.fx)
-        ##S <- S + 0.0001*matrix(rnorm(length(S)),nrow(S),ncol(S))
-        ##rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
-        S <- res$S  ## geneset expressions
-        
+        S <- res$S  ## geneset expressions        
         keyword = "ribosomal"
         keyword = "lipid"
         keyword = "apoptosis"
         keyword = "cell.cycle"
         
-        ##keyword <- input$enrich_wordcloud_clicked_word ## wordcloud2
-        ##keyword <- input$d3word ## rWordcloud
         sel.row <- wordcloud_enrichmentTable$rows_selected()
         shiny::req(sel.row)
         keyword <- topFreq$word[sel.row]
         
-        if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"
-        cat("<enrich_gseaplots> 3: selected keyword=",keyword,"\n")
-
-        dbg("enrich_gseaplots.RENDER: 2")
-        
-        ##targets <- grep(keyword, rownames(S), ignore.case=TRUE, value=TRUE)
+        if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"        
         targets <- names(which(res$W[,keyword]==1))
-        ##length(targets)
-        
-        if(0) {
-            gmt <- list("set1"=targets)
-            names(gmt)[1] = keyword
-
-            i=1
-            wres <- c()
-            for(i in 1:ncol(S)) {
-                res1 <- fgsea::fgsea( gmt, S[,i], nperm=400 )[,1:5]
-                wres <- rbind(wres, as.data.frame(res1)[1,])
-            }
-            rownames(wres) <- colnames(S)
-            wres$padj <- p.adjust( wres$pval, method="fdr")
-            ##wres <- wres[order(-wres$NES),]
-            
-            nes <- wres$NES
-            pv  <- wres$pval
-            qv  <- wres$padj
-            names(nes) <- names(pv) <- names(qv) <- rownames(wres)
-        }
-
-        dbg("enrich_gseaplots.RENDER: 3")
-        
-        keyword
+                
         nes <- unlist(sapply(res[["gsea"]], function(G) G[match(keyword,G$word),"NES"]))
         pv  <- unlist(sapply(res[["gsea"]], function(G) G[match(keyword,G$word),"pval"]))
         qv  <- unlist(sapply(res[["gsea"]], function(G) G[match(keyword,G$word),"padj"]))
         names(qv) <- names(pv) <- names(nes) <- sub("[.]NES","",names(nes))
-
-        dbg("enrich_gseaplots.RENDER: 4")
         
         top <- names(pv)[order(-abs(nes),pv)]
-        ##top <- names(pv)[order(pv,-abs(nes))]
         top <- intersect(top, colnames(S))
-
-        dbg("enrich_gseaplots.RENDER: 5")
         
         par(mfrow=c(3,3), mar=c(0.2,3.2,3.2,0.2), mgp=c(1.8,0.7,0))
         i=1
@@ -310,8 +271,6 @@ WordCloudBoard <- function(id, inputData)
                 legend("topright", tt, bty="n",cex=0.85)
             }
         }
-        dbg("enrich_gseaplots.RENDER: done")
-        
     })
 
     wordcloud_enrichmentTable.RENDER <- shiny::reactive({    
@@ -319,10 +278,6 @@ WordCloudBoard <- function(id, inputData)
         df <- enrich_getCurrentWordEnrichment()
         shiny::req(df)
         df <- df[,c("word","pval","padj","ES","NES","size")]
-        cat("<wordcloud_enrichmentTable.RENDER> dim(df)=",dim(df),"\n")
-
-        ##do.filter <- input$wc_filtertable
-        ##if(do.filter) df <- df[which(df$padj < 0.99),]
         
         numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
         numeric.cols
@@ -344,28 +299,21 @@ WordCloudBoard <- function(id, inputData)
                             background = color_from_middle( df[,"NES"], 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center') 
-        ##tbl <- DT::datatable(df)
         return(tbl)
     })
 
     wordcloud_leadingEdgeTable.RENDER <- shiny::reactive({    
 
-        ngs <- inputData()
-        shiny::req(ngs, input$wc_contrast)
+        shiny::req(pgx$gset.meta, input$wc_contrast)
 
         df <- enrich_getCurrentWordEnrichment()
-
-        sel.row=1
         sel.row <- wordcloud_enrichmentTable$rows_selected()
         shiny::req(df, sel.row)
-        if(is.null(sel.row)) return(NULL)
         
         ee <- unlist(df$leadingEdge[sel.row])
         ee <- strsplit(ee, split="//")[[1]]
 
-        ##fx <- ngs$gset.meta$meta[[1]][ee,"meta.fx"]
-        ##fx <- ngs$gset.meta$meta[[1]][ee,"fc"][,"fgsea"]  ## real NES
-        fx <- ngs$gset.meta$meta[[input$wc_contrast]][ee,"meta.fx"]
+        fx <- pgx$gset.meta$meta[[input$wc_contrast]][ee,"meta.fx"]
         names(fx) <- ee
         df <- data.frame("leading.edge"=ee, fx=fx )
         df <- df[order(-abs(df$fx)),]
@@ -433,10 +381,6 @@ WordCloudBoard <- function(id, inputData)
     
     wordcloud_actmap.RENDER <- shiny::reactive({
 
-        cat("<wordcloud_actmap> called\n")
-        
-        ##df <- enrich_getCurrentWordEnrichment()
-        ##req(df)
         res <- enrich_getWordFreqResults()   
         score <- sapply(res$gsea, function(x) x$NES)
         rownames(score) <- res$gsea[[1]]$word
@@ -452,10 +396,6 @@ WordCloudBoard <- function(id, inputData)
 
     wordcloud_actmap.RENDER2 <- shiny::reactive({
 
-        cat("<wordcloud_actmap> called\n")
-        
-        ##df <- enrich_getCurrentWordEnrichment()
-        ##req(df)
         res <- enrich_getWordFreqResults()   
         score <- sapply(res$gsea, function(x) x$NES)
         rownames(score) <- res$gsea[[1]]$word
