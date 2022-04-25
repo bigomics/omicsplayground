@@ -52,7 +52,8 @@ DataViewUI <- function(id) {
 
     shiny::tabsetPanel(
         id = ns("tabs"),
-        shiny::tabPanel("Plots",
+        shiny::tabPanel(
+            "Plots",
             shiny::fillCol(
                 height = 750,
                 flex = c(NA,0.03,1),
@@ -86,8 +87,10 @@ DataViewUI <- function(id) {
                         )
                     )
                 )
-            )),
-        shiny::tabPanel("QC",
+            )
+        ),
+        shiny::tabPanel(
+            "QC",
             shiny::fillCol(
                 flex = c(NA,0.04,1,1),
                 height = 750,
@@ -99,19 +102,37 @@ DataViewUI <- function(id) {
                     Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
                 ),
                 shiny::br(),
-                shiny::fillRow(
-                    flex = c(1,1,1), id = "counts_tab_row1", height=355,
-                    ##plotWidget(ns("counts_tab_barplot")),
-                    dataview_plot_totalcounts_ui(ns("counts_total"), height=imgH),
-                    dataview_plot_boxplot_ui(ns("counts_boxplot"), height=imgH),
-                    dataview_plot_histogram_ui(ns("counts_histplot"), height=imgH)                    
-                ),
-                shiny::fillRow(
-                    flex = c(1,1), id = "counts_tab_row2", height=355,
-                    dataview_plot_abundance_ui(ns("counts_abundance"), height=imgH),
-                    dataview_plot_averagecounts_ui(ns("counts_averagecounts"), height=imgH)
+                bigdash::swappable(
+                    ns("swap"),
+                    shiny::fillRow(
+                        flex = c(1,1,1), id = "counts_tab_row1", height=355,
+                        bigdash::swappableItem(
+                            "totalcount_swap",
+                            dataview_plot_totalcounts_ui(ns("counts_total"), height=imgH),
+                        ),
+                        bigdash::swappableItem(
+                            "boxplot_swap",
+                            dataview_plot_boxplot_ui(ns("counts_boxplot"), height=imgH),
+                        ),
+                        bigdash::swappableItem(
+                            "histogram_swap",
+                            dataview_plot_histogram_ui(ns("counts_histplot"), height=imgH)                    
+                        )
+                    ),
+                    shiny::fillRow(
+                        flex = c(1,1), id = "counts_tab_row2", height=355,
+                        bigdash::swappableItem(
+                            "abundance_swap",
+                            dataview_plot_abundance_ui(ns("counts_abundance"), height=imgH),
+                        ),
+                        bigdash::swappableItem(
+                            "averagecounts_swap",
+                            dataview_plot_averagecounts_ui(ns("counts_averagecounts"), height=imgH)
+                        )
+                    )
                 )
-            )),
+            )
+        ),
         shiny::tabPanel("Counts",
             shiny::fillCol(
                 flex = c(NA,0.025,1),
