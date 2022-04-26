@@ -53,7 +53,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 WORKDIR /omicsplayground
 ## RUN R -e "setwd('scripts');source('build-datasets.R')"
 ## COPY data/geiger2016-arginine.pgx data/
-RUN R -e "setwd('data');source('init.R')"
+##RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
