@@ -2660,17 +2660,19 @@
     },
     "firebase": {
       "Package": "firebase",
-      "Version": "1.0.1.9000",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "72123fc9393454fe77246bda2040bd4b",
+      "Version": "0.2.1.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "firebase",
+      "RemoteUsername": "JohnCoene",
+      "RemoteRef": "omics",
+      "RemoteSha": "0bd4cd0bcf258566be1c5d8f9a1d5c4a39872751",
+      "Hash": "485f034ba517da7b987e1d9f440fad6b",
       "Requirements": [
         "R6",
-        "base64enc",
         "cli",
-        "htmltools",
         "jose",
-        "jsonlite",
         "openssl",
         "shiny"
       ]
