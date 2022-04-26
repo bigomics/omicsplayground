@@ -1280,8 +1280,8 @@ DataViewBoard <- function(input, output, session, env)
         jj <- c(j1, setdiff(1:nrow(x),j1))
         x <- x[jj,,drop=FALSE]
 
-        if(ncol(x) > 100) {
-            max.row <- 1e5 / ncol(x)
+        if(ncol(x) > 1000) {
+            max.row <- 1e6 / ncol(x)
             max.row <- 100*ceiling(max.row/100)
             max.row
             x <- head(x, max.row)

@@ -416,6 +416,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
             exp.matrix[is.na(exp.matrix)] <- ""
             
             write.csv(ngs$counts,  file=file.path(tmp2, "counts.csv"))
+            write.csv(round(ngs$X, digits=4), file=file.path(tmp2, "expression.csv"))          
             write.csv(ngs$samples, file=file.path(tmp2, "samples.csv"))
             write.csv(exp.matrix, file=file.path(tmp2, "contrasts.csv"))
             zipfile <- tempfile(fileext = ".zip")

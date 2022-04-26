@@ -1,5 +1,6 @@
-v2.8.7
+v2.8.8
 
+- Expression export (log2CPM), increase entries count table (v2.8.8)
 - Referral modal (v2.8.6)
 - Add Shinylogs code (v2.8.5)
 - Sever crash log handler (v2.8.5)
