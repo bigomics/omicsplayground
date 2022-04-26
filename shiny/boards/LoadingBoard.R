@@ -173,7 +173,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                 shinyBS::tipify( downloadButton2(
                     ns("downloadzip"), label=NULL, icon=icon("file-csv"),
                     style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
-                ),"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
+                ),"Download CSV files (counts.csv, expression.csv, samples.csv, contrasts.csv).",
                 placement="bottom"),
                 delete_button
             ),
