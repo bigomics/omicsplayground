@@ -421,7 +421,8 @@ LoadingBoard <- function(input, output, session, pgx_dir,
             write.csv(exp.matrix, file=file.path(tmp2, "contrasts.csv"))
             zipfile <- tempfile(fileext = ".zip")
             zip::zip(zipfile,
-                     files=paste0(pgxname,"/",c("counts.csv","samples.csv","contrasts.csv")),
+                     files=paste0(pgxname,"/",c("counts.csv","expression.csv",
+                                                "samples.csv","contrasts.csv")),
                      root=tmp)
             ## zip::zip_list(zipfile)
             cat("[LoadingBoard::downloadZIP] zipfile = ",zipfile)                        
