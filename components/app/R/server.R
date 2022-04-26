@@ -23,12 +23,11 @@ app_server <- function(input, output, session) {
     log.path <- "../logs/"
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
+    ## shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
     if(1 && has.honcho) {
-        ##sever::sever(sever_screen(), bg_color = "#000000") ## lightblue=2780e3
         sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
         ## No honcho, no email....

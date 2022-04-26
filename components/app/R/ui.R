@@ -1,4 +1,5 @@
 app_ui <- function() {
+
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
@@ -32,7 +33,7 @@ app_ui <- function() {
         gtag2 <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag2)
     } 
 
-    createUI <- function(tabs)
+     createUI <- function(tabs)
     {
         message("\n======================================================")
         message("======================= UI ===========================")
@@ -63,8 +64,6 @@ app_ui <- function() {
                 loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
             )
         )
-        
-        #return(ui)
 
         logout.tab <- bigdash::navbarDropdownItem(
             "Logout",
@@ -80,6 +79,7 @@ app_ui <- function() {
                 link = "/login"
             )
         }
+        
         bigdash::bigPage(
             header,
             navbar = bigdash::navbar(
@@ -422,5 +422,10 @@ app_ui <- function() {
         "DEV" = c("corsa","system","multi")
     )
 
-    createUI(tabs) 
+    dbg("[ui.R] creating UI... ")
+    ui <- createUI(tabs)
+
+    dbg("[ui.R] UI done!")
+    return(ui)
 }
+
