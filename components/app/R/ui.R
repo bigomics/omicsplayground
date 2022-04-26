@@ -50,11 +50,9 @@ app_ui <- function() {
             shinyjs::useShinyjs(),
             sever::useSever(),
             shinylogs::use_tracking(),
-            ##shinyalert::useShinyalert(),  # Set up shinyalert
             firebase::useFirebase(firestore = TRUE),
-            shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-            shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
-            shiny::div(class='label label-info current-user',id='authentication-user')        
+            shiny::div(class='label label-info current-user',id='authentication-user'),
+            shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
         )
         
         footer <- shiny::tagList(
@@ -87,6 +85,7 @@ app_ui <- function() {
                     src = "assets/img/bigomics.png",
                     width = "110",
                 ),
+                shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
                 bigdash::navbarDropdown(
                     "User",
                     bigdash::navbarDropdownTab(
@@ -206,7 +205,7 @@ app_ui <- function() {
             bigdash::sidebarHelp(
                 bigdash::sidebarTabHelp(
                     "home-tab",
-                    "Playground",
+                    "BigOmics Playground",
                     "A is a self-service bioinformatics platform for interactive analysis,
                     visualization and interpretation of transcriptomics and proteomics data.
                     Life scientists can easily perform complex data analysis and visualization without coding,

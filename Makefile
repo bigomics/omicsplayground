@@ -3,6 +3,7 @@ TAG=latest
 ifeq ($(BRANCH),'develop')
   TAG=develop
 endif
+VERSION=`head -n1 VERSION`
 
 run: sass
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
@@ -56,3 +57,13 @@ renv: FORCE
 	R -e "renv::activate();renv::restore()"
 
 FORCE: ;
+
+tags:
+	git tag -f -a $(VERSION) -m 'version $(VERSION)'
+	git push && git push --tags
+
+push.latest: 
+	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:latest
+	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:$(VERSION)
+	docker push bigomics/omicsplayground:latest
+	docker push bigomics/omicsplayground:$(VERSION)

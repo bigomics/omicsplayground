@@ -126,23 +126,8 @@ dataview_table_rawdata_server <- function(id,
 
       dt <- table_data()
       req(dt, dt$x)
-
-      dbg("[rawdataTable.RENDER] called!")
-      dbg("[rawdataTable.RENDER] dim(dt$x) = ",dim(dt$x))
       
-      if(0) {
-        ## should we truncate really large tables??
-        if(ncol(dt$x) > 100) {
-          max.row <- 1e5 / ncol(dt$x)
-          max.row <- 100*ceiling(max.row/100)
-          dt$x <- head(dt$x, max.row)
-        }
-      }
-
       numcols <- grep('gene|title',colnames(dt$x),value=TRUE,invert=TRUE)
-      dbg("[rawdataTable.RENDER] numcols = ",numcols)
-      dbg("[rawdataTable.RENDER] dim(dt$x) = ",dim(dt$x))
-      
       tabH = 700  ## height of table
             
       DT::datatable( dt$x, rownames=FALSE,
@@ -151,7 +136,10 @@ dataview_table_rawdata_server <- function(id,
                     selection = list(mode='single', target='row', selected=1),
                     options=list(
                       dom = 'lfrtip',
-                      scroller=TRUE, scrollX = TRUE, scrollY = tabH,
+                      pageLength = 40,
+                      lengthMenu = c(25, 40, 100, 250),
+                      ##scroller=TRUE, scrollY = tabH,
+                      scroller=FALSE, scrollY = FALSE,                          
                       deferRender=TRUE
                     )  ## end of options.list
                     ) %>%

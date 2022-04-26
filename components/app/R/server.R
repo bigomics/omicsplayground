@@ -205,7 +205,7 @@ app_server <- function(input, output, session) {
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
-        if(length(name)==0) name = "(no data)"
+        if(length(name)==0) name = "BigOmics Playground"
         name
     })
     

@@ -168,15 +168,13 @@ html {
     bottom: 0px;
   }
 
-  .current-data {
-      position: fixed;
+  .current-dataset {
+      padding: 8px 0vw;
       font-weight: 200;
       font-size: 18px;
-      color: rgba(255,255,255,100);
       color: rgba(0,0,0,100);      
-      top: 12px;
-      left: 45%;      
-      z-index: 9999;
+      text-align: center;
+      min-width: 85vw;
   }
 
   .current-user {
