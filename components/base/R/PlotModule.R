@@ -156,9 +156,11 @@ PlotModuleUI <- function(id,
     }
     
     buttons <- shiny::fillRow(
-        flex = c(NA,NA,NA,NA,NA,1),
+        flex = c(NA,1,NA,NA,NA,NA),
         ##flex=c(NA,NA,1),
         label1,
+##        shiny::HTML(paste("<center>",title,"</center>")),
+        shiny::div(class='plotmodule-title', title=title, title),        
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
@@ -169,8 +171,7 @@ PlotModuleUI <- function(id,
         ),
         options.button,
         shiny::div(class='download-button', title='download', dload.button),
-        shiny::div(class='zoom-button', title='zoom', zoom.button),
-        shiny::HTML(paste("<center>",title,"</center>"))
+        shiny::div(class='zoom-button', title='zoom', zoom.button)
     )
     
     ## ------------------------------------------------------------------------
@@ -216,11 +217,12 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")                 
     }
-    
-    shiny::fillCol(
+
+    div( class="plotmodule",
+        shiny::fillCol(
                flex = c(NA,1,NA,0.001,NA),
                height = height.1,
-               buttons,
+               div( buttons, class="plotmodule-header"),
                outputFunc(ns("renderfigure"), width=width.1, height=height.1),                              
                caption,
                shiny::div(class="popup-plot",
@@ -237,7 +239,8 @@ PlotModuleUI <- function(id,
                           shiny::tags$head(shiny::tags$style(modalcontent.style)),
                           shiny::tags$head(shiny::tags$style(modalfooter.none))
                       )
-           )
+              )
+    )
 
 }
 

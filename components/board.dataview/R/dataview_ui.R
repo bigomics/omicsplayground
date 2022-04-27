@@ -59,7 +59,7 @@ DataViewUI <- function(id) {
       "Plots",
       shiny::fillCol(
         height = 750,
-        flex = c(NA,0.03,1),
+        flex = c(NA,1),
         tags$div( class="caption",
           HTML("<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases.
                 <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b>
@@ -67,13 +67,11 @@ DataViewUI <- function(id) {
                 expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
                 expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
         ),
-        shiny::br(),
         shiny::fillRow(
-          flex = c(1,0.06,5),
+          flex = c(1,5),
           dataview_module_geneinfo_ui(ns("geneinfo")),
-          shiny::br(),
           shiny::fillCol(
-            flex = c(1,0.2,1),
+            flex = c(1,0.1,1),
             shiny::fillRow(
               flex = c(1.5,1,1), id = "genePlots_row1",
               height = 355, ## width=1600,
@@ -96,7 +94,7 @@ DataViewUI <- function(id) {
     shiny::tabPanel(
       "QC",
       shiny::fillCol(
-        flex = c(NA,0.04,1,1),
+        flex = c(NA,1,1),
         height = 750,
         tags$div( class="caption",
           HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
@@ -105,7 +103,6 @@ DataViewUI <- function(id) {
                 the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
                 Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
         ),
-        shiny::br(),
         bigdash::swappable(
           ns("swap_qc"),
           shiny::fillRow(
@@ -141,14 +138,13 @@ DataViewUI <- function(id) {
     shiny::tabPanel(
       "Counts",
       shiny::fillCol(
-        flex = c(NA,0.025,1),
+        flex = c(NA,1),
         height = 750,
-        tags$div(
+        tags$div( class="caption",
           HTML("<b>Gene table.</b> The table shows the gene expression values per sample, or average
                 expression values across the groups. The column 'rho' reports the correlation with the
                 gene selected in 'Search gene' in the left side bar.")
         ),
-        shiny::br(),
         dataview_table_rawdata_ui(ns("rawdatatable"))
       )
     ),
@@ -156,7 +152,7 @@ DataViewUI <- function(id) {
     shiny::tabPanel(
     "Samples",
     shiny::fillCol(
-      flex = c(NA,0.04,1.5,1),
+      flex = c(NA,1.5,1),
       height = 750,
       tags$div( class="caption",
         HTML(paste(
@@ -169,13 +165,11 @@ DataViewUI <- function(id) {
                         a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
         ))
       ),
-      shiny::br(),
       shiny::fillRow(
-        flex = c(2.5,0.07,1),
+        flex = c(2.5,1),
         shiny::div(
           dataview_plot_phenoheatmap_ui(ns("phenoheatmap"),height=imgH),
           style="overflow-y: auto;"),
-        shiny::br(),
         dataview_plot_phenoassociation_ui(ns("phenoassociation"),height=imgH)                    
       ),
       dataview_table_rawdata_ui(ns("sampletable"))                
@@ -185,13 +179,12 @@ DataViewUI <- function(id) {
     shiny::tabPanel(
       "Contrasts",
       shiny::fillCol(
-        flex = c(NA,0.03,1), height = 750,
+        flex = c(NA,1), height = 750,
         tags$div( class="caption",
           HTML("<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries
                '+1' and '-1' correspond to the group of interest and control group, respectively. Zero
                 or empty entries denote samples not use for that comparison.")
         ),
-        shiny::br(),
         dataview_table_contrasts_ui(ns("contrastTable"))
       )),
         ##----------------------------------------------------------------------------

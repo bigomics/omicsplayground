@@ -1598,13 +1598,11 @@ displays the expression levels of selected genes across all conditions in the an
     
     output$hm_annotateUI <- shiny::renderUI({
         shiny::fillCol(
-            flex = c(NA,0.03,1.4,0.03,1),
+            flex = c(1.4,1,NA),
             height = fullH,
-            shiny::div(shiny::HTML(clustannot_caption), class="caption"),
-            shiny::br(),
             plotWidget(ns("clustannot_plots")),
-            shiny::br(),
-            plotWidget(ns("clustannot_table"))
+            plotWidget(ns("clustannot_table")),
+            shiny::div(shiny::HTML(clustannot_caption), class="caption"),
         )
     })
     

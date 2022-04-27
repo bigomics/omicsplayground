@@ -60,24 +60,28 @@ ClusteringUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs1"),
             shiny::tabPanel("Heatmap", 
+                plotWidget(ns("hm_splitmap")),
                 tags$div( class="caption",
                     HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
                     clustering. Red corresponds to overexpression, blue to underexpression of the gene.
                     At the same time, gene clusters are functionally annotated in the
                     'Annotate clusters' panel on the right."
                     )
-                ),
-                plotWidget(ns("hm_splitmap"))),
+                )
+            ),
             shiny::tabPanel("PCA/tSNE",
+                plotWidget(ns("hm_PCAplot")),
                 tags$div( class="caption",
                     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
                      samples as a scatterplot in reduced dimension (2D or 3D).
                      Samples that are similar are clustered near to each other, while samples with different
                      expression are positioned farther away. Groups of samples with similar profiles
                      will appear as <i>clusters</i> in the plot.")
-                ),
-                plotWidget(ns("hm_PCAplot"))),
+                )
+            ),
             shiny::tabPanel("Parallel",
+                plotWidget(ns("hm_parcoord")),
+                tableWidget(ns("hm_parcoord_table")),                            
                 tags$div( class="caption",
                     HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                         the expression levels of selected genes across all conditions.
@@ -86,11 +90,8 @@ ClusteringUI <- function(id) {
                         defined by the hierarchical clustered heatmap. <b>(b)</b>
                         Average expression of selected genes across conditions."
                     )
-                ),
-                plotWidget(ns("hm_parcoord")),
-                tableWidget(ns("hm_parcoord_table"))
+                )
             )
-            
         ),
         shiny::br(),
         shiny::tabsetPanel(
@@ -98,22 +99,23 @@ ClusteringUI <- function(id) {
             shiny::tabPanel("Annotate clusters",
                 uiOutput(ns("hm_annotateUI"))),
             shiny::tabPanel("Phenotypes",
+                plotWidget(ns("clust_phenoplot")),
                 tags$div( class="caption",
                         HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
                         superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be
                         driven by the particular phenotype that is controlled by the experimental condition
                         or unwanted batch effects."
                         )
-                ),
-                plotWidget(ns("clust_phenoplot"))),
+                )
+            ),
             shiny::tabPanel("Feature ranking",
+                plotWidget(ns("clust_featureRank")),      
                 tags$div( class="caption",
                         HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
                          The plot ranks the discriminative power of feature sets (or gene sets) as the
                          cumulative discriminant score for all phenotype variables."
                         )
-                ),
-                plotWidget(ns("clust_featureRank"))      
+                )
             )
         )
     )

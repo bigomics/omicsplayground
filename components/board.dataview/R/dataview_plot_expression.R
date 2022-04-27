@@ -216,7 +216,7 @@ dataview_plot_expression_server <- function(id,
             renderFunc2 = shiny::renderPlot,        
             ##renderFunc = shiny::renderCachedPlot,
             ##renderFunc2 = shiny::renderCachedPlot,        
-            res = c(100,170)*1,                ## resolution of plots
+            res = c(90,170)*1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
         )
