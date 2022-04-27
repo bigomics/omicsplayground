@@ -21,6 +21,8 @@ html {
         color: $main; 
         text-decoration: none;
     }
+    font-size: 14px;
+    line-height: 1.1em;
   }
 
   /* space in innner tabpanes */
@@ -62,8 +64,14 @@ html {
 
   .well {
       font-size: 12px;
+      line-height: 1.2em;      
   }
 
+  .modal-content .well {
+      font-size: 1.3em;
+      line-height: 1.2em;
+      width: 100%;
+  }  
 
   /* tooltips */
   .tooltip-inner {
@@ -168,15 +176,6 @@ html {
     bottom: 0px;
   }
 
-  .current-dataset {
-      padding: 8px 0vw;
-      font-weight: 200;
-      font-size: 18px;
-      color: rgba(0,0,0,100);      
-      text-align: center;
-      min-width: 85vw;
-  }
-
   .current-user {
       position: fixed;
       font-weight: 200;
@@ -188,6 +187,24 @@ html {
       z-index: 9999;
   }
 
+  .current-dataset {
+      padding: 8px 0vw;
+      font-weight: 200;
+      font-size: 18px;
+      color: rgba(0,0,0,100);      
+      text-align: left;
+      min-width: 40vw;
+  }
+
+  .current-section {
+      padding: 8px 0vw;
+      font-weight: 400;
+      font-size: 18px;
+      color: rgba(0,0,0,100);      
+      text-align: center;
+      min-width: 0vw;
+  }
+  
   /* ------------------- buttons -------------- */
   .run-button,.load-button {
       outline: none;

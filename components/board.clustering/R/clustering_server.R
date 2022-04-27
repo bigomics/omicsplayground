@@ -692,11 +692,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     )
     
     hm_splitmap_caption = "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
-
-    hm_splitmap_captionDN <- shiny::reactive({
-        text1 = "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
-        return(text1)
-    })
     
     output$hm1_splitmap <- shiny::renderPlot({
         plt <- hm1_splitmap.RENDER()

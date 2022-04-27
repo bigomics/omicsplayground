@@ -51,7 +51,7 @@ app_ui <- function() {
             sever::useSever(),
             shinylogs::use_tracking(),
             firebase::useFirebase(firestore = TRUE),
-            shiny::div(class='label label-info current-user',id='authentication-user'),
+            ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
         )
         
@@ -85,30 +85,54 @@ app_ui <- function() {
                     src = "assets/img/bigomics.png",
                     width = "110",
                 ),
+                shiny::div(shiny::textOutput("current_section"), class='current-section'),
                 shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
+                ##shiny::div(shiny::textOutput("current_user"), class='current-user'),
                 bigdash::navbarDropdown(
-                    "User",
+                    "Support",
+                    bigdash::navbarDropdownItem(
+                        "Community Forum",
+                        link = "https://groups.google.com/d/forum/omicsplayground",
+                        target = "_blank"
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Github issues",
+                        link = "https://github.com/bigomics/omicsplayground/issues",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "www.bigomics.ch",
+                        link = "http://bigomics.ch",
+                        target = "_blank"                        
+                    )
+                ),
+                bigdash::navbarDropdown(
+                    "Tutorials",
+                    bigdash::navbarDropdownItem(
+                        "Documentation",
+                        link = "https://omicsplayground.readthedocs.io",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Video tutorials",
+                        link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Case studies",
+                        link = "https://bigomics.ch/category/case-study/",
+                        target = "_blank"
+                    )
+                ),
+                bigdash::navbarDropdown(
+                    ##"User",
+                    ##shiny::div(class='label label-info current-user',id='authentication-user'),
+                    shiny::textOutput("current_user"), 
                     bigdash::navbarDropdownTab(
                         "Settings",
                         "userSettings"
                     ),
                     upgrade.tab,
-                    bigdash::navbarDropdownItem(
-                        "Documentation",
-                        link = "https://omicsplayground.readthedocs.io"
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Video tutorials",
-                        link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-"
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Community Forum",
-                        link = "https://groups.google.com/d/forum/omicsplayground"
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Github",
-                        link = "https://github.com/bigomics/omicsplayground"
-                    ),
                     logout.tab
                 )
             ),
@@ -206,15 +230,16 @@ app_ui <- function() {
                 bigdash::sidebarTabHelp(
                     "home-tab",
                     "BigOmics Playground",
-                    "A is a self-service bioinformatics platform for interactive analysis,
+                    "is a self-service bioinformatics platform for interactive analysis,
                     visualization and interpretation of transcriptomics and proteomics data.
-                    Life scientists can easily perform complex data analysis and visualization without coding,
-                    and significantly reduce the time to discovery."
+                    Perform complex data analysis and visualization easily without coding,
+                    and significantly reduce the time-to-discovery."
                 ),
                 bigdash::sidebarTabHelp(
                     "dataview-tab",
                     "DataView",
-                    "Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
+                    "Information and descriptive statistics to quickly lookup a gene,
+                     check your experiment QC, view the raw data, sample or contrast tables."
                 ),
                 bigdash::sidebarTabHelp(
                     "clustersamples-tab",
@@ -423,8 +448,8 @@ app_ui <- function() {
 
     dbg("[ui.R] creating UI... ")
     ui <- createUI(tabs)
-
     dbg("[ui.R] UI done!")
+  
     return(ui)
 }
 

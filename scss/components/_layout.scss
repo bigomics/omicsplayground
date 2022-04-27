@@ -2,41 +2,55 @@ html {
 
     h4 {
 	font-weight: 600;
+	font-size: 1.2em;
     }
     
     body {
 	line-height: 1.1em;
     }
     
-    html .nav-tabs .nav-link {
+    .nav-tabs .nav-link {
 	color: #b8b8b8;
     }
     
-    html .nav-tabs .nav-link:hover {
+    .nav-tabs .nav-link:hover {
 	color: #555;
     }
-    
     
     .dropdown-menu.show, .dropdown-menu.in {
 	display: block;
 	left: -71px;
+	font-size: 1em;
     }
-    
     
     /* sidebar */
     .sidebar-expanded {
-	min-width: 15rem;
+	min-width: 12rem;
     }
     
+    #sidebar-help-title {
+	padding-top: 100px;
+    }
     #sidebar-help-container {
-	width: 14rem;
+	width: 11.5rem;
+	font-size: 0.8em;
+	line-height: 1.2em;
+	background: url("assets/img/mascotte-sc.png") no-repeat;
+	background-size: 80px 80px;
+	background-position: 40px 25px;	
     }
     
     #sidebar-container {
+	font-size: 1.1em;
 	min-height: 96vh;
 	background-color: rgba(0,0,0,0.03);
     }
-    
+    .sidebar-collapsed {
+	min-width: 3rem;
+    }
+    .sidebar-content hr {
+	margin: 0.5em 0;
+    }
     
     /* settings */
     #settings-container {
@@ -44,11 +58,12 @@ html {
     }
     
     .settings-expanded {
-	min-width: 15rem;
+	min-width: 12rem;
     }
     
     .settings-collapsed {
-	width: 4rem;
+	min-width: 3rem;
+	width: 3rem;	
     }
     
 }

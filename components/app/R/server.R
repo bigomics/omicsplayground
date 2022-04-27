@@ -95,21 +95,15 @@ app_server <- function(input, output, session) {
     )   
 
     ## If user is logged off, we clear the data
-    observeEvent(env$load$auth$logged(), {
+    observeEvent( env$load$auth$logged(), {
         is.logged <- env$load$auth$logged()
         length.pgx <- length(names(PGX))
 
         if(!is.logged && length.pgx>0) {
-            message("*** EXPERIMENTAL *** clearing reactivevalue pgx!")        
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
         }
-        if(!is.logged) {
-            message("[server.R] *** EXPERIMENTAL *** resetting reactivevalue pgx!")        
-            ## pgx <- reactiveValues()
-        }
-        message("[server.R] *** EXPERIMENTAL *** done")                
     })
     
     ## User board
@@ -122,12 +116,10 @@ app_server <- function(input, output, session) {
         env.loaded <- env$load$loaded()
         message("[SERVER:env.loaded] env.loaded = ",env.loaded)    
         if(env$load$loaded()==0){
-            message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
         
         if(modules_loaded) {
-            message("[SERVER:env.loaded] modules already loaded!")
             Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
             return(NULL)
@@ -193,21 +185,34 @@ app_server <- function(input, output, session) {
         )
     })
     
-    ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
-    message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
+
+    ##--------------------------------------------------------------------------
+    ## Current navigation
+    ##--------------------------------------------------------------------------
     
     output$current_user <- shiny::renderText({
         ## trigger on change of user
         user <- env$load$auth$email()
+        dbg("[SERVER:output$current_user] user = ",user)
+        if(user %in% c("",NA,NULL)) user <- "User"
         user
     })
     
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
+        dbg("[SERVER:output$current_dataset] dataset = ",name)
         if(length(name)==0) name = "BigOmics Playground"
         name
     })
+
+    output$current_section <- shiny::renderText({
+        cdata <- session$clientData
+        section <- sub("section-","",cdata[["url_hash"]])
+        dbg("[SERVER:output$current_section] section = ",section)
+        section
+    })
+
     
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
@@ -231,6 +236,7 @@ app_server <- function(input, output, session) {
         
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
+            message("[SERVER] !!! no data. hiding menu.")          
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
             toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)

@@ -60,12 +60,12 @@ DataViewUI <- function(id) {
       shiny::fillCol(
         height = 750,
         flex = c(NA,0.03,1),
-        tags$div(
+        tags$div( class="caption",
           HTML("<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases.
-                    <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b>
-                    Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by
-                    expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
-                    expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
+                <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b>
+                Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by
+                expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
+                expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
         ),
         shiny::br(),
         shiny::fillRow(
@@ -98,7 +98,7 @@ DataViewUI <- function(id) {
       shiny::fillCol(
         flex = c(NA,0.04,1,1),
         height = 750,
-        tags$div(
+        tags$div( class="caption",
           HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
                 the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
                 <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
@@ -158,7 +158,7 @@ DataViewUI <- function(id) {
     shiny::fillCol(
       flex = c(NA,0.04,1.5,1),
       height = 750,
-      tags$div(
+      tags$div( class="caption",
         HTML(paste(
           "<b>(a)</b> <b>Phenotype clustering.</b> Clustered heatmap of sample information
                         (i.e. phenotype data).","<b>(b)</b> <b>Phenotype association matrix.</b> Clustered
@@ -186,10 +186,10 @@ DataViewUI <- function(id) {
       "Contrasts",
       shiny::fillCol(
         flex = c(NA,0.03,1), height = 750,
-        tags$div(
-          HTML("<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1'
-                correspond to the group of interest and control group, respectively. Zero or empty entries
-                denote samples not use for that comparison.")
+        tags$div( class="caption",
+          HTML("<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries
+               '+1' and '-1' correspond to the group of interest and control group, respectively. Zero
+                or empty entries denote samples not use for that comparison.")
         ),
         shiny::br(),
         dataview_table_contrasts_ui(ns("contrastTable"))
