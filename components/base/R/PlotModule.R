@@ -223,7 +223,7 @@ PlotModuleUI <- function(id,
                flex = c(NA,1,NA,0.001,NA),
                height = height.1,
                div( buttons, class="plotmodule-header"),
-               outputFunc(ns("renderfigure"), width=width.1, height=height.1),                              
+               outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>% shinycssloaders::withSpinner(),                              
                caption,
                shiny::div(class="popup-plot",
                           modalUI(
