@@ -13,7 +13,7 @@ downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
 LoadingInputs <- function(id) {
   ns <- shiny::NS(id)  ## namespace
   bigdash::tabSettings(
-    shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
+##    shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
     shiny::hr(), shiny::br(),
     shiny::checkboxGroupInput(ns("flt_datatype"), "datatype", choices=""),
     shiny::checkboxGroupInput(ns("flt_organism"), "organism", choices="")

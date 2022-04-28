@@ -113,8 +113,9 @@ html {
   }
 
   .dataTables_filter {
-    float: left !important;
-    text-align: left !important;
+//    float: left !important;
+//    text-align: left !important;
+      margin-top: -30px;
   }
 
   .bg-cover-image {
@@ -293,10 +294,10 @@ html {
       font-size: 45px;
       font-weight: 600;      
       color: #58b2e5;
-      padding-top: 250px;
-      background: url("assets/img/mascotte-sc.png") no-repeat;
-      background-size: 180px 180px;
-      background-position: 50% 40px;	
+      padding-top: 300px;
+      background: url("monster-hi.png") no-repeat;      
+      background-size: 300px 300px;
+      background-position: 53% 0px;	
   }
   
   .welcome-btn {
@@ -307,10 +308,10 @@ html {
   }
 
   #welcome-subtext {
-      padding:0 25%;
-      text-align:center;
-      font-size:1.05em;
-      line-height:1.6em;
+      padding: 0 25%;
+      text-align: center;
+      font-size: 1.1em;
+      line-height: 1.4em;
   }
   
   /* ------------------- splash screen ---------------------- */
@@ -328,34 +329,39 @@ html {
       height: 500px;
   }
 
-  #splash-title {
-      position: absolute;
-      top: 40px;
-      left: 5%;
-      width: 90%;
+  div#splash-fullscreen {
+      background-color: #2780e3 !important;
+  }
+
+  #splash-panel {
+      position: absolute;      
+      top: 8vh;
+      left: 55vw;
+      width: 40vw;
       font-family: Lato;
-      line-height: 1.9em;
       color: white;
       text-align: center;
   }
 
-  #splash-panel {
-      position: absolute;
-      top: 280px;
-      left: 38%;
-      width: 24%;
+  #splash-title {
       font-family: Lato;
+      line-height: 2.2em;
       color: white;
       text-align: center;
   }
 
   #splash-panel .form-group {
-      margin-bottom: 5px;
+      margin: 5px auto;
+      text-align: center;
   }
 
-  #splash-login .btn {
-      padding: 3px 6px;
-      height: 26px;
+  #splash-login {
+      padding: 6px 26px;
+  }
+
+  #splash-panel .btn {
+      padding: 4px 26px;
+      font-size: 22px;
   }
 
   #splash-warning {
@@ -367,13 +373,19 @@ html {
       text-align: center;
   }
 
-  #splash-logo {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      height: 24px;
-  }
+   #splash-image {
+     position: absolute;
+     bottom: 3vh;
+     left: 5vw;
+     height: 80vh;
+   }
 
+   #splash-logo2 {
+     position: absolute;
+     bottom: 20px;
+     left: 20px;
+     height: 36px;
+   }
   
   /* ---------- loading page ------------- */
 
@@ -381,14 +393,20 @@ html {
       padding: 0px 25px 0px 20px;
   }
 
+  div#navheader-current-section {
+      font-size: 1.3em;
+      font-weight: 600;      
+      margin: 25px 0 0px 0;
+  }
+
   div#navheader-current-dataset {
-      margin: 22px 0 0px 0;
+      margin: 25px 0 0px 0;
   }
 
   
   /* ---------- modal dialogs ------------- */
   .modal-dialog {
-      width: 870px;
+//      width: 870px;
       top: 0px;
       box-shadow: 10px 10px 30px #999;      
   }

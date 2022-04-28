@@ -493,9 +493,17 @@ LoadingBoard <- function(id,
       fillRow(
         flex=c(NA,1,NA),
         ##h2(input$nav),
-        h4("Data sets"),
-        br(),
-        div(selectedPGX(), id="navheader-current-dataset")
+        shiny::div(
+          id="navheader-current-section",
+          HTML("Data sets &nbsp;"), 
+          shiny::actionLink(
+            ns("module_info"), "",
+            icon=shiny::icon("info-circle"),
+            style="color: #ccc;"
+            )
+        ),        
+        shiny::br(),
+        shiny::div(selectedPGX(), id="navheader-current-dataset")
       )
     })
 

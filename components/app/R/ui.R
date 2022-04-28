@@ -57,10 +57,10 @@ app_ui <- function() {
         
         footer <- shiny::tagList(
             shinybusy::busy_start_up(
-                text = "\nPrepping your Omics Playground...", mode = "auto",
+                text = "\nPrepping your personal playground...", mode = "auto",
                 background="#2780e3", color="#ffffff",
-                loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
-            )
+                ##loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))
+                loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))                            )
         )
 
         logout.tab <- bigdash::navbarDropdownItem(

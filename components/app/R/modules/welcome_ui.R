@@ -17,7 +17,7 @@ WelcomeBoardUI <- function(id) {
   fillCol(
     id = "welcome-page",
     style = "text-align:center;background-color:#eaf7fd;",
-    flex = c(1,NA,NA,NA,1,2),
+    flex = c(1,NA,NA,NA,1,3),
     height = "95vh",
 
     br(),
@@ -40,7 +40,7 @@ WelcomeBoardUI <- function(id) {
     
     div(
       id="welcome-subtext",
-      HTML("<B>BigOmics Playground, Never stop discovering</B><br>
+      HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>
           BigOmics is focused on one thing — helping life scientists see and understand their omics
           data. Our mission is to create smart tools and make advanced omics analysis accessible to
           everyone. Want to know more? Read our paper \"Omics Playground: a comprehensive self-

@@ -111,9 +111,7 @@ dataview_plot_correlation_server <- function(id,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot,        
-##    renderFunc = shiny::renderCachedPlot,
-##    renderFunc2 = shiny::renderCachedPlot,        
-      res = c(90,170),                ## resolution of plots
+      res = c(80,170),                ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )

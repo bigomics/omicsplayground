@@ -3,9 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-WelcomeBoard <- function(id,
-                      auth
-                      )
+WelcomeBoard <- function(id, auth )
 {
   moduleServer(id, function(input, output, session) 
   {

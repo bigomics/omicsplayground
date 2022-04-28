@@ -62,7 +62,7 @@ app_server <- function(input, output, session) {
             }            
             if(!is.null(query[['csv']])) {
                 ## focus on this tab
-                updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+                updateTabsetPanel(session, "load-tabs", selected="Upload data")
                 updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
                                     value = "CSV FILE DESCRIPTION")                
             }
