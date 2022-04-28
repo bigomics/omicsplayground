@@ -138,9 +138,20 @@ app_ui <- function() {
             ),
             sidebar = bigdash::sidebar(
                 "Menu",
-                bigdash::sidebarItem(
-                    "Home",
-                    "home-tab"
+                bigdash::sidebarMenu(
+                    "Load",
+                    bigdash::sidebarMenuItem(
+                      "Welcome",
+                      "welcome-tab"
+                    ),
+                    bigdash::sidebarMenuItem(
+                      "Data sets",
+                      "load-tab"
+                    ),
+                    bigdash::sidebarMenuItem(
+                      "Upload data",
+                      "upload-tab"
+                    )
                 ),
                 bigdash::sidebarItem(
                     "DataView",
@@ -228,12 +239,27 @@ app_ui <- function() {
             ), 
             bigdash::sidebarHelp(
                 bigdash::sidebarTabHelp(
-                    "home-tab",
+                    "welcome-tab",
                     "BigOmics Playground",
                     "is a self-service bioinformatics platform for interactive analysis,
                     visualization and interpretation of transcriptomics and proteomics data.
                     Perform complex data analysis and visualization easily without coding,
                     and significantly reduce the time-to-discovery."
+                ),
+                bigdash::sidebarTabHelp(
+                    "load-tab",
+                    "Load dataset",
+                    "This panel shows the available datasets within the platform. These data sets
+                     have been pre-computed and are ready to be used. Select a
+                     dataset in the table and load the data set by clicking the 'load' button."
+                ),
+                bigdash::sidebarTabHelp(
+                    "upload-tab",
+                    "Upload data",
+                    "users can upload their transcriptomics and proteomics data to the platform.
+                     The platform requires at least 2 data files: a data file containing
+                     counts/expression (counts.csv) and a sample information file (samples.csv).
+                     Optionally, a file specifying the statistical comparisons (contrasts.csv)."
                 ),
                 bigdash::sidebarTabHelp(
                     "dataview-tab",
@@ -341,9 +367,19 @@ app_ui <- function() {
             ),
             bigdash::bigTabs(
                 bigdash::bigTabItem(
-                    "home-tab",
+                    "welcome-tab",
+                    WelcomeBoardInputs("welcome"),
+                    WelcomeBoardUI("welcome")
+                ),
+                bigdash::bigTabItem(
+                    "load-tab",
                     LoadingInputs("load"),
                     LoadingUI("load")
+                ),
+                bigdash::bigTabItem(
+                    "upload-tab",
+                    UploadInputs("upload"),
+                    UploadUI("upload")
                 ),
                 bigdash::bigTabItem(
                     "dataview-tab",

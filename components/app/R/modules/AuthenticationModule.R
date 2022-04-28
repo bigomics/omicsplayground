@@ -10,7 +10,7 @@ AuthenticationUI <- function(id) {
 
 NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
 {
-    message("[AuthenticationModule] >>>> using no authentication <<<<")
+    message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged=FALSE,
@@ -21,13 +21,11 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     )    
 
     resetUSER <- function() {
-
         USER$logged <- FALSE
         USER$name <- ""
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
-
         if(show_modal) {
             m <- splashLoginModal(
                 ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
