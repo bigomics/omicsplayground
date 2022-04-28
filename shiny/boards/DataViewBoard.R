@@ -1280,7 +1280,7 @@ DataViewBoard <- function(input, output, session, env)
         jj <- c(j1, setdiff(1:nrow(x),j1))
         x <- x[jj,,drop=FALSE]
 
-        if(ncol(x) > 1000) {
+        if(FALSE && ncol(x) > 1000) {
             max.row <- 1e6 / ncol(x)
             max.row <- 100*ceiling(max.row/100)
             max.row
@@ -1294,8 +1294,11 @@ DataViewBoard <- function(input, output, session, env)
                       selection = list(mode='single', target='row', selected=1),
                       options=list(
                           dom = 'lfrtip', 
-                          ##pageLength = 60,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = tabH, 
+                          pageLength = 40,
+                          lengthMenu = c(30, 40, 100, 250),
+                          ##scroller=TRUE, scrollY = tabH,
+                          scroller=FALSE, scrollY = FALSE,                          
+                          scrollX = TRUE, 
                           deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
