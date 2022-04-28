@@ -52,7 +52,7 @@ RUN wget https://github.com/bigomics/omicsplayground/archive/develop.zip \
 WORKDIR /omicsplayground
 
 ## restore using renv
-RUN R -e "install.packages('renv');renv::restore()"
+RUN R -e "install.packages(c('renv','remotes'));renv::restore()"
 
 ## any missing packages
 #RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
