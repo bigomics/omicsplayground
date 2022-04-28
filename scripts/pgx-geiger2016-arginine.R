@@ -66,7 +66,7 @@ rownames(samples)=colnames(counts)=short.name
 group.levels <- unique(samples$condition)
 group.levels
 ## 10 contrasts in total
-contrasts <- limma::limma::makeContrasts(
+contrasts <- limma::makeContrasts(
     act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act12h_vs_notact = act12h - notact,
     act24h_vs_notact = act24h - notact,
