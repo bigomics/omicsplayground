@@ -13,6 +13,7 @@ UploadInputs <- function(id) {
 UploadUI <- function(id) {
   ns <- shiny::NS(id)  ## namespace
   shiny::tagList(
+    uiOutput(ns("navheader")),
     UploadModuleUI(ns("upload_panel"))
   )
 }

@@ -74,15 +74,6 @@ LoadingBoard <- function(id,
 
 <br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the Load dataset button.
 
-<br><br><b>Upload data:</b> Under the Upload data panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
-
-<br><br>
-<ol>
-<li>counts.csv: Count/expression file with gene on rows, samples as columns.
-<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
-<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
-</ol>
-
 <br><br><br>
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
 
@@ -506,7 +497,6 @@ LoadingBoard <- function(id,
         shiny::div(selectedPGX(), id="navheader-current-dataset")
       )
     })
-
     
     ##================================================================================
     ## Data sets

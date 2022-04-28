@@ -29,6 +29,49 @@ UploadBoard <- function(id,
     
     dbg("[UploadBoard] getwd = ",getwd())      
 
+    
+    output$navheader <- shiny::renderUI({
+      fillRow(
+        flex=c(NA,1,NA),
+        ##h2(input$nav),
+        shiny::div(
+          id="navheader-current-section",
+          HTML("Upload data &nbsp;"), 
+          shiny::actionLink(
+            ns("module_info"), "",
+            icon=shiny::icon("info-circle"),
+            style="color: #ccc;"
+            )
+        ),        
+        shiny::br(),
+        shiny::div(pgx$name, id="navheader-current-dataset")
+      )
+    })
+
+
+    shiny::observeEvent( input$module_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Data View Board</strong>"),
+            shiny::HTML(module_infotext),
+            easyClose = TRUE, size="l" ))
+    })
+
+    module_infotext =paste0(
+        '<b>Upload data:</b> Under the Upload data panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
+
+<br><br>
+<ol>
+<li>counts.csv: Count/expression file with gene on rows, samples as columns.
+<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
+<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
+</ol>
+
+<br><br><br>
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
+
+')
+    
+    
     ##================================================================================
     ##====================== NEW DATA UPLOAD =========================================
     ##================================================================================
