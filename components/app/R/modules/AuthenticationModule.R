@@ -762,7 +762,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     return(m)
 }
 
-bigomics.buttons <- function() {
+splashscreen.buttons <- function() {
   shiny::div(
     shiny::tags$a(
       shiny::img(id="splash-logo2", src=base64enc::dataURI(file="www/bigomics-logo.png")),
@@ -772,42 +772,42 @@ bigomics.buttons <- function() {
     shiny::tags$a(
       icon("book"),
       "Read-the-docs", 
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://omicsplayground.readthedocs.io",
       target = "_blank"
     ),
     shiny::tags$a(
       icon("youtube"),
       "Watch tutorials",
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
       target = "_blank"
     ),
     shiny::tags$a(
       icon("github"),
       "Get the source", 
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://github.com/bigomics/omicsplayground",
       target = "_blank"
     ),
     shiny::tags$a(
       icon("docker"),
       "Docker image", 
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://hub.docker.com/r/bigomics/omicsplayground",
       target = "_blank"
     ),
     shiny::tags$a(
       icon("users"),
       "User forum", 
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://groups.google.com/d/forum/omicsplayground",
       target = "_blank"
     ),
     shiny::tags$a(
       icon("coffee"),
       "Buy us a coffee!",
-      class = "btn btn-outline-primary mb-2",
+      class = "btn btn-outline-primary",
       href = "https://www.buymeacoffee.com/bigomics",
       target = "_blank"
     )
@@ -824,7 +824,7 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
   
   div.footer = shiny::modalButton("Dismiss")
   if(buttons) {
-    div.footer = bigomics.buttons()      
+    div.footer <- splashscreen.buttons()      
   }
   if(!footer) {
     div.footer <- NULL
@@ -841,7 +841,7 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
       shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
       style="height: 32rem; width: 100%;"                
     ),
-    footer = div.footer,
+    footer = div(div.footer,id="splash-footer"),
     size = "fullscreen",
     easyClose = easyClose,
     fade = fade

@@ -17,7 +17,7 @@ WelcomeBoardUI <- function(id) {
   fillCol(
     id = "welcome-page",
     style = "text-align:center;background-color:#eaf7fd;",
-    flex = c(1,NA,NA,NA,1,3),
+    flex = c(1,NA,NA,NA,1,2),
     height = "95vh",
 
     br(),

@@ -39,8 +39,8 @@ UploadBoard <- function(id,
           HTML("Upload data &nbsp;"), 
           shiny::actionLink(
             ns("module_info"), "",
-            icon=shiny::icon("info-circle"),
-            style="color: #ccc;"
+            icon = shiny::icon("info-circle"),
+            style = "color: #ccc;"
             )
         ),        
         shiny::br(),
@@ -48,10 +48,9 @@ UploadBoard <- function(id,
       )
     })
 
-
     shiny::observeEvent( input$module_info, {
         shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>Data View Board</strong>"),
+            title = shiny::HTML("<strong>Upload new data</strong>"),
             shiny::HTML(module_infotext),
             easyClose = TRUE, size="l" ))
     })
@@ -70,7 +69,6 @@ UploadBoard <- function(id,
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
 
 ')
-    
     
     ##================================================================================
     ##====================== NEW DATA UPLOAD =========================================

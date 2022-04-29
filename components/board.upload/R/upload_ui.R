@@ -6,7 +6,7 @@
 UploadInputs <- function(id) {
   ns <- shiny::NS(id)  ## namespace
   bigdash::tabSettings(
-    shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
+    ## shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
   )
 }
 
