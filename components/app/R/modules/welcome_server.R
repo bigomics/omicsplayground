@@ -14,8 +14,11 @@ WelcomeBoard <- function(id, auth )
         dbg("[HomeBoard] name = ",name)        
         if(name %in% c("",NA,NULL)) {
           welcome <- "Welcome back..."
-        } else {          
-          welcome <- paste0("Welcome back",name,"...")
+        } else {
+          first.name <- strsplit("ivo kwee",split="[@ .]")[[1]][1]
+          first.name <- paste0(toupper(substring(first.name,1,1)),
+                               substring(first.name,2,nchar(first.name)))
+          welcome <- paste0("Welcome back ",first.name,"...")
         }
         welcome
     })

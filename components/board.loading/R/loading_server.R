@@ -64,20 +64,20 @@ LoadingBoard <- function(id,
 
     shiny::observeEvent( input$module_info, {
         shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>Data View Board</strong>"),
+            title = shiny::HTML("<strong>Load Dataset</strong>"),
             shiny::HTML(module_infotext),
             easyClose = TRUE, size="l" ))
     })
 
     module_infotext =paste0(
-        'The platform starts running from the <strong>Home panel</strong>. This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.
+        "This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.
 
-<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the Load dataset button.
+<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the 'Load dataset' button.
 
 <br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
+<center><iframe width='560' height='315' src='https://www.youtube.com/embed/elwT6ztt3Fo' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe><center>
 
-')
+")
     
     ##-----------------------------------------------------------------------------
     ## User interface
@@ -485,7 +485,7 @@ LoadingBoard <- function(id,
         ##h2(input$nav),
         shiny::div(
           id="navheader-current-section",
-          HTML("Data sets &nbsp;"), 
+          HTML("Load dataset &nbsp;"), 
           shiny::actionLink(
             ns("module_info"), "",
             icon=shiny::icon("info-circle"),

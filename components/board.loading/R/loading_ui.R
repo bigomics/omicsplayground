@@ -41,7 +41,7 @@ LoadingUI <- function(id) {
             flex = c(NA,NA,NA,NA,1),
             withTooltip(
               shiny::actionButton(
-                ns("loadbutton"), label="Load data", icon=icon("file-import"),
+                ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
                 class="btn btn-primary mx-2"),
               "Click to load the selected dataset.", placement="bottom"),
             withTooltip( shiny::downloadButton(
@@ -54,7 +54,7 @@ LoadingUI <- function(id) {
              ,"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
               placement="bottom"),
             withTooltip( shiny::actionButton(
-              ns("deletebutton"), label="Delete data set", icon=icon("trash"),
+              ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
               class="btn btn-outline-primary mx-2")
              ,"Delete the selected dataset.", placement="bottom"),
             br()

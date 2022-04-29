@@ -188,9 +188,13 @@ FirebaseAuthenticationModule <- function(input, output, session)
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     dbg("[AuthenticationModule] getwd = ",getwd())
-    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))    
+    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))
 
-    firebase_config <- firebase:::read_config("firebase.rds")
+    if(file.exists("firebase.rds")) {
+      firebase_config <- firebase:::read_config("firebase.rds")
+    } else {
+      stop("[ERROR] no firebase.rds file found. please create.")
+    }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 
     ns <- session$ns    
@@ -682,7 +686,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
             id = "firebaseAuth",
             div(
                 id = "firebaseBtns",
-                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-danger"),
+                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-warning"),
                 "  ",
                 tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
             ),
@@ -725,18 +729,21 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         actionButton(ns("login_btn"),login.text,class="btn-warning")
     )
     if(with.register) {
-        div.button <- div(
-            id="splash-buttons",
-            actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
-            actionButton(ns("register_btn"),"Register",class="btn-primary")
-        )
+      div.button <- div(
+        id="splash-buttons",        
+        actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
+        actionButton(ns("register_btn"),"Register",class="btn-primary")
+      )
     }
     
     ##splash.panel=div();ns=function(x)x
     if(with.firebase) {
-        splash.panel <- div(div.firebase)
+      splash.content <- div(
+        "please login",
+        div.firebase
+      )
     } else {
-      splash.panel <- div(
+      splash.content <- div(
         id="splash-login",
         br(),br(),top,
         div.username,
@@ -753,7 +760,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     body <- div(
       id="splash-panel",
       div(id="splash-title",splash.title),
-      div(id="splash-panelxx",splash.panel),      
+      div(id="splash-content",splash.content),      
       div(id="splash-subtitle",splash.subtitle)
     )
 

@@ -48,7 +48,7 @@ DataViewInputs <- function(id) {
 DataViewUI <- function(id) {
   ns <- shiny::NS(id)  ## namespace
 
-  imgH <- c(340,600)   ## heights for small and fullscreen image
+  imgH <- c(330,600)   ## heights for small and fullscreen image
 
   shiny::tabsetPanel(
 

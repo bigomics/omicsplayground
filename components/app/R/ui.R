@@ -145,7 +145,7 @@ app_ui <- function() {
                       "welcome-tab"
                     ),
                     bigdash::sidebarMenuItem(
-                      "Data sets",
+                      "Load dataset",
                       "load-tab"
                     ),
                     bigdash::sidebarMenuItem(
@@ -241,7 +241,7 @@ app_ui <- function() {
                 bigdash::sidebarTabHelp(
                     "welcome-tab",
                     "BigOmics Playground",
-                    "is a self-service bioinformatics platform for interactive analysis,
+                    "is your self-service bioinformatics platform for interactive analysis,
                     visualization and interpretation of transcriptomics and proteomics data.
                     Perform complex data analysis and visualization easily without coding,
                     and significantly reduce the time-to-discovery."
@@ -256,10 +256,8 @@ app_ui <- function() {
                 bigdash::sidebarTabHelp(
                     "upload-tab",
                     "Upload data",
-                    "users can upload their transcriptomics and proteomics data to the platform.
-                     The platform requires at least 2 data files: a data file containing
-                     counts/expression (counts.csv) and a sample information file (samples.csv).
-                     Optionally, a file specifying the statistical comparisons (contrasts.csv)."
+                    "Here you can upload your own transcriptomics and proteomics data into
+                     the platform and perform computations for the Playground."
                 ),
                 bigdash::sidebarTabHelp(
                     "dataview-tab",
