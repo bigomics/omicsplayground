@@ -16,6 +16,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app/R/modules/welcome_server.R',encoding='UTF-8')
   source('app/R/modules/welcome_ui.R',encoding='UTF-8')
   source('app/R/utils/modalUI.R',encoding='UTF-8')
+  source('app/R/utils/SocialMedia.R',encoding='UTF-8')
   source('app/R/utils/tooltip.R',encoding='UTF-8')
   source('app/R/utils/utils.R',encoding='UTF-8')
   source('base/R/auth.R',encoding='UTF-8')
