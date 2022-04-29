@@ -1373,7 +1373,7 @@ ConnectivityBoard <- function(id, inputData)
         sizevar <- input$LEgraph_sizevar
         vsize = 15
         if(sizevar=="centrality") {
-            vsize <- log(1+betweenness(gr))
+            vsize <- log(1 + igraph::betweenness(gr))
         } else if(sizevar=="cumFC") {
             fc1 <- rowMeans(cumFC)
             vsize <- abs(fc1[match(igraph::V(gr)$name,names(fc1))])**2
@@ -1528,7 +1528,7 @@ ConnectivityBoard <- function(id, inputData)
         sizevar <- input$enrichGraph_sizevar
         vsize = 15
         if(sizevar=="centrality") {
-            vsize <- log(1+betweenness(gr))
+            vsize <- log(1 + igraph::betweenness(gr))
         } else if(sizevar=="cumFC") {
             fc1 <- rowMeans(cumFC)
             vsize <- abs(fc1[match(igraph::V(gr)$name,names(fc1))])**2
