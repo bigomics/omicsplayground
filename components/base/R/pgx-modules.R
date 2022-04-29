@@ -943,8 +943,10 @@ tableModule <- function(input, output, session,
             tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
         )
     }
-    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
 
+    if(!is.null(label) && label!="") label <- paste0("(",label,")")
+    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
+    
     zoom.button <- modalTrigger(
         ns("zoombutton"),
         ns("tablePopup"),
@@ -954,9 +956,9 @@ tableModule <- function(input, output, session,
     
     buttons <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
-        flex=c(NA,NA,NA,NA,NA,1),
-        ##actionLink(options_id, label=NULL, icon = shiny::icon("info")),
+        flex=c(NA,1,NA,NA,NA,NA),
         label1,
+        shiny::div(class='plotmodule-title', title=title, title),        
         shinyWidgets::dropdownButton(
                           shiny::tags$p(shiny::HTML(info.text)),
                           shiny::br(),
@@ -974,8 +976,7 @@ tableModule <- function(input, output, session,
                                      tooltip = shinyWidgets::tooltipOptions(title = "Download",
                                                                             placement = "right")
                                  )),
-        zoom.button,
-        shiny::HTML(paste("<center>",title,"</center>"))
+        zoom.button
     )
     
     CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
@@ -1009,12 +1010,10 @@ tableModule <- function(input, output, session,
     height.2 <- ifnotchar.int(height[2])
 
     output$datatable <- DT::renderDT({
-        dt <- func()
-        ##dt <- dt %>% DT::formatStyle(0, target='row', fontSize='11px', lineHeight='80%')
-        dt
+         func()
     })
     output$datatable2 <- DT::renderDT({
-        func2() %>% DT::formatStyle(0, target='row', fontSize='12px', lineHeight='90%')
+         func2() 
     })
     
     output$popuptable <- shiny::renderUI({
@@ -1037,24 +1036,25 @@ tableModule <- function(input, output, session,
         modalfooter.none  <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
         div.caption <- NULL
         if(!is.null(caption)) div.caption <- shiny::div(caption, class="table-caption")
-        
-        shiny::fillCol(
-                   flex = c(NA,NA,1,NA),
-                   shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                   shiny::tags$head(shiny::tags$style(modalbody.style)),
-                   shiny::tags$head(shiny::tags$style(modalfooter.none)),
-                   buttons,
-                   div.caption,
-                   DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
-                   shiny::div(class="popup-table",
-                              modalUI(
-                                id = ns("tablePopup"),
-                                title = title,
-                                size = "fullscreen",
-                                shiny::uiOutput(ns("popuptable"))
-                            ))            
-               )
-    })
+
+        div(class="tablewidget",
+            shiny::fillCol(
+              flex = c(NA,NA,1,NA),
+              shiny::tags$head(shiny::tags$style(modaldialog.style)),
+              shiny::tags$head(shiny::tags$style(modalbody.style)),
+              shiny::tags$head(shiny::tags$style(modalfooter.none)),
+              div(buttons, class="tablewidget-header"),
+              div.caption,
+              DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
+              shiny::div(class="popup-table",
+                         modalUI(
+                           id = ns("tablePopup"),
+                           title = title,
+                           size = "fullscreen",
+                           shiny::uiOutput(ns("popuptable"))
+                         ))            
+            ))
+        })
     
     module <- list(
         ##data = func,

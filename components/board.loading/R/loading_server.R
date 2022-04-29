@@ -6,14 +6,17 @@
 LoadingBoard <- function(id,
                          pgx_dir,
                          pgx,
+                         ##authentication="none",
+                         auth,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
                          enable_upload = TRUE,
                          enable_delete = TRUE,
                          enable_save = TRUE,
-                         enable_userdir = TRUE,
-                         authentication="none")
+                         enable_userdir = TRUE
+                         ##force_reload = reactive(0)
+                         )
 {
   moduleServer(id, function(input, output, session) 
   {
@@ -21,78 +24,61 @@ LoadingBoard <- function(id,
     dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
     loadedDataset <- shiny::reactiveVal(0)  ## counts/trigger dataset upload
-    
-    SHOWSPLASH=TRUE
-    ## SHOWSPLASH=FALSE
 
     message("[LoadingBoard] in.shinyproxy = ",in.shinyproxy())    
     message("[LoadingBoard] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[LoadingBoard] authentication = ",authentication)
     message("[LoadingBoard] pgx_dir = ",pgx_dir)
     
     dbg("[LoadingBoard] getwd = ",getwd())
 
-    observeEvent(input$close, {
-        session$close()
-    })
-    
-    auth <- NULL   ## shared in module
-    if(authentication == "password") {
+    if(0) {    
+      auth <- NULL   ## shared in module
+      if(authentication == "password") {
         auth <- shiny::callModule(
-            PasswordAuthenticationModule, "auth",
-            credentials.file = "CREDENTIALS")
-    } else if(authentication == "firebase") {
+          PasswordAuthenticationModule, "auth",
+          credentials.file = "CREDENTIALS")
+      } else if(authentication == "firebase") {
         auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
-    } else if(authentication == "shinyproxy") {        
+      } else if(authentication == "shinyproxy") {        
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=TRUE,
                                   username=username, email=username)
-    } else if(authentication == "none2") {        
+      } else if(authentication == "none2") {        
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=FALSE)
-    } else {
+      } else {
         ##} else if(authentication == "none") {
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=TRUE)
-    } 
-
-    dbg("[LoadingBoard] names.auth = ",names(auth))
+      } 
+      dbg("[LoadingBoard] names.auth = ",names(auth))
+    }
+    
     
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
-   
 
     shiny::observeEvent( input$module_info, {
         shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>Data View Board</strong>"),
+            title = shiny::HTML("<strong>Load Dataset</strong>"),
             shiny::HTML(module_infotext),
             easyClose = TRUE, size="l" ))
     })
 
     module_infotext =paste0(
-        'The platform starts running from the <strong>Home panel</strong>. This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.
+        "This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.
 
-<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the Load dataset button.
-
-<br><br><b>Upload data:</b> Under the Upload data panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
-
-<br><br>
-<ol>
-<li>counts.csv: Count/expression file with gene on rows, samples as columns.
-<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
-<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
-</ol>
+<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the 'Load dataset' button.
 
 <br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
+<center><iframe width='560' height='315' src='https://www.youtube.com/embed/elwT6ztt3Fo' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe><center>
 
-')
+")
     
-
     ##-----------------------------------------------------------------------------
     ## User interface
     ##-----------------------------------------------------------------------------
@@ -107,30 +93,12 @@ LoadingBoard <- function(id,
     })
     shiny::outputOptions(output, "rowselected", suspendWhenHidden=FALSE)
     
-    output$dataset_info <- shiny::renderText({
-        sec <- currentSection()
-        inf <- selectedDataSetInfo()
-        inf["conditions"] <- gsub("[,]"," ",inf["conditions"])
-        inf <- sapply(inf, function(s) substring(s,1,500)) 
-        if(sec=="upload-data") {
-            shiny::HTML(paste("<p>Please upload dataset<br>"))
-        } else if(length(inf)==0) {
-            shiny::HTML(paste("<p>Please select a dataset<br>"))
-        } else {
-            shiny::HTML(paste("<p><b>",names(inf),"</b>:", inf,""))
-        }
-    })
-
-    output$dataset_filter <- shiny::renderUI({
+    observe({
         df <- getPGXINFO()
         datatypes <- sort(setdiff(df$datatype,c(NA,"")))
         organisms <- sort(setdiff(df$organism,c(NA,"")))        
-        shiny::tagList(
-            shiny::checkboxGroupInput(ns("flt_datatype"),"datatype", choices = datatypes),
-            shiny::checkboxGroupInput(ns("flt_organism"),"organism", choices = organisms)
-            
-        )
-
+        shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
+        shiny::updateCheckboxGroupInput(session, "flt_organism", choices = organisms)
     })
     
     ##-----------------------------------------------------------------------------
@@ -212,8 +180,8 @@ LoadingBoard <- function(id,
         }
             
         ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
-        kk = unique(c("dataset","datatype","description","nsamples",
-                      "ngenes","nsets","conditions","organism","date"))
+        kk = unique(c("dataset","description","datatype","nsamples",
+                      "ngenes","nsets","conditions","date","organism"))
         kk = intersect(kk,colnames(df))
         df = df[,kk,drop=FALSE]               
         df
@@ -221,6 +189,7 @@ LoadingBoard <- function(id,
     
     selectedPGX <- shiny::reactive({
         ##sel <- input$pgxtable_rows_selected
+        req(pgxtable)
         sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getFilteredPGXINFO()
@@ -228,15 +197,6 @@ LoadingBoard <- function(id,
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx
         pgxfile
-    })
-
-    selectedDataSetInfo <- shiny::reactive({
-        ##sel <- input$pgxtable_rows_selected
-        sel <- pgxtable$rows_selected()
-        if(is.null(sel) || length(sel)==0) return(NULL)
-        df <- getFilteredPGXINFO()
-        if(is.null(df) || nrow(df)==0) return(NULL)        
-        unlist(lapply(df[sel,],as.character))
     })
 
     ##=============================================================================
@@ -346,10 +306,8 @@ LoadingBoard <- function(id,
             if(input$confirmdelete) {
                 cat(">>> deleting",pgxfile,"\n")
                 pgxfile2 <- paste0(pgxfile1,"_")  ## mark as deleted
-                file.rename(pgxfile1, pgxfile2)
-                
+                file.rename(pgxfile1, pgxfile2)                
                 reload_pgxdir(reload_pgxdir()+1)          
-                    
             } else {
                 cat(">>> deletion cancelled\n")
             }
@@ -480,95 +438,6 @@ LoadingBoard <- function(id,
     ##}, ignoreNULL=TRUE )
 
 
-    ##================================================================================
-    ##====================== NEW DATA UPLOAD =========================================
-    ##================================================================================
-
-    if(enable_upload) {
-
-        uploaded_pgx <- UploadModuleServer(
-            id = "upload_panel",
-            FILES = FILES,
-            pgx.dirRT = shiny::reactive(getPGXDIR()),
-            height = 720,
-            ## limits = c(samples=20, comparisons=20, genes=8000),
-            limits = limits
-        )
-        
-        shiny::observeEvent( uploaded_pgx(), {
-            
-            dbg("[observe::uploaded_pgx] uploaded PGX detected!")
-            new_pgx <- uploaded_pgx()
-            
-            dbg("[observe::uploaded_pgx] initializing PGX object")
-            new_pgx <- pgx.initialize(new_pgx)
-            
-            ## update Session PGX
-            dbg("[LoadingBoard@load_react] **** copying current pgx to session.pgx  ****")        
-            for(i in 1:length(new_pgx)) {
-                pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
-            }
-
-            DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)            
-
-            savedata_button <- NULL
-            if(enable_save) {                
-
-                dbg("[LoadingBoard] observeEvent:savedata reacted")        
-                ## -------------- save PGX file/object ---------------
-                pgxname <- sub("[.]pgx$","",new_pgx$name)
-                pgxname <- gsub("^[./-]*","",pgxname)  ## prevent going to parent folder
-                pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
-                pgxname
-                
-                pgxdir  <- getPGXDIR()
-                fn <- file.path(pgxdir,pgxname)
-                fn <- iconv(fn, from = '', to = 'ASCII//TRANSLIT')
-                
-                ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                ## Note: Currently we use 'ngs' as object name but want to go
-                ## towards 'pgx' as standard name. Actually saving as RDS
-                ## should be better.
-                ngs=new_pgx
-                save(ngs, file=fn)
-
-                remove(ngs)
-                remove(new_pgx)
-                
-
-                message("[LoadingBoard::@savedata] updating PGXINFO")                    
-                pgx.initDatasetFolder(pgxdir, force=FALSE, verbose=TRUE)
-                reload_pgxdir(reload_pgxdir()+1)
-            }
-            
-            ## shiny::removeModal()
-            msg1 <- "<b>Ready!</b>"
-            ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-            beepr::beep(10)  ## short beep
-            
-            if(enable_save) {
-                msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
-            } else {
-                msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
-            }
-            loadedDataset(loadedDataset()+1)  ## notify new data uploaded
-
-            showModal(
-                modalDialog(
-                    HTML(msg1),
-                    title = NULL,
-                    size = "s",
-                    footer = tagList(
-                        ## savedata_button,
-                        ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                        modalButton("Start!")
-                    )
-                ))
-            updateTabsetPanel(session, "tabs",  selected = "Datasets")
-        })
-
-    }
-
     ## ================================================================================
     ## =============================== VALUE BOXES UI =================================
     ## ================================================================================
@@ -609,7 +478,25 @@ LoadingBoard <- function(id,
         nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
         vbox( nvalues1, "data points") 
     })
-   
+
+    output$navheader <- shiny::renderUI({
+      fillRow(
+        flex=c(NA,1,NA),
+        ##h2(input$nav),
+        shiny::div(
+          id="navheader-current-section",
+          HTML("Load dataset &nbsp;"), 
+          shiny::actionLink(
+            ns("module_info"), "",
+            icon=shiny::icon("info-circle"),
+            style="color: #ccc;"
+            )
+        ),        
+        shiny::br(),
+        shiny::div(selectedPGX(), id="navheader-current-dataset")
+      )
+    })
+    
     ##================================================================================
     ## Data sets
     ##================================================================================
@@ -628,7 +515,8 @@ LoadingBoard <- function(id,
         paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
     }
 
-    pgxTable.RENDER <- shiny::reactive({
+    
+    pgxTable_data <- shiny::reactive({
         
         dbg("[pgxTable.RENDER] reacted")
 
@@ -638,68 +526,69 @@ LoadingBoard <- function(id,
         df <- getFilteredPGXINFO()
         shiny::req(df)
         dbg("[pgxTable.RENDER] dim(df)=",dim(df))
-
-        updateTab <- function() {
-            ## NEED RETHINK!!! DOES NOT WORK!!!
-            dbg("[pgxTable.RENDER] updating tab to Upload Data")            
-            updateTabsetPanel(session, ns("tabs"), selected = "Upload data")
-            updateTabsetPanel(session, "load-tabs", selected = "Upload data")
-        }
-
-        if(FALSE && nrow(df)==0 && auth$logged()) {
-            ## NEED RETHINK. Sometimes pops up at login...
-            dbg("[pgxTable.RENDER] nrow(df) = ",nrow(df))
-            dbg("[pgxTable.RENDER] auth$logged() = ",auth$logged())            
-            shinyalert::shinyalert(
-                            title = "Your playground looks empty...",
-                            text = "Please start by uploading some data!",
-                            type = "warning",
-                            callbackR = updateTab
-                        )
-        }
         
         df$dataset  <- gsub("[.]pgx$"," ",df$dataset)
         df$conditions  <- gsub("[,]"," ",df$conditions)
         df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)
         df$description <- shortstring(as.character(df$description),200)
         df$nsets <- NULL
+        df$organism <- NULL
+        df
+    })
 
+    pgxTable_DT <- function() {
+        df <- pgxTable_data()
+        req(df)
+        
         target1 <- grep("date",colnames(df))
         target2 <- grep("description",colnames(df))
+        target3 <- grep("conditions",colnames(df))
+        target4 <- grep("dataset",colnames(df))        
         
-        DT::datatable(df,
-                      class = 'compact cell-border stripe hover',
-                      rownames=TRUE,
-                      extensions = c('Scroller'),
-                      selection = list(mode='single', target='row', selected=1),
-                      fillContainer = TRUE,
-                      options=list(
-                          ##dom = 'Blfrtip',
-                          dom = 'frti',
-                          ##columnDefs = list(list(searchable = FALSE, targets = 1)),
-                          pageLength = 1000, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = FALSE,
-                          ##scrollY =400, ## scroller=TRUE,
-                          scrollY = '100vh', ## scroller=TRUE,
-                          deferRender=TRUE,
-                          autoWidth = TRUE,
-                          columnDefs = list(
-                              list(width='50px', targets=target1),
-                              list(width='260px', targets=target2)
-                          )
-                      )  ## end of options.list 
-                      )  %>%
-            DT::formatStyle(0, target='row', fontSize='11.5px', lineHeight='95%')
+        DT::datatable(
+          df,
+          class = 'compact cell-border stripe hover',
+          rownames=TRUE,
+          extensions = c('Scroller'),
+          selection = list(mode='single', target='row', selected=1),
+          fillContainer = TRUE,
+          options=list(
+            dom = 'Blfrtip',
+            ##columnDefs = list(list(searchable = FALSE, targets = 1)),
+            pageLength = 30,
+            lengthMenu = c(20, 30, 40, 100),
+            scrollX = FALSE,
+            ##scrollY =400, ## scroller=TRUE,
+            ##scrollY = '100vh', ## scroller=TRUE,
+            scrollY = FALSE, 
+            deferRender=TRUE,
+            autoWidth = TRUE,
+            columnDefs = list(
+              list(width='60px', targets=target1),
+              list(width='30vw', targets=target2)
+            )
+          )  ## end of options.list 
+        )
+    }
 
-    })
+    pgxTable.RENDER <- function() {
+        pgxTable_DT() %>%
+            DT::formatStyle(0, target='row', fontSize='13px', lineHeight='95%')        
+    }
+
+    pgxTable_modal.RENDER <- function() {
+        pgxTable_DT() %>%
+            DT::formatStyle(0, target='row', fontSize='20px', lineHeight='95%')        
+    }
 
     info_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
 
     pgxtable <- shiny::callModule(
         tableModule, id = "pgxtable",
         func = pgxTable.RENDER,
-        title = "Datasets",
-        height = c(640,750),
+        func2 = pgxTable_modal.RENDER,        
+        title = "",
+        height = c(600,700),
         width = c('100%','100%'),
         info.text = info_text,
         caption2 = info_text

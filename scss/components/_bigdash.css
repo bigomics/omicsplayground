@@ -5,10 +5,6 @@ html {
 	font-size: 1.2em;
     }
     
-    body {
-	line-height: 1.1em;
-    }
-    
     .nav-tabs .nav-link {
 	color: #b8b8b8;
     }
@@ -31,6 +27,7 @@ html {
     #sidebar-help-title {
 	padding-top: 100px;
     }
+
     #sidebar-help-container {
 	width: 11.5rem;
 	font-size: 0.8em;
@@ -46,7 +43,8 @@ html {
 	background-color: rgba(0,0,0,0.03);
     }
     .sidebar-collapsed {
-	min-width: 3rem;
+	min-width: 2.5rem;
+	width: 2.5rem;	
     }
     .sidebar-content hr {
 	margin: 0.5em 0;
@@ -62,8 +60,8 @@ html {
     }
     
     .settings-collapsed {
-	min-width: 3rem;
-	width: 3rem;	
+	min-width: 2.5rem;
+	width: 2.5rem;	
     }
     
 }

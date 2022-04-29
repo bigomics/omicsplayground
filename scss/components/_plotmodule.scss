@@ -1,11 +1,20 @@
 html {
   .plotmodule {
-    padding: 0px 10px 0 10px; 
+    padding: 10px 20px 10px 20px; 
   }
 
   .plotmodule-header {
     margin: 0px 5px 5px 0px; 
-    border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .tablewidget {
+    padding: 10px 20px 10px 20px; 
+  }
+
+  .tablewidget-header {
+    margin: 10px 5px 15px 0px; 
+    border-bottom: 1px solid #ccc;
   }
   
 }

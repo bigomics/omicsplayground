@@ -1,0 +1,89 @@
+html {
+
+    /* ------------------- splash screen ---------------------- */
+    #modal-splash {
+	height: 32rem;
+	width: 100%;
+	background-color: $primary;
+	padding: 0px !important;
+    }
+    
+    #particles-target {
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	height: 500px;
+    }
+    
+    div#splash-fullscreen {
+	background-color: #2780e3 !important;
+    }
+    
+    #splash-panel {
+	position: absolute;      
+	top: 10vh;
+	left: 55vw;
+	width: 40vw;
+	font-family: Lato;
+	color: white;
+	text-align: center;
+    }
+    
+    #splash-title {
+	font-family: Lato;
+	line-height: 2.2em;
+	color: white;
+	text-align: center;
+    }
+    
+    #splash-panel .form-group {
+	margin: 5px auto;
+	text-align: center;
+    }
+    
+    #splash-login {
+	padding: 6px 26px;
+    }
+    
+    #splash-panel .btn {
+	padding: 4px 26px;
+	font-size: 22px;
+    }
+    
+    #splash-footer .btn {
+	font-size: 18px;
+    }
+    
+    #splash-warning {
+	position: absolute;
+	bottom: 25px;
+	left: 50%;
+	width: 200px;
+	margin-left: -100px;
+	text-align: center;
+    }
+    
+    #splash-image {
+	position: absolute;
+	bottom: 3vh;
+	left: 5vw;
+	height: 80vh;
+    }
+    
+    #splash-logo2 {
+	position: absolute;
+	bottom: 16px;
+	left: 20px;
+	height: 36px;
+    }
+
+    #firebaseAuth {
+	margin-top: 11rem;
+    }
+    
+    #firebaseBtns{
+	margin-top: -10rem;
+    }
+    
+    
+}

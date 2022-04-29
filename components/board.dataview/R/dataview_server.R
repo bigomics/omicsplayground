@@ -66,9 +66,11 @@ DataViewBoard <- function(id, pgx)
 
       grps <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=999)
       grps <- sort(grps)
+      grps <- c(grep("^[.]",grps,value=TRUE,invert=TRUE),grep("^[.]",grps,value=TRUE))
       selgrp <- grps[1]
       grps <- c("<ungrouped>",grps)
       if("group" %in% grps) selgrp = "group"
+      if("condition" %in% grps) selgrp = "condition"      
       if(nrow(pgx$samples)<=20) selgrp = "<ungrouped>"
       shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
     })

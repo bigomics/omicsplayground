@@ -10,7 +10,7 @@ AuthenticationUI <- function(id) {
 
 NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
 {
-    message("[AuthenticationModule] >>>> using no authentication <<<<")
+    message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged=FALSE,
@@ -21,16 +21,18 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     )    
 
     resetUSER <- function() {
-
         USER$logged <- FALSE
         USER$name <- ""
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
-
         if(show_modal) {
             m <- splashLoginModal(
-                ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
+              ns=ns,
+              with.email=FALSE,
+              with.password=FALSE,
+              login.text="Start!"
+            )
             ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             shiny::showModal(m)
         } else {
@@ -186,9 +188,13 @@ FirebaseAuthenticationModule <- function(input, output, session)
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     dbg("[AuthenticationModule] getwd = ",getwd())
-    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))    
+    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))
 
-    firebase_config <- firebase:::read_config("firebase.rds")
+    if(file.exists("firebase.rds")) {
+      firebase_config <- firebase:::read_config("firebase.rds")
+    } else {
+      stop("[ERROR] no firebase.rds file found. please create.")
+    }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 
     ns <- session$ns    
@@ -594,7 +600,7 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
     body <- shiny::tagList(
         shiny::div(id="splash-title",splash.title)
     )
-    m <- particlesSplashModal(body, ns=ns, easyClose=TRUE, fade=TRUE,
+    m <- splashScreen(body, ns=ns, easyClose=TRUE, fade=TRUE,
                               buttons=FALSE, footer=FALSE)    
     if(duration>0) {
         cat("closing hello in",round(duration/1000,1),"seconds...\n")
@@ -615,7 +621,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[1]] = c("Big Omics Data","Isn't big anymore with Omics Playground")
     titles[[2]] = c("Great Discoveries","Start on the Omics Playground")
     titles[[3]] = c("Fasten Your Seat Belts!","Hi-speed analytics")
-    titles[[4]] = c("Do-it-yourself Analytics","Yes you can!")
+    titles[[4]] = c("Do-it-yourself Omics Analytics","Yes you can!")
     titles[[5]] = c("Twenty-Four Seven","Your Playground doesn't go on coffee breaks")
     titles[[6]] = c("Analyze with confidence","Be a data rockstar, a Freddie Mercury of omics!")
     titles[[7]] = c("Play-Explore-Discover","Get deeper insights with Omics Playground")
@@ -629,7 +635,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[15]] = c("Keep Exploring","Never stop discovering with Omics Playground")
     titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground")
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
-    titles[[18]] = c("Ich bin doch nicht blöd!","Of course I use Omics Playground")
+    titles[[18]] = c("Ich bin doch nicht bl\u214d!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
@@ -680,7 +686,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
             id = "firebaseAuth",
             div(
                 id = "firebaseBtns",
-                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-danger"),
+                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-warning"),
                 "  ",
                 tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
             ),
@@ -723,41 +729,137 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         actionButton(ns("login_btn"),login.text,class="btn-warning")
     )
     if(with.register) {
-        div.button <- div(
-            id="splash-buttons",
-            actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
-            actionButton(ns("register_btn"),"Register",class="btn-primary")
-        )
+      div.button <- div(
+        id="splash-buttons",        
+        actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
+        actionButton(ns("register_btn"),"Register",class="btn-primary")
+      )
     }
     
     ##splash.panel=div();ns=function(x)x
     if(with.firebase) {
-        splash.panel <- div(div.firebase)
+      splash.content <- div(
+        "please login",
+        div.firebase
+      )
     } else {
-        splash.panel <- div(
-            id="splash-panel",            
-            br(),br(),top,
-            div.username,
-            div.email,
-            div.password,
-            div.alt,
-            br(),
-            div.button
+      splash.content <- div(
+        id="splash-login",
+        br(),br(),top,
+        div.username,
+        div.email,
+        div.password,
+        div.alt,
+        br(),
+        div.button
         )
     }
 
-    body <- tagList(
-        div(id="splash-title",splash.title),
-        splash.panel
+    splash.subtitle <- NULL
+    
+    body <- div(
+      id="splash-panel",
+      div(id="splash-title",splash.title),
+      div(id="splash-content",splash.content),      
+      div(id="splash-subtitle",splash.subtitle)
     )
 
-    m <- particlesSplashModal(body, ns=ns)
+    m <- splashScreen(body, ns=ns)
 
     return(m)
 }
 
-particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
-                                 buttons=TRUE, footer=TRUE)
+splashscreen.buttons <- function() {
+  shiny::div(
+    shiny::tags$a(
+      shiny::img(id="splash-logo2", src=base64enc::dataURI(file="www/bigomics-logo.png")),
+      href = "https://www.bigomics.ch",
+      target = "_blank"
+    ),    
+    shiny::tags$a(
+      icon("book"),
+      "Read-the-docs", 
+      class = "btn btn-outline-primary",
+      href = "https://omicsplayground.readthedocs.io",
+      target = "_blank"
+    ),
+    shiny::tags$a(
+      icon("youtube"),
+      "Watch tutorials",
+      class = "btn btn-outline-primary",
+      href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
+      target = "_blank"
+    ),
+    shiny::tags$a(
+      icon("github"),
+      "Get the source", 
+      class = "btn btn-outline-primary",
+      href = "https://github.com/bigomics/omicsplayground",
+      target = "_blank"
+    ),
+    shiny::tags$a(
+      icon("docker"),
+      "Docker image", 
+      class = "btn btn-outline-primary",
+      href = "https://hub.docker.com/r/bigomics/omicsplayground",
+      target = "_blank"
+    ),
+    shiny::tags$a(
+      icon("users"),
+      "User forum", 
+      class = "btn btn-outline-primary",
+      href = "https://groups.google.com/d/forum/omicsplayground",
+      target = "_blank"
+    ),
+    shiny::tags$a(
+      icon("coffee"),
+      "Buy us a coffee!",
+      class = "btn btn-outline-primary",
+      href = "https://www.buymeacoffee.com/bigomics",
+      target = "_blank"
+    )
+  )
+
+}
+
+splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
+                         buttons=TRUE, footer=TRUE)
+{
+    
+  if(is.null(ns)) ns <- function(e) return(e)
+  message("[AuthenticationModule::monsterFullScreen]")
+  
+  div.footer = shiny::modalButton("Dismiss")
+  if(buttons) {
+    div.footer <- splashscreen.buttons()      
+  }
+  if(!footer) {
+    div.footer <- NULL
+  }
+  
+  ## return modalDialog
+  m <- modalDialog2(
+    id = "splash-fullscreen",
+    class = "bg-primary",
+    shiny::div(
+      shiny::img(src=base64enc::dataURI(file="www/mascotte-sc.png"),id="splash-image"),
+      body,
+      shiny::br(),
+      shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
+      style="height: 32rem; width: 100%;"                
+    ),
+    footer = div(div.footer,id="splash-footer"),
+    size = "fullscreen",
+    easyClose = easyClose,
+    fade = fade
+  ) ## end of modalDialog
+  
+  return(m)
+}
+
+
+splashScreen.SAVE <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
+                              buttons=TRUE, footer=TRUE)
 {
     
     if(is.null(ns)) ns <- function(e) return(e)
@@ -765,50 +867,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
 
     div.footer = shiny::modalButton("Dismiss")
     if(buttons) {
-        div.footer = shiny::div(
-            shiny::tags$a(
-                icon("book"),
-                "Read-the-docs", 
-                class = "btn btn-outline-primary mb-2",
-                href = "https://omicsplayground.readthedocs.io",
-                target = "_blank"
-            ),
-            shiny::tags$a(
-                icon("youtube"),
-                "Watch tutorials",
-                class = "btn btn-outline-primary mb-2",
-                href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
-                target = "_blank"
-            ),
-            shiny::tags$a(
-                icon("github"),
-                "Get the source", 
-                class = "btn btn-outline-primary mb-2",
-                href = "https://github.com/bigomics/omicsplayground",
-                target = "_blank"
-            ),
-            shiny::tags$a(
-                icon("docker"),
-                "Docker image", 
-                class = "btn btn-outline-primary mb-2",
-                href = "https://hub.docker.com/r/bigomics/omicsplayground",
-                target = "_blank"
-            ),
-            shiny::tags$a(
-                icon("users"),
-                "User forum", 
-                class = "btn btn-outline-primary mb-2",
-                href = "https://groups.google.com/d/forum/omicsplayground",
-                target = "_blank"
-            ),
-            shiny::tags$a(
-                icon("coffee"),
-                "Buy us a coffee!",
-                class = "btn btn-outline-primary mb-2",
-                href = "https://www.buymeacoffee.com/bigomics",
-                target = "_blank"
-            )
-        )
+        div.footer = bigomics.buttons()
     }
     if(!footer) {
         div.footer <- NULL

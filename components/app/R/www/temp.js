@@ -143,11 +143,11 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-    Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
+    Shiny.setInputValue('auth-firebaseLogout', 1, {priority: 'event'});    
 };
 
 function quit(){
-    Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
+    Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny input$quit
     // window.close();  // close window??
 };
 
@@ -157,7 +157,7 @@ Shiny.addCustomMessageHandler('shinyproxy-logout', function(msg) {
 
 
 function show_plans(){
-    Shiny.setInputValue('load-auth-firebaseUpgrade', 1, {priority: 'event'});
+    Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});    
 };
 
 async function upgrade_plan(){

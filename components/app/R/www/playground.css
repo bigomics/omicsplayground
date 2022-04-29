@@ -151,8 +151,9 @@ a {
 }
 
 .dataTables_filter {
-    float: left !important;
+    float: right !important;
     text-align: left !important;
+    margin-top: -30px;
 }
 
 .bg-cover-image {

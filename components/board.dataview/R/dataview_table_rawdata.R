@@ -9,7 +9,6 @@ dataview_table_rawdata_ui <- function(id) {
   tableWidget(ns("tbl"))  
 }
 
-
 dataview_table_rawdata_server <- function(id,
                                           pgx,
                                           r.gene = reactive(""),
@@ -130,19 +129,19 @@ dataview_table_rawdata_server <- function(id,
       numcols <- grep('gene|title',colnames(dt$x),value=TRUE,invert=TRUE)
       tabH = 700  ## height of table
             
-      DT::datatable( dt$x, rownames=FALSE,
-                    class = 'compact cell-border stripe hover',
-                    extensions = c('Buttons','Scroller'),
-                    selection = list(mode='single', target='row', selected=1),
-                    options=list(
-                      dom = 'lfrtip',
-                      pageLength = 40,
-                      lengthMenu = c(25, 40, 100, 250),
-                      ##scroller=TRUE, scrollY = tabH,
-                      scroller=FALSE, scrollY = FALSE,                          
-                      deferRender=TRUE
-                    )  ## end of options.list
-                    ) %>%
+      DT::datatable(
+        dt$x, rownames=FALSE,
+        class = 'compact cell-border stripe hover',
+        extensions = c('Buttons','Scroller'),
+        selection = list(mode='single', target='row', selected=1),
+        options=list(
+          dom = 'lfrtip',
+          pageLength = 25,
+          lengthMenu = c(25, 40, 100, 250),
+          scroller=FALSE, scrollY = FALSE,                          
+          deferRender=TRUE
+        )  ## end of options.list
+      ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
         DT::formatStyle(numcols,
                         background = DT::styleColorBar(c(0,dt$x99), 'lightblue'),
@@ -152,6 +151,11 @@ dataview_table_rawdata_server <- function(id,
                         backgroundPosition = 'center')
     }
 
+    rawdataTable_modal.RENDER <- function() {
+      rawdataTable.RENDER() %>%
+        DT::formatStyle(0, target='row', fontSize='20px', lineHeight='70%') 
+    }
+    
     dropdown_search_gene='<code>Search gene</code>'
     menu_grouped='<code>grouped</code>'
     menu_options='<code>Options</code>'

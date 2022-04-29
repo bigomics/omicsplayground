@@ -2,4 +2,9 @@ html {
   tbody .active {
     --bs-table-accent-bg: #004ca7 !important;
   }
+
+  .table-widget {
+      padding: 10px 10px;
+  }
+  
 }

@@ -62,7 +62,7 @@ app_server <- function(input, output, session) {
             }            
             if(!is.null(query[['csv']])) {
                 ## focus on this tab
-                updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+                updateTabsetPanel(session, "load-tabs", selected="Upload data")
                 updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
                                     value = "CSV FILE DESCRIPTION")                
             }
@@ -71,6 +71,34 @@ app_server <- function(input, output, session) {
         dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
     }
     
+    ##-------------------------------------------------------------
+    ## Authentication
+    ##-------------------------------------------------------------
+
+    auth <- NULL   ## shared in module
+    if(authentication == "password") {
+        auth <- shiny::callModule(
+            PasswordAuthenticationModule, "auth",
+            credentials.file = "CREDENTIALS")
+    } else if(authentication == "firebase") {
+        auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
+    } else if(authentication == "shinyproxy") {        
+        username <- Sys.getenv("SHINYPROXY_USERNAME")
+        ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=TRUE,
+                                  username=username, email=username)
+    } else if(authentication == "none2") {        
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=FALSE)
+    } else {
+        ##} else if(authentication == "none") {
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=TRUE)
+    } 
+    dbg("[LoadingBoard] names.auth = ",names(auth))
+  
+  
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
@@ -87,35 +115,51 @@ app_server <- function(input, output, session) {
         pgx_dir = pgx_dir,
         pgx = PGX,
         limits = limits,
+        auth = auth,        
         enable_userdir = opt$ENABLE_USERDIR,                                
-        authentication = authentication,
         enable_upload = opt$ENABLE_UPLOAD,
         enable_delete = opt$ENABLE_DELETE,                                 
         enable_save = opt$ENABLE_SAVE
     )   
 
+    ## Modules needed from the start        
+    env$upload <- UploadBoard(
+        id = "upload",
+        pgx_dir = pgx_dir,
+        pgx = PGX,
+        auth = auth,        
+        limits = limits,
+        enable_userdir = opt$ENABLE_USERDIR,                                
+        enable_upload = opt$ENABLE_UPLOAD,
+        enable_save = opt$ENABLE_SAVE
+    )   
+  
     ## If user is logged off, we clear the data
-    observeEvent( env$load$auth$logged(), {
-        is.logged <- env$load$auth$logged()
+    observeEvent( auth$logged(), {
+        is.logged <- auth$logged()
         length.pgx <- length(names(PGX))
-
+        dbg("[SERVER] *** clearing PGX ***")
         if(!is.logged && length.pgx>0) {
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
         }
     })
-    
+
+    data_loaded <- reactive({
+        (env$load$loaded() || env$upload$loaded())
+    })
+  
     ## User board
-    UserBoard("user", user = env$load$auth) -> env$user
+    WelcomeBoard("welcome", auth=auth) 
+    UserBoard("user", user=auth) -> env$user  
     
     ## Modules needed after dataset is loaded (deferred)
     modules_loaded <- FALSE
-    observeEvent( env$load$loaded(), {        
+    observeEvent( data_loaded(), {        
 
-        env.loaded <- env$load$loaded()
-        message("[SERVER:env.loaded] env.loaded = ",env.loaded)    
-        if(env$load$loaded()==0){
+        message("[SERVER:data.loaded] data_loaded = ",data_loaded())    
+        if(data_loaded()==0){
             return(NULL)
         }
         
@@ -175,7 +219,7 @@ app_server <- function(input, output, session) {
             
         })
 
-        message("[SERVER:env.loaded] --------- done! ----------")
+        message("[SERVER:data_loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
 
@@ -192,7 +236,7 @@ app_server <- function(input, output, session) {
     
     output$current_user <- shiny::renderText({
         ## trigger on change of user
-        user <- env$load$auth$email()
+        user <- auth$email()
         dbg("[SERVER:output$current_user] user = ",user)
         if(user %in% c("",NA,NULL)) user <- "User"
         user
@@ -218,7 +262,7 @@ app_server <- function(input, output, session) {
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
     shiny::observeEvent({
-        env$load$auth$logged()        
+        auth$logged()        
         env$user$enable_beta()
         PGX$name
     }, {
@@ -232,7 +276,7 @@ app_server <- function(input, output, session) {
         show.beta <- env$user$enable_beta()
         dbg("[SERVER] show.beta = ",show.beta)
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
-        is.logged <- env$load$auth$logged()
+        is.logged <- auth$logged()
         
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
@@ -283,7 +327,6 @@ app_server <- function(input, output, session) {
     tm.warned <- FALSE
     shiny::observe({
         ## trigger on change of USER
-        auth <- env$load$auth
         level <- auth$level()
         message("[SERVER] user LEVEL = ",level)
         logged <- auth$logged()
@@ -293,7 +336,7 @@ app_server <- function(input, output, session) {
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
             ## we allow sticky sessions.
-            message("[SERVER] not logged? forcing logout() JS callback...")            
+            message("[SERVER] user not logged in? forcing logout() JS callback...")            
             shinyjs::runjs("logout()")    
         }
         

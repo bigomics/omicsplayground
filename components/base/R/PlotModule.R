@@ -141,6 +141,8 @@ PlotModuleUI <- function(id,
     )
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
+
+    if(!is.null(label) && label!="") label <- paste0("(",label,")")
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
         
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
@@ -159,7 +161,7 @@ PlotModuleUI <- function(id,
         flex = c(NA,1,NA,NA,NA,NA),
         ##flex=c(NA,NA,1),
         label1,
-##        shiny::HTML(paste("<center>",title,"</center>")),
+##      shiny::HTML(paste("<center>",title,"</center>")),
         shiny::div(class='plotmodule-title', title=title, title),        
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
@@ -243,7 +245,6 @@ PlotModuleUI <- function(id,
     )
 
 }
-
 
 
 PlotModuleServer <- function(

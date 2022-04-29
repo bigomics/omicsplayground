@@ -41,10 +41,10 @@ RUN apt install -y r-base r-base-dev r-recommended
 #------------------------------------------------------------
 # Clone fresh code from GitHub
 #------------------------------------------------------------
-WORKDIR /
-RUN wget https://github.com/bigomics/omicsplayground/archive/develop.zip \
-    && unzip develop.zip && mv omicsplayground-develop omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground 
+#WORKDIR /
+#RUN wget https://github.com/bigomics/omicsplayground/archive/develop.zip \
+#    && unzip develop.zip && mv omicsplayground-develop omicsplayground \
+#    && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
 # Install R packages that are required
@@ -52,18 +52,13 @@ RUN wget https://github.com/bigomics/omicsplayground/archive/develop.zip \
 WORKDIR /omicsplayground
 
 ## restore using renv
-RUN R -e "install.packages('renv');renv::restore()"
+COPY renv.lock renv.locak
+RUN R -e "install.packages(renv);renv::restore()"
 
 ## any missing packages
 #RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
 #    'metap','brew','Seurat','R.utils', 'qgraph','psych'))"
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
-
-#------------------------------------------------------------
-# Add shiny user to group shiny
-#------------------------------------------------------------
-#RUN groupadd  shiny \
-#    && useradd --gid shiny --shell /bin/bash --create-home shiny
 
 #------------------------------------------------------------
 # Clean up when done.

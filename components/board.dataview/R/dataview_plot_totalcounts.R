@@ -41,7 +41,7 @@ dataview_plot_totalcounts_server <- function(id,
       
       ylab = "counts (million)"
       if(data_groupby != "<ungrouped>") {
-        ylab = "average group counts (million)"
+        ylab = "average counts (million)"
       }
       
       res <- list(
@@ -72,7 +72,6 @@ dataview_plot_totalcounts_server <- function(id,
         ylim = c(0,max(res$total.counts)/1e6)*1.1,
         names.arg = names.arg
       )
-
     }
     
     modal_plot.RENDER <- function() {
@@ -88,7 +87,7 @@ dataview_plot_totalcounts_server <- function(id,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot,        
-      res = c(96,120)*1,                ## resolution of plots
+      res = c(90,170)*1,                ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
