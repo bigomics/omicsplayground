@@ -108,6 +108,7 @@ app_server <- function(input, output, session) {
     ## *** EXPERIMENTAL *** global reactive value replacing env list
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
+
     
     ## Modules needed from the start        
     env$load <- LoadingBoard(
@@ -150,11 +151,11 @@ app_server <- function(input, output, session) {
         (env$load$loaded() || env$upload$loaded())
     })
   
-    ## User board
+    ## Default boards
     WelcomeBoard("welcome", auth=auth) 
     UserBoard("user", user=auth) -> env$user  
     
-    ## Modules needed after dataset is loaded (deferred)
+    ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
     observeEvent( data_loaded(), {        
 
@@ -256,7 +257,6 @@ app_server <- function(input, output, session) {
         dbg("[SERVER:output$current_section] section = ",section)
         section
     })
-
     
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
@@ -323,8 +323,20 @@ app_server <- function(input, output, session) {
     ##-------------------------------------------------------------
     ## Session Timer (can we put it elsewhere?)
     ##-------------------------------------------------------------
+
+    
+    timer <- TimerModule(
+        "timer",
+        timeout = ifelse(TIMEOUT>0,TIMEOUT,Inf),
+        grace_time = 5*60,
+        max_grace = 3,
+        poll=60
+    )
+    
+    ## timer object
     tm <- reactiveValues(timer=reactiveTimer(Inf), start=NULL)
     tm.warned <- FALSE
+
     shiny::observe({
         ## trigger on change of USER
         level <- auth$level()
@@ -381,6 +393,9 @@ app_server <- function(input, output, session) {
                 if(opt$AUTHENTICATION=="shinyproxy") {
                     js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
+
+                ## after the TIMEOUT we show this
+                
                 showModal(
                     modalDialog(
                         title = "Session Expired",
@@ -440,7 +455,9 @@ app_server <- function(input, output, session) {
                                  )
                         )
                     )
-                )
+                )  ## end of showModal
+
+                ## reset the timer
                 tm$timer <- reactiveTimer(Inf)                
                 tm$start <- NULL
                 tm.warned <<- FALSE                
@@ -449,10 +466,10 @@ app_server <- function(input, output, session) {
     })
 
     observeEvent(input$sendRefs, {
-                                        # check inputs
+        ## check inputs
         input_errors <- FALSE
 
-                                        # check emails
+        ## check emails
         if(input$email1 == "") {
             session$sendCustomMessage(
                         "referral-input-error", 
@@ -551,7 +568,7 @@ app_server <- function(input, output, session) {
         if(input_errors)
             return()
 
-                                        # send emails
+            ## send emails
             body <- list(
                 referrer = "The user",
                 referrals = list(
@@ -594,7 +611,7 @@ app_server <- function(input, output, session) {
                         )
                 return()
             }
-                                        # remove modal
+            ## remove modal
             removeModal()
     })
     

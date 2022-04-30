@@ -56,6 +56,7 @@ app_ui <- function() {
         )
         
         footer <- shiny::tagList(
+            ## social_modal_ui("socialmodal"),
             shinybusy::busy_start_up(
                 text = "\nPrepping your personal playground...", mode = "auto",
                 background="#2780e3", color="#ffffff",

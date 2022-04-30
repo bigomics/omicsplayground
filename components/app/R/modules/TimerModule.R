@@ -2,109 +2,136 @@
 ##library(shinyjs)
 ##library(shinyalert)
 
-TimerUI <- function(id) {
-  ns <- shiny::NS(id)
-  tagList(
-      shinyjs::useShinyjs(),      
-      shinyalert::useShinyalert(),  # Set up shinyalert
-      shiny::actionButton( ns("reset"), "Press me to reset the timer"),
-      ##checkboxInput( ns("pause"), "Click me to pause the timer"),      
-      br(),
-      shiny::textOutput(ns("currentTime"), container=span)
-  )
+TimerModuleUI <- function(id) {
+    ns <- shiny::NS(id)
 }
 
-TimerModule <- function(input, output, session, callbackR,
-                        exit.time = 10, exit.title = "Timed out", exit.text = "", 
-                        warning.time = 5, warning.title = "Warning", warning.text = "", 
+TimerModule <- function(id,
+                        timeout,
+                        grace_time = 0,
+                        max_grace = 3,
+                        reset = reactive(0),
+                        timeout.callback = NULL,
+                        grace.callback = NULL,                         
                         poll = 1)
 {
-    
-    startTime = Sys.time()
-    message("startTime = ",startTime)
-    has.warned <- FALSE
-    timer.on <- reactiveVal(TRUE)
-    
-    resetTimer <- function() {
-        has.warned <<- FALSE                    
-        startTime <<- Sys.time()        
-        timer.on(TRUE)
-    }
-    
-    observeEvent(input$reset, {
-        resetTimer()
-    })
-    
-    ##getTime <- reactive({ Sys.time() - startTime })    
-    output$currentTime <- renderText({
-        shiny::invalidateLater(poll*500)
-        format(Sys.time() - startTime)
-    })    
+    moduleServer(id, function(input, output, session)
+    {
 
-    observe({
-
-        if(timer.on()) shiny::invalidateLater(poll*1000)
-        seconds.passed <- as.numeric(Sys.time() - startTime)
-        message("seconds.passed = ",seconds.passed)
+        start_time <- Sys.time()
+        message("[timer_module] start_time = ",start_time)
         
-        if(seconds.passed > exit.time && timer.on()) {
-            message("10 seconds passed!")                        
-            shinyalert::closeAlert()
-            FUN.callbackR <- function(x) {
-                resetTimer()
-                callbackR()
-                timer.on(TRUE)
-            }
-            shinyalert::shinyalert(
-                            title= exit.title,
-                            text = exit.text,
-                            timer = 0,
-                            callbackR = FUN.callbackR,
-                            type = "warning")
-            ##startTime  <<- Sys.time()
-            has.warned <<- FALSE
-            timer.on(FALSE)
-            return()
+        ngrace = 0
+        warn.time = timeout - max_grace * grace_time
+        message("[timer_module] warn.time = ",warn.time)
+        if(warn.time < 0) {
+            stop("invalid and max_grace and grace_time")
+        }
+        
+        observeEvent( reset(), {
+            if(reset()==0) return()            
+            start_time <<- Sys.time()        
+        })
+
+        lapse_time <- function() {
+            lapse_time <- difftime(Sys.time(), start_time, units = "secs")
+            lapse_time
         }
 
-        if(seconds.passed > warning.time && !has.warned && timer.on()) {
-            message("5 seconds passed!")
-            has.warned <<- TRUE
-            shinyalert::closeAlert()
-            shinyalert::shinyalert(
-                            title = warning.title,
-                            text = warning.text,
-                            ##timer = 2000,                            
-                            type="warning")
-            return()            
-        }
+        timer <- reactive({
+            shiny::invalidateLater(poll*1000)
+            lapse_time()
+        })    
+
+        timeout.trigger <- reactive({
+            is_lapsed <- (lapse_time() > timeout)
+            if(is_lapsed) {
+                message("**** TIME OUT! time out at = ",lapse_time())                
+                if(!is.null(timeout.callback)) timeout.callback()                
+                shiny::invalidateLater(Inf)
+            } else {
+                ##shiny::invalidateLater(poll*1000)
+                shiny::invalidateLater(timeout*1000)                
+            }
+            is_lapsed
+        })
+
+        grace.trigger <- reactive({
+            is_warned <- (lapse_time() > warn.time)
+            is_lapsed <- (lapse_time() > timeout)            
+            if(is_warned && ngrace < max_grace) {
+                message("**** giving grace! lapse_time = ",lapse_time())
+                message("**** ngrace = ",ngrace)                                
+                shiny::invalidateLater(grace_time*1000)
+                if(!is.null(grace.callback)) grace.callback()
+                ngrace <<- ngrace + 1
+            } else if(is_warned && ngrace == max_grace) {
+                message("sorry no grace left")                
+                shiny::invalidateLater(Inf)
+            } else {
+                shiny::invalidateLater(warn.time*1000)
+            }
+            (ngrace * !is_lapsed)
+        })
+                
+        list(
+            timer    = timer,
+            grace    = grace.trigger,
+            timeout  = timeout.trigger
+        )
     })
 }
 
 
+if(FALSE) {
+    
+    require(shiny)
+    shinyApp(
+        ui = fluidPage(
+            textOutput("timer"),
+            textOutput("status1"),            
+            textOutput("status2"),
+            uiOutput("warning"),
+            uiOutput("timeout")
+        ),
+        server = function(input, output, session) {
+            
+            TimerModule(
+                "timer", 
+                timeout = 10,
+                grace_time = 3,
+                max_grace = 0,
+                poll = 1,
+                timeout.callback = function() {message("Callback: TIME OUT!!!!!!")},
+                grace.callback = function() {message("Callback: Gracing you...")}                 
+            ) -> tm
 
-if(0) {
+            social_modal_server("social", r.show = tm$grace)
+            
+            output$timeout <- renderUI({
+                if(!tm$timeout()) return(NULL)
+                showModal( modalDialog("Sorry, time's up friend!"))
+            })
+            output$warning <- renderUI({
+                if(!tm$grace()) return(NULL)
+                showModal(modalDialog("Warning time out soon..."))
+            })
+            
+            output$timer <- renderText({
+                tm$timer()               
+            })
 
-    ui <- fluidPage(
-        shinyjs::useShinyjs(),
-        TimerUI("test")
-    )
+            output$status1 <- renderText({
+                message("status1: reacted!!!!")
+                paste("timeout = ",tm$timeout())                
+            })
 
-    server <- function(input, output, session) {
-        callbackR <- function(x) {
-            message("time out! callbackR called!!")
-            stopApp()
+            output$status2 <- renderText({
+                message("status2: reacted!!!!")
+                paste("grace = ",tm$grace())
+            })
         }
-        callModule(TimerModule, "test", callbackR,
-                   exit.time = 20,
-                   exit.title = "Oh No!",
-                   exit.text = "Your FREE session has timed out.",                
-                   warning.time = 10,
-                   warning.title = "Warning",
-                   warning.text = "Your FREE session will expire in 10 seconds.",
-                   poll = 1) 
-        
-    }
-    shinyApp(ui = ui, server = server)
+    )
+    
 
 }
