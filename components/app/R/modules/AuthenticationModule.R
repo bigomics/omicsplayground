@@ -880,8 +880,6 @@ splashScreen.SAVE <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
         class = "bg-primary",
         shiny::div(
             id="particles-target",
-            ##img(src = base64enc::dataURI(file="www/splash.png"),
-            ##    width="100%", height="auto%", style="position:absolute;"),
             shiny::div(id="splash-logo", shiny::img(src=base64enc::dataURI(file="www/logo.png"),
                                       width=32,height=32)),
             body,
