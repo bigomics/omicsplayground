@@ -83,7 +83,7 @@ TimerModule <- function(id,
                 message("sorry no warn left")                
                 shiny::invalidateLater(Inf)
             } else {
-                shiny::invalidateLater(warn_before*1000)
+                shiny::invalidateLater(warn_start*1000)
             }
             (nwarn * !is_lapsed)
         })

@@ -636,7 +636,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[15]] = c("Keep Exploring","Never stop discovering with Omics Playground")
     titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground")
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
-    titles[[18]] = c("Ich bin doch nicht bl\u214d!","Of course I use Omics Playground")
+    titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")

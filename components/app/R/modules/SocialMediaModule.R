@@ -23,12 +23,12 @@ SocialMediaModule <- function(id, r.show = reactive(0))
   {
     ns <- session$ns
     
-    std.desc <- "Hi. I always thought omics analysis so difficult but now I am using BigOmics Playground to analyze my own omics data. No coding required. It's so easy! You should really try it! It's open source and there is even a free version. Go and visit BigOmics"
+    msg <- "Hi. I always thought omics analysis was so difficult, but now I am using BigOmics Playground to analyze my own omics data. No coding required. It's so easy and fun! You should really try it! It's open source and there is even a free version. Go and visit BigOmics at www.bigomics.ch\n\n"
     
     urls <- GetSocialMediaSiteLinks_WithShareLinks(
       url = "http://www.bigomics.ch",
       title = "Analyze omics data yourself! ",
-      desc = std.desc
+      desc = msg
     )
       
     social.buttons <- fillRow(
@@ -67,14 +67,14 @@ SocialMediaModule <- function(id, r.show = reactive(0))
       if(do.show==0) return(NULL)
       
       showModal( modalDialog(
-        div(HTML("<center><h2>Sorry, time's up!</h2></center>"),style="margin-top:0px;"),
+        div(HTML("<center><h2>Sorry, time's up mate!</h2></center>"),style="margin-top:0px;"),
         br(),
         HTML("Your FREE session has expired. 
          Did you enjoy using BigOmics Playground? You can extend
          your FREE session by referring BigOmics to your friends!"),
         br(),br(),
         social.buttons,
-        br(), br(),
+        br(), br(), br(),
         footer = submit.buttons,
         size = "m",
         easyClose = FALSE
@@ -92,67 +92,67 @@ SocialMediaModule <- function(id, r.show = reactive(0))
     observeEvent( input$twitter, {
       nreferred <<- nreferred + 1
       browseURL( urls["twitter"] )
-      Sys.sleep(10); shinyjs::enable("sure")
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$linkedin, {
       nreferred <<- nreferred + 1
       browseURL( urls["linkedin"] )
-      Sys.sleep(10); shinyjs::enable("sure")      
+      Sys.sleep(5); shinyjs::enable("sure")      
     })
 
     observeEvent( input$facebook, {
       nreferred <<- nreferred + 1
       browseURL( urls["facebook"] )
-      Sys.sleep(10); shinyjs::enable("sure")            
+      Sys.sleep(5); shinyjs::enable("sure")            
     })
 
     observeEvent( input$whatsapp, {
       nreferred <<- nreferred + 1
       browseURL( urls["whatsapp"] )
-      Sys.sleep(10); shinyjs::enable("sure")                  
+      Sys.sleep(5); shinyjs::enable("sure")                  
     })
 
     observeEvent( input$email, {
       nreferred <<- nreferred + 1
       browseURL( urls["email"] )
-      Sys.sleep(10); shinyjs::enable("sure")                        
+      Sys.sleep(5); shinyjs::enable("sure")                        
     })
 
     observeEvent( input$telegram, {
       nreferred <<- nreferred + 1
       browseURL( urls["telegram.me"] )
-      Sys.sleep(10); shinyjs::enable("sure")      
+      Sys.sleep(5); shinyjs::enable("sure")      
     })
 
     observeEvent( input$reddit, {
       nreferred <<- nreferred + 1
       browseURL( urls["reddit"] )
-      Sys.sleep(10); shinyjs::enable("sure")            
+      Sys.sleep(5); shinyjs::enable("sure")            
     })
 
     observeEvent( input$pinterest, {
       nreferred <<- nreferred + 1
       browseURL( urls["pinterest"] )
-      Sys.sleep(10); shinyjs::enable("sure")      
+      Sys.sleep(5); shinyjs::enable("sure")      
     })
 
     observeEvent( input$yahoo, {
       nreferred <<- nreferred + 1
       browseURL( urls["yahoo"] )
-      Sys.sleep(10); shinyjs::enable("sure")            
+      Sys.sleep(5); shinyjs::enable("sure")            
     })
 
     observeEvent( input$skype, {
       nreferred <<- nreferred + 1
       browseURL( urls["skype"] )
-      Sys.sleep(10); shinyjs::enable("sure")            
+      Sys.sleep(5); shinyjs::enable("sure")            
     })
 
     observeEvent( input$xing, {
       nreferred <<- nreferred + 1
       browseURL( urls["xing"] )
-      Sys.sleep(10); shinyjs::enable("sure")            
+      Sys.sleep(5); shinyjs::enable("sure")            
     })
     
 

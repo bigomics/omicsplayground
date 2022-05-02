@@ -18,20 +18,27 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
-
     
     ## Logging of input/output events -------------------------------------
     log.path <- "../logs/"
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
     ## shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
-    
-    has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
-        !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
+
+    ## Determine is Honcho is alive
+    ##honcho.responding <- grepl("Swagger",RCurl::getURL("http://localhost:8000/__docs__/"))
+    ##curl.resp <- try(RCurl::getURL("http://localhost:8000/__docs__/"))
+    curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
+    honcho.responding <- grepl("Swagger", curl.resp)
+    honcho.responding      
+    honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
+    has.honcho <- (honcho.token!="" && honcho.responding)
     if(1 && has.honcho) {
+        dbg("[SERVER] Honcho is alive! ")    
         sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
         ## No honcho, no email....
+        dbg("[SERVER] No Honcho? No party..")          
         sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
 
@@ -376,9 +383,10 @@ app_server <- function(input, output, session) {
         r.timeout <- reactive({
           timer$timeout() && auth$logged()
         })
-        
+
+        ## Choose the referral modal upon timeout:
         mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
-        ##mod.timeout <- SendReferralModule("sendreferral", r.show=r.timeout)
+        ##mod.timeout <- SendReferralModule("sendreferral", r.user=auth$name, r.show=r.timeout)
         
         observeEvent( mod.timeout$success(), {        
           success <- mod.timeout$success()
@@ -387,7 +395,7 @@ app_server <- function(input, output, session) {
             message("[SERVER] logout after no referral!!!")
             shinyjs::runjs("logout()")    
           }
-          if(success > 0) {
+          if(success > 1) {
             message("[SERVER] resetting timer after referral!!!")
             showModal(modalDialog(
               HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>"),
