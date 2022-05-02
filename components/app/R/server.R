@@ -384,7 +384,7 @@ app_server <- function(input, output, session) {
           timer$timeout() && auth$logged()
         })
 
-        ## Choose the referral modal upon timeout:
+        ## Choose type of referral modal upon timeout:
         mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
         ##mod.timeout <- SendReferralModule("sendreferral", r.user=auth$name, r.show=r.timeout)
         
