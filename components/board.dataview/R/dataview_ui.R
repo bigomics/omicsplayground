@@ -58,7 +58,7 @@ DataViewUI <- function(id) {
     shiny::tabPanel(
       "Plots",
       shiny::fillRow(
-        flex = c(1,5),
+        flex = c(1.2,5),
         dataview_module_geneinfo_ui(ns("geneinfo")),
         shiny::fillCol(
           flex = c(1,1,NA),
