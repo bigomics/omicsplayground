@@ -8,7 +8,8 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
+NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
+                                   username="", email="")
 {
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
@@ -56,8 +57,8 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
-    observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+    observeEvent( input$userLogout, {
+        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
     
@@ -267,8 +268,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
     })
 
-    observeEvent( input$firebaseLogout, {    
-        message("[FirebaseAuthenticationModule] firebaseLogout triggered!")
+    observeEvent( input$userLogout, {    
+        message("[FirebaseAuthenticationModule] userLogout triggered!")
         resetUSER() 
     })
 
@@ -550,8 +551,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         ##hide("login_warning")
     })
 
-    observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+    observeEvent( input$userLogout, {
+        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
     
