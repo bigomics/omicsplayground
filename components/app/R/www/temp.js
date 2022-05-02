@@ -8,6 +8,29 @@ Shiny.addCustomMessageHandler('set-user', function(msg) {
 	}
 });
 
+$(function(){
+	setTimeout(() => {
+		$('.sidebar-label').trigger('click');
+		$('.sidebar-menu')
+			.first()
+			.trigger('click');
+
+		$('.tab-sidebar')
+			.first()
+			.css('display', 'none');
+	}, 250);
+
+	$('#init-load-data').on('click', (e) => {
+		$(".tab-sidebar:eq(1)").trigger('click');
+		$('.sidebar-label').trigger('click');
+	});
+
+	$('#init-upload-data').on('click', (e) => {
+		$(".tab-sidebar:eq(2)").trigger('click');
+		$('.sidebar-label').trigger('click');
+	});
+})
+
 Shiny.addCustomMessageHandler('manage-sub', function(msg) {
 	window.location.assign(msg);
 });
