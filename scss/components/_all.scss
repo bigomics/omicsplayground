@@ -1,50 +1,53 @@
 html {
-  
+
   .content {
-      min-height: 800px;
+    min-height: 800px;
   }
 
-  [class*="col-lg-"],[class*="col-md-"],
-  [class*="col-sm-"],[class*="col-xs-"]{
-      padding: 4px !important;
+  [class*="col-lg-"],
+  [class*="col-md-"],
+  [class*="col-sm-"],
+  [class*="col-xs-"] {
+    padding: 4px !important;
   }
 
   .control-label {
-      margin-bottom: 0px;
-      margin-top: 2px;
+    margin-bottom: 0px;
+    margin-top: 2px;
   }
 
   /* ---------------------------- template specfic -------------------------- */
 
   body {
     a {
-        color: $main; 
-        text-decoration: none;
+      color: $main;
+      text-decoration: none;
     }
+
     font-size: 14px;
     line-height: 1.1em;
   }
 
   /* space in innner tabpanes */
   .tabbable .tab-content {
-      padding: 15px 20px; 
+    padding: 15px 20px;
   }
 
   .tabbable .nav-tabs {
-      padding: 0px;
-      margin: 4px 0px;
-      border-radius: 0px;
+    padding: 0px;
+    margin: 4px 0px;
+    border-radius: 0px;
   }
 
   .nav-tabs>li>a {
-      margin: 0px 0px;
-      padding: 6px 12px;
-      border-radius: 0px;
+    margin: 0px 0px;
+    padding: 6px 12px;
+    border-radius: 0px;
   }
 
   .nav-tabs>li.active {
-      border-top: 3px solid $main;
-      margin-top: -3px;
+    border-top: 3px solid $main;
+    margin-top: -3px;
   }
 
   /* ---------------------------- playground -------------------------- */
@@ -52,35 +55,35 @@ html {
   /* value boxes */
 
   .box {
-      border-top: 0px !important;
+    border-top: 0px !important;
   }
 
   #datainfo {
-      background: #fcfcfc;
-      font-size: 12px;
-      padding: 20px 10px;
-      line-height: 1em;
+    background: #fcfcfc;
+    font-size: 12px;
+    padding: 20px 10px;
+    line-height: 1em;
   }
 
   .well {
-      font-size: 12px;
-      line-height: 1.2em;      
+    font-size: 12px;
+    line-height: 1.2em;
   }
 
   .modal-content .well {
-      font-size: 1.3em;
-      line-height: 1.2em;
-      width: 100%;
-  }  
+    font-size: 1.3em;
+    line-height: 1.2em;
+    width: 100%;
+  }
 
   /* tooltips */
   .tooltip-inner {
-      background-color: #e0e0e0FF;
-      background-color: #fcfca0FF; 
-      color: #3f3f3fFF; 
-      border: 1px solid #9f9f9fFF;
-      opacity: 1;
-      text-align: left;    
+    background-color: #e0e0e0FF;
+    background-color: #fcfca0FF;
+    color: #3f3f3fFF;
+    border: 1px solid #9f9f9fFF;
+    opacity: 1;
+    text-align: left;
   }
 
   .tooltip-arrow-inner {
@@ -89,7 +92,7 @@ html {
     border: 1px solid #e0e0e0;
   }
 
-  .code { 
+  .code {
     color: #1f1f1fFF;
     background-color: #F9F9F9FF;
     font-weight: 400;
@@ -113,9 +116,9 @@ html {
   }
 
   .dataTables_filter {
-//    float: left !important;
-//    text-align: left !important;
-      margin-top: -30px;
+    //    float: left !important;
+    //    text-align: left !important;
+    margin-top: -30px;
   }
 
   .bg-cover-image {
@@ -123,12 +126,13 @@ html {
     background-color: #fff;
   }
 
-  .btn-circle-xs, .btn-circle-xs:focus {
+  .btn-circle-xs,
+  .btn-circle-xs:focus {
     background: #FFFFFF;
     color: #FFFFFF;
     color: #EEE;
     color: #DDD;
-    text-shadow: 0 0 0px #ccc;    
+    text-shadow: 0 0 0px #ccc;
     border: 0px;
     border-radius: 3px !important;
   }
@@ -153,7 +157,8 @@ html {
     line-height: 1.3em;
   }
 
-  .caption,.caption2 {
+  .caption,
+  .caption2 {
     font-size: 0.9em;
     font-weight: 400;
     line-height: 1.1em;
@@ -164,7 +169,7 @@ html {
 
   .caption2 {
     padding: 2.5rem 0 2rem 0;
-    font-size: 1.7rem;    
+    font-size: 1.7rem;
   }
 
   .table-caption {
@@ -177,83 +182,85 @@ html {
   }
 
   .current-user {
-      position: fixed;
-      font-weight: 200;
-      font-size: 11px;
-      color: rgba(255,255,255,100);
-      color: rgba(0,0,0,100);
-      top: 1px;
-      right: 20px;
-      z-index: 9999;
+    position: fixed;
+    font-weight: 200;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 100);
+    color: rgba(0, 0, 0, 100);
+    top: 1px;
+    right: 20px;
+    z-index: 9999;
   }
 
   .current-dataset {
-      padding: 8px 0vw;
-      font-weight: 200;
-      font-size: 16px;
-      color: rgba(0,0,0,100);      
-      text-align: left;
-      min-width: 40vw;
+    padding: 8px 0vw;
+    font-weight: 200;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 100);
+    text-align: left;
+    min-width: 40vw;
   }
 
   .current-section {
-      padding: 8px 0vw;
-      font-weight: 400;
-      font-size: 18px;
-      color: rgba(0,0,0,100);      
-      text-align: center;
-      min-width: 0vw;
+    padding: 8px 0vw;
+    font-weight: 400;
+    font-size: 18px;
+    color: rgba(0, 0, 0, 100);
+    text-align: center;
+    min-width: 0vw;
   }
-  
+
   /* ------------------- buttons -------------- */
-  .run-button,.load-button {
-      outline: none;
-      border-color: #1967be;
-      box-shadow: 0 0 5px #1967be;
+  .run-button,
+  .load-button {
+    outline: none;
+    border-color: #1967be;
+    box-shadow: 0 0 5px #1967be;
   }
 
   .action-button .fab .fa {
-      font-size: 16px;
-      margin-top: 0px;
+    font-size: 16px;
+    margin-top: 0px;
   }
 
   .btn-social-icon {
-      padding: 0px;
-      width:  28px;
-      height: 24px;
+    padding: 0px;
+    width: 28px;
+    height: 24px;
   }
 
   #social-buttons {
-      position: fixed;
-      font-weight: 300;
-      font-size: 30px !important;
-      color: #FFFFFF88;
-      bottom: 10px;
-      left: 10px;
-      z-index: 9999;
+    position: fixed;
+    font-weight: 300;
+    font-size: 30px !important;
+    color: #FFFFFF88;
+    bottom: 10px;
+    left: 10px;
+    z-index: 9999;
   }
 
   .radioGroupButtons {
-      margin-top: -3px;
-      margin-bottom: -3px;
+    margin-top: -3px;
+    margin-bottom: -3px;
   }
 
-  .btn, .btn-default {
-      padding: 4px 12px;
-      font-size: 15px;
-      margin: 0px;
-      border-radius: 3px;
+  .btn,
+  .btn-default {
+    padding: 4px 12px;
+    font-size: 15px;
+    margin: 0px;
+    border-radius: 3px;
   }
 
   .modal-footer .btn {
-      margin-left: 5px;
-      margin-bottom: 0;
-      font-size: 14px;
+    margin-left: 5px;
+    margin-bottom: 0;
+    font-size: 14px;
   }
 
-  .btn:hover, 
-  .btn:focus, 
-  .btn:active, 
+  .btn:hover,
+  .btn:focus,
+  .btn:active,
   .btn:active:hover {
     border: 1px solid;
   }
@@ -262,15 +269,15 @@ html {
     color: white;
     background-color: #e45c00;
     background-image: none;
-    border: 0px; 
+    border: 0px;
     padding: 8px 12px;
   }
 
-  .red-button:hover, 
-  .red-button:focus, 
-  .red-button:active, 
+  .red-button:hover,
+  .red-button:focus,
+  .red-button:active,
   .red-button:active:hover {
-    background-color: #b44c00;    
+    background-color: #b44c00;
   }
 
 
@@ -280,8 +287,8 @@ html {
     border-color: #2e6da4;
   }
 
-  .blue-button:hover, 
-  .blue-button:focus, 
+  .blue-button:hover,
+  .blue-button:focus,
   .blue-button:active,
   .blue-button:active:hover {
     background-color: #286090;
@@ -291,72 +298,74 @@ html {
   /* -------------------  welcome screent ---------------------- */
 
   #welcome-text {
-      font-size: 50px;
-      font-weight: 600;      
-      color: #58b2e5;
-      padding-top: 300px;
-      background: url("monster-hi.png") no-repeat;      
-      background-size: 300px 300px;
-      background-position: 53% 0px;	
+    font-size: 50px;
+    font-weight: 600;
+    color: #58b2e5;
+    padding-top: 300px;
+    background: url("monster-hi.png") no-repeat;
+    background-size: 300px 300px;
+    background-position: 53% 0px;
   }
-  
+
   .welcome-btn {
-      padding: 10px 26px;
-      margin-top: 20px;
-      font-size: 25px;
-      width: 330px;
+    padding: 10px 26px;
+    margin-top: 20px;
+    font-size: 25px;
+    width: 330px;
   }
 
   #welcome-subtext {
-      padding: 0 25%;
-      text-align: center;
-      font-size: 1.1em;
-      line-height: 1.4em;
+    padding: 0 25%;
+    text-align: center;
+    font-size: 1.1em;
+    line-height: 1.4em;
   }
-  
-  
+
+
   /* ---------- loading page ------------- */
 
   div#load-navheader {
-      padding: 0px 25px 0px 20px;
+    padding: 0px 25px 0px 20px;
   }
 
   div#navheader-current-section {
-      font-size: 1.3em;
-      font-weight: 600;      
-      margin: 25px 0 0px 0;
+    font-size: 1.3em;
+    font-weight: 600;
+    margin: 25px 0 0px 0;
   }
 
   div#navheader-current-dataset {
-      margin: 27px 0 0px 0;
+    margin: 27px 0 0px 0;
   }
 
-  
+
   /* ---------- modal dialogs ------------- */
   .modal-dialog {
-//      width: 870px;
-      top: 0px;
-      box-shadow: 10px 10px 30px #999;      
+    top: 0px;
+    box-shadow: 10px 10px 30px #999;
   }
+
   .modal-dialog.modal-lg {
-      width: 1400px;
+    width: 1400px;
   }
+
   .modal-dialog.modal-sm {
-      width: 400px;
-      top: 100px;	           
+    width: 400px;
+    top: 100px;
   }
 
   .modal-content {
-    border:0;
+    border: 0;
   }
 
   .modal-backdrop {
-      background-color: #000;
-      background-color: #FFF;
+    background-color: #000;
+    background-color: #FFF;
   }
 
-  .modal-backdrop.show, .modal-backdrop.in {
-      opacity: 0.85;
+  .modal-backdrop.show,
+  .modal-backdrop.in {
+    opacity: 0.85;
   }
 
   .bg-cover-image {
@@ -364,49 +373,47 @@ html {
   }
 
   .popup-plot .modal-footer {
-      display: none;
+    display: none;
   }
 
-  .footer{
-      position:absolute;
-      right:0;
-      left:0;
-      bottom:0;
-      padding:3rem 1rem;
-      text-align:center;
-      font-size:0.8em;
-  }
-
-  .action-text #sig_example1 #sig_example2 #sig_example3 {
-      font-size: 0.9em;
-      color: #2244AA;
-      background-color: transparent;
-      border-style: none;
-      padding: 0
+  .footer {
+    position: absolute;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    padding: 3rem 1rem;
+    text-align: center;
+    font-size: 0.8em;
   }
 
   .action-text #sig_example1 #sig_example2 #sig_example3 {
-      font-size: 0.9em;
-      background-color: $light;
-      border-style: none;
-      padding: 0
+    font-size: 0.9em;
+    color: #2244AA;
+    background-color: transparent;
+    border-style: none;
+    padding: 0
   }
 
-  #emailLinkWrapper{
-      display: none;
-      padding-left: 20rem;
+  .action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    background-color: $light;
+    border-style: none;
+    padding: 0
+  }
+
+  #emailLinkWrapper {
+    display: none;
+    padding-left: 20rem;
   }
 
   .white {
-      color: white;
+    color: white;
   }
 
   // used in socialmedia popup
   textarea.form-control {
-      font-size: 0.95em;
-      line-height: 1.1em;
+    font-size: 0.95em;
+    line-height: 1.1em;
   }
-
-
 
 }

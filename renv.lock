@@ -195,7 +195,6 @@
       "git_last_commit_date": "2021-10-26",
       "Hash": "566e4af3cb3ebd433244e4b0e2cec171",
       "Requirements": [
-        "KernSmooth",
         "Rcpp",
         "SummarizedExperiment",
         "base64enc",
@@ -419,9 +418,7 @@
       "Requirements": [
         "Formula",
         "base64enc",
-        "cluster",
         "data.table",
-        "foreign",
         "ggplot2",
         "gridExtra",
         "gtable",
@@ -429,7 +426,6 @@
         "htmltools",
         "lattice",
         "latticeExtra",
-        "nnet",
         "rpart",
         "survival",
         "viridis"
@@ -477,14 +473,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "aee647d15e5541ad44d157f7b78fda01",
-      "Requirements": []
-    },
-    "KernSmooth": {
-      "Package": "KernSmooth",
-      "Version": "2.23-20",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "8dcfa99b14c296bc9f1fd64d52fd3ce7",
       "Requirements": []
     },
     "MASS": {
@@ -807,12 +795,11 @@
     },
     "Seurat": {
       "Package": "Seurat",
-      "Version": "4.1.0",
+      "Version": "4.1.1",
       "Source": "Repository",
       "Repository": "RSPM",
-      "Hash": "b685b2bbeab0011cca5662f4991203c2",
+      "Hash": "0d7350ea71e070760974a50692596c4d",
       "Requirements": [
-        "KernSmooth",
         "MASS",
         "Matrix",
         "RANN",
@@ -824,7 +811,6 @@
         "RcppProgress",
         "Rtsne",
         "SeuratObject",
-        "cluster",
         "cowplot",
         "fitdistrplus",
         "future",
@@ -956,7 +942,6 @@
         "Biobase",
         "BiocGenerics",
         "MASS",
-        "boot",
         "nnls"
       ]
     },
@@ -1221,17 +1206,8 @@
         "Matrix",
         "Rcpp",
         "S4Vectors",
-        "cluster",
         "igraph"
       ]
-    },
-    "boot": {
-      "Package": "boot",
-      "Version": "1.3-28",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "0baa960e3b49c6176a4f42addcbacc59",
-      "Requirements": []
     },
     "brew": {
       "Package": "brew",
@@ -1317,10 +1293,10 @@
     },
     "car": {
       "Package": "car",
-      "Version": "3.0-12",
+      "Version": "3.0-13",
       "Source": "Repository",
       "Repository": "RSPM",
-      "Hash": "40e15704635050c063b1b26acce2051c",
+      "Hash": "69e00596e08b7f64e5a7d16447bec44d",
       "Requirements": [
         "MASS",
         "abind",
@@ -1329,7 +1305,6 @@
         "maptools",
         "mgcv",
         "nlme",
-        "nnet",
         "pbkrtest",
         "quantreg"
       ]
@@ -1364,16 +1339,6 @@
         "shape"
       ]
     },
-    "class": {
-      "Package": "class",
-      "Version": "7.3-20",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "da09d82223e669d270e47ed24ac8686e",
-      "Requirements": [
-        "MASS"
-      ]
-    },
     "classInt": {
       "Package": "classInt",
       "Version": "0.4-3",
@@ -1381,8 +1346,6 @@
       "Repository": "RSPM",
       "Hash": "17bdfa3c51df4a6c82484d13b11fb380",
       "Requirements": [
-        "KernSmooth",
-        "class",
         "e1071"
       ]
     },
@@ -1410,24 +1373,6 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "402594b0365210ad6df53e8fcda69d8a",
-      "Requirements": [
-        "cluster"
-      ]
-    },
-    "cluster": {
-      "Package": "cluster",
-      "Version": "2.1.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c5f8447373ec2a0f593c694024e5b7ee",
-      "Requirements": []
-    },
-    "codetools": {
-      "Package": "codetools",
-      "Version": "0.2-18",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "019388fc48e48b3da0d3a76ff94608a8",
       "Requirements": []
     },
     "colorspace": {
@@ -1721,7 +1666,6 @@
       "Repository": "RSPM",
       "Hash": "32885be243a29301c90d33db37c3aad8",
       "Requirements": [
-        "class",
         "proxy"
       ]
     },
@@ -1935,7 +1879,6 @@
       "Repository": "RSPM",
       "Hash": "618609b42c9406731ead03adf5379850",
       "Requirements": [
-        "codetools",
         "iterators"
       ]
     },
@@ -1953,20 +1896,11 @@
         "ggplot2",
         "lmtest",
         "magrittr",
-        "nnet",
         "timeDate",
         "tseries",
         "urca",
         "zoo"
       ]
-    },
-    "foreign": {
-      "Package": "foreign",
-      "Version": "0.8-82",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "32b25c97ce306a760c4d9f787991b5d9",
-      "Requirements": []
     },
     "formatR": {
       "Package": "formatR",
@@ -2287,9 +2221,7 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "eca8023ed5ca6372479ebb9b3207f5ae",
-      "Requirements": [
-        "codetools"
-      ]
+      "Requirements": []
     },
     "glue": {
       "Package": "glue",
@@ -2341,7 +2273,6 @@
       "Repository": "RSPM",
       "Hash": "75437dd4c43599f6e9418ea249495fda",
       "Requirements": [
-        "KernSmooth",
         "caTools",
         "gtools"
       ]
@@ -2921,7 +2852,6 @@
         "Matrix",
         "Rcpp",
         "RcppEigen",
-        "boot",
         "lattice",
         "minqa",
         "nlme",
@@ -2994,7 +2924,6 @@
       "Repository": "RSPM",
       "Hash": "e60a1728ad29c48a3491777e0c55a07d",
       "Requirements": [
-        "foreign",
         "lattice",
         "sp"
       ]
@@ -3172,10 +3101,10 @@
     },
     "moments": {
       "Package": "moments",
-      "Version": "0.14",
+      "Version": "0.14.1",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "e5ddf996c4ea60579042c9432a4f744e",
+      "Repository": "RSPM",
+      "Hash": "bb94fd8ee5f7f127eae2bddbff26864d",
       "Requirements": []
     },
     "munsell": {
@@ -3240,14 +3169,6 @@
       "Requirements": [
         "testthat"
       ]
-    },
-    "nnet": {
-      "Package": "nnet",
-      "Version": "7.3-17",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "cb1d8d9f300a7e536b89c8a88c53f610",
-      "Requirements": []
     },
     "nnls": {
       "Package": "nnls",
@@ -3723,14 +3644,16 @@
     },
     "quantreg": {
       "Package": "quantreg",
-      "Version": "5.88",
+      "Version": "5.93",
       "Source": "Repository",
       "Repository": "RSPM",
-      "Hash": "b7d49f60ce945abad300246d4766326a",
+      "Hash": "48485e5cbfe385caf47ce1d9442f5147",
       "Requirements": [
+        "MASS",
         "Matrix",
         "MatrixModels",
-        "SparseM"
+        "SparseM",
+        "survival"
       ]
     },
     "qvalue": {
@@ -4355,6 +4278,19 @@
       "Hash": "e44255f073ecdc26ba6bc2ce3fcf174d",
       "Requirements": [
         "htmltools",
+        "shiny"
+      ]
+    },
+    "shinyFeedback": {
+      "Package": "shinyFeedback",
+      "Version": "0.4.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "88a6b7ff3d135195ad0011fec04336f2",
+      "Requirements": [
+        "fontawesome",
+        "htmltools",
+        "jsonlite",
         "shiny"
       ]
     },
@@ -5144,7 +5080,6 @@
       "Hash": "97bfb04067dc125eb0f00fda67801898",
       "Requirements": [
         "MASS",
-        "cluster",
         "lattice",
         "mgcv",
         "permute"
