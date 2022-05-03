@@ -76,7 +76,6 @@ app_ui <- function() {
                 ),
                 shiny::div(shiny::textOutput("current_section"), class='current-section'),
                 shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
-                ##shiny::div(shiny::textOutput("current_user"), class='current-user'),
                 bigdash::navbarDropdown(
                     "Support",
                     bigdash::navbarDropdownItem(
@@ -116,7 +115,7 @@ app_ui <- function() {
                 bigdash::navbarDropdown(
                     ##"User",
                     ##shiny::div(class='label label-info current-user',id='authentication-user'),
-                    shiny::textOutput("current_user"), 
+                    shiny::textOutput("current_user", inline = TRUE), 
                     bigdash::navbarDropdownTab(
                         "Settings",
                         "userSettings"

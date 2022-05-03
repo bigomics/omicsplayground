@@ -195,6 +195,7 @@
       "git_last_commit_date": "2021-10-26",
       "Hash": "566e4af3cb3ebd433244e4b0e2cec171",
       "Requirements": [
+        "KernSmooth",
         "Rcpp",
         "SummarizedExperiment",
         "base64enc",
@@ -418,7 +419,9 @@
       "Requirements": [
         "Formula",
         "base64enc",
+        "cluster",
         "data.table",
+        "foreign",
         "ggplot2",
         "gridExtra",
         "gtable",
@@ -426,6 +429,7 @@
         "htmltools",
         "lattice",
         "latticeExtra",
+        "nnet",
         "rpart",
         "survival",
         "viridis"
@@ -473,6 +477,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "aee647d15e5541ad44d157f7b78fda01",
+      "Requirements": []
+    },
+    "KernSmooth": {
+      "Package": "KernSmooth",
+      "Version": "2.23-20",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "8dcfa99b14c296bc9f1fd64d52fd3ce7",
       "Requirements": []
     },
     "MASS": {
@@ -800,6 +812,7 @@
       "Repository": "RSPM",
       "Hash": "b685b2bbeab0011cca5662f4991203c2",
       "Requirements": [
+        "KernSmooth",
         "MASS",
         "Matrix",
         "RANN",
@@ -811,6 +824,7 @@
         "RcppProgress",
         "Rtsne",
         "SeuratObject",
+        "cluster",
         "cowplot",
         "fitdistrplus",
         "future",
@@ -942,7 +956,20 @@
         "Biobase",
         "BiocGenerics",
         "MASS",
+        "boot",
         "nnls"
+      ]
+    },
+    "V8": {
+      "Package": "V8",
+      "Version": "4.1.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "c6bdc74e7e3a095102a6326d5a8f0224",
+      "Requirements": [
+        "Rcpp",
+        "curl",
+        "jsonlite"
       ]
     },
     "VGAM": {
@@ -1125,6 +1152,24 @@
       "Hash": "0f4e9d8caa6feaa7e409ae6c30f2ca66",
       "Requirements": []
     },
+    "bigdash": {
+      "Package": "bigdash",
+      "Version": "0.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "bigdash",
+      "RemoteUsername": "bigomics",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "99c59902cc9e0a66076da339fe4520ad0e0a88f0",
+      "Hash": "dd8a1b92961248a391c6036b00b15d36",
+      "Requirements": [
+        "bslib",
+        "htmltools",
+        "jsonlite",
+        "shiny"
+      ]
+    },
     "bit": {
       "Package": "bit",
       "Version": "4.0.4",
@@ -1176,8 +1221,17 @@
         "Matrix",
         "Rcpp",
         "S4Vectors",
+        "cluster",
         "igraph"
       ]
+    },
+    "boot": {
+      "Package": "boot",
+      "Version": "1.3-28",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0baa960e3b49c6176a4f42addcbacc59",
+      "Requirements": []
     },
     "brew": {
       "Package": "brew",
@@ -1275,6 +1329,7 @@
         "maptools",
         "mgcv",
         "nlme",
+        "nnet",
         "pbkrtest",
         "quantreg"
       ]
@@ -1309,6 +1364,16 @@
         "shape"
       ]
     },
+    "class": {
+      "Package": "class",
+      "Version": "7.3-20",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "da09d82223e669d270e47ed24ac8686e",
+      "Requirements": [
+        "MASS"
+      ]
+    },
     "classInt": {
       "Package": "classInt",
       "Version": "0.4-3",
@@ -1316,6 +1381,8 @@
       "Repository": "RSPM",
       "Hash": "17bdfa3c51df4a6c82484d13b11fb380",
       "Requirements": [
+        "KernSmooth",
+        "class",
         "e1071"
       ]
     },
@@ -1343,6 +1410,24 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "402594b0365210ad6df53e8fcda69d8a",
+      "Requirements": [
+        "cluster"
+      ]
+    },
+    "cluster": {
+      "Package": "cluster",
+      "Version": "2.1.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c5f8447373ec2a0f593c694024e5b7ee",
+      "Requirements": []
+    },
+    "codetools": {
+      "Package": "codetools",
+      "Version": "0.2-18",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "019388fc48e48b3da0d3a76ff94608a8",
       "Requirements": []
     },
     "colorspace": {
@@ -1360,6 +1445,20 @@
       "Repository": "CRAN",
       "Hash": "2ba81b120c1655ab696c935ef33ea716",
       "Requirements": []
+    },
+    "concaveman": {
+      "Package": "concaveman",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "6303d93b9a915fbb7dbbf31e1ba5d3a9",
+      "Requirements": [
+        "V8",
+        "dplyr",
+        "jsonlite",
+        "magrittr",
+        "sf"
+      ]
     },
     "config": {
       "Package": "config",
@@ -1622,6 +1721,7 @@
       "Repository": "RSPM",
       "Hash": "32885be243a29301c90d33db37c3aad8",
       "Requirements": [
+        "class",
         "proxy"
       ]
     },
@@ -1835,6 +1935,7 @@
       "Repository": "RSPM",
       "Hash": "618609b42c9406731ead03adf5379850",
       "Requirements": [
+        "codetools",
         "iterators"
       ]
     },
@@ -1852,11 +1953,20 @@
         "ggplot2",
         "lmtest",
         "magrittr",
+        "nnet",
         "timeDate",
         "tseries",
         "urca",
         "zoo"
       ]
+    },
+    "foreign": {
+      "Package": "foreign",
+      "Version": "0.8-82",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "32b25c97ce306a760c4d9f787991b5d9",
+      "Requirements": []
     },
     "formatR": {
       "Package": "formatR",
@@ -2177,7 +2287,9 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "eca8023ed5ca6372479ebb9b3207f5ae",
-      "Requirements": []
+      "Requirements": [
+        "codetools"
+      ]
     },
     "glue": {
       "Package": "glue",
@@ -2229,6 +2341,7 @@
       "Repository": "RSPM",
       "Hash": "75437dd4c43599f6e9418ea249495fda",
       "Requirements": [
+        "KernSmooth",
         "caTools",
         "gtools"
       ]
@@ -2808,6 +2921,7 @@
         "Matrix",
         "Rcpp",
         "RcppEigen",
+        "boot",
         "lattice",
         "minqa",
         "nlme",
@@ -2880,6 +2994,7 @@
       "Repository": "RSPM",
       "Hash": "e60a1728ad29c48a3491777e0c55a07d",
       "Requirements": [
+        "foreign",
         "lattice",
         "sp"
       ]
@@ -3125,6 +3240,14 @@
       "Requirements": [
         "testthat"
       ]
+    },
+    "nnet": {
+      "Package": "nnet",
+      "Version": "7.3-17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cb1d8d9f300a7e536b89c8a88c53f610",
+      "Requirements": []
     },
     "nnls": {
       "Package": "nnls",
@@ -5021,6 +5144,7 @@
       "Hash": "97bfb04067dc125eb0f00fda67801898",
       "Requirements": [
         "MASS",
+        "cluster",
         "lattice",
         "mgcv",
         "permute"
