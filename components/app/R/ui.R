@@ -4,19 +4,17 @@ app_ui <- function() {
     ## Build USERMENU
     #-------------------------------------------------------
     user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
-    ##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
-    # logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
-    logout.tab <- bigdash::navbarDropdownItem(
-        "Logout",
-        onClick = "logout"
-    )
+    ## logout.tab <- bigdash::navbarDropdownItem(
+    ##     "Logout",
+    ##     onClick = "logout"
+    ## )
 
-    ## conditionally add if firebase authentication is enabled
-    if(opt$AUTHENTICATION == "shinyproxy") {
-        ## For ShinyProxy we need to redirect to /logout for clean session
-        ## logout. Then we need a redirect to the /login page.
-        logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/login' onClick='shinyproxy_logout();' id='authentication-logout'>Logout</a>"))    
-    }
+    ## ## conditionally add if firebase authentication is enabled
+    ## if(opt$AUTHENTICATION == "shinyproxy") {
+    ##     ## For ShinyProxy we need to redirect to /logout for clean session
+    ##     ## logout. Then we need a redirect to the /login page.
+    ##     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/login' onClick='shinyproxy_logout();' id='authentication-logout'>Logout</a>"))    
+    ## }
 
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {

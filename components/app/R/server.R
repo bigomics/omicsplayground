@@ -454,12 +454,11 @@ app_server <- function(input, output, session) {
     }
 
     ## This will be called upon user logout after the logout() JS call
-    observeEvent( input$userLogout, {
-        dbg("[SERVER] observe::input$userLogout() reacted")
-        reset_timer()
-        run_timer(FALSE)
+    observeEvent( input$firebaseLogout, {
+      message("[SERVER] >>>>>>>>> observe::input$firebaseLogout reacted")
+      reset_timer()
+      run_timer(FALSE)
     })
-
 
     ## This code listens to the JS quit signal
     observeEvent( input$quit, {

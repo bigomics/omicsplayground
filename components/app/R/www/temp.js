@@ -166,8 +166,8 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-    Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-    Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
+    Shiny.setInputValue('auth-firebaseLogout', 1, {priority: 'event'});
+    Shiny.setInputValue('firebaseLogout', 1, {priority: 'event'});        
 };
 
 function quit(){
