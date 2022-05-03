@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 AuthenticationUI <- function(id) {
@@ -8,7 +8,8 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
+NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
+                                   username="", email="")
 {
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
@@ -56,8 +57,8 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
-    observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+    observeEvent( input$userLogout, {
+        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
     
@@ -267,8 +268,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
     })
 
-    observeEvent( input$firebaseLogout, {    
-        message("[FirebaseAuthenticationModule] firebaseLogout triggered!")
+    observeEvent( input$userLogout, {    
+        message("[FirebaseAuthenticationModule] userLogout triggered!")
         resetUSER() 
     })
 
@@ -550,8 +551,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         ##hide("login_warning")
     })
 
-    observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+    observeEvent( input$userLogout, {
+        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
     
@@ -635,7 +636,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[15]] = c("Keep Exploring","Never stop discovering with Omics Playground")
     titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground")
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
-    titles[[18]] = c("Ich bin doch nicht bl\u214d!","Of course I use Omics Playground")
+    titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")

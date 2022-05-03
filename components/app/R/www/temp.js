@@ -143,7 +143,8 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-    Shiny.setInputValue('auth-firebaseLogout', 1, {priority: 'event'});    
+    Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
+    Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
 };
 
 function quit(){
@@ -244,7 +245,6 @@ function sendLog2(msg){
 //	showSub();
 //      let msg  = $('#logMsg').val();
 //	let user = $('#authentication-user').val();
-
 //    	fetch(`log?session=${id}&msg=${encodeURIComponent(msg)}`)
     	fetch(`log?msg=${encodeURIComponent(msg)}`)    
 	        .then(res => {
@@ -260,7 +260,6 @@ function sendLog2(msg){
 Shiny.addCustomMessageHandler('referral-input-error', function(msg) {
 	$(`#${msg.target}`).addClass('error');
 	$(`#${msg.target}`).after(`<small class='text-danger'>${msg.message}</small>`);
-
 	setTimeout(() => {
 		$(`#${msg.target}`).removeClass('error');
 		$(`#${msg.target}`)

@@ -24,13 +24,21 @@ app_server <- function(input, output, session) {
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
     ## shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
-    
-    has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
-        !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
+
+    ## Determine is Honcho is alive
+    ##honcho.responding <- grepl("Swagger",RCurl::getURL("http://localhost:8000/__docs__/"))
+    ##curl.resp <- try(RCurl::getURL("http://localhost:8000/__docs__/"))
+    curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
+    honcho.responding <- grepl("Swagger", curl.resp)
+    honcho.responding      
+    honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
+    has.honcho <- (honcho.token!="" && honcho.responding)
     if(1 && has.honcho) {
+        dbg("[SERVER] Honcho is alive! ")    
         sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
         ## No honcho, no email....
+        dbg("[SERVER] No Honcho? No party..")          
         sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
     }
 
@@ -150,11 +158,11 @@ app_server <- function(input, output, session) {
         (env$load$loaded() || env$upload$loaded())
     })
   
-    ## User board
+    ## Default boards
     WelcomeBoard("welcome", auth=auth) 
     UserBoard("user", user=auth) -> env$user  
     
-    ## Modules needed after dataset is loaded (deferred)
+    ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
     observeEvent( data_loaded(), {        
 
@@ -256,11 +264,11 @@ app_server <- function(input, output, session) {
         dbg("[SERVER:output$current_section] section = ",section)
         section
     })
-
     
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
+
     shiny::observeEvent({
         auth$logged()        
         env$user$enable_beta()
@@ -268,9 +276,7 @@ app_server <- function(input, output, session) {
     }, {
 
         message("[SERVER] !!! dataset changed. reconfiguring triggered!")
-        
         ## trigger on change dataset
-        ##pgx  <- env$load$inputData() 
 
         ## show beta feauture
         show.beta <- env$user$enable_beta()
@@ -321,14 +327,113 @@ app_server <- function(input, output, session) {
     })
     
     ##-------------------------------------------------------------
-    ## Session Timer (can we put it elsewhere?)
+    ## Session TimerModule
     ##-------------------------------------------------------------
-    tm <- reactiveValues(timer=reactiveTimer(Inf), start=NULL)
-    tm.warned <- FALSE
-    shiny::observe({
+
+    reset_timer <- function() {}
+    run_timer <- function(run=TRUE) {}
+  
+    if( TIMEOUT > 0 ) {
+
+        rv.timer <- reactiveValues(reset=0, run=FALSE)
+        reset_timer <- function() {
+            dbg("[SERVER] resetting timer")
+            rv.timer$reset <- rv.timer$reset + 1
+        }
+        run_timer <- function(run=TRUE) {
+            dbg("[SERVER] run timer =",run)
+            rv.timer$run <- run
+        }
+        WARN_BEFORE = round(TIMEOUT/6)
+
+        message("[SERVER] Creating TimerModule...")
+        message("[SERVER] TIMEOUT = ", TIMEOUT)
+        message("[SERVER] WARN_BEFORE = ", WARN_BEFORE)                  
+      
+        timer <- TimerModule(
+            "timer",
+            timeout = TIMEOUT,
+            warn_before = WARN_BEFORE,
+            max_warn = 1,
+            poll = Inf,  ## not needed, just for timer output
+            reset = reactive(rv.timer$reset),
+            run = reactive(rv.timer$run)            
+        )
+        
+        observe({
+            message("[SERVER] timer = ",timer$timer())
+            message("[SERVER] lapse_time = ",timer$lapse_time())        
+        })
+
+        observeEvent( timer$warn(), {
+          message("[SERVER] timer$warn = ",timer$warn())
+          if(timer$warn()==0) return()  ## skip first atInit call
+          if(WARN_BEFORE < 60) {
+            dt <- paste(round(WARN_BEFORE),"seconds!")
+          } else {
+            dt <- paste(round(WARN_BEFORE/60),"minutes!")
+          }
+          showModal(modalDialog(
+            HTML("<center><h4>Warning!</h4>Your FREE session is expiring in",dt,".</center>"),
+            size = "s",
+            easyClose = TRUE
+          ))
+        })
+
+        r.timeout <- reactive({
+          timer$timeout() && auth$logged()
+        })
+
+        ## Choose type of referral modal upon timeout:
+        mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
+        ##mod.timeout <- SendReferralModule("sendreferral", r.user=auth$name, r.show=r.timeout)
+        
+        observeEvent( mod.timeout$success(), {        
+          success <- mod.timeout$success()
+          message("[SERVER] success = ",success)          
+          if(success==0) {
+            message("[SERVER] logout after no referral!!!")
+            shinyjs::runjs("logout()")    
+          }
+          if(success > 1) {
+            message("[SERVER] resetting timer after referral!!!")
+            showModal(modalDialog(
+              HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>"),
+              size = "s",
+              easyClose = TRUE
+            ))
+            reset_timer()
+          }
+
+        })
+
+      shiny::observeEvent( auth$logged(), {
         ## trigger on change of USER
-        level <- auth$level()
-        message("[SERVER] user LEVEL = ",level)
+        logged <- auth$logged()
+        message("[SERVER] logged = ",logged)
+        
+        ##--------- start timer --------------
+        if(TIMEOUT>0 && logged) {        
+          message("[SERVER] starting session timer!!!")
+          reset_timer()
+          run_timer(TRUE)            
+          
+        } else {
+          message("[SERVER] no timer!!!")            
+          run_timer(FALSE)                        
+        }       
+      })
+
+    } ## end of if TIMEOUT>0
+
+
+    ##-------------------------------------------------------------
+    ## Session logout functions
+    ##-------------------------------------------------------------
+        
+    shiny::observe({
+
+        ## trigger on change of USER
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
         
@@ -340,268 +445,22 @@ app_server <- function(input, output, session) {
             shinyjs::runjs("logout()")    
         }
         
-        ##--------- start timer --------------
-        ##if(tolower(level)=="free" && TIMEOUT>0 && logged) {
-        if(TIMEOUT>0 && logged) {        
-            message("[SERVER] starting session timer!!!")
-            message("[SERVER] TIMEOUT = ", TIMEOUT)            
-            tm$timer <- reactiveTimer(0.1*TIMEOUT*1000)  ## polling time
-            tm$start <- Sys.time()
-            tm.warned <<- FALSE
-        } else {
-            message("[SERVER] no timer!!!")            
-            tm$timer <- reactiveTimer(Inf)
-            tm$start <- NULL
-            tm.warned <<- FALSE
-        }       
-    })
-    
-    ## Logout user after TIMEOUT
-    shiny::observeEvent(tm$timer(), {
-        message("[SERVER] timer reacted")
-        if(is.null(tm$start) || TIMEOUT <=0 ) {
-            message("[SERVER] timer is off")
-            return()
-        }
-        if(!is.null(tm$start)) {
-            secs.lapsed <- as.numeric(Sys.time() - tm$start, units='secs')            
-            message("[SERVER] timer seconds lapsed = ",round(secs.lapsed,digits=2))
-            if(secs.lapsed >= 0.80*TIMEOUT && !tm.warned) {
-                message("[SERVER] timed out warning!!!")
-                shinyalert::closeAlert()
-                shinyalert::shinyalert(
-                                title = "Warning!",
-                                text = "Your FREE session is expiring soon."
-                            )
-                tm.warned <<- TRUE
-            } else if(secs.lapsed >= TIMEOUT) {
-                message("[SERVER] timed out!!!")
-                shinyalert::closeAlert()
-                js.cb = "function(x){logout();}"
-                if(opt$AUTHENTICATION=="shinyproxy") {
-                    js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
-                }
-                showModal(
-                    modalDialog(
-                        title = "Session Expired",
-                        p(
-                            "Please enter three email addresses."
-                        ),
-                        fluidRow(
-                            column(
-                                4,
-                                textInput(
-                                    "name1",
-                                    "Name"
-                                ),
-                                textInput(
-                                    "email1",
-                                    "Email"
-                                )
-                            ),
-                            column(
-                                4,
-                                textInput(
-                                    "name2",
-                                    "Name"
-                                ),
-                                textInput(
-                                    "email2",
-                                    "Email"
-                                )
-                            ),
-                            column(
-                                4,
-                                textInput(
-                                    "name3",
-                                    "Name"
-                                ),
-                                textInput(
-                                    "email3",
-                                    "Email"
-                                )
-                            )
-                        ),
-                        p(
-                            class = "text-danger text-center",
-                            id = "referral-global-error"
-                        ),
-                        footer = tagList(
-                            actionButton(
-                                "sendRefs",
-                                "Send emails",
-                                icon = icon("paper-plane")
-                            ),
-                            tags$a(
-                                     class = "btn btn-danger",
-                                     icon("times"),
-                                     "Close",
-                                     onClick = HTML(js.cb)
-                                 )
-                        )
-                    )
-                )
-                tm$timer <- reactiveTimer(Inf)                
-                tm$start <- NULL
-                tm.warned <<- FALSE                
-            }
-        }
     })
 
-    observeEvent(input$sendRefs, {
-                                        # check inputs
-        input_errors <- FALSE
+    ## logout helper function
+    logout.JScallback = "logout()"    
+    if(opt$AUTHENTICATION=="shinyproxy") {
+        logout.JScallback = "function(x){logout();quit();window.location.assign('/logout');}"
+    }
 
-                                        # check emails
-        if(input$email1 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "email1",
-                            message = "Missing email"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        if(input$email2 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "email2",
-                            message = "Missing email"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        if(input$email3 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "email3",
-                            message = "Missing email"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-                                        # check names
-        if(input$name1 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "name1",
-                            message = "Missing name"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-        
-        if(input$name2 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "name2",
-                            message = "Missing name"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        if(input$name3 == "") {
-            session$sendCustomMessage(
-                        "referral-input-error", 
-                        list(
-                            target = "name3",
-                            message = "Missing name"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        emails <- trimws(
-            c(
-                input$email1,
-                input$email2,
-                input$email3
-            )
-        )
-
-        if(!all(grepl("\\@", emails))) {
-            session$sendCustomMessage(
-                        "referral-global-error", 
-                        list(
-                            message = "Must enter valid email addresses"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        if(length(unique(emails)) < 3) {
-            session$sendCustomMessage(
-                        "referral-global-error", 
-                        list(
-                            message = "Must enter different email addresses"
-                        )
-                    )
-            input_errors <- TRUE
-        }
-
-        if(input_errors)
-            return()
-
-                                        # send emails
-            body <- list(
-                referrer = "The user",
-                referrals = list(
-                    list(
-                        name = input$name1,
-                        email = input$email1
-                    ),
-                    list(
-                        name = input$name2,
-                        email = input$email2
-                    ),
-                    list(
-                        name = input$name3,
-                        email = input$email3
-                    )
-                )
-            )
-            token <- Sys.getenv("HONCHO_TOKEN", "")
-            uri <- sprintf("%s/referral?token=%s", opt$HONCHO_URL, token)
-            response <- httr::POST(
-                                  uri,
-                                  body = body,
-                                  encode = "json"
-                              )
-
-                                        # check response
-            content <- httr::content(response)
-            all_good <- lapply(content, function(ref) {
-                return(ref$success)
-            }) %>% 
-                unlist() %>% 
-                all()
-            
-            if(!all_good) {
-                session$sendCustomMessage(
-                            "referral-global-error", 
-                            list(
-                                message = "One or more of these email address was erroneous"
-                            )
-                        )
-                return()
-            }
-                                        # remove modal
-            removeModal()
+    ## This will be called upon user logout after the logout() JS call
+    observeEvent( input$userLogout, {
+        dbg("[SERVER] observe::input$userLogout() reacted")
+        reset_timer()
+        run_timer(FALSE)
     })
-    
-    ##-------------------------------------------------------------
-    ## Session logout functions
-    ##-------------------------------------------------------------
-    
+
+
     ## This code listens to the JS quit signal
     observeEvent( input$quit, {
         dbg("[SERVER:quit] !!!reacted!!!")
