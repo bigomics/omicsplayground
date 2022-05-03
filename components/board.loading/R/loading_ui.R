@@ -26,7 +26,7 @@ LoadingUI <- function(id) {
     shiny::tagList(
         shiny::fillCol(
           height = 750,
-          flex = c(NA,NA,NA,1),
+          flex = c(NA,NA,NA,NA,NA,1),
           ## shiny::fillRow(
           ##   height=115,
           ##   shiny::uiOutput(ns("valuebox1")),
@@ -34,8 +34,7 @@ LoadingUI <- function(id) {
           ##   shiny::uiOutput(ns("valuebox3"))
           ## ),
           uiOutput(ns("navheader")),
-          tableWidget(ns("pgxtable")),
-
+          br(), br(),
           div( id="load-action-buttons",
           shiny::fillRow(
             flex = c(NA,NA,NA,NA,1),
@@ -59,6 +58,9 @@ LoadingUI <- function(id) {
              ,"Delete the selected dataset.", placement="bottom"),
             br()
           )),
+
+          tableWidget(ns("pgxtable")),
+
           br()
         )
     )
