@@ -216,28 +216,22 @@ LoadingBoard <- function(id,
         pgxfile1 = file.path(pgx.path,pgxfile)
         pgxfile1
         
-        ngs <- NULL
-        ##pgx <- NULL
+        pgx <- NULL
         if(file.exists(pgxfile1)) {
             shiny::withProgress(message="Loading data...", value=0.33, {            
-                load(pgxfile1,verbose=0)
+              pgx <- local(get(load(pgxfile1,verbose=0)))  ## override any name
             })
         } else {
             message("[LoadingBoard::loadPGX] ***ERROR*** file not found : ",pgxfile)
             return(NULL)
         }
-        if(!is.null(ngs)) {
-            ngs$name <- pgxfile
-            return(ngs)
+        if(!is.null(pgx)) {
+            pgx$name <- pgxfile
+            return(pgx)
         } else {
-            message("[LoadingBoard::loadPGX] ***ERROR*** ngs/pgx object empty ")
+            message("[LoadingBoard::loadPGX] ERROR loading pgx object")
             return(NULL)
         }
-##        if(!is.null(pgx)) {
-##            pgx$name <- pgxfile            
-##            return(pgx)
-##        }
-
     }
     
     output$downloadpgx <- shiny::downloadHandler(
@@ -249,10 +243,10 @@ LoadingBoard <- function(id,
             pgxfile <- selectedPGX()
             cat("[LoadingBoard::loadPGX] pgxfile = ",pgxfile,"\n")
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
-            ngs <- loadPGX(pgxfile)
+            pgx <- loadPGX(pgxfile)
             temp <- tempfile()
             cat("[LoadingBoard::loadPGX] temp = ",temp)            
-            save(ngs, file=temp)
+            save(pgx, file=temp)
             file.copy(temp,file)
         }
     )
@@ -267,19 +261,19 @@ LoadingBoard <- function(id,
             cat("[LoadingBoard::downloadZIP] pgxfile = ",pgxfile,"\n")            
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
             pgxname <- sub("[.]pgx$","",pgxfile)
-            ngs <- loadPGX(pgxfile)
+            pgx <- loadPGX(pgxfile)
             dir.create(tmp <- tempfile())
             tmp2 <- file.path(tmp,pgxname)
             dir.create(tmp2)
 
-            exp.matrix <- sign(ngs$model.parameters$exp.matrix)
+            exp.matrix <- sign(pgx$model.parameters$exp.matrix)
             exp.matrix <- contrastAsLabels(exp.matrix) ## new recommended style
             exp.matrix[is.na(exp.matrix)] <- ""
             
-            write.csv(round(ngs$counts,digits=2), file=file.path(tmp2, "counts.csv"))
-            write.csv(ngs$samples, file=file.path(tmp2, "samples.csv"))
+            write.csv(round(pgx$counts,digits=2), file=file.path(tmp2, "counts.csv"))
+            write.csv(pgx$samples, file=file.path(tmp2, "samples.csv"))
             write.csv(exp.matrix,  file=file.path(tmp2, "contrasts.csv"))
-            write.csv(round(ngs$X,digits=4), file=file.path(tmp2, "normalized.csv"))
+            write.csv(round(pgx$X,digits=4), file=file.path(tmp2, "normalized.csv"))
           
             zipfile <- tempfile(fileext = ".zip")
             zip::zip(zipfile,
@@ -288,7 +282,7 @@ LoadingBoard <- function(id,
             ## zip::zip_list(zipfile)
             cat("[LoadingBoard::downloadZIP] zipfile = ",zipfile)                        
             file.copy(zipfile,file)
-            remove(ngs); gc();
+            remove(pgx); gc();
         }
     )
     
@@ -417,7 +411,7 @@ LoadingBoard <- function(id,
         ## ***NEW*** update PGX from session
         if(1) {
             dbg("[LoadingBoard@load_react] pgx$name = ",loaded_pgx$name)
-            dbg("[LoadingBoard@load_react] tracemem(ngs) = ",tracemem(loaded_pgx))
+            dbg("[LoadingBoard@load_react] tracemem(pgx) = ",tracemem(loaded_pgx))
 
             ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
             ## session environment.
