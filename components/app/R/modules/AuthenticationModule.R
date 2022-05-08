@@ -773,7 +773,10 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 splashscreen.buttons <- function() {
   shiny::div(
     shiny::tags$a(
-      shiny::img(id="splash-logo2", src=base64enc::dataURI(file="www/bigomics-logo.png")),
+      shiny::img(
+          id="splash-logo2", 
+          src="static/bigomics-logo.png"
+    ),
       href = "https://www.bigomics.ch",
       target = "_blank"
     ),    
@@ -843,7 +846,7 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
     id = "splash-fullscreen",
     class = "bg-primary",
     shiny::div(
-      shiny::img(src=base64enc::dataURI(file="www/mascotte-sc.png"),id="splash-image"),
+      shiny::img(src="static/mascotte-sc.png",id="splash-image"),
       body,
       shiny::br(),
       shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
@@ -881,8 +884,9 @@ splashScreen.SAVE <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
         class = "bg-primary",
         shiny::div(
             id="particles-target",
-            shiny::div(id="splash-logo", shiny::img(src=base64enc::dataURI(file="www/logo.png"),
-                                      width=32,height=32)),
+            shiny::div(id="splash-logo", 
+            shiny::img(src="static/logo.png",
+                width=32,height=32)),
             body,
             ##firebase::useFirebaseUI(),
             shiny::br(),
