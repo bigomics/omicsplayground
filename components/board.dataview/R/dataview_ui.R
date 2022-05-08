@@ -66,16 +66,21 @@ DataViewUI <- function(id) {
           shiny::fillRow(
             flex = c(1.5,1,1), id = "genePlots_row1",
             height = 375, ## width=1600,
-            dataview_plot_expression_ui(ns("expressionplot"),height=imgH),
-            dataview_plot_averagerank_ui(ns("averagerankplot"),height=imgH),
-            dataview_plot_tsne_ui(ns("tsneplot"),height=imgH)       
+            dataview_plot_expression_ui(ns("expressionplot"),height=imgH) |> 
+              bigdash::asSwappableItem(),
+            dataview_plot_averagerank_ui(ns("averagerankplot"),height=imgH) |> 
+              bigdash::asSwappableItem(),
+            dataview_plot_tsne_ui(ns("tsneplot"),height=imgH) |> 
+              bigdash::asSwappableItem()
           ),
           shiny::fillRow(
             flex = c(1.5,2), id = "genePlots_row2",
             height = 375, ## width=1600,
-            dataview_plot_correlation_ui(ns("correlationplot"),height=imgH),
-            dataview_plot_tissue_ui(ns("tissueplot"),height=imgH),
-            ),
+            dataview_plot_correlation_ui(ns("correlationplot"),height=imgH) |> 
+              bigdash::asSwappableItem(),
+            dataview_plot_tissue_ui(ns("tissueplot"),height=imgH) |> 
+              bigdash::asSwappableItem()
+          ),
           tags$div(
             class="caption",
             HTML("<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases.
@@ -84,7 +89,8 @@ DataViewUI <- function(id) {
             expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
             expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
           )
-        )
+        ) |> 
+          bigdash::asSwappable()
       )
     ),
 
