@@ -132,7 +132,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     
     randomCartoon <- function() {
         cartoon <- sample(cartoon_list,1)[[1]]
-        ##cartoon$img = file.path("cartoons",cartoon$img)
+        cartoon$img2 = paste0("static/cartoons/",cartoon$img)
         cartoon$img  = file.path(img.path,cartoon$img)
         cartoon
     }
@@ -141,11 +141,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     shiny::showModal(shiny::modalDialog(
         ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
         title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
-        shiny::fillRow(
-            flex=c(1,NA,1), shiny::br(),
-            shiny::img(src = base64enc::dataURI(file=toon$img), width="auto", height="300px"),
-            shiny::br()
-        ),
+        shiny::img(src = toon$img2, class = "img-fluid"),
         footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
             size="l", easyClose=FALSE, fade=TRUE))
 
