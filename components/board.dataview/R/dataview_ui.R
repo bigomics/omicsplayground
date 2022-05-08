@@ -156,11 +156,21 @@ DataViewUI <- function(id) {
       shiny::fillRow(
         flex = c(2.3,1),
         shiny::div(
-          dataview_plot_phenoheatmap_ui(ns("phenoheatmap"),height=imgH),
-          style="overflow-y: auto;"),
-        dataview_plot_phenoassociation_ui(ns("phenoassociation"),height=imgH)                    
+          dataview_plot_phenoheatmap_ui(
+            ns("phenoheatmap"),
+            height = imgH
+          ) |> 
+            bigdash::asSwappableItem(),
+          style="overflow-y: auto;"
+        ),
+        dataview_plot_phenoassociation_ui(
+          ns("phenoassociation"),
+          height = imgH
+        ) |> 
+          bigdash::asSwappableItem()
       ),
-      dataview_table_samples_ui(ns("sampletable")),
+      dataview_table_samples_ui(ns("sampletable")) |> 
+        bigdash::asSwappableItem(),
       tags$div(
         class="caption",
         HTML(paste(
@@ -172,7 +182,8 @@ DataViewUI <- function(id) {
            </b> Phenotype information about the samples. Phenotype variables starting with
            a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
         ))
-      ))      
+      )) |>       
+        bigdash::asSwappable()
     ),
 
     ##----------------------------------------------------------------------------
