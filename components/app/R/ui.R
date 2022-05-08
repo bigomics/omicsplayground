@@ -155,7 +155,7 @@ app_ui <- function() {
                     ),
                     bigdash::sidebarMenuItem(
                         "Cluster features",
-                        "clusterfeaters-tab"
+                        "clusterfeatures-tab"
                     ),
                     bigdash::sidebarMenuItem(
                         "WGCNA (beta)",
@@ -378,6 +378,11 @@ app_ui <- function() {
                     "clustersamples-tab",
                     ClusteringInputs("clust"),
                     ClusteringUI("clust")
+                ),
+                bigdash::bigTabItem(
+                    "clusterfeatures-tab",
+                    FeatureMapInputs("ftmap"),
+                    FeatureMapUI("ftmap")
                 ),
                 bigdash::bigTabItem(
                     "wgcna-tab",
