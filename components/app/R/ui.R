@@ -366,7 +366,7 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "upload-tab",
-                    UploadInputs("upload"),
+                    # UploadInputs("upload"),
                     UploadUI("upload")
                 ),
                 bigdash::bigTabItem(
