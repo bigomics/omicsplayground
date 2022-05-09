@@ -4,6 +4,8 @@ ifeq ($(BRANCH),'develop')
   TAG=develop
 endif
 
+VERSION=`head -n1 VERSION`
+
 run:
 	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3838)"
 
@@ -30,3 +32,11 @@ bash.docker:
 	@echo bash into docker $(TAG)
 	docker run -it bigomics/omicsplayground:$(TAG) /bin/bash
 
+tags:
+	git tag -f -a $(VERSION) -m 'version $(VERSION)'
+	git push && git push --tags
+	docker tag bigomics/omicsplayground:latest bigomics/omicsplayground:$(VERSION)
+
+push.latest: 
+	docker push bigomics/omicsplayground:$(VERSION)
+	docker push bigomics/omicsplayground:latest

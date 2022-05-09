@@ -10,7 +10,9 @@ AuthenticationUI <- function(id) {
 
 NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
 {
-    message("[AuthenticationModule] >>>> using no authentication <<<<")
+  message("[NoAuthenticationModule] >>>> using no authentication <<<<")
+  message("[NoAuthenticationModule] show_modal = ",show_modal)  
+
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged=FALSE,
@@ -22,6 +24,8 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
 
     resetUSER <- function() {
 
+        dbg("[NoAuthenticationModule] resetUSER called")
+      
         USER$logged <- FALSE
         USER$name <- ""
         USER$email <- ""
@@ -41,6 +45,7 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     }
     
     output$showLogin <- shiny::renderUI({
+        dbg("[NoAuthenticationModule:showLogin] called")  
         resetUSER() 
     })
 

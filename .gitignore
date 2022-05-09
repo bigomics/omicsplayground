@@ -28,6 +28,7 @@ Thumbs.db
 data/*.pgx
 data/*.pgx_
 data/*.csv
+!data/example-data.pgx
 logs/*.rds
 
 # Sensitive files #

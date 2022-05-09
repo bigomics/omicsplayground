@@ -26,7 +26,8 @@ AUTHENTICATION = "none"
 WATERMARK = FALSE
 DEBUG     = FALSE
 DEV       = dir.exists('/home/kwee')
-##DEV     = FALSE
+##
+DEV     = TRUE
 DEBUG     = TRUE
 TIMEOUT   = 0
 
