@@ -324,10 +324,8 @@ Shiny.addCustomMessageHandler('show-tabs', function(msg) {
 				if($(el).hasClass('collapse'))
 					return;
 
-				if(index == 1)
-					return;
-
 				$(el).show();
 			});
+	$('hr').first().hide();
 	}, 1000);
 });

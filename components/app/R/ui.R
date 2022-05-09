@@ -48,8 +48,10 @@ app_ui <- function() {
             shinybusy::busy_start_up(
                 text = "\nPrepping your personal playground...", mode = "auto",
                 background="#2780e3", color="#ffffff",
-                ##loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))
-                loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))                            )
+                loader = shiny::img(
+                    src="static/ready.png"
+                )
+            )
         )
 
         logout.tab <- bigdash::navbarDropdownItem(
@@ -153,7 +155,7 @@ app_ui <- function() {
                     ),
                     bigdash::sidebarMenuItem(
                         "Cluster features",
-                        "clusterfeaters-tab"
+                        "clusterfeatures-tab"
                     ),
                     bigdash::sidebarMenuItem(
                         "WGCNA (beta)",
@@ -364,7 +366,7 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "upload-tab",
-                    UploadInputs("upload"),
+                    # UploadInputs("upload"),
                     UploadUI("upload")
                 ),
                 bigdash::bigTabItem(
@@ -376,6 +378,11 @@ app_ui <- function() {
                     "clustersamples-tab",
                     ClusteringInputs("clust"),
                     ClusteringUI("clust")
+                ),
+                bigdash::bigTabItem(
+                    "clusterfeatures-tab",
+                    FeatureMapInputs("ftmap"),
+                    FeatureMapUI("ftmap")
                 ),
                 bigdash::bigTabItem(
                     "wgcna-tab",

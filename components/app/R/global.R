@@ -281,3 +281,5 @@ message("\n\n")
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
 message("[INIT] main init time = ",main.init_time," ",attr(main.init_time,"units"))
+
+shiny::addResourcePath("static", "www")
