@@ -166,8 +166,10 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-    Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-    Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
+	if(!$('#sidebar-container').hasClass('sidebar-collapsed'))
+		$('.sidebar-label').trigger('click');
+	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
+	Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
 };
 
 function quit(){
