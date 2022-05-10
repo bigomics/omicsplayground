@@ -350,6 +350,13 @@ LoadingBoard <- function(id,
             return(NULL)
         }
 
+        on.exit({
+            session$sendCustomMessage(
+                "show-tabs",
+                list()
+            )
+        })
+
         pgxfile = NULL
         
         ## Observe URL query

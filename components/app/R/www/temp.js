@@ -8,6 +8,32 @@ Shiny.addCustomMessageHandler('set-user', function(msg) {
 	}
 });
 
+const unloadSidebar = () => {
+	$('.sidebar-content')
+		.children()
+		.each((index, el) => {
+			if($(el).hasClass('collapse'))
+				return;
+
+			if(index == 0){
+				$(el).show();
+				return;
+			} 
+			
+			$(el).hide();
+		});
+}
+
+const sidebarClose = () => {
+	if(!$('#sidebar-container').hasClass('sidebar-collapsed'))
+		$('.sidebar-label').trigger('click');
+}
+
+const sidebarOpen = () => {
+	if($('#sidebar-container').hasClass('sidebar-collapsed'))
+		$('.sidebar-label').trigger('click');
+}
+
 $(function(){
 	setTimeout(() => {
 		$('.sidebar-label').trigger('click');
@@ -166,24 +192,23 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-	if(!$('#sidebar-container').hasClass('sidebar-collapsed'))
-		$('.sidebar-label').trigger('click');
+	unloadSidebar();
+	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
 };
 
 function quit(){
-    Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny input$quit
-    // window.close();  // close window??
+  Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 Shiny.addCustomMessageHandler('shinyproxy-logout', function(msg) {
-    window.location.assign("/logout");
+  window.location.assign("/logout");
 });
 
 
 function show_plans(){
-    Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});    
+  Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});    
 };
 
 async function upgrade_plan(){
@@ -245,15 +270,8 @@ function hideSub() {
     $('#sever-reload-btn').show();
 }
 
-//function showSub() {
-//	$('#logSub').hide();
-//	$('#logSubbed').show();
-//}
-
 function sendLog() {
-//	showSub();
         let msg  = $('#logMsg').val();
-//	let user = $('#authentication-user').val();
 
 	fetch(`log?msg=${encodeURIComponent(msg)}`)
 		.then(res => {
@@ -301,19 +319,7 @@ Shiny.addCustomMessageHandler('referral-global-error', function(msg) {
 });
 
 $(() => {
-	$('.sidebar-content')
-		.children()
-		.each((index, el) => {
-			if($(el).hasClass('collapse'))
-				return;
-
-			if(index == 0){
-				$(el).show();
-				return;
-			} 
-			
-			$(el).hide();
-		});
+	unloadSidebar();
 });
 
 Shiny.addCustomMessageHandler('show-tabs', function(msg) {
