@@ -78,10 +78,13 @@ IntersectionUI <- function(id) {
                 shiny::fillRow(
                     flex = c(2.2,0.01,1),
                     height = 800,
-                    plotWidget(ns("FoldchangeHeatmap")),
+                    plotWidget(ns("FoldchangeHeatmap")) |> 
+                        bigdash::asSwappableItem(),
                     shiny::br(),
-                    plotWidget(ns("ctcorrplot"))
-                )
+                    plotWidget(ns("ctcorrplot")) |> 
+                        bigdash::asSwappableItem()
+                ) |> 
+                    bigdash::asSwappable()
             ))
         )
     )
