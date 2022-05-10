@@ -332,6 +332,7 @@ Shiny.addCustomMessageHandler('show-tabs', function(msg) {
 
 				$(el).show();
 			});
-	$('hr').first().hide();
+	// $('hr').first().hide();
+	$('#sidebar-container .collapse').first().find('hr').first().hide();
 	}, 1000);
 });

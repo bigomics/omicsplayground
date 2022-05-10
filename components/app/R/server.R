@@ -230,11 +230,6 @@ app_server <- function(input, output, session) {
         message("[SERVER:data_loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
-
-        session$sendCustomMessage(
-            "show-tabs",
-            list()
-        )
     })
     
 
