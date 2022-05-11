@@ -5,7 +5,8 @@
 
 BiomarkerInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
+    shiny::div(
+        class = "p-1",
         shiny::tagList(
             withTooltip( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module."),

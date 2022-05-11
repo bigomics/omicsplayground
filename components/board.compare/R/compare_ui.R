@@ -71,10 +71,13 @@ CompareUI <- function(id) {
                 ),
                 shiny::fillRow(
                     flex = c(1,0.1,1),
-                    plotWidget(ns("scatter1")),
+                    plotWidget(ns("scatter1")) |> 
+                        bigdash::asSwappableItem(),
                     shiny::br(),
-                    plotWidget(ns("scatter2"))
-                )
+                    plotWidget(ns("scatter2")) |> 
+                        bigdash::asSwappableItem()
+                ) |> 
+                    bigdash::asSwappable()
             ),
             shiny::tabPanel("Foldchange",
                 tags$div(
@@ -83,10 +86,13 @@ CompareUI <- function(id) {
                 ),
                 shiny::fillRow(
                     flex = c(1,0.05,0.9),
-                    plotWidget(ns("fcfcplot")),
+                    plotWidget(ns("fcfcplot")) |> 
+                        bigdash::asSwappableItem(),
                     shiny::br(),
-                    plotWidget(ns("cumfcplot"))
-                ) 
+                    plotWidget(ns("cumfcplot")) |> 
+                        bigdash::asSwappableItem()
+                )  |> 
+                    bigdash::asSwappable()
             ),
             shiny::tabPanel("Gene Correlation", 
                 shiny::fillCol(
@@ -101,14 +107,18 @@ CompareUI <- function(id) {
                         flex = c(1.0,0.05,1),
                         shiny::fillCol(
                             flex = c(2.2,0.01,1),
-                            plotWidget(ns("multibarplot")),                    
+                            plotWidget(ns("multibarplot")) |> 
+                                bigdash::asSwappableItem(),                    
                             shiny::br(),
-                            tableWidget(ns("score_table"))
+                            tableWidget(ns("score_table")) |> 
+                                bigdash::asSwappableItem()
                         ),
                         shiny::br(),
-                        plotWidget(ns("genecorr"))
+                        plotWidget(ns("genecorr")) |> 
+                            bigdash::asSwappableItem()
                     )
-                )
+                ) |> 
+                    bigdash::asSwappable()
             )            
         )
     )
