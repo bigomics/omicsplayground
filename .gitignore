@@ -37,7 +37,6 @@ Icon?
 Thumbs.db
 
 data/*.pgx
-data/*.pgx_
 !data/example-data.pgx
 data/*.csv
 logs/*.rds

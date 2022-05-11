@@ -397,9 +397,16 @@ app_server <- function(input, output, session) {
           }
           if(success > 1) {
             message("[SERVER] resetting timer after referral!!!")
+            timeout.min <- round(TIMEOUT/60)
+            msg = HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>")
+            msg = HTML(paste0("<center><h4>Ditch the ",timeout.min,"-minute limit</h4>
+Upgrade today and experience advanced analysis features without the time limit.</center>"))
+            
+            
             showModal(modalDialog(
-              HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>"),
-              size = "s",
+              msg,
+
+              size = "m",
               easyClose = TRUE
             ))
             reset_timer()
