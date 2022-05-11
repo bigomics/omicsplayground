@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 ##FROM ubuntu:20.10
 ##FROM ubuntu:20.04
 
@@ -60,38 +60,8 @@ RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
 RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 
 #------------------------------------------------------------
-# Clone fresh code from GitHub
-#------------------------------------------------------------
-WORKDIR /
-#RUN rm -fr /omicsplayground/R /omicsplayground/shiny
-#RUN rm -fr /omicsplayground \
-#    && git clone https://github.com/bigomics/omicsplayground.git \
-##    && rm -fr /omicsplayground/.git \
-#    && chmod -R ugo+rwX /omicsplayground 
-
-#RUN rm -fr /omicsplayground 
-#RUN wget https://github.com/bigomics/omicsplayground/archive/master.zip \
-#    && unzip master.zip && mv omicsplayground-master omicsplayground \
-#    && chmod -R ugo+rwX /omicsplayground 
-
-#------------------------------------------------------------
-# Add shiny user to group shiny
-#------------------------------------------------------------
-RUN groupadd  shiny \
-    && useradd --gid shiny --shell /bin/bash --create-home shiny
-
-#------------------------------------------------------------
 # Clean up when done.
 #------------------------------------------------------------
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
-#------------------------------------------------------------
-# Copy further configuration files into the Docker image
-#------------------------------------------------------------
-#RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-#COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
-#COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
-
-## EXPOSE 3838
-## CMD ["/usr/bin/shiny-server.sh"]
