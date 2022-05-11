@@ -21,7 +21,7 @@ options(Ncpus=8L)
 install.packages("devtools")
 install.packages("BiocManager")
 
-LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
+LOCAL.PKGS <- sub("_.*","",dir("../extdata/packages"))
 LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
@@ -29,7 +29,7 @@ install.pkg <- function(pkg, force=FALSE) {
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
-            pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
+            pkg1 = dir("../extdata/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
             try(install.packages(pkg1,repos=NULL,type="source",force=force))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
@@ -62,16 +62,19 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 
 autoscan.pkgs <- function() {
 
-    pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
-
+    rfiles1 <- system("find ../components -name \\*.r", intern=TRUE)
+    rfiles2 <- system("find ../components -name \\*.R", intern=TRUE)  
+    rfiles <- paste(c(rfiles1,rfiles2),collapse=" ")
+  
+    pkg1 <- system(paste("grep '::' ",rfiles), intern=TRUE)
+    pkg2 <- system(paste("grep 'require(' ",rfiles), intern=TRUE)  
+    pkg3 <- system(paste("grep 'library(' ",rfiles), intern=TRUE)
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
 
     pkg <- gsub(".*[rR]:","",pkg)  ## strip filename
     pkg <- grep("^[#]",pkg,invert=TRUE,value=TRUE)  ## no comments
-    
+    pkg <- trimws(pkg)
     pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
     pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
     pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    

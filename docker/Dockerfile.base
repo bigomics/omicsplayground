@@ -46,13 +46,15 @@ RUN apt install -y r-base r-base-dev r-recommended
 # Install R packages that are required
 #------------------------------------------------------------
 
-RUN rm -fr /omicsplayground
+WORKDIR /
+RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
+
 WORKDIR /omicsplayground
-COPY R /omicsplayground/R
-COPY shiny /omicsplayground/shiny
+COPY dev /omicsplayground/dev
+COPY components /omicsplayground/components
 
 ## auto detected packages
-RUN R -e "setwd('R');source('requirements.R')"
+RUN R -e "setwd('dev');source('requirements.R')"
 
 ## any missing packages
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
