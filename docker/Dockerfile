@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:base
+FROM bigomics/omicsplayground:base-ub2204
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
@@ -50,20 +50,13 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
     && rm $TAG.zip   
 
 #------------------------------------------------------------
-# Copy any extra data sets into Docker image
-#------------------------------------------------------------
-WORKDIR /omicsplayground
-## RUN R -e "setwd('scripts');source('build-datasets.R')"
-## COPY data/geiger2016-arginine.pgx data/
-## RUN R -e "setwd('data');source('init.R')"
-
-#------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 #COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 #COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 #RUN ln -s /var/log/shiny-server/log /log
+RUN mv .Rprofile .Rprofile.disable
 
 EXPOSE 3838
 #CMD ["/usr/bin/shiny-server.sh"]

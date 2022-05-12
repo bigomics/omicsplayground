@@ -2,7 +2,7 @@
 
 get_appdir <- function() {
     wd <- strsplit(getwd(),split='/')[[1]]
-    root.files <- c(".git",".dockerignore")
+    root.files <- c(".gitignore",".dockerignore")
     chk <- rep(NA,length(wd))
     for(i in 1:length(wd)) {
         dd <- paste(wd[1:i],collapse='/')
