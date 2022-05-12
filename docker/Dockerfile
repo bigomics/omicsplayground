@@ -53,12 +53,11 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-#COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
-#COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
-#RUN ln -s /var/log/shiny-server/log /log
+RUN make sass
 RUN mv .Rprofile .Rprofile.disable
 
+#------------------------------------------------------------
+# Expose port and set CMD
+#------------------------------------------------------------
 EXPOSE 3838
-#CMD ["/usr/bin/shiny-server.sh"]
-#CMD ["R", "-e", "shiny::runApp('shiny',port=3838,host='0.0.0.0',launch.browser=FALSE)"]
 CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
