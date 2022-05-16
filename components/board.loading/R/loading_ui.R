@@ -31,7 +31,7 @@ LoadingUI <- function(id) {
         withTooltip(
           shiny::actionButton(
             ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
-            class="btn btn-primary mx-2"),
+            class="btn btn-outline-success mx-2"),
           "Click to load the selected dataset.", placement="bottom"),
         withTooltip( shiny::downloadButton(
           ns("downloadpgx"), label="Download PGX", ##icon=icon("download"),
@@ -44,7 +44,7 @@ LoadingUI <- function(id) {
           placement="bottom"),
         withTooltip( shiny::actionButton(
           ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
-          class="btn btn-outline-primary mx-2")
+          class="btn btn-outline-danger mx-2")
           ,"Delete the selected dataset.", placement="bottom")
       ),
       tableWidget(ns("pgxtable"))

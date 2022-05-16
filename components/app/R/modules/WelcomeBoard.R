@@ -67,14 +67,14 @@ WelcomeBoardUI <- function(id) {
         tags$button(
           id = "init-load-data",
           "Use pre-loaded data",
-          class = "btn btn-success welcome-btn"
+          class = "btn btn-outline-primary welcome-btn"
         ),
         "Click to load a previously uploaded dataset.", placement="bottom"),
       withTooltip(
         tags$a(
           id = "init-upload-data",
           "Upload new data",
-          class = "btn btn-outline-success welcome-btn"
+          class = "btn btn-outline-primary welcome-btn"
         ),
         "Click to upload some new data",
         placement="bottom"
