@@ -132,7 +132,7 @@ DrugConnectivityBoard <- function(id, inputData)
         dsea <- getActiveDSEA()
         dt <- dsea$table
         shiny::req(dt)        
-        targets.list <- lapply(as.character(dt$target),
+        targets.list <- lapply(enc2utf8(as.character(dt$target)),
                                function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
         names(targets.list) <- rownames(dt)
         targets <- setdiff(unique(unlist(targets.list)),c(NA,""," "))
@@ -155,7 +155,7 @@ DrugConnectivityBoard <- function(id, inputData)
         dsea <- getActiveDSEA()
         dt <- dsea$table
         shiny::req(dt)
-        moa.list <- lapply(as.character(dt$moa),
+        moa.list <- lapply(enc2utf8(as.character(dt$moa)),
                            function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
         names(moa.list) <- rownames(dt)
         moa <- setdiff( unlist(moa.list), c("",NA," "))
@@ -385,13 +385,13 @@ DrugConnectivityBoard <- function(id, inputData)
         cex2=0.85        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
 
-        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
+        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n",
+            col=BLUERED(100), col.lim = c(-1,1)*max(abs(score),na.rm=TRUE),
+            tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
 
     }      
         
     dsea_actmap.RENDER <- shiny::reactive({
-
 
         ngs <- inputData()
         shiny::req(ngs, input$dsea_contrast, input$dsea_method)
