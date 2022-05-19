@@ -185,7 +185,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         dt <- dsea$table
         shiny::req(dt)        
         targets.list <- lapply(as.character(dt$target),
-                               function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
+                               function(s) trimws(strsplit(enc2utf8(s),split="[\\|;,]")[[1]]) )
         names(targets.list) <- rownames(dt)
         targets <- setdiff(unique(unlist(targets.list)),c(NA,""," "))
         gmt <- lapply(targets, function(g)
@@ -207,12 +207,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         dsea <- getActiveDSEA()
         dt <- dsea$table
         shiny::req(dt)
+        dbg("[getMOA.class] 1")
         moa.list <- lapply(as.character(dt$moa),
-                           function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
+                           function(s) trimws(strsplit(enc2utf8(s),split="[\\|;,]")[[1]]))
         names(moa.list) <- rownames(dt)
+        dbg("[getMOA.class] 2")        
         moa <- setdiff( unlist(moa.list), c("",NA," "))
         gmt <- lapply(moa, function(g) names(which(sapply(moa.list,function(t) (g %in% t)))))
         names(gmt) <- moa
+        dbg("[getMOA.class] 3")        
         rnk <- dt$NES
         names(rnk) <- rownames(dt)
         suppressWarnings(
@@ -437,8 +440,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         cex2=0.85        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
 
-        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
+        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n",
+            col=BLUERED(100), col.lim=c(-1,1)*max(abs(score),na.rm=TRUE),
+            tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
 
     }      
         

@@ -500,7 +500,7 @@ server = function(input, output, session) {
             ## Forcing logout ensures "clean" sessions. For firebase
             ## we allow sticky sessions.
             message("[SERVER] not logged? forcing logout() JS callback...")            
-            shinyjs::runjs("logout()")    
+            shinyjs::runjs("logout()")
         }
         
         ##--------- start timer --------------
@@ -852,7 +852,7 @@ user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 
 ## conditionally add if firebase authentication is enabled
-stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</a>"))
+quit.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</a>"))
 if(opt$AUTHENTICATION == "shinyproxy") {
     ## For ShinyProxy we need to redirect to /logout for clean session
     ## logout. Then we need a redirect to the /login page.
@@ -876,7 +876,7 @@ user.menu <- shiny::navbarMenu(
     shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
     "----",         
     logout.tab,
-    stop.tab
+    quit.tab
 )
 
 createUI <- function(tabs)

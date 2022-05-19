@@ -53,17 +53,15 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
 
     shiny::observeEvent( input$login_btn, {           
         shiny::removeModal()
-        ##shiny::showModal(splashHelloModal(name=USER$name,ns=ns))
         USER$logged <- TRUE
-        ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()        
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
     observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+        dbg("[NoAuthenticationModule] firebaseLogout() reacted!")
         resetUSER()
     })
-    
+      
     rt <- list(
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),        
@@ -432,7 +430,7 @@ credentials.file='CREDENTIALS'
 PasswordAuthenticationModule <- function(input, output, session,
                                          credentials.file)
 {
-    message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
+    message("[PasswordAuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns    
     USER <- shiny::reactiveValues(
@@ -489,8 +487,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         if( is.null(login_email) || is.null(login_password)) return(NULL)
         if( login_email=="" || login_password=="") return(NULL)            
         sel <- tail(which( CREDENTIALS$email == login_email),1)       
-        dbg("[AuthenticationModule:input$login_btn] CREDENTIALS$email = ",CREDENTIALS$email)
-        dbg("[AuthenticationModule:input$login_btn] sel = ",sel)        
+        dbg("[PasswordAuthenticationModule:input$login_btn] CREDENTIALS$email = ",CREDENTIALS$email)
+        dbg("[PasswordAuthenticationModule:input$login_btn] sel = ",sel)        
         
         valid.user <- isTRUE(CREDENTIALS$email[sel] == login_email) && length(sel)>0
         valid.pw   <- isTRUE(CREDENTIALS[sel,"password"] == input$login_password)
@@ -550,7 +548,7 @@ PasswordAuthenticationModule <- function(input, output, session,
     })
 
     observeEvent( input$firebaseLogout, {
-        dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
+        dbg("[PasswordAuthenticationModule] firebaseLogout() reacted!")
         resetUSER()
     })
     

@@ -1,3 +1,8 @@
+v2.8.9
+
+- Fix colors in activation matrix in Drug Connectivity
+- Fix UTF8 error in drug MOA plot
+
 v2.8.8
 
 - Expression export (log2CPM), increase entries count table (v2.8.8)
