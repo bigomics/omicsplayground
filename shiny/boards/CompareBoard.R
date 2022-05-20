@@ -203,6 +203,8 @@ CompareBoard <- function(input, output, session, env)
         ngs2 <- dataset2()
         shiny::req(ngs1)
         shiny::req(ngs2)
+
+        dbg("[getOmicsScoreTable] 1")
         
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
@@ -213,31 +215,44 @@ CompareBoard <- function(input, output, session, env)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
 
+        dbg("[getOmicsScoreTable] 2")
+        
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
         ##gg <- igraph::union(rownames(F1),rownames(F2))
-        gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
-        F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
-        F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
-        rownames(F1) <- gg
-        rownames(F2) <- gg        
+        gg <- intersect(toupper(rownames(ngs1$X)),toupper(rownames(ngs2$X)))
+        F1 <- F1[match(gg,toupper(rownames(F1))),,drop=FALSE]
+        F2 <- F2[match(gg,toupper(rownames(F2))),,drop=FALSE]
+        ##rownames(F1) <- gg
+        ##rownames(F2) <- gg        
         colnames(F1) <- paste0("1:",colnames(F1))
         colnames(F2) <- paste0("2:",colnames(F2))
-        rho = 1
-        
+        rho = NA
+
+        dbg("[getOmicsScoreTable] 3")        
+
         kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
         if(length(kk) >= 10) {
-            X1 <- scale(t(ngs1$X[gg,kk]))
-            X2 <- scale(t(ngs2$X[gg,kk]))
-            rho <- colSums(X1 * X2) / (nrow(X1)-1)
+            g1 <- rownames(F1)
+            g2 <- rownames(F2)            
+            X1 <- scale(t(ngs1$X[g1,kk]))
+            X2 <- scale(t(ngs2$X[g2,kk]))
+            rho <- colSums(X1 * X2) / (nrow(X1)-1) ## fast correlation
         }
+
+        dbg("[getOmicsScoreTable] 4")        
 
         fc1 <- sqrt(rowMeans(F1**2))
         fc2 <- sqrt(rowMeans(F2**2))        
-        score <- rho * fc1 * fc2
+        score <- fc1 * fc2
+        if(!is.na(rho[1])) {
+            score <- rho * score
+        }
 
-        title <- ngs1$genes[gg,"gene_title"]
+        dbg("[getOmicsScoreTable] 5")                
+        g1 <- rownames(F1)
+        title <- ngs1$genes[g1,"gene_title"]
         title <- substring(title,1,60)
             
         df <- data.frame( title, score, rho, F1, F2, check.names=FALSE )
@@ -265,34 +280,46 @@ CompareBoard <- function(input, output, session, env)
 
     createPlot <- function(ngs, ngs1, ngs2, ct, type, cex.lab, higenes, ntop) {
         p <- NULL
+        genes1 <- rownames(ngs$X)
+        higenes1 <- genes1[match(toupper(higenes),toupper(genes1))]
+
         if(type %in% c('UMAP1','UMAP2')) {
             if(type =='UMAP1') {
-                pos = ngs1$cluster.genes$pos[['umap2d']]
+                pos <- ngs1$cluster.genes$pos[['umap2d']]
             } else if(type=='UMAP2') {
-                pos = ngs2$cluster.genes$pos[['umap2d']]
+                pos <- ngs2$cluster.genes$pos[['umap2d']]
             }
             dim(pos)
+            gg <- intersect(toupper(rownames(ngs$X)),toupper(rownames(pos)))
+            jj <- match(gg,toupper(rownames(pos)))
+            pos <- pos[jj,]
+            ii <- match(toupper(rownames(pos)),toupper(rownames(ngs$X)))
+            rownames(pos) <- rownames(ngs$X)[ii]
+
             p <- pgx.plotGeneUMAP(
                 ngs, contrast=ct, pos=pos,
                 cex = 0.9, cex.lab = cex.lab,
-                hilight = higenes, ntop=ntop,
-                zfix = TRUE,
-                par.sq = TRUE, plotlib="base")
+                hilight = higenes1, ntop=ntop,
+                zfix = TRUE, par.sq = TRUE,
+                plotlib="base")
+
         } else if(type == 'heatmap') {
-            gg <- intersect(higenes, rownames(ngs$X))
+            gg <- intersect(toupper(higenes), toupper(rownames(ngs$X)))
             if(length(gg)>1) {
-                X1 <- ngs$X[gg,,drop=FALSE]
+                jj <- match(gg,toupper(rownames(ngs$X)))
+                X1 <- ngs$X[jj,,drop=FALSE]
                 Y1 <- ngs$samples
                 gx.splitmap(X1, nmax=40, col.annot=Y1,
                             softmax=TRUE, show_legend=FALSE)
             }
         } else {
+            genes1 <- rownames(ngs$X)
+            gg <- intersect(toupper(higenes), toupper(genes1))
+            higenes1 <- genes1[match(gg,toupper(genes1))]
             p <- pgx.plotContrast(
-                ngs, contrast=ct,
-                hilight = higenes, ntop=ntop,
-                cex.lab = cex.lab, ## dlim=0.06,
-                par.sq = TRUE, 
-                type=type, plotlib="base")
+                ngs, contrast=ct, hilight = higenes1,
+                ntop=ntop, cex.lab = cex.lab, ## dlim=0.06,
+                par.sq = TRUE, type=type, plotlib="base")
         }
         p
     }
@@ -401,16 +428,21 @@ CompareBoard <- function(input, output, session, env)
 
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
-        gg <- intersect(rownames(F1),rownames(F2))
-        F1 <- F1[gg,,drop=FALSE]
-        F2 <- F2[gg,,drop=FALSE]
+        gg <- intersect(toupper(rownames(F1)),toupper(rownames(F2)))
+        g1 <- rownames(F1)[match(gg,toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg,toupper(rownames(F2)))]            
+        F1 <- F1[g1,,drop=FALSE]
+        F2 <- F2[g2,,drop=FALSE]
         colnames(F1) <- paste0("1:",colnames(F1))
         colnames(F2) <- paste0("2:",colnames(F2))
+
+        ## force same names if mouse .vs human
+        rownames(F2) <- rownames(F1)
 
         ##ff <- rowMeans(F1**2) * rowMeans(F2**2)
         ##higenes <- head(names(sort(ff, decreasing=TRUE)),12)
         higenes <- hilightgenes()
-        
+
         p <- NULL
         ##p <- plot.ggsplom(F1, F2, title_cex=3, no.axes=FALSE)
         plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)            
@@ -458,47 +490,26 @@ CompareBoard <- function(input, output, session, env)
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
-        gg <- igraph::union(rownames(F1),rownames(F2))
-        gg <- intersect(rownames(F1),rownames(F2))
-        F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
-        F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
-        ##colnames(F1) <- paste0("1:",colnames(F1))
-        ##colnames(F2) <- paste0("2:",colnames(F2))
-        rownames(F1) <- rownames(F2) <- gg
+        gg <- intersect(toupper(rownames(F1)),toupper(rownames(F2)))
+        g1 <- rownames(F1)[match(gg,toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg,toupper(rownames(F2)))]            
+        F1 <- F1[g1,,drop=FALSE]
+        F2 <- F2[g2,,drop=FALSE]
+        colnames(F1) <- paste0("1:",colnames(F1))
+        colnames(F2) <- paste0("2:",colnames(F2))
         
         F <- cbind(F1, F2)
         F[is.na(F)] <- 0
         
-        if(1) {
-            sel <- head(order(-rowMeans(F**2)),50)
-            sel <- rownames(F)[sel]
-        } else {
-            ## get top genes from score table
-            df <- getOmicsScoreTable()
-            if(is.null(df)) return(NULL)
-            sel <- score_table$rows_all()      ## from module  
-            shiny::req(sel)
-            sel <- head(rownames(df)[sel],50)        
-            if(length(sel)==0) return(NULL)
-        }
-
-        sel <- sel[order(rowMeans(F[sel,]))]
-        F  <- F[sel,,drop=FALSE]
-        F1 <- F1[sel,,drop=FALSE]
-        F2 <- F2[sel,,drop=FALSE]
-
-        if(0) {
-            par(mfrow=c(1,1), mar=c(4.5,10,0,2))
-            barplot( t(F), beside=FALSE, las=1, horiz=TRUE,
-                    cex.names = 0.9,
-                    xlab = "cumulative foldchange", ylab = "" )
-            legend("bottomright", colnames(F), fill=grey.colors(ncol(F)),
-                   cex=0.85, y.intersp=0.9, inset=c(0.01,0.02) )
-        }
+        ii <- head(order(-rowMeans(F**2)),50)
+        ii <- ii[order(rowMeans(F[ii,]))]
+        F  <- F[ii,,drop=FALSE]
+        F1 <- F1[ii,,drop=FALSE]
+        F2 <- F2[ii,,drop=FALSE]
         
         par(mfrow=c(1,1), mar=c(4.5,0,1,2), mgp=c(2.2,0.8,0))
-        plotly::layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
-
+        graphics::layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
+        
         frame()
         mtext( rownames(F), cex=0.80, side=2, at=(1:nrow(F)-0.5)/nrow(F),
               las=1, line=-12)        
