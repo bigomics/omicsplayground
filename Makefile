@@ -35,8 +35,8 @@ bash.docker:
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
 	git push && git push --tags
-	docker tag bigomics/omicsplayground:latest bigomics/omicsplayground:$(VERSION)
+	docker tag bigomics/omicsplayground:$(TAG) bigomics/omicsplayground:$(VERSION)
 
 push.latest: 
-	docker push bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:latest
+	docker push bigomics/omicsplayground:$(VERSION)
