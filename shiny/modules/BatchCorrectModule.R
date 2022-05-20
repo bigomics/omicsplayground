@@ -199,8 +199,16 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         }
         req(ncol(X0) == ncol(cX))
 
+        do.pca=FALSE;show_row=TRUE
         do.pca <- (input$bc_maptype == "PCA")                    
         show_row <- (nmax < 50)
+        
+        if(0) {
+            X0=X0;pheno=out$Y;cX=cX;phenotype=p1
+            pca.heatmap=do.pca;npca=3;
+            nmax=nmax;cex=1.8;show_rownames=show_row
+            title=NULL;subtitle=NULL;caption=NULL
+        }
         
         viz.BatchCorrectionMatrix(
           X0=X0, pheno=out$Y, cX=cX, phenotype=p1,
@@ -315,6 +323,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         
         mp="";bp="Chemotherapy"
         mp="dlbcl.type";bp="*"
+        mp="treatment";bp="donor"        
         mp <- input$bc_modelpar
         bp <- input$bc_batchpar
         bc <- input$bc_methods
@@ -365,10 +374,12 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         dbg("[event:outobj] dim(pheno) = ",dim(pheno()))
         dbg("[event:outobj] mp = ",mp)
         dbg("[event:outobj] bp = ",bp)              
+
+        Y0 = pheno()
         
         out <- pgx.superBatchCorrect(
           X = X0,
-          pheno = pheno(),
+          pheno = Y0,
           model.par = mp,
           batch.par = bp,
           ## batch.cov = bv,

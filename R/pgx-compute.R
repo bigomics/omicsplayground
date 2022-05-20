@@ -48,7 +48,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## contrast matrix
     colnames(contrasts)
     is.numbered <- all(unique(as.vector(contrasts)) %in% c(-1,0,1))
-    is.numbered <- all(sapply(type.convert(data.frame(contrasts)),class) %in% c("numeric","integer"))
+    is.numbered <- all(sapply(type.convert(data.frame(contrasts),as.is=FALSE),class) %in% c("numeric","integer"))
     is.numbered
     ct.type <- c("labeled (new style)","numbered (old style)")[1 + 1*is.numbered]
     message("[createPGX] contrast type :",ct.type)
@@ -103,7 +103,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     kk <- intersect(colnames(counts),rownames(samples))
     counts  <- counts[,kk,drop=FALSE]
     samples <- samples[kk,,drop=FALSE]
-    samples <- type.convert(samples) ## automatic type conversion
+    samples <- type.convert(samples,as.is=FALSE) ## automatic type conversion
     if(!is.null(X)) X <- X[,kk,drop=FALSE]
     if(all(kk %in% rownames(contrasts))) {
         contrasts <- contrasts[kk,,drop=FALSE]

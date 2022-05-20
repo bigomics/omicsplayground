@@ -458,11 +458,7 @@ pgx.plotPartialCorrelationAroundGene <-
 ##df=ngs$samples
 pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 {
-
-    
-    
-
-    df <- type.convert(df)
+    df <- type.convert(df,as.is=FALSE)
     cl <- sapply(df,class)
     cvar <- which(cl %in% c("numeric","integer"))
     dvar <- which(cl %in% c("factor","character"))    

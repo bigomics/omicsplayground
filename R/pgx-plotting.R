@@ -2129,7 +2129,7 @@ plot.ggscatter <- function(x, y=NULL, col=NULL, main=NULL,
     if(!is.null(col)) df$col <- col
     if(!is.null(shape)) df$shape <- shape
     Matrix::head(df)
-    is.factor <- class(type.convert(as.character(col)))=="factor"
+    is.factor <- class(type.convert(as.character(col),as.is=FALSE))=="factor"
     if(is.factor) {
         p <- ggplot2::ggplot(df, ggplot2::aes(y=y, x=x, color=col, shape=shape)) +
             ggplot2::geom_point(size = 2.0*cex) +

@@ -30,7 +30,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
     ## tidy up pheno matrix?? get correct parameter types
     ##pheno <- tidy.dataframe(pheno)
-    pheno <- type.convert(pheno)
+    pheno <- type.convert(pheno,as.is=FALSE)
 
     message("[pgx.superBatchCorrect] 1 : dim.pheno = ",paste(dim(pheno),collapse='x'))
     message("[pgx.superBatchCorrect] 1 : model.par = ",paste(model.par,collapse='x'))

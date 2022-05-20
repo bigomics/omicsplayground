@@ -1500,7 +1500,7 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE, drop.ref=TRUE) {
     nlevel <- apply(a1,2,function(x) length(setdiff(unique(x),NA)))
     nterms <- colSums(!is.na(a1))
     ##y.class <- sapply(a1,class)
-    y.class <- sapply(type.convert(pheno),class)
+    y.class <- sapply(type.convert(pheno,as.is=FALSE),class)
     ##y.isnum <- apply(a1,2,is.num)
     y.isnum <- (y.class %in% c("numeric","integer"))
     nlevel

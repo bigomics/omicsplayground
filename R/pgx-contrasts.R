@@ -551,7 +551,7 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     dim(df)   
 
     ## ----------- use type.convert to infer parameters
-    df <- type.convert(data.frame(df,check.names=FALSE))
+    df <- type.convert(data.frame(df,check.names=FALSE),as.is=FALSE)
 
     ## ----------- convert numeric variables into bins
     ii <- which(sapply(df,class) %in% c("integer","numeric"))
