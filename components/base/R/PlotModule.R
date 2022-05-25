@@ -466,7 +466,7 @@ PlotModuleServer <- function(
               } else if(plotlib %in% c("ggplot","ggplot2")) {
                   p <- func()
                   ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                  DT::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
+                  htmlwidgets::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
               } else if(plotlib=="image") {
                   write("<body>image cannot export to HTML</body>",HTMLFILE)
               } else if(plotlib=="generic") {
@@ -501,7 +501,7 @@ PlotModuleServer <- function(
                                                   } else if(plotlib %in% c("ggplot","ggplot2")) {
                                                       p <- func()
                                                       ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                                                      DT::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
+                                                      htmlwidgets::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
                                                   } else if(plotlib=="generic") {
                                                       ## generic function should produce PDF inside plot func()
                                                       ##

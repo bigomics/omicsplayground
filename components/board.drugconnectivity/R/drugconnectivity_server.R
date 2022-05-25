@@ -98,7 +98,7 @@ DrugConnectivityBoard <- function(id, inputData)
         ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
         if(is.null(annot)) {
             message("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
-            annot <- read.csv(file.path(FILESX,"sig/L1000_repurposing_drugs.txt"),
+            annot <- read.csv(file.path(FILESX,"cmap/L1000_repurposing_drugs.txt"),
                               sep="\t", comment.char="#")
             rownames(annot) <- annot$pert_iname
         }
@@ -316,14 +316,15 @@ DrugConnectivityBoard <- function(id, inputData)
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=NULL),
+                      selection = list(mode='single', target='row', selected=NULL),
+                      ## filter = list(position='bottom'),                      
                       fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                           dom = 'lfrtip', 
-                          scrollX = TRUE, ##scrollY = TRUE,
+                          scroller=TRUE, scrollX = TRUE, ##scrollY = TRUE,
                           scrollY = '70vh',
-                          scroller=TRUE, deferRender=TRUE
+                          deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
@@ -484,7 +485,7 @@ DrugConnectivityBoard <- function(id, inputData)
 
     ##--------buttons for table
     dsea_table.opts = shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
+        withTooltip(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',FALSE),
                "Show only annotated drugs.")
     )  
     dsea_table <- shiny::callModule(

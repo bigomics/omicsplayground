@@ -19,4 +19,19 @@ html {
         background-position: 3.5rem 5rem;
     }
 
+    // disable on normal dropdown elements
+    .dropdown-toggle::after {
+	content: "";	
+    }    
+
+    // only on navbars
+    .nav-link .dropdown-toggle::after {
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	content: "\f078";
+	border-top: none;
+	vertical-align: 0;
+    }    
+    
+    
 }

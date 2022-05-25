@@ -38,7 +38,7 @@ CompareBoard <- function(id, inputData)
         sel1 <- comparisons1[1]
         shiny::updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)        
 
-        pgx.files <- sort(dir("../data",pattern="pgx$"))
+        pgx.files <- sort(dir(file.path(OPG,"data"),pattern="pgx$"))
         shiny::updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))
     })
 
@@ -67,7 +67,7 @@ CompareBoard <- function(id, inputData)
         if(input$dataset2 == "<this>") {
             ngs <- inputData()
         } else {
-            load(file.path("../data",input$dataset2))
+            load(file.path(OPG,"data",input$dataset2))
         }
         comparisons2 <- names(ngs$gx.meta$meta)
         sel2 <- tail(head(comparisons2,2),1)
@@ -140,36 +140,49 @@ CompareBoard <- function(id, inputData)
     ## ScatterPlot 1
     ##============================================================================
 
+
     createPlot <- function(ngs, ngs1, ngs2, ct, type, cex.lab, higenes, ntop) {
         p <- NULL
+        genes1 <- rownames(ngs$X)
+        higenes1 <- genes1[match(toupper(higenes),toupper(genes1))]
+
         if(type %in% c('UMAP1','UMAP2')) {
             if(type =='UMAP1') {
-                pos = ngs1$cluster.genes$pos[['umap2d']]
+                pos <- ngs1$cluster.genes$pos[['umap2d']]
             } else if(type=='UMAP2') {
-                pos = ngs2$cluster.genes$pos[['umap2d']]
+                pos <- ngs2$cluster.genes$pos[['umap2d']]
             }
             dim(pos)
+            gg <- intersect(toupper(rownames(ngs$X)),toupper(rownames(pos)))
+            jj <- match(gg,toupper(rownames(pos)))
+            pos <- pos[jj,]
+            ii <- match(toupper(rownames(pos)),toupper(rownames(ngs$X)))
+            rownames(pos) <- rownames(ngs$X)[ii]
+
             p <- pgx.plotGeneUMAP(
                 ngs, contrast=ct, pos=pos,
                 cex = 0.9, cex.lab = cex.lab,
-                hilight = higenes, ntop=ntop,
-                zfix = TRUE,
-                par.sq = TRUE, plotlib="base")
+                hilight = higenes1, ntop=ntop,
+                zfix = TRUE, par.sq = TRUE,
+                plotlib="base")
+
         } else if(type == 'heatmap') {
-            gg <- intersect(higenes, rownames(ngs$X))
+            gg <- intersect(toupper(higenes), toupper(rownames(ngs$X)))
             if(length(gg)>1) {
-                X1 <- ngs$X[gg,,drop=FALSE]
+                jj <- match(gg,toupper(rownames(ngs$X)))
+                X1 <- ngs$X[jj,,drop=FALSE]
                 Y1 <- ngs$samples
                 gx.splitmap(X1, nmax=40, col.annot=Y1,
                             softmax=TRUE, show_legend=FALSE)
             }
         } else {
+            genes1 <- rownames(ngs$X)
+            gg <- intersect(toupper(higenes), toupper(genes1))
+            higenes1 <- genes1[match(gg,toupper(genes1))]
             p <- pgx.plotContrast(
-                ngs, contrast=ct,
-                hilight = higenes, ntop=ntop,
-                cex.lab = cex.lab,
-                par.sq = TRUE,
-                type=type, plotlib="base")
+                ngs, contrast=ct, hilight = higenes1,
+                ntop=ntop, cex.lab = cex.lab, ## dlim=0.06,
+                par.sq = TRUE, type=type, plotlib="base")
         }
         p
     }
@@ -255,10 +268,10 @@ CompareBoard <- function(id, inputData)
     ##============================================================================
     
     fcfcplot.RENDER <- shiny::reactive({
-                          
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
-     
+        ##alertDataLoaded(session,ngs)
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
         ct1 <- input.contrast1()
@@ -270,15 +283,19 @@ CompareBoard <- function(id, inputData)
 
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
-        gg <- intersect(rownames(F1),rownames(F2))
-        F1 <- F1[gg,,drop=FALSE]
-        F2 <- F2[gg,,drop=FALSE]
+        gg <- intersect(toupper(rownames(F1)),toupper(rownames(F2)))
+        g1 <- rownames(F1)[match(gg,toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg,toupper(rownames(F2)))]            
+        F1 <- F1[g1,,drop=FALSE]
+        F2 <- F2[g2,,drop=FALSE]
+        rownames(F2) <- rownames(F1) ## force same names if mouse .vs human
         colnames(F1) <- paste0("1:",colnames(F1))
         colnames(F2) <- paste0("2:",colnames(F2))
         higenes <- hilightgenes()
-        
+
         p <- NULL
-        plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)
+        ##p <- plot.ggsplom(F1, F2, title_cex=3, no.axes=FALSE)
+        plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)            
         p
     })
     
@@ -289,7 +306,7 @@ CompareBoard <- function(id, inputData)
     shiny::callModule(
         plotModule,
         "fcfcplot", label = "a",
-        func = fcfcplot.RENDER,
+        func  = fcfcplot.RENDER,
         func2 = fcfcplot.RENDER,
         title = "FC CORRELATION",
         pdf.height=6, pdf.width=6, 
@@ -303,7 +320,7 @@ CompareBoard <- function(id, inputData)
     ##-----------------------------------------------------------------
 
     cumfcplot.RENDER <- shiny::reactive({
-                        
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
 
@@ -319,50 +336,31 @@ CompareBoard <- function(id, inputData)
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
-        gg <- igraph::union(rownames(F1),rownames(F2))
-        gg <- intersect(rownames(F1),rownames(F2))
-        F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
-        F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
-        
-        rownames(F1) <- rownames(F2) <- gg
+        gg <- intersect(toupper(rownames(F1)),toupper(rownames(F2)))
+        g1 <- rownames(F1)[match(gg,toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg,toupper(rownames(F2)))]            
+        F1 <- F1[g1,,drop=FALSE]
+        F2 <- F2[g2,,drop=FALSE]
+        colnames(F1) <- paste0("1:",colnames(F1))
+        colnames(F2) <- paste0("2:",colnames(F2))
         
         F <- cbind(F1, F2)
         F[is.na(F)] <- 0
         
-        if(1) {
-            sel <- head(order(-rowMeans(F**2)),50)
-            sel <- rownames(F)[sel]
-        } else {
-            ## get top genes from score table
-            df <- getOmicsScoreTable()
-            if(is.null(df)) return(NULL)
-            sel <- score_table$rows_all()      ## from module  
-            shiny::req(sel)
-            sel <- head(rownames(df)[sel],50)        
-            if(length(sel)==0) return(NULL)
-        }
-
-        sel <- sel[order(rowMeans(F[sel,]))]
-        F  <- F[sel,,drop=FALSE]
-        F1 <- F1[sel,,drop=FALSE]
-        F2 <- F2[sel,,drop=FALSE]
-
-        if(0) {
-            par(mfrow=c(1,1), mar=c(4.5,10,0,2))
-            barplot( t(F), beside=FALSE, las=1, horiz=TRUE,
-                    cex.names = 0.9,
-                    xlab = "cumulative foldchange", ylab = "" )
-            legend("bottomright", colnames(F), fill=grey.colors(ncol(F)),
-                   cex=0.85, y.intersp=0.9, inset=c(0.01,0.02) )
-        }
+        ii <- head(order(-rowMeans(F**2)),50)
+        ii <- ii[order(rowMeans(F[ii,]))]
+        F  <- F[ii,,drop=FALSE]
+        F1 <- F1[ii,,drop=FALSE]
+        F2 <- F2[ii,,drop=FALSE]
         
         par(mfrow=c(1,1), mar=c(4.5,0,1,2), mgp=c(2.2,0.8,0))
-        plotly::layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
-
+        graphics::layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
+        
         frame()
         mtext( rownames(F), cex=0.80, side=2, at=(1:nrow(F)-0.5)/nrow(F),
               las=1, line=-12)        
-       
+        ##barplot( t(F1), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
+        ##        xlab = "cumulative foldchange", ylab = "" )
         col1 <- grey.colors(ncol(F1))
         if(ncol(F1)==1) col1 <- "grey50"
         pgx.stackedBarplot( F1, hz=TRUE, las=1, col=col1,
@@ -371,7 +369,9 @@ CompareBoard <- function(id, inputData)
         legend("bottomright", colnames(F1), fill=grey.colors(ncol(F1)),
                cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
         title("DATASET1", line=-0.35, cex.main=1.2)
-   
+        
+        ##barplot( t(F2), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
+        ##        xlab = "cumulative foldchange", ylab = "" )
         col2 <- grey.colors(ncol(F2))
         if(ncol(F2)==1) col2 <- "grey50"
         pgx.stackedBarplot( F2, hz=TRUE, las=1, col=col2,
@@ -380,6 +380,8 @@ CompareBoard <- function(id, inputData)
         legend("bottomright", colnames(F2), fill=grey.colors(ncol(F2)),
                cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
         title("DATASET2", line=-0.35, cex.main=1.2)
+        
+        
     })
     
     cumfcplot.opts <- shiny::tagList()    
@@ -414,13 +416,9 @@ CompareBoard <- function(id, inputData)
         shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)        
-
-        dbg("[genecorr.RENDER] 1:")
         
         gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
         kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
-
-        dbg("[genecorr.RENDER] 2:")
         
         if(length(kk)==0) {
             par(mfrow=c(1,1))
@@ -437,16 +435,12 @@ CompareBoard <- function(id, inputData)
             text(0.5,0.5, "For gene correlation we need at least 10 common samples", col='red3')
             return()
         }
-
-        dbg("[genecorr.RENDER] 3:")
         
         ## conform matrices
         X1 <- ngs1$X[gg,kk]
         X2 <- ngs2$X[gg,kk]        
         Y1 <- ngs1$samples[kk,]
         Y2 <- ngs2$samples[kk,]    
-        
-        dbg("[genecorr.RENDER] 4:")
 
         dset1 <- paste0("[dataset1]  expression")
         dset2 <- paste0("[dataset2]  expression")
@@ -460,8 +454,6 @@ CompareBoard <- function(id, inputData)
             higenes <- intersect(higenes,rownames(X1))
             higenes <- head(higenes, 16)
         }
-
-        dbg("[genecorr.RENDER] 5:")
         
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
@@ -469,13 +461,9 @@ CompareBoard <- function(id, inputData)
         sel <- score_table$rows_all()      ## from module  
         shiny::req(sel)
         if(is.null(sel)) return(NULL)        
-
-        dbg("[genecorr.RENDER] 6: dim.df = ",dim(df))
         
         higenes <- head(rownames(df)[sel],16)        
         if(length(higenes)==0) return(NULL)
-
-        dbg("[genecorr.RENDER] 7: higenes = ",higenes)
         
         ## Set color for points
         klrpal <- rep(1:7,99)
@@ -626,7 +614,7 @@ CompareBoard <- function(id, inputData)
         info.text = multibarplot_info,
         pdf.height=6, pdf.width=8, 
         height = c(440,700),        
-        width=c("auto",1280),
+        width = c("auto",1280),
         res = c(95,130),
         add.watermark = WATERMARK
     )

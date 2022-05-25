@@ -283,8 +283,6 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
 compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
     
     ## -------------- drug enrichment
-    L1000.FILE = "l1000_es_n20d1011.csv.gz"
-    L1000.FILE = "l1000_es.rds"
     cmap.dir
     dir(cmap.dir, pattern='.*rds$')
     ref.db <- dir(cmap.dir, pattern='^L1000-.*rds$')    
@@ -297,19 +295,19 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
     ref.db
     f <- ref.db[1]
 
-    i=1
+    i=2
     for(i in 1:length(ref.db)) {
         f <- ref.db[i]
         message("[compute.drugActivityEnrichment] reading L1000 reference: ",f)
         X <- readRDS(file=file.path(cmap.dir,f))
         ##X <- fread.csv(file=file.path(cmap.dir,L1000.FILE))    
-        xdrugs <- gsub("_.*$","",colnames(X))
+        xdrugs <- gsub("[_@].*$","",colnames(X))
         ndrugs <- length(table(xdrugs))
         ndrugs
         message("number of profiles: ",ncol(X))
         message("number of drugs: ",ndrugs)
         dim(X)
-        is.drug <- grepl("activity",f)
+        is.drug <- grepl("activity|drug|ChemPert",f,ignore.case=TRUE)
         
         NPRUNE=-1
         NPRUNE=250

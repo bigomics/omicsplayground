@@ -739,17 +739,11 @@ plotModule <- function(input, output, session,
         ## reason does not work in the downloadHandler...
         ##
         render <- shiny::renderPlot({
-            ##pdf.width0  <- shiny::isolate(input$pdf_width)
-            ##pdf.height0 <- shiny::isolate(input$pdf_height)                
             pdf.width0  <- pdf.width
             pdf.height0 <- pdf.height
 
             ## save base render in object
-            ##pdf(NULL)
-            ##dev.control(displaylist="enable")
             func()
-            ##p1.base <- recordPlot()
-            ##invisible(dev.off())
             if(1) {
                 suppressWarnings( suppressMessages(
                     if(do.pdf) {
@@ -953,29 +947,30 @@ tableModule <- function(input, output, session,
         icon("window-maximize"),
         class="btn-circle-xs"
     )
+
     
-    buttons <- shiny::fillRow(
+    header <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
         flex=c(NA,1,NA,NA,NA,NA),
         label1,
         shiny::div(class='plotmodule-title', title=title, title),        
         shinyWidgets::dropdownButton(
-                          shiny::tags$p(shiny::HTML(info.text)),
-                          shiny::br(),
-                          circle = TRUE, size = "xs", ## status = "danger",
-                          icon = shiny::icon("info"), width = info.width,
-                          inputId = ns("info"), right=FALSE,
-                          tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
-                      ),
+            shiny::tags$p(shiny::HTML(info.text)),
+            shiny::br(),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = shiny::icon("info"), width = info.width,
+            inputId = ns("info"), right=FALSE,
+            tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
+        ),
         options.button,
         shiny::div(class='download-button',
-                   shinyWidgets::dropdownButton(
-                                     shiny::downloadButton(ns("csv"), "CSV"),
-                                     circle = TRUE, size = "xs", ## status = "danger",
-                                     icon = shiny::icon("download"), width = "80px", right=FALSE,
-                                     tooltip = shinyWidgets::tooltipOptions(title = "Download",
-                                                                            placement = "right")
-                                 )),
+            shinyWidgets::dropdownButton(
+                shiny::downloadButton(ns("csv"), "CSV"),
+                circle = TRUE, size = "xs", ## status = "danger",
+                icon = shiny::icon("download"), width = "80px", right=FALSE,
+                tooltip = shinyWidgets::tooltipOptions(title = "Download",
+                    placement = "right")
+            )),
         zoom.button
     )
     
@@ -1043,7 +1038,7 @@ tableModule <- function(input, output, session,
               shiny::tags$head(shiny::tags$style(modaldialog.style)),
               shiny::tags$head(shiny::tags$style(modalbody.style)),
               shiny::tags$head(shiny::tags$style(modalfooter.none)),
-              div(buttons, class="tablewidget-header"),
+              div(header, class="tablewidget-header"),
               div.caption,
               DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
               shiny::div(class="popup-table",
