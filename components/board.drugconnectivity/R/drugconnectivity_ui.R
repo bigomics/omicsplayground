@@ -20,15 +20,11 @@ DrugConnectivityInputs <- function(id) {
 
 DrugConnectivityUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        flex = c(1),
-        height = 750,
+    
+    div(
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Drug enrichment",
-                shiny::fillCol(
-                flex = c(NA,0.035,1),
-                height = 750,            
                 tags$div(
                     HTML("<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation
                      profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running
@@ -39,23 +35,28 @@ DrugConnectivityUI <- function(id) {
                      levels of drug signatures across multiple contrast profiles.")
                 ),
                 shiny::br(),
-                shiny::fillRow(
-                    height = 660,
-                    flex = c(2.6,1), 
-                    shiny::fillCol(
-                        flex = c(1.5,0.15,1),
-                        height = 660,
-                        shiny::fillRow(
-                            flex=c(1.2,0.04,1),
-                            plotWidget(ns("dsea_enplots")),
-                            shiny::br(),
-                            plotWidget(ns("dsea_moaplot"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-10",
+                        div(
+                            class = "row",
+                            div(
+                                class = "col-md-6",
+                                plotWidget(ns("dsea_enplots")),
+                            ),
+                            div(
+                                class = "col-md-6",
+                                plotWidget(ns("dsea_moaplot"))
+                            )
                         ),
-                        shiny::br(),  ## vertical space
+                        br(),
                         tableWidget(ns("dsea_table"))        
                     ),
-                    plotWidget(ns("dsea_actmap"))
-                )
+                    div(
+                        class = "col-md-2",
+                        plotWidget(ns("dsea_actmap"))
+                    )
                 )
             ),
             shiny::tabPanel("Connectivity map (beta)",

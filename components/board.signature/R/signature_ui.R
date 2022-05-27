@@ -48,91 +48,80 @@ SignatureInputs <- function(id) {
 
 SignatureUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillRow(
-        flex = c(1.5,0.05,1),
-        height = 780,
-        shiny::tabsetPanel(
-            id = ns("tabs1"),
-            shiny::tabPanel("Enrichment",
-                shiny::fillCol(
-                height = 800,
-                flex = c(NA,0.03,1),
-                tags$div(
-                    HTML("<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts.
-                     Positive enrichment means that this particular contrast
-                    shows similar expression changes as the query signature."
-                    )
+
+    div(
+        class = "row",
+        div(
+            class = "col-md-8",
+            shiny::tabsetPanel(
+                id = ns("tabs1"),
+                shiny::tabPanel("Enrichment",
+                    tags$div(
+                        HTML("<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts.
+                        Positive enrichment means that this particular contrast
+                        shows similar expression changes as the query signature."
+                        )
+                    ),
+                    shiny::br(),
+                    plotWidget(ns("enplots"))
                 ),
-                shiny::br(),
-                plotWidget(ns("enplots"))
-            )),
-            shiny::tabPanel("Volcano plots",
-                shiny::fillCol(
-                height = 800,
-                flex = c(NA,0.03,1),
-                tags$div(
-                    HTML("
-                        <b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts.
-                        For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot,
-                        for negative enrichment, on the upper left."
-                    )
+                shiny::tabPanel("Volcano plots",
+                    tags$div(
+                        HTML("
+                            <b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts.
+                            For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot,
+                            for negative enrichment, on the upper left."
+                        )
+                    ),
+                    shiny::br(),
+                    plotWidget(ns("volcanoPlots"))
                 ),
-                shiny::br(),
-                plotWidget(ns("volcanoPlots"))
+                shiny::tabPanel("Overlap/similarity",
+                    tags$div(
+                        HTML("
+                            <b>Overlap/Similarity table.</b><b>(a)</b> Top overlapping gene sets with selected signature.
+                            The vertical axis shows the overlap score of the gene set which combines the odds ratio and
+                            significance (q-value) of the Fisher's test. <b>(b)</b> Table summarizing the results
+                            of the Fishers's test for overlap. The column \'common genes\' reports the
+                            shared gene in order of largest fold-change."
+                        )
+                    ),
+                    shiny::br(),
+                    plotWidget(ns("overlapScorePlot")),
+                    shiny::br(),
+                    tableWidget(ns("overlapTable"))
+                ),
+                shiny::tabPanel("Markers",
+                    tags$div(
+                        HTML("
+                            <b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples)
+                            are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
+                        )
+                    ),
+                    shiny::br(),            
+                    plotWidget(ns("markers"))
+                )
             )
-            ),
-            shiny::tabPanel("Overlap/similarity",
-                shiny::fillCol(
-                flex = c(NA,0.035,1,0.04,1),
-                height = 800,
-                tags$div(
-                    HTML("
-                        <b>Overlap/Similarity table.</b><b>(a)</b> Top overlapping gene sets with selected signature.
-                        The vertical axis shows the overlap score of the gene set which combines the odds ratio and
-                        significance (q-value) of the Fisher's test. <b>(b)</b> Table summarizing the results
-                        of the Fishers's test for overlap. The column \'common genes\' reports the
-                        shared gene in order of largest fold-change."
-                    )
-                ),
-                shiny::br(),
-                plotWidget(ns("overlapScorePlot")),
-                shiny::br(),
-                tableWidget(ns("overlapTable"))
-            )),
-            shiny::tabPanel("Markers",
-                shiny::fillCol(
-                flex = c(NA,0.025,1),
-                height = 800,
-                tags$div(
-                    HTML("
-                        <b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples)
-                        are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
-                    )
-                ),
-                shiny::br(),            
-                plotWidget(ns("markers"))
-            ))
         ),
-        shiny::br(),
-        shiny::tabsetPanel(
-            id = ns("tabs2"),
-            shiny::tabPanel("Enrichment table",
-                shiny::fillCol(
-                flex = c(NA,0.04,1.0,0.04,1.5), ## width = 600,
-                height = 800,
-                tags$div(
-                    HTML("
-                        <b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all
-                        contrasts for the selected query signature . The NES corresponds to the normalized enrichment
-                        score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute)
-                        fold-change corresponding to the selected contrast."
-                    )
-                ),
-                shiny::br(),
-                plotWidget(ns("enrichmentContrastTable")),
-                shiny::br(),
-                plotWidget(ns("enrichmentGeneTable"))
-            ))
+        div(
+            class = "col-md-4",
+            shiny::tabsetPanel(
+                id = ns("tabs2"),
+                shiny::tabPanel("Enrichment table",
+                    tags$div(
+                        HTML("
+                            <b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all
+                            contrasts for the selected query signature . The NES corresponds to the normalized enrichment
+                            score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute)
+                            fold-change corresponding to the selected contrast."
+                        )
+                    ),
+                    shiny::br(),
+                    plotWidget(ns("enrichmentContrastTable")),
+                    shiny::br(),
+                    plotWidget(ns("enrichmentGeneTable"))
+                )
+            )
         )
     )
 }

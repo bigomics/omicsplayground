@@ -29,58 +29,49 @@ CorrelationInputs <- function(id) {
 
 CorrelationUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    ui <- shiny::fillCol(
-        height = 750,
-        shiny::tabsetPanel(
-            id = ns("tabs"),
-            shiny::tabPanel("Correlation",
-            shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = 800,
+
+    shiny::tabsetPanel(
+        id = ns("tabs"),
+        shiny::tabPanel(
+            "Correlation",
             tags$div(
                 HTML("<h3>Gene Correlation Analysis</h3><b>(a)</b>
-                 <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene.
+                <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene.
                 <b>(b)</b> <b>Correlation table</b> of correlation and partial
                 correlation with respect to selected gene. <b>(c)</b> <b>Scatter plots</b> of gene
                 expression of top correlated genes.")
             ),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.01,1.2),
-                shiny::fillCol(
-                    flex = c(1,1),
-                    height = 720,
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
                     plotWidget(ns('cor_barplot')),
                     tableWidget(ns('cor_table'))
-                ),	
-                shiny::br(), ## spacer
-                shiny::fillCol(
-                    flex = c(NA,1),
-                    height = 720,
+                ),
+                div(
+                    class = "col-md-6",
                     plotWidget(ns('cor_scatter'))
                 )
             )
-        )
         ),
-        shiny::tabPanel("Graph",
-            shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = 800,
-            tags$div(
-                HTML("<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>
-                (a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b>
-                 <b>Correlation UMAP</b>. Clustering of genes  colored by correlation (or covariance).")
+    shiny::tabPanel(
+        "Graph",
+        div(
+            HTML("<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>
+            (a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b>
+            <b>Correlation UMAP</b>. Clustering of genes  colored by correlation (or covariance).")
+        ),
+        div(
+            class = "row",
+            div(
+                class = "col-md-6",
+                plotWidget(ns('cor_graph'))
             ),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.05,1),
-                plotWidget(ns('cor_graph')),
-                shiny::br(),
+            div(
+                class = "col-md-6",
                 plotWidget(ns('cor_umap'))
-            )
             )
         )
         )
     )
-    ui
 }

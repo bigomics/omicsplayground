@@ -38,14 +38,11 @@ ConnectivityInputs <- function(id) {
 
 ConnectivityUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        height = 750,
+
+    tagList(
         shiny::tabsetPanel(
             id = ns("tabs1"),
             shiny::tabPanel("FC correlation", 
-                shiny::fillCol(
-                height = 750,
-                flex = c(NA,0.015,1),
                 tags$div(
                         HTML(paste(
                             "<b>(a)</b> <b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal.",
@@ -54,23 +51,20 @@ ConnectivityUI <- function(id) {
                         )
                     )
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1.2,0.05,1),
-                    shiny::fillCol(
-                        flex = c(1.3,0.03,1),                    
-                        plotWidget(ns("cmap_FCFCplots")),
-                        shiny::br(),
-                        tableWidget(ns("connectivityScoreTable"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("cmap_FCFCplots"))
                     ),
-                    shiny::br(),
-                    plotWidget(ns("cmapPairsPlot"))
-                )
-            )),
+                    div(
+                        class = "col-md-6",
+                        tableWidget(ns("connectivityScoreTable"))
+                    )
+                ),
+                plotWidget(ns("cmapPairsPlot"))
+            ),
             shiny::tabPanel("FC heatmap", 
-            shiny::fillCol(
-                height = 750,
-                flex=c(NA,0.05,1.6,0.05,2),
                 tags$div(
                         HTML(paste(
                             "<b>(a)</b> <b>Meta-foldchange.</b> The barplot visualizes the cumulative foldchange between the top-10 most similar profiles.",
@@ -79,20 +73,21 @@ ConnectivityUI <- function(id) {
                         )
                     )
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1.8,0.06,1),
-                    plotWidget(ns("cumFCplot")),
-                    shiny::br(),
-                    plotWidget(ns("cumEnrichmentPlot"))                
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("cumFCplot"))
+                    ),
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("cumEnrichmentPlot"))                
+                    )
                 ),
                 shiny::br(),
                 plotWidget(ns("connectivityHeatmap"))
-            )),            
+            ),            
             shiny::tabPanel("Meta-graph", 
-                shiny::fillCol(
-                height = 750,
-                flex = c(NA,0.02,1),
                 tags$div(
                         HTML(paste(
                             "<b>(a)</b> <b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes.",
@@ -100,18 +95,19 @@ ConnectivityUI <- function(id) {
                         )
                     )
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1,0.06,1),
-                    plotWidget(ns("leadingEdgeGraph")),
-                    shiny::br(),
-                    plotWidget(ns("enrichmentGraph"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("leadingEdgeGraph"))
+                    ),
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("enrichmentGraph"))
+                    )
                 )
-            )),
+            ),
             shiny::tabPanel("Experiment clustering",  
-                shiny::fillCol(
-                height = 750,
-                flex=c(NA,0.025,1),
                 tags$div(
                         HTML(paste(
                             "<b>(a)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
@@ -119,14 +115,18 @@ ConnectivityUI <- function(id) {
                         )
                     )
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex=c(1.3,0.05,1), 
-                    plotWidget(ns("connectivityMap")),
-                    shiny::br(),
-                    tableWidget(ns("connectivityScoreTable2"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("connectivityMap"))
+                    ),
+                    div(
+                        class = "col-md-6",
+                        tableWidget(ns("connectivityScoreTable2"))
+                    )
                 )
-            ))
+            )
         )
     )
 }
