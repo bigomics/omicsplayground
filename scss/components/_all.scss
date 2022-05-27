@@ -27,10 +27,6 @@ html {
     font-size: 14px;
   }
 
-  .big-tabs {
-    line-height: 1.1em;
-  }
-
   /* space in innner tabpanes */
   .tabbable .tab-content {
     padding: 15px 20px;
@@ -48,7 +44,7 @@ html {
     border-radius: 0px;
   }
 
-  .nav-tabs>li.active {
+  .nav-tabs > li.active {
     border-top: 3px solid $main;
     margin-top: -3px;
   }

@@ -33,44 +33,42 @@ FeatureMapInputs <- function(id) {
 
 FeatureMapUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    ui <- shiny::fillCol(
-        height = 750,
-        shiny::tabsetPanel(
-            id = ns("tabs"),
-            shiny::tabPanel("Gene", 
-                shiny::fillCol(
-                flex = c(NA,0.02,1,0.3),
-                height = 1.1*800,
-                tags$div(
-                    HTML("<h4>Gene UMAP</h4>")
+
+    shiny::tabsetPanel(
+        id = ns("tabs"),
+        shiny::tabPanel(
+            "Gene", 
+            h4("Gene UMAP"),
+            shiny::br(),
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns('geneUMAP'))
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1,0.03,1.2),
-                    height = 0.85*800,                
-                    plotWidget(ns('geneUMAP')),
-                    shiny::br(),                
+                div(
+                    class = "col-md-6",
                     plotWidget(ns('geneSigPlots'))
+                )
+            ),
+            tableWidget(ns('geneTable'))
+        ),
+        shiny::tabPanel(
+            "Geneset",
+            h4("Geneset UMAP"),
+            shiny::br(),
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns('gsetUMAP'))
                 ),
-                tableWidget(ns('geneTable'))
-            )),
-            shiny::tabPanel("Geneset",
-                shiny::fillCol(
-                flex = c(NA,0.02,1,0.3),
-                height = 1.1*800,
-                tags$div(
-                    HTML("<h4>Geneset UMAP</h4>")
-                ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1,0.03,1.2),
-                    plotWidget(ns('gsetUMAP')),
-                    shiny::br(),
+                div(
+                    class = "col-md-6",
                     plotWidget(ns('gsetSigPlots'))
-                ),
-                tableWidget(ns('gsetTable'))
-            ))            
-        )
+                )
+            ),
+            tableWidget(ns('gsetTable'))
+        )            
     )
-    ui
 }

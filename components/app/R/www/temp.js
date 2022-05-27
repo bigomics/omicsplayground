@@ -334,6 +334,5 @@ Shiny.addCustomMessageHandler('show-tabs', function(msg) {
 			});
 	// $('hr').first().hide();
 	$('#sidebar-container .collapse').first().find('hr').first().hide();
-	$('#sidebar-container').css('min-height', '95.5vh');
 	}, 1000);
 });
