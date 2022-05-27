@@ -44,98 +44,97 @@ ExpressionInputs <- function(id) {
 
 ExpressionUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        flex = c(1.5,1),
-        height = 780,
-        shiny::tabsetPanel(
-            id = ns("tabs1"),
-            shiny::tabPanel("Plot",
-                shiny::fillCol(
-                height = 390,
-                flex = c(1,0.35,NA),
-                    shiny::fillRow(
-                        id = "plots",
-                        flex=c(1,1,1,1),
-                        plotWidget(ns("plots_volcano")),
-                        plotWidget(ns("plots_maplot")),
-                        plotWidget(ns("plots_boxplot")),
-                        plotWidget(ns("plots_topfoldchange"))
+
+    tagList(
+        div(
+            style = "max-height:50vh;",
+            shiny::tabsetPanel(
+                id = ns("tabs1"),
+                shiny::tabPanel(
+                    "Plot",
+                    div(
+                        class = "row",
+                        div(
+                            class = "col-md-3",
+                            plotWidget(ns("plots_volcano"))
+                        ),
+                        div(
+                            class = "col-md-3",
+                            plotWidget(ns("plots_maplot"))
+                        ),
+                        div(
+                            class = "col-md-3",
+                            plotWidget(ns("plots_boxplot"))
+                        ),
+                        div(
+                            class = "col-md-3",
+                            plotWidget(ns("plots_topfoldchange"))
+                        )
                     ),
-                    shiny::br(),
                     tags$div(
                         HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
                             significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
                             respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
                             for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts.")
                     )
-                )
-            ),
-            shiny::tabPanel("Top genes",
-                shiny::fillCol(
-                height = 390,
-                flex=c(1,NA,NA),
-                plotWidget(ns("topgenes")),
-                shiny::br(),
-                tags$div(
-                        HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
-                         (both positively and negatively) expressed genes for the selected contrast.")
-                )
-            )),
-            shiny::tabPanel("Volcano (all)",
-                shiny::fillCol(
-                height = 390,
-                flex=c(1,NA,NA),
-                plotWidget(ns("volcanoAll")),
-                shiny::br(),
-                tags$div(
+                ),
+                shiny::tabPanel("Top genes",
+                    plotWidget(ns("topgenes")),
+                    shiny::br(),
+                    tags$div(
+                            HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
+                            (both positively and negatively) expressed genes for the selected contrast.")
+                    )
+                ),
+                shiny::tabPanel("Volcano (all)",
+                    plotWidget(ns("volcanoAll")),
+                    shiny::br(),
+                    tags$div(
                         HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
-                         plots of genes for all contrasts. Experimental contrasts with better statistical significance will
-                          show volcano plots with 'higher' wings.")
-                )
-            )),
-           
-            shiny::tabPanel("Volcano (methods)",
-                shiny::fillCol(
-                height = 390,
-                flex=c(1,NA,NA),
-                plotWidget(ns("volcanoMethods")),
-                shiny::br(),
-                tags$div(
+                        plots of genes for all contrasts. Experimental contrasts with better statistical significance will
+                        show volcano plots with 'higher' wings.")
+                    )
+                ),
+                shiny::tabPanel("Volcano (methods)",
+                    plotWidget(ns("volcanoMethods")),
+                    shiny::br(),
+                    tags$div(
                         HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
-                         of genes by multiple differential expression methods for the selected contrast.
-                          Methods showing better statistical significance will show volcano plots with 'higher' wings.")
+                        of genes by multiple differential expression methods for the selected contrast.
+                        Methods showing better statistical significance will show volcano plots with 'higher' wings.")
+                    )
                 )
-            ))
+            )
         ),
-        shiny::tabsetPanel(
-            id = ns("tabs2"),
-            shiny::tabPanel("Table",
-                shiny::fillCol(
-                    height = 1.15*320,
-                    flex = c(NA,0.06,1),
+        div(
+            style="max-height: 50vh",
+            shiny::tabsetPanel(
+                id = ns("tabs2"),
+                shiny::tabPanel("Table",
                     tags$div(
                         HTML("<b>Differential Expression Analysis.</b> Compare expression between
                         two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
                     ),
                     shiny::br(),
-                    shiny::fillRow(
-                        flex = c(1.6,0.07,1), 
-                        tableWidget(ns("genetable")),
-                        shiny::br(),
-                        tableWidget(ns("gsettable"))
+                    div(
+                        class = "row",
+                        div(
+                            class = "col-md-8",
+                            tableWidget(ns("genetable"))
+                        ),
+                        div(
+                            class = "col-md-4",
+                            tableWidget(ns("gsettable"))
+                        )
                     )
-                )
-            ),
-            shiny::tabPanel("Foldchange (all)",
-                shiny::fillCol(
-                height = 320,
-                tableWidget(ns("fctable"))
-            )),
-            shiny::tabPanel("FDR table",
-                shiny::fillCol(
-                height = 320,
-                tableWidget(ns("FDRtable"))
-            ))                       
+                ),
+                shiny::tabPanel("Foldchange (all)",
+                    tableWidget(ns("fctable"))
+                ),
+                shiny::tabPanel("FDR table",
+                    tableWidget(ns("FDRtable"))
+                )                    
+            )
         )
     )
 }
