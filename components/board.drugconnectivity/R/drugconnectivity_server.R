@@ -98,7 +98,7 @@ DrugConnectivityBoard <- function(id, inputData)
         ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
         if(is.null(annot)) {
             message("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
-            annot <- read.csv(file.path(FILESX,"sig/L1000_repurposing_drugs.txt"),
+            annot <- read.csv(file.path(FILESX,"cmap/L1000_repurposing_drugs.txt"),
                               sep="\t", comment.char="#")
             rownames(annot) <- annot$pert_iname
         }
@@ -132,7 +132,7 @@ DrugConnectivityBoard <- function(id, inputData)
         dsea <- getActiveDSEA()
         dt <- dsea$table
         shiny::req(dt)        
-        targets.list <- lapply(as.character(dt$target),
+        targets.list <- lapply(enc2utf8(as.character(dt$target)),
                                function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
         names(targets.list) <- rownames(dt)
         targets <- setdiff(unique(unlist(targets.list)),c(NA,""," "))
@@ -155,7 +155,7 @@ DrugConnectivityBoard <- function(id, inputData)
         dsea <- getActiveDSEA()
         dt <- dsea$table
         shiny::req(dt)
-        moa.list <- lapply(as.character(dt$moa),
+        moa.list <- lapply(enc2utf8(as.character(dt$moa)),
                            function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
         names(moa.list) <- rownames(dt)
         moa <- setdiff( unlist(moa.list), c("",NA," "))
@@ -316,14 +316,15 @@ DrugConnectivityBoard <- function(id, inputData)
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=NULL),
+                      selection = list(mode='single', target='row', selected=NULL),
+                      ## filter = list(position='bottom'),                      
                       fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                           dom = 'lfrtip', 
-                          scrollX = TRUE, ##scrollY = TRUE,
+                          scroller=TRUE, scrollX = TRUE, ##scrollY = TRUE,
                           scrollY = '70vh',
-                          scroller=TRUE, deferRender=TRUE
+                          deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
@@ -385,13 +386,13 @@ DrugConnectivityBoard <- function(id, inputData)
         cex2=0.85        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
 
-        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
+        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n",
+            col=BLUERED(100), col.lim = c(-1,1)*max(abs(score),na.rm=TRUE),
+            tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
 
     }      
         
     dsea_actmap.RENDER <- shiny::reactive({
-
 
         ngs <- inputData()
         shiny::req(ngs, input$dsea_contrast, input$dsea_method)
@@ -484,7 +485,7 @@ DrugConnectivityBoard <- function(id, inputData)
 
     ##--------buttons for table
     dsea_table.opts = shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
+        withTooltip(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',FALSE),
                "Show only annotated drugs.")
     )  
     dsea_table <- shiny::callModule(

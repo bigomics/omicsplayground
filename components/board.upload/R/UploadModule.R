@@ -615,7 +615,6 @@ UploadModuleServer <- function(id,
                         qdir <- query[['pgx']]
                         dbg("[UploadModule:parseQueryString] pgx =>",qdir)
 
-                        pgx_file <- "../data/example-data.pgx"
                         pgx_file <- query[['pgx']]
                         pgx_file <- paste0(sub("[.]pgx$","",pgx_file),".pgx")
                         dbg("[UploadModule:parseQueryString] pgx_file = ",pgx_file)                         

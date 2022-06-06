@@ -20,7 +20,6 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: SESSION = ",session$token)
     
     ## Logging of input/output events -------------------------------------
-    log.path <- "../logs/"
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
     ## shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = log.path))
@@ -43,8 +42,6 @@ app_server <- function(input, output, session) {
     }
 
     setwd(WORKDIR)  ## for some reason it can change!! (defined in global.R)
-    dbg("[SERVER] 1: getwd = ",getwd())
-    
     server.start_time  <- Sys.time()
     session.start_time <- -1
     authentication <- opt$AUTHENTICATION

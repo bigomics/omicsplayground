@@ -73,20 +73,26 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         message("WARNING::: pgx.computeDrugEnrichment : not enough common genes!!")
         return(NULL)
     }
-    rnk1 <- apply(X[gg,,drop=FALSE],2,rank,na.last="keep")
-    rnk2 <- apply(F[gg,,drop=FALSE],2,rank,na.last="keep")
-    system.time(R1 <- stats::cor(rnk1, rnk2, use="pairwise"))
-    dim(R1)
-    ##
-    ##system.time(R1 <- gpuCor(rnk1, rnk2, use="pairwise")$coefficients)
+    if(any(class(X)=="dgCMatrix")) {
+        dbg("[pgx.computeDrugEnrichment] X is 0/1 sparse matrix")
+        ## gene set enrichment by rank correlation 
+        fx <- apply(F[gg,,drop=FALSE],2,rank)
+        R1 <- qlcMatrix::corSparse(X[gg,], fx)
+    } else {
+        dbg("[pgx.computeDrugEnrichment] X is full matrix")        
+        rnk1 <- apply(X[gg,,drop=FALSE],2,rank,na.last="keep")
+        rnk2 <- apply(F[gg,,drop=FALSE],2,rank,na.last="keep")
+        system.time(R1 <- stats::cor(rnk1, rnk2, use="pairwise"))
+    }
+    R1 <- as.matrix(R1)
+    R1[is.nan(R1)] <- 0
+    R1[is.infinite(R1)] <- 0        
     R1 <- R1 + 1e-8*matrix(rnorm(length(R1)),nrow(R1),ncol(R1))
     colnames(R1) <- colnames(F)
     rownames(R1) <- colnames(X)
     dim(R1)
-
+       
     ## experiment to drug
-    
-
     results <- list()
     if("cor" %in% methods) {
         message("Calculating drug enrichment using rank correlation ...")
@@ -111,7 +117,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         res0 <- list()
         i=1
         for(i in 1:ncol(R1)) {
-            suppressWarnings(res0[[i]] <- fgsea::fgseaSimple( meta.gmt, stats=R1[,i], nperm=1000))
+            suppressWarnings(res0[[i]] <- fgsea::fgseaSimple( meta.gmt, stats=R1[,i], nperm=10000))
         }
         names(res0) <- colnames(R1)
         length(res0)
@@ -143,9 +149,10 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         for(k in 1:length(results)) {
             res <- results[[k]]
             ## reduce solution set with top-N of each comparison??
-            mtop <- apply(abs(res$X), 2, function(x) Matrix::head(order(-x),nprune)) ## absolute NES!!
-            mtop <- unique(as.vector(mtop))
-            length(mtop)
+            ##mtop <- apply(abs(res$X), 2, function(x) Matrix::head(order(-x),nprune)) ## absolute NES!!
+            rx   <- apply(abs(res$X), 2, rank)
+            rownames(rx) <- rownames(res$X)
+            mtop <- names(head(sort(rowMeans(rx), decreasing=TRUE),nprune))
             top.idx <- unique(unlist(meta.gmt[mtop]))
             length(top.idx)
             results[[k]]$X <- res$X[mtop,,drop=FALSE]
@@ -155,20 +162,24 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         }
     }
 
-    ## UMAP clustering
-    message("[pgx.computeDrugEnrichment] UMAP clustering...")
-    top.drugs <- unique(unlist(sapply(results,function(res) rownames(res$X))))    
-    sel <- which(xdrugs %in% top.drugs)
-    ##sel <- unique(unlist(sapply(results,function(res) rownames(res$stats))))
-    cX <- scale(X[,sel], center=FALSE)
-    cX <- cX - rowMeans(cX)
-    cX <- scale(cX, center=TRUE)
-    pos <- uwot::umap(t(cX), fast_sgd=TRUE)
-    dim(pos)
-    rownames(pos) <- colnames(cX)
-    results$clust <- pos
-    results$stats <- R1[rownames(pos),,drop=FALSE]
-    
+    ## reduce large stats object
+    sel.drugs <- unique(unlist(sapply(results,function(res) rownames(res$X))))    
+    sel <- which(xdrugs %in% sel.drugs)
+    results$stats <- R1[sel,]
+
+    if(0) {
+        ## UMAP clustering
+        message("[pgx.computeDrugEnrichment] UMAP clustering...")
+        cX <- scale(X[,sel], center=FALSE)
+        cX <- cX - rowMeans(cX)
+        cX <- scale(cX, center=TRUE)
+        pos <- uwot::umap(t(cX), fast_sgd=TRUE)
+        dim(pos)
+        rownames(pos) <- colnames(cX)
+        results$clust <- pos
+        results$stats <- R1[rownames(pos),,drop=FALSE]
+    }
+        
     if(0) {
         pgx.scatterPlotXY.BASE(pos, var=2**R1[rownames(pos),1])
         pgx.scatterPlotXY.BASE(pos, var=log(colMeans(X**2)))

@@ -976,27 +976,30 @@ pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=5
 {
 
     ##dir="/home/share/datasets/gmt/";nrows=-1
-    read.gmt <- function(file, dir=NULL, add.source=FALSE, nrows=-1) {
-        f0 <- file
-        if(strtrim(file,1)=="/") dir=NULL
-        if(!is.null(dir)) f0 <- paste(sub("/$","",dir),"/",file,sep="")
+    read.gmt <- function(gmt.file, dir=NULL, add.source=FALSE, nrows=-1) {
+        f0 <- gmt.file
+        if(strtrim(gmt.file,1)=="/") dir=NULL
+        if(!is.null(dir)) f0 <- paste(sub("/$","",dir),"/",gmt.file,sep="")
         ##cat("reading GMT from file",file,"\n")
         gmt <- read.csv(f0,sep="!",header=FALSE,comment.char="#",nrows=nrows)[,1]
         gmt <- as.character(gmt)
-        gmt <- gsub("[\t]+","\t",gmt)
+        ##    gmt <- gsub("[\t]+","\t",gmt)
         gmt <- sapply(gmt,strsplit,split="\t")
         names(gmt) <- NULL
         gmt.name <- sapply(gmt,"[",1)
         gmt.source <- sapply(gmt,"[",2)
-        gmt.genes <- sapply(gmt,function(x) paste(x[3:length(x)],collapse=" "))
+        gmt.genes <- sapply(gmt,function(x) {
+            if(length(x)<3) return("")
+            paste(x[3:length(x)],collapse=" ")
+        })
         ##gmt.genes <- gsub("[\t]+"," ",gmt.genes)
-        gset <- sapply(gmt.genes,strsplit,split=" ")
+        gset <- strsplit(gmt.genes,split="[ \t]")
         gset <- lapply(gset, function(x) setdiff(x,c("","NA",NA)))
         names(gset) <- gmt.name
         if(add.source) {
             names(gset) <- paste0(names(gset)," (",gmt.source,")")
         }
-        gset <- gset[which(lapply(gset,length)>0)]
+        ## gset <- gset[which(lapply(gset,length)>0)]
         gset
     }
 
