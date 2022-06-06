@@ -548,7 +548,7 @@ LoadingBoard <- function(id,
         
         DT::datatable(
           df,
-          class = 'compact cell-border stripe hover',
+          class = 'compact cell-border hover',
           rownames=TRUE,
           extensions = c('Scroller'),
           selection = list(mode='single', target='row', selected=1),

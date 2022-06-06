@@ -70,7 +70,7 @@ WelcomeBoardUI <- function(id) {
         tags$a(
           id = "init-upload-data",
           "Upload new data",
-          class = "btn btn-outline-primary welcome-btn"
+          class = "btn btn-outline-primary-hover welcome-btn"
         )
       ),
       div(
@@ -79,7 +79,7 @@ WelcomeBoardUI <- function(id) {
         tags$a(
           id = "init-example-data",
           "Use example dataset",
-          class = "btn btn-outline-primary welcome-btn"
+          class = "btn btn-outline-primary-hover welcome-btn"
         )
       )
     ),
