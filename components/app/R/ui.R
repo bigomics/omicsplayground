@@ -167,10 +167,6 @@ app_ui <- function() {
                 bigdash::sidebarItem(
                     "Cell profiling",
                     "cell-tab"
-                ),
-                top_expanded = tags$img(
-                    src = "static/bigomics-logo.png",
-                    style = "max-width:10rem;"
                 )
             ),
             navbar = bigdash::navbar(

@@ -55,24 +55,31 @@ WelcomeBoardUI <- function(id) {
     style = "text-align:center;background-color:#eaf7fd;",
     br(),
     div(shiny::textOutput(ns("welcome")), id="welcome-text"),
-    h3("What would you like to do today?", style="padding: 10px;"),
+    h3("What would you like to do today?"),
     div(
       class = "row",
       id = "welcome-buttons",
       div(
         class = "col-md-6",
+        h4("Existing users"),
         tags$button(
           id = "init-load-data",
           "Use pre-loaded data",
-          class = "btn btn-success welcome-btn"
+          class = "btn btn-outline-primary welcome-btn"
+        ),
+        tags$a(
+          id = "init-upload-data",
+          "Upload new data",
+          class = "btn btn-outline-primary welcome-btn"
         )
       ),
       div(
         class = "col-md-6",
+        h4("New users"),
         tags$a(
-          id = "init-upload-data",
-          "Upload new data",
-          class = "btn btn-outline-success welcome-btn"
+          id = "init-example-data",
+          "Use example dataset",
+          class = "btn btn-outline-primary welcome-btn"
         )
       )
     ),
@@ -86,5 +93,5 @@ WelcomeBoardUI <- function(id) {
           service platform for visualization, analytics and exploration of Big Omics Data\".")),
     br()
     
-  ) ## end of fill-col
+  )
 }

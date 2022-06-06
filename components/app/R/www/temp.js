@@ -53,6 +53,23 @@ $(function(){
 		$('.sidebar-label').trigger('click');
 	});
 
+	$('#init-example-data').on('click', (e) => {
+		$(".tab-sidebar:eq(1)").trigger('click');
+		$('.sidebar-label').trigger('click');
+		setTimeout(() => {
+			let first = $('tbody')
+				.find('tr')
+				.first()
+				.find('td:eq(1)')
+				.text();
+
+			if(first != 'example-data')
+				return;
+
+			$('#load-loadbutton').trigger('click');
+		}, 1000);
+	});
+
 	$('#init-upload-data').on('click', (e) => {
 		$(".tab-sidebar:eq(2)").trigger('click');
 		$('.sidebar-label').trigger('click');
@@ -329,7 +346,17 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 
 				$(el).show();
 			});
-	// $('hr').first().hide();
-	$('#sidebar-container .collapse').first().find('hr').first().hide();
+
+	$('#sidebar-container .collapse')
+		.first()
+		.find('hr')
+		.first()
+		.hide();
+
+	if(!$('.big-tab[data-name="load-tab"]').is(':visible'))
+		return;
+
+	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
+
 	}, 1000);
 });
