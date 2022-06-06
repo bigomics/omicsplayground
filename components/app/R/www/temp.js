@@ -242,10 +242,6 @@ async function upgrade_plan(){
 	});	
 }
 
-const toggleEmail = () => {
-	$('#emailLinkWrapper').toggle();
-}
-
 Shiny.addCustomMessageHandler('email-feedback', function(msg) {
 	$('#emailFeedbackShow').html(msg.msg);
 

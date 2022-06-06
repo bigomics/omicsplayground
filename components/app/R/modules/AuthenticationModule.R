@@ -648,9 +648,9 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     ##if(title.len < 40) title[1] <- paste0("<br>",title[1])
     splash.title <- shiny::div(
         shiny::br(),br(),
-        shiny::div(shiny::HTML(title[1]),style="font-size:70px;font-weight:700;line-height:1em;"),
+        shiny::div(shiny::HTML(title[1]),style="font-size:3rem;font-weight:700;line-height:1em;"),
         shiny::br(),
-        shiny::div(shiny::HTML(title[2]),style="font-size:28px;"),
+        shiny::div(shiny::HTML(title[2]),style="font-size:1.5rem;"),
         shiny::br(),br(),br()
     )
 
@@ -679,15 +679,24 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     }
     if(with.firebase) {
         div.firebase <- div(
-            id = "firebaseAuth",
+            class = "card",
             div(
-                id = "firebaseBtns",
-                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-warning"),
-                "  ",
-                tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
-            ),
-            div(
-                id = "emailLinkWrapper",
+                class = "card-body",
+                p(
+                    "Sign in with your",
+                    actionLink(
+                        ns("launchGoogle"), 
+                        "Google account",
+                        class = "text-decoration-underline text-dark"
+                    )
+                ),
+                h4(
+                    "OR",
+                    class = "text-center pb-4 pt-4"
+                ),
+                p(
+                    "Sign in with your email, we'll send you a link."
+                ),
                 div(
                     class = "row",
                     div(
@@ -704,13 +713,13 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                         br(),
                         actionButton(
                             ns("emailSubmit"),
-                            "Send"
+                            "Send",
+                            class = "btn-outline-dark"
                         )
                     )
                 ),
                 p(
                     id = "emailFeedbackShow",
-                    class = "white"
                 )
             )
         )
@@ -734,20 +743,16 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     
     ##splash.panel=div();ns=function(x)x
     if(with.firebase) {
-      splash.content <- div(
-        "please login",
-        div.firebase
-      )
+        splash.content <- div.firebase
     } else {
-      splash.content <- div(
-        id="splash-login",
-        br(),br(),top,
-        div.username,
-        div.email,
-        div.password,
-        div.alt,
-        br(),
-        div.button
+        splash.content <- div(
+            id="splash-login",
+            top,
+            div.username,
+            div.email,
+            div.password,
+            div.alt,
+            div.button
         )
     }
 
@@ -755,8 +760,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     
     body <- div(
       id="splash-panel",
-      div(id="splash-title",splash.title),
       div(id="splash-content",splash.content),      
+      div(id="splash-title",splash.title),
       div(id="splash-subtitle",splash.subtitle)
     )
 
@@ -886,9 +891,10 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
     shiny::div(
         class = "row",
         div(
-            class = "col-md-8",
+            class = "col-md-4 offset-md-2",
             shiny::div(
                 id="splash-warning",
+                body,
                 textOutput(ns("login_warning")),
             ),
         ),
@@ -896,7 +902,6 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             class = "col-md-4",
             shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
         ),
-        body
     ),
     footer = NULL,
     size = "fullscreen",

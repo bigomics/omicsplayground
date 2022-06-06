@@ -17,35 +17,10 @@ html {
 
 	div#splash-fullscreen {
 		background-color: #2780e3 !important;
-	}
-
-	#splash-login {
-		padding: 6px 26px;
-	}
-
-	#splash-footer .btn {
-		font-size: 18px;
-	}
-
-	#splash-warning {
-		position: absolute;
-		bottom: 25px;
-		left: 50%;
-		width: 200px;
-		margin-left: -100px;
-		text-align: center;
+		padding: 2rem;
 	}
 
 	#splash-logo2 {
 		height: 3rem;
 	}
-
-	#firebaseAuth {
-		margin-top: 11rem;
-	}
-
-	#firebaseBtns {
-		margin-top: -10rem;
-	}
-
 }
