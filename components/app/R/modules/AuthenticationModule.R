@@ -34,7 +34,6 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
               with.password=FALSE,
               login.text="Start!"
             )
-            ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             shiny::showModal(m)
         } else {
             USER$logged <- TRUE
@@ -459,7 +458,6 @@ PasswordAuthenticationModule <- function(input, output, session,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE)
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
         
     }
@@ -473,7 +471,6 @@ PasswordAuthenticationModule <- function(input, output, session,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE)
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
     })
 
@@ -544,11 +541,9 @@ PasswordAuthenticationModule <- function(input, output, session,
             if(!valid.user) {
                 output$login_warning = shiny::renderText("Invalid user")
             }
-            ##shinyjs::delay(2000, shinyjs::hide("login_warning", anim = TRUE, animType = "fade"))
             shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             USER$logged <- FALSE
         }
-        ##hide("login_warning")
     })
 
     observeEvent( input$userLogout, {
@@ -771,58 +766,100 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 }
 
 splashscreen.buttons <- function() {
-  shiny::div(
-    shiny::tags$a(
-      shiny::img(
-          id="splash-logo2", 
-          src="static/bigomics-logo.png"
-    ),
-      href = "https://www.bigomics.ch",
-      target = "_blank"
-    ),    
-    shiny::tags$a(
-      icon("book"),
-      "Read-the-docs", 
-      class = "btn btn-outline-primary",
-      href = "https://omicsplayground.readthedocs.io",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("youtube"),
-      "Watch tutorials",
-      class = "btn btn-outline-primary",
-      href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("github"),
-      "Get the source", 
-      class = "btn btn-outline-primary",
-      href = "https://github.com/bigomics/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("docker"),
-      "Docker image", 
-      class = "btn btn-outline-primary",
-      href = "https://hub.docker.com/r/bigomics/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("users"),
-      "User forum", 
-      class = "btn btn-outline-primary",
-      href = "https://groups.google.com/d/forum/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("coffee"),
-      "Buy us a coffee!",
-      class = "btn btn-outline-primary",
-      href = "https://www.buymeacoffee.com/bigomics",
-      target = "_blank"
+    tagList(
+        shiny::tags$a(
+            shiny::img(
+                id="splash-logo2", 
+                src="static/bigomics-logo.png"
+            ),
+            href = "https://www.bigomics.ch",
+            target = "_blank"
+        ),
+        div(
+            class = "btn-group",
+            role = "group",
+            div(
+                class = "btn-group",
+                role = "group",
+                tags$button(
+                    "Support",
+                    id = "splash-toggle-support",
+                    type = "button",
+                    class = "btn btn-outline-primary dropdown-toggle",
+                    `data-bs-toggle` = "dropdown",
+                    `aria-expanded` = "false"
+                ),
+                tags$ul(
+                    class = "dropdown-menu",
+                    `aria-labelledby` = "splash-toggle-support",
+                    tags$li(
+                        shiny::tags$a(
+                            "Watch tutorials",
+                            class = "dropdown-item",
+                            href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "User forum", 
+                            class = "dropdown-item",
+                            href = "https://groups.google.com/d/forum/omicsplayground",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Buy us a coffee!",
+                            class = "dropdown-item",
+                            href = "https://www.buymeacoffee.com/bigomics",
+                            target = "_blank"
+                        )
+                    )
+                )
+            ),
+            div(
+                class = "btn-group",
+                role = "group",
+                tags$button(
+                    "Developers",
+                    id = "splash-toggle-dev",
+                    type = "button",
+                    class = "btn btn-outline-primary dropdown-toggle",
+                    `data-bs-toggle` = "dropdown",
+                    `aria-expanded` = "false"
+                ),
+                tags$ul(
+                    class = "dropdown-menu",
+                    `aria-labelledby` = "splash-toggle-dev",
+                    tags$li(
+                        shiny::tags$a(
+                            "Read-the-docs", 
+                            class = "dropdown-item",
+                            href = "https://omicsplayground.readthedocs.io",
+                            target = "_blank"
+                        ),
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Get the source", 
+                            class = "dropdown-item",
+                            href = "https://github.com/bigomics/omicsplayground",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Docker image", 
+                            class = "dropdown-item",
+                            href = "https://hub.docker.com/r/bigomics/omicsplayground",
+                            target = "_blank"
+                        )
+                    )
+                )
+            )
+        )
     )
-  )
 
 }
 
@@ -845,14 +882,23 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
   m <- modalDialog2(
     id = "splash-fullscreen",
     class = "bg-primary",
+    header = div.footer,
     shiny::div(
-      shiny::img(src="static/mascotte-sc.png",id="splash-image"),
-      body,
-      shiny::br(),
-      shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
-      style="height: 32rem; width: 100%;"                
+        class = "row",
+        div(
+            class = "col-md-8",
+            shiny::div(
+                id="splash-warning",
+                textOutput(ns("login_warning")),
+            ),
+        ),
+        div(
+            class = "col-md-4",
+            shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
+        ),
+        body
     ),
-    footer = div(div.footer,id="splash-footer"),
+    footer = NULL,
     size = "fullscreen",
     easyClose = easyClose,
     fade = fade

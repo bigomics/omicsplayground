@@ -19,35 +19,8 @@ html {
 		background-color: #2780e3 !important;
 	}
 
-	#splash-panel {
-		position: absolute;
-		top: 10vh;
-		left: 55vw;
-		width: 40vw;
-		font-family: Lato;
-		color: white;
-		text-align: center;
-	}
-
-	#splash-title {
-		font-family: Lato;
-		line-height: 2.2em;
-		color: white;
-		text-align: center;
-	}
-
-	#splash-panel .form-group {
-		margin: 5px auto;
-		text-align: center;
-	}
-
 	#splash-login {
 		padding: 6px 26px;
-	}
-
-	#splash-panel .btn {
-		padding: 4px 26px;
-		font-size: 22px;
 	}
 
 	#splash-footer .btn {
@@ -63,18 +36,8 @@ html {
 		text-align: center;
 	}
 
-	#splash-image {
-		position: absolute;
-		bottom: 3vh;
-		left: 5vw;
-		height: 80vh;
-	}
-
 	#splash-logo2 {
-		position: absolute;
-		bottom: 16px;
-		left: 20px;
-		height: 36px;
+		height: 3rem;
 	}
 
 	#firebaseAuth {
