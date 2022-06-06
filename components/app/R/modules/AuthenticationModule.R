@@ -633,7 +633,6 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
     titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
-    ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
     titles[[21]] = c("Explore More","The more you explore, the more you learn and grow.<br>&ndash; Nitesh Nishad")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
@@ -645,13 +644,10 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     title <- sample(titles,1)[[1]]
     title.len <- nchar(paste(title,collapse=' '))
     if(title.len < 80) title[1] <- paste0("<br>",title[1])
-    ##if(title.len < 40) title[1] <- paste0("<br>",title[1])
     splash.title <- shiny::div(
-        shiny::br(),br(),
+        class = "text-white",
         shiny::div(shiny::HTML(title[1]),style="font-size:3rem;font-weight:700;line-height:1em;"),
-        shiny::br(),
-        shiny::div(shiny::HTML(title[2]),style="font-size:1.5rem;"),
-        shiny::br(),br(),br()
+        shiny::div(shiny::HTML(title[2]),style="font-size:1.5rem;")
     )
 
     div.password <- div()
@@ -682,8 +678,24 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
             class = "card",
             div(
                 class = "card-body",
+                h1(
+                    "Sign in", 
+                    class = "card-title pb-2"
+                ),
+                tags$ul(
+                    tags$li(
+                        "No registration"
+                    ),
+                    tags$li(
+                        "No credit card"
+                    ),
+                    tags$li(
+                        "Two-click sign-in"
+                    )
+                ),
+                hr(),
                 p(
-                    "Sign in with your",
+                    "Use your",
                     actionLink(
                         ns("launchGoogle"), 
                         "Google account",
@@ -695,7 +707,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                     class = "text-center pb-4 pt-4"
                 ),
                 p(
-                    "Sign in with your email, we'll send you a link."
+                    "Enter your email and we'll send you a link."
                 ),
                 div(
                     class = "row",
@@ -731,7 +743,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 
     div.button <- div(
         id="splash-buttons",
-        actionButton(ns("login_btn"),login.text,class="btn-warning")
+        actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow")
     )
     if(with.register) {
       div.button <- div(

@@ -231,25 +231,16 @@ html {
     margin-bottom: -3px;
   }
 
-  .btn,
-  .btn-default {
-    padding: 4px 12px;
-    font-size: 15px;
-    margin: 0px;
-    border-radius: 3px;
-  }
-
   .modal-footer .btn {
     margin-left: 5px;
     margin-bottom: 0;
     font-size: 14px;
   }
 
-  .btn:hover,
-  .btn:focus,
-  .btn:active,
-  .btn:active:hover {
-    border: 1px solid;
+  .btn-xl {
+    padding: .5rem 1rem;
+    font-size: 2.5rem;
+    border-radius: .3rem;
   }
 
   .red-button {
