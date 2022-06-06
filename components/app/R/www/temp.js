@@ -1,6 +1,6 @@
 let db;
 let pricing;
-Shiny.addCustomMessageHandler('set-user', function(msg) {
+Shiny.addCustomMessageHandler('set-user', (msg) => {
 	$('#authentication-user').text(msg.user);
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
@@ -44,6 +44,8 @@ $(function(){
 		$('.tab-sidebar')
 			.first()
 			.css('display', 'none');
+
+		$('.settings-label').click()
 	}, 250);
 
 	$('#init-load-data').on('click', (e) => {
@@ -55,13 +57,16 @@ $(function(){
 		$(".tab-sidebar:eq(2)").trigger('click');
 		$('.sidebar-label').trigger('click');
 	});
+
+	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 })
 
-Shiny.addCustomMessageHandler('manage-sub', function(msg) {
+Shiny.addCustomMessageHandler('manage-sub', (msg) => {
 	window.location.assign(msg);
 });
 
-Shiny.addCustomMessageHandler('get-permissions', function(msg) {
+Shiny.addCustomMessageHandler('get-permissions', (msg) => {
 	if(!db)
 		db = firebase.firestore();
 	
@@ -69,7 +74,7 @@ Shiny.addCustomMessageHandler('get-permissions', function(msg) {
 		.collection('customers')
 		.doc(firebase.auth().currentUser.uid)
 		.get()
-		.then(function(doc){
+		.then((doc) => {
 			let data = {
 				href: window.location.href,
 				id: doc.data().stripeId
@@ -105,7 +110,7 @@ Shiny.addCustomMessageHandler('get-permissions', function(msg) {
 					{priority: 'event'}
 				);
 			}
-		}, function(error) {
+		}, (error) => {
 			Shiny.setInputValue(
 				msg.ns + '-permissions', 
 				{ 
@@ -117,7 +122,7 @@ Shiny.addCustomMessageHandler('get-permissions', function(msg) {
 		});
 });
 
-Shiny.addCustomMessageHandler('get-subs', function(msg) {
+Shiny.addCustomMessageHandler('get-subs', (msg) => {
 	if(!db)
 		db = firebase.firestore();
 
@@ -129,7 +134,7 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 		.onSnapshot(async (snapshot) => {
 			const docs = [];
 
-			snapshot.docs.forEach(function(doc){
+			snapshot.docs.forEach((doc) => {
 				let docp = doc.data();
 				docs.push({
 					status: docp.status,
@@ -148,7 +153,7 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 			}
 
 			let content = '';
-			docs.forEach(function(doc) {
+			docs.forEach((doc) => {
 				let cl = 'warning';
 				if(doc.status == 'active')
 					cl = 'success';
@@ -179,7 +184,7 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 
 			$('#user-subs').html(content);
 
-		}, function(error) {
+		}, (error) => {
 			Shiny.setInputValue(
 				msg.ns + '-subs', 
 				{ 
@@ -191,23 +196,23 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 		});
 });
 
-function logout(){
+const logout = () => {
 	unloadSidebar();
 	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
 };
 
-function quit(){
+const quit = () => {
   Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
-Shiny.addCustomMessageHandler('shinyproxy-logout', function(msg) {
+Shiny.addCustomMessageHandler('shinyproxy-logout', (msg) => {
   window.location.assign("/logout");
 });
 
 
-function show_plans(){
+const show_plans = () => {
   Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});    
 };
 
@@ -237,7 +242,7 @@ async function upgrade_plan(){
 	});	
 }
 
-function toggleEmail(){
+const toggleEmail = () => {
 	$('#emailLinkWrapper').toggle();
 }
 
@@ -249,7 +254,7 @@ Shiny.addCustomMessageHandler('email-feedback', function(msg) {
 	}, 5000);
 });
 
-function priceChange(name){
+const priceChange = (name) => {
 	if(name == 'monthly'){
 		$('#yearlyCheck').prop('checked', false);
 	} else {
@@ -264,43 +269,39 @@ function priceChange(name){
 	}
 }
 
-function hideSub() {
+const hideSub = () => {
     $('#logSub').hide();
     $('#logSubbed').show();
     $('#sever-reload-btn').show();
 }
 
-function sendLog() {
-        let msg  = $('#logMsg').val();
+const sendLog = () => {
+  let msg  = $('#logMsg').val();
 
-	fetch(`log?msg=${encodeURIComponent(msg)}`)
-		.then(res => {
-			console.info(res);
-			hideSub();
-		})
-	        .catch(error => {
-			console.error(error);
-			hideSub();
-		})
+fetch(`log?msg=${encodeURIComponent(msg)}`)
+	.then(res => {
+		console.info(res);
+		hideSub();
+	})
+	.catch(error => {
+		console.error(error);
+		hideSub();
+	})
 }
 
-function sendLog2(msg){
-//	showSub();
-//      let msg  = $('#logMsg').val();
-//	let user = $('#authentication-user').val();
-//    	fetch(`log?session=${id}&msg=${encodeURIComponent(msg)}`)
+const sendLog2 = (msg) => {
     	fetch(`log?msg=${encodeURIComponent(msg)}`)    
 	        .then(res => {
 		        console.info(res);
 			hideSub();
 		})
-	        .catch(error => {
+	  .catch(error => {
 			console.error(error);
 			hideSub();
 		})
 };
 
-Shiny.addCustomMessageHandler('referral-input-error', function(msg) {
+Shiny.addCustomMessageHandler('referral-input-error', (msg) => {
 	$(`#${msg.target}`).addClass('error');
 	$(`#${msg.target}`).after(`<small class='text-danger'>${msg.message}</small>`);
 	setTimeout(() => {
@@ -311,7 +312,7 @@ Shiny.addCustomMessageHandler('referral-input-error', function(msg) {
 	}, 5000);
 });
 
-Shiny.addCustomMessageHandler('referral-global-error', function(msg) {
+Shiny.addCustomMessageHandler('referral-global-error', (msg) => {
 	$('#referral-global-error').html(msg.message);
 	setTimeout(() => {
 		$('#referral-global-error').html('');
@@ -322,7 +323,7 @@ $(() => {
 	unloadSidebar();
 });
 
-Shiny.addCustomMessageHandler('show-tabs', function(msg) {
+Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	setTimeout(() => {
 		$('.sidebar-content')
 			.children()

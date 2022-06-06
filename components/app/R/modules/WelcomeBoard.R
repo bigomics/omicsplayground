@@ -50,37 +50,33 @@ WelcomeBoardInputs <- function(id) {
 WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id)  ## namespace
 
-  fillCol(
+  div(
     id = "welcome-page",
     style = "text-align:center;background-color:#eaf7fd;",
-    flex = c(1,NA,NA,NA,1,2),
-    height = "95vh",
-
     br(),
     div(shiny::textOutput(ns("welcome")), id="welcome-text"),
     h3("What would you like to do today?", style="padding: 10px;"),
-    
-    fillRow(
-      id="welcome-buttons",
-      height = 150,
-      withTooltip(
+    div(
+      class = "row",
+      id = "welcome-buttons",
+      div(
+        class = "col-md-6",
         tags$button(
           id = "init-load-data",
           "Use pre-loaded data",
           class = "btn btn-success welcome-btn"
-        ),
-        "Click to load a previously uploaded dataset.", placement="bottom"),
-      withTooltip(
+        )
+      ),
+      div(
+        class = "col-md-6",
         tags$a(
           id = "init-upload-data",
           "Upload new data",
           class = "btn btn-outline-success welcome-btn"
-        ),
-        "Click to upload some new data",
-        placement="bottom"
+        )
       )
     ),
-    
+    br(),
     div(
       id="welcome-subtext",
       HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>

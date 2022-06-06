@@ -4,6 +4,10 @@ html {
     min-height: 800px;
   }
 
+  #welcome-page {
+    min-height: 100vh;
+  }
+
   [class*="col-lg-"],
   [class*="col-md-"],
   [class*="col-sm-"],
@@ -73,22 +77,6 @@ html {
     font-size: 1.3em;
     line-height: 1.2em;
     width: 100%;
-  }
-
-  /* tooltips */
-  .tooltip-inner {
-    background-color: #e0e0e0FF;
-    background-color: #fcfca0FF;
-    color: #3f3f3fFF;
-    border: 1px solid #9f9f9fFF;
-    opacity: 1;
-    text-align: left;
-  }
-
-  .tooltip-arrow-inner {
-    background-color: #e0e0e0;
-    color: #e0e0e0;
-    border: 1px solid #e0e0e0;
   }
 
   .code {
