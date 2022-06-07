@@ -643,7 +643,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[21]] = c("Explore More","The more you explore, the more you learn and grow")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
     titles[[23]] = c("Love Adventurous Life","Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
-    titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
+    titles[[24]] = c("Succes is Exploration","Find the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
     titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")    
     title <- titles[[length(titles)]]
@@ -918,7 +918,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
             shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
         ),
         shiny::div(
-            class = "col-md-2 offset-md-2",
+            class = "col-md-2 offset-md-3",
             shiny::div(
                 id="splash-panel",
                 body,
