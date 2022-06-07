@@ -51,47 +51,52 @@ WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id)  ## namespace
 
   div(
-    id = "welcome-page",
-    style = "text-align:center;background-color:#eaf7fd;",
-    br(),
-    div(shiny::textOutput(ns("welcome")), id="welcome-text"),
-    h3("What would you like to do today?"),
-    div(
-      class = "row",
-      id = "welcome-buttons",
+      id = "welcome-page",
+      style = "text-align:center;background-color:#eaf7fd;",
+      br(),      
+      br(),
+      div(shiny::textOutput(ns("welcome")), id="welcome-text"),
+      h3("What would you like to do today?"),
+      br(),
+      br(),    
+      br(),
+      br(),    
       div(
-        class = "col-md-6",
-        h4("Existing users"),
-        tags$button(
-          id = "init-load-data",
-          "Use pre-loaded data",
-          class = "btn btn-outline-primary welcome-btn"
-        ),
-        tags$a(
-          id = "init-upload-data",
-          "Upload new data",
-          class = "btn btn-outline-primary-hover welcome-btn"
-        )
+          class = "row",
+          id = "welcome-buttons",
+          div(
+              class = "col-md-5",
+              h4("Just want to try out?"),
+              tags$a(
+                  id = "init-example-data",
+                  "Try example dataset",
+                  class = "btn btn-outline-primary welcome-btn"
+              )
+          ),
+          div(
+              class = "col-md-7",
+              h4("I'm an existing user..."),
+              tags$button(
+                  id = "init-load-data",
+                  "Use my saved data",
+                  class = "btn btn-outline-primary welcome-btn"
+              ),
+              tags$a(
+                  id = "init-upload-data",
+                  "Upload new data",
+                  class = "btn btn-outline-primary welcome-btn"
+              )
+          )
       ),
-      div(
-        class = "col-md-6",
-        h4("New users"),
-        tags$a(
-          id = "init-example-data",
-          "Use example dataset",
-          class = "btn btn-outline-primary-hover welcome-btn"
-        )
-      )
-    ),
-    br(),
-    div(
-      id="welcome-subtext",
-      HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>
-          BigOmics is focused on one thing — helping life scientists see and understand their omics
-          data. Our mission is to create smart tools and make advanced omics analysis accessible to
-          everyone. Want to know more? Read our paper \"Omics Playground: a comprehensive self-
-          service platform for visualization, analytics and exploration of Big Omics Data\".")),
-    br()
-    
+      ## br(),
+      ## div(
+      ##   id="welcome-subtext",
+      ##   HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>
+      ##       BigOmics is focused on one thing — helping life scientists see and understand their omics
+      ##       data. Our mission is to create smart tools and make advanced omics analysis accessible to
+      ##       everyone. Want to know more? Read our paper \"Omics Playground: a comprehensive self-
+      ##       service platform for visualization, analytics and exploration of Big Omics Data\".")),
+      br()
+      
   )
 }

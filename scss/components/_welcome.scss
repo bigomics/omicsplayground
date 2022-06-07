@@ -1,6 +1,34 @@
 html {
-  #init-load-data, 
-  #init-upload-data {
-    margin-right: 2rem;
-  }
+
+    /* -------------------  welcome screent ---------------------- */
+
+    #init-load-data, 
+    #init-upload-data {
+	margin-right: 2rem;
+    }
+    
+    #welcome-text {
+	font-size: 50px;
+	font-weight: 600;
+	color: #2484bb;
+	padding-top: 340px;
+	background: url("monster-hi.png") no-repeat;
+	background-size: 350px 350px;
+	background-position: 53% 0px;
+    }
+    
+    .welcome-btn {
+	padding: 10px 26px;
+	margin-top: 20px;
+	font-size: 25px;
+	width: 300px;
+    }
+    
+    #welcome-subtext {
+	padding: 0 25%;
+	text-align: center;
+	font-size: 1.1em;
+	line-height: 1.4em;
+    }
+    
 }
