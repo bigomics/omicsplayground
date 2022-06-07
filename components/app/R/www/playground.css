@@ -447,35 +447,6 @@ input[type="checkbox"], input[type="radio"] {
     background-color: var(--main-color);    
 }
 
-#splash-title {
-    position: absolute;
-    top: 40px;
-    left: 5%;
-    width: 90%;
-    font-family: Lato;
-    color: white;
-    text-align: center;
-}
-
-#splash-panel {
-    position: absolute;
-    top: 280px;
-    left: 38%;
-    width: 24%;
-    font-family: Lato;
-    color: white;
-    text-align: center;
-}
-
-#splash-panel .form-group {
-    margin-bottom: 5px;
-}
-
-#splash-login .btn {
-    padding: 3px 6px;
-    height: 26px;
-}
-
 #splash-warning {
     position: absolute;
     bottom: 25px;
@@ -567,11 +538,6 @@ input[type="checkbox"], input[type="radio"] {
 
 #firebaseBtns{
     padding-left: 21rem;
-}
-
-#emailLinkWrapper{
-    display: none;
-    padding-left: 20rem;
 }
 
 .white {

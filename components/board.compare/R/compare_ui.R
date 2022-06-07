@@ -60,66 +60,59 @@ CompareInputs <- function(id) {
 
 CompareUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        height = 750,
-        shiny::tabsetPanel(
-            id = ns("tabs1"),
-            shiny::tabPanel("Compare",
-                tags$div(
-                        HTML("<h4>Compare Expression</h4>"
-                        )
-                ),
-                shiny::fillRow(
-                    flex = c(1,0.1,1),
-                    plotWidget(ns("scatter1")) |> 
-                        bigdash::asSwappableItem(),
-                    shiny::br(),
-                    plotWidget(ns("scatter2")) |> 
-                        bigdash::asSwappableItem()
-                ) |> 
-                    bigdash::asSwappable()
+
+    shiny::tabsetPanel(
+        id = ns("tabs1"),
+        shiny::tabPanel("Compare",
+            tags$div(
+                HTML("<h4>Compare Expression</h4>")
             ),
-            shiny::tabPanel("Foldchange",
-                tags$div(
-                        HTML("<h4>Compare Foldchange</h4>"
-                        )
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("scatter1"))
                 ),
-                shiny::fillRow(
-                    flex = c(1,0.05,0.9),
-                    plotWidget(ns("fcfcplot")) |> 
-                        bigdash::asSwappableItem(),
-                    shiny::br(),
-                    plotWidget(ns("cumfcplot")) |> 
-                        bigdash::asSwappableItem()
-                )  |> 
-                    bigdash::asSwappable()
-            ),
-            shiny::tabPanel("Gene Correlation", 
-                shiny::fillCol(
-                    height = 770,
-                    flex = c(NA,0.015,1),
-                    tags$div(
-                        HTML("<h4>Compare Correlation</h4>"
-                        )
-                    ),
-                    shiny::br(),
-                    shiny::fillRow(
-                        flex = c(1.0,0.05,1),
-                        shiny::fillCol(
-                            flex = c(2.2,0.01,1),
-                            plotWidget(ns("multibarplot")) |> 
-                                bigdash::asSwappableItem(),                    
-                            shiny::br(),
-                            tableWidget(ns("score_table")) |> 
-                                bigdash::asSwappableItem()
-                        ),
-                        shiny::br(),
-                        plotWidget(ns("genecorr")) |> 
-                            bigdash::asSwappableItem()
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("scatter2"))
+                )
+            )
+        ),
+        shiny::tabPanel("Foldchange",
+            tags$div(
+                    HTML("<h4>Compare Foldchange</h4>"
                     )
-                ) |> 
-                    bigdash::asSwappable()
-            )            
-        )
+            ),
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("fcfcplot"))
+                ),
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("cumfcplot"))
+                )
+            )
+        ),
+        shiny::tabPanel("Gene Correlation", 
+            tags$div(
+                HTML("<h4>Compare Correlation</h4>"
+                )
+            ),
+            div(
+                class = "row",
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("multibarplot")),
+                    tableWidget(ns("score_table"))
+                ),
+                div(
+                    class = "col-md-6",
+                    plotWidget(ns("genecorr"))
+                )
+            )
+        )            
     )
 }

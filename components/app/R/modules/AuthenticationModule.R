@@ -34,7 +34,6 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
               with.password=FALSE,
               login.text="Start!"
             )
-            ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             shiny::showModal(m)
         } else {
             USER$logged <- TRUE
@@ -459,7 +458,6 @@ PasswordAuthenticationModule <- function(input, output, session,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE)
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
         
     }
@@ -473,7 +471,6 @@ PasswordAuthenticationModule <- function(input, output, session,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE)
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
     })
 
@@ -544,11 +541,9 @@ PasswordAuthenticationModule <- function(input, output, session,
             if(!valid.user) {
                 output$login_warning = shiny::renderText("Invalid user")
             }
-            ##shinyjs::delay(2000, shinyjs::hide("login_warning", anim = TRUE, animType = "fade"))
             shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             USER$logged <- FALSE
         }
-        ##hide("login_warning")
     })
 
     observeEvent( input$userLogout, {
@@ -638,7 +633,6 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
     titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
-    ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
     titles[[21]] = c("Explore More","The more you explore, the more you learn and grow.<br>&ndash; Nitesh Nishad")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
@@ -650,13 +644,10 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     title <- sample(titles,1)[[1]]
     title.len <- nchar(paste(title,collapse=' '))
     if(title.len < 80) title[1] <- paste0("<br>",title[1])
-    ##if(title.len < 40) title[1] <- paste0("<br>",title[1])
     splash.title <- shiny::div(
-        shiny::br(),br(),
-        shiny::div(shiny::HTML(title[1]),style="font-size:70px;font-weight:700;line-height:1em;"),
-        shiny::br(),
-        shiny::div(shiny::HTML(title[2]),style="font-size:28px;"),
-        shiny::br(),br(),br()
+        class = "text-white",
+        shiny::div(shiny::HTML(title[1]),style="font-size:3rem;font-weight:700;line-height:1em;"),
+        shiny::div(shiny::HTML(title[2]),style="font-size:1.5rem;")
     )
 
     div.password <- div()
@@ -684,15 +675,40 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     }
     if(with.firebase) {
         div.firebase <- div(
-            id = "firebaseAuth",
+            class = "card",
             div(
-                id = "firebaseBtns",
-                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-warning"),
-                "  ",
-                tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
-            ),
-            div(
-                id = "emailLinkWrapper",
+                class = "card-body",
+                h1(
+                    "Sign in", 
+                    class = "card-title pb-2"
+                ),
+                tags$ul(
+                    tags$li(
+                        "No registration"
+                    ),
+                    tags$li(
+                        "No credit card"
+                    ),
+                    tags$li(
+                        "Two-click sign-in"
+                    )
+                ),
+                hr(),
+                p(
+                    "Use your",
+                    actionLink(
+                        ns("launchGoogle"), 
+                        "Google account",
+                        class = "text-decoration-underline text-dark"
+                    )
+                ),
+                h4(
+                    "OR",
+                    class = "text-center pb-4 pt-4"
+                ),
+                p(
+                    "Enter your email and we'll send you a link."
+                ),
                 div(
                     class = "row",
                     div(
@@ -709,13 +725,13 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                         br(),
                         actionButton(
                             ns("emailSubmit"),
-                            "Send"
+                            "Send",
+                            class = "btn-outline-dark"
                         )
                     )
                 ),
                 p(
                     id = "emailFeedbackShow",
-                    class = "white"
                 )
             )
         )
@@ -727,7 +743,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 
     div.button <- div(
         id="splash-buttons",
-        actionButton(ns("login_btn"),login.text,class="btn-warning")
+        class = "pb-4",
+        actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
     )
     if(with.register) {
       div.button <- div(
@@ -739,20 +756,16 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     
     ##splash.panel=div();ns=function(x)x
     if(with.firebase) {
-      splash.content <- div(
-        "please login",
-        div.firebase
-      )
+        splash.content <- div.firebase
     } else {
-      splash.content <- div(
-        id="splash-login",
-        br(),br(),top,
-        div.username,
-        div.email,
-        div.password,
-        div.alt,
-        br(),
-        div.button
+        splash.content <- div(
+            id="splash-login",
+            top,
+            div.username,
+            div.email,
+            div.password,
+            div.alt,
+            div.button
         )
     }
 
@@ -760,8 +773,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     
     body <- div(
       id="splash-panel",
-      div(id="splash-title",splash.title),
       div(id="splash-content",splash.content),      
+      div(id="splash-title",splash.title),
       div(id="splash-subtitle",splash.subtitle)
     )
 
@@ -771,58 +784,100 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 }
 
 splashscreen.buttons <- function() {
-  shiny::div(
-    shiny::tags$a(
-      shiny::img(
-          id="splash-logo2", 
-          src="static/bigomics-logo.png"
-    ),
-      href = "https://www.bigomics.ch",
-      target = "_blank"
-    ),    
-    shiny::tags$a(
-      icon("book"),
-      "Read-the-docs", 
-      class = "btn btn-outline-primary",
-      href = "https://omicsplayground.readthedocs.io",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("youtube"),
-      "Watch tutorials",
-      class = "btn btn-outline-primary",
-      href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("github"),
-      "Get the source", 
-      class = "btn btn-outline-primary",
-      href = "https://github.com/bigomics/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("docker"),
-      "Docker image", 
-      class = "btn btn-outline-primary",
-      href = "https://hub.docker.com/r/bigomics/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("users"),
-      "User forum", 
-      class = "btn btn-outline-primary",
-      href = "https://groups.google.com/d/forum/omicsplayground",
-      target = "_blank"
-    ),
-    shiny::tags$a(
-      icon("coffee"),
-      "Buy us a coffee!",
-      class = "btn btn-outline-primary",
-      href = "https://www.buymeacoffee.com/bigomics",
-      target = "_blank"
+    tagList(
+        shiny::tags$a(
+            shiny::img(
+                id="splash-logo2", 
+                src="static/bigomics-logo.png"
+            ),
+            href = "https://www.bigomics.ch",
+            target = "_blank"
+        ),
+        div(
+            class = "btn-group",
+            role = "group",
+            div(
+                class = "btn-group",
+                role = "group",
+                tags$button(
+                    "Support",
+                    id = "splash-toggle-support",
+                    type = "button",
+                    class = "btn btn-outline-primary dropdown-toggle",
+                    `data-bs-toggle` = "dropdown",
+                    `aria-expanded` = "false"
+                ),
+                tags$ul(
+                    class = "dropdown-menu",
+                    `aria-labelledby` = "splash-toggle-support",
+                    tags$li(
+                        shiny::tags$a(
+                            "Watch tutorials",
+                            class = "dropdown-item",
+                            href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "User forum", 
+                            class = "dropdown-item",
+                            href = "https://groups.google.com/d/forum/omicsplayground",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Buy us a coffee!",
+                            class = "dropdown-item",
+                            href = "https://www.buymeacoffee.com/bigomics",
+                            target = "_blank"
+                        )
+                    )
+                )
+            ),
+            div(
+                class = "btn-group",
+                role = "group",
+                tags$button(
+                    "Developers",
+                    id = "splash-toggle-dev",
+                    type = "button",
+                    class = "btn btn-outline-primary dropdown-toggle",
+                    `data-bs-toggle` = "dropdown",
+                    `aria-expanded` = "false"
+                ),
+                tags$ul(
+                    class = "dropdown-menu",
+                    `aria-labelledby` = "splash-toggle-dev",
+                    tags$li(
+                        shiny::tags$a(
+                            "Read-the-docs", 
+                            class = "dropdown-item",
+                            href = "https://omicsplayground.readthedocs.io",
+                            target = "_blank"
+                        ),
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Get the source", 
+                            class = "dropdown-item",
+                            href = "https://github.com/bigomics/omicsplayground",
+                            target = "_blank"
+                        )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Docker image", 
+                            class = "dropdown-item",
+                            href = "https://hub.docker.com/r/bigomics/omicsplayground",
+                            target = "_blank"
+                        )
+                    )
+                )
+            )
+        )
     )
-  )
 
 }
 
@@ -845,14 +900,23 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
   m <- modalDialog2(
     id = "splash-fullscreen",
     class = "bg-primary",
+    header = div.footer,
     shiny::div(
-      shiny::img(src="static/mascotte-sc.png",id="splash-image"),
-      body,
-      shiny::br(),
-      shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
-      style="height: 32rem; width: 100%;"                
+        class = "row",
+        div(
+            class = "col-md-4 offset-md-2",
+            shiny::div(
+                id="splash-warning",
+                body,
+                textOutput(ns("login_warning")),
+            ),
+        ),
+        div(
+            class = "col-md-4",
+            shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
+        ),
     ),
-    footer = div(div.footer,id="splash-footer"),
+    footer = NULL,
     size = "fullscreen",
     easyClose = easyClose,
     fade = fade

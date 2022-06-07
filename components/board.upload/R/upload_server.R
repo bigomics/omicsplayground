@@ -172,12 +172,9 @@ UploadBoard <- function(id,
                     title = NULL,
                     size = "s",
                     footer = tagList(
-                        ## savedata_button,
-                        ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
                         modalButton("Start!")
                     )
                 ))
-            ## updateTabsetPanel(session, "tabs",  selected = "Datasets")
         })
 
     }

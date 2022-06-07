@@ -79,7 +79,7 @@ modalUI <- function(
 }
 
 
-modalDialog2 <- function (..., title = NULL, footer = modalButton("Dismiss"), 
+modalDialog2 <- function (..., header = NULL, footer = modalButton("Dismiss"), 
     size = c("m", "s", "l", "xl","fullscreen"), easyClose = FALSE, fade = TRUE) 
 {
     size <- match.arg(size)
@@ -94,9 +94,8 @@ modalDialog2 <- function (..., title = NULL, footer = modalButton("Dismiss"),
             class = switch(size, s = "modal-sm", m = NULL, l = "modal-lg", 
                            xl = "modal-xl", fullscreen = "modal-fullscreen"),
             div(class = "modal-content", 
-                if (!is.null(title)) 
-                  div(class = "modal-header", tags$h4(class = "modal-title", 
-                    title)), div(class = "modal-body", ...), 
+                if (!is.null(header)) 
+                  div(class = "modal-header", header), div(class = "modal-body", ...), 
                 if (!is.null(footer)) 
                   div(class = "modal-footer", footer))), tags$script(HTML("if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\./)) {\n         var modal = new bootstrap.Modal(document.getElementById('shiny-modal'));\n         modal.show();\n      } else {\n         $('#shiny-modal').modal().focus();\n      }")))
 }

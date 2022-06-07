@@ -4,6 +4,10 @@ html {
     min-height: 800px;
   }
 
+  #welcome-page {
+    min-height: 100vh;
+  }
+
   [class*="col-lg-"],
   [class*="col-md-"],
   [class*="col-sm-"],
@@ -27,10 +31,6 @@ html {
     font-size: 14px;
   }
 
-  .big-tabs {
-    line-height: 1.1em;
-  }
-
   /* space in innner tabpanes */
   .tabbable .tab-content {
     padding: 15px 20px;
@@ -48,7 +48,7 @@ html {
     border-radius: 0px;
   }
 
-  .nav-tabs>li.active {
+  .nav-tabs > li.active {
     border-top: 3px solid $main;
     margin-top: -3px;
   }
@@ -77,22 +77,6 @@ html {
     font-size: 1.3em;
     line-height: 1.2em;
     width: 100%;
-  }
-
-  /* tooltips */
-  .tooltip-inner {
-    background-color: #e0e0e0FF;
-    background-color: #fcfca0FF;
-    color: #3f3f3fFF;
-    border: 1px solid #9f9f9fFF;
-    opacity: 1;
-    text-align: left;
-  }
-
-  .tooltip-arrow-inner {
-    background-color: #e0e0e0;
-    color: #e0e0e0;
-    border: 1px solid #e0e0e0;
   }
 
   .code {
@@ -228,25 +212,16 @@ html {
     margin-bottom: -3px;
   }
 
-  .btn,
-  .btn-default {
-    padding: 4px 12px;
-    font-size: 15px;
-    margin: 0px;
-    border-radius: 3px;
-  }
-
   .modal-footer .btn {
     margin-left: 5px;
     margin-bottom: 0;
     font-size: 14px;
   }
 
-  .btn:hover,
-  .btn:focus,
-  .btn:active,
-  .btn:active:hover {
-    border: 1px solid;
+  .btn-xl {
+    padding: .5rem 1rem;
+    font-size: 2.5rem;
+    border-radius: .3rem;
   }
 
   .red-button {

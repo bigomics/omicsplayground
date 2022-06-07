@@ -71,61 +71,6 @@ app_ui <- function() {
         
         bigdash::bigPage(
             header,
-            navbar = bigdash::navbar(
-                tags$img(
-                    src = "assets/img/bigomics.png",
-                    width = "110",
-                ),
-                shiny::div(shiny::textOutput("current_section"), class='current-section'),
-                shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
-                bigdash::navbarDropdown(
-                    "Support",
-                    bigdash::navbarDropdownItem(
-                        "Community Forum",
-                        link = "https://groups.google.com/d/forum/omicsplayground",
-                        target = "_blank"
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Github issues",
-                        link = "https://github.com/bigomics/omicsplayground/issues",
-                        target = "_blank"                        
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "www.bigomics.ch",
-                        link = "http://bigomics.ch",
-                        target = "_blank"                        
-                    )
-                ),
-                bigdash::navbarDropdown(
-                    "Tutorials",
-                    bigdash::navbarDropdownItem(
-                        "Documentation",
-                        link = "https://omicsplayground.readthedocs.io",
-                        target = "_blank"                        
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Video tutorials",
-                        link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
-                        target = "_blank"                        
-                    ),
-                    bigdash::navbarDropdownItem(
-                        "Case studies",
-                        link = "https://bigomics.ch/category/case-study/",
-                        target = "_blank"
-                    )
-                ),
-                bigdash::navbarDropdown(
-                    ##"User",
-                    ##shiny::div(class='label label-info current-user',id='authentication-user'),
-                    shiny::textOutput("current_user", inline = TRUE), 
-                    bigdash::navbarDropdownTab(
-                        "Settings",
-                        "userSettings"
-                    ),
-                    upgrade.tab,
-                    logout.tab
-                )
-            ),
             sidebar = bigdash::sidebar(
                 "Menu",
                 bigdash::sidebarMenu(
@@ -224,6 +169,61 @@ app_ui <- function() {
                     "cell-tab"
                 )
             ),
+            navbar = bigdash::navbar(
+                tags$img(
+                    src = "assets/img/bigomics.png",
+                    width = "110",
+                ),
+                shiny::div(shiny::textOutput("current_section"), class='current-section'),
+                shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
+                bigdash::navbarDropdown(
+                    "Support",
+                    bigdash::navbarDropdownItem(
+                        "Community Forum",
+                        link = "https://groups.google.com/d/forum/omicsplayground",
+                        target = "_blank"
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Github issues",
+                        link = "https://github.com/bigomics/omicsplayground/issues",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "www.bigomics.ch",
+                        link = "http://bigomics.ch",
+                        target = "_blank"                        
+                    )
+                ),
+                bigdash::navbarDropdown(
+                    "Tutorials",
+                    bigdash::navbarDropdownItem(
+                        "Documentation",
+                        link = "https://omicsplayground.readthedocs.io",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Video tutorials",
+                        link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                        target = "_blank"                        
+                    ),
+                    bigdash::navbarDropdownItem(
+                        "Case studies",
+                        link = "https://bigomics.ch/category/case-study/",
+                        target = "_blank"
+                    )
+                ),
+                bigdash::navbarDropdown(
+                    ##"User",
+                    ##shiny::div(class='label label-info current-user',id='authentication-user'),
+                    shiny::textOutput("current_user", inline = TRUE), 
+                    bigdash::navbarDropdownTab(
+                        "Settings",
+                        "userSettings"
+                    ),
+                    upgrade.tab,
+                    logout.tab
+                )
+            ), 
             settings = bigdash::settings(
                 "Settings"
             ), 

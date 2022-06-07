@@ -40,37 +40,48 @@ EnrichmentInputs <- function(id) {
 
 EnrichmentUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        flex = c(1.75,1),
-        height = 800,
+
+    tagList(
         shiny::tabsetPanel(
             id = ns("tabs1"),
             shiny::tabPanel("Top enriched",
-                shiny::fillCol(
-                height = 420,
-                flex = c(1,NA),
-                shiny::fillRow(
-                    flex = c(1.5,0.05,1),
-                    plotWidget(ns("topEnriched")),
-                    shiny::br(),
-                    plotWidget(ns("topEnrichedFreq"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("topEnriched"))
+                    ),
+                    div(
+                        class = "col-md-6",
+                        plotWidget(ns("topEnrichedFreq"))
+                    )
                 ),
-                tags$div(
-                    HTML("<b>(a)</b> <b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score.",
-                        "<b>(b)</b> <strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency.")
-                ))),
+                div(
+                    HTML(
+                        "<b>(a)</b> <b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score.",
+                        "<b>(b)</b> <strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
+                    )
+                )
+            ),
             shiny::tabPanel("Plots",
-                shiny::fillCol(
-                height = 420,
-                flex = c(1,0.05,NA),
-                shiny::fillRow(
-                    id = ns("subplots"),
-                    height = 340,
-                    flex=c(1,1,1,1),
-                    plotWidget(ns("subplot_volcano")),                
-                    plotWidget(ns("subplot_barplot")),
-                    plotWidget(ns("subplot_geneplot")),
-                    plotWidget(ns("subplot_scatter"))
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-3",
+                        plotWidget(ns("subplot_volcano"))
+                    ),
+                    div(
+                        class = "col-md-3",
+                        plotWidget(ns("subplot_barplot"))
+                    ),
+                    div(
+                        class = "col-md-3",
+                        plotWidget(ns("subplot_geneplot"))
+                    ),
+                    div(
+                        class = "col-md-3",
+                        plotWidget(ns("subplot_scatter"))
+                    )
                 ),
                 shiny::br(),
                 tags$div(
@@ -80,18 +91,15 @@ EnrichmentUI <- function(id) {
                     <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression
                     of the selected geneset and gene, on the y and x axes, respectively.")
                 )
-            )),
+            ),
             shiny::tabPanel("Compare",
-                shiny::fillCol(
-                height = 420,
-                flex=c(1,NA),
                 plotWidget( ns("compare")),
                 tags$div(
                     HTML("<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>)
                     across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set
                     across all other comparisons.")
                 )
-            )),
+            ),
             shiny::tabPanel("Volcano (all)",
                 shiny::fillCol(
                 height = 420,
@@ -105,47 +113,41 @@ EnrichmentUI <- function(id) {
                 )
             )),
             shiny::tabPanel("Volcano (methods)",
-                shiny::fillCol(
-                height = 420,
-                flex=c(1,NA),
                 plotWidget(ns("volcanoMethods")),
                 tags$div(
                     HTML("<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene
                     sets for different enrichment methods. Methods showing better statistical
                     significance will show volcano plots with 'higher' wings.")
                 )
-            ))
+            )
         ),
         shiny::tabsetPanel(
             id = ns("tabs2"),
             shiny::tabPanel("Table",
-                shiny::fillCol(
-                height = 420,
-                flex = c(NA,0.05,1),
                 tags$div(
                     HTML("<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene
                     set enrichment analysis for selected contrast. The number of stars indicate how many methods
                     identified the geneset significant. <b>(II)</b> Table showing the fold-change,
                     statistics and correlation of the genes in the selected gene set.")
                 ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1.82,0.08,1),
-                    tableWidget(ns("gseatable")),
-                    shiny::br(),
-                    tableWidget(ns("genetable"))        
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-7",
+                        tableWidget(ns("gseatable"))
+                    ),
+                    div(
+                        class = "col-md-5",
+                        tableWidget(ns("genetable"))        
+                    )
                 )
-            )),
+            ),
             shiny::tabPanel("Foldchange (all)",
-                shiny::fillCol(
-                height = 420,
                 plotWidget(ns("fctable"))
-            )),
+            ),
             shiny::tabPanel("FDR table",
-                shiny::fillCol(
-                height = 420,
                 tableWidget(ns("FDRtable"))
-            ))                       
+            )                    
         )
     )
 }

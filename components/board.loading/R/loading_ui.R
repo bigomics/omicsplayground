@@ -27,26 +27,25 @@ LoadingUI <- function(id) {
       class = "p-1",
         uiOutput(ns("navheader")),
         br(), br(),
-        div( id="load-action-buttons",
-        withTooltip(
+        div( 
+          id="load-action-buttons",
+          tableWidget(ns("pgxtable")),
           shiny::actionButton(
             ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
-            class="btn btn-outline-success mx-2"),
-          "Click to load the selected dataset.", placement="bottom"),
-        withTooltip( shiny::downloadButton(
-          ns("downloadpgx"), label="Download PGX", ##icon=icon("download"),
-          class="btn btn-outline-primary mx-2")
-          ,"Download PGX file (binary).", placement="bottom"),
-        withTooltip( downloadButton2(
-          ns("downloadzip"), label="Download ZIP", icon=icon("file-csv"),
-          class="btn btn-outline-primary mx-2")
-          ,"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
-          placement="bottom"),
-        withTooltip( shiny::actionButton(
-          ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
-          class="btn btn-outline-danger mx-2")
-          ,"Delete the selected dataset.", placement="bottom")
-      ),
-      tableWidget(ns("pgxtable"))
+            class="btn btn-outline-primary"
+          ),
+          shiny::downloadButton(
+            ns("downloadpgx"), label="Download PGX", ##icon=icon("download"),
+            class="btn btn-outline-dark-hover"
+          ),
+          downloadButton2(
+            ns("downloadzip"), label="Download ZIP", icon=icon("file-archive"),
+            class="btn btn-outline-dark-hover"
+          ),
+          shiny::actionButton(
+            ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
+            class="btn btn-outline-danger-hover"
+        )
+      )
     )
 }

@@ -5,7 +5,7 @@
 
 BiomarkerInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::div(
+    bigdash::tabSettings(
         class = "p-1",
         shiny::tagList(
             withTooltip( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
@@ -33,39 +33,28 @@ BiomarkerInputs <- function(id) {
 
 BiomarkerUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        flex = c(1),
-        height = 760,
-        shiny::tabsetPanel(
-            id=ns("tabs"),
-                shiny::fillCol(
-                height = 800,
-                flex = c(NA,0.05,1),
-                tags$div(
-                    HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain
-                    phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications.
-                    <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms,
-                    including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according
-                    to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features.
-                    <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features.
-                    <b>(d)</b> Boxplots show the expression of biomarker genes across the groups.")
-                ),
-                shiny::br(),
-                shiny::fillRow(
-                    flex = c(1,0.1,1),
-                    height = 800,                
-                    shiny::fillCol(
-                        flex = c(0.5,1),
-                        plotWidget(ns("pdx_importance")),
-                        plotWidget(ns("pdx_heatmap"))
-                    ),
-                    shiny::br(), ## spacer
-                    shiny::fillCol(
-                        flex = c(1,0.9), 
-                        plotWidget(ns("pdx_decisiontree")),
-                        plotWidget(ns("pdx_boxplots"))
-                    )
-                )
+
+    tagList(
+        tags$div(
+            HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain
+            phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications.
+            <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms,
+            including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according
+            to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features.
+            <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features.
+            <b>(d)</b> Boxplots show the expression of biomarker genes across the groups.")
+        ),
+        div(
+            class = "row",
+            div(
+                class = "col-md-6",
+                plotWidget(ns("pdx_importance")),
+                plotWidget(ns("pdx_heatmap"))
+            ),
+            div(
+                class = "col-md-6",
+                plotWidget(ns("pdx_decisiontree")),
+                plotWidget(ns("pdx_boxplots"))
             )
         )
     )
