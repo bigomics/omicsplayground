@@ -29,7 +29,12 @@ LoadingUI <- function(id) {
         br(), br(),
         div( 
           id="load-action-buttons",
+
+          ## table----------------            
           tableWidget(ns("pgxtable")),
+          br(),
+
+          ## buttons----------------
           shiny::actionButton(
             ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
             class="btn btn-outline-primary"

@@ -918,7 +918,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
             shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
         ),
         shiny::div(
-            class = "col-md-2 offset-md-3",
+            class = "col-md-3 offset-md-2",
             shiny::div(
                 id="splash-panel",
                 body,

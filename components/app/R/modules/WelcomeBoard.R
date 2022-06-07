@@ -66,7 +66,7 @@ WelcomeBoardUI <- function(id) {
           id = "welcome-buttons",
           div(
               class = "col-md-5",
-              h4("Just want to try out?"),
+              h3("I just wanna try..."),
               tags$a(
                   id = "init-example-data",
                   "Try example dataset",
@@ -75,7 +75,7 @@ WelcomeBoardUI <- function(id) {
           ),
           div(
               class = "col-md-7",
-              h4("I'm an existing user..."),
+              h3("I'm an existing user..."),
               tags$button(
                   id = "init-load-data",
                   "Use my saved data",
