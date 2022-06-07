@@ -640,9 +640,9 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use BigOmics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use BigOmics Playground")
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
-    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow.<br>&ndash; Nitesh Nishad")
+    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
-    titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
+    titles[[23]] = c("Love Adventurous Life","Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
     titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
     titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")    
@@ -652,8 +652,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     if(title.len < 80) title[1] <- paste0("<br>",title[1])
     splash.title <- shiny::div(
         class = "text-white",
-        shiny::div(shiny::HTML(title[1]),style="font-size:3.5rem;font-weight:700;line-height:1em;width:130%;"),
-        shiny::div(shiny::HTML(title[2]),style="font-size:2rem;line-height:0.5em;margin-top:0.5em;width:130%;")
+        shiny::div(shiny::HTML(title[1]),style="font-size:3.2rem;font-weight:700;line-height:1em;width:130%;"),
+        shiny::div(shiny::HTML(title[2]),style="font-size:1.8rem;line-height:1.1em;margin-top:0.5em;width:130%;")
     )
 
     div.password <- div()
@@ -826,17 +826,17 @@ splashscreen.buttons <- function() {
                     ),
                     tags$li(
                         shiny::tags$a(
-                            "User forum", 
+                            "Read documentation", 
                             class = "dropdown-item",
-                            href = "https://groups.google.com/d/forum/omicsplayground",
+                            href = "https://omicsplayground.readthedocs.io",
                             target = "_blank"
-                        )
+                        ),
                     ),
                     tags$li(
                         shiny::tags$a(
-                            "Buy us a coffee!",
+                            "User forum", 
                             class = "dropdown-item",
-                            href = "https://www.buymeacoffee.com/bigomics",
+                            href = "https://groups.google.com/d/forum/omicsplayground",
                             target = "_blank"
                         )
                     )
@@ -856,14 +856,7 @@ splashscreen.buttons <- function() {
                 tags$ul(
                     class = "dropdown-menu",
                     `aria-labelledby` = "splash-toggle-dev",
-                    tags$li(
-                        shiny::tags$a(
-                            "Read-the-docs", 
-                            class = "dropdown-item",
-                            href = "https://omicsplayground.readthedocs.io",
-                            target = "_blank"
-                        ),
-                    ),
+
                     tags$li(
                         shiny::tags$a(
                             "Get the source", 
@@ -879,7 +872,15 @@ splashscreen.buttons <- function() {
                             href = "https://hub.docker.com/r/bigomics/omicsplayground",
                             target = "_blank"
                         )
-                    )
+                    ),
+                    tags$li(
+                        shiny::tags$a(
+                            "Buy us a coffee!",
+                            class = "dropdown-item",
+                            href = "https://www.buymeacoffee.com/bigomics",
+                            target = "_blank"
+                        )
+                    )                    
                 )
             )
         )
@@ -912,7 +913,8 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
         shiny::div(
             class = "col-md-4 offset-md-2",
             title,
-            br(), br(),
+            br(),
+            br(),             
             shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
         ),
         shiny::div(
