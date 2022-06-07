@@ -32,6 +32,7 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
               ns=ns,
               with.email=FALSE,
               with.password=FALSE,
+              alt=h5("Ready to explore your data?"),            
               login.text="Start!"
             )
             shiny::showModal(m)
@@ -243,6 +244,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             with.password = FALSE,
             with.register = FALSE,
             with.firebase = TRUE,            
+            alt=h5("Ready to explore your data?"),            
             login.text = "Start!"
         )
 
@@ -457,7 +459,9 @@ PasswordAuthenticationModule <- function(input, output, session,
             ns=ns,
             with.email=TRUE,
             with.username=FALSE,
-            with.password=TRUE)
+            with.password=TRUE,
+            login.text="Let me in!"
+            )
         shiny::showModal(m)
         
     }
@@ -470,7 +474,9 @@ PasswordAuthenticationModule <- function(input, output, session,
             ns=ns,
             with.email=TRUE,
             with.username=FALSE,
-            with.password=TRUE)
+            with.password=TRUE,
+            login.text="Let me in!"
+        )
         shiny::showModal(m)
     })
 
@@ -588,16 +594,16 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
     if(!is.null(msg)) subtitle <- msg
     splash.title <- shiny::div(
         shiny::br(),br(),br(),br(),
-        shiny::div(shiny::HTML(title),style="font-size:70px;font-weight:700;line-height:1em;"),
+        shiny::div(shiny::HTML(title),style="font-size:70px;font-weight:700;line-height:1em;width:130%;"),
         shiny::br(),
-        shiny::div(shiny::HTML(subtitle),style="font-size:30px;"),
+        shiny::div(shiny::HTML(subtitle),style="font-size:30px;line-height:1em;margin-top:0.6em;width:130%;"),
         shiny::br(),br(),br()
     )
     body <- shiny::tagList(
         shiny::div(id="splash-title",splash.title)
     )
-    m <- splashScreen(body, ns=ns, easyClose=TRUE, fade=TRUE,
-                              buttons=FALSE, footer=FALSE)    
+    m <- splashScreen("", body, ns=ns, easyClose=TRUE, fade=TRUE,
+        buttons=FALSE, footer=FALSE)    
     if(duration>0) {
         cat("closing hello in",round(duration/1000,1),"seconds...\n")
         shinyjs::delay(duration, shiny::removeModal())
@@ -614,25 +620,25 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     message("[AuthenticationModule::splashLoginModal]")
 
     titles <- list()
-    titles[[1]] = c("Big Omics Data","Isn't big anymore with Omics Playground")
-    titles[[2]] = c("Great Discoveries","Start on the Omics Playground")
+    titles[[1]] = c("Big Omics Data","Isn't big anymore with BigOmics Playground")
+    titles[[2]] = c("Great Discoveries","Start on BigOmics Playground")
     titles[[3]] = c("Fasten Your Seat Belts!","Hi-speed analytics")
     titles[[4]] = c("Do-it-yourself Omics Analytics","Yes you can!")
     titles[[5]] = c("Twenty-Four Seven","Your Playground doesn't go on coffee breaks")
     titles[[6]] = c("Analyze with confidence","Be a data rockstar, a Freddie Mercury of omics!")
-    titles[[7]] = c("Play-Explore-Discover","Get deeper insights with Omics Playground")
+    titles[[7]] = c("Play-Explore-Discover","Get deeper insights with BigOmics Playground")
     titles[[8]] = c("Skip the Queue","Take the fast lane. Self-service analytics.")
     titles[[9]] = c("Look Ma! No help!","I did it without a bioinformatician")
     titles[[10]] = c("Easy-peasy insight!","Get insight from your data the easy way")
     titles[[11]] = c("Zoom-zoom-insight!","Get faster insight from your data")
     titles[[12]] = c("Click-click-eureka!","Owe yourself that <i>eureka!</i> moment")
-    titles[[13]] = c("I Love Omics Data!","Unleash your inner nerd with Omics Playground")
+    titles[[13]] = c("I Love Omics Data!","Unleash your inner nerd with BigOmics Playground")
     titles[[14]] = c("More Omics Data","Is all I want for Christmas")
-    titles[[15]] = c("Keep Exploring","Never stop discovering with Omics Playground")
-    titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground")
-    titles[[17]] = c("Real Biologists","Do it with Omics Playground")
-    titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use Omics Playground")
-    titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
+    titles[[15]] = c("Keep Exploring","Never stop discovering with BigOmics Playground")
+    titles[[16]] = c("Real Bioinformaticians","Do it with BigOmics Playground")
+    titles[[17]] = c("Real Biologists","Do it with BigOmics Playground")
+    titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use BigOmics Playground")
+    titles[[19]] = c("Non sono mica scemo!","Of course I use BigOmics Playground")
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
     titles[[21]] = c("Explore More","The more you explore, the more you learn and grow.<br>&ndash; Nitesh Nishad")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
@@ -646,8 +652,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     if(title.len < 80) title[1] <- paste0("<br>",title[1])
     splash.title <- shiny::div(
         class = "text-white",
-        shiny::div(shiny::HTML(title[1]),style="font-size:3rem;font-weight:700;line-height:1em;"),
-        shiny::div(shiny::HTML(title[2]),style="font-size:1.5rem;")
+        shiny::div(shiny::HTML(title[1]),style="font-size:3.5rem;font-weight:700;line-height:1em;width:130%;"),
+        shiny::div(shiny::HTML(title[2]),style="font-size:2rem;line-height:0.5em;margin-top:0.5em;width:130%;")
     )
 
     div.password <- div()
@@ -682,56 +688,52 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                     "Sign in", 
                     class = "card-title pb-2"
                 ),
-                tags$ul(
-                    tags$li(
-                        "No registration"
-                    ),
-                    tags$li(
-                        "No credit card"
-                    ),
-                    tags$li(
-                        "Two-click sign-in"
-                    )
-                ),
-                hr(),
-                p(
-                    "Use your",
-                    actionLink(
-                        ns("launchGoogle"), 
-                        "Google account",
-                        class = "text-decoration-underline text-dark"
-                    )
-                ),
-                h4(
-                    "OR",
-                    class = "text-center pb-4 pt-4"
-                ),
-                p(
+                div(
                     "Enter your email and we'll send you a link."
                 ),
-                div(
-                    class = "row",
-                    div(
-                        class = "col-md-9",
-                        textInput(
-                            ns("emailInput"),
-                            "",
-                            placeholder = "Your email",
-                            width = "100%"
-                        )
-                    ),
-                    div(
-                        class = "col-md-3",
-                        br(),
-                        actionButton(
-                            ns("emailSubmit"),
-                            "Send",
-                            class = "btn-outline-dark"
-                        )
-                    )
+                textInput(
+                    ns("emailInput"),
+                    "",
+                    placeholder = "Your email",
+                    width = "100%"
+                ),
+                actionButton(
+                    ns("emailSubmit"),
+                    "Send link",
+                    class = "btn-warning"
                 ),
                 p(
-                    id = "emailFeedbackShow",
+                    id = "emailFeedbackShow"
+                ),
+                hr(),
+                h5(
+                    id = "or-div",
+                    "OR",
+                    class = "text-center pb-3 pt-0"
+                ),                
+                div(
+                    class = "social-button google-button",
+                    actionLink(
+                        ns("launchGoogle"), 
+                        "Sign in with Google",
+                        icon = icon("google")
+                    )
+                ),
+                ## div(
+                ##     class = "social-button apple-button",
+                ##     actionLink(
+                ##         ns("launchApple"), 
+                ##         "Sign in with Apple",
+                ##         icon = icon("apple")
+                ##     )
+                ## ),
+                div(
+                    class = "social-button facebook-button",
+                    actionLink(
+                        ns("launchFacebook"), 
+                        "Sign in with Facebook",
+                        icon = icon("facebook")
+                    )
                 )
             )
         )
@@ -746,6 +748,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         class = "pb-4",
         actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
     )
+    
     if(with.register) {
       div.button <- div(
         id="splash-buttons",        
@@ -772,13 +775,16 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     splash.subtitle <- NULL
     
     body <- div(
-      id="splash-panel",
-      div(id="splash-content",splash.content),      
-      div(id="splash-title",splash.title),
-      div(id="splash-subtitle",splash.subtitle)
+      id="splash-content",
+      splash.content      
     )
 
-    m <- splashScreen(body, ns=ns)
+    title <- div(
+        div(id="splash-title",splash.title),
+        div(id="splash-subtitle",splash.subtitle)
+    )
+
+    m <- splashScreen(title, body, ns=ns)
 
     return(m)
 }
@@ -800,7 +806,7 @@ splashscreen.buttons <- function() {
                 class = "btn-group",
                 role = "group",
                 tags$button(
-                    "Support",
+                    "Get support",
                     id = "splash-toggle-support",
                     type = "button",
                     class = "btn btn-outline-primary dropdown-toggle",
@@ -840,7 +846,7 @@ splashscreen.buttons <- function() {
                 class = "btn-group",
                 role = "group",
                 tags$button(
-                    "Developers",
+                    "I'm a developer",
                     id = "splash-toggle-dev",
                     type = "button",
                     class = "btn btn-outline-primary dropdown-toggle",
@@ -881,40 +887,42 @@ splashscreen.buttons <- function() {
 
 }
 
-splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
+splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
                          buttons=TRUE, footer=TRUE)
 {
     
   if(is.null(ns)) ns <- function(e) return(e)
   message("[AuthenticationModule::monsterFullScreen]")
   
-  div.footer = shiny::modalButton("Dismiss")
+  div.buttons = shiny::modalButton("Dismiss")
   if(buttons) {
-    div.footer <- splashscreen.buttons()      
+    div.buttons <- splashscreen.buttons()      
   }
   if(!footer) {
-    div.footer <- NULL
+    div.buttons <- NULL
   }
   
   ## return modalDialog
   m <- modalDialog2(
     id = "splash-fullscreen",
     class = "bg-primary",
-    header = div.footer,
+    header = div.buttons,
     shiny::div(
         class = "row",
-        div(
+        shiny::div(
             class = "col-md-4 offset-md-2",
+            title,
+            br(), br(),
+            shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
+        ),
+        shiny::div(
+            class = "col-md-2 offset-md-2",
             shiny::div(
-                id="splash-warning",
+                id="splash-panel",
                 body,
                 textOutput(ns("login_warning")),
             ),
-        ),
-        div(
-            class = "col-md-4",
-            shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
-        ),
+        )
     ),
     footer = NULL,
     size = "fullscreen",
@@ -925,42 +933,3 @@ splashScreen <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
   return(m)
 }
 
-
-splashScreen.SAVE <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
-                              buttons=TRUE, footer=TRUE)
-{
-    
-    if(is.null(ns)) ns <- function(e) return(e)
-    message("[AuthenticationModule::splashModal]")
-
-    div.footer = shiny::modalButton("Dismiss")
-    if(buttons) {
-        div.footer = bigomics.buttons()
-    }
-    if(!footer) {
-        div.footer <- NULL
-    }
-
-    ## return modalDialog
-    particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
-    m <- shiny::modalDialog(
-        id = "modal-splash",
-        class = "bg-primary",
-        shiny::div(
-            id="particles-target",
-            shiny::div(id="splash-logo", 
-            shiny::img(src="static/logo.png",
-                width=32,height=32)),
-            body,
-            ##firebase::useFirebaseUI(),
-            shiny::br(),
-            shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
-            style="height: 32rem; width: 100%;"                
-        ),
-        footer = div.footer,
-        particlesjs::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
-        size="xl", easyClose=easyClose, fade=fade
-    ) ## end of modalDialog
-    
-    return(m)
-}

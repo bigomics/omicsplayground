@@ -17,10 +17,79 @@ html {
 
 	div#splash-fullscreen {
 		background-color: #2780e3 !important;
-		padding: 2rem;
+		padding: 0rem 2rem;		
 	}
 
 	#splash-logo2 {
 		height: 3rem;
 	}
+
+	#splash-panel {
+	    margin-top: 100%;
+	    text-align: center;
+	}
+
+	#splash-panel .card {
+	    color: #555;
+	    background: white;
+	    padding: 10px 10px;
+	    text-align: center;	    
+	    box-shadow: 10px 10px 20px #0002;
+	    margin-top: -50%;
+	}
+
+	#splash-panel .card-title {
+	    margin-top: 0.5rem;
+	    margin-bottom: 0.5rem;
+	}
+
+
+	#splash-panel .shiny-input-container {
+	    width: 100%;
+	    max-width: 100%;	    
+	}
+	
+	button#auth-emailSubmit {
+	    border: 1px solid #ccc;
+	    padding: 5px 40px;
+	    margin: 0 0 10px 0;
+	    width: 100%;
+	}	
+
+	.social-button {
+	    border: 1px solid #fff;
+	    padding: 8px 10px;
+	    border-radius: 5px;
+	    text-decoration: none !important;	    
+	}
+
+	.google-button {
+	    background-color: #dd4b39;
+	    color: white !important;
+	}
+
+	.facebook-button {
+	    background-color: #4267B2;
+	    color: white !important;
+	}
+	.apple-button {
+	    background-color: #ccc;
+	    color: black !important;
+	}
+
+	a#auth-launchGoogle {
+	    color: white !important;	    
+	    text-decoration: none !important;	    
+	}
+	a#auth-launchFacebook {
+	    color: white !important;	    
+	    text-decoration: none !important;	    
+	}
+	a#auth-launchApple {
+	    color: black !important;	    
+	    text-decoration: none !important;	    
+	}
+	
+
+
 }
