@@ -6,7 +6,10 @@
 
 dataview_table_rawdata_ui <- function(id) {
   ns <- shiny::NS(id)
-  tableWidget(ns("tbl"))  
+  tagList(
+      ##br(),
+      tableWidget(ns("tbl"))
+  )
 }
 
 dataview_table_rawdata_server <- function(id,
@@ -131,14 +134,17 @@ dataview_table_rawdata_server <- function(id,
             
       DT::datatable(
         dt$x, rownames=FALSE,
-        class = 'compact cell-border stripe hover',
+        ##class = 'compact cell-border stripe hover',
+        class = 'compact hover',        
         extensions = c('Buttons','Scroller'),
         selection = list(mode='single', target='row', selected=1),
         options=list(
-          dom = 'lfrtip',
-          pageLength = 25,
-          lengthMenu = c(25, 40, 100, 250),
-          scroller=FALSE, scrollY = FALSE,                          
+          # dom = 'lfrtip',
+          dom = 'frtip',            
+          pageLength = 100,
+          lengthMenu = c(25, 40, 100, 250, 1000),
+          ##scroller = FALSE, scrollY = FALSE,
+          scroller = TRUE, scrollY = "65vh",                          
           deferRender=TRUE
         )  ## end of options.list
       ) %>%
@@ -167,6 +173,7 @@ dataview_table_rawdata_server <- function(id,
       csvFunc = table_data,
       title = "Gene expression table",
       filename = "counts.csv",
+      height = c("75vh",700),      
       info.text = info_text,
       caption2 = info_text
     )

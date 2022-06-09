@@ -20,8 +20,10 @@ html {
     .welcome-btn {
 	padding: 10px 26px;
 	margin-top: 20px;
-	font-size: 25px;
+	font-size: 24px;
 	width: 300px;
+	color: black;
+	border-width: 2.5px;
     }
     
     #welcome-subtext {
@@ -30,5 +32,12 @@ html {
 	font-size: 1.1em;
 	line-height: 1.4em;
     }
+
+    #welcome-page {
+	text-align: center;
+	background-color: #f0f9fd;
+	margin: 0px -15px 0px -15px;
+    }
+
     
 }

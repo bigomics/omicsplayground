@@ -1283,7 +1283,8 @@ ExpressionBoard <- function(id, inputData)
         
         DT::datatable( res,
                       rownames=FALSE,
-                      class = 'compact cell-border stripe hover',                  
+                      ##class = 'compact cell-border stripe hover',
+                      class = 'compact hover',                                        
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
                       fillContainer = TRUE,
@@ -1389,7 +1390,8 @@ ExpressionBoard <- function(id, inputData)
         df$geneset <- wrapHyperLink(df$geneset, rownames(df))
         
         DT::datatable(df,
-                      class = 'compact cell-border stripe',
+                      ##class = 'compact cell-border stripe',
+                      class = 'compact',            
                       rownames=FALSE, escape = c(-1,-2),
                       extensions = c('Scroller'),
                       fillContainer = TRUE,
@@ -1473,7 +1475,8 @@ ExpressionBoard <- function(id, inputData)
             
       dt <- DT::datatable( df,
                           rownames=FALSE,
-                          class = 'compact cell-border stripe hover',
+                          # class = 'compact cell-border stripe hover',
+                          class = 'compact hover',
                           extensions = c('Scroller'),
                           selection=list(mode='single', target='row', selected=c(1)),
                           fillContainer = TRUE,
@@ -1577,7 +1580,8 @@ ExpressionBoard <- function(id, inputData)
         D = data.frame( method=metd, contrast=contr, sigcount, check.names=FALSE)
         
         DT::datatable( D, rownames=FALSE,
-                      class = 'compact cell-border stripe hover',
+            #                      class = 'compact cell-border stripe hover',
+                      class = 'compact hover',            
                       fillContainer = TRUE,
                       extensions = c('Scroller'),                      
                       options=list(

@@ -1254,7 +1254,7 @@ displays the expression levels of selected genes across all conditions in the an
                 df, rownames=TRUE, ## escape = c(-1,-2),
                 extensions = c('Buttons','Scroller'),
                 selection=list(mode='single', target='row', selected=NULL),
-                class = 'compact cell-border stripe hover',
+                class = 'compact hover',
                 fillContainer = TRUE,
                 options=list(
                     dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
@@ -1565,7 +1565,7 @@ displays the expression levels of selected genes across all conditions in the an
                 df, rownames=FALSE, escape = c(-1,-2),
                 extensions = c('Buttons','Scroller'),
                 selection=list(mode='single', target='row', selected=c(1)),
-                class = 'compact cell-border stripe hover',
+                class = 'compact hover',
                 fillContainer = TRUE,
                 options=list(
                     dom = 'lfrtip', buttons = c('copy','csv','pdf'),

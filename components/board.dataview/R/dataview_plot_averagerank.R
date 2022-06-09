@@ -71,7 +71,7 @@ dataview_plot_averagerank_server <- function(id,
             gene <- pd$gene
             ylab <- pd$ylab
 
-            par(mar=c(2.3,3.0,1,1), mgp=c(2.0,0.6,0))            
+            par(mar=c(2.3,3.0,1,0), mgp=c(2.0,0.6,0))            
             base::plot( mean.fc, type="h", lwd=0.4,
                        col="#bbd4ee", cex.axis=0.9,
                        ylab=ylab, xlab="ordered genes", xaxt="n")

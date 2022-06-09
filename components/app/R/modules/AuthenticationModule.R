@@ -32,8 +32,8 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
               ns=ns,
               with.email=FALSE,
               with.password=FALSE,
-              alt=h5("Ready to explore your data?"),            
-              login.text="Start!"
+              alt=h5("Ready to explore your data?",style="color:white;"),            
+              login.text="Sure I am!"
             )
             shiny::showModal(m)
         } else {
@@ -244,8 +244,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
             with.password = FALSE,
             with.register = FALSE,
             with.firebase = TRUE,            
-            alt=h5("Ready to explore your data?"),            
-            login.text = "Start!"
+            alt=h5("Ready to explore your data?",style="color:white;"),            
+            login.text = "Sure I am!"
         )
 
         ## login modal
@@ -705,11 +705,11 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                 p(
                     id = "emailFeedbackShow"
                 ),
-                hr(),
+                hr( style="color:#888;opacity:1;margin-top:30px;"),
                 h5(
-                    id = "or-div",
                     "OR",
-                    class = "text-center pb-3 pt-0"
+                    class = "text-center pb-4 pt-1",
+                    style = "margin-top:-32px;background:white;width:50px;margin-left:auto;margin-right:auto;"
                 ),                
                 div(
                     class = "social-button google-button",

@@ -56,7 +56,7 @@ dataview_plot_abundance_server <- function(id,
             if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
             cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
 
-            par(mar=c(8,3.5,2,0.5), mgp=c(2.2,0.8,0))
+            par(mar=c(8,3.5,2,0), mgp=c(2.2,0.8,0))
             barplot(res$prop.counts, las=3,
                     cex.lab=1.0, border = NA,
                     ylim = c(0,ymax)*1.6, ylab = "abundance (%)",

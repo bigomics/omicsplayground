@@ -313,19 +313,19 @@ plotModule <- function(input, output, session,
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
     if(show.maximize) {        
-        zoom.button <- modalTrigger(ns("zoombutton"),
-            ns("plotpopup"),
-                                    icon("window-maximize"),
-                                    class="btn-circle-xs")
-        zoom.button <- withTooltip(zoom.button, "Maximize", placement="right")
+        zoom.button <- modalTrigger(ns("zoombutton"), ns("plotpopup"),
+            icon("window-maximize"), class="btn-circle-xs")
+        zoom.button <- withTooltip(zoom.button, "Maximize plot", placement="right")
     }
+
     
     ##output$renderbuttons <- shiny::renderUI({
     ## button layout
-    buttons <- shiny::fillRow(
-        flex = c(NA,NA,NA,NA,NA,1),
+    header <- shiny::fillRow(
+        flex = c(NA,1,NA,NA,NA,NA),
         ##flex=c(NA,NA,1),
         label1,
+        shiny::HTML(title),
         ##div( class="button-group", style="display: inline-block; float: left;",
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
@@ -337,13 +337,8 @@ plotModule <- function(input, output, session,
         ),
         options.button,
         shiny::div(class='download-button', dload.button),
-        shiny::div(class='zoom-button', zoom.button),
+        shiny::div(class='zoom-button', zoom.button)
         ##),
-        shiny::HTML(paste("<center>",title,"</center>"))
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ##shiny::br()
-        ##inputs
-        ##selectInput("sel123","number",1:10)
     )
     ##return(ui)
     ##})
@@ -855,9 +850,8 @@ plotModule <- function(input, output, session,
                 shiny::tags$head(shiny::tags$style(modaldialog.style)),
                 shiny::tags$head(shiny::tags$style(modalbody.style)),            
                 shiny::tags$head(shiny::tags$style(modalfooter.none))
-            ),
-            
-            buttons,
+            ),            
+            div(class="plotmodule-header", header),
             ##render,
             eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
             shiny::br(),
@@ -885,7 +879,6 @@ plotModule <- function(input, output, session,
         download.png = download.png,
         download.html = download.html,
         download.csv = download.csv,
-        ##buttons = buttons,
         ##getCaption = caption.fun,
         saveHTML = saveHTML,
         outputFunc = outputFunc,
@@ -914,6 +907,7 @@ tableModule <- function(input, output, session,
                         options = NULL, info.width="300px"
                         )
 {
+    ##require(bsutils)
     ns <- session$ns
     
     if(any(class(caption)=="reactive")) {
@@ -938,7 +932,7 @@ tableModule <- function(input, output, session,
         )
     }
 
-    if(!is.null(label) && label!="") label <- paste0("(",label,")")
+    ##if(!is.null(label) && label!="") label <- paste0("(",label,")")
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
     
     zoom.button <- modalTrigger(
@@ -947,13 +941,12 @@ tableModule <- function(input, output, session,
         icon("window-maximize"),
         class="btn-circle-xs"
     )
-
     
     header <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
         flex=c(NA,1,NA,NA,NA,NA),
         label1,
-        shiny::div(class='plotmodule-title', title=title, title),        
+        shiny::div(class='plotmodule-title', title=title, title),
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
@@ -971,6 +964,7 @@ tableModule <- function(input, output, session,
                 tooltip = shinyWidgets::tooltipOptions(title = "Download",
                     placement = "right")
             )),
+        ##withTooltip(zoom.button,"maximize table")
         zoom.button
     )
     

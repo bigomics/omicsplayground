@@ -28,7 +28,7 @@ dataview_table_samples_server <- function(id,
       dt <- table_data()
       req(dt)      
       DT::datatable( dt,
-                    class = 'compact cell-border stripe hover',
+                    class = 'compact hover',
                     rownames = TRUE,
                     extensions = c('Buttons','Scroller'),
                     selection = list(mode='single', target='row', selected=1),
@@ -44,7 +44,7 @@ dataview_table_samples_server <- function(id,
       dt <- table_data()
       req(dt)      
       DT::datatable( dt,
-                    class = 'compact cell-border stripe hover',
+                    class = 'compact hover',
                     rownames = TRUE,
                     extensions = c('Buttons','Scroller'),
                     selection = list(mode='single', target='row', selected=1),

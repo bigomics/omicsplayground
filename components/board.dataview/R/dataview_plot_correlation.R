@@ -86,7 +86,7 @@ dataview_plot_correlation_server <- function(id,
       res <- plot_data()
       shiny::req(res)
         
-      par(mar=c(4.3,3.0,1,1), mgp=c(2.0,0.6,0))
+      par(mar=c(4.3,3.0,1,0), mgp=c(2.0,0.6,0))
       barplot(res$top.rho, col=res$klr1, ## horiz=TRUE,
               las = 3,  
               main = paste(res$gene),

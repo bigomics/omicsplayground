@@ -15,26 +15,26 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id)  ## namespace
 
   bigdash::tabSettings(
-    withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
-                "Show more information about this module."),
-    shiny::hr(), shiny::br(),
-    withTooltip( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
-                "Enter a gene of interest for the analysis.", placement="top"),
-    withTooltip( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
-                                    choices=NULL, multiple=TRUE),
-                "Filter the relevant samples for the analysis.", placement="top"),
-    withTooltip( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
-                "Select phenotype for grouping the samples.", placement="top"),
-    shiny::br(),
-    withTooltip( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                "Toggle advanced options.", placement="top"),
-    shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.data_options % 2 == 1", ns=ns,
-      withTooltip( shiny::radioButtons(ns('data_type'),'Data type:',
-                                       choices=c("counts","logCPM"), selected="logCPM", inline=TRUE),
-                  "Choose an input data type for the analysis.", placement="bottom")
-    )
+      withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
+          "Show more information about this module."),
+      shiny::hr(), shiny::br(),
+      withTooltip( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
+          "Enter a gene of interest for the analysis.", placement="top"),
+      withTooltip( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
+          choices=NULL, multiple=TRUE),
+          "Filter the relevant samples for the analysis.", placement="top"),
+      withTooltip( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+          "Select phenotype for grouping the samples.", placement="top"),
+      shiny::br(),
+      withTooltip( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+          "Toggle advanced options.", placement="top"),
+      shiny::br(), shiny::br(),
+      shiny::conditionalPanel(
+          "input.data_options % 2 == 1", ns=ns,
+          withTooltip( shiny::radioButtons(ns('data_type'),'Data type:',
+              choices=c("counts","logCPM"), selected="logCPM", inline=TRUE),
+              "Choose an input data type for the analysis.", placement="bottom")
+      )
   )
 }
 
@@ -49,6 +49,7 @@ DataViewUI <- function(id) {
   ns <- shiny::NS(id)  ## namespace
 
   imgH <- c(330,600)   ## heights for small and fullscreen image
+  imgH <- c("35vh","70vh")   ## heights for small and fullscreen image  
 
   shiny::tabsetPanel(
 
@@ -60,11 +61,11 @@ DataViewUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-3",
+          class = "col-md-2",
           dataview_module_geneinfo_ui(ns("geneinfo")),
         ),
         div(
-          class = "col-md-9",
+          class = "col-md-10",
           div(
             class = "row",
             div(
@@ -77,7 +78,7 @@ DataViewUI <- function(id) {
             ),
             div(
               class = "col-md-4",
-              dataview_plot_tsne_ui(ns("tsneplot"),height=imgH)
+              dataview_plot_tsne_ui(ns("tsneplot"),height=c("30vh","70vh"))
             )
           ),
           div(
@@ -144,12 +145,12 @@ DataViewUI <- function(id) {
     ##----------------------------------------------------------------------------
     shiny::tabPanel(
       "Counts",
+      dataview_table_rawdata_ui(ns("rawdatatable")),
       tags$div( class="caption",
         HTML("<b>Gene table.</b> The table shows the gene expression values per sample, or average
               expression values across the groups. The column 'rho' reports the correlation with the
               gene selected in 'Search gene' in the left side bar.")
-      ),
-      dataview_table_rawdata_ui(ns("rawdatatable"))
+      )
     ),
     ##----------------------------------------------------------------------------
     shiny::tabPanel(
@@ -192,6 +193,7 @@ DataViewUI <- function(id) {
     ##----------------------------------------------------------------------------
     shiny::tabPanel(
       "Contrasts",
+      dataview_table_contrasts_ui(ns("contrastTable")),
       tags$div(
         class = "caption",
         HTML(
@@ -199,8 +201,7 @@ DataViewUI <- function(id) {
           '+1' and '-1' correspond to the group of interest and control group, respectively. Zero
           or empty entries denote samples not use for that comparison."
         )
-      ),
-      dataview_table_contrasts_ui(ns("contrastTable"))
+      )
     ),
     ##----------------------------------------------------------------------------
     shiny::tabPanel(

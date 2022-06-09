@@ -1,8 +1,12 @@
 html {
 
-    h4 {
-        font-weight: 600;
-        font-size: 1.2em;
+
+    .sidebar-expanded {
+//        min-width: 12rem;
+    }
+
+    .navbar {
+	padding-top: 0.3rem;
     }
 
     #sidebar-help-title {

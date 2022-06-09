@@ -81,7 +81,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
             ylab <- pdat$ylab
             gene <- pdat$gene
 
-            par(mar=c(6,4,1,1), mgp=c(1.5,0.5,0))
+            par(mar=c(6,4,1,0), mgp=c(1.5,0.5,0))
             barplot(df$x, las=3, main=gene, cex.main=1, col.main="#7f7f7f",
                     col = df$color, border=NA,ylab=ylab, cex.names=0.9,
                     names.arg=rep(NA,length(df$x)))

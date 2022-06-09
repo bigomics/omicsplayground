@@ -27,17 +27,18 @@ LoadingUI <- function(id) {
       class = "p-1",
         uiOutput(ns("navheader")),
         br(), br(),
-        div( 
+
+      ## table----------------            
+      tableWidget(ns("pgxtable")),
+      br(),
+      br(),
+          
+      ## buttons----------------
+      div( 
           id="load-action-buttons",
-
-          ## table----------------            
-          tableWidget(ns("pgxtable")),
-          br(),
-
-          ## buttons----------------
           shiny::actionButton(
-            ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
-            class="btn btn-outline-primary"
+              ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
+              class="btn btn-outline-danger-hover"
           ),
           shiny::downloadButton(
             ns("downloadpgx"), label="Download PGX", ##icon=icon("download"),
@@ -48,9 +49,9 @@ LoadingUI <- function(id) {
             class="btn btn-outline-dark-hover"
           ),
           shiny::actionButton(
-            ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
-            class="btn btn-outline-danger-hover"
-        )
+            ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
+            class="btn btn-outline-primary"
+          )          
       )
     )
 }

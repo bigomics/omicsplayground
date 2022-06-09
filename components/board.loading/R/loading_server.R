@@ -66,7 +66,7 @@ LoadingBoard <- function(id,
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Load Dataset</strong>"),
             shiny::HTML(module_infotext),
-            easyClose = TRUE, size="l" ))
+            easyClose = TRUE, size="xl" ))
     })
 
     module_infotext =paste0(
@@ -171,8 +171,6 @@ LoadingBoard <- function(id,
             if(notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
             df <- df[which(f1 & f2 & f3),,drop=FALSE]        
             df$date <- as.Date(df$date, format='%Y-%m-%d')
-            ## df$date  <- NULL
-            df <- df[order(df$dataset),,drop=FALSE]   ## sort alphabetically...
             ##df <- df[order(df$date,decreasing=FALSE),]
             df <- df[order(df$date,decreasing=TRUE),]
             rownames(df) <- nrow(df):1
@@ -187,7 +185,6 @@ LoadingBoard <- function(id,
     })
     
     selectedPGX <- shiny::reactive({
-        ##sel <- input$pgxtable_rows_selected
         req(pgxtable)
         sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
@@ -438,50 +435,23 @@ LoadingBoard <- function(id,
     ##}, ignoreNULL=TRUE )
 
 
-    ## ================================================================================
-    ## =============================== VALUE BOXES UI =================================
-    ## ================================================================================
+    ##================================================================================
+    ## Header
+    ##================================================================================
 
-    vbox <- function(value, label) {
-        div(
-            class = "valuebox w-100 border",
-            div(
-                class = "valuebox-box bg-primary",
-                h1(value, class = "valuebox-value"),
-                h5(label, class = "valuebox-label")
-            )
-        )
-    }
-
-    output$valuebox1 <- shiny::renderUI({
-        pgx <- getFilteredPGXINFO()
-        shiny::req(pgx)
-        ndatasets = "..."
-        ndatasets <- nrow(pgx)
-        vbox( ndatasets, "data sets")     
-    })
-
-    output$valuebox2 <- shiny::renderUI({
+    pgx_stats <- reactive({
         pgx <- getFilteredPGXINFO()
         shiny::req(pgx)
         ##dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
+        ndatasets <- nrow(pgx)
         nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
-        vbox( nsamples, "number of samples")     
+        paste(ndatasets,"Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")        
     })
-
-    output$valuebox3 <- shiny::renderUI({
-        pgx <- getFilteredPGXINFO()
-        shiny::req(pgx)
-        ##dbg("valuebox3:: pgx$nsamples=",pgx$nsamples)
-        nvalues <- sum(as.integer(pgx$nsamples) * (as.integer(pgx$ngenes)
-            + as.integer(pgx$nsets)),na.rm=TRUE)
-        nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
-        vbox( nvalues1, "data points") 
-    })
-
+    
+    
     output$navheader <- shiny::renderUI({
       fillRow(
-        flex=c(NA,1,NA),
+        flex=c(NA,NA,1),
         ##h2(input$nav),
         shiny::div(
           id="navheader-current-section",
@@ -492,10 +462,11 @@ LoadingBoard <- function(id,
             style="color: #ccc;"
             )
         ),        
-        shiny::br(),
-        shiny::div(selectedPGX(), id="navheader-current-dataset")
+        shiny::div(HTML(pgx_stats()), id="navheader-current-dataset"),
+        shiny::br()        
       )
     })
+    
     
     ##================================================================================
     ## Data sets
@@ -539,6 +510,8 @@ LoadingBoard <- function(id,
     pgxTable_DT <- function() {
         df <- pgxTable_data()
         req(df)
+
+        ##df <- data.frame(nr=rownames(df), df)
         
         target1 <- grep("date",colnames(df))
         target2 <- grep("description",colnames(df))
@@ -547,14 +520,15 @@ LoadingBoard <- function(id,
         
         DT::datatable(
           df,
-          class = 'compact cell-border hover',
-          rownames=TRUE,
+          #          class = 'compact cell-border hover',
+          class = 'compact hover',          
+          rownames = TRUE,
           extensions = c('Scroller'),
           selection = list(mode='single', target='row', selected=1),
           fillContainer = TRUE,
           options=list(
-              ##dom = 'Blfrtip',
-              dom = 'ft',              
+            ##dom = 'Blfrtip',
+            dom = 'ft',              
             ##columnDefs = list(list(searchable = FALSE, targets = 1)),
             pageLength = 9999,
             ##lengthMenu = c(20, 30, 40, 100),
@@ -574,7 +548,7 @@ LoadingBoard <- function(id,
 
     pgxTable.RENDER <- function() {
         pgxTable_DT() %>%
-            DT::formatStyle(0, target='row', fontSize='13px', lineHeight='95%')        
+            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')        
     }
 
     pgxTable_modal.RENDER <- function() {
@@ -589,7 +563,8 @@ LoadingBoard <- function(id,
         func = pgxTable.RENDER,
         func2 = pgxTable_modal.RENDER,        
         title = "",
-        height = c(600,700),
+        ##height = c(600,700),
+        height = c("65vh",700),
         width = c('100%','100%'),
         info.text = info_text,
         caption2 = info_text

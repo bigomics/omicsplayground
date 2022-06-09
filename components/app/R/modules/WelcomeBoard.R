@@ -52,38 +52,38 @@ WelcomeBoardUI <- function(id) {
 
   div(
       id = "welcome-page",
-      style = "text-align:center;background-color:#eaf7fd;",
+      ##style = "text-align:center;background-color:#eaf7fd;",
+      ##style = "text-align:center;",      
       br(),      
       br(),
       div(shiny::textOutput(ns("welcome")), id="welcome-text"),
-      h3("What would you like to do today?"),
+      h2("What would you like to do today?"),
       br(),
       br(),    
       br(),
-      br(),    
       div(
           class = "row",
           id = "welcome-buttons",
           div(
               class = "col-md-5",
-              h3("I just wanna try..."),
+              h3("I am new..."),
               tags$a(
                   id = "init-example-data",
                   "Try example dataset",
-                  class = "btn btn-outline-primary welcome-btn"
+                  class = "btn btn-outline-info welcome-btn"
               )
           ),
           div(
               class = "col-md-7",
               h3("I'm an existing user..."),
-              tags$button(
-                  id = "init-load-data",
-                  "Use my saved data",
-                  class = "btn btn-outline-primary welcome-btn"
-              ),
               tags$a(
                   id = "init-upload-data",
                   "Upload new data",
+                  class = "btn btn-outline-info welcome-btn"
+              ),
+              tags$button(
+                  id = "init-load-data",
+                  "Use my saved data",
                   class = "btn btn-outline-primary welcome-btn"
               )
           )

@@ -4,6 +4,20 @@ html {
     min-height: 800px;
   }
 
+
+  h2 {
+      font-size: 1.85em;
+  }
+  
+  h3 {
+      font-size: 1.5em;
+  }
+  
+  h4 {
+      font-weight: 600;
+      font-size: 1.2em;
+  }
+  
   #welcome-page {
     min-height: 100vh;
   }
@@ -23,12 +37,11 @@ html {
   /* ---------------------------- template specfic -------------------------- */
 
   body {
-    a {
-      color: $main;
-      text-decoration: none;
-    }
-
-    font-size: 14px;
+      a {
+	  color: $main;
+	  text-decoration: none;
+      }      
+      font-size: 14px;
   }
 
   /* space in innner tabpanes */
@@ -134,14 +147,13 @@ html {
     line-height: 1.3em;
   }
 
-  .caption,
-  .caption2 {
-    font-size: 0.9em;
+  .caption,.caption2 {
+    font-size: 0.95em;
     font-weight: 400;
-    line-height: 1.1em;
-    position: relative;
-    padding: 0.5rem 0 1.2rem 0;
-    bottom: 0px;
+    line-height: 1.2em;
+//    position: relative;
+    padding: 2rem 0.3rem 2rem 0.3rem;
+//    bottom: 0px;
   }
 
   .caption2 {
@@ -259,7 +271,7 @@ html {
   /* ---------- loading page ------------- */
 
   div#load-navheader {
-    padding: 0px 25px 0px 20px;
+//    padding: 0px 25px 0px 20px;
   }
 
   div#navheader-current-section {
@@ -269,9 +281,10 @@ html {
   }
 
   div#navheader-current-dataset {
-    margin: 27px 0 0px 0;
+    margin: 24px 0 0px 40px;
+    font-size: 1.2rem;
+    color: var(--bs-primary);
   }
-
 
   /* ---------- modal dialogs ------------- */
   .modal-dialog {

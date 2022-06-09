@@ -57,7 +57,7 @@ dataview_table_contrasts_server <- function(id,
       colnames(dt) <- sub("[_. ]vs[_. ]","\nvs ",colnames(dt))
       
       DT::datatable( dt,
-                    class = 'compact cell-border stripe hover',
+                    class = 'compact hover',
                     rownames = TRUE,
                     extensions = c('Buttons','Scroller'),
                     selection = list(mode='single', target='row', selected=1),
@@ -67,7 +67,7 @@ dataview_table_contrasts_server <- function(id,
                       deferRender=TRUE,
                       autoWidth = TRUE
                     )) %>%
-        DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') %>%
+        DT::formatStyle(0, target='row', fontSize='14px', lineHeight='70%') %>%
         DT::formatStyle(colnames(dt),
                         background = color_from_middle(c(-1,1), 'lightblue', '#f5aeae'),
                         backgroundSize = '98% 88%',

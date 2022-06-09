@@ -60,7 +60,7 @@ dataview_table_resources_server <- function(id, pgx)
       req(D)
       DT::datatable( D, rownames=FALSE,
                     options = list(dom='tp', pageLength = 100),
-                    class = 'compact cell-border stripe hover' ) %>%
+                    class = 'compact hover' ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     }
     
@@ -94,7 +94,7 @@ dataview_table_resources_server <- function(id, pgx)
       req(D)
       DT::datatable( D, rownames=FALSE,
                     options = list(dom='t', pageLength = 50),
-                    class = 'compact cell-border stripe hover') %>%
+                    class = 'compact hover') %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     }
 
@@ -123,7 +123,7 @@ dataview_table_resources_server <- function(id, pgx)
       req(D)
       DT::datatable( D, rownames=FALSE,
                     options = list(dom='t', pageLength = 50),
-                    class = 'compact cell-border stripe hover') %>%
+                    class = 'compact hover') %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     }
 

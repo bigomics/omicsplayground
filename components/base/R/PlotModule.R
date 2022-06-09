@@ -157,7 +157,7 @@ PlotModuleUI <- function(id,
         ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
     }
     
-    buttons <- shiny::fillRow(
+    header <- shiny::fillRow(
         flex = c(NA,1,NA,NA,NA,NA),
         ##flex=c(NA,NA,1),
         label1,
@@ -224,7 +224,7 @@ PlotModuleUI <- function(id,
         shiny::fillCol(
                flex = c(NA,1,NA,0.001,NA),
                height = height.1,
-               div( buttons, class="plotmodule-header"),
+               div( header, class="plotmodule-header"),
                outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>% shinycssloaders::withSpinner(),                              
                caption,
                shiny::div(class="popup-plot",
@@ -656,7 +656,6 @@ PlotModuleServer <- function(
               download.png = download.png,
               download.html = download.html,
               download.csv = download.csv,
-              ##buttons = buttons,
               ##getCaption = caption.fun,
               saveHTML = saveHTML,
               ## outputFunc = outputFunc,

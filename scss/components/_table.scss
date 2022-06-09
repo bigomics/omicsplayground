@@ -4,6 +4,12 @@ html {
 	padding: 0;
     }
 
+    .tablewidget-header {
+	border-bottom: 1px solid #ccc;
+	height: 24px;
+	margin-bottom: 5px;
+    }
+    
     .table-caption {
 	font-size: 13px;
 	font-weight: 400;
@@ -29,12 +35,27 @@ html {
     }
 
     div.dataTables_wrapper div.dataTables_filter input {
-	width: 400px;
+	width: 350px;
+	background-color: #f7fafd;	
     }
     
     table.dataTable {
 	border-collapse: collapse !important;
     }
 
+    table.dataTable td, table.dataTable th {
+	border-bottom: solid 1px #aaa !important;
+//	border-style: none !important;
+    }
+    table.dataTable>thead>tr>th {
+	font-size: 14px;
+    }
 
+    .table.dataTable tbody td.active, .table.dataTable tbody tr.active td {
+	background-color: #F7FAFD;
+	color: black; 
+	font-weight: 600;
+    }
+    
 }
+
