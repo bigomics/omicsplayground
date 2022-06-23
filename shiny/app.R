@@ -380,7 +380,7 @@ server = function(input, output, session) {
         
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
-        shiny::withProgress(message="initializing modules ...", value=0, {
+        shiny::withProgress(message="preparing your dashboard ...", value=0, {
             if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
             if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
             if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    

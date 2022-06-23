@@ -22,6 +22,14 @@ run.docker:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
+run.docker2:
+	@echo running docker $(TAG) at port 4000
+	docker run --rm -p 4000:3838 -v /home/kwee/Playground/pgx:/omicsplayground/data bigomics/omicsplayground:$(TAG)
+
+run.docker3:
+	@echo running docker $(TAG) at port 4000
+	docker run --rm -p 4000:3838 -v /home/kwee/Playground/omicsplayground/data:/omicsplayground/data -v /home/kwee/Playground/omicsplayground-dev/libx:/omicsplayground/libx bigomics/omicsplayground:$(TAG)
+
 build.docker:
 	@echo building docker $(TAG) from branch $(BRANCH) 
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \

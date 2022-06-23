@@ -917,7 +917,8 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     res <- list(
         loaded = loadedDataset,
         inputData = inputData,
-        auth = auth
+        auth = auth,
+        pgxdir = getPGXDIR
         ##inputData = currentPGX,
         ##usermode = shiny::reactive({ USERMODE() })
     )

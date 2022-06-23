@@ -37,6 +37,7 @@ CompareBoard <- function(input, output, session, env)
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
+    pgxdir    <- env[["load"]][["pgxdir"]]
     ## selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     ## selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
@@ -129,7 +130,9 @@ CompareBoard <- function(input, output, session, env)
         sel1 <- comparisons1[1]
         shiny::updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)        
 
-        pgx.files <- sort(dir("../data",pattern="pgx$"))
+        pgxdir2 <- "../data"
+        pgxdir2 <- pgxdir()
+        pgx.files <- sort(dir(pgxdir2,pattern="pgx$"))
         shiny::updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))        
        
         ##pheno <- colnames(ngs$samples)
@@ -189,7 +192,9 @@ CompareBoard <- function(input, output, session, env)
         if(input$dataset2 == "<this>") {
             ngs <- inputData()
         } else {
-            load(file.path("../data",input$dataset2))
+            pgxdir2 <- "../data"
+            pgxdir2 <- pgxdir()            
+            load(file.path(pgxdir2,input$dataset2))
         }
         comparisons2 <- names(ngs$gx.meta$meta)
         sel2 <- tail(head(comparisons2,2),1)
