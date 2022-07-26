@@ -14,8 +14,9 @@ dataview_plot_totalcounts_ui <- function(id, label='', height=c(600,800)) {
         ns("pltmod"),
         title = "Total counts",
         label = label,
-        outputFunc = plotOutput,
-        outputFunc2 = plotOutput,        
+        plotlib = "plotly",
+        #outputFunc = plotOutput,
+        #outputFunc2 = plotOutput,        
         info.text = info_text,
         options = NULL,
         download.fmt=c("png","pdf","csv"),         
@@ -31,67 +32,90 @@ dataview_plot_totalcounts_server <- function(id,
                                              watermark=FALSE)
 {
   moduleServer( id, function(input, output, session) {
-    
-    plot_data  <- shiny::reactive({
       
-      data_groupby <- r.data_groupby()
+      plot_data  <- shiny::reactive({
+          
+          data_groupby <- r.data_groupby()
+          
+          tbl = getCountsTable()
+          req(tbl)
+          
+          ylab = "total counts"
+          if(data_groupby != "<ungrouped>") {
+              ylab = "mean total counts"
+          }
+          
+          res <- list(
+              df = data.frame(
+                  sample = names(tbl$total.counts),
+                  counts = tbl$total.counts
+              ),
+              ylab = ylab
+          )
+          return(res)
+      })
       
-      tbl = getCountsTable()
-      req(tbl)
       
-      ylab = "counts (million)"
-      if(data_groupby != "<ungrouped>") {
-        ylab = "average counts (million)"
+      plot.RENDER <- function() {
+          
+          res <- plot_data()
+          shiny::req(res)
+          df <- res[[1]]
+          
+          ## ---- xlab ------ ###
+          names.arg = df$sample
+          if( length(names.arg) > 20){ names.arg = "" }
+          cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+          
+          par(mar=c(8,4,2,0.5), mgp=c(2.2,0.8,0))
+          barplot(
+              df$counts/1e6, las=3, border = NA,
+              col=rgb(0.2,0.5,0.8,0.8), 
+              cex.names = cex.names,
+              cex.lab = 1,
+              ylab = paste(res$ylab,"(M)"),
+              ylim = c(0,max(df$counts)/1e6)*1.1,
+              names.arg = names.arg
+          )
       }
       
-      res <- list(
-        total.counts = tbl$total.counts,
-        ylab = ylab
-      )
-      return(res)
-    })
-    
+      modal_plot.RENDER <- function() {
+          plot.RENDER()
+      }
 
-    plot.RENDER <- function() {
+      plotly.RENDER <- function() {
+          
+          res <- plot_data()
+          shiny::req(res)
+          df <- res[[1]]
 
-      res <- plot_data()
-      shiny::req(res)
+          fig <- plotly::plot_ly(
+              data = df,
+              x = ~sample,
+              y = ~counts,
+              type = 'bar'
+          ) %>% plotly::layout(
+              yaxis = list( title = res$ylab),
+              xaxis = list( title = "")              
+          )
+          fig
+      }
       
-      ## ---- xlab ------ ###
-      names.arg = names(res$total.counts)
-      if( length(names.arg) > 20){ names.arg = "" }
-      cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+      modal_plotly.RENDER <- function() {
+          plotly.RENDER()
+      }
       
-      par(mar=c(8,4,2,0.5), mgp=c(2.2,0.8,0))
-      barplot(
-        res$total.counts/1e6, las=3, border = NA,
-        col=rgb(0.2,0.5,0.8,0.8), 
-        cex.names = cex.names,
-        cex.lab = 1,
-        ylab = res$ylab,
-        ylim = c(0,max(res$total.counts)/1e6)*1.1,
-        names.arg = names.arg
-      )
-    }
-    
-    modal_plot.RENDER <- function() {
-      plot.RENDER()
-    }
-    
     PlotModuleServer(
-      "pltmod",
-      plotlib = "base",
-      plotlib2 = "base",
-      func = plot.RENDER,
-      func2 = modal_plot.RENDER,
-      csvFunc = plot_data,   ##  *** downloadable data as CSV
-      renderFunc = shiny::renderPlot,
-      renderFunc2 = shiny::renderPlot,        
-      res = c(90,170)*1,                ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+        "pltmod",
+        plotlib = "plotly",
+        func = plotly.RENDER,
+        func2 = modal_plotly.RENDER,
+        csvFunc = plot_data,   ##  *** downloadable data as CSV
+        res = c(90,170)*1,                ## resolution of plots
+        pdf.width = 6, pdf.height = 6,
+        add.watermark = watermark
     )
-
+      
   })  ## end of moduleServer
 }
 

@@ -30,6 +30,10 @@ run.docker:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
+run.docker2:
+	@echo running docker $(TAG) at port 4001
+	docker run --rm -p 4001:3838 bigomics/omicsplayground:$(TAG)
+
 build.base:
 	@echo building docker BASE
 	docker build --no-cache \

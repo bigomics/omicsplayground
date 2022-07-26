@@ -452,7 +452,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
         logout.JScallback = "function(x){logout();quit();window.location.assign('/logout');}"
     }
 
-    ## This will be called upon user logout after the logout() JS call
+    ## This will be called upon user logout *after* the logout() JS call
     observeEvent( input$userLogout, {
       message("[SERVER] >>>>>>>>> observe::input$userLogout reacted")
       reset_timer()

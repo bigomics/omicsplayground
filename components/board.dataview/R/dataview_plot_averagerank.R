@@ -6,14 +6,14 @@
 dataview_plot_averagerank_ui <- function(id, label='', height=c(350,600)) {
 
     ns <- shiny::NS(id)
-    info_text = paste0('Ranking of the average expression of the selected gene.')
+    info_text = paste0('Ranking of the selected gene by decreasing average expression.')
     
     PlotModuleUI(
         ns("pltsrv"),
         title = "Average rank",
         label = label,
-        outputFunc = plotOutput,
-        outputFunc2 = plotOutput,        
+        outputFunc = plotly::plotlyOutput,
+        outputFunc2 = plotly::plotlyOutput,
         info.text = info_text,
         options = NULL,
         download.fmt=c("png","pdf","csv"),         
@@ -54,15 +54,16 @@ dataview_plot_averagerank_server <- function(id,
 
             sel <- which(sub(".*:","",names(mean.fc)) == gene)
             
-            list(
+            pd <- list(
                 df = data.frame(mean.fc=mean.fc),
                 sel = sel,
                 gene = gene,
                 ylab = ylab
             )
+            pd
         })
 
-        plot.RENDER <- function() {
+        plot.RENDER.save <- function() {
             pd <- plot_data()
             req(pd)
             
@@ -78,22 +79,69 @@ dataview_plot_averagerank_server <- function(id,
             points( sel, mean.fc[sel], type="h", lwd=2, col="black")
             text( sel, mean.fc[sel], gene, pos=3, cex=0.9)
         }
-           
+
+        plot.RENDER <- function() {
+            pd <- plot_data()
+            req(pd)
+            
+            mean.fc <- log2(pd$df$mean.fc)
+            mean.fc <- pd$df$mean.fc            
+            sel  <- pd$sel
+            gene <- pd$gene
+            ylab <- pd$ylab
+
+            ## subsample for speed
+            ii <- 1:length(mean.fc)
+            if(length(ii) > 200) {
+                ii <- c(1:200,seq(201,length(mean.fc),10))
+            }
+            
+            fig <- plotly::plot_ly(
+                x = ii,
+                y = mean.fc[ii],
+                type = 'scatter',
+                mode = 'lines',
+                fill = 'tozeroy'
+            )
+
+            fig <- fig %>%
+                plotly::add_lines(x = sel, y = c(0,mean.fc[sel]),
+                    type="scatter", mode="lines" ) %>%
+                plotly::add_annotations(
+                    x = sel,
+                    y = mean.fc[sel],
+                    ax = 20,
+                    ay = -40,
+                    text = gene)
+            
+            fig <- fig %>%
+                plotly::layout(
+                    showlegend = FALSE,
+                    xaxis = list(title = 'ordered genes'),
+                    yaxis = list(title = ylab)
+                )
+            fig %>% plotly_default1()            
+        }
+        
         modal_plot.RENDER <- function() {
-            plot.RENDER()
+            fig <- plot.RENDER() %>%
+                plotly::layout(
+                    showlegend = FALSE,
+                    font = list(
+                        size = 18
+                    )
+                )
+            ## fig <- plotly::style(fig, marker.size = 14)
+            fig
         }
         
         PlotModuleServer(
             "pltsrv",
-            plotlib = "base",
-            plotlib2 = "base",
+            plotlib = "plotly",
+            plotlib2 = "plotly",
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
-            renderFunc = shiny::renderPlot,
-            renderFunc2 = shiny::renderPlot,        
-            ##renderFunc = shiny::renderCachedPlot,
-            ##renderFunc2 = shiny::renderCachedPlot,        
             res = c(90,170)*1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark

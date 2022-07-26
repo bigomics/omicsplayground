@@ -8,14 +8,13 @@ dataview_plot_abundance_ui <- function(id, label='', height=c(600,800)) {
     ns <- shiny::NS(id)
 
     menu_grouped = '<code>grouped</code>'
-    info_text = paste0('Barplot showing the percentage of counts in terms of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
+    info_text = paste0('Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
     
     PlotModuleUI(
         ns("pltmod"),
         title = "Abundance of major gene types",
         label = label,
-        outputFunc = plotOutput,
-        outputFunc2 = plotOutput,        
+        plotlib = "plotly",
         info.text = info_text,
         options = NULL,
         download.fmt=c("png","pdf","csv"),         
@@ -37,13 +36,14 @@ dataview_plot_abundance_server <- function(id,
             dbg("[dataview_counts_histplot_server:plot_data] reacted!")
             res <- getCountsTable()
             shiny::req(res)
-            list(
+            res <- list(
                 prop.counts = res$prop.counts
             )
+            res
         })
 
         plot.RENDER <- function() {
-
+            
             res <- plot_data()
             shiny::req(res)            
             
@@ -76,16 +76,58 @@ dataview_plot_abundance_server <- function(id,
         modal_plot.RENDER <- function() {
             plot.RENDER()
         }
+
+        plotly.RENDER <- function() {
+
+            res <- plot_data()
+            shiny::req(res)            
+            
+            long.data <- reshape2::melt( head(res$prop.counts,5) )
+            colnames(long.data) <- c("gene","sample","value")
+
+            klr1 <- colorRampPalette(
+                c(rgb(0.2,0.5,0.8), rgb(0.8,0.9,0.99)))(5)            
+            klr1 <- rev(RColorBrewer::brewer.pal(5, "Blues"))
+            
+            ## stacked barchart
+            fig <- plotly::plot_ly(
+                long.data,
+                x = ~sample,
+                y = ~value,
+                color = ~gene,
+                ##colors = "Blues",
+                colors = klr1,
+                type = 'bar'
+                #marker = list(color = klr1)
+            )  %>% plotly::layout(
+                barmode = 'stack',
+                ## legend = list(orientation = 'h'),
+                xaxis = list( title= ""),
+                yaxis = list( title= "cumulative proportion (%)")                
+            )
+            fig
+            
+        }
         
+        modal_plotly.RENDER <- function() {
+            fig <- plotly.RENDER() %>%
+                plotly::layout(
+                    showlegend = TRUE,
+                    font = list(
+                        size = 18
+                    )
+                )
+            ## fig <- plotly::style(fig, marker.size = 14)
+            fig
+        }
+
         PlotModuleServer(
             "pltmod",
-            plotlib = "base",
-            plotlib2 = "base",
-            func = plot.RENDER,
-            func2 = modal_plot.RENDER,
+            plotlib = "plotly",
+            ##plotlib2 = "base",
+            func = plotly.RENDER,
+            func2 = modal_plotly.RENDER,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
-            renderFunc = shiny::renderPlot,
-            renderFunc2 = shiny::renderPlot,        
             res = c(90,170),                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark

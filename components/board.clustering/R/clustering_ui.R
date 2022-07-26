@@ -58,7 +58,7 @@ ClusteringUI <- function(id) {
     div(
         class = "row",
         div(
-            class = "col-md-6",
+            class = "col-md-7",
             shiny::tabsetPanel(
                 id = ns("tabs1"),
                 shiny::tabPanel("Heatmap", 
@@ -72,14 +72,15 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("PCA/tSNE",
-                    plotWidget(ns("hm_PCAplot")),
-                    tags$div( class="caption",
-                        HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
-                        samples as a scatterplot in reduced dimension (2D or 3D).
-                        Samples that are similar are clustered near to each other, while samples with different
-                        expression are positioned farther away. Groups of samples with similar profiles
-                        will appear as <i>clusters</i> in the plot.")
-                    )
+                    plot_clustpca_ui( ns("PCAplot"), label="", height=c("70vh","70vh") )                     
+                    ##plotWidget(ns("hm_PCAplot")),
+                    ## tags$div( class="caption",
+                    ##     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
+                    ##     samples as a scatterplot in reduced dimension (2D or 3D).
+                    ##     Samples that are similar are clustered near to each other, while samples with different
+                    ##     expression are positioned farther away. Groups of samples with similar profiles
+                    ##     will appear as <i>clusters</i> in the plot.")
+                    ## )
                 ),
                 shiny::tabPanel("Parallel",
                     plotWidget(ns("hm_parcoord")),
@@ -98,7 +99,7 @@ ClusteringUI <- function(id) {
             ),
         ),
         div(
-            class = "col-md-6",
+            class = "col-md-5",
             shiny::tabsetPanel(
                 id = ns("tabs2"),
                 shiny::tabPanel("Annotate clusters",

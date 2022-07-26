@@ -763,7 +763,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     } else {
         splash.content <- div(
             id="splash-login",
-            top,
+            ## top,
             div.username,
             div.email,
             div.password,
@@ -915,7 +915,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
             title,
             br(),
             br(),             
-            shiny::img(src="static/mascotte-sc.png", class = "img-fluid"),
+            shiny::img(src="static/mascotte-sc.png", class = "img-fluid", id = "splash-image"),
         ),
         shiny::div(
             class = "col-md-3 offset-md-2",

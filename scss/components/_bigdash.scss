@@ -22,13 +22,13 @@ html {
         background-position: 3.5rem 5rem;
     }
 
-    // disable on normal dropdown elements
-    .dropdown-toggle::after {
-	content: "";	
+    // disable on button dropdown elements
+    .btn.dropdown-toggle::after {
+	content: none;	
     }    
 
     // only on navbars
-    .nav-link .dropdown-toggle::after {
+    .nav-link.dropdown-toggle::after {
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: "\f078";
