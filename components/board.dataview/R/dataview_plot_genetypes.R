@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dataview_plot_abundance_ui <- function(id, label='', height=c(600,800)) {
+dataview_plot_genetypes_ui <- function(id, label='', height=c(600,800)) {
 
     ns <- shiny::NS(id)
 
@@ -12,7 +12,7 @@ dataview_plot_abundance_ui <- function(id, label='', height=c(600,800)) {
     
     PlotModuleUI(
         ns("pltmod"),
-        title = "Abundance of major gene types",
+        title = "Relative abundance of major gene types",
         label = label,
         plotlib = "plotly",
         info.text = info_text,
@@ -24,7 +24,7 @@ dataview_plot_abundance_ui <- function(id, label='', height=c(600,800)) {
     
 }
 
-dataview_plot_abundance_server <- function(id, 
+dataview_plot_genetypes_server <- function(id, 
                                            getCountsTable,
                                            watermark=FALSE)
 {
@@ -37,7 +37,8 @@ dataview_plot_abundance_server <- function(id,
             res <- getCountsTable()
             shiny::req(res)
             res <- list(
-                prop.counts = res$prop.counts
+                prop.counts = res$prop.counts,
+                gset.genes = res$gset.genes                
             )
             res
         })
@@ -46,31 +47,40 @@ dataview_plot_abundance_server <- function(id,
             
             res <- plot_data()
             shiny::req(res)            
-            
+
+            nsamples <- ncol(res$prop.counts)
             klr <- colorRampPalette(
                 c(rgb(0.2,0.5,0.8,0.8),
-                  rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$prop.counts))
+                  rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nsamples)
         
             ymax = max(colSums(res$prop.counts, na.rm=TRUE))
             names.arg = colnames(res$prop.counts)
             if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
             cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-
-            par(mar=c(8,3.5,2,0), mgp=c(2.2,0.8,0))
-            barplot(res$prop.counts, las=3,
-                    cex.lab=1.0, border = NA,
-                    ylim = c(0,ymax)*1.6, ylab = "abundance (%)",
-                    names.arg = names.arg, cex.names = cex.names,
-                    col = klr)
-            leg <- legend("topleft", legend=rev(rownames(res$prop.counts)),
+            
+            par(mfrow=c(1,2),mar=c(4,0,2,0.5), mgp=c(2.2,0.8,0))
+            frame()
+            barplot(
+                t(res$prop.counts) / nsamples,
+                horiz=TRUE, las=1, 
+                cex.lab=1.0, border = NA,
+                #ylim = c(0,ymax)*1.6, ylab = "abundance (%)",
+                ##ylim = c(0,ymax)*1.6,
+                xlab = "abundance (%)",                
+                #names.arg = names.arg, cex.names = cex.names,
+                col = klr
+            )
+            
+            leg <- legend("topright", legend=rev(colnames(res$prop.counts)),
                           fill=rev(klr),cex=1, y.intersp=0.75, bty="n", plot = FALSE)
             leftx  <- leg$rect$left*0.9
             rightx <- leg$rect$right*0.9
             topy <- leg$rect$top
             bottomy <- leg$rect$bottom
             legend(x = c(leftx, rightx), y = c(topy, bottomy),
-                   legend=rev(rownames(res$prop.counts)),
+                   legend=rev(colnames(res$prop.counts)),
                    fill=rev(klr), bty="n", cex=0.9, y.intersp=0.75)
+
         }
 
         modal_plot.RENDER <- function() {
@@ -82,31 +92,26 @@ dataview_plot_abundance_server <- function(id,
             res <- plot_data()
             shiny::req(res)            
             
-            long.data <- reshape2::melt( head(res$prop.counts,5) )
-            colnames(long.data) <- c("gene","sample","value")
-
-            klr1 <- colorRampPalette(
-                c(rgb(0.2,0.5,0.8), rgb(0.8,0.9,0.99)))(5)            
-            klr1 <- rev(RColorBrewer::brewer.pal(5, "Blues"))
+            avg.prop <- head( rowMeans(res$prop.counts), 15)
+            genes  <- head(res$gset.genes, 15)            
+            family <- paste0(names(avg.prop),"  ")
+            family <- factor(family, levels=family)
+            
+            df <- data.frame( family = family, prop = avg.prop, genes = genes)
             
             ## stacked barchart
             fig <- plotly::plot_ly(
-                long.data,
-                x = ~sample,
-                y = ~value,
-                color = ~gene,
-                ##colors = "Blues",
-                colors = klr1,
-                type = 'bar'
-                #marker = list(color = klr1)
+                df,
+                x = ~prop,
+                y = ~family,
+                type = 'bar',
+                hovertext = ~paste("Gene family:",family,"<br>Genes:",genes)
+                ##hoverinfo = "text"
             )  %>% plotly::layout(
-                barmode = 'stack',
-                ## legend = list(orientation = 'h'),
-                xaxis = list( title= ""),
-                yaxis = list( title= "cumulative proportion (%)")                
+                yaxis = list( title= ""),
+                xaxis = list( title= "proportion (%)")                
             )
             fig
-            
         }
         
         modal_plotly.RENDER <- function() {

@@ -20,6 +20,20 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/hyDEk_MCaTk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 ') 
+
+    ##================================================================================
+    ##============================ MODULES ===========================================
+    ##================================================================================
+
+      r.samples <- reactive({
+          ##colnames(getFilteredMatrix())
+          selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
+      })
+      
+      
+    plot_clustpca_server("PCAplot", pgx, r.samples = r.samples, watermark=FALSE)
+
+      
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -1042,10 +1056,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
         if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
-        ## plt <- plt %>% plotly::layout(title=title) %>% 
-        ##     plotly::config(displayModeBar = FALSE)
         plt <- plt %>% 
-            ##config(displayModeBar = FALSE) %>%
             plotly::config(displayModeBar = TRUE) %>%
             ##config(modeBarButtonsToRemove = all.plotly.buttons ) %>%
             plotly::config(displaylogo = FALSE) %>% 
@@ -1540,7 +1551,7 @@ displays the expression levels of selected genes across all conditions in the an
         func = clustannot_plots.PLOTLY, plotlib="plotly",
         download.fmt = c("png","pdf"),
         options = clustannot_plots_opts,
-        height = c(360,600), width = c(500,1000),
+        height = c(360,600), width = c("100%",1000),
         pdf.width=8, pdf.height=5, res=80,
         title="Functional annotation of clusters", label="a",
         info.text = clustannot_plots_text,

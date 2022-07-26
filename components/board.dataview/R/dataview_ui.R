@@ -78,7 +78,7 @@ DataViewUI <- function(id) {
             ),
             div(
               class = "col-md-4",
-              dataview_plot_tsne_ui(ns("tsneplot"),height=c("30vh","70vh"))
+              dataview_plot_tsne_ui(ns("tsneplot"),height=imgH)
             )
           ),
           div(
@@ -125,12 +125,12 @@ DataViewUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-6",
-          dataview_plot_abundance_ui(ns("counts_abundance"), height=imgH)
+          class = "col-md-5",
+          dataview_plot_genetypes_ui(ns("counts_genetypes"), height=imgH)
         ),
         div(
-          class = "col-md-6",
-          dataview_plot_averagecounts_ui(ns("counts_averagecounts"), height=imgH)
+          class = "col-md-7",
+          dataview_plot_abundance_ui(ns("counts_abundance"), height=imgH)
         )
       ),
       tags$div(

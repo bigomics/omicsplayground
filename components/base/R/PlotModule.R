@@ -38,7 +38,7 @@ PlotModuleUI <- function(id,
                        caption="",
                        caption2=info.text, ## header=NULL,
                        plotlib = "base",
-                       plotlib2 = "base",
+                       plotlib2 = plotlib,
                        outputFunc = NULL,
                        outputFunc2 = NULL,
                        no.download = FALSE,
@@ -86,7 +86,8 @@ PlotModuleUI <- function(id,
         )
         FUN
     }
-    
+
+    if(is.null(plotlib2))   plotlib2 <- plotlib
     if(is.null(outputFunc))  outputFunc  <- getOutputFunc(plotlib)
     if(is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)    
     
@@ -208,7 +209,7 @@ PlotModuleUI <- function(id,
     }
 
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
-    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:60px 300px;}")
+    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")    
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
     

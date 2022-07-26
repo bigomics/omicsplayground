@@ -45,7 +45,7 @@ $(function(){
 			.first()
 			.css('display', 'none');
 
-		$('.settings-label').click()
+	        // $('.settings-label').click()
 	}, 250);
 
 	$('#init-load-data').on('click', (e) => {

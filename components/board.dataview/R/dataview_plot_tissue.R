@@ -14,8 +14,9 @@ dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
         ns("pltmod"),
         title = "Tissue expression (GTEX)",
         label = label,
-        outputFunc = plotOutput,
-        outputFunc2 = plotOutput,        
+        plotlib = "plotly",
+        #outputFunc = plotOutput,
+        #outputFunc2 = plotOutput,        
         info.text = info_text,
         options = NULL,
         download.fmt=c("png","pdf","csv"),         
@@ -41,7 +42,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
             pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
             hgnc.gene = toupper(as.character(pgx$genes[pp,"gene_name"]))
 
-            tx = tissue.klr = NULL
+            tx = tissue.klr = grp = NULL
             if( hgnc.gene %in% rownames(TISSUE)) {
                 tx = TISSUE[hgnc.gene,]
                 grp = TISSUE.grp[names(tx)]
@@ -55,7 +56,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
                 sorting="no"
                 if(sorting=="decr") jj <- order(-tx)
                 if(sorting=="inc") jj <- order(tx)
-
+                
                 tx <- tx[jj]
                 tissue.klr <- tissue.klr[jj]
             }
@@ -64,6 +65,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
                 df = data.frame(
                     tissue = names(tx),
                     x = tx,
+                    group = grp,
                     color = tissue.klr
                 ),
                 gene = hgnc.gene,
@@ -73,7 +75,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
 
         })
         
-        plot.RENDER <- function() {
+        plot.RENDER.base <- function() {
             pdat <- plot_data()
             shiny::req(pdat)
 
@@ -91,17 +93,46 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
 
         }
         
+        plot.RENDER <- function() {
+            pdat <- plot_data()
+            shiny::req(pdat)
+            
+            df   <- pdat$df
+            ylab <- pdat$ylab
+            gene <- pdat$gene
+
+            ## plot as regular bar plot
+            df$tissue <- factor(df$tissue, levels=df$tissue)
+            fig <- plotly::plot_ly(
+                data = df,
+                type = 'bar', ## name = pd$gene
+                x = ~tissue, y = ~x,
+                marker = list(color = ~color)
+            ) %>% plotly::layout(
+                xaxis = list(title = ""),
+                yaxis = list(title = ylab)                
+            )
+            fig
+        }
+
         modal_plot.RENDER <- function() {
-            plot.RENDER()
+            plot.RENDER() %>%
+                plotly::layout(
+                    ## showlegend = TRUE,
+                    font = list(
+                        size = 18
+                    )
+                )
         }
         
         PlotModuleServer(
             "pltmod",
-            csvFunc = plot_data,   ##  *** downloadable data as CSV
+            plotlib = "plotly",
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
-            renderFunc = shiny::renderCachedPlot,
-            renderFunc2 = shiny::renderCachedPlot,        
+##          renderFunc = shiny::renderCachedPlot,
+##          renderFunc2 = shiny::renderCachedPlot,        
+            csvFunc = plot_data,   ##  *** downloadable data as CSV
             res = c(90,170),                ## resolution of plots
             pdf.width = 8, pdf.height = 4,
             add.watermark = watermark

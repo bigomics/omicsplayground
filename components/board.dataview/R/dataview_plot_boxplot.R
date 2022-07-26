@@ -3,6 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+
 dataview_plot_boxplot_ui <- function(id, label='', height=c(600,800)) {
 
     ns <- shiny::NS(id)
@@ -13,6 +14,7 @@ dataview_plot_boxplot_ui <- function(id, label='', height=c(600,800)) {
     PlotModuleUI(
         ns("pltmod"),
         title = "Counts distribution",
+        plotlib = "plotly",
         label = label,
         info.text = info_text,
         height = height
@@ -28,8 +30,10 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
         plot_data  <- shiny::reactive({
             res = getCountsTable()
             req(res)
+
             list(
-                log2counts = res$log2counts
+                counts = res$log2counts,
+                sample = colnames(res$log2counts)
             )
         })
             
@@ -40,7 +44,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
             par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
             ## ---- xlab ------ ###
             xaxt="l"
-            names.arg = colnames(res$log2counts)
+            names.arg = res$sample
             if( length(names.arg) > 20){
                 names.arg = rep("",length(names.arg))
                 xaxt = "n"
@@ -48,8 +52,8 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
             
             cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
             boxplot(
-                res$log2counts,
-                col=rgb(0.2,0.5,0.8,0.4),
+                res$counts,
+                col = rgb(0.2,0.5,0.8,0.4),
                 names = names.arg,
                 cex.axis = cex.names,
                 border = rgb(0.824,0.824,0.824,0.9),
@@ -61,20 +65,46 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
                 varwidth = FALSE
             )
         }
-        
+
+        plotly.RENDER <- function() {
+            
+            res <- plot_data()
+            shiny::req(res)
+
+            df <- res$counts[,]
+            long.df <- reshape2::melt(df)
+            colnames(long.df) <- c("gene","sample","value")
+            
+            ## boxplot
+            fig <- plotly::plot_ly(
+                long.df,
+                x = ~sample,
+                y = ~value,
+                type = "box"
+            ) %>%
+                plotly::layout(
+                    yaxis = list(title = "counts (log2)"),
+                    xaxis = list(title = "")
+                )
+            fig
+        }
+               
         modal_plot.RENDER <- function() {
             plot.RENDER()
+        }
+
+        modal_plotly.RENDER <- function() {
+            plotly.RENDER()
         }
         
         PlotModuleServer(
             "pltmod",
-            plotlib = "base",
-            plotlib2 = "base",
-            func = plot.RENDER,
-            func2 = modal_plot.RENDER,
+            plotlib = "plotly",
+            func = plotly.RENDER,
+            func2 = modal_plotly.RENDER,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
-            renderFunc = shiny::renderPlot,
-            renderFunc2 = shiny::renderPlot,        
+            #renderFunc = shiny::renderPlot,
+            #renderFunc2 = shiny::renderPlot,        
             res = c(90,170),                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark

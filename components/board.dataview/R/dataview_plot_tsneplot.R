@@ -13,8 +13,7 @@ dataview_plot_tsne_ui <- function(id, label='', height=c(350,600)) {
     
     PlotModuleUI(
         ns("pltmod"),
-        outputFunc = plotOutput,
-        outputFunc2 = plotOutput,        
+        plotlib = "plotly",
         info.text = info_text,
         options = options,
         download.fmt=c("png","pdf","csv"),         
@@ -32,7 +31,7 @@ dataview_plot_tsne_server <- function(id,
                                       r.samples = reactive(""),
                                       r.data_type = reactive("counts"),            
                                       r.groupby = reactive(""),
-                                      watermark=FALSE
+                                      watermark = FALSE
                                       )
 {
     moduleServer( id, function(input, output, session) {
@@ -82,26 +81,28 @@ dataview_plot_tsne_server <- function(id,
             fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
             ##fc1 <- tanh(0.99 * gx/sd(gx))
             fc2 <- (fc1 - min(fc1))            
-            jj2 <- order(abs(fc1))
             
-            data <- data.frame(pos[jj2,])
-            colnames(data) <- c("pos_x", "pos_y")
-            data$fc2 <- fc2
+            data <- data.frame(
+                pos_x = pos[,1],
+                pos_y = pos[,2],
+                expression = gx,
+                fc2 = fc2,
+                name = rownames(pos)
+            )
             
             grp <- NULL
             filt.groupby <- groupby
-            
             if(!is.null(filt.groupby) && filt.groupby %in% colnames(pgx$samples)) {
                 grp <- factor(pgx$samples[samples, filt.groupby])
-                data$grp <- grp
+                data$group <- grp
             }
             
-            return(data)
+            return(list(data=data, gene=gene))
         })
 
         plot.RENDER <- function() {        
             
-            data <- plot_data()
+            data <- plot_data()[[1]]
             shiny::req(data)
             
             fig_base <- 
@@ -120,20 +121,21 @@ dataview_plot_tsne_server <- function(id,
             
             plot_dl$base <- fig_base
             
-            if (!is.null(plot_data()$grp)) {
+            if (!is.null(plot_data()$group)) {
                 fig <- fig_base +
                     ggforce::geom_mark_hull(
-                                 aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-                                 color = "grey33", 
-                                 size = .4,
-                                 alpha = .33 / length(unique(plot_data()$grp)),
-                                 expand = unit(2.7, "mm"), 
-                                 con.cap = unit(.01, "mm"), 
-                                 con.colour = "grey33", 
-                                 label.buffer = unit(2, "mm"),
-                                 label.fontsize = 12.5, 
-                                 label.fontface = "plain"
-                             ) +
+                        aes(fill = stage(group, after_scale = colorspace::desaturate(fill, 1)),
+                            label = group),
+                        color = "grey33", 
+                        size = .4,
+                        alpha = .33 / length(unique(plot_data()$group)),
+                        expand = unit(2.7, "mm"), 
+                        con.cap = unit(.01, "mm"), 
+                        con.colour = "grey33", 
+                        label.buffer = unit(2, "mm"),
+                        label.fontsize = 12.5, 
+                        label.fontface = "plain"
+                    ) +
                     geom_point(
                         aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
                             fill = after_scale(color)), 
@@ -157,80 +159,80 @@ dataview_plot_tsne_server <- function(id,
             }
             
             plot_dl$plot <- fig
+            ## fig <- plotly::ggplotly(fig)
             fig
         }
         
         modal_plot.RENDER <- function() {
-            plot.RENDER() +
-                guide_continuous(aes = "color", type = "steps", width = .7) +
-                theme_omics(base_size = 30, axis_num = "xy", legendnum = TRUE)
-        }
-
-        ##modal_plot.RENDER <- shiny::reactive({
-        modal_plot.RENDER.BAK <- function() {
-            
-            if(is.null(class(plot_dl$base))) {
-                message("[tsne3::modal_plot.RENDER] call plot.RENDER ")
-                tmp <- plot.RENDER()
-            }
-            
-            fig_base <- plot_dl$base +
-                ##fig_base <- plot_dl$plot +         
+            fig <- plot.RENDER() +
                 guide_continuous(aes = "color", type = "steps", width = .7) +
                 theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
-            
-            if (!is.null(plot_data()$grp)) {
-                fig <- fig_base #+
-                                        # ggforce::geom_mark_hull(
-                                        #   aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-                                        #   color = "grey33", 
-                                        #   size = .8,
-                                        #   alpha = .33 / length(unique(plot_data()$grp)),
-                                        #   expand = unit(3.4, "mm"), 
-                                        #   con.cap = unit(.01, "mm"), 
-                                        #   con.colour = "grey33", 
-                                        #   label.buffer = unit(2, "mm"),
-                                        #   label.fontsize = 22, 
-                                        #   label.fontface = "plain"
-                                        # ) +
-                                        # geom_point(
-                                        #   aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
-                                        #       fill = after_scale(color)), 
-                                        #   size = 1.8, 
-                                        #   shape = 21, 
-                                        #   stroke = .5
-                                        # ) +
-                                        # scale_x_continuous(expand = c(.15, .15)) +
-                                        # scale_y_continuous(expand = c(.15, .15)) +
-                                        # scale_fill_discrete(guide = "none")
-                
-            } else {
-                fig <- fig_base #+
-                                        # geom_point(
-                                        #   aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
-                                        #       fill = after_scale(color)), 
-                                        #   size = 4.7, 
-                                        #   shape = 21, 
-                                        #   stroke = .5
-                                        # )
-            }
+            ## plotly::ggplotly(fig)
             fig
-            ##gridExtra::grid.arrange(fig)
         }
-        ##})        
-        ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
+  
+        plotly.RENDER0 <- function() {        
+            data <- plot_data()
+            shiny::req(data)
+
+            df <- data[[1]]
+            gene <- data[[2]]
+            
+            p <- plotly::plot_ly(
+                df,
+                type = 'scatter',
+                mode = 'markers'
+            ) %>%
+                plotly::add_markers(
+                    x = ~pos_x,
+                    y = ~pos_y,
+                    color = ~expression,
+                    #text = ~name,
+                    hovertext = ~paste("Sample:",name,"<br>Gene:",gene,
+                        "<br>Expression:",expression),                    
+                    marker = list(
+                        size = 10,                    
+                        scale = "Viridis",
+                        reversescale = FALSE                
+                    )
+                ) %>%
+                plotly::layout(
+                    showlegend = FALSE,
+                    xaxis = list(title = 'tSNE-x'),
+                    yaxis = list(title = 'tSNE-y')
+                ) %>%
+                plotly_default1() ## %>% toWebGL()
+            p
+        }
+        
+        plotly.RENDER <- function() {
+            p <- plotly.RENDER0() %>%
+                plotly::hide_colorbar()
+            p
+        }
+        
+        modal_plotly.RENDER <- function() {
+            p <- plotly.RENDER0() %>%
+                plotly::layout(
+                    font = list(
+                        size = 18
+                    ),
+                    legend = list(
+                        font = list(size = 18)
+                    )
+                )
+            p <- plotly::style(p, marker.size = 20)           
+            p
+        }
         
         PlotModuleServer(
             "pltmod",
-            plotlib = "ggplot",
-            plotlib2 = "ggplot",
-            func = plot.RENDER,
-            func2 = modal_plot.RENDER,
+            plotlib = "plotly",
+            ##func = plot.RENDER,
+            ##func2 = modal_plot.RENDER,
+            func = plotly.RENDER,
+            func2 = modal_plotly.RENDER,            
             csvFunc = plot_data,             ##  *** downloadable data as CSV
-            renderFunc = shiny::renderPlot,
-            renderFunc2 = shiny::renderPlot,        
-            ##renderFunc = shiny::renderCachedPlot,
-            ##renderFunc2 = shiny::renderCachedPlot,        
             res = c(100,300)*1,              ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             ##label = label, title = "t-SNE clustering",

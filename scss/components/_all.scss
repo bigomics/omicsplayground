@@ -86,12 +86,6 @@ html {
     line-height: 1.2em;
   }
 
-  .modal-content .well {
-    font-size: 1.3em;
-    line-height: 1.2em;
-    width: 100%;
-  }
-
   .code {
     color: #1f1f1fFF;
     background-color: #F9F9F9FF;
@@ -109,7 +103,6 @@ html {
   .modal-body .gene-info-output {
     height: auto;
   }
-
 
   .bg-cover-image {
     background-color: #dde6f0;
@@ -147,18 +140,18 @@ html {
     line-height: 1.3em;
   }
 
-  .caption,.caption2 {
+  .caption, .caption2 {
     font-size: 0.95em;
     font-weight: 400;
     line-height: 1.2em;
 //    position: relative;
-    padding: 2rem 0.3rem 2rem 0.3rem;
+    padding: 0rem 0.3rem 2rem 0.3rem;
 //    bottom: 0px;
   }
 
   .caption2 {
     padding: 2.5rem 0 2rem 0;
-    font-size: 1.7rem;
+    font-size: 1.5rem;
   }
 
   .current-user {
@@ -284,43 +277,6 @@ html {
     margin: 24px 0 0px 40px;
     font-size: 1.2rem;
     color: var(--bs-primary);
-  }
-
-  /* ---------- modal dialogs ------------- */
-  .modal-dialog {
-    top: 0px;
-    box-shadow: 10px 10px 30px #999;
-  }
-
-  .modal-dialog.modal-lg {
-    width: 1400px;
-  }
-
-  .modal-dialog.modal-sm {
-    width: 400px;
-    top: 100px;
-  }
-
-  .modal-content {
-    border: 0;
-  }
-
-  .modal-backdrop {
-    background-color: #000;
-    background-color: #FFF;
-  }
-
-  .modal-backdrop.show,
-  .modal-backdrop.in {
-    opacity: 0.85;
-  }
-
-  .bg-cover-image {
-    background-color: #fff;
-  }
-
-  .popup-plot .modal-footer {
-    display: none;
   }
 
   .footer {

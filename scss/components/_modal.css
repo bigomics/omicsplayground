@@ -1,0 +1,48 @@
+html {
+
+    /* ---------- modal dialogs ------------- */
+    .modal-content .well {
+	font-size: 1.3em;
+	line-height: 1.2em;
+	width: 100%;
+    }
+
+    .modal-dialog {
+	top: 0px;
+	box-shadow: 10px 10px 30px #999;
+    }
+
+    .modal-dialog.modal-lg {
+	width: 1400px;
+    }
+
+    .modal-dialog.modal-sm {
+	width: 400px;
+	top: 100px;
+    }
+
+    .modal-content {
+	border: 0;
+    }
+
+    .modal-backdrop {
+	background-color: #000;
+	background-color: #FFF;
+    }
+
+    .modal-backdrop.show,
+    .modal-backdrop.in {
+	opacity: 0.85;
+    }
+
+    .bg-cover-image {
+	background-color: #fff;
+    }
+
+    .popup-plot .modal-footer {
+	display: none;
+    }
+    
+
+
+}

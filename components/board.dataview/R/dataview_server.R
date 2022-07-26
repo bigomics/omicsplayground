@@ -3,6 +3,9 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+##source("../../app/R/global.R",chdir=TRUE);load("../../../data/example-data.pgx")
+
+
 #' DataView module server function
 #'
 #' @description A shiny Module (server code).
@@ -210,9 +213,9 @@ DataViewBoard <- function(id, pgx)
       getCountStatistics,
       watermark = WATERMARK
     )
-
-    dataview_plot_averagecounts_server(
-      "counts_averagecounts",
+    
+    dataview_plot_genetypes_server(
+      "counts_genetypes",
       getCountStatistics,
       watermark = WATERMARK
     )
@@ -335,66 +338,46 @@ DataViewBoard <- function(id, pgx)
       total.counts = Matrix::colSums(counts,na.rm=TRUE)
       summed.counts = t(sapply(gset, function(f)
         Matrix::colSums(counts[which(gg %in% f),,drop=FALSE], na.rm=TRUE)))
-      avg.counts   = t(sapply(gset, function(f)
-        Matrix::colMeans(counts[which(gg %in% f),,drop=FALSE], na.rm=TRUE)))
       prop.counts = 100 * t(t(summed.counts) / total.counts)
 
-      head(sort(rowSums(prop.counts,na.rm=TRUE),decreasing=TRUE),10)
-      head(sort(rowSums(avg.counts,na.rm=TRUE),decreasing=TRUE),10)
-      ##jj <- order(-apply(avg.counts,1,sd,na.rm=TRUE))
-
-      jj <- head(order(-rowSums(prop.counts,na.rm=TRUE)),6)
+      ## get variation per group
+      log2counts <- log2(1+counts)
+      varx <- apply(log2counts,1,var)
+      gset.var <- sapply(gset, function(s) mean(varx[s],na.rm=TRUE))
+      gset.var
+      tail(sort(gset.var),10)
+      
+      ## sort get top 20 gene families
+      jj <- head(order(-rowSums(prop.counts,na.rm=TRUE)),20)
       prop.counts <- prop.counts[jj,,drop=FALSE]
-      jj <- head(order(-rowSums(avg.counts,na.rm=TRUE)),6)
-      avg.counts  <- avg.counts[jj,,drop=FALSE]
-      sorting="no"
-      if(sorting=="decr") {
-        total.counts <- sort(total.counts, decreasing=TRUE)
-        prop.counts  <- prop.counts[,order(-colMeans(prop.counts))]
-        avg.counts   <- avg.counts[,order(-colMeans(avg.counts))]
-        counts <- counts[,order(-colMeans(counts))]
-      }
-      if(sorting=="inc") {
-        total.counts <- sort(total.counts, decreasing=FALSE)
-        prop.counts  <- prop.counts[,order(colMeans(prop.counts))]
-        avg.counts   <- avg.counts[,order(colMeans(avg.counts))]
-        counts <- counts[,order(colMeans(counts))]
-      }
+      gset <- gset[rownames(prop.counts)]
 
+      gset.genes <- sapply(gset, function(gg) {
+          gg <- strwrap(paste(c(head(gg,20),"+ ..."),collapse=" "),40)
+          paste(gg,collapse="<br>")
+      })
+
+      ## align
       ss <- names(total.counts)
       prop.counts <- prop.counts[,ss,drop=FALSE]
-      avg.counts <- avg.counts[,ss,drop=FALSE]
       counts <- counts[,ss,drop=FALSE]
-
       log2counts <- log2(1 + counts)
-      ##log2counts[which(log2counts==0)] <- NA
-      jj <- sample(nrow(counts),100,replace=TRUE)
-      jj <- sample(nrow(counts),1000,replace=TRUE)
-
-      ## create the plots
-      par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )
-      cx1=1
-      if(length(total.counts)>12) cx1=0.9
-      if(length(total.counts)>30) cx1=0.8
-      if(length(total.counts)>50) cx1=0.7
-      if(length(total.counts)>80) cx1=0.6
 
       if(1) {
         names(total.counts) <- substring(names(total.counts),1,30)
         colnames(log2counts) <- substring(colnames(log2counts),1,30)
         colnames(prop.counts) <- substring(colnames(prop.counts),1,30)
-        colnames(avg.counts) <- substring(colnames(avg.counts),1,30)
       }
 
-      res = list(
+      res <- list(
         total.counts = total.counts,
         subtt = subtt,
-        cx1 = cx1,
         log2counts = log2counts,
-        jj = jj,
         prop.counts = prop.counts,
-        avg.counts = avg.counts
+        gset.genes = gset.genes
       )
+
+      res
     })
     
     

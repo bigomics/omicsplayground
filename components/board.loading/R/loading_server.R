@@ -30,34 +30,12 @@ LoadingBoard <- function(id,
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
     message("[LoadingBoard] pgx_dir = ",pgx_dir)
     
-    dbg("[LoadingBoard] getwd = ",getwd())
-
-    if(0) {    
-      auth <- NULL   ## shared in module
-      if(authentication == "password") {
-        auth <- shiny::callModule(
-          PasswordAuthenticationModule, "auth",
-          credentials.file = "CREDENTIALS")
-      } else if(authentication == "firebase") {
-        auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
-      } else if(authentication == "shinyproxy") {        
-        username <- Sys.getenv("SHINYPROXY_USERNAME")
-        ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE,
-                                  username=username, email=username)
-      } else if(authentication == "none2") {        
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=FALSE)
-      } else {
-        ##} else if(authentication == "none") {
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE)
-      } 
-      dbg("[LoadingBoard] names.auth = ",names(auth))
-    }
     
-    
+    ##================================================================================
+    ## Modules
+    ##================================================================================
+    loading_tsne_server("tsne", watermark=FALSE)
+      
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
@@ -469,7 +447,7 @@ LoadingBoard <- function(id,
     
     
     ##================================================================================
-    ## Data sets
+    ## Data sets table
     ##================================================================================
     
     ## reactive value for updating table
@@ -553,7 +531,7 @@ LoadingBoard <- function(id,
 
     pgxTable_modal.RENDER <- function() {
         pgxTable_DT() %>%
-            DT::formatStyle(0, target='row', fontSize='20px', lineHeight='95%')        
+            DT::formatStyle(0, target='row', fontSize='16px', lineHeight='95%')        
     }
 
     info_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
@@ -562,7 +540,7 @@ LoadingBoard <- function(id,
         tableModule, id = "pgxtable",
         func = pgxTable.RENDER,
         func2 = pgxTable_modal.RENDER,        
-        title = "",
+        title = "Data files",
         ##height = c(600,700),
         height = c("65vh",700),
         width = c('100%','100%'),
@@ -570,6 +548,8 @@ LoadingBoard <- function(id,
         caption2 = info_text
     )
     
+
+
     ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------

@@ -40,9 +40,15 @@ addWatermark.PNG <- function(file) {
 ##================================================================================
 
 ## prepare ORCA server if we are not in a Docker
+if(0) {
+    library(reticulate)
+    use_condaenv("r-reticulate")
+    py_install("kaleido", pip = TRUE)
+    py_module_available("kaleido")
+    fh <- import("kaleido")
+}
 
-
-initOrca <- function(launch=TRUE) {
+initOrca.DEPRECATED <- function(launch=TRUE) {
 
     responding.local = FALSE
     responding.docker = FALSE
@@ -125,7 +131,8 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 {
     is.docker <- file.exists("/.dockerenv")
     has.orca.bin <- file.exists("/usr/local/bin/orca")
-    has.orca.export <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
+    ##has.orca.export <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
+    has.orca.export = FALSE
     is.docker
     has.orca.bin
     has.orca.export
@@ -140,10 +147,6 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     message("[plotlyExport] file = ",file)
     message("[plotlyExport] format = ",format)
     message("[plotlyExport] is.docker = ",is.docker)
-    message("[plotlyExport] exists(ORCA) = ",exists("ORCA"))
-    message("[plotlyExport] class(ORCA) = ",class(ORCA))
-    ##message("[plotlyExport] ORCA$port = ",ORCA$port)
-    ##message("[plotlyExport] ORCA is alive = ",ORCA$process$is_alive())
     
     ## remove old
     unlink(file,force=TRUE)
@@ -157,8 +160,8 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     }
     
     ## See if any ORCA server is responding (docker or already local)
-    if(1 && !export.ok) {
-        global.srv  <- exists("ORCA") && class(ORCA)[1]=="character"
+    if(FALSE && !export.ok) {
+        global.srv <- exists("ORCA") && class(ORCA)[1]=="character"
         global.srv
         if(is.null(server) && !global.srv) {
             server <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
@@ -195,7 +198,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     ##     if(export.ok) message("[plotlyExport] --> exported with plotly::orca()")
     ## }
     
-    if(1 && has.orca.export && !export.ok) {
+    if(FALSE && has.orca.export && !export.ok) {
         err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with ORCA$export()")
@@ -1032,7 +1035,7 @@ tableModule <- function(input, output, session,
               shiny::tags$head(shiny::tags$style(modaldialog.style)),
               shiny::tags$head(shiny::tags$style(modalbody.style)),
               shiny::tags$head(shiny::tags$style(modalfooter.none)),
-              div(header, class="tablewidget-header"),
+              div(header, class="plotmodule-header"),
               div.caption,
               DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
               shiny::div(class="popup-table",
