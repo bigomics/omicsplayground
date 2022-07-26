@@ -1,5 +1,4 @@
 app_ui <- function() {
-
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
@@ -37,7 +36,7 @@ app_ui <- function() {
             shinyjs::useShinyjs(),
             sever::useSever(),
             shinylogs::use_tracking(),
-            firebase::useFirebase(firestore = TRUE),
+            firebase::useFirebase(firestore = TRUE, analytics = TRUE),
             ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
         )

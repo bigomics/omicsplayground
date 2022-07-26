@@ -213,10 +213,10 @@ FirebaseAuthenticationModule <- function(input, output, session)
     )    
 
     firebase <- firebase::FirebaseSocial$
-        new(persistence = "local")
+        new(persistence = "local", analytics = TRUE)
     
     firebase2 <- firebase::FirebaseEmailLink$
-        new(persistence = "local")
+        new(persistence = "local", analytics = TRUE)
     
     observeEvent(input$launchGoogle, {
         firebase$launch_google()
