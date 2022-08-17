@@ -6,9 +6,9 @@
 ClusteringInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
-                "Show more information and video tutorial about this module."),
-        shiny::hr(), shiny::br(),             
+#        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
+#                "Show more information and video tutorial about this module."),
+#        shiny::hr(), shiny::br(),             
         withTooltip( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                 "Select a family of features.", placement="top"),
         shiny::conditionalPanel(
@@ -37,26 +37,51 @@ ClusteringInputs <- function(id) {
         shiny::conditionalPanel(
             "input.hm_options % 2 == 1", ns=ns,
             shiny::tagList(
-                        withTooltip( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
-                                        "Specify the level analysis: gene or geneset level.",
-                                        placement="top", options = list(container = "body")),
-                        withTooltip( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
-                                        "Exclude genes on X/Y chromosomes.", 
-                                        placement="top", options = list(container = "body")),
-                        withTooltip( shiny::checkboxInput(ns('hm_filterMitoRibo'),
-                                                                'exclude mito/ribo genes',FALSE),
-                                        "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
-                                        placement="top", options = list(container = "body"))
-                )
+                withTooltip( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
+                    "Specify the level analysis: gene or geneset level.",
+                    placement="top", options = list(container = "body")),
+                withTooltip( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
+                    "Exclude genes on X/Y chromosomes.", 
+                    placement="top", options = list(container = "body")),
+                withTooltip( shiny::checkboxInput(ns('hm_filterMitoRibo'),
+                    'exclude mito/ribo genes',FALSE),
+                    "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
+                    placement="top", options = list(container = "body"))
+            )
         )
+    )
+}
+
+boardHeader <- function(title, info_link) {
+    fillRow(
+        flex=c(NA,1,NA),
+        ##h2(input$nav),
+        shiny::div(
+            id = "navheader-current-section",
+            HTML(paste0(title," &nbsp;")), 
+            withTooltip( 
+                shiny::actionLink(
+                    inputId = info_link,
+                    label="",
+                    icon = shiny::icon("info-circle"),
+                    style = "color: #ccc;"
+                ),
+                "Show information and tutorial about this board"
+            )
+        ),        
+        shiny::br(),
+        ##shiny::div(shiny::textOutput("current_dataset"), class='current-dataset')
+        shiny::div("current dataset", id='navheader-current-dataset')        
     )
 }
 
 ClusteringUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-
+        
     div(
         class = "row",
+        ## h4("Cluster Samples"),
+        boardHeader(title = "Cluster Samples", info_link = ns("clust_info")),
         div(
             class = "col-md-7",
             shiny::tabsetPanel(
@@ -126,4 +151,6 @@ ClusteringUI <- function(id) {
             )
         )
     )
+
+    
 }

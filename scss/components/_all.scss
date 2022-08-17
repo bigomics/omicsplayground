@@ -51,13 +51,14 @@ html {
 
   .tabbable .nav-tabs {
     padding: 0px;
-    margin: 4px 0px;
+    margin: 5px 0px 20px 10px;
     border-radius: 0px;
+    font-size: 16px;
   }
 
   .nav-tabs>li>a {
-    margin: 0px 0px;
-    padding: 6px 12px;
+    margin: 0px 20px 20px 0px;
+    padding: 2px 0px;
     border-radius: 0px;
   }
 
@@ -268,15 +269,15 @@ html {
   }
 
   div#navheader-current-section {
-    font-size: 1.3em;
-    font-weight: 600;
-    margin: 25px 0 0px 0;
+    font-size: 30px;
+    font-weight: 400;
+    margin: 10px 0 0px 0;
   }
 
   div#navheader-current-dataset {
-    margin: 24px 0 0px 40px;
-    font-size: 1.2rem;
-    color: var(--bs-primary);
+    margin: 20px 0px 0px 0px;
+    font-size: 14px;
+    color: black;
   }
 
   .footer {

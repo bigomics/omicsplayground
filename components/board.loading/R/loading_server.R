@@ -425,8 +425,7 @@ LoadingBoard <- function(id,
         nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
         paste(ndatasets,"Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")        
     })
-    
-    
+        
     output$navheader <- shiny::renderUI({
       fillRow(
         flex=c(NA,NA,1),
@@ -443,8 +442,7 @@ LoadingBoard <- function(id,
         shiny::div(HTML(pgx_stats()), id="navheader-current-dataset"),
         shiny::br()        
       )
-    })
-    
+    })    
     
     ##================================================================================
     ## Data sets table

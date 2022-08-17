@@ -5,11 +5,12 @@
 
 ClusteringBoard <- function(id, pgx)
 {
-  moduleServer(id, function(input, output, session) {
-
-    ns <- session$ns ## NAMESPACE
-    fullH = 850  ## full height of page
-    clust_infotext = paste('
+    moduleServer(id, function(input, output, session) {
+        
+        ns <- session$ns ## NAMESPACE
+        fullH = 850  ## full height of page
+        
+        clust_infotext = paste('
 The <strong>Clustering Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
 
 <br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot. 
@@ -814,7 +815,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         outputFunc = "uiOutput",
         download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
-        height = 2*fullH-80, ##???
+        height = fullH-50, ##???        
         width = '100%',
         pdf.width = 10, pdf.height = 8, 
         title ="Clustered Heatmap",

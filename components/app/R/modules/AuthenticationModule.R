@@ -213,10 +213,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
     )    
 
     firebase <- firebase::FirebaseSocial$
-        new(persistence = "local", analytics = TRUE)
+        #        new(persistence = "local", analytics = TRUE)
+        new(persistence = "local")        
     
     firebase2 <- firebase::FirebaseEmailLink$
-        new(persistence = "local", analytics = TRUE)
+        #        new(persistence = "local", analytics = TRUE)
+        new(persistence = "local")        
     
     observeEvent(input$launchGoogle, {
         firebase$launch_google()
@@ -707,9 +709,9 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                 ),
                 hr( style="color:#888;opacity:1;margin-top:30px;"),
                 h5(
-                    "OR",
+                    "or",
                     class = "text-center pb-4 pt-1",
-                    style = "margin-top:-32px;background:white;width:50px;margin-left:auto;margin-right:auto;"
+                    style = "margin-top:-35px;background:white;width:50px;margin-left:auto;margin-right:auto;"
                 ),                
                 div(
                     class = "social-button google-button",
