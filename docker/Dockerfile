@@ -51,7 +51,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN test -f .Rprofile && mv .Rprofile .Rprofile.disable
+RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.disable; fi
 RUN make sass
 
 #------------------------------------------------------------
