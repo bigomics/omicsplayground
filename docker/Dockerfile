@@ -18,6 +18,10 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 ENV DEBIAN_FRONTEND noninteractive
 
+# Hirsute (21.04) has been moved..
+RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+RUN sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+
 RUN apt update && apt install -y locales
 
 # Set the locale

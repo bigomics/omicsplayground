@@ -35,6 +35,15 @@ build.docker:
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(TAG) .
+build.base:
+	@echo building ubuntu BASE docker 
+	docker build --no-cache \
+		-f docker/Dockerfile.base \
+	  	-t bigomics/omicsplayground:base .
+
+build.ub:
+	@echo building UB docker 
+	docker build --no-cache -f docker/Dockerfile.ub -t ub .
 
 bash.docker:
 	@echo bash into docker $(TAG)
