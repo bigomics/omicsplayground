@@ -38,7 +38,7 @@ build.base:
 	@echo building docker BASE
 	docker build --no-cache \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground:base .
+	  	-t bigomics/omicsplayground:base-ub2204 .
 
 build.docker:
 	@echo building docker $(TAG)
