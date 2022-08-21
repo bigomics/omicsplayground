@@ -261,18 +261,17 @@ dataview_plot_expression_server <- function(id,
                     
                     fig <- fig %>% 
                       plotly::add_markers(
-                        data = df,
                         type = 'scatter', 
-                        x = group, 
-                        y = x, 
+                        x = df$group, 
+                        y = df$x, 
                         showlegend = FALSE,
                         marker = list(
                           color = omics_colors("super_dark_grey"), 
                           size = 6
                         )
-                      )
+                      ) %>%
+                      plotly_default1()
                     fig
-                    ##fig
 
                 } else if(pd$geneplot_type == 'violin') {
                     
@@ -297,7 +296,8 @@ dataview_plot_expression_server <- function(id,
                         ## title = "",
                         zeroline = FALSE
                       )
-                    )                     
+                    ) %>% 
+                    plotly_default1()
                     ##fig
                     
                 } else {
@@ -312,7 +312,8 @@ dataview_plot_expression_server <- function(id,
                         jitter = 0.3,
                         pointpos = 0.0,
                         color = omics_colors("bright_blue")
-                      ) 
+                      ) %>% 
+                      plotly_default1()
                     ## fig 
 
                 }
@@ -335,25 +336,27 @@ dataview_plot_expression_server <- function(id,
                       "</b><br>Sample: <b>", samples,
                       "</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), 
                       "</b><extra></extra>"
-                    )
+                  )
                 )
+                
                 pd$groupby <- ""
                 ## fig
             }
 
-            fig <- fig %>%
+            fig <- 
+              fig %>%
                 plotly::layout(                    
-                    xaxis = list(title = pd$groupby, fixedrange=TRUE),
-                    yaxis = list(title = pd$ylab, fixedrange=TRUE),
-                    font = list(family = 'Lato'),
-                    showlegend = FALSE                    
-                    ## title = pd$gene                    
+                  xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE),
+                  yaxis = list(title = stringr::str_to_sentence(pd$ylab), fixedrange = TRUE),
+                  font = list(family = "Lato"),
+                  showlegend = FALSE                    
+                  ## title = pd$gene                    
                 ) %>%
                 ##plotly::config(displayModeBar = FALSE) %>%
                 plotly::config(displaylogo = FALSE) %>%
                 plotly::config(
-                    modeBarButtons = list(list("toImage")),
-                    toImageButtonOptions = list(format='svg', height=500, width=900)
+                  modeBarButtons = list(list("toImage")),
+                  toImageButtonOptions = list(format='svg', height=500, width=900)
                 )                        
             fig
         }
