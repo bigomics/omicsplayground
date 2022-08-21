@@ -234,14 +234,15 @@ dataview_plot_expression_server <- function(id,
                     fig <- 
                       plotly::plot_ly(
                         data = data,
+                        type = 'bar', 
                         x = ~group, 
                         y = ~mean, 
-                        type = 'bar', 
                         name = pd$gene,
                         marker = list(
                           color = omics_colors("bright_blue")
                           #color = omics_pal_d(palette = "muted")(nrow(data))
                         ), 
+                        ## TODO: Q Does it make any sense to show erro rbars on a log scale??
                         error_y = ~list(
                           array = sd, 
                           color = omics_colors("super_dark_grey")
@@ -260,9 +261,10 @@ dataview_plot_expression_server <- function(id,
                     
                     fig <- fig %>% 
                       plotly::add_markers(
-                        x = df$group, 
-                        y = df$x, 
+                        data = df,
                         type = 'scatter', 
+                        x = group, 
+                        y = x, 
                         showlegend = FALSE,
                         marker = list(
                           color = omics_colors("super_dark_grey"), 
@@ -277,9 +279,9 @@ dataview_plot_expression_server <- function(id,
                   fig <- 
                     plotly::plot_ly(
                       data = df,
+                      type = 'violin',
                       x = ~group,
                       y = ~x,
-                      type = 'violin',
                       split = ~group,
                       box = list(
                         visible = TRUE
@@ -302,9 +304,9 @@ dataview_plot_expression_server <- function(id,
                     ## boxplot
                     fig <- 
                       plotly::plot_ly(
-                        df,
-                        y = ~x,
+                        data = df,
                         type = 'box',
+                        y = ~x,
                         split = ~group,
                         boxpoints = "all",
                         jitter = 0.3,

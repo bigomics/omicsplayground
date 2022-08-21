@@ -181,10 +181,10 @@ dataview_plot_tsne_server <- function(id,
             p <- 
               plotly::plot_ly(
                 data = df,
+                type = 'scatter',
+                #mode = 'markers',
                 x = ~pos_x,
                 y = ~pos_y,
-                #type = 'scatter',
-                #mode = 'markers',
                 color = ~expression,
                 colors = omics_pal_c(palette = "bright_blue")(100),
                 marker = list(
