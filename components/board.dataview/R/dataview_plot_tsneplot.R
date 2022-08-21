@@ -194,8 +194,8 @@ dataview_plot_tsne_server <- function(id,
                     width = 1.2
                   )       
                 ), 
-                hovertemplate = ~paste("Sample:", name ,"<br>Gene:", gene,
-                                   "<br>Expression:", sprintf("%1.3f", expression), "<extra></extra>")
+                hovertemplate = ~paste("Sample:<b>", name ,"</b><br>Gene:<b>", gene,
+                                   "</b><br>Expression:<b>", sprintf("%1.3f", expression), "</b><extra></extra>")
               ) %>%
               plotly::layout(
                 xaxis = list(title = 'tSNE-x'),
