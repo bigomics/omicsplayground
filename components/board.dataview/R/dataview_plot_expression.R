@@ -229,52 +229,88 @@ dataview_plot_expression_server <- function(id,
                     
                     data_mean <- tapply( df$x, df$group, mean)
                     data_sd   <- tapply( df$x, df$group, sd)
-                    data <- data.frame(group=names(data_mean), mean=data_mean, sd=data_sd)
+                    data      <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
                     
-                    fig <- plotly::plot_ly(data = data,
-                        x = ~group, y = ~mean, type = 'bar', name = pd$gene,
-                        error_y = ~list(array = sd, color = '#000000')) 
+                    fig <- 
+                      plotly::plot_ly(
+                        data = data,
+                        x = ~group, 
+                        y = ~mean, 
+                        type = 'bar', 
+                        name = pd$gene,
+                        marker = list(
+                          color = omics_colors("bright_blue")
+                          #color = omics_pal_d(palette = "muted")(nrow(data))
+                        ), 
+                        error_y = ~list(
+                          array = sd, 
+                          color = omics_colors("super_dark_grey")
+                        ), 
+                        hovertemplate = ~paste0(
+                          "Gene: <b>", pd$gene, 
+                          ## NOTE: groups doesn't work this way, as it's multiple groups per bar
+                          ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
+                          #"</b><br>Group: <b>", group,
+                          ## NOTE: currently shwoing mean doesn't work as there are multiple averages per bar 
+                          ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
+                          #"</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), 
+                          "</b><extra></extra>"
+                        )
+                      ) 
                     
-                    fig <- fig %>% plotly::add_markers(x = df$group, y = df$x, 
-                        type = 'scatter', showlegend=FALSE,
-                        marker = list(color = "black", size = 8))
+                    fig <- fig %>% 
+                      plotly::add_markers(
+                        x = df$group, 
+                        y = df$x, 
+                        type = 'scatter', 
+                        showlegend = FALSE,
+                        marker = list(
+                          color = omics_colors("super_dark_grey"), 
+                          size = 6
+                        )
+                      )
                     fig
                     ##fig
 
                 } else if(pd$geneplot_type == 'violin') {
                     
-                    fig <- df %>%
-                        plotly::plot_ly(
-                            x = ~group,
-                            y = ~x,
-                            split = ~group,
-                            type = 'violin',
-                            box = list(
-                                visible = TRUE
-                            ),
-                            meanline = list(
-                                visible = TRUE
-                            ),
-                            x0 = ''
-                        ) %>%
-                        plotly::layout(
-                            yaxis = list(
-                                ## title = "",
-                                zeroline = FALSE
-                            )
-                        )                    
+                  fig <- 
+                    plotly::plot_ly(
+                      data = df,
+                      x = ~group,
+                      y = ~x,
+                      type = 'violin',
+                      split = ~group,
+                      box = list(
+                        visible = TRUE
+                      ),
+                      meanline = list(
+                        visible = TRUE
+                      ),
+                      color = omics_colors("bright_blue"),
+                      x0 = ''
+                    ) %>%
+                    plotly::layout(
+                      yaxis = list(
+                        ## title = "",
+                        zeroline = FALSE
+                      )
+                    )                     
                     ##fig
                     
                 } else {
                     ## boxplot
-                    fig <- plotly::plot_ly(
+                    fig <- 
+                      plotly::plot_ly(
                         df,
                         y = ~x,
+                        type = 'box',
                         split = ~group,
                         boxpoints = "all",
-                        jitter=0.3,
+                        jitter = 0.3,
                         pointpos = 0.0,
-                        type = "box") 
+                        color = omics_colors("bright_blue")
+                      ) 
                     ## fig 
 
                 }
@@ -282,8 +318,22 @@ dataview_plot_expression_server <- function(id,
             }  else {
                 
                 ## plot as regular bar plot
-                fig <- plotly::plot_ly(data = df,
-                    x = ~samples, y = ~x, type = 'bar', name = pd$gene
+                fig <- 
+                  plotly::plot_ly(
+                    data = df,
+                    x = ~samples, 
+                    y = ~x, 
+                    type = 'bar', 
+                    name = pd$gene,
+                    marker = list(
+                      color = omics_colors("bright_blue")
+                    ), 
+                    hovertemplate = ~paste0(
+                      "Gene:<b>", pd$gene,
+                      "</b><br>Sample: <b>", samples,
+                      "</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), 
+                      "</b><extra></extra>"
+                    )
                 )
                 pd$groupby <- ""
                 ## fig
