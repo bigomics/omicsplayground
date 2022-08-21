@@ -178,36 +178,31 @@ dataview_plot_tsne_server <- function(id,
             df <- data[[1]]
             gene <- data[[2]]
             
-            p <- plotly::plot_ly(
+            p <- 
+              plotly::plot_ly(
                 df,
-                type = 'scatter',
-                mode = 'markers'
-            ) %>%
-                plotly::add_markers(
-                    x = ~pos_x,
-                    y = ~pos_y,
-                    color = ~expression,
-                    #text = ~name,
-                    hovertext = ~paste("Sample:",name,"<br>Gene:",gene,
-                        "<br>Expression:",expression),                    
-                    marker = list(
-                        size = 10,                    
-                        scale = "Viridis",
-                        reversescale = FALSE                
-                    )
-                ) %>%
-                plotly::layout(
-                    showlegend = FALSE,
-                    xaxis = list(title = 'tSNE-x'),
-                    yaxis = list(title = 'tSNE-y')
-                ) %>%
-                plotly_default1() ## %>% toWebGL()
+                x = ~pos_x,
+                y = ~pos_y,
+                #type = 'scatter',
+                #mode = 'markers',
+                color = ~expression,
+                colors = omics_pal_c(palette = "blue_red")(100),                    
+                marker = list(size = 10),
+                hovertemplate = ~paste("Sample:", name ,"<br>Gene:", gene,
+                                   "<br>Expression:", sprintf("%1.3f", expression), "<extra></extra>")
+              ) %>%
+              plotly::layout(
+                #showlegend = TRUE,
+                xaxis = list(title = 'tSNE-x'),
+                yaxis = list(title = 'tSNE-y')
+              ) %>%
+              plotly_default1() ## %>% toWebGL()
             p
         }
         
         plotly.RENDER <- function() {
-            p <- plotly.RENDER0() %>%
-                plotly::hide_colorbar()
+            p <- plotly.RENDER0() #%>%
+            #    plotly::hide_colorbar()
             p
         }
         
