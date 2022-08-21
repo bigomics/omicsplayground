@@ -186,16 +186,22 @@ dataview_plot_tsne_server <- function(id,
                 #type = 'scatter',
                 #mode = 'markers',
                 color = ~expression,
-                colors = omics_pal_c(palette = "blue_red")(100),                    
-                marker = list(size = 10),
+                colors = omics_pal_c(palette = "turquoise")(100),
+                marker = list(
+                  size = 10,                
+                  line = list(
+                    color = omics_colors ("super_dark_grey"),
+                    width = 1.2
+                  )       
+                ), 
                 hovertemplate = ~paste("Sample:", name ,"<br>Gene:", gene,
                                    "<br>Expression:", sprintf("%1.3f", expression), "<extra></extra>")
               ) %>%
               plotly::layout(
-                #showlegend = TRUE,
                 xaxis = list(title = 'tSNE-x'),
                 yaxis = list(title = 'tSNE-y')
               ) %>%
+              plotly::colorbar(title = "<b>Expression:</b>") %>%
               plotly_default1() ## %>% toWebGL()
             p
         }
