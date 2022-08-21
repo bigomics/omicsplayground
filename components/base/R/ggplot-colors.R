@@ -84,7 +84,7 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
     `bright_blue`        = unname(generate_colors(omics_colors("bright_blue"))),
     `turquoise`          = unname(generate_colors(omics_colors("turquoise"))),
     `red`                = unname(generate_colors(omics_colors("red"))),
-    `yellow`              = unname(generate_colors(omics_colors("orange"))),
+    `yellow`             = unname(generate_colors(omics_colors("orange"))),
     `orange`             = unname(generate_colors(omics_colors("yellow"))),
     `purple`             = unname(generate_colors(omics_colors("purple"))),
     `green`              = unname(generate_colors(omics_colors("green"))),
@@ -92,10 +92,10 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
     `grey`               = unname(omics_colors(c("mid_grey", "super_dark_grey"))),
     ## diverging palettes based on multiple data colours
     `blue_red`           = unname(omics_colors(c("red", "brand_blue"))),
-    `turq_yellow`         = unname(omics_colors(c("yellow", "grey", "turquoise"))),
+    `turq_yellow`        = unname(omics_colors(c("yellow", "grey", "turquoise"))),
     `purple_orange`      = unname(omics_colors(c("orange", "purple"))),
     `blue_red_grey`      = unname(omics_colors(c("red", "mid_grey", "brand_blue"))),
-    `turq_yellow_grey`    = unname(omics_colors(c("yellow", "mid_grey", "turquoise"))),
+    `turq_yellow_grey`   = unname(omics_colors(c("yellow", "mid_grey", "turquoise"))),
     `purple_orange_grey` = unname(omics_colors(c("orange", "mid_grey", "purple")))
   )
   
