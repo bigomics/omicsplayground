@@ -180,7 +180,7 @@ dataview_plot_tsne_server <- function(id,
             
             p <- 
               plotly::plot_ly(
-                df,
+                data = df,
                 x = ~pos_x,
                 y = ~pos_y,
                 #type = 'scatter',
@@ -190,12 +190,16 @@ dataview_plot_tsne_server <- function(id,
                 marker = list(
                   size = 10,                
                   line = list(
-                    color = omics_colors ("super_dark_grey"),
+                    color = omics_colors("super_dark_grey"),
                     width = 1.2
                   )       
                 ), 
-                hovertemplate = ~paste("Sample:<b>", name ,"</b><br>Gene:<b>", gene,
-                                   "</b><br>Expression:<b>", sprintf("%1.3f", expression), "</b><extra></extra>")
+                hovertemplate = ~paste(
+                  "Sample:<b>", name ,
+                  "</b><br>Gene:<b>", gene,
+                  "</b><br>Expression:<b>", sprintf("%1.3f", expression), 
+                  "</b><extra></extra>"
+                )
               ) %>%
               plotly::layout(
                 xaxis = list(title = 'tSNE-x'),
