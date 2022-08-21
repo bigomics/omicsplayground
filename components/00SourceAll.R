@@ -24,6 +24,7 @@ if(!file.exists('00SourceAll.R')) {
   source('base/R/compute2-extra.R',encoding='UTF-8')
   source('base/R/compute2-genes.R',encoding='UTF-8')
   source('base/R/compute2-genesets.R',encoding='UTF-8')
+  source('base/R/ggplot-colors.R',encoding='UTF-8')
   source('base/R/ggplot-theme.R',encoding='UTF-8')
   source('base/R/gset-fisher.r',encoding='UTF-8')
   source('base/R/gset-gsea.r',encoding='UTF-8')
