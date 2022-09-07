@@ -41,7 +41,7 @@ omics_colors <- function(...) {
     `yellow`          = "#ffd90e",
     `purple`          = "#c7a4ff",
     ## gradient + sequential colours
-    `mid_blue`        = "#0f4ebc", ## plus red for gradient
+    `mid_blue`        = "#2780e3", ## plus red for gradient
     `bright_blue`     = "#2fb5e3", ## both plus turquoise, green, light_green and yellow 
     ## grey
     `light_grey`      = "#f8f8f8",
