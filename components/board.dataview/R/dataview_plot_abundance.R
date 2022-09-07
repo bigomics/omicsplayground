@@ -85,26 +85,22 @@ dataview_plot_abundance_server <- function(id,
             long.data <- reshape2::melt( head(res$prop.counts,5) )
             colnames(long.data) <- c("gene","sample","value")
 
-            klr1 <- colorRampPalette(
-                c(rgb(0.2,0.5,0.8), rgb(0.8,0.9,0.99)))(5)            
-            klr1 <- rev(RColorBrewer::brewer.pal(5, "Blues"))
-            
             ## stacked barchart
-            fig <- plotly::plot_ly(
-                long.data,
+            fig <- 
+              plotly::plot_ly(
+                data = long.data,
+                type = 'bar',
                 x = ~sample,
                 y = ~value,
                 color = ~gene,
-                ##colors = "Blues",
-                colors = klr1,
-                type = 'bar'
-                #marker = list(color = klr1)
-            )  %>% plotly::layout(
+                marker = list(color = omics_pal_c()(5))
+              ) %>% 
+              plotly::layout(
                 barmode = 'stack',
                 ## legend = list(orientation = 'h'),
-                xaxis = list( title= ""),
-                yaxis = list( title= "cumulative proportion (%)")                
-            )
+                xaxis = list(title = ""),
+                yaxis = list(title = "cumulative proportion (%)")                
+              )
             fig
             
         }
