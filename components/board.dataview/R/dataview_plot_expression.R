@@ -234,12 +234,12 @@ dataview_plot_expression_server <- function(id,
                     fig <- 
                       plotly::plot_ly(
                         data = data,
-                        type = 'bar', 
                         x = ~group, 
                         y = ~mean, 
+                        type = 'bar', 
                         name = pd$gene,
                         marker = list(
-                          color = omics_colors("bright_blue")
+                          color = omics_colors("mid_blue")
                           #color = omics_pal_d(palette = "muted")(nrow(data))
                         ), 
                         ## TODO: Q Does it make any sense to show erro rbars on a log scale??
@@ -271,6 +271,7 @@ dataview_plot_expression_server <- function(id,
                         )
                       ) %>%
                       plotly_default1()
+                    
                     fig
 
                 } else if(pd$geneplot_type == 'violin') {
@@ -288,7 +289,7 @@ dataview_plot_expression_server <- function(id,
                       meanline = list(
                         visible = TRUE
                       ),
-                      color = omics_colors("bright_blue"),
+                      color = omics_colors("mid_blue"),
                       x0 = ''
                     ) %>%
                     plotly::layout(
@@ -311,7 +312,7 @@ dataview_plot_expression_server <- function(id,
                         boxpoints = "all",
                         jitter = 0.3,
                         pointpos = 0.0,
-                        color = omics_colors("bright_blue")
+                        color = omics_colors("mid_blue")
                       ) %>% 
                       plotly_default1()
                     ## fig 
@@ -329,7 +330,7 @@ dataview_plot_expression_server <- function(id,
                     type = 'bar', 
                     name = pd$gene,
                     marker = list(
-                      color = omics_colors("bright_blue")
+                      color = omics_colors("mid_blue")
                     ), 
                     hovertemplate = ~paste0(
                       "Gene:<b>", pd$gene,
