@@ -439,7 +439,7 @@ LoadingBoard <- function(id,
             style="color: #ccc;"
             )
         ),        
-        shiny::div(HTML(pgx_stats()), id="navheader-current-dataset"),
+        shiny::div(HTML(pgx_stats()), id="navheader-dataset-stats"),
         shiny::br()        
       )
     })    

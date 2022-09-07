@@ -32,11 +32,11 @@ LoadingUI <- function(id) {
       div(
           class = "row",
           div(
-              class = "col-md-8",
+              class = "col-md-7",
               tableWidget(ns("pgxtable"))
           ),
           div(
-              class = "col-md-4",
+              class = "col-md-5",
               loading_tsne_ui(ns("tsne"), height=c("65vh","70vh"))
           )
       ),

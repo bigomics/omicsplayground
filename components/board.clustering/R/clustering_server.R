@@ -815,12 +815,13 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         outputFunc = "uiOutput",
         download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
-        height = fullH-50, ##???        
+        height = fullH-80, ##???        	
         width = '100%',
         pdf.width = 10, pdf.height = 8, 
         title ="Clustered Heatmap",
         info.text = hm_splitmap_text,
         info.width = "350px",
+        ## caption = hm_splitmap_caption,
         download.pdf = hm_splitmap_downloadPDF,
         download.png = hm_splitmap_downloadPNG,
         download.html = hm_splitmap_downloadHTML,
