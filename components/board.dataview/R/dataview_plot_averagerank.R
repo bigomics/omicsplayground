@@ -93,40 +93,73 @@ dataview_plot_averagerank_server <- function(id,
             ## subsample for speed
             ii <- 1:length(mean.fc)
             if(length(ii) > 200) {
-                ii <- c(1:200,seq(201,length(mean.fc),10))
+                ii <- c(1:200, seq(201, length(mean.fc), 10))
             }
             
-            fig <- plotly::plot_ly(
+            fig <- 
+              plotly::plot_ly(
                 x = ii,
                 y = mean.fc[ii],
                 type = 'scatter',
                 mode = 'lines',
-                fill = 'tozeroy'
-            )
-
-            fig <- fig %>%
-                plotly::add_lines(x = sel, y = c(0,mean.fc[sel]),
-                    type="scatter", mode="lines" ) %>%
-                plotly::add_annotations(
-                    x = sel,
-                    y = mean.fc[sel],
-                    ax = 20,
-                    ay = -40,
-                    text = gene)
-            
-            fig <- fig %>%
-                plotly::layout(
-                    showlegend = FALSE,
-                    xaxis = list(title = 'ordered genes'),
-                    yaxis = list(title = ylab)
+                fill = 'tozeroy',
+                fillcolor = omics_colors("light_blue"),
+                line = list(
+                  width = 0
+                ),
+                hovertemplate = ~paste(
+                  ## TODO: currently x and y cannot be shown explicitly as the format doesnt comply with the chart
+                  #"Gene rank:", floor(ii), 
+                  #"<br>Density:", sprintf("%1.3f", mean.fc[ii]),
+                  "<extra></extra>"
                 )
-            fig %>% plotly_default1()            
+              )
+            
+            fig <- fig %>% 
+              plotly::add_lines(
+                x = sel, 
+                y = c(0, mean.fc[sel]),
+                type = "scatter", 
+                mode = "lines",
+                line = list(
+                  color = omics_colors("orange"), 
+                  width = 5
+                )
+              ) %>% 
+              ## add a second density curve with transparent filling 
+              ## to add an outline overwriting annotation line
+              plotly::add_lines(
+                x = ii,
+                y = mean.fc[ii],
+                type = "scatter",
+                mode = "lines",
+                fill = "tozeroy",
+                fillcolor = "#00000000",
+                line = list(
+                  color = omics_colors("mid_blue"), 
+                  width = 2.5
+                )
+              ) %>% 
+              plotly::add_annotations(
+                x = sel,
+                y = mean.fc[sel],
+                ax = 20,
+                ay = -40,
+                text = gene
+              )
+            
+            fig %>%
+              plotly::layout(
+                showlegend = FALSE,
+                xaxis = list(title = "Ordered genes"),
+                yaxis = list(title = stringr::str_to_sentence(ylab))
+              ) %>% 
+              plotly_default1()            
         }
         
         modal_plot.RENDER <- function() {
             fig <- plot.RENDER() %>%
                 plotly::layout(
-                    showlegend = FALSE,
                     font = list(
                         size = 18
                     )
