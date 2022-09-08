@@ -1,3 +1,7 @@
+v2.8.11
+
+- Fix search_gene list in Dataview
+
 v2.8.10
 
 - Fix USERDIR for compare dataset
