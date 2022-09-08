@@ -140,8 +140,11 @@ DataViewBoard <- function(input, output, session, env)
     })
     
 
-    shiny::observeEvent( input$data_type, {
+    ##shiny::observeEvent( input$data_type, {
+    shiny::observe({    
         ngs = inputData()
+        req(ngs)
+        req(input$data_type)
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(ngs$counts)
         } else {
