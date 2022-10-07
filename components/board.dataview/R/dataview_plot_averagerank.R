@@ -148,13 +148,14 @@ dataview_plot_averagerank_server <- function(id,
                 text = gene
               )
             
-            fig %>%
+            fig <- fig %>%
               plotly::layout(
                 showlegend = FALSE,
                 xaxis = list(title = "Ordered genes"),
                 yaxis = list(title = stringr::str_to_sentence(ylab))
               ) %>% 
               plotly_default1()            
+            fig
         }
         
         modal_plot.RENDER <- function() {

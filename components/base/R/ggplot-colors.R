@@ -75,7 +75,7 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
+  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "midblue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "midblue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
   
   omics_palettes <- list(
     ## sequential palettes based on gradients of unique data colours
@@ -92,6 +92,7 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
     `grey`               = unname(omics_colors(c("mid_grey", "super_dark_grey"))),
     ## diverging palettes based on multiple data colours
     `blue_red`           = unname(omics_colors(c("red", "brand_blue"))),
+    `midblue_orange`     = unname(omics_colors(c("orange", "mid_blue"))),
     `turq_yellow`        = unname(omics_colors(c("yellow", "grey", "turquoise"))),
     `purple_orange`      = unname(omics_colors(c("orange", "purple"))),
     `blue_red_grey`      = unname(omics_colors(c("red", "mid_grey", "brand_blue"))),
@@ -164,7 +165,7 @@ scale_color_omics_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
+  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "midblue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
   
   pal <- omics_pal_c(palette = palette, reverse = reverse)
   
@@ -223,7 +224,7 @@ scale_fill_omics_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
+  if (!palette %in% c("brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "midblue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "red", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "midblue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "turq_yellow_grey", or "purple_orange_grey".')
   
   pal <- omics_pal_c(palette = palette, reverse = reverse)
   

@@ -108,7 +108,7 @@ dataview_plot_abundance_server <- function(id,
         modal_plotly.RENDER <- function() {
             fig <- plotly.RENDER() %>%
                 plotly::layout(
-                    showlegend = TRUE,
+                    showlegend = TRUE, ## TODO: really TRUE here?
                     font = list(
                         size = 18
                     )

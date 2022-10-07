@@ -269,36 +269,40 @@ dataview_plot_expression_server <- function(id,
                           color = omics_colors("super_dark_grey"), 
                           size = 6
                         )
-                      ) %>%
-                      plotly_default1()
+                      ) %>% 
+                      plotly::layout(
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
+                      ) 
                     
                     fig
 
                 } else if(pd$geneplot_type == 'violin') {
                     
-                  fig <- 
-                    plotly::plot_ly(
-                      data = df,
-                      type = 'violin',
-                      x = ~group,
-                      y = ~x,
-                      split = ~group,
-                      box = list(
-                        visible = TRUE
-                      ),
-                      meanline = list(
-                        visible = TRUE
-                      ),
-                      color = omics_colors("mid_blue"),
-                      x0 = ''
-                    ) %>%
-                    plotly::layout(
-                      yaxis = list(
-                        ## title = "",
-                        zeroline = FALSE
+                    fig <- 
+                      plotly::plot_ly(
+                        data = df,
+                        type = 'violin',
+                        x = ~group,
+                        y = ~x,
+                        split = ~group,
+                        box = list(
+                          visible = TRUE
+                        ),
+                        meanline = list(
+                          visible = TRUE
+                        ),
+                        color = omics_colors("mid_blue"),
+                        x0 = ''
+                      ) %>%
+                      plotly::layout(
+                        yaxis = list(
+                          ## title = "",
+                          zeroline = FALSE
+                        )
+                      ) %>% 
+                      plotly::layout(
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
                       )
-                    ) %>% 
-                    plotly_default1()
                     ##fig
                     
                 } else {
@@ -314,7 +318,9 @@ dataview_plot_expression_server <- function(id,
                         pointpos = 0.0,
                         color = omics_colors("mid_blue")
                       ) %>% 
-                      plotly_default1()
+                      plotly::layout(
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
+                      )
                     ## fig 
 
                 }
@@ -337,28 +343,31 @@ dataview_plot_expression_server <- function(id,
                       "</b><br>Sample: <b>", samples,
                       "</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), 
                       "</b><extra></extra>"
+                    )
+                  ) %>% 
+                  plotly::layout(
+                    xaxis = list(title = FALSE, fixedrange = TRUE)  
                   )
-                )
                 
-                pd$groupby <- ""
                 ## fig
             }
 
             fig <- 
               fig %>%
                 plotly::layout(                    
-                  xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE),
                   yaxis = list(title = stringr::str_to_sentence(pd$ylab), fixedrange = TRUE),
                   font = list(family = "Lato"),
-                  showlegend = FALSE                    
+                  showlegend = FALSE,
+                  margin = list(l = 10, r = 10, b = 10, t = 10)                  
                   ## title = pd$gene                    
                 ) %>%
                 ##plotly::config(displayModeBar = FALSE) %>%
                 plotly::config(displaylogo = FALSE) %>%
                 plotly::config(
                   modeBarButtons = list(list("toImage")),
-                  toImageButtonOptions = list(format='svg', height=500, width=900)
-                )                        
+                  toImageButtonOptions = list(format = 'svg', height = 500, width = 900)
+                ) %>% 
+              plotly_default1()                        
             fig
         }
         

@@ -102,23 +102,34 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
             gene <- pdat$gene
 
             ## plot as regular bar plot
-            df$tissue <- factor(df$tissue, levels=df$tissue)
-            fig <- plotly::plot_ly(
-                data = df,
-                type = 'bar', ## name = pd$gene
-                x = ~tissue, y = ~x,
-                marker = list(color = ~color)
-            ) %>% plotly::layout(
-                xaxis = list(title = ""),
-                yaxis = list(title = ylab)                
-            )
-            fig
+            df <- dplyr::mutate(df, tissue = forcats::fct_reorder(stringr::str_to_title(tissue), x))
+              
+            #df$tissue <- factor(df$tissue, levels = df$tissue)
+            
+            plotly::plot_ly(
+              data = df, 
+              ## name = pd$gene
+              y = ~tissue, 
+              x = ~x,
+              type = 'bar', 
+              orientation = 'h',
+              color = ~color, ## TODO: use variable that encodes grouping
+              colors = omics_pal_d()(length(unique(df$color)))
+            ) %>% 
+            plotly::layout(
+              yaxis = list(title = FALSE),
+              xaxis = list(title = ylab),
+              showlegend = FALSE,
+              bargap = .4,
+              margin = list(l = 10, r = 10, b = 10, t = 10)
+            ) %>%
+            plotly_default1()    
         }
 
         modal_plot.RENDER <- function() {
             plot.RENDER() %>%
                 plotly::layout(
-                    ## showlegend = TRUE,
+                    showlegend = TRUE, ## TODO: I guess a legend makes sense here?
                     font = list(
                         size = 18
                     )
