@@ -242,17 +242,19 @@ dataview_plot_expression_server <- function(id,
                           color = omics_colors("mid_blue")
                           #color = omics_pal_d(palette = "muted")(nrow(data))
                         ), 
-                        ## TODO: Q Does it make any sense to show erro rbars on a log scale??
+                        ## TODO: Q Does it make any sense to show error bars on a log scale??
                         error_y = ~list(
                           array = sd, 
                           color = omics_colors("super_dark_grey")
                         ), 
                         hovertemplate = ~paste0(
                           "Gene: <b>", pd$gene, 
-                          ## NOTE: groups doesn't work this way, as it's multiple groups per bar
+                          
+                          
+                          ## NOTE: groups don't work this way, as it's multiple groups per bar
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
                           #"</b><br>Group: <b>", group,
-                          ## NOTE: currently shwoing mean doesn't work as there are multiple averages per bar 
+                          ## NOTE: currently showing mean doesn't work as there are multiple averages per bar 
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
                           #"</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), 
                           "</b><extra></extra>"
