@@ -116,6 +116,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.featuremap/R/featuremap_ui.R',encoding='UTF-8')
   source('board.functional/R/functional_server.R',encoding='UTF-8')
   source('board.functional/R/functional_ui.R',encoding='UTF-8')
+  source('board.intersection/R/intersection_plot_venn_diagram.R',encoding='UTF-8')
   source('board.intersection/R/intersection_server.R',encoding='UTF-8')
   source('board.intersection/R/intersection_ui.R',encoding='UTF-8')
   source('board.loading/R/loading_server.R',encoding='UTF-8')

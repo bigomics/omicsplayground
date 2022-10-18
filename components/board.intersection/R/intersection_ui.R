@@ -28,15 +28,27 @@ IntersectionInputs <- function(id) {
                 withTooltip( shiny::textAreaInput(ns("customlist"), NULL, value = NULL,
                                         rows=5, placeholder="Paste your custom gene list"),
                         "Paste a custom list of genes to highlight.", placement="bottom")
-            )
+            ),
+            shiny::h6("Thresholds for (b) Venn Diagram and (c) Intersection"),
+            withTooltip( shiny::selectInput(ns("fdr"),"FDR", choices=c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1), 
+                                            selected=0.20),
+                         "Threshold for false discovery rate",
+                         placement="right", options = list(container = "body")),
+            withTooltip( shiny::selectInput(ns("lfc"),"logFC threshold",
+                                            choices = c(0,0.1,0.2,0.5,1,2,5),
+                                            selected = 0.2),
+                         "Threshold for fold-change (log2 scale)",
+                         placement="right", options = list(container = "body"))
         )
     )
 }
 
 IntersectionUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-
-    shiny::tabsetPanel(
+    
+    imgH <- c("35vh","70vh")   ## heights for small and fullscreen image  
+    
+        shiny::tabsetPanel(
         id = ns("tabs1"),
         shiny::tabPanel(
             "Pairwise scatter",
@@ -55,7 +67,7 @@ IntersectionUI <- function(id) {
                 ),
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("venndiagram")),
+                    intersection_plot_venn_diagram_ui(ns("venndiagram"),height=imgH),
                     tableWidget(ns("venntable"))
                 )
             )

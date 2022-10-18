@@ -394,10 +394,6 @@ IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetme
 
         dbg("[IntersectionBoard::scatterPlotMatrix.PLOT]  reacted\n")
 
-
-
-
-
         ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getActiveFoldChangeMatrix()
         fc0 = res$fc.full
@@ -644,136 +640,6 @@ IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetme
         add.watermark = WATERMARK
     )
     ##output <- attachModule(output, scatterPlotMatrix_module)
-
-    
-    ##======================================================================
-    ## Venn diagram
-    ##======================================================================
-
-    venndiagram.RENDER <- shiny::reactive({
-        
-        dt = getSignificanceCalls()
-        if(is.null(dt) || nrow(dt)==0) return(NULL)
-        
-        dt1 = dt[,2:ncol(dt),drop=FALSE]
-        label = LETTERS[1:ncol(dt1)]
-        colnames(dt1) = label
-        include = "both"
-        if(input$include=="up/down") {
-            include = c("up","down")
-        }    
-        
-        par(mfrow=c(1,1), mar=c(1,1,3,1)*0, bty="n")
-        par(oma=c(0.0,0,0,0))
-        if(ncol(dt1)==1) {
-            frame()
-            text(0.5, 0.5, "Error: Venn diagram needs at least two groups")
-            return(NULL)            
-        } 
-        if(ncol(dt1)>7) {
-            frame()
-            text(0.5, 0.5, "Error: too many groups for Venn diagram")
-            return(NULL)
-        } 
-
-        p <- NULL
-        if(0) {
-            ## dt1 = dt1[,1:min(5,ncol(dt1))]
-            limma::vennDiagram(
-                       dt1,  main=NULL, cex.main=0.2, cex=1.2, mar=c(0,0,2,0),
-                       include=include, bty="n", fg=grey(0.7),
-                       circle.col=c("turquoise", "salmon","lightgreen","orange") )
-            tt = paste(label,"=",colnames(dt)[-1])
-            legend("topleft", legend=tt, bty='n', cex=0.9, y.intersp=0.95,
-                       inset=c(0.04,-0.01), xpd=TRUE)       
-            
-        } else {
-
-            ##colnames(dt1) <- colnames(dt)[-1]
-            
-            x <- apply(dt1, 2, function(x) rownames(dt1)[which(x!=0)])
-            ##venntable <- ggVennDiagram::process_region_data(Venn(x))
-            xlen <- sapply(x,length) 
-            dbg("[venndiagram.RENDER] list.len = ",xlen)
-            
-            if(length(x)==0 || all(xlen==0)) {
-                frame()
-                text(0.5, 0.5, "Error: no valid genes. Please adjust thresholds.",
-                     col='red')
-                return(NULL)
-            }            
-            
-            p <- ggVennDiagram::ggVennDiagram(
-                x,
-                label = "count",
-                edge_size = 0.4
-            ) +
-                ggplot2::scale_fill_gradient(low="grey90",high = "red") +
-                ggplot2::theme( legend.position = "none", 
-                      plot.margin = ggplot2::unit(c(1,1,1,1)*0.3, "cm"))
-            
-            ## legend
-            tt = paste(label,"=",colnames(dt)[-1])
-            n1  <- ceiling(length(tt)/2)
-            tt1 <- tt[1:n1]
-            tt2 <- tt[(n1+1):length(tt)]
-            if(length(tt2) < length(tt1)) tt2 <- c(tt2,"   ")
-            tt1 <- paste(tt1, collapse='\n')
-            tt2 <- paste(tt2, collapse='\n')            
-            
-            xlim <- ggplot2::ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
-            ylim <- ggplot2::ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
-            x1 = xlim[1] - 0.1*diff(xlim)
-            x2 = xlim[1] + 0.6*diff(xlim)
-            y1 = ylim[2] + 0.12*diff(xlim)
-            
-            p <- p +
-                ggplot2::annotate("text", x = x1, y = y1, hjust="left",
-                         label = tt1, size=4, lineheight=0.83) +
-                ggplot2::annotate("text", x = x2, y = y1, hjust="left",
-                             label = tt2, size=4, lineheight=0.83) +
-                ggplot2::coord_sf(clip="off")
-
-            grid::grid.draw(p)
-        }        
-        ##p
-    })
-
-    FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-    venndiagram.opts = shiny::tagList(
-        ##    shiny::checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
-        shiny::fillRow(
-            flex=c(1,1), ## height=80,       
-            withTooltip( shiny::selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
-                   "Threshold for false discovery rate",
-                   placement="right", options = list(container = "body")),
-            withTooltip( shiny::selectInput(ns("lfc"),"logFC threshold",
-                                choices = c(0,0.1,0.2,0.5,1,2,5),
-                                selected = 0.2),
-                   "Threshold for fold-change (log2 scale)",
-                   placement="right", options = list(container = "body"))
-        ),
-        shiny::br(),br(),br(),br(),
-        shiny::radioButtons(ns('include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
-    )
-   
-    shiny::callModule(
-        plotModule,
-        id = "venndiagram", 
-        func = venndiagram.RENDER,
-        func2 = venndiagram.RENDER,
-        ## plotlib = "ggplot",
-        title = "VENN DIAGRAM", label="b",
-        ##caption = venntable_buttons,
-        info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
-        options = venndiagram.opts,
-        pdf.width = 8, pdf.height = 8,
-        height = c(400,700),
-        width = c('100%',900),
-        res = c(72,90),
-        add.watermark = WATERMARK
-    )
-
     ##output$intersection_table <- DT::renderDataTable({
     venntable.RENDER <- shiny::reactive({
         ngs <- inputData()
@@ -1684,5 +1550,20 @@ IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetme
         info.text = ctGseaTable.info,
         height = c(225,750), width=c('100%',1500)
     )
+    
+    ##================================================================================
+    ##=========================== MODULES ============================================
+    ##================================================================================
+    
+    WATERMARK = FALSE
+    
+    intersection_plot_venn_diagram_server(
+      "venndiagram",
+      getSignificantTable = getSignificanceCalls,
+      watermark           = WATERMARK
+    )
+    
+    
+    
   })    
 } ## end-of-Board 
