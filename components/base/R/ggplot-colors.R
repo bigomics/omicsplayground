@@ -123,7 +123,7 @@ omics_pal_d <- function(palette = "default", reverse = FALSE) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark")) stop('palette should be one of "default", "light", "dark", "muted", "super_light" or "super_dark".')
+  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark", "expanded")) stop('palette should be one of "default", "light", "dark", "muted", "super_light", "super_dark" or "expanded".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
   
   cat_colors <- unname(omics_colors("brand_blue", "red", "turquoise", "yellow", "purple", "green", "orange", "light_green", "bright_blue", "dark_grey"))
@@ -134,7 +134,8 @@ omics_pal_d <- function(palette = "default", reverse = FALSE) {
     `dark`        = colorspace::darken(cat_colors, .2), 
     `super_light` = colorspace::lighten(cat_colors, .6), 
     `super_dark`  = colorspace::darken(cat_colors, .4),
-    `muted`       = colorspace::desaturate(cat_colors, .5)
+    `muted`       = colorspace::desaturate(cat_colors, .5),
+    `expanded`    = c(cat_colors, colorspace::darken(cat_colors, .4), colorspace::desaturate(cat_colors, .5), colorspace::lighten(cat_colors, .6))
   )
   
   pal <- omics_palettes[[palette]]
@@ -194,7 +195,7 @@ scale_color_omics_d <- function(palette = "default", reverse = FALSE, ...) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark")) stop('palette should be one of "default", "light", "dark", "muted", "super_light" or "super_dark".')
+  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark", "expanded")) stop('palette should be one of "default", "light", "dark", "muted", "super_light", "super_dark" or "expanded".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
   
   pal <- omics_pal_d(palette = palette, reverse = reverse)
@@ -258,7 +259,7 @@ scale_fill_omics_d <- function(palette = "default", reverse = FALSE, ...) {
   
   palette <- stringr::str_to_lower(palette)
   
-  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark")) stop('palette should be one of "default", "light", "dark", "muted", "super_light" or "super_dark".')
+  if (!palette %in% c("default", "light", "dark", "muted", "super_light", "super_dark", "expanded")) stop('palette should be one of "default", "light", "dark", "muted", "super_light", "super_dark" or "expanded".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
   
   pal <- omics_pal_d(palette = palette, reverse = reverse)
