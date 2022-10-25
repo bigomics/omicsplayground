@@ -105,8 +105,8 @@ dataview_plot_totalcounts_server <- function(id,
               )
             ) %>% 
             plotly::layout(
-              yaxis = list(title = res$ylab),
               xaxis = list(title = FALSE),
+              yaxis = list(title = res$ylab),
               font = list(family = "Lato"),
               margin = list(l = 10, r = 10, b = 10, t = 10)   
             ) %>% 
