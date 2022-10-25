@@ -108,7 +108,8 @@ dataview_plot_averagerank_server <- function(id,
                   width = 0
                 ),
                 hovertemplate = ~paste(
-                  ## TODO: currently x and y cannot be shown explicitly as the format doesnt comply with the chart
+                  ## NOTE: currently x and y cannot be shown explicitly as the format doesnt comply with the chart
+                  ## TODO: check if the format can be adjusted (if information is needed in tooltip)
                   #"Gene rank:", floor(ii), 
                   #"<br>Density:", sprintf("%1.3f", mean.fc[ii]),
                   "<extra></extra>"
