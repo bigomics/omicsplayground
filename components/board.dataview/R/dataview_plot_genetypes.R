@@ -92,25 +92,39 @@ dataview_plot_genetypes_server <- function(id,
             res <- plot_data()
             shiny::req(res)            
             
-            avg.prop <- head( rowMeans(res$prop.counts), 15)
+            avg.prop <- head(rowMeans(res$prop.counts), 15)
             genes  <- head(res$gset.genes, 15)            
             family <- paste0(names(avg.prop),"  ")
-            family <- factor(family, levels=family)
+            family <- factor(family, levels = family)
             
-            df <- data.frame( family = family, prop = avg.prop, genes = genes)
+            df <- data.frame(family = family, prop = avg.prop, genes = genes)
             
             ## stacked barchart
-            fig <- plotly::plot_ly(
-                df,
+            fig <- 
+              plotly::plot_ly(
+                data = df,
                 x = ~prop,
                 y = ~family,
-                type = 'bar',
-                hovertext = ~paste("Gene family:",family,"<br>Genes:",genes)
-                ##hoverinfo = "text"
-            )  %>% plotly::layout(
-                yaxis = list( title= ""),
-                xaxis = list( title= "proportion (%)")                
-            )
+                type = 'bar', 
+                marker = list(
+                  color = omics_colors("mid_blue")
+                ), 
+                hovertemplate = ~paste0(
+                  "Gene family: <b>", family,
+                  ## NOTE: tooltip looks awful due to way too many genes
+                  ## TODO: discuss potential solutions; how about showing number of genes or the top 3?
+                  "<br></b>Genes: <b>", genes,
+                  "</b><extra></extra>"
+                )
+              ) %>%
+              plotly::layout(
+                yaxis = list(title = FALSE),
+                xaxis = list(title = "Proportion", ticksuffix = "%"),
+                font = list(family = "Lato"),
+                margin = list(l = 10, r = 10, b = 10, t = 10),
+                showlegend = FALSE
+              ) %>% 
+              plotly_default1()
             fig
         }
         
