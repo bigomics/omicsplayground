@@ -78,7 +78,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
             ## boxplot
             fig <- 
               plotly::plot_ly(
-                long.df,
+                data = long.df,
                 x = ~sample,
                 y = ~value,
                 type = "box",
@@ -88,6 +88,8 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
                   fillcolor = omics_colors("light_blue")
                 ),
                 line = list(color = omics_colors("mid_blue")),
+                ## NOTE: I'd like to show less labels as tooltips; could format them nicely but didn't find any information on how to remove some
+                ## TODO: decide if it's fine like that; check if it is possible to reduce the number of tooltips
                 hoverinfo = "y"
                 # hovertemplate = ~paste0(
                 #   "Sample: <b>", sample,
@@ -96,6 +98,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
                 # )
               ) %>%
               plotly::layout(
+                ## NOTE: I am not sure if it's a good idea to show boxplots on a log scale
                 yaxis = list(title = "Counts (log2)", hoverformat = '.2f'),
                 xaxis = list(title = FALSE),
                 font = list(family = "Lato"),
