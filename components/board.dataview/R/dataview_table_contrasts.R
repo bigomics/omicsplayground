@@ -56,23 +56,38 @@ dataview_table_contrasts_server <- function(id,
       tabH = 600  ## height of tables
       colnames(dt) <- sub("[_. ]vs[_. ]","\nvs ",colnames(dt))
       
-      DT::datatable( dt,
-                    class = 'compact hover',
-                    rownames = TRUE,
-                    extensions = c('Buttons','Scroller'),
-                    selection = list(mode='single', target='row', selected=1),
-                    options=list(
-                      dom = 'lfrtip',
-                      scroller=TRUE, scrollX = TRUE, scrollY = tabH,
-                      deferRender=TRUE,
-                      autoWidth = TRUE
-                    )) %>%
-        DT::formatStyle(0, target='row', fontSize='14px', lineHeight='70%') %>%
-        DT::formatStyle(colnames(dt),
-                        background = color_from_middle(c(-1,1), 'lightblue', '#f5aeae'),
-                        backgroundSize = '98% 88%',
-                        backgroundRepeat = 'no-repeat',
-                        backgroundPosition = 'center')
+      DT::datatable(
+          data = dt,
+          class = 'compact hover',
+          rownames = TRUE,
+          extensions = c('Buttons','Scroller'),
+          selection = list(
+            mode = 'single', 
+            target = 'row', 
+            selected = 1
+          ),
+          options = list(
+            dom = 'lfrtip',
+            scroller = TRUE, 
+            scrollX = TRUE, 
+            scrollY = tabH,
+            deferRender = TRUE,
+            autoWidth = TRUE
+          )
+        ) %>%
+        DT::formatStyle(
+          columns = 0, 
+          target = 'row', 
+          fontSize = '14px', 
+          lineHeight = '70%'
+        ) %>%
+        DT::formatStyle(
+          columns = colnames(dt),
+          background = color_from_middle(c(-1, 1), omics_colors("mid_blue"), omics_colors("orange")),
+          backgroundSize = '98% 88%',
+          backgroundRepeat = 'no-repeat',
+          backgroundPosition = 'center'
+        )
 
     }
 
