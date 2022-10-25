@@ -41,7 +41,10 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark=
             
         plot.RENDER <- function() {
             res <- plot_data()
-            shiny::req(res)            
+            shiny::req(res)         
+            
+            ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
+            ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)   
             pq <- pgx.testPhenoCorrelation(res$annot, plot=TRUE)
         }
         
