@@ -33,7 +33,7 @@ omics_colors <- function(...) {
     ## data colours
     `brand_blue`      = "#004ca7",
     `light_blue`      = "#b8ddff",
-    `turquoise`       = "#70b4a7",
+    `turquoise`       = "#15AEA5",
     `green`           = "#99d4a9",
     `light_green`     = "#c7dd03",
     `orange`          = "#ff9c00",
