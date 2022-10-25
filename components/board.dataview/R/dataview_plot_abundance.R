@@ -89,18 +89,26 @@ dataview_plot_abundance_server <- function(id,
             fig <- 
               plotly::plot_ly(
                 data = long.data,
-                type = 'bar',
                 x = ~sample,
                 y = ~value,
+                type = 'bar',
                 color = ~gene,
-                marker = list(color = omics_pal_c()(5))
+                colors = omics_pal_d("muted")(length(unique(long.data$gene))), 
+                hovertemplate = ~paste0(
+                  "Sample: <b>", sample,
+                  "</b><br>Gene: <b>", gene,
+                  "</b><br>Cum. proportion: <b>", sprintf("%2.1f", value), "%",
+                  "</b><extra></extra>"
+                )
               ) %>% 
               plotly::layout(
                 barmode = 'stack',
-                ## legend = list(orientation = 'h'),
-                xaxis = list(title = ""),
-                yaxis = list(title = "cumulative proportion (%)")                
-              )
+                xaxis = list(title = FALSE),
+                yaxis = list(title = "Cumulative proportion", ticksuffix = "%"),
+                font = list(family = "Lato"),
+                margin = list(l = 10, r = 10, b = 10, t = 10)   
+              ) %>% 
+              plotly_default1()
             fig
             
         }
