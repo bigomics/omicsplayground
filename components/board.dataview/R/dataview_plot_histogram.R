@@ -89,38 +89,49 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark=FALSE)
             y.smooth <- apply(hist[,3:ncol(hist)], 2, smoothen)
                         
             df <- data.frame(
-                x = rep( hist$mids, ncol(hist) - 2),
+                x = rep(hist$mids, ncol(hist) - 2),
                 ##y = unlist(hist[,3:ncol(hist)]),
                 y = as.vector(y.smooth),
                 sample = as.vector(mapply(rep, colnames(hist)[-c(1,2)], nrow(hist)))
             )
             
-            fig <- plotly::plot_ly(
-                df,
+            fig <- 
+              plotly::plot_ly(
+                data = df,
                 x = ~x,
-                y = ~y,
-                split = ~sample
-            ) %>%
-                plotly::add_lines()
-
-            fig <- fig %>% plotly::layout(
-                xaxis = list( title="expression"),
-                yaxis = list( title="density"),
+                y = ~y, 
+                type = 'scatter', 
+                mode = 'lines',
+                split = ~sample,
+                color = ~sample,
+                colors = omics_pal_d(palette = "expanded")(length(unique(df$sample)))#, 
+                # hovertemplate = ~paste0(
+                #   "Sample: <b>", sample,
+                #   "</b><br>Expression: <b>", x,
+                #   "</b><br>Density: <b>", y,
+                #   "</b><extra></extra>"
+                # )
+              ) %>%
+              plotly::layout(
+                xaxis = list(title = "Expression"),
+                yaxis = list(title = "Density"),
+                ## TODO: decide if unified label or not - maybe only in zoom mode as it's that long?
+                hovermode = "x unified",
+                font = list(family = "Lato"),
+                margin = list(l = 10, r = 10, b = 10, t = 10)  ,
                 showlegend = FALSE                
-            )
-
+              ) %>% 
+              plotly_default1()
             fig
                 
         }
         
         modal_plotly.RENDER <- function() {
             plotly.RENDER() %>%
-                plotly::layout(
-                    showlegend = TRUE,
-                    font = list(
-                        size = 18
-                    )
-                )
+              plotly::layout(
+                showlegend = TRUE,
+                font = list(size = 18)
+              )
         }
         
         PlotModuleServer(
