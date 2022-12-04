@@ -112,6 +112,8 @@ DataViewBoard <- function(input, output, session, env)
         ngs <- inputData()
         shiny::req(ngs)
 
+        dbg("[DataViewBoard.R] shiny::observe L115")
+
         ## levels for sample filter
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
@@ -136,7 +138,8 @@ DataViewBoard <- function(input, output, session, env)
         if("group" %in% grps) selgrp = "group"
         if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
         shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
-        
+
+        remove(levels,grps,selgrp)
     })
     
 
@@ -145,6 +148,9 @@ DataViewBoard <- function(input, output, session, env)
         ngs = inputData()
         req(ngs)
         req(input$data_type)
+
+        dbg("[DataViewBoard.R] shiny::observe L152")
+        
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(ngs$counts)
         } else {
@@ -157,15 +163,16 @@ DataViewBoard <- function(input, output, session, env)
         fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
         genes = intersect(names(sort(-fc2)),genes) ## most var gene??
         selgene <- genes[1]
-        dbg("[DataViewBoard.R] length(genes) = ",length(genes))
+
         genes1 <- unique(c(selgene,sort(genes)))
         if(length(genes1)>1000) {
             genes1 <- c(sort(genes1[1:1000]),"(type SYMBOL for more genes...)",genes1[1001:length(genes1)])
         }
-        shiny::updateSelectizeInput(session,'search_gene', choices=genes1, selected=selgene,
-                                    ##options = list(maxOptions = 9999999),
-                                    options = list(maxOptions = 1001),                                    
-                                    server = TRUE)
+        shiny::updateSelectizeInput(
+            session,'search_gene', choices=genes1, selected=selgene,
+            ##options = list(maxOptions = 9999999),
+            options = list(maxOptions = 1001),
+            server = TRUE)
 
     })
 
