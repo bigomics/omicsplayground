@@ -1,6 +1,6 @@
 v2.8.12
 
-- Fix awe snap memory leak
+- Fix browser memory leak (remove shinylogs).
 
 v2.8.11
 

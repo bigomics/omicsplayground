@@ -274,9 +274,6 @@ server = function(input, output, session) {
     dbg("[SERVER] 0: SESSION = ",session$token)
     ##dbg("[SERVER] 0: names(session) = ",names(session))
 
-    ## Logging of input/output events
-    ##shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
@@ -910,7 +907,6 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         sever::useSever(),
-        shinylogs::use_tracking(),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
         ##TAGS.JSSCRIPT,  ## window size
