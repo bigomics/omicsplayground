@@ -36,6 +36,11 @@ build.base:
 	docker build --no-cache \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground:base .
+build.test:
+	@echo building test docker 
+	docker build --no-cache \
+		-f docker/Dockerfile.test \
+	  	-t bigomics/omicsplayground:test .
 
 bash.docker:
 	@echo bash into docker $(TAG)

@@ -1,3 +1,7 @@
+v2.8.12
+
+- Fix awe snap memory leak
+
 v2.8.11
 
 - Fix search_gene list in Dataview
