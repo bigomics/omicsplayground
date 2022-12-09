@@ -17,6 +17,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app/R/modules/SocialMediaModule.R',encoding='UTF-8')
   source('app/R/modules/TimerModule.R',encoding='UTF-8')
   source('app/R/modules/WelcomeBoard.R',encoding='UTF-8')
+  source('app/R/utils/boardHeader.R',encoding='UTF-8')
   source('app/R/utils/modalUI.R',encoding='UTF-8')
   source('app/R/utils/tooltip.R',encoding='UTF-8')
   source('app/R/utils/utils.R',encoding='UTF-8')

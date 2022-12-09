@@ -71,7 +71,7 @@ app_ui <- function() {
         bigdash::bigPage(
             header,
             sidebar = bigdash::sidebar(
-                "Menu",
+                "Home",
                 bigdash::sidebarMenu(
                     "Load",
                     bigdash::sidebarMenuItem(
@@ -87,10 +87,11 @@ app_ui <- function() {
                       "upload-tab"
                     )
                 ),
-                bigdash::sidebarItem(
+                div(class="sidebar-item",
+                    bigdash::sidebarItem(
                     "DataView",
                     "dataview-tab"
-                ),
+                )),
                 bigdash::sidebarMenu(
                     "Clustering",
                     bigdash::sidebarMenuItem(
@@ -163,9 +164,11 @@ app_ui <- function() {
                         "tcga-tab"
                     )
                 ),
-                bigdash::sidebarItem(
-                    "Cell profiling",
-                    "cell-tab"
+                div(class="sidebar-item",
+                    bigdash::sidebarItem(
+                        "Cell profiling",
+                        "cell-tab"
+                    )
                 )
             ),
             navbar = bigdash::navbar(

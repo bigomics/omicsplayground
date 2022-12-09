@@ -1,25 +1,16 @@
+//
+// THESE CHANGES SHOULD EVENTUALLY BE MOVED TO BIGDASH
+//
+
 html {
 
-
-    .sidebar-expanded {
-//        min-width: 12rem;
+    .big-tab {
+	padding: 0px 15px;
     }
 
+    //---------------- navbar ---------------------
     .navbar {
 	padding-top: 0.3rem;
-    }
-
-    #sidebar-help-title {
-        padding-top: 10rem;
-    }
-
-    #sidebar-help-container {
-        width: 11.5rem;
-        font-size: 0.8em;
-        line-height: 1.2em;
-        background: url("assets/img/mascotte-sc.png") no-repeat;
-        background-size: 5rem 5rem;
-        background-position: 3.5rem 5rem;
     }
 
     // disable on button dropdown elements
@@ -35,9 +26,65 @@ html {
 	border-top: none;
 	vertical-align: 0;
     }    
+
+    // bit darker (see Matt)
+    .nav-tabs .nav-link {
+	color: #b8b8b8;
+	border-bottom: solid 1px;
+    }
+
     
-    .big-tab {
-	padding: 0px 15px;
+    //---------------- sidebar ---------------------
+    .sidebar-expanded {
+//        min-width: 12rem;
+    }
+
+
+    #sidebar-help-title {
+        padding-top: 10rem;
+    }
+
+    #sidebar-help-container {
+        width: 11.5rem;
+        font-size: 0.8em;
+        line-height: 1.2em;
+        background: url("assets/img/mascotte-sc.png") no-repeat;
+        background-size: 5rem 5rem;
+        background-position: 3.5rem 5rem;
+    }
+
+    .sidebar-menu {
+	padding-left: 1rem;
+	font-size: 18px;
+	font-weight: bold;
+	color: #333 !important;
+    }
+
+    .sidebar-item {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333 !important;
+    }
+
+    .sidebar-menu-item {
+	font-size: 17px;
+	font-weight: 400;
+	color: #333 !important;	
+    	padding-left: 0.5rem;  // less indent
+	margin: -8px 0 0 0; // less on top
+    }
+
+    .sidebar-label {
+	font-size: 18px;
+    }
+
+    // 'disable' text-muted
+    .text-muted {
+	color: #333 !important;
+    }
+
+    .active-sidebar {
+	background-color: #E8E8E8;
     }
 
     

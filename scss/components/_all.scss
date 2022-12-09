@@ -53,7 +53,7 @@ html {
     padding: 0px;
     margin: 5px 0px 20px 10px;
     border-radius: 0px;
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .nav-tabs>li>a {
@@ -142,7 +142,7 @@ html {
   }
 
   .caption, .caption2 {
-    font-size: 0.95em;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.2em;
 //    position: relative;
@@ -271,11 +271,17 @@ html {
   div#navheader-current-section {
     font-size: 30px;
     font-weight: 400;
-    margin: 10px 0 0px 0;
+    margin: 15px 0 5px 10px;
+  }
+
+  div#navheader-dataset-stats {
+    margin: 16px 0px 0px 40px;
+    font-size: 24px;
+    color: #3181DE;
   }
 
   div#navheader-current-dataset {
-    margin: 20px 0px 0px 0px;
+    margin: 35px 10px 0px 0px;
     font-size: 14px;
     color: black;
   }

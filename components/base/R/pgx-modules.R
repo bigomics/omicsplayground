@@ -311,7 +311,11 @@ plotModule <- function(input, output, session,
     )
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
-    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
+    ##label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
+    title1 <- title
+    if(label!="") {
+        title1 = shiny::HTML(paste0(title," (",label,")"))
+    }
         
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
@@ -325,10 +329,10 @@ plotModule <- function(input, output, session,
     ##output$renderbuttons <- shiny::renderUI({
     ## button layout
     header <- shiny::fillRow(
-        flex = c(NA,1,NA,NA,NA,NA),
-        ##flex=c(NA,NA,1),
-        label1,
-        shiny::HTML(title),
+        flex = c(1,NA,NA,NA,NA),
+        ##label1,
+        ##shiny::HTML(title1),
+        shiny::div(class='plotmodule-title', title=title, title1),        
         ##div( class="button-group", style="display: inline-block; float: left;",
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
@@ -845,26 +849,30 @@ plotModule <- function(input, output, session,
         if(any(class(caption)=="character")) {
             caption <- shiny::HTML(caption)
         }
-        
-        shiny::fillCol(
-            flex = c(NA,NA,1,NA,NA,0.001),
-            height = height.1,
-            shiny::tagList(
-                shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                shiny::tags$head(shiny::tags$style(modalbody.style)),            
-                shiny::tags$head(shiny::tags$style(modalfooter.none))
-            ),            
-            div(class="plotmodule-header", header),
-            ##render,
-            eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
-            shiny::br(),
-            shiny::div(caption, class="caption"),          
-            shiny::div(class="popup-plot",
-                modalUI(ns("plotPopup"), title, size="fullscreen",
+
+        div(
+            class = "plotmodule",
+            shiny::fillCol(
+                flex = c(NA,NA,1,NA,NA,0.001),
+                height = height.1,
+                shiny::tagList(
+                    shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                    shiny::tags$head(shiny::tags$style(modalbody.style)),            
+                    shiny::tags$head(shiny::tags$style(modalfooter.none))
+                ),            
+                div(class="plotmodule-header", header),
+                ##render,
+                eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
+                shiny::br(),
+                shiny::div(caption, class="caption"),          
+                shiny::div(class="popup-plot",
+                    modalUI(ns("plotPopup"), title, size="fullscreen",
                         shiny::uiOutput(ns("popupfig"))
-                        )
+                    )
                 )
+            )
         )
+
     })
     shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
     
@@ -902,7 +910,7 @@ tableWidget <- function(id) {
 
 tableModule <- function(input, output, session, 
                         func, func2=NULL, info.text="Info text",
-                        title=NULL, label=NULL, server=TRUE, 
+                        title=NULL, label="", server=TRUE, 
                         caption=NULL, caption2=caption,
                         csvFunc=NULL, filename="data.csv", ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
@@ -937,6 +945,10 @@ tableModule <- function(input, output, session,
 
     ##if(!is.null(label) && label!="") label <- paste0("(",label,")")
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
+    title1 = title
+    if(label!="") {
+        title1 = shiny::HTML(paste0(title," (",label,")"))
+    }
     
     zoom.button <- modalTrigger(
         ns("zoombutton"),
@@ -949,7 +961,7 @@ tableModule <- function(input, output, session,
         ##flex=c(NA,NA,NA,NA,1),
         flex=c(NA,1,NA,NA,NA,NA),
         label1,
-        shiny::div(class='plotmodule-title', title=title, title),
+        shiny::div(class='plotmodule-title', title=title, title1),
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
