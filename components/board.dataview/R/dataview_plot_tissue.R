@@ -119,6 +119,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
             plotly::layout(
               yaxis = list(title = FALSE),
               xaxis = list(title = ylab),
+              font = list(family = "Lato"),
               showlegend = FALSE,
               bargap = .4,
               margin = list(l = 10, r = 10, b = 10, t = 10)
