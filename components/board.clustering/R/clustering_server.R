@@ -1514,7 +1514,7 @@ displays the expression levels of selected genes across all conditions in the an
                 align = 'right'
               ) %>% 
               plotly::layout(
-                ## TODO: check axis ranges! while in the lower row x is scaled from 0 to .9,
+                ## TODO: check x axis ranges! while in the lower row x is scaled from 0 to .9,
                 ##       in the upper it's ranging free (kinda; when you plot the axis, 
                 ##       the axis range is the same but the tooltip and axis are out of sync)
                 xaxis = list(
