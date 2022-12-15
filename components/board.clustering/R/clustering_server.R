@@ -1458,74 +1458,102 @@ displays the expression levels of selected genes across all conditions in the an
             NTERMS=22
         }
 
-        klrpal = rep(RColorBrewer::brewer.pal(8,"Set2"),2)
-        ##klrpal = paste0(klrpal,"88")
-        col.addalpha <- function(clr,a=100)
-            paste0("rgba(",paste(col2rgb(clr)[,1],collapse=","),",",a,")")
-        ##klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
-        klrpal <- paste0(klrpal,"55")
+        klrpal <- omics_pal_d("muted_light")(ncol(rho))
+        #klrpal <- paste0(klrpal, "B3")
         
         plot_list <- list()
-        i=1    
-        for(i in 1:min(9,ncol(rho))) {
+        i = 1    
+        for(i in 1:min(9, ncol(rho))) {
             
-            x = rev(head(sort(rho[,i],decreasing=TRUE),NTERMS))
-            names(x) = sub(".*:","",names(x))
-            names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
+            x <- rev(head(sort(rho[,i], decreasing = TRUE), NTERMS))
+            names(x) <- sub(".*:", "", names(x))
+            names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
 
-            y = names(x)
-            y = factor(y, levels=y)
+            y <- names(x)
+            y <- factor(y, levels = y)
             anntitle <- function(tt) {
-                list(text=tt, font = list(size=13),
-                     xref="paper", yref="paper",
-                     yanchor = "bottom", xanchor = "center",
-                     align = "center", x=0.5, y=1.02 , showarrow = FALSE )
+              list(
+                x = 0.5, y = 1.02, 
+                xref = "paper", yref = "paper",
+                xanchor = "center", yanchor = "bottom", 
+                text = tt, font = list(size = 13), 
+                align = "center", showarrow = FALSE
+              )
             }
-            
-            plot_list[[i]] <- plotly::plot_ly(
-                x=x, y=y, type='bar',  orientation='h',
-                ## text=y,
+            ## NOTE: The same plotly code (originally) as in `plot_clustannot.R`
+            ##       -> Seems it uses the function from this file, not the other one
+            ## TODO: clean-up; we should stick to the general setup of individual 
+            ##       scripts for the plotting functions
+            plot_list[[i]] <- 
+              plotly::plot_ly(
+                x = x, 
+                y = y, 
+                type = 'bar', 
+                orientation = 'h',
                 hoverinfo = 'text',
-                hovertemplate = paste0("%{y}<extra>",colnames(rho)[i],"</extra>"),
-                ##hovertemplate = "%{y}",
-                marker = list(color=klrpal[i])) %>%
-                plotly::layout(
-                    showlegend = FALSE,
-                    annotations = anntitle(colnames(rho)[i]),
-                    ## annotations = list(text="TITLE"),
-                    ## margin = c(0, 0.0, 0.05, 0.05),
-                    margin = list(l=5, r=0, t=25, b=15),
-                    xaxis = list(range = c(0,0.9),
-                                 titlefont = list(size=11),
-                                 tickfont = list(size=10),
-                                 showgrid=FALSE,
-                                 title = "\ncorrelation (R)" ),
-                    yaxis = list(title = "",
-                                 showgrid = FALSE,
-                                 showline = FALSE,
-                                 showticklabels = FALSE,
-                                 showgrid=FALSE,
-                                 zeroline = FALSE)
-                ) %>%
-                ## labeling the y-axis inside bars
-                plotly::add_annotations(xref = 'paper', yref = 'y',
-                                x = 0.01, y = y, xanchor='left',
-                                text = shortstring(y,slen), 
-                                font = list(size = 10),
-                                showarrow = FALSE, align = 'right')
-            ##layout(margin = c(0,0,0,0))
+                hovertemplate = ~paste0(
+                  ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
+                  ##       needs to be fixed (or that information to be removed)
+                  "Annotation: <b>%{y}</b><br>", 
+                  "Cluster: <b>", colnames(rho)[i], "</b><br>"
+                  "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
+                  "<extra></extra>"
+                ),
+                marker = list(color = klrpal[i])
+              ) %>%
+              ## labeling the y-axis inside bars
+              plotly::add_annotations(
+                x = .01, 
+                y = y, 
+                xref = 'paper', 
+                yref = 'y',
+                xanchor = 'left',
+                text = shortstring(y, slen), 
+                font = list(size = 10),
+                showarrow = FALSE, 
+                align = 'right'
+              ) %>% 
+              plotly::layout(
+                ## TODO: check axis ranges! while in the lower row x is scaled from 0 to .9,
+                ##       in the upper it's ranging free (kinda; when you plot the axis, 
+                ##       the axis range is the same but the tooltip and axis are out of sync)
+                xaxis = list(
+                  range = c(0, .9),
+                  font = list(family = "Lato"),
+                  titlefont = list(size = 11),
+                  tickfont = list(size = 10),
+                  showgrid = FALSE,
+                  title = "\ncorrelation (R)"
+                ),
+                yaxis = list(
+                  title = FALSE,
+                  showgrid = FALSE,
+                  showline = FALSE,
+                  showticklabels = FALSE,
+                  showgrid = FALSE,
+                  zeroline = FALSE
+                ),
+                showlegend = FALSE,
+                annotations = anntitle(colnames(rho)[i]),
+                bargap = .2,
+                margin = list(l = 5, r = 0, b = 25, t = 20)
+              ) %>%
+              plotly_default1() 
         }
         
         if(length(plot_list) <= 4) {
-            nrows = ceiling(length(plot_list)/2 )
+            nrows = ceiling(length(plot_list) / 2 )
         } else {
-            nrows = ceiling(length(plot_list)/3 )
+            nrows = ceiling(length(plot_list) / 3 )
         }
         
-        plotly::subplot( plot_list, nrows=nrows, shareX=TRUE,
-                ## template = "plotly_dark",
-                margin = c(0, 0.0, 0.05, 0.05) ) %>%
-            plotly::config(displayModeBar = FALSE) 
+        plotly::subplot( 
+          plot_list, 
+          nrows = nrows, 
+          shareX = TRUE,
+          margin = c(0, 0, .05, .05) 
+        ) %>%
+        plotly::config(displayModeBar = FALSE) 
     })
 
     clustannot_plots_opts = shiny::tagList(
