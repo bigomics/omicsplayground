@@ -110,11 +110,11 @@ dataview_plot_genetypes_server <- function(id,
                   color = omics_colors("mid_blue")
                 ), 
                 hovertemplate = ~paste0(
-                  "Gene family: <b>", family,
+                  "Gene family: <b>", family, "</b><br>",
                   ## NOTE: tooltip looks awful due to way too many genes
                   ## TODO: discuss potential solutions; how about showing number of genes or the top 3?
-                  "<br></b>Genes: <b>", genes,
-                  "</b><extra></extra>"
+                  "Genes: <b>", genes, "</b>",
+                  "<extra></extra>"
                 )
               ) %>%
               plotly::layout(

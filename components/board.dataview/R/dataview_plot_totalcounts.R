@@ -99,9 +99,9 @@ dataview_plot_totalcounts_server <- function(id,
                 color = omics_colors("mid_blue")
               ), 
               hovertemplate = ~paste0(
-                "Sample: <b>", sample,
-                "</b><br>", res$ylab, ": <b>", sprintf("%8.0f", counts),
-                "</b><extra></extra>"
+                "Sample: <b>", sample, "</b><br>", 
+                res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+                "<extra></extra>"
               )
             ) %>% 
             plotly::layout(

@@ -106,10 +106,10 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark=FALSE)
                 color = ~sample,
                 colors = omics_pal_d(palette = "expanded")(length(unique(df$sample)))#, 
                 # hovertemplate = ~paste0(
-                #   "Sample: <b>", sample,
-                #   "</b><br>Expression: <b>", x,
-                #   "</b><br>Density: <b>", y,
-                #   "</b><extra></extra>"
+                #   "Sample: <b>", sample, "</b><br>",
+                #   "Expression: <b>", x, "</b><br>",
+                #   "Density: <b>", y, "</b>", 
+                #   "<extra></extra>"
                 # )
               ) %>%
               plotly::layout(

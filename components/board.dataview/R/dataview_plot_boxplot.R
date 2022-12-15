@@ -92,9 +92,9 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
                 ## TODO: decide if it's fine like that; check if it is possible to reduce the number of tooltips
                 hoverinfo = "y"
                 # hovertemplate = ~paste0(
-                #   "Sample: <b>", sample,
-                #   "</b><br>Counts (log2): <b>", value,
-                #   "</b><extra></extra>"
+                #   "Sample: <b>", sample, "</b><br>",
+                #   "Counts (log2): <b>", value, "</b>",
+                #   "<extra></extra>"
                 # )
               ) %>%
               plotly::layout(

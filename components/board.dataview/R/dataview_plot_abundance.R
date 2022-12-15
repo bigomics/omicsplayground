@@ -95,10 +95,10 @@ dataview_plot_abundance_server <- function(id,
                 color = ~gene,
                 colors = omics_pal_d("muted")(length(unique(long.data$gene))), 
                 hovertemplate = ~paste0(
-                  "Sample: <b>", sample,
-                  "</b><br>Gene: <b>", gene,
-                  "</b><br>Cum. proportion: <b>", sprintf("%2.1f", value), "%",
-                  "</b><extra></extra>"
+                  "Sample: <b>", sample, "</b><br>",
+                  "Gene: <b>", gene, "</b><br>",
+                  "Cum. proportion: <b>", sprintf("%2.1f", value), "%</b>",
+                  "<extra></extra>"
                 )
               ) %>% 
               plotly::layout(

@@ -1495,7 +1495,7 @@ displays the expression levels of selected genes across all conditions in the an
                   ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
                   ##       needs to be fixed (or that information to be removed)
                   "Annotation: <b>%{y}</b><br>", 
-                  "Cluster: <b>", colnames(rho)[i], "</b><br>"
+                  "Cluster: <b>", colnames(rho)[i], "</b><br>",
                   "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
                   "<extra></extra>"
                 ),

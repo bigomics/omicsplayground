@@ -200,9 +200,9 @@ dataview_plot_tsne_server <- function(id,
                   ), 
                   hovertemplate = ~paste(
                     "Gene:<b>", gene,
-                    "</b><br>Sample:<b>", name ,
-                    "</b><br>Expression:<b>", sprintf("%1.3f", expression), 
-                    "</b><extra></extra>"
+                    "</b><br>Sample:<b>", name, "</b><br>",
+                    "Expression:<b>", sprintf("%1.3f", expression), "</b>",
+                    "<extra></extra>"
                   )
                 )
               
