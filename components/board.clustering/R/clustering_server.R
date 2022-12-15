@@ -1483,7 +1483,7 @@ displays the expression levels of selected genes across all conditions in the an
             ## NOTE: The same plotly code (originally) as in `plot_clustannot.R`
             ##       -> Seems it uses the function from this file, not the other one
             ## TODO: clean-up; we should stick to the general setup of individual 
-            ##       scripts for the plotting functions
+            ##       scripts for the plotting functions, not inside the server scripts as agreed
             plot_list[[i]] <- 
               plotly::plot_ly(
                 x = x, 
