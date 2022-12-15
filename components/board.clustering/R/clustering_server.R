@@ -1499,6 +1499,11 @@ displays the expression levels of selected genes across all conditions in the an
                   "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
                   "<extra></extra>"
                 ),
+                ## NOTE: I suggest to not use a categorical palette for the different clusters;
+                ##       the panels alone highlight the different groups and a single color would
+                ##       allow for a fair comparison (in terms of visual weight), solve all 
+                ##       readability problems and would make the page much more calm
+                ## TODO: if you agree, set to single color instead
                 marker = list(color = klrpal[i])
               ) %>%
               ## labeling the y-axis inside bars
