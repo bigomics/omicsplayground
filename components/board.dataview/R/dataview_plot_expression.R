@@ -248,16 +248,14 @@ dataview_plot_expression_server <- function(id,
                           color = omics_colors("super_dark_grey")
                         ), 
                         hovertemplate = ~paste0(
-                          "Gene: <b>", pd$gene, 
-                          
-                          
+                          "Gene: <b>", pd$gene, "</b><br>",
                           ## NOTE: groups don't work this way, as it's multiple groups per bar
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
-                          #"</b><br>Group: <b>", group,
+                          # "Group: <b>", group, "</b><br>",
                           ## NOTE: currently showing mean doesn't work as there are multiple averages per bar 
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
-                          #"</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), 
-                          "</b><extra></extra>"
+                          # stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), "</b>", 
+                          "<extra></extra>"
                         )
                       ) 
                     
@@ -341,14 +339,11 @@ dataview_plot_expression_server <- function(id,
                       color = omics_colors("mid_blue")
                     ), 
                     hovertemplate = ~paste0(
-                      "Gene:<b>", pd$gene,
-                      "</b><br>Sample: <b>", samples,
-                      "</b><br>", stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), 
-                      "</b><extra></extra>"
+                      "Gene: <b>", pd$gene, "</b><br>",
+                      "Sample: <b>", samples, "</b><br>", 
+                      stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), "</b>"
+                      "<extra></extra>"
                     )
-                  ) %>% 
-                  plotly::layout(
-                    xaxis = list(title = FALSE, fixedrange = TRUE)  
                   )
                 
                 ## fig
@@ -356,7 +351,8 @@ dataview_plot_expression_server <- function(id,
 
             fig <- 
               fig %>%
-                plotly::layout(                    
+                plotly::layout(     
+                  xaxis = list(title = FALSE, fixedrange = TRUE),                
                   yaxis = list(title = stringr::str_to_sentence(pd$ylab), fixedrange = TRUE),
                   font = list(family = "Lato"),
                   showlegend = FALSE,
