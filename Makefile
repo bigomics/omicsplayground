@@ -51,6 +51,6 @@ tags:
 	git push && git push --tags
 	docker tag bigomics/omicsplayground:$(TAG) bigomics/omicsplayground:$(VERSION)
 
-push.latest: 
-	docker push bigomics/omicsplayground:latest
+push.docker: 
 	docker push bigomics/omicsplayground:$(VERSION)
+	docker push bigomics/omicsplayground:latest
