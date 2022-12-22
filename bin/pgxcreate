@@ -7,32 +7,32 @@
 ##
 
 
-if(!require(optparse)) install.packages("optparse")
-require(optparse, quietly=TRUE)
+if(!require(optparse, quietly=TRUE)) install.packages("optparse")
+## require(optparse, quietly=TRUE)
 
 option_list = list(
-  make_option(c("-c", "--counts"), type="character", default="counts.tsv", 
-              help="counts file name", metavar="character"),
-  make_option(c("-s", "--samples"), type="character", default="samples.tsv", 
-              help="samples file name [default= %default]", metavar="character"),
-  make_option(c("-p", "--contrasts"), type="character", default="auto", 
-              help="specify contrasts file (or auto) for comparisons [default= %default]", metavar="character"),
-  make_option(c("-o", "--out"), type="character", default=NULL, 
-              help="output PGX file name [default= %default]", metavar="character"),
-  make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
-              help="omicsplayground root folder [default= %default]", metavar="character"),      
-  make_option(c("-x", "--maxgenes"), type="integer", default=25000, 
-              help="maximum number of genes [default= %default]", metavar="integer"),      
-  make_option(c("-z", "--maxgenesets"), type="integer", default=5000, 
-              help="maximum number of genesets [default= %default]", metavar="integer"),      
-  make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,edger.qlf,edger.lrt", 
-              help="gene testing methods [default= %default]", metavar="character"),      
-  make_option(c("-d", "--gsetmethods"), type="character", default="fisher,gsva,fgsea", 
-              help="geneset testing methods [default= %default]", metavar="character")
+    optparse::make_option(c("-c", "--counts"), type="character", default="counts.tsv", 
+        help="counts file name", metavar="character"),
+    optparse::make_option(c("-s", "--samples"), type="character", default="samples.tsv", 
+        help="samples file name [default= %default]", metavar="character"),
+    optparse::make_option(c("-p", "--contrasts"), type="character", default="auto", 
+        help="specify contrasts file (or auto) for comparisons [default= %default]", metavar="character"),
+    optparse::make_option(c("-o", "--out"), type="character", default=NULL, 
+        help="output PGX file name [default= %default]", metavar="character"),
+    optparse::make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
+        help="omicsplayground root folder [default= %default]", metavar="character"),      
+    optparse::make_option(c("-x", "--maxgenes"), type="integer", default=25000, 
+        help="maximum number of genes [default= %default]", metavar="integer"),      
+    optparse::make_option(c("-z", "--maxgenesets"), type="integer", default=5000, 
+        help="maximum number of genesets [default= %default]", metavar="integer"),      
+    optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,edger.qlf,edger.lrt", 
+        help="gene testing methods [default= %default]", metavar="character"),      
+    optparse::make_option(c("-d", "--gsetmethods"), type="character", default="fisher,gsva,fgsea", 
+        help="geneset testing methods [default= %default]", metavar="character")
 )
 
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
+opt_parser = optparse::OptionParser(option_list=option_list)
+opt = optparse::parse_args(opt_parser)
 
 if(0) {
     opt <- list()
