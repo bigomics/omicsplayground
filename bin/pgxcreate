@@ -8,7 +8,7 @@
 
 
 if(!require(optparse)) install.packages("optparse")
-require(optparse)
+require(optparse, quietly=TRUE)
 
 option_list = list(
   make_option(c("-c", "--counts"), type="character", default="counts.tsv", 
