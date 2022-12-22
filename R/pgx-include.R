@@ -3,30 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 
-
     
 ##useShinyjs(rmd=TRUE)  
 shinyjs::useShinyjs()

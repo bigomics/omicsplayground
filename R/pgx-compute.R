@@ -19,6 +19,216 @@ if(0) {
     contrasts <- ngs$contrasts
 }
 
+pgx.createFromFiles <- function(count.file, samples.file, contrasts.file=NULL,
+                                extra=TRUE)
+{
+    ## compile sample table
+    samples <- fread(samples.file, header=TRUE)
+    samples <- data.frame(samples, check.names=FALSE, row.names=1)
+
+    ## read counts table
+    counts <- fread(counts.file)
+    counts <- as.matrix(data.frame(counts, check.names=FALSE, row.names=1))
+    head(counts)
+    
+    ## undo logarithm if necessary
+    if(max(counts) < 100) {
+        cat("assuming counts were log2 values. undoing logarithm...")
+        counts <- 2**counts
+    }
+    
+    ## match sample table and counts
+    kk <- sort(intersect(colnames(counts),rownames(samples)))
+    counts <- counts[,kk,drop=FALSE] 
+    samples <- samples[kk,]
+    
+    ## parse requested phenotypes
+    if(!is.null(contrasts.file) && file.exists(contrasts.file)) {
+        cat("reading contrasts file", contrasts.file,"\n")
+        contrasts <- fread(contrasts.file, header=TRUE)
+        contrasts <- data.frame(contrasts, check.names=FALSE, row.names=1)
+    } else {
+        pheno <- head(grep("^[.]",colnames(samples),value=TRUE,invert=TRUE),1)
+        #pheno <- strsplit(pheno,split=",")[[1]]
+        pheno <- intersect(pheno,colnames(samples))
+        pheno
+        Y <- samples[,pheno,drop=FALSE]
+        ## automatically guess contrasts
+        ac <- pgx.makeAutoContrasts(Y, mingrp=3, slen=20, ref=NA)
+        is.null(ac)
+        table(ac$group)
+        head(ac$contr.matrix)
+        contrasts <- contrastAsLabels(ac$exp.matrix)
+    }
+
+    head(contrasts)
+    
+    if(0) {
+        ## reduce sample table? Only phenotypes in contrasts
+        vv <- unique(sub("[:].*","",colnames(contrasts)))
+        vv
+        samples <- data.frame(samples[,vv,drop=FALSE])
+    }
+    
+    ## other params
+    gx.methods <- strsplit(opt$gxmethods,split=",")[[1]]
+    gset.methods <- strsplit(opt$gsetmethods,split=",")[[1]]
+    ##extra.methods <- strsplit(opt$extramethods,split=",")[[1]]
+    extra.methods <- NULL
+    if(extra == TRUE) {
+        extra.methods <- c("meta.go","deconv","infer","drugs","wordcloud")
+    }
+    
+    gx.methods
+    gset.methods
+    extra.methods
+    
+    ## create initial PGX object
+    pgx <- pgx.createPGX(
+        counts,
+        samples = samples,
+        contrasts = contrasts,
+        X = NULL, ## genes,
+        is.logx = NULL,
+        batch.correct = TRUE,
+        auto.scale = TRUE,
+        filter.genes = TRUE,
+        prune.samples = FALSE,
+        only.known = TRUE,
+        only.hugo = TRUE,
+        convert.hugo = TRUE,
+        do.cluster = TRUE,
+        cluster.contrasts = FALSE,
+        do.clustergenes = TRUE,
+        only.proteincoding = TRUE
+    )
+    
+    
+    ## start computing PGX object
+    pgx <- pgx.computePGX(
+        pgx, 
+        max.genes = opt$maxgenes,
+        max.genesets = opt$maxgenesets,
+        gx.methods = gx.methods,
+        gset.methods = gset.methods,
+        extra.methods = extra.methods,
+        do.cluster = TRUE,
+        use.design = TRUE,
+        prune.samples = FALSE,
+        lib.dir = FILES,
+        progress=NULL
+    )
+
+    ## save
+    names(pgx)
+    pgx
+}
+
+pgx.createFromFiles <- function(count.file, samples.file, contrasts.file=NULL,
+                                extra=TRUE)
+{
+    ## compile sample table
+    samples <- fread(samples.file, header=TRUE)
+    samples <- data.frame(samples, check.names=FALSE, row.names=1)
+
+    ## read counts table
+    counts <- fread(counts.file)
+    counts <- as.matrix(data.frame(counts, check.names=FALSE, row.names=1))
+    head(counts)
+    
+    ## undo logarithm if necessary
+    if(max(counts) < 100) {
+        cat("assuming counts were log2 values. undoing logarithm...")
+        counts <- 2**counts
+    }
+    
+    ## match sample table and counts
+    kk <- sort(intersect(colnames(counts),rownames(samples)))
+    counts <- counts[,kk,drop=FALSE] 
+    samples <- samples[kk,]
+    
+    ## parse requested phenotypes
+    if(!is.null(contrasts.file) && file.exists(contrasts.file)) {
+        cat("reading contrasts file", contrasts.file,"\n")
+        contrasts <- fread(contrasts.file, header=TRUE)
+        contrasts <- data.frame(contrasts, check.names=FALSE, row.names=1)
+    } else {
+        pheno <- head(grep("^[.]",colnames(samples),value=TRUE,invert=TRUE),1)
+        #pheno <- strsplit(pheno,split=",")[[1]]
+        pheno <- intersect(pheno,colnames(samples))
+        pheno
+        Y <- samples[,pheno,drop=FALSE]
+        ## automatically guess contrasts
+        ac <- pgx.makeAutoContrasts(Y, mingrp=3, slen=20, ref=NA)
+        is.null(ac)
+        table(ac$group)
+        head(ac$contr.matrix)
+        contrasts <- contrastAsLabels(ac$exp.matrix)
+    }
+
+    head(contrasts)
+    
+    if(0) {
+        ## reduce sample table? Only phenotypes in contrasts
+        vv <- unique(sub("[:].*","",colnames(contrasts)))
+        vv
+        samples <- data.frame(samples[,vv,drop=FALSE])
+    }
+    
+    ## other params
+    gx.methods <- strsplit(opt$gxmethods,split=",")[[1]]
+    gset.methods <- strsplit(opt$gsetmethods,split=",")[[1]]
+    ##extra.methods <- strsplit(opt$extramethods,split=",")[[1]]
+    extra.methods <- NULL
+    if(extra == TRUE) {
+        extra.methods <- c("meta.go","deconv","infer","drugs","wordcloud")
+    }
+    
+    gx.methods
+    gset.methods
+    extra.methods
+    
+    ## create initial PGX object
+    pgx <- pgx.createPGX(
+        counts,
+        samples = samples,
+        contrasts = contrasts,
+        X = NULL, ## genes,
+        is.logx = NULL,
+        batch.correct = TRUE,
+        auto.scale = TRUE,
+        filter.genes = TRUE,
+        prune.samples = FALSE,
+        only.known = TRUE,
+        only.hugo = TRUE,
+        convert.hugo = TRUE,
+        do.cluster = TRUE,
+        cluster.contrasts = FALSE,
+        do.clustergenes = TRUE,
+        only.proteincoding = TRUE
+    )
+    
+    
+    ## start computing PGX object
+    pgx <- pgx.computePGX(
+        pgx, 
+        max.genes = opt$maxgenes,
+        max.genesets = opt$maxgenesets,
+        gx.methods = gx.methods,
+        gset.methods = gset.methods,
+        extra.methods = extra.methods,
+        do.cluster = TRUE,
+        use.design = TRUE,
+        prune.samples = FALSE,
+        lib.dir = FILES,
+        progress=NULL
+    )
+
+    ## save
+    names(pgx)
+    pgx
+}
+
 pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
                           is.logx=NULL, batch.correct=TRUE,
                           auto.scale=TRUE, filter.genes=TRUE, prune.samples=FALSE,
