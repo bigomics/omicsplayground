@@ -19,6 +19,7 @@ WORKDIR /omicsplayground
 RUN rm -rf shiny/* R/*
 COPY shiny/ shiny/
 COPY R/ R/
+COPY bin/ bin/
 
 WORKDIR /omicsplayground
 EXPOSE 3838
