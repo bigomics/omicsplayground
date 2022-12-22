@@ -47,10 +47,10 @@ if(0) {
     opt$extramethods = "meta.go,infer,drugs,wordcloud"
 }
 
-## if(is.null(opt$out)){
-##     print_help(opt_parser)
-##     stop("At least one argument must be supplied (out file)\n", call.=FALSE)
-## }
+if(is.null(opt$counts) || is.null(opt$samples) || is.null(opt$out)){
+     print_help(opt_parser)
+     stop("incomplete or invalid options\n", call.=FALSE)
+}
 
 if(!file.exists(opt$counts))  stop("could not find counts file\n", call.=FALSE)
 if(!file.exists(opt$samples)) stop("could not find samples file\n", call.=FALSE)
