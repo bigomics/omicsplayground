@@ -11,9 +11,9 @@ if(!require(optparse, quietly=TRUE)) install.packages("optparse")
 ## require(optparse, quietly=TRUE)
 
 option_list = list(
-    optparse::make_option(c("-c", "--counts"), type="character", default="counts.tsv", 
+    optparse::make_option(c("-c", "--counts"), type="character", default="counts.csv", 
         help="counts file name", metavar="character"),
-    optparse::make_option(c("-s", "--samples"), type="character", default="samples.tsv", 
+    optparse::make_option(c("-s", "--samples"), type="character", default="samples.csv", 
         help="samples file name [default= %default]", metavar="character"),
     optparse::make_option(c("-p", "--contrasts"), type="character", default="auto", 
         help="specify contrasts file (or auto) for comparisons [default= %default]", metavar="character"),
@@ -21,14 +21,16 @@ option_list = list(
         help="output PGX file name [default= %default]", metavar="character"),
     optparse::make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
         help="omicsplayground root folder [default= %default]", metavar="character"),      
-    optparse::make_option(c("-x", "--maxgenes"), type="integer", default=25000, 
+    optparse::make_option(c("-g", "--maxgenes"), type="integer", default=25000, 
         help="maximum number of genes [default= %default]", metavar="integer"),      
     optparse::make_option(c("-z", "--maxgenesets"), type="integer", default=5000, 
         help="maximum number of genesets [default= %default]", metavar="integer"),      
     optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,edger.qlf,edger.lrt", 
         help="gene testing methods [default= %default]", metavar="character"),      
     optparse::make_option(c("-d", "--gsetmethods"), type="character", default="fisher,gsva,fgsea", 
-        help="geneset testing methods [default= %default]", metavar="character")
+        help="geneset testing methods [default= %default]", metavar="character"),
+    optparse::make_option(c("-x", "--extra"), type="character", default="meta.go,deconv,infer,drugs,wordcloud", 
+        help="compute extra methods [default= %default]", metavar="character")
 )
 
 opt_parser = optparse::OptionParser(option_list=option_list)
@@ -49,12 +51,16 @@ if(0) {
 
 if(is.null(opt$counts) || is.null(opt$samples) || is.null(opt$out)){
      print_help(opt_parser)
+     if(is.null(opt$out))    stop("must supply output filename\n", call.=FALSE)
+     if(is.null(opt$counts)) stop("must supply counts filename\n", call.=FALSE)
+     if(is.null(opt$sample)) stop("must supply sample filename\n", call.=FALSE)
      stop("incomplete or invalid options\n", call.=FALSE)
 }
 
 if(!file.exists(opt$counts))  stop("could not find counts file\n", call.=FALSE)
 if(!file.exists(opt$samples)) stop("could not find samples file\n", call.=FALSE)
 if(!dir.exists(opt$root))     stop("could not find Playground root folder\n", call.=FALSE)
+
 
 RDIR  = file.path(opt$root,"R")
 FILES = file.path(opt$root,"lib")
@@ -64,9 +70,19 @@ library(data.table)
 
 counts.file  <- opt$counts
 samples.file <- opt$samples
-contrasts.file <- ifelse(opt$contrasts=="auto", NULL, opt$contrasts)
+contrasts.file <- NULL
+if(!is.null(opt$contrasts) && opt$contrasts!="auto") {
+    contrast.file <- opt$contrasts
+}
+extra <- opt$extra
 
-pgx <- pgx.createFromFiles(count.file, samples.file, contrasts.file=NULL, extra=FALSE)
+pgx <- pgx.createFromFiles(
+    count.file,
+    samples.file,
+    contrasts.file,
+    gxmethods = opt$gxmethods,
+    gsetmethods = opt$gsetmethods,
+    extra = opt$extra)
 cat("pgx.createFromFiles finished\n")
 
 cat("saving PGX object to",opt$out,"\n")
