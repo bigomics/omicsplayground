@@ -38,14 +38,14 @@ RUN R -e "remotes::install_github('bigomics/bigdash')"
 # Download fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-ARG TAG=master
-RUN echo Downloading $TAG branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$TAG.zip \
+ARG BRANCH=master
+RUN echo Downloading $BRANCH branch
+RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
     && rm -fr /omicsplayground*  \
-    && unzip $TAG.zip \
-    && mv omicsplayground-$TAG omicsplayground \
+    && unzip $BRANCH.zip \
+    && mv omicsplayground-$BRANCH omicsplayground \
     && chmod -R ugo+rwX /omicsplayground \
-    && rm $TAG.zip   
+    && rm $BRANCH.zip   
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
