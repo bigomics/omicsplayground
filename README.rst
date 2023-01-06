@@ -44,7 +44,7 @@ Omics Playground is implemented using the
 will need R and Shiny Server installed to run Omics Playground. The
 source code of the platform is available on `GitHub
 <https://github.com/bigomics/omicsplayground>`__. You can download the
-latest release of the software by cloning the repository.
+latest release of the software by cloning the repository here.
 
 Below, we explain the steps required to set up the platform from
 the source code:
