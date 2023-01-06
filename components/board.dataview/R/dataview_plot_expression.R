@@ -13,56 +13,56 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
         shiny::radioButtons(ns('geneplot_type'),'plot type (grouped)', c('bar','violin','box'),
                             inline=TRUE)
     )
-    
+
     PlotModuleUI(
         ns("pltmod"),
         title = "Abundance/expression",
         label = label,
         outputFunc = plotly::plotlyOutput,
-        outputFunc2 = plotly::plotlyOutput,        
+        outputFunc2 = plotly::plotlyOutput,
         info.text = info_text,
         options = opts,
-        download.fmt=c("png","pdf","csv"),         
+        download.fmt=c("png","pdf","csv"),
         ##width = c("auto","100%"),
         height = height
     )
-    
+
 }
 
 dataview_plot_expression_server <- function(id,
                                             pgx,
                                             r.gene = reactive(""),
                                             r.samples = reactive(""),
-                                            r.data_type = reactive("counts"),            
+                                            r.data_type = reactive("counts"),
                                             r.data_groupby = reactive(""),
                                             watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
 
         dbg("[dataview_expressionplot_server] created!")
-        
+
         plot_data <- shiny::reactive({
 
             shiny::req(pgx$X)
             shiny::req(r.gene(), r.data_type())
-            
+
             ## dereference reactives
             gene <- r.gene()
             samples <- r.samples()
-            data_type <- r.data_type()                      
+            data_type <- r.data_type()
             groupby <- r.data_groupby()
 
             if(samples[1]=="") samples <- colnames(pgx$X)
-            if(gene=="") genes <- rownames(pgx$X)[1]            
-            
+            if(gene=="") genes <- rownames(pgx$X)[1]
+
             grpvar=1
             grp <- rep(NA,length(samples))
             if(groupby != "<ungrouped>") {
                 ##grp  = factor(as.character(pgx$samples[,3]))
-                grp  = factor(as.character(pgx$Y[samples,groupby]))                
+                grp  = factor(as.character(pgx$Y[samples,groupby]))
             }
 
-            pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]            
+            pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
             gx = NULL
             ylab = NULL
             if(data_type=="counts") {
@@ -75,10 +75,10 @@ dataview_plot_expression_server <- function(id,
                 gx = pgx$X[pp,samples]
                 ylab="expression (log2CPM)"
             }
-            
+
             geneplot_type = "barplot"
             geneplot_type = input$geneplot_type
-            
+
             pd <- list(
                 df = data.frame(
                     x = gx,
@@ -95,18 +95,18 @@ dataview_plot_expression_server <- function(id,
 
 
         plot.RENDER.SAVE <- function() {
-            
+
             pd  <- plot_data()
             shiny::req(pd)
-            
+
             df <- pd[['df']]
-            
+
             par(mar=c(7,3.5,2,1), mgp=c(2.1,0.8,0))
-            
+
             BLUE = rgb(0.2,0.5,0.8,0.8)
             bee.cex = ifelse(length(df$x)>500,0.1,0.2)
             bee.cex = c(0.3,0.1,0.05)[cut(length(df$x),c(0,100,500,99999))]
-            
+
             if(pd$groupby != "<ungrouped>") {
                 nnchar = nchar(paste(unique(df$group),collapse=''))
                 srt = ifelse(nnchar < 20, 0, 35)
@@ -145,7 +145,7 @@ dataview_plot_expression_server <- function(id,
                         vcol = rgb(0.4,0.6,0.85,0.85),
                         srt = srt
                     )
-                    
+
                 } else {
                     boxplot(
                         df$x ~ df$group,
@@ -206,17 +206,17 @@ dataview_plot_expression_server <- function(id,
         }
 
         plot.RENDER <- function() {
-            
+
             pd  <- plot_data()
             shiny::req(pd)
 
-            df <- pd[['df']]            
+            df <- pd[['df']]
             ##par(mar=c(7,3.5,2,1), mgp=c(2.1,0.8,0))
-            
+
             BLUE = rgb(0.2,0.5,0.8,0.8)
             bee.cex = ifelse(length(df$x)>500,0.1,0.2)
             bee.cex = c(0.3,0.1,0.05)[cut(length(df$x),c(0,100,500,99999))]
-            
+
             if(pd$groupby != "<ungrouped>") {
 
                 nnchar = nchar(paste(unique(df$group),collapse=''))
@@ -226,59 +226,59 @@ dataview_plot_expression_server <- function(id,
                 cx1 = ifelse( ngrp > 20, 0.6, cx1)
 
                 if(pd$geneplot_type == 'bar') {
-                    
+
                     data_mean <- tapply( df$x, df$group, mean)
                     data_sd   <- tapply( df$x, df$group, sd)
                     data      <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
-                    
-                    fig <- 
+
+                    fig <-
                       plotly::plot_ly(
                         data = data,
-                        x = ~group, 
-                        y = ~mean, 
-                        type = 'bar', 
+                        x = ~group,
+                        y = ~mean,
+                        type = 'bar',
                         name = pd$gene,
                         marker = list(
                           color = omics_colors("mid_blue")
                           #color = omics_pal_d(palette = "muted")(nrow(data))
-                        ), 
+                        ),
                         ## TODO: Q Does it make any sense to show error bars on a log scale??
                         error_y = ~list(
-                          array = sd, 
+                          array = sd,
                           color = omics_colors("super_dark_grey")
-                        ), 
+                        ),
                         hovertemplate = ~paste0(
                           "Gene: <b>", pd$gene, "</b><br>",
                           ## NOTE: groups don't work this way, as it's multiple groups per bar
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
                           # "Group: <b>", group, "</b><br>",
-                          ## NOTE: currently showing mean doesn't work as there are multiple averages per bar 
+                          ## NOTE: currently showing mean doesn't work as there are multiple averages per bar
                           ## TODO: check if that should really be the case - if so, decide how to handle in tooltips
-                          # stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), "</b>", 
+                          # stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", mean), "</b>",
                           "<extra></extra>"
                         )
-                      ) 
-                    
-                    fig <- fig %>% 
+                      )
+
+                    fig <- fig %>%
                       plotly::add_markers(
-                        type = 'scatter', 
-                        x = df$group, 
-                        y = df$x, 
+                        type = 'scatter',
+                        x = df$group,
+                        y = df$x,
                         showlegend = FALSE,
                         marker = list(
-                          color = omics_colors("super_dark_grey"), 
+                          color = omics_colors("super_dark_grey"),
                           size = 6
                         )
-                      ) %>% 
+                      ) %>%
                       plotly::layout(
-                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
-                      ) 
-                    
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)
+                      )
+
                     fig
 
                 } else if(pd$geneplot_type == 'violin') {
-                    
-                    fig <- 
+
+                    fig <-
                       plotly::plot_ly(
                         data = df,
                         type = 'violin',
@@ -299,15 +299,15 @@ dataview_plot_expression_server <- function(id,
                           ## title = "",
                           zeroline = FALSE
                         )
-                      ) %>% 
+                      ) %>%
                       plotly::layout(
-                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)
                       )
                     ##fig
-                    
+
                 } else {
                     ## boxplot
-                    fig <- 
+                    fig <-
                       plotly::plot_ly(
                         data = df,
                         type = 'box',
@@ -317,58 +317,58 @@ dataview_plot_expression_server <- function(id,
                         jitter = 0.3,
                         pointpos = 0.0,
                         color = omics_colors("mid_blue")
-                      ) %>% 
+                      ) %>%
                       plotly::layout(
-                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)  
+                        xaxis = list(title = paste0("'", pd$groupby, "'"), fixedrange = TRUE)
                       )
-                    ## fig 
+                    ## fig
 
                 }
-                
+
             }  else {
-                
+
                 ## plot as regular bar plot
-                fig <- 
+                fig <-
                   plotly::plot_ly(
                     data = df,
-                    x = ~samples, 
-                    y = ~x, 
-                    type = 'bar', 
+                    x = ~samples,
+                    y = ~x,
+                    type = 'bar',
                     name = pd$gene,
                     marker = list(
                       color = omics_colors("mid_blue")
-                    ), 
+                    ),
                     hovertemplate = ~paste0(
                       "Gene: <b>", pd$gene, "</b><br>",
-                      "Sample: <b>", samples, "</b><br>", 
-                      stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), "</b>"
+                      "Sample: <b>", samples, "</b><br>",
+                      stringr::str_to_sentence(pd$ylab), ": <b>", sprintf("%1.3f", x), "</b>",
                       "<extra></extra>"
                     )
                   )
-                
+
                 ## fig
             }
 
-            fig <- 
+            fig <-
               fig %>%
-                plotly::layout(     
-                  xaxis = list(title = FALSE, fixedrange = TRUE),                
+                plotly::layout(
+                  xaxis = list(title = FALSE, fixedrange = TRUE),
                   yaxis = list(title = stringr::str_to_sentence(pd$ylab), fixedrange = TRUE),
                   font = list(family = "Lato"),
                   showlegend = FALSE,
-                  margin = list(l = 10, r = 10, b = 10, t = 10)                  
-                  ## title = pd$gene                    
+                  margin = list(l = 10, r = 10, b = 10, t = 10)
+                  ## title = pd$gene
                 ) %>%
                 ##plotly::config(displayModeBar = FALSE) %>%
                 plotly::config(displaylogo = FALSE) %>%
                 plotly::config(
                   modeBarButtons = list(list("toImage")),
                   toImageButtonOptions = list(format = 'svg', height = 500, width = 900)
-                ) %>% 
-              plotly_default1()                        
+                ) %>%
+              plotly_default1()
             fig
         }
-        
+
         modal_plot.RENDER <- function() {
             fig <- plot.RENDER() %>%
                 plotly::layout(
@@ -380,7 +380,7 @@ dataview_plot_expression_server <- function(id,
             fig <- plotly::style(fig, marker.size = 14)
             fig
         }
-        
+
         PlotModuleServer(
             "pltmod",
             plotlib = "plotly",
@@ -389,9 +389,9 @@ dataview_plot_expression_server <- function(id,
             func2 = modal_plot.RENDER,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
             renderFunc = plotly::renderPlotly,
-            renderFunc2 = plotly::renderPlotly,        
+            renderFunc2 = plotly::renderPlotly,
             ##renderFunc = shiny::renderPlot,
-            ##renderFunc2 = shiny::renderPlot,        
+            ##renderFunc2 = shiny::renderPlot,
             res = c(90,170)*1,                ## resolution of plots
             pdf.width = 6, pdf.height = 6,
             add.watermark = watermark
