@@ -16,6 +16,10 @@ MAINTAINER Ivo Kwee "kwee@bigomics.ch"
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Hirsute (21.04) has been moved..
+RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+RUN sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+
 RUN apt update && apt install -y \
     locales apt-utils software-properties-common \
     libcurl4-gnutls-dev libnode-dev libv8-dev \
@@ -34,12 +38,12 @@ RUN apt update && apt install -y \
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
+# set bash (not dash) as default shell
+RUN ln -fs /bin/bash /bin/sh 
+
 # Install basic stuff and R
 RUN apt install -y r-base r-base-dev r-recommended
-
-# Install shiny-server
-#RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
-#    && gdebi shiny-server-1.5.14.948-amd64.deb
+RUN apt install -y libharfbuzz-dev libfribidi-dev
 
 #------------------------------------------------------------
 # Install R packages that are required
@@ -50,28 +54,20 @@ WORKDIR /omicsplayground
 COPY R /omicsplayground/R
 COPY shiny /omicsplayground/shiny
 
+## base packages
+RUN R -e "install.packages(c('devtools','remotes','reticulate'))"
+RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
+
+## any required/manual packages
+RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
+    'metap','brew','Seurat','R.utils', 'qgraph','psych', \
+    'pryr','shinycssloaders','rpart.plot'))"
+
 ## auto detected packages
 RUN R -e "setwd('R');source('requirements.R')"
+RUN R -e "install.packages(c('BiocManager'))"
+RUN R -e "BiocManager::install(c('rhdf5','monocle','mygene','edgeR','DESeq2'))"
 
-## any missing packages
-RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
-    'metap','brew','Seurat','R.utils', 'qgraph','psych'))"
-RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
-
-#------------------------------------------------------------
-# Clone fresh code from GitHub
-#------------------------------------------------------------
-WORKDIR /
-#RUN rm -fr /omicsplayground/R /omicsplayground/shiny
-#RUN rm -fr /omicsplayground \
-#    && git clone https://github.com/bigomics/omicsplayground.git \
-##    && rm -fr /omicsplayground/.git \
-#    && chmod -R ugo+rwX /omicsplayground 
-
-#RUN rm -fr /omicsplayground 
-#RUN wget https://github.com/bigomics/omicsplayground/archive/master.zip \
-#    && unzip master.zip && mv omicsplayground-master omicsplayground \
-#    && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
 # Add shiny user to group shiny
@@ -86,11 +82,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
 #------------------------------------------------------------
-# Copy further configuration files into the Docker image
+#----------------------- END --------------------------------
 #------------------------------------------------------------
-#RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-#COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
-#COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 
-## EXPOSE 3838
-## CMD ["/usr/bin/shiny-server.sh"]
+## NOTHING

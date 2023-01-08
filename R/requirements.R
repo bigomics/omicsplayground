@@ -129,8 +129,8 @@ install.pkgs(r.pkg)
 ##install.pkg("grid", force=TRUE)
 install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
                "diptest", "fpc", "webshot"))
-webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
-file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
+#webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
+#file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
 
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org")
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
@@ -189,9 +189,10 @@ install.pkgs(c("KEGGREST","pathview"), force=TRUE)
 ##---------------------------------------------------------------------
 
 install.packages('reticulate')
-reticulate::install_miniconda()
+reticulate::install_miniconda(force=TRUE)
+# reticulate::conda_create("r-reticulate")
 reticulate::conda_install('r-reticulate', 'python-kaleido')
-reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
+reticulate::conda_install('r-reticulate', 'plotly', channel='plotly')
 reticulate::use_miniconda('r-reticulate')
 
 ##---------------------------------------------------------------------
