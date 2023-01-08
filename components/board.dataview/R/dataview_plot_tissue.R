@@ -9,21 +9,21 @@ dataview_plot_tissue_ui <- function(id, label='', height=c(600,800)) {
     ns <- shiny::NS(id)
     info_text = paste("Tissue expression for the selected gene in the tissue expression ",
                       a_GTEx," dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering.")
-    
+
     PlotModuleUI(
         ns("pltmod"),
         title = "Tissue expression (GTEX)",
         label = label,
         plotlib = "plotly",
         #outputFunc = plotOutput,
-        #outputFunc2 = plotOutput,        
+        #outputFunc2 = plotOutput,
         info.text = info_text,
         options = NULL,
-        download.fmt=c("png","pdf","csv"),         
+        download.fmt=c("png","pdf","csv"),
         width = c("auto","100%"),
         height = height
     )
-    
+
 }
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=FALSE)
@@ -31,14 +31,14 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
     moduleServer( id, function(input, output, session) {
 
         plot_data  <- shiny::reactive({
-            
+
             shiny::req(pgx$X)
             shiny::req(r.gene(), r.data_type())
 
             ## dereference reactive
             gene <- r.gene()
-            data_type <- r.data_type()            
-            
+            data_type <- r.data_type()
+
             pp <- rownames(pgx$genes)[match(gene,pgx$genes$gene_name)]
             hgnc.gene = toupper(as.character(pgx$genes[pp,"gene_name"]))
 
@@ -56,7 +56,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
                 sorting="no"
                 if(sorting=="decr") jj <- order(-tx)
                 if(sorting=="inc") jj <- order(tx)
-                
+
                 tx <- tx[jj]
                 tissue.klr <- tissue.klr[jj]
             }
@@ -71,10 +71,10 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
                 gene = hgnc.gene,
                 ylab = ylab
             )
-                
+
 
         })
-        
+
         plot.RENDER.base <- function() {
             pdat <- plot_data()
             shiny::req(pdat)
@@ -92,46 +92,58 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark=
                  cex=0.85, pos=2, adj=0, offset=0, srt=55, xpd=TRUE)
 
         }
-        
+
         plot.RENDER <- function() {
             pdat <- plot_data()
             shiny::req(pdat)
-            
+
             df   <- pdat$df
-            ylab <- pdat$ylab
+            ylab <- stringr::str_to_sentence(pdat$ylab)
             gene <- pdat$gene
 
             ## plot as regular bar plot
-            df$tissue <- factor(df$tissue, levels=df$tissue)
-            fig <- plotly::plot_ly(
-                data = df,
-                type = 'bar', ## name = pd$gene
-                x = ~tissue, y = ~x,
-                marker = list(color = ~color)
-            ) %>% plotly::layout(
-                xaxis = list(title = ""),
-                yaxis = list(title = ylab)                
-            )
-            fig
+            df <- dplyr::mutate(df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
+
+            #df$tissue <- factor(df$tissue, levels = df$tissue)
+
+            plotly::plot_ly(
+              data = df,
+              ## name = pd$gene
+              y = ~tissue,
+              x = ~x,
+              type = 'bar',
+              orientation = 'h',
+              color = ~color, ## TODO: use variable that encodes grouping
+              colors = omics_pal_d()(length(unique(df$color)))
+            ) %>%
+            plotly::layout(
+              yaxis = list(title = FALSE),
+              xaxis = list(title = ylab),
+              font = list(family = "Lato"),
+              showlegend = FALSE,
+              bargap = .4,
+              margin = list(l = 10, r = 10, b = 10, t = 10)
+            ) %>%
+            plotly_default1()
         }
 
         modal_plot.RENDER <- function() {
             plot.RENDER() %>%
                 plotly::layout(
-                    ## showlegend = TRUE,
+                    showlegend = TRUE, ## TODO: I guess a legend makes sense here?
                     font = list(
                         size = 18
                     )
                 )
         }
-        
+
         PlotModuleServer(
             "pltmod",
             plotlib = "plotly",
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
 ##          renderFunc = shiny::renderCachedPlot,
-##          renderFunc2 = shiny::renderCachedPlot,        
+##          renderFunc2 = shiny::renderCachedPlot,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
             res = c(90,170),                ## resolution of plots
             pdf.width = 8, pdf.height = 4,

@@ -1603,8 +1603,8 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=5, cluster.samples=TRUE)
     for(i in 1:length(npar)) {
         prm = colnames(annot.df)[i]
         klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))  ## continous scale
-        if(npar[i]==1) klrs = "#E6E6E6"
-        if(npar[i]>3 & !isnum[i]) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
+        if(npar[i]==1) klrs = omics_colors("mid_grey")
+        if(npar[i]>3 & !isnum[i]) klrs = rep(omics_pal_d()(8),99)[1:npar[i]]
         ##if(!is.binary[i] & !isnum[i]) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]        
         ##if(npar[i]==2) klrs = rep(RColorBrewer::brewer.pal(2,"Paired"),99)[1:npar[i]]
         names(klrs) = sort(unique(annot.df[,i]))
@@ -1618,7 +1618,7 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=5, cluster.samples=TRUE)
         df = annot.df,
         ##df2 = annot.fvar[,,drop=FALSE],        
         col = ann.colors,
-        na_col = "grey99",
+        na_col = omics_colors("super_dark_grey"),
         ##annotation_height = grid::unit(annot.ht, "mm"),
         simple_anno_size = grid::unit(annot.ht,"mm"),  ## BioC 3.8!!
         ##show_annotation_name = (i==ngrp),
@@ -2428,9 +2428,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         z1 <- factor(var)
         nz <- length(levels(z1)) 
         if(is.null(col) && nz>2) {
-            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),
-                      RColorBrewer::brewer.pal(8,"Set2"),
-                      RColorBrewer::brewer.pal(12,"Set3"))    
+            col1 <- c(omics_pal_d("muted")(8), #RColorBrewer::brewer.pal(8,"Set1"),
+                      omics_pal_d("default")(8), #RColorBrewer::brewer.pal(8,"Set2"),
+                      omics_pal_d("dark")(12)) #RColorBrewer::brewer.pal(12,"Set3"))    
         } else if(is.null(col) && nz==2) {
             col1 <- rev(grey.colors(2, end=0.8))
             col1 <- c("#AAAAAA55","#555555FF")
@@ -2734,20 +2734,21 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         if(!is.null(col)) {
             col1 <- col
         } else if(nz==2) {
-            col1 <- rev(grey.colors(2, end=0.8))
-            col1 <- c("#AAAAAA55","#555555FF")
-            col1 <- c("#00008855","#AA0000FF")
-            col1 <- c("#CCCCCC55","#AA0000FF")
+            #col1 <- rev(grey.colors(2, end=0.8))
+            #col1 <- c("#AAAAAA55","#555555FF")
+            #col1 <- c("#00008855","#AA0000FF")
+            #col1 <- c("#CCCCCC55","#AA0000FF")
+            col1 <- omics_colors("light_grey", "red")
         } else if(nz==1) {
-            col1 <- c("#22222255")
+            col1 <- omics_colors("super_dark_grey")
         } else {
-            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),
-                      RColorBrewer::brewer.pal(8,"Set2"),
-                      RColorBrewer::brewer.pal(12,"Set3"))    
+          col1 <- c(omics_pal_d("muted")(8), #RColorBrewer::brewer.pal(8,"Set1"),
+                    omics_pal_d("default")(8), #RColorBrewer::brewer.pal(8,"Set2"),
+                    omics_pal_d("dark")(12)) #RColorBrewer::brewer.pal(12,"Set3"))    
         }
         col1 <- Matrix::head(rep(col1,99),nz)
         pt.col <- col1[z1]
-        pt.col[is.na(pt.col)] <- "#DDDDDD11"
+        pt.col[is.na(pt.col)] <- omics_colors("mid_grey")
         if(opacity<1) {
             pt.col <- add_opacity(pt.col, opacity**0.33)
             col1 <- add_opacity(col1, opacity**0.33)
@@ -3831,7 +3832,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     length(xx)
     
     ## ------- set colors
-    colors0 = rep("Set2",ncol(annot))    
+    colors0 = rep("Set2", ncol(annot))    
     names(colors0) = colnames(annot)
     
     if(!is.null(colors) && any(names(colors) %in% names(colors0))) {

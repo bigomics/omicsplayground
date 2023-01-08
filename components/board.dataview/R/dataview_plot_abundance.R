@@ -85,26 +85,30 @@ dataview_plot_abundance_server <- function(id,
             long.data <- reshape2::melt( head(res$prop.counts,5) )
             colnames(long.data) <- c("gene","sample","value")
 
-            klr1 <- colorRampPalette(
-                c(rgb(0.2,0.5,0.8), rgb(0.8,0.9,0.99)))(5)            
-            klr1 <- rev(RColorBrewer::brewer.pal(5, "Blues"))
-            
             ## stacked barchart
-            fig <- plotly::plot_ly(
-                long.data,
+            fig <- 
+              plotly::plot_ly(
+                data = long.data,
                 x = ~sample,
                 y = ~value,
+                type = 'bar',
                 color = ~gene,
-                ##colors = "Blues",
-                colors = klr1,
-                type = 'bar'
-                #marker = list(color = klr1)
-            )  %>% plotly::layout(
+                colors = omics_pal_d("muted")(length(unique(long.data$gene))), 
+                hovertemplate = ~paste0(
+                  "Sample: <b>", sample, "</b><br>",
+                  "Gene: <b>", gene, "</b><br>",
+                  "Cum. proportion: <b>", sprintf("%2.1f", value), "%</b>",
+                  "<extra></extra>"
+                )
+              ) %>% 
+              plotly::layout(
                 barmode = 'stack',
-                ## legend = list(orientation = 'h'),
-                xaxis = list( title= ""),
-                yaxis = list( title= "cumulative proportion (%)")                
-            )
+                xaxis = list(title = FALSE),
+                yaxis = list(title = "Cumulative proportion", ticksuffix = "%"),
+                font = list(family = "Lato"),
+                margin = list(l = 10, r = 10, b = 10, t = 10)   
+              ) %>% 
+              plotly_default1()
             fig
             
         }
@@ -112,7 +116,7 @@ dataview_plot_abundance_server <- function(id,
         modal_plotly.RENDER <- function() {
             fig <- plotly.RENDER() %>%
                 plotly::layout(
-                    showlegend = TRUE,
+                    showlegend = TRUE, ## TODO: really TRUE here?
                     font = list(
                         size = 18
                     )

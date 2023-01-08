@@ -73,19 +73,38 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
 
             df <- res$counts[,]
             long.df <- reshape2::melt(df)
-            colnames(long.df) <- c("gene","sample","value")
+            colnames(long.df) <- c("gene", "sample", "value")
             
             ## boxplot
-            fig <- plotly::plot_ly(
-                long.df,
+            fig <- 
+              plotly::plot_ly(
+                data = long.df,
                 x = ~sample,
                 y = ~value,
-                type = "box"
-            ) %>%
-                plotly::layout(
-                    yaxis = list(title = "counts (log2)"),
-                    xaxis = list(title = "")
-                )
+                type = "box",
+                # color = omics_colors("mid_blue"),
+                marker = list(
+                  color = omics_colors("mid_blue"),
+                  fillcolor = omics_colors("light_blue")
+                ),
+                line = list(color = omics_colors("mid_blue")),
+                ## NOTE: I'd like to show less labels as tooltips; could format them nicely but didn't find any information on how to remove some
+                ## TODO: decide if it's fine like that; check if it is possible to reduce the number of tooltips
+                hoverinfo = "y"
+                # hovertemplate = ~paste0(
+                #   "Sample: <b>", sample, "</b><br>",
+                #   "Counts (log2): <b>", value, "</b>",
+                #   "<extra></extra>"
+                # )
+              ) %>%
+              plotly::layout(
+                ## NOTE: I am not sure if it's a good idea to show boxplots on a log scale
+                yaxis = list(title = "Counts (log2)", hoverformat = '.2f'),
+                xaxis = list(title = FALSE),
+                font = list(family = "Lato"),
+                margin = list(l = 10, r = 10, b = 10, t = 10)   
+              ) %>% 
+              plotly_default1()
             fig
         }
                

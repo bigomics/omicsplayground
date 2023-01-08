@@ -250,6 +250,10 @@ clustannot_server <- function(id,
             align = "center", x=0.5, y=1.02 , showarrow = FALSE )
         }
         
+        ## NOTE: The same plotly code (originally) as in `clustering_server.R`
+        ##       -> Seems it uses the function from that file, not this one
+        ## TODO: clean-up; we should stick to the general setup of individual 
+        ##       scripts for the plotting functions
         plot_list[[i]] <- plotly::plot_ly(
           x=x, y=y, type='bar',  orientation='h',
           ## text=y,
