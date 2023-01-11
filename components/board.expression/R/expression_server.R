@@ -259,26 +259,23 @@ ExpressionBoard <- function(id, inputData)
 
     # Plotting ####
 
-    # tab differential expression > Plots
-    serverSideComputation(pgx = inputData(),
-                          pgx_fdr = input$gx_fdr,
-                          pgx_contrast = input$gx_contrast,
-                          pgx_lfc = input$gx_lfc,
-                          pgx_features = input$gx_features,
-                          res = fullDiffExprTable(),
-                          fam.genes = res$gene_name)
+    # tab differential expression > Plots ####
+    expression_plot_volcano_server(id = "plots_volcano",
+                                   pgx = inputData(),
+                                   pgx_fdr = input$gx_fdr,
+                                   pgx_contrast = input$gx_contrast,
+                                   pgx_lfc = input$gx_lfc,
+                                   pgx_features = input$gx_features,
+                                   res = fullDiffExprTable(),
+                                   fam.genes = res$gene_name)
 
+    # tab differential expression > Top genes ####
 
-    # expression_plot_volcano_server("volcanoplot")
+    # tab differential expression > Volcano (all) ####
 
+    # tab differential expression > Volcano (methods) ####
 
-    # tab differential expression > Top genes
-
-    # tab differential expression > Volcano (all)
-
-    # tab differential expression > Volcano (methods)
-
-    #table bottom page
+    #table bottom page ####
 
     #first tab
 

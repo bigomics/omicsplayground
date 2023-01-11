@@ -28,7 +28,7 @@ expression_plot_volcano_ui <- function(id,
                options = NULL,
                download.fmt=c("png","pdf","csv"),
                width = c("auto","100%"),
-               height = height
+               height = height)
 
 }
 
@@ -54,12 +54,12 @@ expression_plot_volcano_server <- function(id,
                                            pgx_lfc = 1.0,
                                            pgx_features,
                                            res,
+                                           fam.genes,
                                            watermark = FALSE
-                                           )
-{
+                                           ){
   moduleServer(id, function(input, output, session, watermark) {
 
-    dbg("[plots_volcano.PLOTLY] reacted")
+    # dbg("[plots_volcano.PLOTLY] reacted")
 
     #calculate required inputs for plotting
     serverSideComputation <- function(pgx,
@@ -157,7 +157,7 @@ expression_plot_volcano_server <- function(id,
       })
 
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- function(){
       pd <- plot_data()
       shiny::req(pd)
 
@@ -201,7 +201,5 @@ expression_plot_volcano_server <- function(id,
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
-    }## end of moduleServer
-
-    dbg("[plots_volcano.PLOTLY] done!")
+    })## end of moduleServer
 }
