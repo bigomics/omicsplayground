@@ -9,7 +9,7 @@ ExpressionInputs <- function(id) {
     bigdash::tabSettings(
         withTooltip( shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
                 "Show more information about this module."),
-        shiny::hr(), shiny::br(),             
+        shiny::hr(), shiny::br(),
         withTooltip( shiny::selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
                 "Select a contrast of interest for the analysis.", placement="top"),
         withTooltip( shiny::selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
@@ -29,7 +29,7 @@ ExpressionInputs <- function(id) {
             "input.gx_options % 2 == 1", ns=ns,
             shiny::tagList(
                 withTooltip(shiny::checkboxInput(ns("gx_showall"),"show all genes", FALSE),
-                        "Display all genes in the table. Disable filtering of significant genes.", 
+                        "Display all genes in the table. Disable filtering of significant genes.",
             placement="top", options = list(container = "body")),
                 withTooltip( shiny::checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                             choices=NULL, inline=TRUE),
@@ -56,7 +56,7 @@ ExpressionUI <- function(id) {
                         class = "row",
                         div(
                             class = "col-md-3",
-                            plotWidget(ns("plots_volcano"))
+                            expression_plot_volcano_ui(ns("plots_volcano"),label = "A")
                         ),
                         div(
                             class = "col-md-3",
@@ -133,7 +133,7 @@ ExpressionUI <- function(id) {
                 ),
                 shiny::tabPanel("FDR table",
                     tableWidget(ns("FDRtable"))
-                )                    
+                )
             )
         )
     )

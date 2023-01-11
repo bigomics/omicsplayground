@@ -7,9 +7,9 @@ ExpressionBoard <- function(id, inputData)
 {
   moduleServer(id, function(input, output, session)
   {
-        
+
     ns <- session$ns ## NAMESPACE
-    
+
     fullH = 780
     rowH = 390  ## row height of panels
     imgH = 340  ## height of images
@@ -29,26 +29,26 @@ ExpressionBoard <- function(id, inputData)
      The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
      <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
      frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
-   
+
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
-    
+
     shiny::observeEvent( input$gx_info, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
             shiny::HTML(gx_infotext),
             easyClose = TRUE, size="l"))
     }, ignoreInit = TRUE)
-    
-    ## update choices upon change of data set 
+
+    ## update choices upon change of data set
     shiny::observe({
         ngs <- inputData()
         shiny::req(ngs)
-        
+
         contr <- colnames(ngs$model.parameters$contr.matrix)
         shiny::updateSelectInput(session, "gx_contrast", choices=sort(contr))
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
@@ -63,18 +63,18 @@ ExpressionBoard <- function(id, inputData)
                                  choices = sort(gx.methods),
                                  selected = sel1)
 
-        shiny::updateCheckboxInput(session, "gx_ungroup", value= (ncol(ngs$X)<=8) )        
-        
+        shiny::updateCheckboxInput(session, "gx_ungroup", value= (ncol(ngs$X)<=8) )
+
     })
 
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-    
+
     selected_gxmethods <- shiny::reactive({
         ngs <- inputData()
         req(ngs)
-        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))
         gx.methods0 <- colnames(ngs$gx.meta$meta[[1]]$fc)
         test <- input$gx_statmethod
         test <- intersect(test,gx.methods0)
@@ -84,35 +84,35 @@ ExpressionBoard <- function(id, inputData)
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
-    
+
     comparison=1;testmethods=c("trend.limma");add.pq=0
     getDEGtable <- function(ngs, testmethods, comparison, add.pq,
                             lfc, fdr) {
         ##ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         shiny::req(ngs)
-        
+
         if(is.null(testmethods)) return(NULL)
         if(is.null(comparison)) return(NULL)
         if(length(testmethods)==0 || testmethods=="") return(NULL)
         if(length(comparison)==0  || comparison=="") return(NULL)
 
         message("[getDEGtable] called")
-        
+
         ## build meta table
         mx = ngs$gx.meta$meta[[comparison]]
         if(is.null(mx)) return(NULL)
         mm  = colnames(unclass(mx$p))
         testmethods = intersect(mm, testmethods)
-        
+
         mx.p  <- unclass(mx$p[,testmethods,drop=FALSE]) ## get rid of AsIs
         mx.q  <- unclass(mx$q[,testmethods,drop=FALSE])
         mx.fc <- unclass(mx$fc[,testmethods,drop=FALSE])
-        ##mx$score = mx$fc * (-log10(1e-100+mx$q) )    
+        ##mx$score = mx$fc * (-log10(1e-100+mx$q) )
         rownames(mx.p)  <- rownames(mx)
         rownames(mx.q)  <- rownames(mx)
         rownames(mx.fc) <- rownames(mx)
-        
+
         mx.fc[ is.infinite(mx.fc) | is.nan(mx.fc) ] <- NA
         mx.p[ is.infinite(mx.p) | is.nan(mx.p) ] <- NA
         mx.q[ is.infinite(mx.q) | is.nan(mx.q) ] <- NA
@@ -121,23 +121,23 @@ ExpressionBoard <- function(id, inputData)
         ## must recompute meta parameters (maxQ method)
         mx$meta.p  <- apply(mx.p,1,max,na.rm=TRUE)
         mx$meta.q  <- apply(mx.q,1,max,na.rm=TRUE)
-        mx$meta.fx <- rowMeans(mx.fc,na.rm=TRUE)  
-        ##mx$meta.score = rowMeans(mx$score,na.rm=TRUE)  
-        
+        mx$meta.fx <- rowMeans(mx.fc,na.rm=TRUE)
+        ##mx$meta.score = rowMeans(mx$score,na.rm=TRUE)
+
         stars.fdr = fdr
-        ##stars.fdr = 0.05  ## fixed otherwisetable will always have three stars..        
+        ##stars.fdr = 0.05  ## fixed otherwisetable will always have three stars..
         ##star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
         ##is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
         is.sig <- 1*(mx.q <= stars.fdr) * (abs(mx$meta.fx) >= lfc)
-        ##stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
+        ##stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]
         stars <- sapply(rowSums(is.sig, na.rm=TRUE), star.symbols)
-            
+
         ## recalculate group averages???
         y0 <- ngs$model.parameters$exp.matrix[,comparison]
         names(y0) <- rownames(ngs$model.parameters$exp.matrix)
         AveExpr1 <- rowMeans(ngs$X[rownames(mx),names(which(y0>0)),drop=FALSE])
         AveExpr0 <- rowMeans(ngs$X[rownames(mx),names(which(y0<0)),drop=FALSE])
-        
+
         ##logFC <- unclass(ngs$gx.meta$meta[[comparison]][,"fc"])[,"trend.limma"]
         ##logFC <- ngs$gx.meta$meta[[comparison]][,"meta.fx"]
         logFC <- mx$meta.fx
@@ -147,8 +147,8 @@ ExpressionBoard <- function(id, inputData)
         AveExpr1 <- mean0 + logFC/2
         AveExpr0 <- mean0 - logFC/2
 
-        message("[getDEGtable] creating results table")            
-        
+        message("[getDEGtable] creating results table")
+
         ##gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
         aa <- intersect(c("gene_name","gene_title","chr"), colnames(ngs$genes))
         gene.annot <- ngs$genes[rownames(mx),aa]
@@ -157,9 +157,9 @@ ExpressionBoard <- function(id, inputData)
                          stars = stars, meta.q = mx$meta.q,
                          AveExpr0, AveExpr1, check.names=FALSE )
         rownames(res) = rownames(mx)
-        
+
         if(add.pq) {
-            message("[getDEGtable] adding PQ table")            
+            message("[getDEGtable] adding PQ table")
             ## add extra columns
             ##res <- cbind( res, q=mx$q, p=mx$p)
             colnames(mx.q) <- paste0("q.",colnames(mx.q))
@@ -167,9 +167,9 @@ ExpressionBoard <- function(id, inputData)
         }
         return(res)
     }
-    
+
     fullDiffExprTable <- shiny::reactive({
-        ## return the full DE table 
+        ## return the full DE table
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
         comp=1;tests="trend.limma";fdr=1;lfc=0
@@ -177,7 +177,7 @@ ExpressionBoard <- function(id, inputData)
         tests = input$gx_statmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
-        
+
         if(is.null(comp)) return(NULL)
         if(is.null(tests)) return(NULL)
         res = getDEGtable(ngs, testmethods=tests, comparison=comp,
@@ -209,22 +209,22 @@ ExpressionBoard <- function(id, inputData)
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         shiny::req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
-        
+
         comp=1;test="trend.limma"
         comp = input$gx_contrast
         tests = input$gx_statmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
-        
+
         ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
         ##res = getDEGtable(ngs, testmethods=tests, comparison=comp,
         ##add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
         res = fullDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
-                
+
         fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
         res = res[order(-abs(res[,fx.col])),]
-        
+
         ## just show significant genes
         if(!is.null(input$gx_showall) && !input$gx_showall) {
             n   <- length(input$gx_statmethod)
@@ -246,209 +246,122 @@ ExpressionBoard <- function(id, inputData)
             shiny::validate(shiny::need(nrow(res) > 0, "warning. no genes passed current filters."))
             return(NULL)
         }
-        
+
         ## limit number of rows???
         ## res <- head(res, 1000)
 
         dbg("[ExpressionBoard::filteredDiffExprTable] done!")
-        
+
         return(res)
     })
       ## %>%
       ## bindCache(input$gx_features, input$gx_fdr, input$gx_lfc)
 
-    
+    # Plotting ####
+
+    # tab differential expression > Plots
+    serverSideComputation(pgx = inputData(),
+                          pgx_fdr = input$gx_fdr,
+                          pgx_contrast = input$gx_contrast,
+                          pgx_lfc = input$gx_lfc,
+                          pgx_features = input$gx_features,
+                          res = fullDiffExprTable(),
+                          fam.genes = res$gene_name)
+
+
+    # expression_plot_volcano_server("volcanoplot")
+
+
+    # tab differential expression > Top genes
+
+    # tab differential expression > Volcano (all)
+
+    # tab differential expression > Volcano (methods)
+
+    #table bottom page
+
+    #first tab
+
     ##================================================================================
-    ## Plots 
+    ## Plots
     ##================================================================================
 
     ## ------------------  Info messages
-    plots_volcano_text = "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
     plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
     plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
-    
-    plots_volcano.RENDER <- shiny::reactive({
-        
-        comp1=1;fdr=0.10
-        comp1 = input$gx_contrast
-        if(length(comp1)==0) return(NULL)
-        if(is.null(input$gx_features)) return(NULL)
-        ngs <- inputData()
-        shiny::req(ngs)
-        
-        fdr = 1
-        fdr = as.numeric(input$gx_fdr)
-        
-        res = fullDiffExprTable()
-        if(is.null(res)) return(NULL)
-        lfc=1
-        lfc = as.numeric(input$gx_lfc)
 
-        fam.genes = res$gene_name
-        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        if(input$gx_features!="<all>") {
-            ##gset <- GSETS[input$gx_features]
-            gset <- getGSETS(input$gx_features)
-            fam.genes = unique(unlist(gset))
-        }
-        jj <- match(toupper(fam.genes),toupper(res$gene_name))
-        sel.genes <- res$gene_name[setdiff(jj,NA)]
-        
-        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
-        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
-        qval = pmax(qval, 1e-100)
-        fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
-        sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)
-        xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
-        ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+    #old code not incorporated into plot module files
+    # plots_volcano.RENDER <- shiny::reactive({
+    #
+    #     comp1=1;fdr=0.10
+    #     comp1 = input$gx_contrast
+    #     if(length(comp1)==0) return(NULL)
+    #     if(is.null(input$gx_features)) return(NULL)
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #
+    #     fdr = 1
+    #     fdr = as.numeric(input$gx_fdr)
+    #
+    #     res = fullDiffExprTable()
+    #     if(is.null(res)) return(NULL)
+    #     lfc=1
+    #     lfc = as.numeric(input$gx_lfc)
+    #
+    #     fam.genes = res$gene_name
+    #     ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+    #     if(input$gx_features!="<all>") {
+    #         ##gset <- GSETS[input$gx_features]
+    #         gset <- getGSETS(input$gx_features)
+    #         fam.genes = unique(unlist(gset))
+    #     }
+    #     jj <- match(toupper(fam.genes),toupper(res$gene_name))
+    #     sel.genes <- res$gene_name[setdiff(jj,NA)]
+    #
+    #     fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+    #     qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+    #     qval = pmax(qval, 1e-100)
+    #     fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+    #     sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
+    #     sel.genes = intersect(sig.genes, sel.genes)
+    #     xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
+    #     ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+    #
+    #     par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    #     par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
+    #     gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
+    #                       render="canvas", n=5000, nlab=12,
+    #                       xlim=xlim, ylim=ylim, ## hi.col="#222222",
+    #                       use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+    #                       cex=0.9, lab.cex=1.4, cex.main=1.0,
+    #                       xlab="effect size (log2.FC)",
+    #                       ylab="significance (-log10.q)",
+    #                       ## main="Volcano plot",
+    #                       highlight=sel.genes )
+    #
+    #
+    # })
 
-        par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
-        par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
-                          render="canvas", n=5000, nlab=12, 
-                          xlim=xlim, ylim=ylim, ## hi.col="#222222",
-                          use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                          cex=0.9, lab.cex=1.4, cex.main=1.0,
-                          xlab="effect size (log2.FC)",
-                          ylab="significance (-log10.q)",
-                          ## main="Volcano plot",
-                          highlight=sel.genes )
 
-
-    })
-
-    plots_volcano.PLOTLY <- shiny::reactive({
-        
-        dbg("[plots_volcano.PLOTLY] reacted")
-        
-        comp1=1;fdr=0.10
-        comp1 = input$gx_contrast
-        if(length(comp1)==0) return(NULL)
-        if(is.null(input$gx_features)) return(NULL)
-        ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        shiny::req(ngs)
-
-        dbg("[plots_volcano.PLOTLY] 1")
-                
-        fdr = 1
-        fdr = as.numeric(input$gx_fdr)
-        
-        res = fullDiffExprTable()
-        if(is.null(res)) return(NULL)
-        lfc=1
-        lfc = as.numeric(input$gx_lfc)
-
-        fam.genes = res$gene_name
-        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        if(input$gx_features!="<all>") {
-            ##gset <- GSETS[input$gx_features]
-            gset <- getGSETS(input$gx_features)
-            fam.genes = unique(unlist(gset))
-        }
-        jj <- match(toupper(fam.genes),toupper(res$gene_name))
-        sel.genes <- res$gene_name[setdiff(jj,NA)]
-        
-        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
-        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
-        qval = pmax(qval, 1e-20)
-        x = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
-        y <- -log10(qval + 1e-12)
-        
-        sig.genes = fc.genes[which(qval <= fdr & abs(x) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)
-        scaled.x <- scale(x,center=FALSE)
-        scaled.y <- scale(y,center=FALSE)        
-        impt <- function(g) {
-            j = match(g, fc.genes)
-            x1 = scaled.x[j]
-            y1 = scaled.y[j]
-            x = sign(x1)*(x1**2 + 0.25*y1**2)
-            names(x)=g
-            x
-        }
-
-        sel1 = genetable$rows_selected()
-        df1 = filteredDiffExprTable()
-
-        sel2 = gsettable$rows_selected()
-        df2 <- gx_related_genesets()        
-
-        lab.cex = 1
-        gene.selected <- !is.null(sel1) && !is.null(df1)
-        gset.selected <- !is.null(sel2) && !is.null(df2) 
-        if(gene.selected && !gset.selected) {
-            lab.genes = rownames(df1)[sel1]
-            sel.genes = lab.genes
-            lab.cex = 1.3
-        } else if(gene.selected && gset.selected) {
-            gs <- rownames(df2)[sel2]
-            dbg("[plots_volcano.PLOTLY] gs = ",gs)
-            ##gset <- GSETS[[gs]]
-            gset <- unlist(getGSETS(gs))
-            sel.genes = intersect(sel.genes, gset)
-            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                          head(sel.genes[order(-impt(sel.genes))],10) )
-            lab.cex = 1
-        } else {
-            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                          head(sel.genes[order(-impt(sel.genes))],10) )
-            lab.cex = 1
-        }
-        xlim = c(-1,1)*max(abs(x),na.rm=TRUE)
-        ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
-        
-        ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        plt <- plotlyVolcano(
-            x=x, y=y, names=fc.genes,
-            source = "plot1", marker.type = "scattergl",
-            highlight = sel.genes,
-            label = lab.genes, label.cex = lab.cex,
-            group.names = c("group1","group0"),
-            ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
-            ##use.fdr=TRUE,
-            psig = fdr, lfc = lfc,
-            xlab = "effect size (log2FC)",
-            ylab = "significance (-log10q)",
-            marker.size = 4,
-            displayModeBar = FALSE,
-            showlegend = FALSE) %>%
-            plotly::layout( margin = list(b=65) )
-
-        dbg("[plots_volcano.PLOTLY] done!")
-        return(plt)
-    })
-    
     ##plots_volcano_module <- plotModule(
-    shiny::callModule(
-        plotModule,
-        id = "plots_volcano", ## ns=ns,
-        ##func = plots_volcano.RENDER, func2 = plots_volcano.RENDER,
-        func = plots_volcano.PLOTLY, plotlib = "plotly",       
-        info.text = plots_volcano_text, 
-        title = "Volcano plot", label="a",
-        height = imgH,  res=75,
-        pdf.width=6, pdf.height=6,
-        add.watermark = WATERMARK
-    )
-    
+
+
     ## ------------------------------------------------------
     ## MA plot
     ## ------------------------------------------------------
-    
+
     plots_maplot.RENDER <- shiny::reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
         ngs <- inputData()
         shiny::req(ngs)
-        
+
         fdr=1;lfc=1
-        fdr = as.numeric(input$gx_fdr)    
+        fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
-        
+
         res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
@@ -471,7 +384,7 @@ ExpressionBoard <- function(id, inputData)
         fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
 
         sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)    
+        sel.genes = intersect(sig.genes, sel.genes)
 
         xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
         ma = rowMeans(ngs$X[rownames(res),], na.rm=TRUE)
@@ -479,7 +392,7 @@ ExpressionBoard <- function(id, inputData)
         par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
-                          render="canvas", n=5000, nlab=12, 
+                          render="canvas", n=5000, nlab=12,
                           xlim=xlim, ylim=c(0,15),
                           xlab="average expression (log2CPM)",
                           ylab="effect size (log2FC)",
@@ -500,11 +413,11 @@ ExpressionBoard <- function(id, inputData)
         shiny::req(ngs)
 
         dbg("[plots_maplot.PLOTLY] reacted")
-        
+
         fdr=1;lfc=1
-        fdr = as.numeric(input$gx_fdr)    
+        fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
-        
+
         res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
@@ -539,16 +452,16 @@ ExpressionBoard <- function(id, inputData)
         }
 
         sig.genes = fc.genes[which(qval <= fdr & abs(y) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)    
+        sel.genes = intersect(sig.genes, sel.genes)
 
         ## are there any genes/genesets selected?
         sel1 = genetable$rows_selected()
         df1 = filteredDiffExprTable()
         sel2 = gsettable$rows_selected()
-        df2 <- gx_related_genesets()        
+        df2 <- gx_related_genesets()
         lab.cex = 1
         gene.selected <- !is.null(sel1) && !is.null(df1)
-        gset.selected <- !is.null(sel2) && !is.null(df2) 
+        gset.selected <- !is.null(sel2) && !is.null(df2)
         if(gene.selected && !gset.selected) {
             lab.genes = rownames(df1)[sel1]
             sel.genes = lab.genes
@@ -581,7 +494,7 @@ ExpressionBoard <- function(id, inputData)
         }
         lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
                       head(sel.genes[order(-impt(sel.genes))],10) )
-        
+
         highlight=sel.genes;label=lab.genes;names=fc.genes
         plt <- plotlyMA(
             x=x, y=y, names=fc.genes,
@@ -600,14 +513,14 @@ ExpressionBoard <- function(id, inputData)
             plotly::layout( margin = list(b=65) )
 
         dbg("[plots_maplot.PLOTLY] done!")
-        
+
         return(plt)
     })
-    
+
     shiny::callModule( plotModule,
-        id="plots_maplot", 
+        id="plots_maplot",
         ##func = plots_maplot.RENDER,
-        ##func2 = plots_maplot.RENDER, 
+        ##func2 = plots_maplot.RENDER,
         func = plots_maplot.PLOTLY, plotlib="plotly",
         info.text = plots_maplot_text, label="b",
         title = "MA plot",
@@ -615,7 +528,7 @@ ExpressionBoard <- function(id, inputData)
         pdf.width=6, pdf.height=6, res=75,
         add.watermark = WATERMARK
     )
-    
+
     plots_topgenesbarplot.RENDER <- shiny::reactive({
 
         ngs = inputData()
@@ -623,14 +536,14 @@ ExpressionBoard <- function(id, inputData)
         comp1 = input$gx_contrast
 
         dbg("plots_topgenesbarplot.RENDER: reacted")
-        
+
         if(length(comp1)==0) return(NULL)
-        
+
         ## get table
         ##sel.row=1;pp=rownames(ngs$X)[1]
         ##sel.row = input$genetable_rows_selected
-        
-        res = filteredDiffExprTable()        
+
+        res = filteredDiffExprTable()
         if(is.null(res)) return(NULL)
 
         ##fc <- res$meta.fx
@@ -642,12 +555,12 @@ ExpressionBoard <- function(id, inputData)
         klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
         klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
         names(fc.top) <- sub(".*:","",names(fc.top))
-        
+
         ii <- order(fc.top)
         par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
                 col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
-        
+
         ## warning A_vs_B or B_vs_A not checked!!!
         groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
         if(is.POSvsNEG(ngs)) groups <- rev(groups)
@@ -656,34 +569,34 @@ ExpressionBoard <- function(id, inputData)
         ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
         legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
         ##title("top DE genes",cex.main=1)
-        
+
         dbg("plots_topgenesbarplot.RENDER: done\n")
-        
+
     })
 
     shiny::callModule(
         plotModule,
         id="plots_topgenesbarplot", ## ns=ns,
         func = plots_topgenesbarplot.RENDER,
-        func2 = plots_topgenesbarplot.RENDER,        
+        func2 = plots_topgenesbarplot.RENDER,
         info.text = plots_topgenesbarplot_text, label="c",
         title = "top DE genes",
         height = c(imgH,500), width=c('auto',800),
         pdf.width=6, pdf.height=6, res=75,
         add.watermark = WATERMARK
     )
-    
+
     plots_topfoldchange.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)
-        
+
         ## get table
         ##sel=1;pp=rownames(ngs$X)[1]
         sel = genetable$rows_selected()
         if(is.null(sel) || length(sel)==0) {
             frame()
-            text(0.5,0.5, "No gene selected", col='black')            
+            text(0.5,0.5, "No gene selected", col='black')
             return(NULL)
         }
 
@@ -691,7 +604,7 @@ ExpressionBoard <- function(id, inputData)
         if(is.null(res) || is.null(sel)) return(NULL)
         psel <- rownames(res)[sel]
         gene <- ngs$genes[psel,"gene_name"]
-        
+
         ##fc <- res$meta.fx
         comp=1
         comp = input$gx_contrast
@@ -707,7 +620,7 @@ ExpressionBoard <- function(id, inputData)
         klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
         ##klr.pal <- BLUERED(16)[c(3,14)]
         klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
-        
+
         par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
         par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
         nch <- max(nchar(names(fc.top)))
@@ -723,11 +636,11 @@ ExpressionBoard <- function(id, inputData)
                 xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
                 cex.names=cex1, xlab="fold change (log2)")
         title(gene, cex.main=1, line=-0.15)
-        
+
     })
 
     shiny::callModule( plotModule,
-        id = "plots_topfoldchange", 
+        id = "plots_topfoldchange",
         func = plots_topfoldchange.RENDER,
         func2 = plots_topfoldchange.RENDER,
         info.text = plots_topfoldchange_text,
@@ -736,18 +649,18 @@ ExpressionBoard <- function(id, inputData)
         pdf.width=6, pdf.height=6, res=74,
         add.watermark = WATERMARK
     )
-    
+
     plots_boxplot.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)
-        
+
         ## get table
         ##sel=1
         sel = genetable$rows_selected()
         if(is.null(sel) || length(sel)==0) {
             frame()
-            text(0.5,0.5, "No gene selected", col='black')            
+            text(0.5,0.5, "No gene selected", col='black')
             return(NULL)
         }
 
@@ -767,7 +680,7 @@ ExpressionBoard <- function(id, inputData)
         pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
                            max.points = 200, ## slow!!
                            names = TRUE,
-                           logscale=logscale, srt=srt)    
+                           logscale=logscale, srt=srt)
 
     })
 
@@ -780,7 +693,7 @@ ExpressionBoard <- function(id, inputData)
                "Show logarithmic (log2CPM) expression values.",
                placement="right", options = list(container = "body"))
     )
-    
+
     shiny::callModule( plotModule,
         id = "plots_boxplot", label = "c",
         func = plots_boxplot.RENDER,
@@ -788,12 +701,12 @@ ExpressionBoard <- function(id, inputData)
         options = plots_boxplot_opts,
         info.text = "Differential expression boxplot for selected gene.",
         info.width = "150px",
-        title = "Differential expression", 
+        title = "Differential expression",
         height = imgH,
         pdf.width=6, pdf.height=6, res=75,
         add.watermark = WATERMARK
     )
-    
+
     ##================================================================================
     ## Top genes
     ##================================================================================
@@ -802,22 +715,22 @@ ExpressionBoard <- function(id, inputData)
 
         ngs <- inputData()
         shiny::req(ngs)
-        
+
         res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ## filter on active rows (using search)
         ##ii  <- genetable$rows_all()
-        ii  <- genetable$rows_current()        
+        ii  <- genetable$rows_current()
         res <- res[ii,,drop=FALSE]
         if(nrow(res)==0) return(NULL)
-                        
+
         comp=1;grouped=0;logscale=1
         comp = input$gx_contrast
         grouped <- !input$gx_ungroup
         logscale <- input$gx_logscale
         showothers <- input$gx_showothers
-        
+
         mar1 = 3.5
         ylab = ifelse(logscale, "log2CPM", "CPM")
 
@@ -833,7 +746,7 @@ ExpressionBoard <- function(id, inputData)
         srt = 35
         sumlen.grpnames <- sum(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
         if(show.names && sumlen.grpnames <= 20) srt <- 0
-        
+
         nc <- 8
         par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
         i=1
@@ -845,12 +758,12 @@ ExpressionBoard <- function(id, inputData)
                 ngs, gene, comp=comp, grouped=grouped,
                 max.points = 200,  ## slow!!
                 collapse.others=TRUE, showothers=showothers,
-                ylab = ylab, xlab="", srt=srt, 
+                ylab = ylab, xlab="", srt=srt,
                 logscale=logscale, names=show.names, main="")
             title( gene, cex.main=1, line=-0.6)
-        }        
+        }
     })
-        
+
     topgenes_opts = shiny::tagList(
         withTooltip( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
                "Logarithmic scale the counts (abundance levels).",
@@ -868,7 +781,7 @@ ExpressionBoard <- function(id, inputData)
     topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
 
     shiny::callModule( plotModule,
-        id = "topgenes", 
+        id = "topgenes",
         func = topgenes.RENDER,
         func2 = topgenes.RENDER,
         options = topgenes_opts,
@@ -876,7 +789,7 @@ ExpressionBoard <- function(id, inputData)
         ##caption = topgenes_caption,
         height = c(imgH,420), width = c('auto',1600),
         res = c(90,105),
-        pdf.width=14, pdf.height=3.5, 
+        pdf.width=14, pdf.height=3.5,
         title="Expression of top differentially expressed genes",
         add.watermark = WATERMARK
     )
@@ -889,18 +802,18 @@ ExpressionBoard <- function(id, inputData)
     getAllContrasts <- shiny::reactive({
 
         ngs = inputData()
-        if( is.null(ngs)) return(NULL)        
+        if( is.null(ngs)) return(NULL)
         comp = names(ngs$gx.meta$meta)
         if(length(comp)==0) return(NULL)
         ## if(is.null(input$gx_features)) return(NULL)
-        
+
         ##fdr=1;lfc=0
         ##fdr = as.numeric(input$gx_fdr)
-        ##lfc = as.numeric(input$gx_lfc)                
+        ##lfc = as.numeric(input$gx_lfc)
         tests = colnames(ngs$gx.meta$meta[[1]]$p)
         tests = input$gx_statmethod
         if(is.null(tests)) return(NULL)
-        
+
         ##comp <- head(comp,75)  ## maximum 75!!!
         i=1
         F <- list()
@@ -908,8 +821,8 @@ ExpressionBoard <- function(id, inputData)
         shiny::withProgress(message="computing contrasts ...", value=0, {
 
             for(i in 1:length(comp)) {
-                res = getDEGtable(ngs, testmethods=tests, comparison=comp[i], 
-                                  add.pq=FALSE, lfc=0, fdr=1)            
+                res = getDEGtable(ngs, testmethods=tests, comparison=comp[i],
+                                  add.pq=FALSE, lfc=0, fdr=1)
                 fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
                 ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
                 qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
@@ -919,19 +832,19 @@ ExpressionBoard <- function(id, inputData)
                 names(qval) <- names(fx) <- fc.gene
                 F[[i]] <- fx
                 Q[[i]] <- qval
-                
-                if(!interactive()) shiny::incProgress( 1/length(comp) )            
+
+                if(!interactive()) shiny::incProgress( 1/length(comp) )
            }
 
         })
         names(Q) <- names(F) <- comp
-        
+
         ct = list(Q=Q, F=F)
         ct
     })
-    
+
     volcanoAll.RENDER <- shiny::reactive({
-    ##volcanoAll.RENDER <- shiny::reactive({    
+    ##volcanoAll.RENDER <- shiny::reactive({
 
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
@@ -941,7 +854,7 @@ ExpressionBoard <- function(id, inputData)
         ct <- getAllContrasts()
         F <- ct$F
         Q <- ct$Q
-        
+
         ##comp = names(ngs$gx.meta$meta)
         comp = names(F)
         if(length(comp)==0) return(NULL)
@@ -979,16 +892,16 @@ ExpressionBoard <- function(id, inputData)
         nr
         nc
         par(mfrow=c(nr,nc))
-        
+
         ymax=15
         nlq  <- -log10(1e-99 + unlist(Q))
         ymax <- max(1.3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
         xmax <- max(1, 1.2 * quantile(abs(unlist(F)), probs=0.999, na.rm=TRUE)[1]) ## x-axis
-        
+
         shiny::withProgress(message="rendering volcano plots ...", value=0, {
-            
+
             plt <- list()
-            i=1            
+            i=1
             for(i in 1:length(comp)) {
                 qval <- Q[[i]]
                 fx   <- F[[i]]
@@ -999,40 +912,40 @@ ExpressionBoard <- function(id, inputData)
                 genes2 = head(genes1[order(-abs(fx[genes1])*(-log10(qval[genes1])))],10)
                 xy <- data.frame(x = fx, y = -log10(qval))
                 is.sig2 <- factor(is.sig, levels=c(FALSE,TRUE))
-                
+
                 plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
-                    xy, title = comp[i], cex.title = 0.85, 
+                    xy, title = comp[i], cex.title = 0.85,
                     var = is.sig2, type = 'factor',
                     col = c('#bbbbbb','#1e60bb'),
-                    legend.pos = 'none', ## plotlib="ggplot", 
+                    legend.pos = 'none', ## plotlib="ggplot",
                     hilight = NULL, hilight2 = genes2,
                     xlim = xmax*c(-1,1), ylim = c(0,ymax),
                     xlab = 'difference  (log2FC)',
                     ylab = 'significance  (-log10q)',
                     hilight.lwd = 0, hilight.col = '#1e60bb', hilight.cex = 1.5,
-                    cex = 0.45, cex.lab = 0.62) 
+                    cex = 0.45, cex.lab = 0.62)
                 ## ggplot2::theme(legend.position='none')
                 ## ggplot2::theme_bw(base_size=11)
-                
+
                 if(!interactive()) shiny::incProgress( 1 / length(comp) )
-            }            
+            }
 
         })  ## progress
 
 
         ##patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
         ##    ggplot2::theme_bw(base_size=11) &
-        ##    ggplot2::theme(legend.position='none')        
+        ##    ggplot2::theme(legend.position='none')
 
 
-        gridExtra::grid.arrange( grobs=plt, nrow=nr, ncol=nc)         
+        gridExtra::grid.arrange( grobs=plt, nrow=nr, ncol=nc)
 
     })
-    
+
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
     shiny::callModule( plotModule,
-        id="volcanoAll", 
+        id="volcanoAll",
         func = volcanoAll.RENDER,
         func2 = volcanoAll.RENDER,
         info.text = volcanoAll_text,
@@ -1050,10 +963,10 @@ ExpressionBoard <- function(id, inputData)
     ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ## PLOTS SEEMS NOT TO REFRESH/DRAW CORRECTLY. Maybe viz.Contrast is isolated????
     ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
+
     ##volcanoAll2.RENDER <- shiny::reactive({
     volcanoAll2.RENDER <- shiny::reactive({
-        
+
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
 
@@ -1095,7 +1008,7 @@ ExpressionBoard <- function(id, inputData)
         ## par(mfrow=c(nr,nc))
         dbg("[volcanoAll2.RENDER] nr = ",nr)
         dbg("[volcanoAll2.RENDER] nc = ",nc)
-        
+
         tests = 'meta'
         methods = NULL
         methods = selected_gxmethods()
@@ -1104,15 +1017,15 @@ ExpressionBoard <- function(id, inputData)
             methods=methods, type='volcano', fixed.axis=TRUE,
             psig=fdr, fc=lfc, ntop=10, cex=0.5, cex.lab=0.7,
             plots.only=TRUE, title=NULL, subtitle=NULL, caption=NULL)
-        
+
         fig <- viz.showFigure(plist) + plot_layout(nrow=nr, ncol=nc) &
             ggplot2::theme_bw(base_size=11) &
-            ## ggplot2::theme_bw(base_size=16) &            
-            ggplot2::theme(legend.position='none')        
+            ## ggplot2::theme_bw(base_size=16) &
+            ggplot2::theme(legend.position='none')
 
         fig
     })
-    
+
     volcanoAll2_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
     volcanoAll2_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
@@ -1122,7 +1035,7 @@ ExpressionBoard <- function(id, inputData)
         id = "volcanoAll2",
         func = volcanoAll2.RENDER,
         func2 = volcanoAll2.RENDER,
-        ## plotlib = 'ggplot',       
+        ## plotlib = 'ggplot',
         info.text = volcanoAll2_text,
         ##caption = volcanoAll_caption,
         pdf.width=16, pdf.height=5,
@@ -1144,7 +1057,7 @@ ExpressionBoard <- function(id, inputData)
             shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
         )
     })
-    
+
     ##================================================================================
     ## Volcano (all methods)
     ##================================================================================
@@ -1156,22 +1069,22 @@ ExpressionBoard <- function(id, inputData)
         ngs = inputData()
         shiny::req(ngs)
         if(is.null(input$gx_features)) return(NULL)
-        
+
         fdr=1;lfc=1;comp=names(ngs$gx.meta$meta)[1]
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
         genes = NULL
-        
+
         gset <- getGSETS(input$gx_features)
         sel.genes = unique(unlist(gset))
-        
+
         ## meta tables
         mx = ngs$gx.meta$meta[[comp]]
         fc = unclass(mx$fc)
         ##pv = unclass(mx$p)
         qv = unclass(mx$q)
         nlq <- -log10(1e-99 + qv)
-        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis        
+        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
         xlim = c(-1.1,1.1) * max(abs(fc))
         xlim = 1.3*c(-1,1) * quantile(abs(fc),probs=0.999)
         fc.genes = ngs$genes[rownames(mx),"gene_name"]
@@ -1186,9 +1099,9 @@ ExpressionBoard <- function(id, inputData)
             par(mfrow=c(3,8), mar=c(4,4,2,2)*0)
             nc=8
         }
-        
+
         shiny::withProgress(message="computing volcano plots ...", value=0, {
-            
+
             i=1
             for(i in 1:nplots) {
                 fx = fc[,i]
@@ -1199,24 +1112,24 @@ ExpressionBoard <- function(id, inputData)
                 genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
                 gx.volcanoPlot.XY(
                     x=fx, pv=qval, gene=fc.genes,
-                    render="canvas", n=5000, nlab=5, 
-                    xlim=xlim, ylim=c(0,ymax), axes=FALSE, 
+                    render="canvas", n=5000, nlab=5,
+                    xlim=xlim, ylim=c(0,ymax), axes=FALSE,
                     use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                    ##main=comp[i], 
+                    ##main=comp[i],
                     ## ma.plot=TRUE, use.rpkm=TRUE,
                     cex=0.6, lab.cex=1.5, highlight=genes1)
-                
+
                 is.first = (i%%nc==1)
                 last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
                 is.first
                 last.row
                 if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
-                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)                
+                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
                 graphics::box(lwd=1, col="black", lty="solid")
                 legend("top", legend=colnames(fc)[i], cex=1.2,
                        bg="white", box.lty=0, inset=c(0,0.01),
                        x.intersp = 0.1, y.intersp = 0.1)
-                shiny::incProgress( 1/length(nplots) )                
+                shiny::incProgress( 1/length(nplots) )
             }
 
         })
@@ -1226,11 +1139,11 @@ ExpressionBoard <- function(id, inputData)
     volcanoMethods_text = "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots provided by multiple differential expression calculation methods for the selected contrast. This provides users an overview of the statistics of all methods at the same time."
 
     shiny::callModule( plotModule,
-        id = "volcanoMethods", 
+        id = "volcanoMethods",
         func = volcanoMethods.RENDER,
-        func2 = volcanoMethods.RENDER,        
+        func2 = volcanoMethods.RENDER,
         title = "Volcano plots for all methods",
-        info.text = volcanoMethods_text, 
+        info.text = volcanoMethods_text,
         ##caption = volcanoMethods_caption,
         height = c(imgH,450), width = c('auto',1600),
         res=c(75,95),
@@ -1251,19 +1164,19 @@ ExpressionBoard <- function(id, inputData)
     })
 
     genetable.RENDER <- shiny::reactive({
-        
+
         dbg("[ExpressionBoard::genetable.RENDER] reacted")
 
         res <- filteredDiffExprTable()
         ##res <- fullDiffExprTable()
         dbg("[ExpressionBoard::genetable.RENDER] dim(res)=",dim(res),"\n")
-        
+
         if(is.null(res) || nrow(res)==0) return(NULL)
-        
+
         fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
         fx.col
         fx = res[,fx.col]
-        
+
         if("gene_title" %in% colnames(res)) res$gene_title = shortstring(res$gene_title,50)
         rownames(res) = sub(".*:","",rownames(res))
 
@@ -1280,20 +1193,20 @@ ExpressionBoard <- function(id, inputData)
         numeric.cols <- colnames(res)[numeric.cols]
         dbg("[ExpressionBoard::genetable.RENDER] numeric.cols=",numeric.cols)
         dbg("[ExpressionBoard::genetable.RENDER] done!")
-        
+
         DT::datatable( res,
                       rownames=FALSE,
                       ##class = 'compact cell-border stripe hover',
-                      class = 'compact hover',                                        
+                      class = 'compact hover',
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
                       fillContainer = TRUE,
                       options=list(
-                          dom = 'frtip',                          
+                          dom = 'frtip',
                           paging = TRUE,
                           pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = FALSE,                          
+                          scrollY = FALSE,
                           scroller = FALSE,
                           deferRender=TRUE,
                           search = list(
@@ -1301,7 +1214,7 @@ ExpressionBoard <- function(id, inputData)
                               caseInsensitive = TRUE
                             ##, search = 'M[ae]'
                           )
-                      )  ## end of options.list 
+                      )  ## end of options.list
                       ) %>%
             DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1314,26 +1227,26 @@ ExpressionBoard <- function(id, inputData)
     }) %>%
     bindCache(filteredDiffExprTable(),input$gx_showqvalues)
 
-    genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. 
+    genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results.
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     genetable_opts = shiny::tagList(
         withTooltip(shiny::checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
-               "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
+               "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
                placement="top", options = list(container = "body")),
         withTooltip(shiny::checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
-               "Show q-values of each indivivual statistical method in the table.", 
-               placement="top", options = list(container = "body"))    
+               "Show q-values of each indivivual statistical method in the table.",
+               placement="top", options = list(container = "body"))
     )
 
     genetable <- shiny::callModule(
         tableModule,
         id = "genetable",
-        func = genetable.RENDER, 
+        func = genetable.RENDER,
         info.text = genetable_text,
         label="I", info.width="500px",
         options = genetable_opts,
-        server = TRUE, 
+        server = TRUE,
         title = "Differential expression analysis",
         height = c(tabH-10,700)
     )
@@ -1343,7 +1256,7 @@ ExpressionBoard <- function(id, inputData)
     gx_related_genesets <- shiny::reactive({
 
         dbg("[gx_related_genesets] reacted")
-        
+
         ngs <- inputData()
         res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
@@ -1351,7 +1264,7 @@ ExpressionBoard <- function(id, inputData)
         if(is.null(contr)) return(NULL)
 
         dbg("[gx_related_genesets] 1")
-        
+
         ## get table
         sel.row=1;
         ##sel.row = input$genetable_rows_selected
@@ -1364,17 +1277,17 @@ ExpressionBoard <- function(id, inputData)
         gset <- names(which(ngs$GMT[j,] != 0))
         gset <- intersect(gset, rownames(ngs$gsetX))
         if(length(gset)==0) return(NULL)
-        
-        fx <- ngs$gset.meta$meta[[contr]]$meta.fx 
+
+        fx <- ngs$gset.meta$meta[[contr]]$meta.fx
         names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
         fx  <- round(fx[gset],digits=4)
-        
-        rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]        
+
+        rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]
         rho <- round(rho, digits=3)
         gset1 <- substring(gset,1,60)
-        
+
         df <- data.frame(geneset=gset1, rho=rho, fx=fx, check.names=FALSE)
-        rownames(df) <- gset       
+        rownames(df) <- gset
         df <- df[order(-abs(df$fx)),]
 
         dbg("[gx_related_genesets] done!")
@@ -1384,33 +1297,33 @@ ExpressionBoard <- function(id, inputData)
 
     gsettable.RENDER <- shiny::reactive({
 
-        df <- gx_related_genesets()        
+        df <- gx_related_genesets()
         if(is.null(df)) return(NULL)
 
         df$geneset <- wrapHyperLink(df$geneset, rownames(df))
-        
+
         DT::datatable(df,
                       ##class = 'compact cell-border stripe',
-                      class = 'compact',            
+                      class = 'compact',
                       rownames=FALSE, escape = c(-1,-2),
                       extensions = c('Scroller'),
                       fillContainer = TRUE,
                       options=list(
                           ##dom = 'lfrtip',
-                          dom = 'frtip',                          
+                          dom = 'frtip',
                           paging = TRUE,
                           pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
                           ## scrollY = tabV,
-                          scrollY = FALSE,                          
+                          scrollY = FALSE,
                           scroller = FALSE,
                           deferRender=TRUE,
                           search = list(
                               regex = TRUE,
                               caseInsensitive = TRUE
-                              ##search = 'GOBP:'                              
+                              ##search = 'GOBP:'
                           )
-                      ),  ## end of options.list 
+                      ),  ## end of options.list
                       selection=list(mode='single', target='row', selected=NULL)) %>%
             ##formatSignif(1:ncol(df),4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1422,11 +1335,11 @@ ExpressionBoard <- function(id, inputData)
 
     gsettable <- shiny::callModule(
         tableModule,
-        id = "gsettable", 
-        func = gsettable.RENDER, 
+        id = "gsettable",
+        func = gsettable.RENDER,
         info.text = gsettable_text, label="II",
         title="Gene sets with gene",
-        height = c(tabH-10,700), width = c('100%',800)        
+        height = c(tabH-10,700), width = c('100%',800)
     )
 
     ##================================================================================
@@ -1434,23 +1347,23 @@ ExpressionBoard <- function(id, inputData)
     ##================================================================================
 
     fctable.RENDER <- shiny::reactive({
-        
+
       ngs <- inputData()
       res <- filteredDiffExprTable()
       if(is.null(res) || nrow(res)==0) return(NULL)
-      
+
       ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
       ##Q <- sapply(ngs$gx.meta$meta, function(x) x$meta.q)
-      ##F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)        
+      ##F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
       ##rownames(F)=rownames(Q)=rownames(ngs$gx.meta$meta[[1]])
       F <- metaFC()
-      Q <- metaQ()        
-      
+      Q <- metaQ()
+
       fc.rms = sqrt(F[,1]**2)
       if(NCOL(F)>1) {
         fc.rms <- round(sqrt(rowMeans(F**2)), digits=4)
       }
-      
+
       show.q = TRUE
       show.q <- input$fctable_showq
       df <- NULL
@@ -1464,15 +1377,15 @@ ExpressionBoard <- function(id, inputData)
         colnames(F1) <- paste0("FC.",colnames(F))
         df <- data.frame(gene=rownames(F), rms.FC=fc.rms, F1, check.names=FALSE)
       }
-      
+
       df <- df[intersect(rownames(df),rownames(res)),]  ## take intersection of current comparison
       df <- df[order(-df$rms.FC),]
       colnames(df) <- gsub("_"," ",colnames(df))  ## so it allows wrap line
-      colnames(F1) <- gsub("_"," ",colnames(F1))  ## so it allows wrap line      
-      qv.cols <- grep("^q",colnames(F1))        
+      colnames(F1) <- gsub("_"," ",colnames(F1))  ## so it allows wrap line
+      qv.cols <- grep("^q",colnames(F1))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
       ## if(length(qv.cols)==0) qv = 0
-            
+
       dt <- DT::datatable( df,
                           rownames=FALSE,
                           # class = 'compact cell-border stripe hover',
@@ -1481,12 +1394,12 @@ ExpressionBoard <- function(id, inputData)
                           selection=list(mode='single', target='row', selected=c(1)),
                           fillContainer = TRUE,
                           options=list(
-                            dom = 'lfrtip', 
+                            dom = 'lfrtip',
                             ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                             scrollX = TRUE,
                             scrollY = tabV,
                             scroller=TRUE, deferRender=TRUE
-                          )  ## end of options.list 
+                          )  ## end of options.list
                           )  %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
         DT::formatSignif(columns = fc.cols, digits = 3) %>%
@@ -1500,32 +1413,32 @@ ExpressionBoard <- function(id, inputData)
                         background = color_from_middle(F, 'lightblue', '#f5aeae'),
                         backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                         backgroundPosition = 'center')
-      
+
       if(length(qv.cols)>0) {
         dt <- dt %>%
           DT::formatSignif(columns = qv.cols, digits = 3)
       }
-      
+
       dt
     })
-    
+
     fctable_text = "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
 
     fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
-    
+
     fctable_opts <- shiny::tagList(
       withTooltip( shiny::checkboxInput(ns('fctable_showq'),'show q-values',TRUE),
                       "Show q-values next to FC values.",
                       placement="right", options = list(container = "body"))
     )
-    
+
     shiny::callModule(
         tableModule,
         id="fctable",
-        func = fctable.RENDER, 
+        func = fctable.RENDER,
         title ="Gene fold changes for all contrasts",
         info.text = fctable_text,
-        options = fctable_opts,        
+        options = fctable_opts,
         caption = fctable_caption,
         height = c(tabH,700)
     )
@@ -1533,18 +1446,18 @@ ExpressionBoard <- function(id, inputData)
     ##================================================================================
     ## FDR table
     ##================================================================================
-    
+
     FDRtable.RENDER <- shiny::reactive({
 
         dbg("FDRtable.RENDER:: reacted")
-        
+
         methods = GX.DEFAULTTEST
         methods = input$gx_statmethod
         ##methods = input$gx_statmethod
         if(is.null(methods)) return(NULL)
 
         dbg("FDRtable.RENDER:: 1")
-        
+
         ##comp <- input$gx_contrast
         ngs = inputData()
 
@@ -1562,35 +1475,35 @@ ExpressionBoard <- function(id, inputData)
         sig.down = do.call(rbind, counts.down)
 
         dbg("FDRtable.RENDER:: 2")
-        
+
         sig.up   <- sig.up[order(rownames(sig.up)),,drop=FALSE]
-        sig.down <- sig.down[order(rownames(sig.down)),,drop=FALSE]    
+        sig.down <- sig.down[order(rownames(sig.down)),,drop=FALSE]
         colnames(sig.up)[1] = paste("UP   FDR = ",colnames(sig.up)[1])
         colnames(sig.down)[1] = paste("DOWN   FDR = ",colnames(sig.down)[1])
         colnames(sig.down) = paste0("  ",colnames(sig.down))
         sigcount = cbind( sig.down, sig.up[rownames(sig.down),,drop=FALSE] )
-        dim(sigcount)    
+        dim(sigcount)
         maxsig = 0.99 * max(sigcount,na.rm=TRUE)
 
         dbg("FDRtable.RENDER:: 3")
-        
+
         contr = sub("::.*","",rownames(sigcount))
         ##contr = rownames(sigcount)
         metd  = sub(".*::","",rownames(sigcount))
         D = data.frame( method=metd, contrast=contr, sigcount, check.names=FALSE)
-        
+
         DT::datatable( D, rownames=FALSE,
             #                      class = 'compact cell-border stripe hover',
-                      class = 'compact hover',            
+                      class = 'compact hover',
                       fillContainer = TRUE,
-                      extensions = c('Scroller'),                      
+                      extensions = c('Scroller'),
                       options=list(
                           dom = 'lfrtip',
                           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
                           scrollY = tabV,
                           scroller=TRUE, deferRender=TRUE
-                      )  ## end of options.list 
+                      )  ## end of options.list
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(sig.up),
@@ -1608,11 +1521,11 @@ ExpressionBoard <- function(id, inputData)
     FDRtable_text = "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
 
     FDRtable_caption = "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
-    
+
     shiny::callModule(
         tableModule,
         id="FDRtable",
-        func = FDRtable.RENDER, 
+        func = FDRtable.RENDER,
         info.text = FDRtable_text,
         title = 'Number of significant genes',
         caption = FDRtable_caption,
@@ -1626,7 +1539,7 @@ ExpressionBoard <- function(id, inputData)
     metaQ <- shiny::reactive({
         ngs <- inputData()
         req(ngs)
-        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))
         methods <- selected_gxmethods()
         metaQ <- sapply(ngs$gx.meta$meta, function(m) apply(m$q[,methods,drop=FALSE],1,max,na.rm=TRUE))
         rownames(metaQ) <- rownames(ngs$gx.meta$meta[[1]])
@@ -1636,7 +1549,7 @@ ExpressionBoard <- function(id, inputData)
     metaFC <- shiny::reactive({
         ngs <- inputData()
         req(ngs)
-        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))
         methods <- selected_gxmethods()
         ##metaFC <- sapply(ngs$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
         metaFC <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
@@ -1649,5 +1562,5 @@ ExpressionBoard <- function(id, inputData)
         selected_gxmethods = selected_gxmethods
     )
     return(outx)
-  }) ## end of moduleServer    
+  }) ## end of moduleServer
 } ## end-of-ExpressionBoard
