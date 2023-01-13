@@ -13,23 +13,23 @@
 #'
 #' @export
 biomarker_plot_heatmap_ui <- function(id,
-                                         label='',
-                                         height=c(600, 800)) {
+                                      label = "",
+                                      height = c(600, 800)) {
   ns <- shiny::NS(id)
-  info_text = strwrap("<b>Biomarker heatmap.</b> Expression heatmap
+  info_text <- strwrap("<b>Biomarker heatmap.</b> Expression heatmap
                       of top gene features according to their variable
                       importance.")
 
   PlotModuleUI(ns("plot"),
-               title = "Heatmap",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = NULL,
-               download.fmt=c("png","pdf","csv"),
-               width = c("auto","100%"),
-               height = height)
-
+    title = "Heatmap",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = NULL,
+    download.fmt = c("png", "pdf", "csv"),
+    width = c("auto", "100%"),
+    height = height
+  )
 }
 
 #' Expression plot Server function
@@ -44,70 +44,69 @@ biomarker_plot_heatmap_server <- function(id,
                                           calcVariableImportance,
                                           inputData,
                                           pdx_predicted,
-                                          watermark = FALSE)
-{
-  moduleServer( id, function(input, output, session) {
+                                          watermark = FALSE) {
+  moduleServer(
+    id, function(input, output, session) {
+      plot_data <- shiny::reactive({
+        pgx <- inputData()
+        shiny::req(pgx)
 
-    plot_data <- shiny::reactive({
-      pgx <- inputData()
-      shiny::req(pgx)
+        res <- calcVariableImportance()
 
-      res <- calcVariableImportance()
+        if (is.null(res)) {
+          return(NULL)
+        }
 
-      if (is.null(res)) {
-        return(NULL)
-      }
+        gg <- rownames(res$X)
+        gg <- intersect(gg, rownames(pgx$X))
+        X <- pgx$X[gg, ]
 
-      gg <- rownames(res$X)
-      gg <- intersect(gg, rownames(pgx$X))
-      X <- pgx$X[gg, ]
+        X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
 
-      X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
-
-      splitx <- NULL
-      ct <- pdx_predicted()
-      do.survival <- grepl("survival", ct, ignore.case = TRUE)
-
-      splitx <- pgx$Y[colnames(X), ct]
-      if (!is.categorical(splitx) || do.survival) {
         splitx <- NULL
-      }
+        ct <- pdx_predicted()
+        do.survival <- grepl("survival", ct, ignore.case = TRUE)
 
-      rownames(X) <- substring(rownames(X), 1, 40)
-      annot <- pgx$Y[colnames(X), ]
-      sdx <- apply(X, 1, sd)
+        splitx <- pgx$Y[colnames(X), ct]
+        if (!is.categorical(splitx) || do.survival) {
+          splitx <- NULL
+        }
 
-      res <- list(X = X, splitx = splitx)
-    })
+        rownames(X) <- substring(rownames(X), 1, 40)
+        annot <- pgx$Y[colnames(X), ]
+        sdx <- apply(X, 1, sd)
 
-    plot.RENDER <- shiny::reactive({
-      res <- plot_data()
-      shiny::req(res)
+        res <- list(X = X, splitx = splitx)
+      })
 
-      X <- res$X
-      splitx <- res$splitx
+      plot.RENDER <- shiny::reactive({
+        res <- plot_data()
+        shiny::req(res)
 
-      gx.splitmap(X,
-        split = NULL, splitx = splitx, main = "  ",
-        dist.method = "euclidean",
-        show_colnames = FALSE, ## save space, no sample names
-        show_legend = ifelse(is.null(splitx), TRUE, FALSE),
-        key.offset = c(0.05, 1.03),
-        show_rownames = 99,
-        lab.len = 50, cexRow = 0.88, mar = c(2, 8)
+        X <- res$X
+        splitx <- res$splitx
+
+        gx.splitmap(X,
+          split = NULL, splitx = splitx, main = "  ",
+          dist.method = "euclidean",
+          show_colnames = FALSE, ## save space, no sample names
+          show_legend = ifelse(is.null(splitx), TRUE, FALSE),
+          key.offset = c(0.05, 1.03),
+          show_rownames = 99,
+          lab.len = 50, cexRow = 0.88, mar = c(2, 8)
+        )
+      })
+
+      PlotModuleServer(
+        "plot",
+        plotlib = "base", # does not use plotly
+        func = plot.RENDER,
+        func2 = plot.RENDER, # no separate modal plot render
+        csvFunc = plot_data,
+        res = c(72, 435),
+        pdf.width = 10, pdf.height = 10,
+        add.watermark = watermark
       )
-    })
-
-    PlotModuleServer(
-      "plot",
-      plotlib = "base", # does not use plotly
-      func = plot.RENDER,
-      func2 = plot.RENDER, # no separate modal plot render
-      csvFunc = plot_data,
-      res = c(72, 435),
-      pdf.width = 10, pdf.height = 10,
-      add.watermark = watermark
-    )
-  }## end of moduleServer
+    } ## end of moduleServer
   )
 }
