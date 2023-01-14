@@ -18,16 +18,16 @@ if(0) {
     outputFunc=shiny::plotOutput
     ##csvFunc=NULL
     ##renderFunc2=NULL
-    outputFunc2=shiny::plotOutput 
+    outputFunc2=shiny::plotOutput
     no.download = FALSE
-    download.fmt=c("png","pdf") 
+    download.fmt=c("png","pdf")
     just.info=FALSE
     info.width="300px"
     show.maximize = TRUE
     height = c(640,800)
     width = c("auto",1400)
     pdf.width = 6
-    pdf.height = 6                        
+    pdf.height = 6
 }
 
 PlotModuleUI <- function(id,
@@ -42,7 +42,7 @@ PlotModuleUI <- function(id,
                        outputFunc = NULL,
                        outputFunc2 = NULL,
                        no.download = FALSE,
-                       download.fmt=c("png","pdf"), 
+                       download.fmt=c("png","pdf"),
                        just.info=FALSE,
                        info.width="300px",
                        show.maximize = TRUE,
@@ -52,26 +52,26 @@ PlotModuleUI <- function(id,
                        pdf.height = 6
                        )
 {
-    ns <- shiny::NS(id)    
+    ns <- shiny::NS(id)
 
-    if(is.null(plotlib2)) plotlib2 <- plotlib    
+    if(is.null(plotlib2)) plotlib2 <- plotlib
     if(length(height)==1) height <- c(height,800)
     if(length(width)==1)  width  <- c(width,1200)
 
-    ##ifnotchar.int <- function(s) ifelse(grepl("[%]|auto|vh|vw|vmin|vmax",s),s,as.integer(s))
+
     ifnotchar.int <- function(s) suppressWarnings(
       ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
     width.1  <- ifnotchar.int(width[1])
     width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
-    height.2 <- ifnotchar.int(height[2])            
-    
+    height.2 <- ifnotchar.int(height[2])
+
     getOutputFunc <- function(plotlib)
     {
         FUN <- switch(
             plotlib,
             generic = NULL,
-            htmlwidget = NULL,        
+            htmlwidget = NULL,
             plotly = plotly::plotlyOutput,
 ##          echarts4r = echarts4r::echarts4rOutput,
 ##          scatterD3 = scatterD3::scatterD3Output,
@@ -79,25 +79,25 @@ PlotModuleUI <- function(id,
             visnetwork = visNetwork::visNetworkOutput,
             ggplot = shiny::plotOutput,
             grid = shiny::plotOutput,
-            iheatmap = iheatmapr::iheatmaprOutput,
+            iheatmapr = iheatmapr::iheatmaprOutput,
             image = shiny::imageOutput,
             base = shiny::plotOutput,
-            shiny::plotOutput        
+            shiny::plotOutput
         )
         FUN
     }
 
     if(is.null(plotlib2))   plotlib2 <- plotlib
     if(is.null(outputFunc))  outputFunc  <- getOutputFunc(plotlib)
-    if(is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)    
-    
+    if(is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
+
     ##--------------------------------------------------------------------------------
     ##------------------------ BUTTONS -----------------------------------------------
     ##--------------------------------------------------------------------------------
-    
+
     ##if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
     options.button <- ""
-    
+
     if(!just.info && !is.null(options) && length(options)>0) {
         options.button <- shinyWidgets::dropdownButton(
             ##shiny::tags$h3("Options"),
@@ -123,19 +123,30 @@ PlotModuleUI <- function(id,
     if(TRUE || plotlib!="base") {
         pdf_size <- shiny::tagList(
             shiny::fillRow(
-                shiny::numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
-                shiny::numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
+                shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width='95%'),
+                shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width='100%')
             ),
             shiny::br(),shiny::br(),shiny::br()
         )
     }
-    
+
     dload.button <- shinyWidgets::dropdownButton(
-        dload.pdf,
-        dload.png,
-        dload.csv,
-        dload.html,
+      shiny::selectInput(
+        inputId = ns("downloadOption"),
+        label = "Format",
+        choices = download.fmt
+      ),
+        # dload.pdf,
+        # dload.png,
+        # dload.csv,
+        # dload.html,
         pdf_size,
+        shiny::br(),
+        shiny::downloadButton(
+          outputId = ns("download"),
+          label = "Download",
+        ),
+
         circle = TRUE, size = "xs", ## status = "danger",
         icon = shiny::icon("download"), width = "40px", right=FALSE,
         tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
@@ -145,25 +156,22 @@ PlotModuleUI <- function(id,
 
     if(!is.null(label) && label!="") label <- paste0("(",label,")")
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
-        
-    ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
+
     zoom.button <- NULL
-    if(1 && show.maximize) {        
+    if(1 && show.maximize) {
         zoom.button <- modalTrigger(ns("zoombutton"),
             ns("plotPopup"),
             icon("window-maximize"),
             class="btn-circle-xs"
         )
-##zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")  ## weird Cairo error!!!
-        ##zoom.button <- with_tippy(zoom.button, "Maximize") ## not consistent...       
     }
-    
+
     header <- shiny::fillRow(
         flex = c(NA,1,NA,NA,NA,NA),
         ##flex=c(NA,NA,1),
         label1,
 ##      shiny::HTML(paste("<center>",title,"</center>")),
-        shiny::div(class='plotmodule-title', title=title, title),        
+        shiny::div(class='plotmodule-title', title=title, title),
         shinyWidgets::dropdownButton(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
@@ -176,14 +184,14 @@ PlotModuleUI <- function(id,
         shiny::div(class='download-button', title='download', dload.button),
         shiny::div(class='zoom-button', title='zoom', zoom.button)
     )
-    
+
     ## ------------------------------------------------------------------------
     ## --------------- modal UI (former output$popupfig) ----------------------
     ## ------------------------------------------------------------------------
 
     popupfigUI <- function() {
         w <- width.2
-        h <- height.2        
+        h <- height.2
         if(FALSE && plotlib2=="image") {
             ## retains aspect ratio
             ##
@@ -194,31 +202,37 @@ PlotModuleUI <- function(id,
             r <- min( width.2 / img.dim[2], height.2 / img.dim[1])
             h <- img.dim[1]*r
             w <- img.dim[2]*r
-        } 
+        }
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
         if(any(class(caption2)=="character")) {
             caption2 <- shiny::HTML(caption2)
-            caption2 <- shiny::div(caption2, class="caption2")                         
+            caption2 <- shiny::div(caption2, class="caption2")
         }
         shiny::tagList(
-                   outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE),
-                   caption2
+          tryCatch({
+            outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE)
+          }, error = function(x){ # This try-catch is used for render functions that
+                                  # do not have the arguments, such as
+                                  # iheatmap plots
+            outputFunc2(ns("renderpopup"), width=w, height=h)
+          }),
+          caption2
         )
     }
 
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
-    modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")    
+    modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
-    
+
     if(any(class(caption)=="reactive")) {
         caption <- caption()
     }
     if(any(class(caption)=="character")) {
         caption <- shiny::HTML(caption)
-        caption <- shiny::div(caption, class="caption")                 
+        caption <- shiny::div(caption, class="caption")
     }
 
     div( class="plotmodule",
@@ -226,12 +240,13 @@ PlotModuleUI <- function(id,
                flex = c(NA,1,NA,0.001,NA),
                height = height.1,
                div( header, class="plotmodule-header"),
-               outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>% shinycssloaders::withSpinner(),                              
+               outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>%
+                 shinycssloaders::withSpinner(),
                caption,
                shiny::div(class="popup-plot",
                           modalUI(
                                 ns("plotPopup"),
-                                title, 
+                                title,
                                 size="fullscreen",
                                 popupfigUI()
                             )
@@ -257,9 +272,9 @@ PlotModuleServer <- function(
          renderFunc = NULL,
          renderFunc2 = NULL,
          csvFunc=NULL,
-         download.fmt=c("png","pdf"), 
-         ##height = c(640,800),
-         ##width = c("auto",1400),
+         download.fmt=c("png","pdf"),
+         height = c(640,800),
+         width = c("auto",1400),
          res=c(100,170),
          download.pdf = NULL,
          download.png = NULL,
@@ -273,48 +288,98 @@ PlotModuleServer <- function(
     moduleServer(
       id,
       function(input, output, session) {
-          
-          ns <- session$ns    
-          
-          
+
+          ns <- session$ns
+
+          ##--------------------------------------------------------------------------------
+          ##------------------------ Plotly editor------------------------------------------
+          ##--------------------------------------------------------------------------------
+          octocat <- list(
+            name = "Editor",
+            icon = list(
+              path = "M410.052,46.398c-0.812-10.885-5.509-21.129-13.226-28.845c-16.089-16.089-41.044-17.965-59.34-4.459l-7.427,5.487C257.281,72.291,191.872,135.46,135.647,206.336c-14.115,17.795-27.792,36.287-40.715,55.015c-0.928-0.042-1.859-0.068-2.795-0.068c-16.279,0-31.583,6.339-43.094,17.851C28.607,299.57,27.77,319.906,26.96,339.572c-0.745,18.1-1.449,35.196-16.99,54.271L0,406.081h15.785c37.145,0,96.119-17.431,119.447-40.759c11.511-11.511,17.85-26.815,17.85-43.094c0-0.941-0.026-1.877-0.068-2.81c18.766-12.941,37.258-26.614,55.01-40.704C278.873,222.52,342.046,157.11,395.787,84.302l5.479-7.419C407.747,68.111,410.867,57.284,410.052,46.398z M124.625,354.715c-16.334,16.334-58.786,31.89-94.095,35.555c10.098-18.012,10.791-34.866,11.417-50.082c0.754-18.326,1.406-34.152,17.702-50.449c8.678-8.678,20.216-13.457,32.488-13.457s23.81,4.779,32.488,13.457s13.457,20.215,13.457,32.487C138.082,334.5,133.303,346.037,124.625,354.715z M135.232,279.133c-6.875-6.875-15.11-11.889-24.091-14.825c10.801-15.429,22.107-30.656,33.724-45.426c12.79,1.717,24.7,7.567,33.871,16.737c9.174,9.174,15.027,21.087,16.745,33.875c-14.743,11.601-29.97,22.905-45.427,33.719C147.116,294.236,142.104,286.006,135.232,279.133z M389.2,67.971l-5.481,7.421c-50.415,68.302-109.268,129.976-175.037,183.518c-3.279-12.747-9.915-24.473-19.34-33.897c-9.421-9.421-21.145-16.055-33.893-19.333C209.017,139.887,270.692,81.036,338.97,30.649l7.427-5.488c12.275-9.062,29.023-7.801,39.823,3c5.177,5.177,8.329,12.05,8.874,19.355C395.641,54.822,393.548,62.086,389.2,67.971z",
+              transform = 'scale(0.035)'
+            ),
+            click = htmlwidgets::JS(paste0(
+              "function(gd) {
+                Shiny.setInputValue('", ns("plotly.edit"), "', Math.random());}"
+            )
+            )
+          )
+
+          getEditorUrl <- function(session, path_object) {
+            cd <- session$clientData
+            sprintf(
+              "%s/?plotURL=%s//%s:%s%s%s",
+              PLOTLY_EDITOR,
+              cd$url_protocol,
+              cd$url_hostname,
+              cd$url_port,
+              cd$url_pathname,
+              path_object
+            )
+          }
+
+          observeEvent(input$plotly.edit, {
+            withProgress(message = 'Sending plot...', value = 0.2, {
+              plot <- func()
+              incProgress(0.5)
+              json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+              res <- session$registerDataObj(
+                "plotly_graph", json$x$data,
+                function(data, req) {
+                  httpResponse(
+                    status = 200,
+                    content_type = 'application/json',
+                    content = data,
+                    headers = list("Access-Control-Allow-Origin" = PLOTLY_EDITOR)
+                  )
+                }
+              )
+              incProgress(0.8)
+              url <- getEditorUrl(session, res)
+              utils::browseURL(url)
+              })
+            })
+
           ##--------------------------------------------------------------------------------
           ##------------------------ FIGURE ------------------------------------------------
           ##--------------------------------------------------------------------------------
-          
+
           ## these engines cannot (yet) provide html
-          if(plotlib %in% c("base")) {    
+          if(plotlib %in% c("base")) {
               download.fmt <- setdiff(download.fmt, c("html"))
           }
-          
+
           do.pdf = "pdf" %in% download.fmt
           do.png = "png" %in% download.fmt
           do.html = "html" %in% download.fmt
           ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
-          
+
           PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
           if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
           if(do.png) PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
-          if(do.csv) CSVFILE = paste0(gsub("file","data",tempfile()),".csv")    
+          if(do.csv) CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
           HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
           HTMLFILE
           unlink(HTMLFILE)
-          
+
           ##============================================================
           ##=============== Download Handlers ==========================
           ##============================================================
           ## download.pdf = NULL
           ##download.png = download.html = NULL
-          
+
           if(do.png && is.null(download.png)) {
               download.png <- shiny::downloadHandler(
                                          filename = "plot.png",
                                          content = function(file) {
 
                                              pdf.width  <- input$pdf_width
-                                             pdf.height <- input$pdf_height                
+                                             pdf.height <- input$pdf_height
                                              resx <- 4  ## upresolution
-                                             
+
                                              shiny::withProgress({
                                                  ## unlink(PNGFILE) ## do not remove!
                                                  if(plotlib=="plotly") {
@@ -342,7 +407,7 @@ PlotModuleServer <- function(
                                                      png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                                                          pointsize=1.2*pdf.pointsize, res=72*resx)
                                                      grid::grid.draw(p)
-                                                     dev.off() 
+                                                     dev.off()
                                                  } else if(plotlib=="image") {
                                                      p <- func()
                                                      dbg("[downloadHandler.PNG] copy image ",p$src,"to PNGFILE",PNGFILE)
@@ -355,33 +420,33 @@ PlotModuleServer <- function(
                                                          pointsize=1.2*pdf.pointsize, res=72*resx)
                                                      func()
                                                      dev.off()  ## important!!
-                                                 } else { ## end base                
+                                                 } else { ## end base
                                                      png(PNGFILE, pointsize=pdf.pointsize)
                                                      plot.new()
                                                      mtext("Error. PNG not available.",line=-8)
                                                      dev.off()
                                                  }
-                                                 
+
                                                  ## finally copy to final exported file
                                                  dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
                                                  file.copy(PNGFILE, file, overwrite=TRUE)
                                                  ## ImageMagick or pdftk
                                                  if(TRUE && add.watermark) {
                                                      message("[plotModule] adding watermark to PNG...")
-                                                     addWatermark.PNG(file) 
+                                                     addWatermark.PNG(file)
                                                  }
-                                                 dbg("[downloadHandler.PNG] export to PNG done!")                    
-                                             }, message="exporting to PNG", value=0.8)
-                                         } ## content 
+                                                 dbg("[downloadHandler.PNG] export to PNG done!")
+                                             }, message="Exporting to PNG", value=0.8)
+                                         } ## content
                                      ) ## PNG downloadHandler
           } ## end if do.png
 
-          if(do.pdf && is.null(download.pdf) ) {        
+          if(do.pdf && is.null(download.pdf) ) {
               download.pdf <- shiny::downloadHandler(
                                          filename = "plot.pdf",
                                          content = function(file) {
                                              pdf.width  <- input$pdf_width
-                                             pdf.height <- input$pdf_height                
+                                             pdf.height <- input$pdf_height
                                              shiny::withProgress({
                                                  ## unlink(PDFFILE) ## do not remove!
                                                  if(plotlib=="plotly") {
@@ -408,13 +473,13 @@ PlotModuleServer <- function(
                                                  } else if(plotlib %in% c("ggplot","ggplot2")) {
                                                      p <- func()
                                                      pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
-                                                     print(p) 
-                                                     dev.off() 
+                                                     print(p)
+                                                     dev.off()
                                                  } else if(plotlib %in% c("grid")) {
                                                      p <- func()
                                                      pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                                                      grid::grid.draw(p)
-                                                     dev.off() 
+                                                     dev.off()
                                                  } else if(plotlib=="image") {
                                                      p <- func()
                                                      ## p$src  ## PNG image file
@@ -428,13 +493,13 @@ PlotModuleServer <- function(
                                                          pointsize=pdf.pointsize)
                                                      func()
                                                      dev.off()  ## important!!
-                                                 } else { ## end base                
+                                                 } else { ## end base
                                                      pdf(PDFFILE, pointsize=pdf.pointsize)
                                                      plot.new()
                                                      mtext("Error. PDF not available.",line=-8)
                                                      dev.off()
                                                  }
-                                                 
+
                                                  ## finally copy to final exported file
                                                  dbg("[downloadHandler.PDF] copy PDFFILE",PDFFILE,"to download file",file )
                                                  file.copy(PDFFILE, file, overwrite=TRUE)
@@ -442,22 +507,22 @@ PlotModuleServer <- function(
                                                  ## ImageMagick or pdftk
                                                  if(TRUE && add.watermark) {
                                                      message("[plotModule] adding watermark to PDF...")
-                                                     addWatermark.PDF(file) 
+                                                     addWatermark.PDF(file)
                                                  }
                                                  message("[plotModule] export to PDF done!")
-                                             }, message="exporting to PDF", value=0.8)
-                                         } ## content 
+                                             }, message="Exporting to PDF", value=0.8)
+                                         } ## content
                                      ) ## PDF downloadHandler
           } ## end if do.pdf
-          
+
           saveHTML <- function() {
               ## unlink(HTMLFILE) ## do not remove!
               if(plotlib == "plotly" ) {
                   p <- func()
-                  htmlwidgets::saveWidget(p, HTMLFILE) 
+                  htmlwidgets::saveWidget(p, HTMLFILE)
               } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                   p <- func()
-                  htmlwidgets::saveWidget(p, HTMLFILE) 
+                  htmlwidgets::saveWidget(p, HTMLFILE)
               } else if(plotlib == "iheatmapr") {
                   p <- func()
                   iheatmapr::save_iheatmap(p, HTMLFILE)
@@ -480,7 +545,7 @@ PlotModuleServer <- function(
               }
               return(HTMLFILE)
           }
-          
+
           if(do.html && is.null(download.html) )  {
               download.html <- shiny::downloadHandler(
                                           filename = "plot.html",
@@ -489,10 +554,10 @@ PlotModuleServer <- function(
                                                   ## unlink(HTMLFILE) ## do not remove!
                                                   if(plotlib == "plotly" ) {
                                                       p <- func()
-                                                      htmlwidgets::saveWidget(p, HTMLFILE) 
+                                                      htmlwidgets::saveWidget(p, HTMLFILE)
                                                   } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                                                       p <- func()
-                                                      htmlwidgets::saveWidget(p, HTMLFILE) 
+                                                      htmlwidgets::saveWidget(p, HTMLFILE)
                                                   } else if(plotlib == "iheatmapr") {
                                                       p <- func()
                                                       iheatmapr::save_iheatmap(p, HTMLFILE)
@@ -515,7 +580,7 @@ PlotModuleServer <- function(
                                                   }
                                                   ## finally copy to fina lexport file
                                                   file.copy(HTMLFILE, file, overwrite=TRUE)
-                                              }, message="exporting to HTML", value=0.8)
+                                              }, message="Exporting to HTML", value=0.8)
                                           } ## end of content
                                       ) ## end of HTML downloadHandler
           } ## end of do HTML
@@ -530,29 +595,38 @@ PlotModuleServer <- function(
                                                  if(is.list(data)) data <- data[[1]]
                                                  ##file.copy(CSVFILE, file, overwrite=TRUE)
                                                  write.csv(data, file=file)
-                                             }, message="exporting to CSV", value=0.8)
+                                             }, message="Exporting to CSV", value=0.8)
                                          } ## end of content
                                      ) ## end of HTML downloadHandler
           } ## end of do HTML
-          
+
           ##--------------------------------------------------------------------------------
           ##------------------------ OUTPUT ------------------------------------------------
           ##--------------------------------------------------------------------------------
-
-          if(!is.null(download.csv))  output$csv  <- download.csv
-          if(!is.null(download.pdf))  output$pdf  <- download.pdf
-          if(!is.null(download.png))  output$png  <- download.png
-          if(!is.null(download.html)) output$html <- download.html
+          observeEvent(input$downloadOption, {
+            if(input$downloadOption == "png"){
+              output$download <- download.png
+            }
+            if(input$downloadOption == "pdf"){
+              output$download <- download.pdf
+            }
+            if(input$downloadOption == "csv"){
+              output$download <- download.csv
+            }
+            if(input$downloadOption == "html"){
+              output$download <- download.html
+            }
+          })
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- UI ------------------------------------------------
           ##--------------------------------------------------------------------------------
 
           if(is.null(func2)) func2 <- func
-          if(is.null(plotlib2)) plotlib2 <- plotlib    
+          if(is.null(plotlib2)) plotlib2 <- plotlib
           if(length(height)==1) height <- c(height,700)
           if(length(width)==1)  width  <- c(width,1200)
-          if(length(res)==1)    res    <- c(res, 1.3*res)    
+          if(length(res)==1)    res    <- c(res, 1.3*res)
 
           res.1 <- res[1]
           res.2 <- res[2]
@@ -565,7 +639,7 @@ PlotModuleServer <- function(
           width.2  <- ifnotchar.int(width[2])
           height.1 <- ifnotchar.int(height[1])
           height.2 <- ifnotchar.int(height[2])
-          
+
           ## This sets the correct render and output functions for different
           ##plotting libraries.
 
@@ -573,7 +647,7 @@ PlotModuleServer <- function(
               switch(
                   plotlib,
                   generic = NULL,
-                  htmlwidget = NULL,        
+                  htmlwidget = NULL,
                   plotly = plotly::renderPlotly,
 ##                  echarts4r = echarts4r::renderEcharts4r,
 ##                  scatterD3 = scatterD3::renderScatterD3,
@@ -587,7 +661,7 @@ PlotModuleServer <- function(
                   shiny::renderPlot
               )
           }
-          
+
           if(is.null(renderFunc)) {
               renderFunc <- getRenderFunc(plotlib)
           }
@@ -596,15 +670,16 @@ PlotModuleServer <- function(
               renderFunc2 <- getRenderFunc(plotlib2)
           }
 
-          render = render2 = NULL             
+          render = render2 = NULL
+
           if(1) {
               if(!is.null(func) && plotlib=="base") {
                   render <- shiny::renderPlot({ func() }, res=res.1)
-                  ##render <- shiny::renderPlot({ func() }, res=res.1, width=width.1, height=height.1)              
+                  ##render <- shiny::renderPlot({ func() }, res=res.1, width=width.1, height=height.1)
               }
               if(!is.null(func2) && plotlib2=="base") {
                   render2 <- shiny::renderPlot({ func2() }, res=res.2)
-                  ##render2 <- shiny::renderPlot({ func2() }, res=res.2, width=width.2, height=height.2)              
+                  ##render2 <- shiny::renderPlot({ func2() }, res=res.2, width=width.2, height=height.2)
               }
               if(plotlib=="image") {
                   render <- shiny::renderImage( func(), deleteFile=FALSE)
@@ -612,9 +687,9 @@ PlotModuleServer <- function(
               if(!is.null(func2) && plotlib2=="image") {
                   render2 <- shiny::renderImage(func2(), deleteFile=FALSE)
               }
-              
+
               ##if(grepl("renderCachedPlot",deparse(substitute(renderFunc)))) {
-              if(grepl("cacheKeyExpr",head(renderFunc,1))) {          
+              if(grepl("cacheKeyExpr",head(renderFunc,1))) {
                   render <- shiny::renderCachedPlot(
                                        func(),
                                        cacheKeyExpr = {list(csvFunc())},
@@ -622,7 +697,7 @@ PlotModuleServer <- function(
                                    )
               }
               ##if(grepl("renderCachedPlot",deparse(substitute(renderFunc2)))) {
-              if(grepl("cacheKeyExpr",head(renderFunc2,1))) {                        
+              if(grepl("cacheKeyExpr",head(renderFunc2,1))) {
                   render2 <- shiny::renderCachedPlot(
                                         func2(),
                                         cacheKeyExpr = {list(csvFunc())},
@@ -631,18 +706,71 @@ PlotModuleServer <- function(
               }
           }
 
+
           if(is.null(render)) {
-              ##render <- eval(parse(text=renderFunc))(func())
-              render <- renderFunc(func())              
+            if(plotlib == "plotly"){
+              # If the plotting function is `plotly`, add the edit button
+              render <- renderFunc({
+                # By default remove plotly logo from all plots
+                plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
+                  plotly::plotly_build()
+                # If there is already custom buttons, append the edit one
+                # (issue #2210 plotly/plotly.R)
+                if(inherits(plot$x$config$modeBarButtons, "list")){
+                  for (y in 1:length(plot$x$config$modeBarButtons[[1]])) {
+                    if(plot$x$config$modeBarButtons[[1]][[y]] == "toImage"){
+                      plot$x$config$modeBarButtons[[1]][[y]] <- NULL
+                      break
+                    }
+                  }
+                  plot$x$config$modeBarButtons[[1]] <- append(plot$x$config$modeBarButtons[[1]],
+                                                              list(octocat))
+                } else { # Otherwise, apply the button regularly
+                  plot <- plot %>%
+                    plotly::config(modeBarButtonsToAdd = list(octocat),
+                                   modeBarButtonsToRemove = c("zoomIn2d", "toImage"))
+                }
+                plot
+              })
+            } else {
+              render <- renderFunc(func())
+            }
+
+
           }
           if(is.null(render2) && !is.null(func2)) {
-              ##render2 <- eval(parse(text=renderFunc2))(func2())
-              render2 <- renderFunc2(func2())              
+            if(plotlib2 == "plotly"){
+              render2 <- renderFunc2({
+                # By default remove plotly logo from all plots
+                plot <- func2() %>% plotly::config(displaylogo = FALSE) %>%
+                  plotly::plotly_build()
+                # If there is already custom buttons, append the edit one
+                # (issue #2210 plotly/plotly.R)
+                if(inherits(plot$x$config$modeBarButtons, "list")){
+                  for (y in 1:length(plot$x$config$modeBarButtons[[1]])) {
+                    if(plot$x$config$modeBarButtons[[1]][[y]] == "toImage"){
+                      plot$x$config$modeBarButtons[[1]][[y]] <- NULL
+                      break
+                    }
+                  }
+                  plot$x$config$modeBarButtons[[1]] <- append(plot$x$config$modeBarButtons[[1]],
+                                                              list(octocat))
+                } else { # Otherwise, apply the button regularly
+                  plot <- plot %>%
+                    plotly::config(modeBarButtonsToAdd = list(octocat),
+                                   modeBarButtonsToRemove = c("zoomIn2d", "toImage"))
+                }
+                plot
+              })
+            } else {
+              render2 <- renderFunc2(func2())
+            }
           }
-          
+
           output$renderfigure <- render
           output$renderpopup  <- render2
-          
+
+
           ##--------------------------------------------------------------------------------
           ##---------------------------- RETURN VALUE --------------------------------------
           ##--------------------------------------------------------------------------------
