@@ -22,7 +22,7 @@ if(Sys.info()["sysname"] != "Windows") {
 
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 ##options(warnPartialMatchDollar = TRUE)
-##options(warnPartialMatchArgs = TRUE)    
+##options(warnPartialMatchArgs = TRUE)
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
@@ -83,7 +83,7 @@ message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
 
 if(file.exists("Renviron.site")) {
-    message("Loading local Renviron.site...")    
+    message("Loading local Renviron.site...")
     readRenviron("Renviron.site")
 }
 
@@ -147,7 +147,7 @@ if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
     Sys.setenv("SHINYPROXY_USERNAME"="Test Person")  ## only for testing!!
 }
 if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
-    message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
+    message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")
     opt$AUTHENTICATION = "none"
     ## opt$ENABLE_USERDIR = FALSE
     ## stop("[INIT] FATAL Missing firebase.rds file")
@@ -156,6 +156,7 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK
 TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
+PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -196,36 +197,36 @@ MAINTABS = c("DataView","Clustering","Expression","Enrichment",
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
-  
+
 
     dbg("[INIT.logHandler] >>>>> called! <<<<<")
     ##dbg("[INIT.logHandler] names(http.req) = ",sort(names(http.req)))
     dbg("[INIT.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
-    
+
     if(!http.req$PATH_INFO == "/log") {
         return()
     }
-    
+
     query <- shiny::parseQueryString(http.req$QUERY_STRING)
     dbg("[INIT.logHandler] names(query) = ",names(query))
     dbg("[INIT.logHandler] query$msg = ",query$msg)
-    
+
     if(is.null(query$msg)) {
         dbg("[INIT.logHandler] msg is NULL!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
-        dbg("[INIT.logHandler] msg is empty!")        
+        dbg("[INIT.logHandler] msg is empty!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
-    
+
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
-        dbg("[INIT.logHandler] missing HONCHO_TOKEN!")        
+        dbg("[INIT.logHandler] missing HONCHO_TOKEN!")
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
-    
+
     uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
 
     ## get the correct log file
@@ -238,12 +239,12 @@ logHandler <- function(http.req){
     log.file
     log.file <- tail(log.file,1)  ## take newest???
     log.file
-    
+
     if(length(log.file)==0) {
         dbg("[INIT.logHandler] could not resolve log file for session ID = ",id)
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
-    
+
     dbg("[logHandler] reading log.file = ",log.file)
     if(!is.null(log.file)) {
         ##the.log <- readr::read_file(log.file)
@@ -251,7 +252,7 @@ logHandler <- function(http.req){
         the.log <- paste(system(paste("grep -B100 -A99999",id,log.file),intern=TRUE),collapse='\n')
     }
 
-    dbg("[logHandler] sending log file... ")    
+    dbg("[logHandler] sending log file... ")
     httr::POST(
         uri,
         body = list(
@@ -261,7 +262,7 @@ logHandler <- function(http.req){
         ),
         encode = "json"
     )
-    
+
 
     http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
