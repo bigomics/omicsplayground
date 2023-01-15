@@ -7,7 +7,6 @@ CorrelationInputs <- function(id) {
 
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
         shiny::hr(), shiny::br(),
 
         ## data set parameters
