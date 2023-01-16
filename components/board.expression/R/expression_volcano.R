@@ -14,7 +14,8 @@
 #' @export
 expression_plot_volcano_ui <- function(id,
                                        label='',
-                                       height=c(600, 800)) {
+                                       height,
+                                       width) {
   ns <- shiny::NS(id)
   options <- tagList(
     actionButton(ns("button1"),"some action")
@@ -31,7 +32,7 @@ expression_plot_volcano_ui <- function(id,
                info.text = info_text,
                options = NULL,
                download.fmt=c("png","pdf","csv"),
-               width = c("auto","100%"),
+               width = width,
                height = height)
 
 }
@@ -215,7 +216,7 @@ expression_plot_volcano_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
-      res = c(80,170),                ## resolution of plots
+      res = c(80,95),                ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )

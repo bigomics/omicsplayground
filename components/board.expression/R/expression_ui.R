@@ -45,6 +45,9 @@ ExpressionInputs <- function(id) {
 ExpressionUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 
+    fullH = 800  ## full height of page
+    rowH  = 340  ## full height of page
+
     tagList(
         div(
             style = "max-height:50vh;",
@@ -56,7 +59,10 @@ ExpressionUI <- function(id) {
                         class = "row",
                         div(
                             class = "col-md-3",
-                            expression_plot_volcano_ui(ns("plots_volcano"),label = "A")
+                            expression_plot_volcano_ui(ns("plots_volcano"),
+                                                       label = "A",
+                                                       height = c(0.45*fullH,700),
+                                                       width = c('auto',1200)),
                         ),
                         div(
                             class = "col-md-3",
