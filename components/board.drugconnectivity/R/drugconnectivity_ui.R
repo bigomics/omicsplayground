@@ -47,7 +47,8 @@ DrugConnectivityUI <- function(id) {
               tableWidget(ns("dsea_table"))
             ),
             div(class = "col-md-2",
-              plotWidget(ns("dsea_actmap"))
+              #plotWidget(ns("dsea_actmap"))
+              drugconnectivity_plot_actmap_ui(ns("dsea_actmap"))
             )
           ),
           div(

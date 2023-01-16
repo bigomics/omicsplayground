@@ -335,108 +335,108 @@ DrugConnectivityBoard <- function(id, inputData) {
         )
     })
 
-    dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc) {
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-      ## dmethod="activity/L1000";contr=1
-      nes <- pgx$drugs[[dmethod]]$X
-      qv <- pgx$drugs[[dmethod]]$Q
-      score <- nes * (1 - qv)**2
-      score[is.na(score)] <- 0
-      ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
+    #dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc) {
+    #  if (is.null(pgx$drugs)) {
+    #    return(NULL)
+    #  }
+    #  ## dmethod="activity/L1000";contr=1
+    #  nes <- pgx$drugs[[dmethod]]$X
+    #  qv <- pgx$drugs[[dmethod]]$Q
+    #  score <- nes * (1 - qv)**2
+    #  score[is.na(score)] <- 0
+    #  ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
+#
+    #  ## reduce score matrix
+    #  score <- score[order(-score[, contr]**2), , drop = FALSE] ## sort by score
+    #  dsea <- getActiveDSEA()
+    #  res <- dsea$table
+    #  ## filter with table selection/search
+    #  ii <- dsea_table$rows_all()
+    #  shiny::req(ii)
+    #  if (length(ii) > 0) {
+    #    res <- res[ii, , drop = FALSE]
+    #    dd <- intersect(res$drug, rownames(score))
+    #    score <- score[dd, , drop = FALSE]
+    #  }
+    #  if (nrow(score) <= 1) {
+    #    return(NULL)
+    #  }
+#
+    #  score <- head(score, nterms) ## max number of terms
+    #  score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max contrs/FC
+    #  score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+#
+    #  if (input$dsea_normalize) score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2))))
+    #  score <- sign(score) * abs(score)**3 ## fudging
+    #  score <- score / (1e-8 + max(abs(score), na.rm = TRUE))
+#
+    #  if (NCOL(score) > 1) {
+    #    d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
+    #    d2 <- as.dist(1 - cor(score, use = "pairwise"))
+#
+    #    d1[is.na(d1)] <- 1
+    #    d2[is.na(d2)] <- 1
+    #    jj <- 1
+    #    ii <- 1:nrow(score)
+    #    ii <- hclust(d1)$order
+    #    jj <- hclust(d2)$order
+    #    score <- score[ii, jj, drop = FALSE]
+    #  } else {
+    #    score <- score[order(-score[, 1]), , drop = FALSE]
+    #  }
+#
+    #  cex2 <- 1
+    #  colnames(score) <- substring(colnames(score), 1, 30)
+    #  rownames(score) <- substring(rownames(score), 1, 50)
+    #  cex2 <- 0.85
+    #  par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1, 0, 0))
+#
+    #  corrplot::corrplot(score,
+    #    is.corr = FALSE, cl.pos = "n",
+    #    col = BLUERED(100), col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
+    #    tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
+    #  )
+    #}
 
-      ## reduce score matrix
-      score <- score[order(-score[, contr]**2), , drop = FALSE] ## sort by score
-      dsea <- getActiveDSEA()
-      res <- dsea$table
-      ## filter with table selection/search
-      ii <- dsea_table$rows_all()
-      shiny::req(ii)
-      if (length(ii) > 0) {
-        res <- res[ii, , drop = FALSE]
-        dd <- intersect(res$drug, rownames(score))
-        score <- score[dd, , drop = FALSE]
-      }
-      if (nrow(score) <= 1) {
-        return(NULL)
-      }
+    #dsea_actmap.RENDER <- shiny::reactive({
+    #  pgx <- inputData()
+    #  shiny::req(pgx, input$dsea_contrast, input$dsea_method)
+#
+    #  shiny::validate(shiny::need("drugs" %in% names(pgx), "no 'drugs' in object."))
+    #  if (is.null(pgx$drugs)) {
+    #    return(NULL)
+    #  }
+#
+    #  dmethod <- "activity/L1000"
+    #  contr <- 1
+    #  dmethod <- input$dsea_method
+    #  contr <- input$dsea_contrast
+    #  if (is.null(contr)) {
+    #    return(NULL)
+    #  }
+#
+    #  dseaPlotActmap(pgx, dmethod, contr, nterms = 50, nfc = 20)
+    #})
 
-      score <- head(score, nterms) ## max number of terms
-      score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max contrs/FC
-      score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+    #dsea_actmap.RENDER2 <- shiny::reactive({
+    #  pgx <- inputData()
+    #  shiny::req(pgx, input$dsea_contrast, input$dsea_method)
 
-      if (input$dsea_normalize) score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2))))
-      score <- sign(score) * abs(score)**3 ## fudging
-      score <- score / (1e-8 + max(abs(score), na.rm = TRUE))
+    #  shiny::validate(shiny::need("drugs" %in% names(pgx), "no 'drugs' in object."))
+    #  if (is.null(pgx$drugs)) {
+    #    return(NULL)
+    #  }
 
-      if (NCOL(score) > 1) {
-        d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
-        d2 <- as.dist(1 - cor(score, use = "pairwise"))
+    #  dmethod <- "activity/L1000"
+    #  contr <- 1
+    #  dmethod <- input$dsea_method
+    #  contr <- input$dsea_contrast
+    #  if (is.null(contr)) {
+    #    return(NULL)
+    #  }
 
-        d1[is.na(d1)] <- 1
-        d2[is.na(d2)] <- 1
-        jj <- 1
-        ii <- 1:nrow(score)
-        ii <- hclust(d1)$order
-        jj <- hclust(d2)$order
-        score <- score[ii, jj, drop = FALSE]
-      } else {
-        score <- score[order(-score[, 1]), , drop = FALSE]
-      }
-
-      cex2 <- 1
-      colnames(score) <- substring(colnames(score), 1, 30)
-      rownames(score) <- substring(rownames(score), 1, 50)
-      cex2 <- 0.85
-      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1, 0, 0))
-
-      corrplot::corrplot(score,
-        is.corr = FALSE, cl.pos = "n",
-        col = BLUERED(100), col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
-        tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
-      )
-    }
-
-    dsea_actmap.RENDER <- shiny::reactive({
-      pgx <- inputData()
-      shiny::req(pgx, input$dsea_contrast, input$dsea_method)
-
-      shiny::validate(shiny::need("drugs" %in% names(pgx), "no 'drugs' in object."))
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-
-      dmethod <- "activity/L1000"
-      contr <- 1
-      dmethod <- input$dsea_method
-      contr <- input$dsea_contrast
-      if (is.null(contr)) {
-        return(NULL)
-      }
-
-      dseaPlotActmap(pgx, dmethod, contr, nterms = 50, nfc = 20)
-    })
-
-    dsea_actmap.RENDER2 <- shiny::reactive({
-      pgx <- inputData()
-      shiny::req(pgx, input$dsea_contrast, input$dsea_method)
-
-      shiny::validate(shiny::need("drugs" %in% names(pgx), "no 'drugs' in object."))
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-
-      dmethod <- "activity/L1000"
-      contr <- 1
-      dmethod <- input$dsea_method
-      contr <- input$dsea_contrast
-      if (is.null(contr)) {
-        return(NULL)
-      }
-
-      dseaPlotActmap(pgx, dmethod, contr, nterms = 50, nfc = 100)
-    })
+    #  dseaPlotActmap(pgx, dmethod, contr, nterms = 50, nfc = 100)
+    #})
 
 
     ## --------- DSEA enplot plotting module
@@ -484,22 +484,31 @@ DrugConnectivityBoard <- function(id, inputData) {
     #)
 
     ## -------- Activation map plotting module
-    dsea_actmap.opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("dsea_normalize"), "normalize activation matrix", FALSE), "Normalize columns of the activation matrix.")
+    drugconnectivity_plot_actmap_server(
+      "dsea_actmap",
+      inputData,
+      reactive(input$dsea_contrast),
+      reactive(input$dsea_method),
+      dsea_table,
+      getActiveDSEA,
+      watermark = WATERMARK
     )
-    shiny::callModule(
-      plotModule,
-      id = "dsea_actmap",
-      func = dsea_actmap.RENDER,
-      func2 = dsea_actmap.RENDER2,
-      title = "Activation matrix", label = "d",
-      info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
-      options = dsea_actmap.opts,
-      pdf.width = 6, pdf.height = 9,
-      height = c(fullH, 750), width = c("100%", 1400),
-      res = 72,
-      add.watermark = WATERMARK
-    )
+    #dsea_actmap.opts <- shiny::tagList(
+    #  withTooltip(shiny::checkboxInput(ns("dsea_normalize"), "normalize activation matrix", FALSE), "Normalize columns of the activation matrix.")
+    #)
+    #shiny::callModule(
+    #  plotModule,
+    #  id = "dsea_actmap",
+    #  func = dsea_actmap.RENDER,
+    #  func2 = dsea_actmap.RENDER2,
+    #  title = "Activation matrix", label = "d",
+    #  info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    #  options = dsea_actmap.opts,
+    #  pdf.width = 6, pdf.height = 9,
+    #  height = c(fullH, 750), width = c("100%", 1400),
+    #  res = 72,
+    #  add.watermark = WATERMARK
+    #)
 
     ## --------buttons for table
     dsea_table.opts <- shiny::tagList(

@@ -30,7 +30,7 @@ drugconnectivity_plot_moa_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-               title = "Mechanism of action (NEW)",
+               title = "Mechanism of action",
                label = label,
                plotlib = "base",
                info.text = info_text,
