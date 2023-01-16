@@ -111,6 +111,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.dataview/R/dataview_ui.R',encoding='UTF-8')
   source('board.dataview/R/utils.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_plot_actmap.R',encoding='UTF-8')
+  source('board.drugconnectivity/R/drugconnectivity_plot_enplots.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_plot_moa.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_server.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_ui.R',encoding='UTF-8')

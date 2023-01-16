@@ -36,7 +36,8 @@ DrugConnectivityUI <- function(id) {
             div(class = "col-md-10",
               div(class = "row",
                 div(class = "col-md-6",
-                  plotWidget(ns("dsea_enplots")),
+                  #plotWidget(ns("dsea_enplots")),
+                  drugconnectivity_plot_enplots_ui(ns("dsea_enplots"))
                 ),
                 div(class = "col-md-6",
                   #plotWidget(ns("dsea_moaplot"))
