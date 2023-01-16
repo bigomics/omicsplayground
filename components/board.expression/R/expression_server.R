@@ -257,19 +257,27 @@ ExpressionBoard <- function(id, inputData)
       ## %>%
       ## bindCache(input$gx_features, input$gx_fdr, input$gx_lfc)
 
-    # Plotting ####
+    # Plotting ###
 
     # tab differential expression > Plots ####
+
     expression_plot_volcano_server(id = "plots_volcano",
-                                   pgx = inputData(),
-                                   pgx_fdr = input$gx_fdr,
-                                   pgx_contrast = input$gx_contrast,
-                                   pgx_lfc = input$gx_lfc,
-                                   pgx_features = input$gx_features,
-                                   res = fullDiffExprTable(),
-                                   fam.genes = res$gene_name)
+                                   pgx_fdr = reactive(input$gx_fdr),
+                                   pgx_contrast = reactive(input$gx_contrast),
+                                   pgx_lfc = reactive(input$gx_lfc),
+                                   pgx_features = reactive(input$gx_features),
+                                   res = fullDiffExprTable,
+                                   sel1 = genetable$rows_selected,
+                                   df1 = filteredDiffExprTable,
+                                   sel2 = gsettable$rows_selected,
+                                   df2 = gx_related_genesets,
+                                   fam.genes = res$gene_name
+                                   )
+
 
     # tab differential expression > Top genes ####
+
+
 
     # tab differential expression > Volcano (all) ####
 

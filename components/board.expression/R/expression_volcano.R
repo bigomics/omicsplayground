@@ -16,6 +16,10 @@ expression_plot_volcano_ui <- function(id,
                                        label='',
                                        height=c(600, 800)) {
   ns <- shiny::NS(id)
+  options <- tagList(
+    actionButton(ns("button1"),"some action")
+  )
+
   info_text = "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
 
   PlotModuleUI(ns("pltmod"),
@@ -37,23 +41,28 @@ expression_plot_volcano_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param pgx
 #' @param pgx_fdr
 #' @param pgx_contrast
 #' @param pgx_lfc
 #' @param pgx_features
 #' @param res
+#' @param sel1
+#' @param df1
 #' @param watermark
+#'
 #'
 #'
 #' @export
 expression_plot_volcano_server <- function(id,
-                                           pgx,
                                            pgx_fdr = 0.1,
                                            pgx_contrast,
                                            pgx_lfc = 1.0,
                                            pgx_features,
                                            res,
+                                           sel1,
+                                           df1,
+                                           sel2,
+                                           df2,
                                            fam.genes,
                                            watermark = FALSE
                                            ){
@@ -62,27 +71,30 @@ expression_plot_volcano_server <- function(id,
     # dbg("[plots_volcano.PLOTLY] reacted")
 
     #calculate required inputs for plotting
-    serverSideComputation <- function(pgx,
-                                      pgx_fdr,
+    serverSideComputation <- function(pgx_fdr,
                                       pgx_contrast,
                                       pgx_lfc,
                                       pgx_features,
                                       res,
+                                      sel1,
+                                      df1,
+                                      sel2,
+                                      df2,
                                       fam.genes){
-      shiny::req(pgx)
-      comp1 = gx_contrast
-      alertDataLoaded(session,pgx)
+      comp1 = pgx_contrast
+      # alertDataLoaded(session,gx)
+      # res <- res()
       fdr = as.numeric(pgx_fdr)
-      res = fullDiffExprTable()
+      # res = fullDiffExprTable()
       lfc = as.numeric(pgx_lfc)
       fam.genes = res$gene_name
-      ##fam.genes = unique(unlist(pgx$families[input$gx_features]))
+      ##fam.genes = unique(unlist(pgx$families[input$pgx_features]))
 
       if(is.null(res)) return(NULL)
       if(length(comp1)==0) return(NULL)
       if(is.null(pgx_features)) return(NULL)
       if(pgx_features!="<all>") {
-        ##gset <- GSETS[input$gx_features]
+        ##gset <- GSETS[input$pgx_features]
         gset <- getGSETS(pgx_features)
         fam.genes = unique(unlist(gset))
       }
@@ -108,12 +120,6 @@ expression_plot_volcano_server <- function(id,
         names(x)=g
         x
       }
-
-      sel1 = genetable$rows_selected()
-      df1 = filteredDiffExprTable()
-
-      sel2 = gsettable$rows_selected()
-      df2 <- gx_related_genesets()
 
       lab.cex = 1
       gene.selected <- !is.null(sel1) && !is.null(df1)
@@ -141,18 +147,28 @@ expression_plot_volcano_server <- function(id,
 
       ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
 
-      return(list(x,y,fc.genes, sel.genes,lab.genes,lab.cex,fdr,lfc))
+      return(list(x=x,
+                  y=y,
+                  fc.genes=fc.genes,
+                  sel.genes=sel.genes,
+                  lab.genes=lab.genes,
+                  lab.cex =lab.cex,
+                  fdr=fdr,
+                  lfc=lfc))
 
     }
 
     #reactive function listening for changes in input
     plot_data <- shiny::reactive({
-      serverSideComputation(pgx,
-                            pgx_fdr,
-                            pgx_contrast,
-                            pgx_lfc,
-                            pgx_features,
-                            res,
+      serverSideComputation(pgx_fdr(),
+                            pgx_contrast(),
+                            pgx_lfc(),
+                            pgx_features(),
+                            res(),
+                            sel1(),
+                            df1(),
+                            sel2(),
+                            df2(),
                             fam.genes)
       })
 
@@ -161,17 +177,17 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      df <- pd
       par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
+
       plt <- plotlyVolcano(
-        x=x, y=y, names=fc.genes,
+        x=pd[["x"]], y=pd[["y"]], names=pd[["fc.genes"]],
         source = "plot1", marker.type = "scattergl",
-        highlight = sel.genes,
-        label = lab.genes, label.cex = lab.cex,
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]], label.cex = pd[["lab.cex"]],
         group.names = c("group1","group0"),
         ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
         ##use.fdr=TRUE,
-        psig = fdr, lfc = lfc,
+        psig = pd[["fdr"]], lfc = pd[["lfc"]],
         xlab = "effect size (log2FC)",
         ylab = "significance (-log10q)",
         marker.size = 4,
@@ -182,13 +198,15 @@ expression_plot_volcano_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      plotly.RENDER() %>%
+      fig <- plotly.RENDER() %>%
         plotly::layout(
-          ## showlegend = TRUE,
-          font = list(
-            size = 16
+          font = list(size = 18),
+          legend = list(
+            font = list(size = 18)
           )
         )
+      fig <- plotly::style(fig, marker.size = 20)
+      fig
     }
 
     PlotModuleServer(
