@@ -10,7 +10,7 @@ DrugConnectivityInputs <- function(id) {
       shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube")),
       "Show more information about this module."
     ),
-    shiny::hr(), shiny::br(),
+    shiny::hr(),
     withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
@@ -18,6 +18,13 @@ DrugConnectivityInputs <- function(id) {
     withTooltip(shiny::selectInput(ns("dsea_method"), "Analysis type:", choices = ""),
       "Select type of drug enrichment analysis: activity or sensitivity (if available).",
       placement = "top"
+    ),
+    shiny::hr(),
+    withTooltip(
+      shiny::checkboxInput(ns("dseatable_filter"),
+                           "only annotated drugs",
+                           FALSE),
+      "Show only annotated drugs."
     )
   )
 }
@@ -36,19 +43,16 @@ DrugConnectivityUI <- function(id) {
             div(class = "col-md-10",
               div(class = "row",
                 div(class = "col-md-6",
-                  #plotWidget(ns("dsea_enplots")),
                   drugconnectivity_plot_enplots_ui(ns("dsea_enplots"))
                 ),
                 div(class = "col-md-6",
-                  #plotWidget(ns("dsea_moaplot"))
                   drugconnectivity_plot_moa_ui(ns("dsea_moaplot"))
                 )
               ),
               br(),
-              tableWidget(ns("dsea_table"))
+              drugconnectivity_table_dsea_ui(ns("dsea_table"))
             ),
             div(class = "col-md-2",
-              #plotWidget(ns("dsea_actmap"))
               drugconnectivity_plot_actmap_ui(ns("dsea_actmap"))
             )
           ),

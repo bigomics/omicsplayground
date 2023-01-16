@@ -114,6 +114,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.drugconnectivity/R/drugconnectivity_plot_enplots.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_plot_moa.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_server.R',encoding='UTF-8')
+  source('board.drugconnectivity/R/drugconnectivity_table_dsea.R',encoding='UTF-8')
   source('board.drugconnectivity/R/drugconnectivity_ui.R',encoding='UTF-8')
   source('board.enrichment/R/enrichment_server.R',encoding='UTF-8')
   source('board.enrichment/R/enrichment_ui.R',encoding='UTF-8')

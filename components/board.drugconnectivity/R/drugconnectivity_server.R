@@ -53,13 +53,11 @@ DrugConnectivityBoard <- function(id, inputData) {
     ## Shared Reactive functions
     ## ================================================================================
 
+    # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
       pgx <- inputData()
-      shiny::req(pgx)
-      shiny::req(input$dsea_contrast, input$dsea_method)
+      shiny::req(pgx, input$dsea_contrast, input$dsea_method)
 
-      dmethod <- "CTRPv2/sensitivity"
-      dmethod <- "L1000/activityXL"
       dmethod <- "L1000/gene"
       contr <- "treatment:Gefitinib_vs_CT"
 
@@ -114,48 +112,6 @@ DrugConnectivityBoard <- function(id, inputData) {
       return(dsea)
     })
 
-
-
-    ## =========================================================================
-    ## PLOTTING
-    ## =========================================================================
-    dsea_table.RENDER <- shiny::reactive({
-      pgx <- inputData()
-      shiny::req(pgx)
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-
-      dsea <- getActiveDSEA()
-      shiny::req(dsea)
-      res <- dsea$table
-      res$moa <- shortstring(res$moa, 60)
-      res$target <- shortstring(res$target, 30)
-      res$drug <- shortstring(res$drug, 60)
-
-      colnames(res) <- sub("moa", "MOA", colnames(res))
-      DT::datatable(res,
-        rownames = FALSE,
-        class = "compact cell-border stripe hover",
-        extensions = c("Scroller"),
-        selection = list(mode = "single", target = "row", selected = NULL),
-        fillContainer = TRUE,
-        options = list(
-          dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE,
-          scrollY = "70vh",
-          deferRender = TRUE
-        )
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle("NES",
-          background = color_from_middle(res[, "NES"], "lightblue", "#f5aeae"),
-          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-          backgroundPosition = "center"
-        )
-    })
-
-
     ## --------- DSEA enplot plotting module
     drugconnectivity_plot_enplots_server(
       "dsea_enplots",
@@ -185,21 +141,10 @@ DrugConnectivityBoard <- function(id, inputData) {
       watermark = WATERMARK
     )
 
-    ## --------buttons for table
-    dsea_table.opts <- shiny::tagList(
-      withTooltip(
-        shiny::checkboxInput(ns("dseatable_filter"), "only annotated drugs", FALSE),
-        "Show only annotated drugs."
-      )
-    )
-    dsea_table <- shiny::callModule(
-      tableModule,
-      id = "dsea_table", label = "b",
-      func = dsea_table.RENDER,
-      options = dsea_table.opts,
-      info.text = "<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.",
-      title = "Enrichment table",
-      height = c(360, 700)
+    ## -------- DSEA table
+    dsea_table <- drugconnectivity_table_dsea_server(
+      "dsea_table",
+      getActiveDSEA
     )
 
     ## =======================================================================================
