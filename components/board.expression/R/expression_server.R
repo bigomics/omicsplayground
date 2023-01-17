@@ -274,19 +274,19 @@ ExpressionBoard <- function(id, inputData)
                                    fam.genes = res$gene_name
                                    )
 
-    expression_plot_ma_server(id = "plots_maplot",
-                              inputData = inputData,
-                              gx_fdr = reactive(input$gx_fdr),
-                              gx_contrast = reactive(input$gx_contrast),
-                              gx_lfc = reactive(input$gx_lfc),
-                              gx_features = reactive(input$gx_features),
-                              res = fullDiffExprTable,
-                              sel1 = genetable$rows_selected,
-                              df1 = filteredDiffExprTable,
-                              sel2 = gsettable$rows_selected,
-                              df2 = gx_related_genesets,
-                              fam.genes = res$gene_name,
-                              watermark = FALSE
+    expression_plot_maplot_server(id = "plots_maplot",
+                                  inputData = inputData,
+                                  gx_fdr = reactive(input$gx_fdr),
+                                  gx_contrast = reactive(input$gx_contrast),
+                                  gx_lfc = reactive(input$gx_lfc),
+                                  gx_features = reactive(input$gx_features),
+                                  res = fullDiffExprTable,
+                                  sel1 = genetable$rows_selected,
+                                  df1 = filteredDiffExprTable,
+                                  sel2 = gsettable$rows_selected,
+                                  df2 = gx_related_genesets,
+                                  fam.genes = res$gene_name,
+                                  watermark = FALSE
     )
 
 

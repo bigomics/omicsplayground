@@ -66,7 +66,7 @@ ExpressionUI <- function(id) {
                         ),
                         div(
                             class = "col-md-3",
-                            expression_plot_ma_ui(ns("plots_maplot"),
+                            expression_plot_maplot_ui(ns("plots_maplot"),
                                                   label = "B",
                                                   height = c(0.45*fullH,700),
                                                   width = c('auto',1200)),
