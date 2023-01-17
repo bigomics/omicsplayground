@@ -67,13 +67,16 @@ ExpressionUI <- function(id) {
                         div(
                             class = "col-md-3",
                             expression_plot_maplot_ui(ns("plots_maplot"),
-                                                  label = "B",
-                                                  height = c(0.45*fullH,700),
-                                                  width = c('auto',1200)),
+                                                      label = "C",
+                                                      height = c(0.45*fullH,700),
+                                                      width = c('auto',1200)),
                         ),
                         div(
                             class = "col-md-3",
-                            plotWidget(ns("plots_boxplot"))
+                            expression_plot_boxplot_ui(id = "plots_boxplot",
+                                                       label='C',
+                                                       height = c(0.45*fullH,700),
+                                                       width = c("auto",1200))
                         ),
                         div(
                             class = "col-md-3",
