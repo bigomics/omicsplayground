@@ -28,8 +28,6 @@ expression_plot_ma_ui <- function(id,
                title = "MA plot",
                label = label,
                plotlib = "plotly",
-               ##outputFunc = plotly::plotlyOutput,
-               ##outputFunc2 = plotly::plotlyOutput,
                info.text = info_text,
                options = NULL,
                download.fmt=c("png","pdf","csv"),
@@ -69,7 +67,7 @@ expression_plot_ma_server <- function(id,
                                       fam.genes,
                                       watermark = FALSE
                                            ){
-  moduleServer(id, function(input, output, session, watermark) {
+  moduleServer(id, function(input, output, session) {
 
       dbg("[plots_MA.PLOTLY] reacted")
 
@@ -77,17 +75,16 @@ expression_plot_ma_server <- function(id,
       # #calculate required inputs for plotting ---------------------------------
 
         plot_data <- shiny::reactive({
-            comp1 = input$gx_contrast
+            comp1 = gx_contrast()
             if(length(comp1)==0) return(NULL)
 
             ngs <- inputData()
             shiny::req(ngs)
 
-            fdr=1;lfc=1
-            fdr = as.numeric(input$gx_fdr)
-            lfc = as.numeric(input$gx_lfc)
+            fdr = as.numeric(gx_fdr())
+            lfc = as.numeric(gx_lfc())
 
-            res = fullDiffExprTable()
+            res = res()
             if(is.null(res)) return(NULL)
             fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
             ##pval = res$P.Value
@@ -97,9 +94,9 @@ expression_plot_ma_server <- function(id,
             fam.genes = unique(unlist(ngs$families[10]))
             ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
             fam.genes = res$gene_name
-            if(input$gx_features!="<all>") {
+            if(gx_features()!="<all>") {
                 ##gset <- GSETS[input$gx_features]
-                gset <- getGSETS( input$gx_features )
+                gset <- getGSETS( gx_features() )
                 fam.genes = unique(unlist(gset))
             }
             jj <- match(toupper(fam.genes),toupper(res$gene_name))
@@ -124,10 +121,12 @@ expression_plot_ma_server <- function(id,
             sel.genes = intersect(sig.genes, sel.genes)
 
             ## are there any genes/genesets selected?
-            sel1 = genetable$rows_selected()
-            df1 = filteredDiffExprTable()
-            sel2 = gsettable$rows_selected()
-            df2 <- gx_related_genesets()
+            # sel1 = genetable$rows_selected()
+            sel1 = sel1()
+            df1 = df1()
+            # sel2 = gsettable$rows_selected()
+            sel2 = sel2()
+            df2 <- df2()
             lab.cex = 1
             gene.selected <- !is.null(sel1) && !is.null(df1)
             gset.selected <- !is.null(sel2) && !is.null(df2)
