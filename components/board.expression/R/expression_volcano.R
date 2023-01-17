@@ -10,6 +10,7 @@
 #' @param id
 #' @param label
 #' @param height
+#' @param width
 #'
 #' @export
 expression_plot_volcano_ui <- function(id,

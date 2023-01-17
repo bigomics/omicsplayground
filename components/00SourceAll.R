@@ -125,6 +125,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.expression/R/expression_server.R',encoding='UTF-8')
   source('board.expression/R/expression_ui.R',encoding='UTF-8')
   source('board.expression/R/expression_volcano.R',encoding='UTF-8')
+  source('board.expression/R/expression_maplot.R',encoding='UTF-8')
   source('board.featuremap/R/featuremap_plot_gene_map.R',encoding='UTF-8')
   source('board.featuremap/R/featuremap_plot_gene_sig.R',encoding='UTF-8')
   source('board.featuremap/R/featuremap_server.R',encoding='UTF-8')

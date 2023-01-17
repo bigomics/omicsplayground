@@ -274,6 +274,23 @@ ExpressionBoard <- function(id, inputData)
                                    fam.genes = res$gene_name
                                    )
 
+    expression_plot_ma_server(id = "plots_maplot",
+                              inputData = inputData,
+                              gx_fdr = reactive(input$gx_fdr),
+                              gx_contrast = reactive(input$gx_contrast),
+                              gx_lfc = reactive(input$gx_lfc),
+                              gx_features = reactive(input$gx_features),
+                              res = fullDiffExprTable,
+                              sel1 = genetable$rows_selected,
+                              df1 = filteredDiffExprTable,
+                              sel2 = gsettable$rows_selected,
+                              df2 = gx_related_genesets,
+                              fam.genes = res$gene_name,
+                              watermark = FALSE
+    )
+
+
+
 
     # tab differential expression > Top genes ####
 
@@ -292,7 +309,7 @@ ExpressionBoard <- function(id, inputData)
     ##================================================================================
 
     ## ------------------  Info messages
-    plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
+    # plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
     plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
@@ -353,186 +370,189 @@ ExpressionBoard <- function(id, inputData)
 
 
     ## ------------------------------------------------------
-    ## MA plot
+    ## MA plot ####
     ## ------------------------------------------------------
 
-    plots_maplot.RENDER <- shiny::reactive({
-        comp1 = input$gx_contrast
-        if(length(comp1)==0) return(NULL)
+    # MA old code refactored into plot module #####
+    # plots_maplot.RENDER <- shiny::reactive({
+    #     comp1 = input$gx_contrast
+    #     if(length(comp1)==0) return(NULL)
+    #
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #
+    #     fdr=1;lfc=1
+    #     fdr = as.numeric(input$gx_fdr)
+    #     lfc = as.numeric(input$gx_lfc)
+    #
+    #     res = fullDiffExprTable()
+    #     if(is.null(res)) return(NULL)
+    #     fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+    #     ##pval = res$P.Value
+    #     ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
+    #
+    #     ## filter genes by gene family or gene set
+    #     fam.genes = unique(unlist(ngs$families[10]))
+    #     ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+    #     fam.genes = res$gene_name
+    #     if(input$gx_features!="<all>") {
+    #         ##gset <- GSETS[input$gx_features]
+    #         gset <- getGSETS( input$gx_features )
+    #         fam.genes = unique(unlist(gset))
+    #     }
+    #     jj <- match(toupper(fam.genes),toupper(res$gene_name))
+    #     sel.genes <- res$gene_name[setdiff(jj,NA)]
+    #
+    #     qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+    #     fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+    #
+    #     sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
+    #     sel.genes = intersect(sig.genes, sel.genes)
+    #
+    #     xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
+    #     ma = rowMeans(ngs$X[rownames(res),], na.rm=TRUE)
+    #
+    #     par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    #     par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
+    #     gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
+    #                       render="canvas", n=5000, nlab=12,
+    #                       xlim=xlim, ylim=c(0,15),
+    #                       xlab="average expression (log2CPM)",
+    #                       ylab="effect size (log2FC)",
+    #                       ma_plot=TRUE, ma = ma, ## hi.col="#222222",
+    #                       use.fdr=TRUE, p.sig=fdr, ##main=comp1,
+    #                       highlight = sel.genes,
+    #                       lab.cex = lab.cex,
+    #                       ## highlight = sel.genes,
+    #                       ## main="MA plot",
+    #                       cex=0.9, lab.cex=1.4, cex.main=1.0 )
+    # })
+    #
+    # plots_maplot.PLOTLY <- shiny::reactive({
+    #     comp1 = input$gx_contrast
+    #     if(length(comp1)==0) return(NULL)
+    #
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #
+    #     dbg("[plots_maplot.PLOTLY] reacted")
+    #
+    #     fdr=1;lfc=1
+    #     fdr = as.numeric(input$gx_fdr)
+    #     lfc = as.numeric(input$gx_lfc)
+    #
+    #     res = fullDiffExprTable()
+    #     if(is.null(res)) return(NULL)
+    #     fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+    #     ##pval = res$P.Value
+    #     ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
+    #
+    #     ## filter genes by gene family or gene set
+    #     fam.genes = unique(unlist(ngs$families[10]))
+    #     ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+    #     fam.genes = res$gene_name
+    #     if(input$gx_features!="<all>") {
+    #         ##gset <- GSETS[input$gx_features]
+    #         gset <- getGSETS( input$gx_features )
+    #         fam.genes = unique(unlist(gset))
+    #     }
+    #     jj <- match(toupper(fam.genes),toupper(res$gene_name))
+    #     sel.genes <- res$gene_name[setdiff(jj,NA)]
+    #
+    #     qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+    #     y = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+    #
+    #     scaled.x <- scale(-log10(qval),center=FALSE)
+    #     scaled.y <- scale(y,center=FALSE)
+    #     fc.genes <- rownames(res)
+    #     impt <- function(g) {
+    #         j = match(g, fc.genes)
+    #         x1 = scaled.x[j]
+    #         y1 = scaled.y[j]
+    #         x = sign(x1)*(0.25*x1**2 + y1**2)
+    #         names(x)=g
+    #         x
+    #     }
+    #
+    #     sig.genes = fc.genes[which(qval <= fdr & abs(y) > lfc )]
+    #     sel.genes = intersect(sig.genes, sel.genes)
+    #
+    #     ## are there any genes/genesets selected?
+    #     sel1 = genetable$rows_selected()
+    #     df1 = filteredDiffExprTable()
+    #     sel2 = gsettable$rows_selected()
+    #     df2 <- gx_related_genesets()
+    #     lab.cex = 1
+    #     gene.selected <- !is.null(sel1) && !is.null(df1)
+    #     gset.selected <- !is.null(sel2) && !is.null(df2)
+    #     if(gene.selected && !gset.selected) {
+    #         lab.genes = rownames(df1)[sel1]
+    #         sel.genes = lab.genes
+    #         lab.cex = 1.3
+    #     } else if(gene.selected && gset.selected) {
+    #         gs <- rownames(df2)[sel2]
+    #         dbg("[plots_maplot.PLOTLY] gs = ",gs)
+    #         ##gset <- GSETS[[gs]]
+    #         gset <- unlist(getGSETS(gs))
+    #         sel.genes = intersect(sel.genes, gset)
+    #         lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+    #                       head(sel.genes[order(-impt(sel.genes))],10) )
+    #         lab.cex = 1
+    #     } else {
+    #         lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+    #                       head(sel.genes[order(-impt(sel.genes))],10) )
+    #         lab.cex = 1
+    #     }
+    #
+    #     ylim = c(-1,1)*max(abs(y),na.rm=TRUE)
+    #     x = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
+    #
+    #     impt <- function(g) {
+    #         j = match(g, fc.genes)
+    #         x1 = scale(x,center=FALSE)[j]
+    #         y1 = scale(y,center=FALSE)[j]
+    #         x = sign(y1)*(1.0*x1**2 + 1.0*y1**2)
+    #         names(x)=g
+    #         x
+    #     }
+    #     lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+    #                   head(sel.genes[order(-impt(sel.genes))],10) )
+    #
+    #     highlight=sel.genes;label=lab.genes;names=fc.genes
+    #     plt <- plotlyMA(
+    #         x=x, y=y, names=fc.genes,
+    #         source = "plot1", marker.type = "scattergl",
+    #         highlight = sel.genes,
+    #         label = lab.genes, label.cex = lab.cex,
+    #         group.names = c("group1","group0"),
+    #         ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
+    #         ##use.fdr=TRUE,
+    #         psig = fdr, lfc = lfc,
+    #         xlab = "average expression (log2.CPM)",
+    #         ylab = "effect size (log2.FC)",
+    #         marker.size = 4,
+    #         displayModeBar = FALSE,
+    #         showlegend = FALSE) %>%
+    #         plotly::layout( margin = list(b=65) )
+    #
+    #     dbg("[plots_maplot.PLOTLY] done!")
+    #
+    #     return(plt)
+    # })
+    #
+    # shiny::callModule( plotModule,
+    #     id="plots_maplot",
+    #     ##func = plots_maplot.RENDER,
+    #     ##func2 = plots_maplot.RENDER,
+    #     func = plots_maplot.PLOTLY, plotlib="plotly",
+    #     info.text = plots_maplot_text, label="b",
+    #     title = "MA plot",
+    #     height = imgH,
+    #     pdf.width=6, pdf.height=6, res=75,
+    #     add.watermark = WATERMARK
+    # )
 
-        ngs <- inputData()
-        shiny::req(ngs)
-
-        fdr=1;lfc=1
-        fdr = as.numeric(input$gx_fdr)
-        lfc = as.numeric(input$gx_lfc)
-
-        res = fullDiffExprTable()
-        if(is.null(res)) return(NULL)
-        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
-        ##pval = res$P.Value
-        ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
-
-        ## filter genes by gene family or gene set
-        fam.genes = unique(unlist(ngs$families[10]))
-        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        fam.genes = res$gene_name
-        if(input$gx_features!="<all>") {
-            ##gset <- GSETS[input$gx_features]
-            gset <- getGSETS( input$gx_features )
-            fam.genes = unique(unlist(gset))
-        }
-        jj <- match(toupper(fam.genes),toupper(res$gene_name))
-        sel.genes <- res$gene_name[setdiff(jj,NA)]
-
-        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
-        fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
-
-        sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)
-
-        xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
-        ma = rowMeans(ngs$X[rownames(res),], na.rm=TRUE)
-
-        par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
-        par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
-                          render="canvas", n=5000, nlab=12,
-                          xlim=xlim, ylim=c(0,15),
-                          xlab="average expression (log2CPM)",
-                          ylab="effect size (log2FC)",
-                          ma_plot=TRUE, ma = ma, ## hi.col="#222222",
-                          use.fdr=TRUE, p.sig=fdr, ##main=comp1,
-                          highlight = sel.genes,
-                          lab.cex = lab.cex,
-                          ## highlight = sel.genes,
-                          ## main="MA plot",
-                          cex=0.9, lab.cex=1.4, cex.main=1.0 )
-    })
-
-    plots_maplot.PLOTLY <- shiny::reactive({
-        comp1 = input$gx_contrast
-        if(length(comp1)==0) return(NULL)
-
-        ngs <- inputData()
-        shiny::req(ngs)
-
-        dbg("[plots_maplot.PLOTLY] reacted")
-
-        fdr=1;lfc=1
-        fdr = as.numeric(input$gx_fdr)
-        lfc = as.numeric(input$gx_lfc)
-
-        res = fullDiffExprTable()
-        if(is.null(res)) return(NULL)
-        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
-        ##pval = res$P.Value
-        ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
-
-        ## filter genes by gene family or gene set
-        fam.genes = unique(unlist(ngs$families[10]))
-        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        fam.genes = res$gene_name
-        if(input$gx_features!="<all>") {
-            ##gset <- GSETS[input$gx_features]
-            gset <- getGSETS( input$gx_features )
-            fam.genes = unique(unlist(gset))
-        }
-        jj <- match(toupper(fam.genes),toupper(res$gene_name))
-        sel.genes <- res$gene_name[setdiff(jj,NA)]
-
-        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
-        y = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
-
-        scaled.x <- scale(-log10(qval),center=FALSE)
-        scaled.y <- scale(y,center=FALSE)
-        fc.genes <- rownames(res)
-        impt <- function(g) {
-            j = match(g, fc.genes)
-            x1 = scaled.x[j]
-            y1 = scaled.y[j]
-            x = sign(x1)*(0.25*x1**2 + y1**2)
-            names(x)=g
-            x
-        }
-
-        sig.genes = fc.genes[which(qval <= fdr & abs(y) > lfc )]
-        sel.genes = intersect(sig.genes, sel.genes)
-
-        ## are there any genes/genesets selected?
-        sel1 = genetable$rows_selected()
-        df1 = filteredDiffExprTable()
-        sel2 = gsettable$rows_selected()
-        df2 <- gx_related_genesets()
-        lab.cex = 1
-        gene.selected <- !is.null(sel1) && !is.null(df1)
-        gset.selected <- !is.null(sel2) && !is.null(df2)
-        if(gene.selected && !gset.selected) {
-            lab.genes = rownames(df1)[sel1]
-            sel.genes = lab.genes
-            lab.cex = 1.3
-        } else if(gene.selected && gset.selected) {
-            gs <- rownames(df2)[sel2]
-            dbg("[plots_maplot.PLOTLY] gs = ",gs)
-            ##gset <- GSETS[[gs]]
-            gset <- unlist(getGSETS(gs))
-            sel.genes = intersect(sel.genes, gset)
-            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                          head(sel.genes[order(-impt(sel.genes))],10) )
-            lab.cex = 1
-        } else {
-            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                          head(sel.genes[order(-impt(sel.genes))],10) )
-            lab.cex = 1
-        }
-
-        ylim = c(-1,1)*max(abs(y),na.rm=TRUE)
-        x = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
-
-        impt <- function(g) {
-            j = match(g, fc.genes)
-            x1 = scale(x,center=FALSE)[j]
-            y1 = scale(y,center=FALSE)[j]
-            x = sign(y1)*(1.0*x1**2 + 1.0*y1**2)
-            names(x)=g
-            x
-        }
-        lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                      head(sel.genes[order(-impt(sel.genes))],10) )
-
-        highlight=sel.genes;label=lab.genes;names=fc.genes
-        plt <- plotlyMA(
-            x=x, y=y, names=fc.genes,
-            source = "plot1", marker.type = "scattergl",
-            highlight = sel.genes,
-            label = lab.genes, label.cex = lab.cex,
-            group.names = c("group1","group0"),
-            ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
-            ##use.fdr=TRUE,
-            psig = fdr, lfc = lfc,
-            xlab = "average expression (log2.CPM)",
-            ylab = "effect size (log2.FC)",
-            marker.size = 4,
-            displayModeBar = FALSE,
-            showlegend = FALSE) %>%
-            plotly::layout( margin = list(b=65) )
-
-        dbg("[plots_maplot.PLOTLY] done!")
-
-        return(plt)
-    })
-
-    shiny::callModule( plotModule,
-        id="plots_maplot",
-        ##func = plots_maplot.RENDER,
-        ##func2 = plots_maplot.RENDER,
-        func = plots_maplot.PLOTLY, plotlib="plotly",
-        info.text = plots_maplot_text, label="b",
-        title = "MA plot",
-        height = imgH,
-        pdf.width=6, pdf.height=6, res=75,
-        add.watermark = WATERMARK
-    )
+    # MA end of old code refactored into plot module #####
 
     plots_topgenesbarplot.RENDER <- shiny::reactive({
 
