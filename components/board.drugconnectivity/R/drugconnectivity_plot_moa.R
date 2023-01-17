@@ -51,6 +51,8 @@ drugconnectivity_plot_moa_ui <- function(id,
 #' @export
 drugconnectivity_plot_moa_server <- function(id,
                                              getActiveDSEA,
+                                             getMOA.target,
+                                             getMOA.class,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -64,56 +66,8 @@ drugconnectivity_plot_moa_server <- function(id,
         } else {
           res <- NULL
         }
+
         res
-      })
-
-      getMOA.target <- shiny::reactive({
-        ## meta-GSEA on molecular targets
-        dsea <- getActiveDSEA()
-        dt <- dsea$table
-        shiny::req(dt)
-        targets.list <- lapply(
-          enc2utf8(as.character(dt$target)),
-          function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-        )
-        names(targets.list) <- rownames(dt)
-        targets <- setdiff(unique(unlist(targets.list)), c(NA, "", " "))
-        gmt <- lapply(targets, function(g) {
-          names(which(sapply(targets.list, function(t) (g %in% t))))
-        })
-        names(gmt) <- targets
-
-        rnk <- dt$NES
-        names(rnk) <- rownames(dt)
-        suppressWarnings(
-          moa.target <- fgsea::fgsea(gmt, rnk, nperm = 20000)
-        )
-        moa.target <- moa.target[order(-abs(moa.target$NES)), ]
-        ## head(moa.target)
-        return(moa.target)
-      })
-
-
-      getMOA.class <- shiny::reactive({
-        ## meta-GSEA on MOA terms
-        dsea <- getActiveDSEA()
-        dt <- dsea$table
-        shiny::req(dt)
-        moa.list <- lapply(
-          enc2utf8(as.character(dt$moa)),
-          function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-        )
-        names(moa.list) <- rownames(dt)
-        moa <- setdiff(unlist(moa.list), c("", NA, " "))
-        gmt <- lapply(moa, function(g) names(which(sapply(moa.list, function(t) (g %in% t)))))
-        names(gmt) <- moa
-        rnk <- dt$NES
-        names(rnk) <- rownames(dt)
-        suppressWarnings(
-          moa.class <- fgsea::fgsea(gmt, rnk, nperm = 20000)
-        )
-        moa.class <- moa.class[order(-abs(moa.class$NES)), ]
-        return(moa.class)
       })
 
       plot_data <- shiny::reactive({

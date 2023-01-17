@@ -76,12 +76,15 @@ DrugConnectivityUI <- function(id) {
               flex = c(1, 0.05, 1.5),
               shiny::fillCol(
                 flex = c(1.15, 0.05, 1),
-                plotWidget(ns("cmap_enplot")),
+                #plotWidget(ns("cmap_enplot")),
+                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot")),
                 shiny::br(),
-                tableWidget(ns("cmap_table"))
+                #tableWidget(ns("cmap_table"))
+                drugconnectivity_table_cmap_ui(ns("cmap_table"))
               ),
               shiny::br(),
-              plotWidget(ns("dsea_cmap"))
+              #plotWidget(ns("dsea_cmap"))
+              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"))
             ),
             div(
               HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
