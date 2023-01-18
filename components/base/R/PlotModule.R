@@ -113,17 +113,18 @@ PlotModuleUI <- function(id,
             tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
         )
     }
-    dload.csv = dload.pdf = dload.png = dload.html = NULL
-    if("pdf" %in% download.fmt)  dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
-    if("png" %in% download.fmt)  dload.png  <- shiny::downloadButton(ns("png"), "PNG")
-    if("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
-    if("csv" %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    dload.csv = dload.pdf = dload.png = dload.html = dload.obj = NULL
+    if("pdf" %in% download.fmt)   dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
+    if("png" %in% download.fmt)   dload.png  <- shiny::downloadButton(ns("png"), "PNG")
+    if("html" %in% download.fmt)  dload.html <- shiny::downloadButton(ns("html"), "HTML")
+    if("csv"  %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    if("obj"  %in% download.fmt)  dload.obj  <- shiny::downloadButton(ns("obj"), "obj")
 
     pdf_size = NULL
     if(TRUE || plotlib!="base") {
         pdf_size <- shiny::tagList(
             shiny::fillRow(
-                shiny::numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
+                shiny::numericInput(ns("pdf_width"),  "width", pdf.width, 1, 20, 1, width='100%'),
                 shiny::numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
             ),
             shiny::br(),shiny::br(),shiny::br()
@@ -135,6 +136,7 @@ PlotModuleUI <- function(id,
         dload.png,
         dload.csv,
         dload.html,
+        dload.obj,        
         pdf_size,
         circle = TRUE, size = "xs", ## status = "danger",
         icon = shiny::icon("download"), width = "40px", right=FALSE,
@@ -265,6 +267,7 @@ PlotModuleServer <- function(
          download.png = NULL,
          download.html = NULL,
          download.csv = NULL,
+         download.obj = NULL,
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
@@ -289,6 +292,7 @@ PlotModuleServer <- function(
           do.pdf = "pdf" %in% download.fmt
           do.png = "png" %in% download.fmt
           do.html = "html" %in% download.fmt
+          do.obj  = "obj" %in% download.fmt
           ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
           
@@ -487,7 +491,7 @@ PlotModuleServer <- function(
                                           content = function(file) {
                                               shiny::withProgress({
                                                   ## unlink(HTMLFILE) ## do not remove!
-                                                  if(plotlib == "plotly" ) {
+                                                  if(plotlib == "plotly") {
                                                       p <- func()
                                                       htmlwidgets::saveWidget(p, HTMLFILE) 
                                                   } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
@@ -534,6 +538,24 @@ PlotModuleServer <- function(
                                          } ## end of content
                                      ) ## end of HTML downloadHandler
           } ## end of do HTML
+
+          if(do.obj)  {
+              if(plotlib == "plotly") {
+                  download.obj <- shiny::downloadHandler(
+                      filename = "plot.rds",
+                      content = function(file) {
+                          shiny::withProgress({
+                              p <- func()
+                              ## we need to strip away unnecessary environment to prevent save bloat
+                              b <- plotly::plotly_build(p)$x[c("data", "layout", "config")]                           
+                              #b <- plotly_build(p); $x$attr <- NULL; b$x$visdat <- NULL
+                              b <- plotly::as_widget(b)   ## from JSON back to R object                               
+                              saveRDS(b, file=file)  
+                          }, message="saving plot object", value=0.2)
+                      } ## end of content
+                  ) ## end of object downloadHandler
+              }
+          } ## end of do object
           
           ##--------------------------------------------------------------------------------
           ##------------------------ OUTPUT ------------------------------------------------
@@ -543,6 +565,7 @@ PlotModuleServer <- function(
           if(!is.null(download.pdf))  output$pdf  <- download.pdf
           if(!is.null(download.png))  output$png  <- download.png
           if(!is.null(download.html)) output$html <- download.html
+          if(!is.null(download.obj))  output$obj  <- download.obj
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- UI ------------------------------------------------
