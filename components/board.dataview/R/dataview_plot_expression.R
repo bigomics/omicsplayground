@@ -22,7 +22,7 @@ dataview_plot_expression_ui <- function(id, label='', height=c(600,800)) {
         outputFunc2 = plotly::plotlyOutput,        
         info.text = info_text,
         options = opts,
-        download.fmt=c("png","pdf","csv"),         
+        download.fmt = c("png","pdf","csv","obj"),         
         ##width = c("auto","100%"),
         height = height
     )
@@ -34,7 +34,7 @@ dataview_plot_expression_server <- function(id,
                                             r.gene = reactive(""),
                                             r.samples = reactive(""),
                                             r.data_type = reactive("counts"),            
-                                            r.data_groupby = reactive(""),
+                                            r.data_groupby = reactive("<ungrouped>"),
                                             watermark=FALSE)
 {
     moduleServer( id, function(input, output, session) {
@@ -282,13 +282,24 @@ dataview_plot_expression_server <- function(id,
             }  else {
                 
                 ## plot as regular bar plot
-                fig <- plotly::plot_ly(data = df,
-                    x = ~samples, y = ~x, type = 'bar', name = pd$gene
-                )
+                fig <- plotly::plot_ly(df, x = ~samples, y = ~x, type = 'bar', name = pd$gene)
+                #fig <- plotly::plot_ly(x = df$samples, y = df$x, type = 'bar', name = pd$gene)                
                 pd$groupby <- ""
                 ## fig
             }
 
+            ## DEBUG
+            if(0) {
+                message("[DEBUG] saving fig.rda ...")
+                y <- array( c(1,2,3,4,5,6), dimnames=list(letters[1:6]))
+                ##fig2 <- plotly::plot_ly(x = names(y), y = y, type = "bar")
+                #fig2 <- plotly::plot_ly(pd$df,  x = ~samples, y = ~x, type = "bar")
+                ##fig2 <- plotly::plot_ly(x = pd$df$samples, y = pd$df$x, type = "bar")
+                fig2 <- plotly::plot_ly(x = df$samples, y = df$x, type = "bar")                                
+                saveRDS(fig2, file="/tmp/figplotexpression-render-debug.rds")
+                message("[DEBUG] done saving!")
+            }
+                
             fig <- fig %>%
                 plotly::layout(                    
                     xaxis = list(title = pd$groupby, fixedrange=TRUE),
@@ -325,6 +336,7 @@ dataview_plot_expression_server <- function(id,
             func = plot.RENDER,
             func2 = modal_plot.RENDER,
             csvFunc = plot_data,   ##  *** downloadable data as CSV
+            download.fmt = c("png","pdf","csv","obj"),         
             renderFunc = plotly::renderPlotly,
             renderFunc2 = plotly::renderPlotly,        
             ##renderFunc = shiny::renderPlot,
