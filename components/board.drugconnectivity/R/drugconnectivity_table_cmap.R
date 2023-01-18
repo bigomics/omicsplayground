@@ -73,7 +73,7 @@ drugconnectivity_table_cmap_server <- function(id,
       options = table.opts,
       info.text = info_text,
       title = "Connectivity table",
-      height = c(360, 700)
+      height = c(380, 740)
     )
 
     return(cmap_table)

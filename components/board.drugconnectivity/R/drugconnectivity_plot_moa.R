@@ -14,7 +14,7 @@
 #' @export
 drugconnectivity_plot_moa_ui <- function(id,
                                          label = "",
-                                         height = c(600, 800)) {
+                                         rowH = 660) {
   ns <- shiny::NS(id)
   info_text <- strwrap("This plot visualizes the <strong>mechanism of
                        action</strong> (MOA) across the enriched drug profiles.
@@ -36,8 +36,8 @@ drugconnectivity_plot_moa_ui <- function(id,
                info.text = info_text,
                options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               height = c(0.54*rowH, 700),
+               width = c('auto', 1400),
   )
 }
 
@@ -116,7 +116,7 @@ drugconnectivity_plot_moa_server <- function(id,
         func2 = plot.RENDER2,
         csvFunc = plot_data,
         res = c(70, 110),
-        pdf.width = 10, pdf.height = 5,
+        pdf.width = 6, pdf.height = 6,
         add.watermark = watermark
       )
     } ## end of moduleServer

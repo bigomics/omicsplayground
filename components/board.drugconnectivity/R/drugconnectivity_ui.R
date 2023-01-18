@@ -6,10 +6,6 @@
 DrugConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(
-      shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube")),
-      "Show more information about this module."
-    ),
     shiny::hr(),
     withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",

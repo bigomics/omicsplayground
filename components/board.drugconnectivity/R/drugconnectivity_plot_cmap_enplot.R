@@ -30,8 +30,8 @@ drugconnectivity_plot_cmap_enplot_ui <- function(id,
                info.text = info_text,
                options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               height = c(305, 600),
+               width=c('auto', 1000),
   )
 }
 

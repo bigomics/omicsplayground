@@ -14,7 +14,8 @@
 #' @export
 drugconnectivity_plot_actmap_ui <- function(id,
                                             label = "",
-                                            height = c(600, 800)) {
+                                            height = c(750, 1400),
+                                            fullH = 750) {
   ns <- shiny::NS(id)
   info_text <- strwrap("The <strong>Activation Matrix</strong> visualizes the
                        activation of drug activation enrichment across the
@@ -35,8 +36,8 @@ drugconnectivity_plot_actmap_ui <- function(id,
                info.text = info_text,
                options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               height = c(fullH, 750),
+               width=c("100%", 1400)
   )
 }
 
@@ -167,7 +168,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER2,
         csvFunc = plot_data,
-        res = c(70, 110),
+        res = 72,
         pdf.width = 6, pdf.height = 9,
         add.watermark = watermark
       )

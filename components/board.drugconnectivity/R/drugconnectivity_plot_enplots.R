@@ -14,7 +14,8 @@
 #' @export
 drugconnectivity_plot_enplots_ui <- function(id,
                                             label = "",
-                                            height = c(600, 800)) {
+                                            height = c(600, 800),
+                                            rowH = 660) {
   ns <- shiny::NS(id)
   info_text <- strwrap("<strong>Drug connectivity</strong> correlates your
                        signature with known drug profiles from the L1000
@@ -30,8 +31,8 @@ drugconnectivity_plot_enplots_ui <- function(id,
                info.text = info_text,
                options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               height = c(0.54*rowH, 750),
+               width=c('auto', 1280),
   )
 }
 

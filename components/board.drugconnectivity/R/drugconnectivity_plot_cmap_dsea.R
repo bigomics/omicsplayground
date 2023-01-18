@@ -51,8 +51,8 @@ drugconnectivity_plot_cmap_dsea_ui <- function(id,
     info.text = info_text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
-    height = height
+    height = c(750, 750),
+    width=c('auto', 900),
   )
 }
 
@@ -82,8 +82,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                            opacity = 0.15, softmax = 1,
                            title = NULL, plotlib = "base") {
 
-        print('HERE')
-        print(names(pgx))
         if (!"drugs" %in% names(pgx)) {
           frame()
           text(0.5, 0.5, "Error: PGX object does not have CMAP results", col = "red3")
@@ -150,8 +148,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
 
         h1 <- h2 <- NULL
         ## limit number of labels/points
-        labtype <- 'drugs'
-        print(labtype)
         if (labtype == "replicate") {
           xx <- res$stats[, contr]
           names(xx) <- paste0("0:", names(xx))
@@ -255,8 +251,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
 
         moa.class <- res$moa.class
         moa.target <- res$moa.target
-        print(moa.class)
-        print(moa.target)
 
         labtype <- input$cmap_labeltype
         nlabel <- as.integer(input$cmap_nlabel)
