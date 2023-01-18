@@ -67,7 +67,7 @@ ExpressionUI <- function(id) {
                         div(
                             class = "col-md-3",
                             expression_plot_maplot_ui(ns("plots_maplot"),
-                                                      label = "C",
+                                                      label = "B",
                                                       height = c(0.45*fullH,700),
                                                       width = c('auto',1200)),
                         ),
@@ -76,11 +76,15 @@ ExpressionUI <- function(id) {
                             expression_plot_boxplot_ui(id = "plots_boxplot",
                                                        label='C',
                                                        height = c(0.45*fullH,700),
-                                                       width = c("auto",1200))
+                                                       width = c("auto",1200)),
                         ),
                         div(
                             class = "col-md-3",
-                            plotWidget(ns("plots_topfoldchange"))
+                            expression_plot_topfoldchange_ui(id = "plots_topfoldchange",
+                                                             label='D',
+                                                             height = c(0.45*fullH,700),
+                                                             width = c("auto",1200)),
+
                         )
                     ),
                     tags$div(
@@ -91,7 +95,7 @@ ExpressionUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Top genes",
-                    plotWidget(ns("topgenes")),
+                    plotWidget(ns("topgenes")),  #TODO
                     shiny::br(),
                     tags$div(
                             HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially

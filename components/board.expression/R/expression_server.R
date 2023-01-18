@@ -289,14 +289,67 @@ ExpressionBoard <- function(id, inputData)
                                   watermark = FALSE
     )
 
-    expression_plot_boxplot_server <- function(id = "plots_barplot",
-                                               inputData = inputData,
-                                               sel = genetable$rows_selected,
-                                               res = filteredDiffExprTable,
-                                               watermark = FALSE
-                                               )
+    expression_plot_boxplot_server(id = "plots_barplot",
+                                   inputData = inputData,
+                                   sel = genetable$rows_selected,
+                                   res = filteredDiffExprTable,
+                                   watermark = FALSE
+                                   )
+
+      expression_plot_topfoldchange_server(id = "plots_topfoldchange",
+                                           inputData = inputData,
+                                           sel = genetable$rows_selected,
+                                           res = filteredDiffExprTable,
+                                           watermark = FALSE
+      )
 
     # tab differential expression > Top genes ####
+
+      getAllContrasts <- shiny::reactive({
+
+        ngs = inputData()
+        if( is.null(ngs)) return(NULL)
+        comp = names(ngs$gx.meta$meta)
+        if(length(comp)==0) return(NULL)
+        ## if(is.null(input$gx_features)) return(NULL)
+
+        ##fdr=1;lfc=0
+        ##fdr = as.numeric(input$gx_fdr)
+        ##lfc = as.numeric(input$gx_lfc)
+        tests = colnames(ngs$gx.meta$meta[[1]]$p)
+        tests = input$gx_statmethod
+        if(is.null(tests)) return(NULL)
+
+        ##comp <- head(comp,75)  ## maximum 75!!!
+        i=1
+        F <- list()
+        Q <- list()
+        shiny::withProgress(message="computing contrasts ...", value=0, {
+
+          for(i in 1:length(comp)) {
+            res = getDEGtable(ngs, testmethods=tests, comparison=comp[i],
+                              add.pq=FALSE, lfc=0, fdr=1)
+            fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
+            ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
+            qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+            fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
+            qval = res[,qv.col]
+            fx   = res[,fx.col]
+            names(qval) <- names(fx) <- fc.gene
+            F[[i]] <- fx
+            Q[[i]] <- qval
+
+            if(!interactive()) shiny::incProgress( 1/length(comp) )
+          }
+
+        })
+        names(Q) <- names(F) <- comp
+
+        ct = list(Q=Q, F=F)
+        ct
+      })
+
+
 
 
 
@@ -315,7 +368,7 @@ ExpressionBoard <- function(id, inputData)
     ## ------------------  Info messages
     # plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
     # plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
-    plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
+    # plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
     #old code not incorporated into plot module files
     # plots_volcano.RENDER <- shiny::reactive({
@@ -747,9 +800,8 @@ ExpressionBoard <- function(id, inputData)
 
     # end boxplot old code refactored into plot module ####
 
-    ##================================================================================
-    ## Top genes
-    ##================================================================================
+
+    #  topgenes old code refactor into plotmodule #####
 
     topgenes.RENDER <- shiny::reactive({
 
@@ -834,54 +886,12 @@ ExpressionBoard <- function(id, inputData)
         add.watermark = WATERMARK
     )
 
+    #  end topgenes old code refactor into plotmodule #####
+
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================
 
-
-    getAllContrasts <- shiny::reactive({
-
-        ngs = inputData()
-        if( is.null(ngs)) return(NULL)
-        comp = names(ngs$gx.meta$meta)
-        if(length(comp)==0) return(NULL)
-        ## if(is.null(input$gx_features)) return(NULL)
-
-        ##fdr=1;lfc=0
-        ##fdr = as.numeric(input$gx_fdr)
-        ##lfc = as.numeric(input$gx_lfc)
-        tests = colnames(ngs$gx.meta$meta[[1]]$p)
-        tests = input$gx_statmethod
-        if(is.null(tests)) return(NULL)
-
-        ##comp <- head(comp,75)  ## maximum 75!!!
-        i=1
-        F <- list()
-        Q <- list()
-        shiny::withProgress(message="computing contrasts ...", value=0, {
-
-            for(i in 1:length(comp)) {
-                res = getDEGtable(ngs, testmethods=tests, comparison=comp[i],
-                                  add.pq=FALSE, lfc=0, fdr=1)
-                fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
-                ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
-                qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
-                fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
-                qval = res[,qv.col]
-                fx   = res[,fx.col]
-                names(qval) <- names(fx) <- fc.gene
-                F[[i]] <- fx
-                Q[[i]] <- qval
-
-                if(!interactive()) shiny::incProgress( 1/length(comp) )
-           }
-
-        })
-        names(Q) <- names(F) <- comp
-
-        ct = list(Q=Q, F=F)
-        ct
-    })
 
     volcanoAll.RENDER <- shiny::reactive({
     ##volcanoAll.RENDER <- shiny::reactive({
@@ -995,6 +1005,7 @@ ExpressionBoard <- function(id, inputData)
         title="Volcano plots for all contrasts",
         add.watermark = WATERMARK
     )
+
 
     ##================================================================================
     ## Volcano (all2 contrasts)
