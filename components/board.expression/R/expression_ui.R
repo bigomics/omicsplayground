@@ -95,7 +95,11 @@ ExpressionUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Top genes",
-                    plotWidget(ns("topgenes")),  #TODO
+                    expression_plot_topgenes_ui(id = "topgenes",
+                                                label = "A",
+                                                height = c(0.45*fullH,700), #c(imgH,420)
+                                                width = c("auto",1200)), #c('auto',1600)
+
                     shiny::br(),
                     tags$div(
                             HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially

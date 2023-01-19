@@ -119,6 +119,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.expression/R/expression_plot.R',encoding='UTF-8')
   source('board.expression/R/expression_plot_boxplot.R',encoding='UTF-8')
   source('board.expression/R/expression_plot_topfoldchange.R',encoding='UTF-8')
+  source('board.expression/R/expression_plot_topgenes.R',encoding='UTF-8')
   source('board.expression/R/expression_server.R',encoding='UTF-8')
   source('board.expression/R/expression_ui.R',encoding='UTF-8')
   source('board.expression/R/expression_volcano.R',encoding='UTF-8')
