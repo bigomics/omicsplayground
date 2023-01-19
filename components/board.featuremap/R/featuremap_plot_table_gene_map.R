@@ -1,0 +1,210 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+featuremap_plot_gene_map_ui <- function(id, label='', height=c(600,800)) {
+
+  ns <- shiny::NS(id)
+
+  info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
+
+  plot.opts = shiny::tagList(
+    shiny::selectInput(ns('umap_nlabel'),'nr labels:',
+                       c(0,10,20,50,100,1000), selected=50),
+    shiny::sliderInput(ns('umap_gamma'),'color gamma:',
+                       min=0.1, max=1.2, value=0.4, step=0.1),
+    shiny::radioButtons(ns('umap_colorby'),'color by:',
+                        choices = c("sd.X","var.FC","mean.FC"),
+                        selected = "sd.X", inline=TRUE )
+  )
+
+  plotui <- PlotModuleUI(
+    ns("gene_map"),
+    title = "Gene Map",
+    label = "a",
+    outputFunc = function(x, width, height)plotOutput(x,brush=ns("geneUMAP_brush"), width = width,
+                                                      height = height),
+    plotlib2 = "plotly",
+    info.text = info_text,
+    options = plot.opts,
+    height = c(600, 750), width = c('auto',1200),
+    download.fmt = c("png","pdf")
+  )
+  return(list(plotui, ns))
+}
+
+featuremap_plot_gene_map_server <- function(id,
+                                            inputData,
+                                            getGeneUMAP,
+                                            plotUMAP,
+                                            sigvar,
+                                            filter_genes,
+                                            watermark=FALSE){
+  moduleServer( id, function(input, output, session) {
+
+    selGenes <- shiny::reactive({
+      ngs <- inputData()
+      shiny::req(ngs)
+      sel <- filter_genes()
+      selgenes <- FAMILIES[[sel]]
+      selgenes
+    })
+
+    geneUMAP.RENDER <- shiny::reactive({
+
+      dbg("[FeatureMap::geneUMAP.RENDER] reacted")
+      ngs <- inputData()
+      shiny::req(ngs)
+
+      pos <- getGeneUMAP()
+      hilight <- NULL
+      colgamma <- as.numeric(input$umap_gamma)
+
+      ## select on table filter
+      F  <- pgx.getMetaMatrix(ngs)$fc
+      F <- scale(F,center=FALSE)
+      colorby <- input$umap_colorby
+      if(colorby=='sd.FC') {
+        fc <- (rowMeans(F**2))**0.2
+      } else if(colorby=='mean.FC') {
+        fc <- rowMeans(F)
+      } else {
+        ## sdX
+        cX <- ngs$X - rowMeans(ngs$X,na.rm=TRUE)
+        fc <- sqrt(rowMeans(cX**2))
+      }
+      fc <- sign(fc)*abs(fc/max(abs(fc)))**colgamma
+      hilight <- names(sort(-fc))
+
+      ## filter on table
+      hilight <- selGenes()
+      nlabel <- as.integer(input$umap_nlabel)
+
+      p <- plotUMAP(pos, fc, hilight, nlabel=nlabel, title=colorby,
+                    cex=0.9, source="", plotlib='base')
+      p
+    })
+
+    geneUMAP.RENDER2 <- shiny::reactive({
+
+      dbg("[FeatureMap::geneUMAP.RENDER] reacted")
+      ngs <- inputData()
+      shiny::req(ngs)
+
+      ##pos <- ngs$cluster.genes$pos[['umap2d']]
+      pos <- getGeneUMAP()
+      hilight <- NULL
+      colgamma <- as.numeric(input$umap_gamma)
+
+      ## select on table filter
+      F <- pgx.getMetaMatrix(ngs)$fc
+      F <- scale(F,center=FALSE)
+      colorby <- input$umap_colorby
+      if(colorby=='var.FC') {
+        fc <- (rowMeans(F**2))**0.2
+      } else if(colorby=='mean.FC') {
+        fc <- rowMeans(F)
+      } else {
+        cX <- ngs$X - rowMeans(ngs$X,na.rm=TRUE)
+        fc <- sqrt(rowMeans(cX**2))
+      }
+      fc <- sign(fc)*abs(fc/max(abs(fc)))**colgamma
+
+      ## filter on table
+      hilight <- selGenes()
+      nlabel <- as.integer(input$umap_nlabel)
+
+      p <- plotUMAP(pos, fc, hilight, nlabel=nlabel, title=colorby,
+                    cex=1.2, source="", plotlib='plotly')
+      p
+    })
+
+    PlotModuleServer(
+      "gene_map",
+      plotlib = "base",
+      plotlib2 = "plotly",
+      func = geneUMAP.RENDER,
+      func2 = geneUMAP.RENDER2,
+      pdf.width = 5, pdf.height = 5,
+      add.watermark = watermark
+    )
+
+    # Table
+
+    geneTable.RENDER <- shiny::reactive({
+      ngs <- inputData()
+      shiny::req(ngs)
+      if(is.null(ngs$drugs)) return(NULL)
+
+      pos <- getGeneUMAP()
+
+      ## detect brush
+      sel.genes <- NULL
+      ##b <- input$ftmap-geneUMAP_brush  ## ugly??
+      b <- NULL
+      b <- input[['geneUMAP_brush']]  ## ugly??
+      if(!is.null(b) & length(b)>0) {
+        sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
+                        pos[,2] > b$ymin & pos[,2] < b$ymax )
+        sel.genes <- rownames(pos)[sel]
+      }
+      dbg("[FeatureMap::geneTable.RENDER] head(sel.genes) = ",head(sel.genes))
+
+      pheno='tissue'
+      pheno <- sigvar()
+      is.fc=FALSE
+      if(pheno %in% colnames(ngs$samples)) {
+        X <- ngs$X - rowMeans(ngs$X)
+        y <- ngs$samples[,pheno]
+        F <- do.call(cbind,tapply(1:ncol(X),y,function(i)
+          rowMeans(X[,i,drop=FALSE])))
+        is.fc=FALSE
+      } else {
+        F <- pgx.getMetaMatrix(ngs, level='gene')$fc
+        is.fc=TRUE
+      }
+
+      if(!is.null(sel.genes)) {
+        sel.genes <- intersect(sel.genes,rownames(F))
+        F <- F[sel.genes,,drop=FALSE]
+      }
+      F <- F[order(-rowMeans(F**2)),]
+
+      tt <- shortstring(ngs$genes[rownames(F),'gene_title'],60)
+      tt <- as.character(tt)
+      F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
+      if(is.fc) colnames(F)[1] = "sd.FC"
+      F  <- round(F, digits=3)
+      df <- data.frame(gene=rownames(F), title=tt, F,
+                       check.names=FALSE)
+
+      DT::datatable( df, rownames=FALSE,
+                     class = 'compact cell-border stripe hover',
+                     extensions = c('Scroller'),
+                     selection=list(mode='single', target='row', selected=NULL),
+                     fillContainer = TRUE,
+                     options=list(
+                       dom = 'lfrtip',
+                       scrollX = TRUE, ##scrollY = TRUE,
+                       scrollY = '70vh',
+                       scroller = TRUE,
+                       deferRender = TRUE
+                     )  ## end of options.list
+      ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
+    })
+
+    shiny::callModule(
+      tableModule,
+      id = "geneTable",
+      func = geneTable.RENDER,
+      options = NULL,
+      info.text="<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot.",
+      title = tags$div(
+        HTML('<span class="module-label">(c)</span>Gene table')),
+      height = c(280,750), width=c('auto',1400)
+    )
+  }
+  )
+}
