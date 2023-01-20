@@ -66,18 +66,25 @@ ExpressionUI <- function(id) {
                         ),
                         div(
                             class = "col-md-3",
-                            expression_plot_ma_ui(ns("plots_maplot"),
-                                                  label = "B",
-                                                  height = c(0.45*fullH,700),
-                                                  width = c('auto',1200)),
+                            expression_plot_maplot_ui(ns("plots_maplot"),
+                                                      label = "B",
+                                                      height = c(0.45*fullH,700),
+                                                      width = c('auto',1200)),
                         ),
                         div(
                             class = "col-md-3",
-                            plotWidget(ns("plots_boxplot"))
+                            expression_plot_boxplot_ui(id = "plots_boxplot",
+                                                       label='C',
+                                                       height = c(0.45*fullH,700),
+                                                       width = c("auto",1200)),
                         ),
                         div(
                             class = "col-md-3",
-                            plotWidget(ns("plots_topfoldchange"))
+                            expression_plot_topfoldchange_ui(id = "plots_topfoldchange",
+                                                             label='D',
+                                                             height = c(0.45*fullH,700),
+                                                             width = c("auto",1200)),
+
                         )
                     ),
                     tags$div(
@@ -88,7 +95,11 @@ ExpressionUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Top genes",
-                    plotWidget(ns("topgenes")),
+                    expression_plot_topgenes_ui(id = "topgenes",
+                                                label = "A",
+                                                height = c(0.45*fullH,700), #c(imgH,420)
+                                                width = c("auto",1200)), #c('auto',1600)
+
                     shiny::br(),
                     tags$div(
                             HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially

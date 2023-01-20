@@ -274,25 +274,87 @@ ExpressionBoard <- function(id, inputData)
                                    fam.genes = res$gene_name
                                    )
 
-    expression_plot_ma_server(id = "plots_maplot",
-                              inputData = inputData,
-                              gx_fdr = reactive(input$gx_fdr),
-                              gx_contrast = reactive(input$gx_contrast),
-                              gx_lfc = reactive(input$gx_lfc),
-                              gx_features = reactive(input$gx_features),
-                              res = fullDiffExprTable,
-                              sel1 = genetable$rows_selected,
-                              df1 = filteredDiffExprTable,
-                              sel2 = gsettable$rows_selected,
-                              df2 = gx_related_genesets,
-                              fam.genes = res$gene_name,
-                              watermark = FALSE
+    expression_plot_maplot_server(id = "plots_maplot",
+                                  inputData = inputData,
+                                  gx_fdr = reactive(input$gx_fdr),
+                                  gx_contrast = reactive(input$gx_contrast),
+                                  gx_lfc = reactive(input$gx_lfc),
+                                  gx_features = reactive(input$gx_features),
+                                  res = fullDiffExprTable,
+                                  sel1 = genetable$rows_selected,
+                                  df1 = filteredDiffExprTable,
+                                  sel2 = gsettable$rows_selected,
+                                  df2 = gx_related_genesets,
+                                  fam.genes = res$gene_name,
+                                  watermark = FALSE
     )
 
+    expression_plot_boxplot_server(id = "plots_barplot",
+                                   inputData = inputData,
+                                   sel = genetable$rows_selected,
+                                   res = filteredDiffExprTable,
+                                   watermark = FALSE
+                                   )
 
-
+      expression_plot_topfoldchange_server(id = "plots_topfoldchange",
+                                           inputData = inputData,
+                                           sel = genetable$rows_selected,
+                                           res = filteredDiffExprTable,
+                                           watermark = FALSE
+      )
 
     # tab differential expression > Top genes ####
+
+      getAllContrasts <- shiny::reactive({
+
+        ngs = inputData()
+        if( is.null(ngs)) return(NULL)
+        comp = names(ngs$gx.meta$meta)
+        if(length(comp)==0) return(NULL)
+        ## if(is.null(input$gx_features)) return(NULL)
+
+        ##fdr=1;lfc=0
+        ##fdr = as.numeric(input$gx_fdr)
+        ##lfc = as.numeric(input$gx_lfc)
+        tests = colnames(ngs$gx.meta$meta[[1]]$p)
+        tests = input$gx_statmethod
+        if(is.null(tests)) return(NULL)
+
+        ##comp <- head(comp,75)  ## maximum 75!!!
+        i=1
+        F <- list()
+        Q <- list()
+        shiny::withProgress(message="computing contrasts ...", value=0, {
+
+          for(i in 1:length(comp)) {
+            res = getDEGtable(ngs, testmethods=tests, comparison=comp[i],
+                              add.pq=FALSE, lfc=0, fdr=1)
+            fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
+            ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
+            qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+            fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
+            qval = res[,qv.col]
+            fx   = res[,fx.col]
+            names(qval) <- names(fx) <- fc.gene
+            F[[i]] <- fx
+            Q[[i]] <- qval
+
+            if(!interactive()) shiny::incProgress( 1/length(comp) )
+          }
+
+        })
+        names(Q) <- names(F) <- comp
+
+        ct = list(Q=Q, F=F)
+        ct
+      })
+
+      expression_plot_topgenes_server(id = "topgenes",
+                                      inputData = inputData,
+                                      res = filteredDiffExprTable,
+                                      ii = genetable$rows_current)
+
+
 
 
 
@@ -310,8 +372,8 @@ ExpressionBoard <- function(id, inputData)
 
     ## ------------------  Info messages
     # plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
-    plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
-    plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
+    # plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
+    # plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
     #old code not incorporated into plot module files
     # plots_volcano.RENDER <- shiny::reactive({
@@ -554,319 +616,287 @@ ExpressionBoard <- function(id, inputData)
 
     # MA end of old code refactored into plot module #####
 
-    plots_topgenesbarplot.RENDER <- shiny::reactive({
+    # topgenesbarplot old code NOT refactored into plot module ####
 
-        ngs = inputData()
-        shiny::req(ngs)
-        comp1 = input$gx_contrast
+    # plots_topgenesbarplot.RENDER <- shiny::reactive({
+    #
+    #     ngs = inputData()
+    #     shiny::req(ngs)
+    #     comp1 = input$gx_contrast
+    #
+    #     dbg("plots_topgenesbarplot.RENDER: reacted")
+    #
+    #     if(length(comp1)==0) return(NULL)
+    #
+    #     ## get table
+    #     ##sel.row=1;pp=rownames(ngs$X)[1]
+    #     ##sel.row = input$genetable_rows_selected
+    #
+    #     res = filteredDiffExprTable()
+    #     if(is.null(res)) return(NULL)
+    #
+    #     ##fc <- res$meta.fx
+    #     fc <- res$logFC
+    #     names(fc) <- rownames(res)
+    #     top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
+    #     top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
+    #     fc.top <- c(fc[top.up], fc[top.dn])
+    #     klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
+    #     klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
+    #     names(fc.top) <- sub(".*:","",names(fc.top))
+    #
+    #     ii <- order(fc.top)
+    #     par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
+    #     barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
+    #             col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
+    #
+    #     ## warning A_vs_B or B_vs_A not checked!!!
+    #     groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
+    #     if(is.POSvsNEG(ngs)) groups <- rev(groups)
+    #     groups <- gsub("@.*","",gsub(".*[:]","",groups))
+    #     tt <- c( paste("up in",groups[2]), paste("up in",groups[1]) )
+    #     ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
+    #     legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
+    #     ##title("top DE genes",cex.main=1)
+    #
+    #     dbg("plots_topgenesbarplot.RENDER: done\n")
+    #
+    # })
+    #
+    # shiny::callModule(
+    #     plotModule,
+    #     id="plots_topgenesbarplot", ## ns=ns,
+    #     func = plots_topgenesbarplot.RENDER,
+    #     func2 = plots_topgenesbarplot.RENDER,
+    #     info.text = plots_topgenesbarplot_text, label="c",
+    #     title = "top DE genes",
+    #     height = c(imgH,500), width=c('auto',800),
+    #     pdf.width=6, pdf.height=6, res=75,
+    #     add.watermark = WATERMARK
+    # )
+    #
+#
+#     plots_topfoldchange.RENDER <- shiny::reactive({
+#
+#         ngs = inputData()
+#         shiny::req(ngs)
+#
+#         ## get table
+#         ##sel=1;pp=rownames(ngs$X)[1]
+#         sel = genetable$rows_selected()
+#         if(is.null(sel) || length(sel)==0) {
+#             frame()
+#             text(0.5,0.5, "No gene selected", col='black')
+#             return(NULL)
+#         }
+#
+#         res = filteredDiffExprTable()
+#         if(is.null(res) || is.null(sel)) return(NULL)
+#         psel <- rownames(res)[sel]
+#         gene <- ngs$genes[psel,"gene_name"]
+#
+#         ##fc <- res$meta.fx
+#         comp=1
+#         comp = input$gx_contrast
+#         if(is.null(comp) || length(comp)==0) return(NULL)
+#         fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
+#         top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
+#         top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
+#         fc.top <- c(fc[top.up], fc[top.dn])
+#         fc.top <- fc.top[head(order(-abs(fc.top)),15)]
+#         fc.top <- sort(fc.top)
+#         fc.top <- head(c(fc.top, rep(NA,99)),15)
+#
+#         klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
+#         ##klr.pal <- BLUERED(16)[c(3,14)]
+#         klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
+#
+#         par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
+#         par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
+#         nch <- max(nchar(names(fc.top)))
+#         m1 <- ifelse(nch > 12, 12, 8)
+#         m1 <- ifelse(nch > 30, 16, m1)
+#
+#         ##par( mar=c(4,m1,2,0.5) )
+#         par( mar=c(3.2,m1-0.5,1,1) )
+#         cex1 <- 0.9
+#         nn <- sum(!is.na(fc.top))
+#         if(nn>15) cex1 <- 0.8
+#         barplot(fc.top, col=klr, horiz=TRUE, las=1,
+#                 xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
+#                 cex.names=cex1, xlab="fold change (log2)")
+#         title(gene, cex.main=1, line=-0.15)
+#
+#     })
+#
+#     shiny::callModule( plotModule,
+#         id = "plots_topfoldchange",
+#         func = plots_topfoldchange.RENDER,
+#         func2 = plots_topfoldchange.RENDER,
+#         info.text = plots_topfoldchange_text,
+#         title = "Gene in contrasts", label = "d",
+#         height = c(imgH,500), width=c('auto',700),
+#         pdf.width=6, pdf.height=6, res=74,
+#         add.watermark = WATERMARK
+#     )
+#
+    # # end of topgenesbarplot old code NOT into plot module ####
 
-        dbg("plots_topgenesbarplot.RENDER: reacted")
 
-        if(length(comp1)==0) return(NULL)
+    # # boxplot old code refactored into plot module ####
+    #
+    # plots_boxplot.RENDER <- shiny::reactive({
+    #
+    #     ngs = inputData()
+    #     shiny::req(ngs)
+    #
+    #     ## get table
+    #     ##sel=1
+    #     sel = genetable$rows_selected()
+    #     if(is.null(sel) || length(sel)==0) {
+    #         frame()
+    #         text(0.5,0.5, "No gene selected", col='black')
+    #         return(NULL)
+    #     }
+    #
+    #     res = filteredDiffExprTable()
+    #     if(is.null(res) || is.null(sel)) return(NULL)
+    #
+    #     psel <- rownames(res)[sel]
+    #     gene=ngs$genes[1,"gene_name"];comp=1;grouped=TRUE;logscale=TRUE;srt=45
+    #     gene = ngs$genes[psel,"gene_name"]
+    #     comp = input$gx_contrast
+    #     shiny::req(comp)
+    #     grouped  <- input$boxplot_grouped
+    #     logscale <- input$boxplot_logscale
+    #     srt <- ifelse(grouped, 0, 35)
+    #
+    #     par(mfrow=c(1,1), mar=c(4,3,1.5,1.5), mgp=c(2,0.8,0), oma=c(1,0.5,0,0.5))
+    #     pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
+    #                        max.points = 200, ## slow!!
+    #                        names = TRUE,
+    #                        logscale=logscale, srt=srt)
+    #
+    # })
+    #
+    # ##plots_boxplot
+    # plots_boxplot_opts = shiny::tagList(
+    #     withTooltip( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
+    #            "Group expression values by conditions.",
+    #            placement="right", options = list(container = "body")),
+    #     withTooltip( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
+    #            "Show logarithmic (log2CPM) expression values.",
+    #            placement="right", options = list(container = "body"))
+    # )
+    #
+    # shiny::callModule( plotModule,
+    #     id = "plots_boxplot", label = "c",
+    #     func = plots_boxplot.RENDER,
+    #     func2 = plots_boxplot.RENDER,
+    #     options = plots_boxplot_opts,
+    #     info.text = "Differential expression boxplot for selected gene.",
+    #     info.width = "150px",
+    #     title = "Differential expression",
+    #     height = imgH,
+    #     pdf.width=6, pdf.height=6, res=75,
+    #     add.watermark = WATERMARK
+    # )
 
-        ## get table
-        ##sel.row=1;pp=rownames(ngs$X)[1]
-        ##sel.row = input$genetable_rows_selected
 
-        res = filteredDiffExprTable()
-        if(is.null(res)) return(NULL)
+    # end boxplot old code refactored into plot module ####
 
-        ##fc <- res$meta.fx
-        fc <- res$logFC
-        names(fc) <- rownames(res)
-        top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
-        top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
-        fc.top <- c(fc[top.up], fc[top.dn])
-        klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
-        klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
-        names(fc.top) <- sub(".*:","",names(fc.top))
 
-        ii <- order(fc.top)
-        par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
-                col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
+    #  topgenes old code refactor into plotmodule #####
 
-        ## warning A_vs_B or B_vs_A not checked!!!
-        groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
-        if(is.POSvsNEG(ngs)) groups <- rev(groups)
-        groups <- gsub("@.*","",gsub(".*[:]","",groups))
-        tt <- c( paste("up in",groups[2]), paste("up in",groups[1]) )
-        ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
-        legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
-        ##title("top DE genes",cex.main=1)
+    # topgenes.RENDER <- shiny::reactive({
+    #
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #
+    #     res <- filteredDiffExprTable()
+    #     if(is.null(res) || nrow(res)==0) return(NULL)
+    #
+    #     ## filter on active rows (using search)
+    #     ##ii  <- genetable$rows_all()
+    #     ii  <- genetable$rows_current()
+    #     res <- res[ii,,drop=FALSE]
+    #     if(nrow(res)==0) return(NULL)
+    #
+    #     comp=1;grouped=0;logscale=1
+    #     comp = input$gx_contrast
+    #     grouped <- !input$gx_ungroup
+    #     logscale <- input$gx_logscale
+    #     showothers <- input$gx_showothers
+    #
+    #     mar1 = 3.5
+    #     ylab = ifelse(logscale, "log2CPM", "CPM")
+    #
+    #     ny <- nrow(ngs$samples)  ## ???!!
+    #     show.names <- ifelse(!grouped & ny>25, FALSE, TRUE)
+    #     ##nx = ifelse(grouped, ngrp, length(y))
+    #     nx = ifelse(grouped, 3, ny)
+    #     nc = 4
+    #     nc = 8
+    #     if( nx <= 3) nc <- 10
+    #     if( nx > 10) nc <- 5
+    #     if( nx > 25) nc <- 4
+    #     srt = 35
+    #     sumlen.grpnames <- sum(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
+    #     if(show.names && sumlen.grpnames <= 20) srt <- 0
+    #
+    #     nc <- 8
+    #     par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
+    #     i=1
+    #     for(i in 1:nrow(res)) {
+    #         ## if(i > length(top.up)) { frame() }
+    #         ##gene = sub(".*:","",top.up[i])
+    #         gene = rownames(res)[i]
+    #         pgx.plotExpression(
+    #             ngs, gene, comp=comp, grouped=grouped,
+    #             max.points = 200,  ## slow!!
+    #             collapse.others=TRUE, showothers=showothers,
+    #             ylab = ylab, xlab="", srt=srt,
+    #             logscale=logscale, names=show.names, main="")
+    #         title( gene, cex.main=1, line=-0.6)
+    #     }
+    # })
+    #
+    # topgenes_opts = shiny::tagList(
+    #     withTooltip( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
+    #            "Logarithmic scale the counts (abundance levels).",
+    #            placement="right", options = list(container = "body")),
+    #     withTooltip( shiny::checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
+    #            "Ungroup samples in the plot",
+    #            placement="right", options = list(container = "body")),
+    #     withTooltip( shiny::checkboxInput(ns('gx_showothers'),'show others',FALSE),
+    #            "Show the 'others' class (if any)",
+    #            placement="right", options = list(container = "body"))
+    #     )
+    #
+    # topgenes_text = "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
+    #
+    # topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
+    #
+    # shiny::callModule( plotModule,
+    #     id = "topgenes",
+    #     func = topgenes.RENDER,
+    #     func2 = topgenes.RENDER,
+    #     options = topgenes_opts,
+    #     info.text = topgenes_text,
+    #     ##caption = topgenes_caption,
+    #     height = c(imgH,420), width = c('auto',1600),
+    #     res = c(90,105),
+    #     pdf.width=14, pdf.height=3.5,
+    #     title="Expression of top differentially expressed genes",
+    #     add.watermark = WATERMARK
+    # )
 
-        dbg("plots_topgenesbarplot.RENDER: done\n")
-
-    })
-
-    shiny::callModule(
-        plotModule,
-        id="plots_topgenesbarplot", ## ns=ns,
-        func = plots_topgenesbarplot.RENDER,
-        func2 = plots_topgenesbarplot.RENDER,
-        info.text = plots_topgenesbarplot_text, label="c",
-        title = "top DE genes",
-        height = c(imgH,500), width=c('auto',800),
-        pdf.width=6, pdf.height=6, res=75,
-        add.watermark = WATERMARK
-    )
-
-    plots_topfoldchange.RENDER <- shiny::reactive({
-
-        ngs = inputData()
-        shiny::req(ngs)
-
-        ## get table
-        ##sel=1;pp=rownames(ngs$X)[1]
-        sel = genetable$rows_selected()
-        if(is.null(sel) || length(sel)==0) {
-            frame()
-            text(0.5,0.5, "No gene selected", col='black')
-            return(NULL)
-        }
-
-        res = filteredDiffExprTable()
-        if(is.null(res) || is.null(sel)) return(NULL)
-        psel <- rownames(res)[sel]
-        gene <- ngs$genes[psel,"gene_name"]
-
-        ##fc <- res$meta.fx
-        comp=1
-        comp = input$gx_contrast
-        if(is.null(comp) || length(comp)==0) return(NULL)
-        fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
-        top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
-        top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
-        fc.top <- c(fc[top.up], fc[top.dn])
-        fc.top <- fc.top[head(order(-abs(fc.top)),15)]
-        fc.top <- sort(fc.top)
-        fc.top <- head(c(fc.top, rep(NA,99)),15)
-
-        klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
-        ##klr.pal <- BLUERED(16)[c(3,14)]
-        klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
-
-        par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
-        par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
-        nch <- max(nchar(names(fc.top)))
-        m1 <- ifelse(nch > 12, 12, 8)
-        m1 <- ifelse(nch > 30, 16, m1)
-
-        ##par( mar=c(4,m1,2,0.5) )
-        par( mar=c(3.2,m1-0.5,1,1) )
-        cex1 <- 0.9
-        nn <- sum(!is.na(fc.top))
-        if(nn>15) cex1 <- 0.8
-        barplot(fc.top, col=klr, horiz=TRUE, las=1,
-                xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
-                cex.names=cex1, xlab="fold change (log2)")
-        title(gene, cex.main=1, line=-0.15)
-
-    })
-
-    shiny::callModule( plotModule,
-        id = "plots_topfoldchange",
-        func = plots_topfoldchange.RENDER,
-        func2 = plots_topfoldchange.RENDER,
-        info.text = plots_topfoldchange_text,
-        title = "Gene in contrasts", label = "d",
-        height = c(imgH,500), width=c('auto',700),
-        pdf.width=6, pdf.height=6, res=74,
-        add.watermark = WATERMARK
-    )
-
-    plots_boxplot.RENDER <- shiny::reactive({
-
-        ngs = inputData()
-        shiny::req(ngs)
-
-        ## get table
-        ##sel=1
-        sel = genetable$rows_selected()
-        if(is.null(sel) || length(sel)==0) {
-            frame()
-            text(0.5,0.5, "No gene selected", col='black')
-            return(NULL)
-        }
-
-        res = filteredDiffExprTable()
-        if(is.null(res) || is.null(sel)) return(NULL)
-
-        psel <- rownames(res)[sel]
-        gene=ngs$genes[1,"gene_name"];comp=1;grouped=TRUE;logscale=TRUE;srt=45
-        gene = ngs$genes[psel,"gene_name"]
-        comp = input$gx_contrast
-        shiny::req(comp)
-        grouped  <- input$boxplot_grouped
-        logscale <- input$boxplot_logscale
-        srt <- ifelse(grouped, 0, 35)
-
-        par(mfrow=c(1,1), mar=c(4,3,1.5,1.5), mgp=c(2,0.8,0), oma=c(1,0.5,0,0.5))
-        pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
-                           max.points = 200, ## slow!!
-                           names = TRUE,
-                           logscale=logscale, srt=srt)
-
-    })
-
-    ##plots_boxplot
-    plots_boxplot_opts = shiny::tagList(
-        withTooltip( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
-               "Group expression values by conditions.",
-               placement="right", options = list(container = "body")),
-        withTooltip( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
-               "Show logarithmic (log2CPM) expression values.",
-               placement="right", options = list(container = "body"))
-    )
-
-    shiny::callModule( plotModule,
-        id = "plots_boxplot", label = "c",
-        func = plots_boxplot.RENDER,
-        func2 = plots_boxplot.RENDER,
-        options = plots_boxplot_opts,
-        info.text = "Differential expression boxplot for selected gene.",
-        info.width = "150px",
-        title = "Differential expression",
-        height = imgH,
-        pdf.width=6, pdf.height=6, res=75,
-        add.watermark = WATERMARK
-    )
-
-    ##================================================================================
-    ## Top genes
-    ##================================================================================
-
-    topgenes.RENDER <- shiny::reactive({
-
-        ngs <- inputData()
-        shiny::req(ngs)
-
-        res <- filteredDiffExprTable()
-        if(is.null(res) || nrow(res)==0) return(NULL)
-
-        ## filter on active rows (using search)
-        ##ii  <- genetable$rows_all()
-        ii  <- genetable$rows_current()
-        res <- res[ii,,drop=FALSE]
-        if(nrow(res)==0) return(NULL)
-
-        comp=1;grouped=0;logscale=1
-        comp = input$gx_contrast
-        grouped <- !input$gx_ungroup
-        logscale <- input$gx_logscale
-        showothers <- input$gx_showothers
-
-        mar1 = 3.5
-        ylab = ifelse(logscale, "log2CPM", "CPM")
-
-        ny <- nrow(ngs$samples)  ## ???!!
-        show.names <- ifelse(!grouped & ny>25, FALSE, TRUE)
-        ##nx = ifelse(grouped, ngrp, length(y))
-        nx = ifelse(grouped, 3, ny)
-        nc = 4
-        nc = 8
-        if( nx <= 3) nc <- 10
-        if( nx > 10) nc <- 5
-        if( nx > 25) nc <- 4
-        srt = 35
-        sumlen.grpnames <- sum(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
-        if(show.names && sumlen.grpnames <= 20) srt <- 0
-
-        nc <- 8
-        par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
-        i=1
-        for(i in 1:nrow(res)) {
-            ## if(i > length(top.up)) { frame() }
-            ##gene = sub(".*:","",top.up[i])
-            gene = rownames(res)[i]
-            pgx.plotExpression(
-                ngs, gene, comp=comp, grouped=grouped,
-                max.points = 200,  ## slow!!
-                collapse.others=TRUE, showothers=showothers,
-                ylab = ylab, xlab="", srt=srt,
-                logscale=logscale, names=show.names, main="")
-            title( gene, cex.main=1, line=-0.6)
-        }
-    })
-
-    topgenes_opts = shiny::tagList(
-        withTooltip( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
-               "Logarithmic scale the counts (abundance levels).",
-               placement="right", options = list(container = "body")),
-        withTooltip( shiny::checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
-               "Ungroup samples in the plot",
-               placement="right", options = list(container = "body")),
-        withTooltip( shiny::checkboxInput(ns('gx_showothers'),'show others',FALSE),
-               "Show the 'others' class (if any)",
-               placement="right", options = list(container = "body"))
-        )
-
-    topgenes_text = "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
-
-    topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
-
-    shiny::callModule( plotModule,
-        id = "topgenes",
-        func = topgenes.RENDER,
-        func2 = topgenes.RENDER,
-        options = topgenes_opts,
-        info.text = topgenes_text,
-        ##caption = topgenes_caption,
-        height = c(imgH,420), width = c('auto',1600),
-        res = c(90,105),
-        pdf.width=14, pdf.height=3.5,
-        title="Expression of top differentially expressed genes",
-        add.watermark = WATERMARK
-    )
+    #  end topgenes old code refactor into plotmodule #####
 
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================
 
-
-    getAllContrasts <- shiny::reactive({
-
-        ngs = inputData()
-        if( is.null(ngs)) return(NULL)
-        comp = names(ngs$gx.meta$meta)
-        if(length(comp)==0) return(NULL)
-        ## if(is.null(input$gx_features)) return(NULL)
-
-        ##fdr=1;lfc=0
-        ##fdr = as.numeric(input$gx_fdr)
-        ##lfc = as.numeric(input$gx_lfc)
-        tests = colnames(ngs$gx.meta$meta[[1]]$p)
-        tests = input$gx_statmethod
-        if(is.null(tests)) return(NULL)
-
-        ##comp <- head(comp,75)  ## maximum 75!!!
-        i=1
-        F <- list()
-        Q <- list()
-        shiny::withProgress(message="computing contrasts ...", value=0, {
-
-            for(i in 1:length(comp)) {
-                res = getDEGtable(ngs, testmethods=tests, comparison=comp[i],
-                                  add.pq=FALSE, lfc=0, fdr=1)
-                fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
-                ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
-                qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
-                fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
-                qval = res[,qv.col]
-                fx   = res[,fx.col]
-                names(qval) <- names(fx) <- fc.gene
-                F[[i]] <- fx
-                Q[[i]] <- qval
-
-                if(!interactive()) shiny::incProgress( 1/length(comp) )
-           }
-
-        })
-        names(Q) <- names(F) <- comp
-
-        ct = list(Q=Q, F=F)
-        ct
-    })
 
     volcanoAll.RENDER <- shiny::reactive({
     ##volcanoAll.RENDER <- shiny::reactive({
@@ -980,6 +1010,7 @@ ExpressionBoard <- function(id, inputData)
         title="Volcano plots for all contrasts",
         add.watermark = WATERMARK
     )
+
 
     ##================================================================================
     ## Volcano (all2 contrasts)

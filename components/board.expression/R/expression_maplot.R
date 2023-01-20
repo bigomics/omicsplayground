@@ -13,7 +13,7 @@
 #' @param width
 #'
 #' @export
-expression_plot_ma_ui <- function(id,
+expression_plot_maplot_ui <- function(id,
                                   label='',
                                   height,
                                   width) {
@@ -53,19 +53,19 @@ expression_plot_ma_ui <- function(id,
 #'
 #'
 #' @export
-expression_plot_ma_server <- function(id,
-                                      inputData,
-                                      gx_fdr,
-                                      gx_contrast,
-                                      gx_lfc,
-                                      gx_features,
-                                      res,
-                                      sel1,
-                                      df1,
-                                      sel2,
-                                      df2,
-                                      fam.genes,
-                                      watermark = FALSE
+expression_plot_maplot_server <- function(id,
+                                          inputData,
+                                          gx_fdr,
+                                          gx_contrast,
+                                          gx_lfc,
+                                          gx_features,
+                                          res,
+                                          sel1,
+                                          df1,
+                                          sel2,
+                                          df2,
+                                          fam.genes,
+                                          watermark = FALSE
                                            ){
   moduleServer(id, function(input, output, session) {
 
