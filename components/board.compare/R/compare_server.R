@@ -3,189 +3,197 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-CompareBoard <- function(id, inputData)
-{
-  moduleServer(id, function(input, output, session)
-  {
-
+CompareBoard <- function(id, inputData) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-    fullH = 770 # row height of panel
-    tabH = '70vh'
+    fullH <- 770 # row height of panel
+    tabH <- "70vh"
 
-    infotext =
-        "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
+    infotext <-
+      "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
          This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
          It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
         <br><br><br><br>
         <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
         frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
 
-    ##================================================================================
-    ##======================= OBSERVE FUNCTIONS ======================================
-    ##================================================================================
+    ## ================================================================================
+    ## ======================= OBSERVE FUNCTIONS ======================================
+    ## ================================================================================
 
-    shiny::observeEvent( input$info, {
-        shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>Compare Experiments</strong>"),
-            shiny::HTML(infotext),
-            easyClose = TRUE, size="l" ))
+    shiny::observeEvent(input$info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Compare Experiments</strong>"),
+        shiny::HTML(infotext),
+        easyClose = TRUE, size = "l"
+      ))
     })
 
     shiny::observe({
-        ngs <- inputData()
+      ngs <- inputData()
 
-        comparisons1 <- names(ngs$gx.meta$meta)
-        sel1 <- comparisons1[1]
-        shiny::updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)
+      comparisons1 <- names(ngs$gx.meta$meta)
+      sel1 <- comparisons1[1]
+      shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
 
-        pgx.files <- sort(dir(file.path(OPG,"data"),pattern="pgx$"))
-        shiny::updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))
+      pgx.files <- sort(dir(file.path(OPG, "data"), pattern = "pgx$"))
+      shiny::updateSelectInput(session, "dataset2", choices = c("<this>", pgx.files))
     })
 
     shiny::observe({
-        df <- getOmicsScoreTable()
-        if(is.null(df)) return(NULL)
-        ntop <- as.integer(input$ntop)
-        higenes <- rownames(df)[order(df$score,decreasing=TRUE)]
-        higenes <- head(higenes, ntop)
-        higenes <- paste(higenes, collapse=' ')
-        shiny::updateTextAreaInput(session, "genelist", value=higenes)
+      df <- getOmicsScoreTable()
+      if (is.null(df)) {
+        return(NULL)
+      }
+      ntop <- as.integer(input$ntop)
+      higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
+      higenes <- head(higenes, ntop)
+      higenes <- paste(higenes, collapse = " ")
+      shiny::updateTextAreaInput(session, "genelist", value = higenes)
     })
 
-    ##================================================================================
-    ##========================= REACTIVE FUNCTIONS ===================================
-    ##================================================================================
+    ## ================================================================================
+    ## ========================= REACTIVE FUNCTIONS ===================================
+    ## ================================================================================
 
     dataset2 <- shiny::reactive({
-        shiny::req(input$dataset2)
-        if(input$dataset2 == "<this>") {
-            ngs <- inputData()
-        } else {
-            load(file.path(OPG,"data",input$dataset2))
-        }
-        comparisons2 <- names(ngs$gx.meta$meta)
-        sel2 <- tail(head(comparisons2,2),1)
-        shiny::updateSelectInput(session, "contrast2", choices=comparisons2, selected=sel2)
-        ngs
+      shiny::req(input$dataset2)
+      if (input$dataset2 == "<this>") {
+        ngs <- inputData()
+      } else {
+        load(file.path(OPG, "data", input$dataset2))
+      }
+      comparisons2 <- names(ngs$gx.meta$meta)
+      sel2 <- tail(head(comparisons2, 2), 1)
+      shiny::updateSelectInput(session, "contrast2", choices = comparisons2, selected = sel2)
+      ngs
     })
 
     getOmicsScoreTable <- shiny::reactive({
+      ngs1 <- inputData()
+      ngs2 <- dataset2()
+      shiny::req(ngs1)
+      shiny::req(ngs2)
 
-        ngs1 <- inputData()
-        ngs2 <- dataset2()
-        shiny::req(ngs1)
-        shiny::req(ngs2)
+      ct1 <- head(names(ngs1$gx.meta$meta), 2)
+      ct2 <- head(names(ngs2$gx.meta$meta), 2)
+      ct1 <- input.contrast1()
+      ct2 <- input.contrast2()
+      shiny::req(ct1)
+      shiny::req(ct2)
+      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
+        return(NULL)
+      }
+      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+        return(NULL)
+      }
 
-        ct1 <- head(names(ngs1$gx.meta$meta),2)
-        ct2 <- head(names(ngs2$gx.meta$meta),2)
-        ct1 <- input.contrast1()
-        ct2 <- input.contrast2()
-        shiny::req(ct1)
-        shiny::req(ct2)
-        if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
-        if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
+      F1 <- pgx.getMetaMatrix(ngs1)$fc[, ct1, drop = FALSE]
+      F2 <- pgx.getMetaMatrix(ngs2)$fc[, ct2, drop = FALSE]
 
-        F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
-        F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]
+      gg <- intersect(rownames(ngs1$X), rownames(ngs2$X))
+      F1 <- F1[match(gg, rownames(F1)), , drop = FALSE]
+      F2 <- F2[match(gg, rownames(F2)), , drop = FALSE]
+      rownames(F1) <- gg
+      rownames(F2) <- gg
+      colnames(F1) <- paste0("1:", colnames(F1))
+      colnames(F2) <- paste0("2:", colnames(F2))
+      rho <- 1
 
-        gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
-        F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
-        F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
-        rownames(F1) <- gg
-        rownames(F2) <- gg
-        colnames(F1) <- paste0("1:",colnames(F1))
-        colnames(F2) <- paste0("2:",colnames(F2))
-        rho = 1
+      kk <- intersect(colnames(ngs1$X), colnames(ngs2$X))
+      if (length(kk) >= 10) {
+        X1 <- scale(t(ngs1$X[gg, kk]))
+        X2 <- scale(t(ngs2$X[gg, kk]))
+        rho <- colSums(X1 * X2) / (nrow(X1) - 1)
+      }
 
-        kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
-        if(length(kk) >= 10) {
-            X1 <- scale(t(ngs1$X[gg,kk]))
-            X2 <- scale(t(ngs2$X[gg,kk]))
-            rho <- colSums(X1 * X2) / (nrow(X1)-1)
-        }
+      fc1 <- sqrt(rowMeans(F1**2))
+      fc2 <- sqrt(rowMeans(F2**2))
+      score <- rho * fc1 * fc2
 
-        fc1 <- sqrt(rowMeans(F1**2))
-        fc2 <- sqrt(rowMeans(F2**2))
-        score <- rho * fc1 * fc2
+      title <- ngs1$genes[gg, "gene_title"]
+      title <- substring(title, 1, 60)
 
-        title <- ngs1$genes[gg,"gene_title"]
-        title <- substring(title,1,60)
-
-        df <- data.frame( title, score, rho, F1, F2, check.names=FALSE )
-        df <- df[order(-df$score),]
-        df
+      df <- data.frame(title, score, rho, F1, F2, check.names = FALSE)
+      df <- df[order(-df$score), ]
+      df
     })
 
     hilightgenes <- shiny::reactive({
-        genes <- as.character(input$genelist)
-        genes <- strsplit(genes, split='[\t, \n]')[[1]]
-        gsub("[ ]","",genes)
+      genes <- as.character(input$genelist)
+      genes <- strsplit(genes, split = "[\t, \n]")[[1]]
+      gsub("[ ]", "", genes)
     })
 
     input.contrast1 <- shiny::reactive({
-        input$contrast1
+      input$contrast1
     }) %>% shiny::debounce(2500)
 
     input.contrast2 <- shiny::reactive({
-        input$contrast2
+      input$contrast2
     }) %>% shiny::debounce(2500)
 
-    ##============================================================================
+    ## ============================================================================
     ## ScatterPlot 1
-    ##============================================================================
+    ## ============================================================================
 
 
     createPlot <- function(ngs, ngs1, ngs2, ct, type, cex.lab, higenes, ntop) {
-        p <- NULL
-        genes1 <- rownames(ngs$X)
-        higenes1 <- genes1[match(toupper(higenes),toupper(genes1))]
+      p <- NULL
+      genes1 <- rownames(ngs$X)
+      higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
 
-        # if(type %in% c('UMAP1','UMAP2')) {
-        if(type %in% c('UMAP1', 'UMAP2')) {
-            if(type =='UMAP1') {
-                pos <- ngs1$cluster.genes$pos[['umap2d']]
-            } else if(type=='UMAP2') {
-                pos <- ngs2$cluster.genes$pos[['umap2d']]
-            }
-            dim(pos)
-            gg <- intersect(toupper(rownames(ngs$X)),toupper(rownames(pos)))
-            jj <- match(gg,toupper(rownames(pos)))
-            pos <- pos[jj,]
-            ii <- match(toupper(rownames(pos)),toupper(rownames(ngs$X)))
-            rownames(pos) <- rownames(ngs$X)[ii]
-
-            p <- pgx.plotGeneUMAP(
-                ngs, contrast=ct, pos=pos,
-                cex = 0.9, cex.lab = cex.lab,
-                hilight = higenes1, ntop=ntop,
-                zfix = TRUE, par.sq = TRUE,
-                plotlib="base")
-
-        } else if(type == 'heatmap') {
-            gg <- intersect(toupper(higenes), toupper(rownames(ngs$X)))
-            if(length(gg)>1) {
-                jj <- match(gg,toupper(rownames(ngs$X)))
-                X1 <- ngs$X[jj,,drop=FALSE]
-                Y1 <- ngs$samples
-                gx.splitmap(X1, nmax=40, col.annot=Y1,
-                            softmax=TRUE, show_legend=FALSE)
-            }
-        } else {
-            genes1 <- rownames(ngs$X)
-            gg <- intersect(toupper(higenes), toupper(genes1))
-            higenes1 <- genes1[match(gg,toupper(genes1))]
-            p <- pgx.plotContrast(
-                ngs, contrast=ct, hilight = higenes1,
-                ntop=ntop, cex.lab = cex.lab, ## dlim=0.06,
-                par.sq = TRUE, type=type, plotlib="base")
+      # if(type %in% c('UMAP1','UMAP2')) {
+      if (type %in% c("UMAP1", "UMAP2")) {
+        if (type == "UMAP1") {
+          pos <- ngs1$cluster.genes$pos[["umap2d"]]
+        } else if (type == "UMAP2") {
+          pos <- ngs2$cluster.genes$pos[["umap2d"]]
         }
-        p <- grDevices::recordPlot()
-        p
+        dim(pos)
+        gg <- intersect(toupper(rownames(ngs$X)), toupper(rownames(pos)))
+        jj <- match(gg, toupper(rownames(pos)))
+        pos <- pos[jj, ]
+        ii <- match(toupper(rownames(pos)), toupper(rownames(ngs$X)))
+        rownames(pos) <- rownames(ngs$X)[ii]
+
+        p <- pgx.plotGeneUMAP(
+          ngs,
+          contrast = ct, pos = pos,
+          cex = 0.9, cex.lab = cex.lab,
+          hilight = higenes1, ntop = ntop,
+          zfix = TRUE, par.sq = TRUE,
+          plotlib = "base"
+        )
+      } else if (type == "heatmap") {
+        gg <- intersect(toupper(higenes), toupper(rownames(ngs$X)))
+        if (length(gg) > 1) {
+          jj <- match(gg, toupper(rownames(ngs$X)))
+          X1 <- ngs$X[jj, , drop = FALSE]
+          Y1 <- ngs$samples
+          gx.splitmap(X1,
+            nmax = 40, col.annot = Y1,
+            softmax = TRUE, show_legend = FALSE
+          )
+        }
+      } else {
+        genes1 <- rownames(ngs$X)
+        gg <- intersect(toupper(higenes), toupper(genes1))
+        higenes1 <- genes1[match(gg, toupper(genes1))]
+        p <- pgx.plotContrast(
+          ngs,
+          contrast = ct, hilight = higenes1,
+          ntop = ntop, cex.lab = cex.lab, ## dlim=0.06,
+          par.sq = TRUE, type = type, plotlib = "base"
+        )
+      }
+      p <- grDevices::recordPlot()
+      p
     }
 
-    ##============================================================================
+    ## ============================================================================
     ## Score table
-    ##============================================================================
+    ## ============================================================================
 
     # score_table.RENDER <- shiny::reactive({
     #
@@ -225,11 +233,11 @@ CompareBoard <- function(id, inputData)
     #     width = c("auto",1600)
     # )
 
-    ##================================================================================
-    ##=========================== MODULES ============================================
-    ##================================================================================
+    ## ================================================================================
+    ## =========================== MODULES ============================================
+    ## ================================================================================
 
-    WATERMARK = FALSE
+    WATERMARK <- FALSE
 
     # Dataset 1
 
@@ -241,7 +249,7 @@ CompareBoard <- function(id, inputData)
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      watermark    = WATERMARK
+      watermark = WATERMARK
     )
 
     # Dataset 2
@@ -254,7 +262,7 @@ CompareBoard <- function(id, inputData)
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      watermark    = WATERMARK
+      watermark = WATERMARK
     )
 
     # FC Correlation
@@ -266,7 +274,7 @@ CompareBoard <- function(id, inputData)
       hilightgenes = hilightgenes,
       input.contrast1 = input.contrast1,
       input.contrast2 = input.contrast2,
-      watermark    = WATERMARK
+      watermark = WATERMARK
     )
 
     # Cumulative FC
@@ -277,7 +285,7 @@ CompareBoard <- function(id, inputData)
       dataset2 = dataset2,
       input.contrast1 = input.contrast1,
       input.contrast2 = input.contrast2,
-      watermark    = WATERMARK
+      watermark = WATERMARK
     )
 
     # Correlation score
@@ -285,7 +293,7 @@ CompareBoard <- function(id, inputData)
     score_table <- compare_table_corr_score_server(
       "score_table",
       getOmicsScoreTable = getOmicsScoreTable,
-      watermark    = WATERMARK
+      watermark = WATERMARK
     )
 
     # Expression
@@ -316,6 +324,5 @@ CompareBoard <- function(id, inputData)
       contrast1 = shiny::reactive(input$contrast1),
       watermark = WATERMARK
     )
-
   })
 } ## end-of-Board

@@ -16,22 +16,25 @@ correlation_plot_scattercorr_ui <- function(id,
                                             height,
                                             width) {
   ns <- shiny::NS(id)
-  info_text = "<b>Correlation scatter plots.</b> Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit."
+  info_text <- "<b>Correlation scatter plots.</b> Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit."
   cor_scatter.opts <- shiny::tagList(
-    withTooltip( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
-                 "Variable to split and color by groups.", placement="top"),
-    shiny::checkboxInput(ns("corscatter.swapaxis"),"Swap axes")
+    withTooltip(shiny::selectInput(ns("cor_group"), "Color by:", choices = NULL, multiple = FALSE),
+      "Variable to split and color by groups.",
+      placement = "top"
+    ),
+    shiny::checkboxInput(ns("corscatter.swapaxis"), "Swap axes")
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Correlation scatter plots",
-               plotlib = "base",
-               label = "c",
-               info.text = info_text,
-               options = cor_scatter.opts,
-               download.fmt=c("png","pdf","csv"),
-               width = width,
-               height = height)
+    title = "Correlation scatter plots",
+    plotlib = "base",
+    label = "c",
+    info.text = info_text,
+    options = cor_scatter.opts,
+    download.fmt = c("png", "pdf", "csv"),
+    width = width,
+    height = height
+  )
 }
 
 #' Expression plot Server function
@@ -49,16 +52,13 @@ correlation_plot_scattercorr_server <- function(id,
                                                 getGeneCorr,
                                                 cor_gene,
                                                 COL,
-                                                watermark = FALSE)
-{
+                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     shiny::observe({
       ngs <- inputData()
       px <- colnames(ngs$Y)
-      s1 <- grep("^[.]",px,value=TRUE,invert=TRUE)[1]
-      shiny::updateSelectInput(session, "cor_group", choices=px, selected=s1)
-
+      s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
+      shiny::updateSelectInput(session, "cor_group", choices = px, selected = s1)
     })
 
     cor_scatter.DATA <- shiny::reactive({
@@ -66,47 +66,34 @@ correlation_plot_scattercorr_server <- function(id,
       shiny::req(cor_gene)
 
       X <- getFilteredExpression()
-      this.gene=rownames(ngs$X)[1]
+      this.gene <- rownames(ngs$X)[1]
       this.gene <- cor_gene
 
-      dbg("[cor_scatter.DATA] 0:")
+      NTOP <- 25
+      R <- getGeneCorr()
+      dbg("[cor_scatter.DATA] 1: dim.R = ", dim(R))
+      sel <- 1:NTOP
+      rho <- R[sel, "cor"]
+      if (length(sel) == 1) names(rho) <- rownames(R)[sel]
 
-      NTOP = 25
-      if(0) {
-        res <- getPartialCorrelationMatrix()
-        j <- which(rownames(res$cor) == this.gene)
-        rho <- res$cor[j,-j]
-        rho <- head(rho[order(-abs(rho))],NTOP)
-        rho <- rho[order(-rho)]
-      } else {
-        R <- getGeneCorr()
-        dbg("[cor_scatter.DATA] 1: dim.R = ",dim(R))
-        sel <- 1:NTOP
-        rho <- R[sel,"cor"]
-        if(length(sel)==1) names(rho) <- rownames(R)[sel]
-      }
       return(list(rho, this.gene))
     })
 
-    cor_scatter.PLOTFUN <- function(){
+    cor_scatter.PLOTFUN <- function() {
       dt <- cor_scatter.DATA()
       rho <- dt[[1]]
       this.gene <- dt[[2]]
       ngs <- inputData()
-
-      dbg("[cor_scatter.PLOTFUN] 2: len.rho = ",length(rho))
-      if(length(rho)==0) return(NULL)
-
-      dbg("[cor_scatter.PLOTFUN] 2: head.names.rho = ",head(names(rho)))
+      if (length(rho) == 0) {
+        return(NULL)
+      }
 
       colorby <- input$cor_group
       shiny::req(colorby)
 
-      ph <- factor(ngs$samples[,colorby])
-      klrpal <- rep(COL,99)
+      ph <- factor(ngs$samples[, colorby])
+      klrpal <- rep(COL, 99)
       klr <- klrpal[as.integer(ph)]
-
-      dbg("[cor_scatter.PLOTFUN] 2: levels.ph = ",paste(levels(ph),collapse=' '))
 
       ndim <- ncol(ngs$X)
 
@@ -114,50 +101,56 @@ correlation_plot_scattercorr_server <- function(id,
       dim_cuts <- c(0, 40, 100, 200, Inf)
       cex <- cex_levels[findInterval(ndim, dim_cuts)]
 
-      par(mfrow=c(5,5), mar=c(4,3.5,0.3,0),
-          mgp=c(1.9,0.7,0), oma=c(0,0,0.5,0.5))
-      par(mfrow=c(5,5), mar=c(3,3.5,0.5,0),
-          mgp=c(1.7,0.6,0), oma=c(0,0,0.5,0.5))
+      par(
+        mfrow = c(5, 5), mar = c(4, 3.5, 0.3, 0),
+        mgp = c(1.9, 0.7, 0), oma = c(0, 0, 0.5, 0.5)
+      )
+      par(
+        mfrow = c(5, 5), mar = c(3, 3.5, 0.5, 0),
+        mgp = c(1.7, 0.6, 0), oma = c(0, 0, 0.5, 0.5)
+      )
 
-      dbg("[cor_scatter.PLOTFUN] 3:")
-
-      swapaxis = FALSE
-      swapaxis = TRUE
+      swapaxis <- FALSE
+      swapaxis <- TRUE
       swapaxis <- input$corscatter.swapaxis
-      xlab = this.gene
+      xlab <- this.gene
 
-      dbg("[cor_scatter.PLOTFUN] 4: this.gene = ", this.gene)
-
-      i=1
-      for(i in 1:min(25,length(rho))) {
+      i <- 1
+      for (i in 1:min(25, length(rho))) {
         gene2 <- names(rho)[i]
-        if(swapaxis) {
-          x <- ngs$X[gene2,]
-          y <- ngs$X[this.gene,]
-          xlab = gene2
-          ylab = this.gene
+        if (swapaxis) {
+          x <- ngs$X[gene2, ]
+          y <- ngs$X[this.gene, ]
+          xlab <- gene2
+          ylab <- this.gene
         } else {
-          y <- ngs$X[gene2,]
-          x <- ngs$X[this.gene,]
-          ylab = gene2
-          xlab = this.gene
+          y <- ngs$X[gene2, ]
+          x <- ngs$X[this.gene, ]
+          ylab <- gene2
+          xlab <- this.gene
         }
-        base::plot(x, y, pch=19, cex=cex, col = klr,
-                   ylab=ylab, xlab=xlab)
+        base::plot(x, y,
+          pch = 19, cex = cex, col = klr,
+          ylab = ylab, xlab = xlab
+        )
 
-        y <- y + 1e-3*rnorm(length(y))
-        x <- x + 1e-3*rnorm(length(x))
-        abline(lm(y ~ x), col="black", lty=2)
+        y <- y + 1e-3 * rnorm(length(y))
+        x <- x + 1e-3 * rnorm(length(x))
+        abline(lm(y ~ x), col = "black", lty = 2)
 
-        if(i%%5==1) {
-          tt <- c("   ",levels(ph))
-          legend("topleft", legend=tt,
-                 fill = c(NA,klrpal), inset=c(0.02,0.02),
-                 border = c(NA,rep("black",99)),
-                 cex=0.9, box.lwd=0, pt.lwd=0,
-                 x.intersp=0.5, y.intersp=0.8)
-          legend("topleft", colorby, x.intersp=-0.2,
-                 cex=0.9, y.intersp=0.45, bty='n')
+        if (i %% 5 == 1) {
+          tt <- c("   ", levels(ph))
+          legend("topleft",
+            legend = tt,
+            fill = c(NA, klrpal), inset = c(0.02, 0.02),
+            border = c(NA, rep("black", 99)),
+            cex = 0.9, box.lwd = 0, pt.lwd = 0,
+            x.intersp = 0.5, y.intersp = 0.8
+          )
+          legend("topleft", colorby,
+            x.intersp = -0.2,
+            cex = 0.9, y.intersp = 0.45, bty = "n"
+          )
         }
       }
       plot <- recordPlot()
@@ -168,11 +161,10 @@ correlation_plot_scattercorr_server <- function(id,
       "plot",
       plotlib = "base",
       func = cor_scatter.PLOTFUN,
-      csvFunc = cor_scatter.DATA,   ##  NOTE: Not sure what should be the plot data!
-      res = c(80,95),               ## resolution of plots
+      csvFunc = cor_scatter.DATA, ##  NOTE: Not sure what should be the plot data!
+      res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
-
-  })## end of moduleServer
+  }) ## end of moduleServer
 }

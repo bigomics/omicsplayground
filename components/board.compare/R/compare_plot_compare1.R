@@ -19,13 +19,14 @@ compare_plot_compare1_ui <- function(id,
   info_text <- "<b>Expression scatter plot.</b> Scatter plots of gene expression."
 
   PlotModuleUI(ns("plot"),
-               title = "Dataset 1",
-               plotlib = "base",
-               label = "a",
-               info.text = NULL,
-               download.fmt = c("png","pdf","csv"),
-               height = height,
-               width = width)
+    title = "Dataset 1",
+    plotlib = "base",
+    label = "a",
+    info.text = NULL,
+    download.fmt = c("png", "pdf", "csv"),
+    height = height,
+    width = width
+  )
 }
 
 #' Expression plot Server function
@@ -43,10 +44,8 @@ compare_plot_compare1_server <- function(id,
                                          createPlot,
                                          plottype,
                                          dataset2,
-                                         watermark = FALSE)
-{
+                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
 
     plot_data <- shiny::reactive({
@@ -59,13 +58,15 @@ compare_plot_compare1_server <- function(id,
       all.ct <- names(ngs1$gx.meta$meta)
       ct1 <- input.contrast1()
       shiny::req(ct1)
-      if(!all(ct1 %in% all.ct)) return(NULL)
+      if (!all(ct1 %in% all.ct)) {
+        return(NULL)
+      }
       higenes <- hilightgenes()
       cex.lab <- 1.0
       ntop <- 9999
       type <- plottype()
 
-      if(length(higenes) <= 3) cex.lab = 1.3
+      if (length(higenes) <= 3) cex.lab <- 1.3
       createPlot(ngs1, ngs1, ngs2, ct1, type, cex.lab, higenes, ntop)
     })
 
@@ -74,10 +75,9 @@ compare_plot_compare1_server <- function(id,
       plotlib = "base",
       func = scatter1.RENDER,
       csvFunc = plot_data,
-      res = c(90,110),               ## resolution of plots
+      res = c(90, 110), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
-
-  })## end of moduleServer
+  }) ## end of moduleServer
 }
