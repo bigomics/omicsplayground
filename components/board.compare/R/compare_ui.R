@@ -6,15 +6,13 @@
 CompareInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     bigdash::tabSettings(
-        withTooltip( shiny::actionLink(ns("info"), "Info", icon = shiny::icon("info-circle")),
-                "Show more information about this module"),
-        shiny::hr(), shiny::br(),             
+        shiny::hr(), shiny::br(),
         withTooltip( shiny::selectInput(ns('contrast1'),'Dataset1:',
                             choices=NULL, multiple=TRUE),
                 "Select the contrast that you want to compare.",
                 placement="right", options = list(container = "body")
                 ),
-        shiny::br(),            
+        shiny::br(),
         withTooltip( shiny::selectInput(ns('dataset2'),"Dataset2:", choices=NULL),
                 "Select second dataset to compare.",
                 placement="right", options = list(container = "body")),
@@ -43,12 +41,12 @@ CompareInputs <- function(id) {
             shiny::conditionalPanel(
                 "input.hilighttype == 'custom'", ns=ns,
                 withTooltip( shiny::textAreaInput(ns("genelist"),NULL, value = NULL,
-                                        height = "100px", width = "100%", 
+                                        height = "100px", width = "100%",
                                         rows=5, placeholder="Paste your custom gene list"),
                         "Paste a custom list of genes to highlight.",
                         placement="right")
             ),
-            shiny::br(),            
+            shiny::br(),
             withTooltip(
                 shiny::radioButtons( ns('ntop'),"ntop", choices=c(10,20,40,100),
                                 selected=20, inline=TRUE),
@@ -61,7 +59,10 @@ CompareInputs <- function(id) {
 CompareUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 
-    shiny::tabsetPanel(
+    fullH = 770
+    tabH = '70vh'
+
+    tabs <- shiny::tabsetPanel(
         id = ns("tabs1"),
         shiny::tabPanel("Compare",
             tags$div(
@@ -71,11 +72,15 @@ CompareUI <- function(id) {
                 class = "row",
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("scatter1"))
+                    compare_plot_compare1_ui(ns("dt1"),
+                                             width = c("auto",900),
+                                             height = c(700,750))
                 ),
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("scatter2"))
+                    compare_plot_compare2_ui(ns("dt2"),
+                                             width = c("auto",900),
+                                             height = c(700,750))
                 )
             )
         ),
@@ -88,15 +93,19 @@ CompareUI <- function(id) {
                 class = "row",
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("fcfcplot"))
+                    compare_plot_fc_correlation_ui(ns("fcfcplot"),
+                                                   height = c(700,fullH),
+                                                   width=c("auto",900))
                 ),
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("cumfcplot"))
+                    compare_plot_cum_fc_ui(ns("cumfcplot"),
+                                           height = c(700,750),
+                                           width=c("auto",900))
                 )
             )
         ),
-        shiny::tabPanel("Gene Correlation", 
+        shiny::tabPanel("Gene Correlation",
             tags$div(
                 HTML("<h4>Compare Correlation</h4>"
                 )
@@ -105,14 +114,19 @@ CompareUI <- function(id) {
                 class = "row",
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("multibarplot")),
-                    tableWidget(ns("score_table"))
+                    compare_plot_expression_ui(ns("multibarplot")),
+                    compare_table_corr_score_ui(ns("score_table"))
+                    # tableWidget(ns("score_table"))
                 ),
                 div(
                     class = "col-md-6",
-                    plotWidget(ns("genecorr"))
+                    compare_plot_gene_corr_ui(ns("genecorr"))
                 )
             )
-        )            
+        )
+    )
+    div(
+      boardHeader(title = "Compare datasets", info_link = ns("info")),
+      tabs
     )
 }
