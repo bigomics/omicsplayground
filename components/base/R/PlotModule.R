@@ -118,6 +118,7 @@ PlotModuleUI <- function(id,
     if("png" %in% download.fmt)  dload.png  <- shiny::downloadButton(ns("png"), "PNG")
     if("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
     if("csv" %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    if("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
 
     pdf_size = NULL
     if(TRUE || plotlib!="base") {
@@ -136,10 +137,6 @@ PlotModuleUI <- function(id,
         label = "Format",
         choices = download.fmt
       ),
-        # dload.pdf,
-        # dload.png,
-        # dload.csv,
-        # dload.html,
         pdf_size,
         shiny::br(),
         shiny::downloadButton(
@@ -354,6 +351,7 @@ PlotModuleServer <- function(
           do.pdf = "pdf" %in% download.fmt
           do.png = "png" %in% download.fmt
           do.html = "html" %in% download.fmt
+          do.obj = "obj" %in% download.fmt
           ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
 
@@ -585,6 +583,24 @@ PlotModuleServer <- function(
                                       ) ## end of HTML downloadHandler
           } ## end of do HTML
 
+          if(do.obj)  {
+            if(plotlib == "plotly") {
+              download.obj <- shiny::downloadHandler(
+                filename = "plot.rds",
+                content = function(file) {
+                  shiny::withProgress({
+                    p <- func()
+                    ## we need to strip away unnecessary environment to prevent save bloat
+                    b <- plotly::plotly_build(p)$x[c("data", "layout", "config")]
+                    #b <- plotly_build(p); $x$attr <- NULL; b$x$visdat <- NULL
+                    b <- plotly::as_widget(b)   ## from JSON back to R object
+                    saveRDS(b, file=file)
+                  }, message="saving plot object", value=0.2)
+                } ## end of content
+              ) ## end of object downloadHandler
+            }
+          } ## end of do object
+
           ##if(do.csv && is.null(download.csv) )  {
           if(do.csv)  {
               download.csv <- shiny::downloadHandler(
@@ -615,6 +631,9 @@ PlotModuleServer <- function(
             }
             if(input$downloadOption == "html"){
               output$download <- download.html
+            }
+            if(input$downloadOption == "obj"){
+              output$download <- download.obj
             }
           })
 
