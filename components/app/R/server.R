@@ -34,11 +34,11 @@ app_server <- function(input, output, session) {
     has.honcho <- (honcho.token!="" && honcho.responding)
     if(1 && has.honcho) {
         dbg("[SERVER] Honcho is alive! ")    
-        sever::sever(sever_screen2(session$token), bg_color = "#000000") 
+        sever::sever(sever_screen2(session$token), bg_color = "#004c7d") 
     } else {
         ## No honcho, no email....
         dbg("[SERVER] No Honcho? No party..")          
-        sever::sever(sever_screen0(), bg_color = "#000000") ## lightblue=2780e3
+        sever::sever(sever_screen0(), bg_color = "#004c7d") ## lightblue=2780e3
     }
 
     setwd(WORKDIR)  ## for some reason it can change!! (defined in global.R)
@@ -308,7 +308,7 @@ app_server <- function(input, output, session) {
         
         ## Dynamically show upon availability in pgx object
         toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
-        tabRequire(PGX, "connectivity", "maintabs", "Find similar experiments")
+        tabRequire(PGX, "connectivity", "maintabs", "Similar experiments")
         tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
         tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
         tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
