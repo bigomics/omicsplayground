@@ -4,87 +4,94 @@
 ##
 
 DrugConnectivityInputs <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    bigdash::tabSettings(
-        withTooltip( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
-                "Show more information about this module."),
-        shiny::hr(), shiny::br(),             
-        withTooltip( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
-                "Select the contrast corresponding to the comparison of interest.",
-                placement="top"),
-        withTooltip( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
-                "Select type of drug enrichment analysis: activity or sensitivity (if available).",
-                placement="top")
+  ns <- shiny::NS(id) ## namespace
+  bigdash::tabSettings(
+    shiny::hr(),
+    withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
+      "Select the contrast corresponding to the comparison of interest.",
+      placement = "top"
+    ),
+    withTooltip(shiny::selectInput(ns("dsea_method"), "Analysis type:", choices = ""),
+      "Select type of drug enrichment analysis: activity or sensitivity (if available).",
+      placement = "top"
+    ),
+    shiny::hr(),
+    withTooltip(
+      shiny::checkboxInput(ns("dseatable_filter"),
+                           "only annotated drugs",
+                           FALSE),
+      "Show only annotated drugs."
     )
+  )
 }
 
 DrugConnectivityUI <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    
+  ns <- shiny::NS(id)
+
+  div(
+    boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
     div(
-        shiny::tabsetPanel(
-            id = ns("tabs"),
-            shiny::tabPanel("Drug enrichment",
-                tags$div(
-                    HTML("<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation
-                     profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running
-                     the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing
-                     the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b>
-                     plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment
-                     compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment
-                     levels of drug signatures across multiple contrast profiles.")
+      shiny::tabsetPanel(
+        id = ns("tabs"),
+        shiny::tabPanel(
+          "Drug enrichment",
+          div(class = "row",
+            div(class = "col-md-10",
+              div(class = "row",
+                div(class = "col-md-6",
+                  drugconnectivity_plot_enplots_ui(ns("dsea_enplots"))
                 ),
-                shiny::br(),
-                div(
-                    class = "row",
-                    div(
-                        class = "col-md-10",
-                        div(
-                            class = "row",
-                            div(
-                                class = "col-md-6",
-                                plotWidget(ns("dsea_enplots")),
-                            ),
-                            div(
-                                class = "col-md-6",
-                                plotWidget(ns("dsea_moaplot"))
-                            )
-                        ),
-                        br(),
-                        tableWidget(ns("dsea_table"))        
-                    ),
-                    div(
-                        class = "col-md-2",
-                        plotWidget(ns("dsea_actmap"))
-                    )
+                div(class = "col-md-6",
+                  drugconnectivity_plot_moa_ui(ns("dsea_moaplot"))
                 )
+              ),
+              br(),
+              drugconnectivity_table_dsea_ui(ns("dsea_table"))
             ),
-            shiny::tabPanel("Connectivity map (beta)",
-                shiny::fillCol(
-                flex = c(NA,0.035,1),
-                height = 750,            
-                tags$div(
-                    HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
+            div(class = "col-md-2",
+              drugconnectivity_plot_actmap_ui(ns("dsea_actmap"))
+            )
+          ),
+          div(
+            HTML("<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation
+                  profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running
+                  the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing
+                  the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b>
+                  plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment
+                  compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment
+                  levels of drug signatures across multiple contrast profiles.")
+          )
+        ),
+        shiny::tabPanel(
+          "Connectivity map (beta)",
+          shiny::fillCol(
+            flex = c(NA, 0.035, 1),
+            height = 750,
+            shiny::fillRow(
+              height = 660,
+              flex = c(1, 0.05, 1.5),
+              shiny::fillCol(
+                flex = c(1.15, 0.05, 1),
+                #plotWidget(ns("cmap_enplot")),
+                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot")),
+                shiny::br(),
+                #tableWidget(ns("cmap_table"))
+                drugconnectivity_table_cmap_ui(ns("cmap_table"))
+              ),
+              shiny::br(),
+              #plotWidget(ns("dsea_cmap"))
+              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"))
+            ),
+            div(
+              HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
                      profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical
                      results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b>
                      Plot showing the top signatures as UMAP. Each point is one L1000 experiment.
                      The color corresponds to the rank correlation between the drug signatures and your selected contrast.")
-                ),
-                shiny::br(),
-                shiny::fillRow(
-                    height = 660,
-                    flex = c(1,0.05,1.5),
-                    shiny::fillCol(
-                        flex = c(1.15,0.05,1),                    
-                        plotWidget(ns("cmap_enplot")),
-                        shiny::br(),
-                        tableWidget(ns("cmap_table"))                    
-                    ),
-                    shiny::br(),
-                    plotWidget(ns("dsea_cmap"))
-                )
             )
+          )
         )
-        )
+      )
     )
+  )
 }

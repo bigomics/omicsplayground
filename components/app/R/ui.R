@@ -152,7 +152,7 @@ app_ui <- function() {
                         "bio-tab"
                     ),
                     bigdash::sidebarMenuItem(
-                        "Find similar experiments",
+                        "Similar experiments",
                         "cmap-tab"
                     ),
                     bigdash::sidebarMenuItem(

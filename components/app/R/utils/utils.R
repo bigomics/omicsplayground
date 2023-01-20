@@ -149,12 +149,12 @@ toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
 sever_screen <- function() {
     shiny::tagList(
                shiny::tags$h1(
-                               "Houston, we have a problem", style = "color:white;font-family:lato;"
+                               "Woops!", style = "color:white;font-family:lato;"
                            ),
-               shiny::p("You have been disconnected!", style="font-size:15px;"),
+               shiny::p("You have been disconnected", style="font-size:15px;"),
                shiny::br(),
-               shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
-                                     width=500,height=250)),
+               shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
+                                     width=450,height=250)),
                shiny::div(
                           id="logSub",
                           ##        shiny::textAreaInput(
@@ -187,12 +187,12 @@ sever_screen <- function() {
 sever_screen0 <- function() {
     shiny::tagList(
                shiny::tags$h1(
-                               "Houston, we have a problem", style="color:white;font-family:lato;"
+                               "Woops!", style="color:white;font-family:lato;"
                            ),
-               shiny::p("You have been disconnected!", style="font-size:15px;"),
+               shiny::p("You have been disconnected", style="font-size:15px;"),
                shiny::br(),
-               shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
-                          width=500,height=250)),
+               shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
+                          width=450,height=250)),
                shiny::br(),
                sever::reload_button("Relaunch", class = "info")
            )
@@ -202,12 +202,12 @@ sever_screen0 <- function() {
 sever_screen2 <- function(session_id) {
   shiny::tagList(
     shiny::tags$h1(
-      "Houston, we have a problem", style = "color:white;font-family:lato;"
+      "Woops!", style = "color:white;font-family:lato;"
     ),
-    shiny::p("You have been disconnected!", style="font-size:15px;"),
+    shiny::p("You have been disconnected", style="font-size:15px;"),
     shiny::br(),
-    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
-                          width=500,height=250)),
+    shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
+                          width=450,height=250)),
     shiny::div(
       id="logSub",
       ##        shiny::textAreaInput(

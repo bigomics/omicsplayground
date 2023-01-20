@@ -141,8 +141,6 @@ plot_clustpca_server <- function(id,
         dbg("[plot_clustpca_server:plot_data] reacted!")        
         clust <- hm_getClusterPositions()      
         ##data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
-
-
         data.frame( x=clust$pos[,1], y=clust$pos[,2])
     })
 
@@ -159,10 +157,9 @@ plot_clustpca_server <- function(id,
         
         do3d = ("3D" %in% input$hmpca_options)        
         ##clust <- hm_getClusterPositions()
-        ##pos <- clust$pos
         sel <- rownames(pos)
         df  <- cbind(pos, pgx$Y[sel,])
-        if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
+        # if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
         
         colvar = shapevar = linevar = textvar = NULL
         if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])

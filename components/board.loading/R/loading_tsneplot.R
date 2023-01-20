@@ -50,7 +50,8 @@ loading_tsne_server <- function(id,
                     ## OK
                 }
             }
-                
+
+            ## if no t-SNE file exists, we need to calculate it
             if(is.null(pos)) {
                 dbg("[loading_tsne_server] calculating FC signature positions...")                
                 F <- data.table::fread(file.path(PGX.DIR,"datasets-allFC.csv"))
@@ -60,8 +61,10 @@ loading_tsne_server <- function(id,
                 F <- apply(F, 2, rank, na.last=FALSE)
                 corF <- cor(F, use="pairwise")  ## slow...
                 dim(corF)
-                
-                pos <- Rtsne::Rtsne( 1 - abs(corF), check_duplicates=FALSE, is_distance=TRUE)$Y
+                px <- max(min(30, floor(ncol(corF)/4)),1)
+                pos <- Rtsne::Rtsne( 1 - abs(corF),
+                    perplexity = px,
+                    check_duplicates=FALSE, is_distance=TRUE)$Y
                 ##pos <- umap::umap(1-corF)$layout
                 pos <- round(pos, digits=4)
                 rownames(pos) <- colnames(F)
@@ -73,7 +76,7 @@ loading_tsne_server <- function(id,
             pos.pgx <- gsub("^\\[|\\].*","",rownames(pos))
             table(pos.pgx %in% pgx.files)
             setdiff(pos.pgx, pgx.files)            
-            pos <- pos[which(pos.pgx %in% pgx.files),]
+            pos <- pos[which(pos.pgx %in% pgx.files),,drop=FALSE]
             dim(pos)
 
             ##
@@ -81,7 +84,12 @@ loading_tsne_server <- function(id,
             comparison <- gsub("^.*\\]","",rownames(pos))            
             df <- data.frame(pos, dataset=dset, comparison=comparison)
 
+            ## compute medioid of datasets
             dpos <- apply(pos, 2, function(x) tapply(x, dset, median, na.rm=TRUE))
+            if(length(unique(dset))==1) {
+                dpos <- matrix(dpos, nrow=1, ncol=2)
+                rownames(dpos) <- dset[1]
+            }
             colnames(dpos) <- c("x","y")
       
             return(list(df, dpos))

@@ -295,7 +295,7 @@ plotModule <- function(input, output, session,
     if(plotlib!="base") {
         pdf_size <- shiny::tagList(
             shiny::fillRow(
-                shiny::numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
+                shiny::numericInput(ns("pdf_width"), "width", pdf.width, 1, 20, 1, width='100%'),
                 shiny::numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
             ),
             shiny::br(),shiny::br(),shiny::br()

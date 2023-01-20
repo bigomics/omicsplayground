@@ -113,12 +113,14 @@ PlotModuleUI <- function(id,
             tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
         )
     }
-    dload.csv = dload.pdf = dload.png = dload.html = NULL
-    if("pdf" %in% download.fmt)  dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
-    if("png" %in% download.fmt)  dload.png  <- shiny::downloadButton(ns("png"), "PNG")
-    if("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
-    if("csv" %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
-    if("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
+
+    dload.csv = dload.pdf = dload.png = dload.html = dload.obj = NULL
+    if("pdf" %in% download.fmt)   dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
+    if("png" %in% download.fmt)   dload.png  <- shiny::downloadButton(ns("png"), "PNG")
+    if("html" %in% download.fmt)  dload.html <- shiny::downloadButton(ns("html"), "HTML")
+    if("csv"  %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    if("obj"  %in% download.fmt)  dload.obj  <- shiny::downloadButton(ns("obj"), "obj")
+
 
     pdf_size = NULL
     if(TRUE || plotlib!="base") {
@@ -277,6 +279,7 @@ PlotModuleServer <- function(
          download.png = NULL,
          download.html = NULL,
          download.csv = NULL,
+         download.obj = NULL,
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
@@ -352,6 +355,7 @@ PlotModuleServer <- function(
           do.png = "png" %in% download.fmt
           do.html = "html" %in% download.fmt
           do.obj = "obj" %in% download.fmt
+
           ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
 
@@ -550,7 +554,7 @@ PlotModuleServer <- function(
                                           content = function(file) {
                                               shiny::withProgress({
                                                   ## unlink(HTMLFILE) ## do not remove!
-                                                  if(plotlib == "plotly" ) {
+                                                  if(plotlib == "plotly") {
                                                       p <- func()
                                                       htmlwidgets::saveWidget(p, HTMLFILE)
                                                   } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
