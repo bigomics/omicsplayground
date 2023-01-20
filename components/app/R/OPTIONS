@@ -15,6 +15,7 @@ WATERMARK       = TRUE
 TIMEOUT        = 0
 #TIMEOUT         = 2400
 HONCHO_URL      = http://localhost:8000
+PLOTLY_EDITOR = https://shiny-plotly-editor.cpsievert.me
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,tcga
 #BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,wgcna,tcga,clust,ftmap,comp

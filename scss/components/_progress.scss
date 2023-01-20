@@ -1,0 +1,16 @@
+html {
+  .progress {
+    border-radius: 0px;
+    background-color: $light;
+    box-shadow: none;
+  }
+  
+  .progress-bar {
+    background-color: #2780e3;
+  }
+  
+  .shiny-notification {
+    border-radius: 0px;
+    background-color: $canvas;
+  }
+}

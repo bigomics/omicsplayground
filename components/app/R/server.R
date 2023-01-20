@@ -190,7 +190,7 @@ app_server <- function(input, output, session) {
             PGX
         })
         
-        shiny::withProgress(message="preparing your dashboards...", value=0, {
+        shiny::withProgress(message="Preparing your dashboards...", value=0, {
 
             DataViewBoard("view", pgx=PGX)            
             ClusteringBoard("clust", pgx=PGX)

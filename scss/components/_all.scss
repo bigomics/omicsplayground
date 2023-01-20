@@ -8,16 +8,16 @@ html {
   h2 {
       font-size: 1.85em;
   }
-  
+
   h3 {
       font-size: 1.5em;
   }
-  
+
   h4 {
       font-weight: 600;
       font-size: 1.2em;
   }
-  
+
   #welcome-page {
     min-height: 100vh;
   }
@@ -40,7 +40,7 @@ html {
       a {
 	  color: $main;
 	  text-decoration: none;
-      }      
+      }
       font-size: 14px;
   }
 
@@ -113,8 +113,6 @@ html {
   .btn-circle-xs,
   .btn-circle-xs:focus {
     background: #FFFFFF;
-    color: #FFFFFF;
-    color: #EEE;
     color: #DDD;
     text-shadow: 0 0 0px #ccc;
     border: 0px;
@@ -122,6 +120,7 @@ html {
   }
 
   .btn-circle-xs:hover {
+    background-color: #fff;
     color: #444;
     border: 0px;
     border-radius: 3px;

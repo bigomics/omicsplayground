@@ -1,0 +1,211 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
+  ns <- shiny::NS(id)
+
+  info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genesets that are clustered nearby have high covariance."
+
+  plot.opts <- shiny::tagList(
+    shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
+      choices = c(0, 10, 20, 50, 100, 1000), selected = 20
+    ),
+    shiny::sliderInput(ns("gsmap_gamma"), "color gamma:",
+      min = 0.1, max = 1.2, value = 0.4, step = 0.1
+    ),
+    shiny::radioButtons(ns("gsmap_colorby"), "color by:",
+      choices = c("sd.X", "sd.FC", "mean.FC"),
+      selected = "sd.X", inline = TRUE
+    )
+  )
+
+  plotui <- PlotModuleUI(
+    ns("gset_map"),
+    title = "Geneset UMAP",
+    label = "a",
+    outputFunc = function(x, width, height) {
+      plotOutput(x,
+        brush = ns("gsetUMAP_brush"), width = width,
+        height = height
+      )
+    },
+    plotlib2 = "plotly",
+    info.text = info_text,
+    options = plot.opts,
+    height = c(600, 750), width = c("auto", 1200),
+    download.fmt = c("png", "pdf")
+  )
+  return(list(plotui, ns))
+}
+
+featuremap_plot_table_geneset_map_server <- function(id,
+                                                     inputData,
+                                                     getGsetUMAP,
+                                                     plotUMAP,
+                                                     filter_gsets,
+                                                     sigvar,
+                                                     watermark = FALSE) {
+  moduleServer(id, function(input, output, session) {
+    selGsets <- shiny::reactive({
+      ngs <- inputData()
+      shiny::req(ngs)
+      db <- filter_gsets()
+      gsets <- rownames(ngs$gsetX)
+      gsets <- grep(paste0("^", db, ":"), gsets, value = TRUE)
+      gsets
+    })
+
+    gsetUMAP.RENDER <- shiny::reactive({
+      ngs <- inputData()
+
+      pos <- getGsetUMAP()
+      hilight <- NULL
+      colgamma <- as.numeric(input$gsmap_gamma)
+
+      F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+      F <- scale(F, center = FALSE)
+      colorby <- input$gsmap_colorby
+      if (colorby == "sd.FC") {
+        fc <- (rowMeans(F**2))**0.2
+      } else if (colorby == "mean.FC") {
+        fc <- rowMeans(F)
+      } else {
+        cX <- ngs$gsetX - rowMeans(ngs$gsetX, na.rm = TRUE)
+        fc <- sqrt(rowMeans(cX**2))
+      }
+      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
+
+      ## filter on table
+      hilight <- selGsets()
+      nlabel <- as.integer(input$gsmap_nlabel)
+
+      par(mfrow = c(1, 1))
+      p <- plotUMAP(pos, fc, hilight,
+        nlabel = nlabel, title = colorby,
+        cex = 0.9, source = "", plotlib = "base"
+      )
+      p
+    })
+
+    gsetUMAP.RENDER2 <- shiny::reactive({
+      ngs <- inputData()
+
+      pos <- getGsetUMAP()
+      hilight <- NULL
+      colgamma <- as.numeric(input$gsmap_gamma)
+
+      F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+      F <- scale(F, center = FALSE)
+      colorby <- input$gsmap_colorby
+      if (colorby == "var.FC") {
+        fc <- (rowMeans(F**2))**0.2
+      } else if (colorby == "mean.FC") {
+        fc <- rowMeans(F)
+      } else {
+        cX <- ngs$gsetX - rowMeans(ngs$gsetX, na.rm = TRUE)
+        fc <- sqrt(rowMeans(cX**2))
+      }
+      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
+
+      ## filter on table
+      hilight <- selGsets()
+      nlabel <- as.integer(input$gsmap_nlabel)
+
+      par(mfrow = c(1, 1))
+      p <- plotUMAP(pos, fc, hilight,
+        nlabel = nlabel, title = colorby,
+        cex = 1.2, source = "", plotlib = "plotly"
+      )
+      p
+    })
+
+    PlotModuleServer(
+      "gset_map",
+      plotlib = "base",
+      plotlib2 = "plotly",
+      func = gsetUMAP.RENDER,
+      func2 = gsetUMAP.RENDER2,
+      pdf.width = 5, pdf.height = 5,
+      add.watermark = watermark
+    )
+
+    # Table
+
+    gsetTable.RENDER <- shiny::reactive({
+      ngs <- inputData()
+      shiny::req(ngs)
+      if (is.null(ngs$drugs)) {
+        return(NULL)
+      }
+
+      pos <- getGsetUMAP()
+
+      ## detect brush
+      sel.gsets <- NULL
+      b <- input[["gsetUMAP_brush"]] ## ugly??
+
+      if (!is.null(b) & length(b)) {
+        sel <- which(pos[, 1] > b$xmin & pos[, 1] < b$xmax &
+          pos[, 2] > b$ymin & pos[, 2] < b$ymax)
+        sel.gsets <- rownames(pos)[sel]
+      }
+
+      pheno <- "tissue"
+      pheno <- sigvar()
+      is.fc <- FALSE
+      if (pheno %in% colnames(ngs$samples)) {
+        X <- ngs$gsetX - rowMeans(ngs$gsetX)
+        y <- ngs$samples[, pheno]
+        F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
+          rowMeans(X[, i, drop = FALSE])
+        }))
+        is.fc <- FALSE
+      } else {
+        F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+        is.fc <- TRUE
+      }
+
+      if (!is.null(sel.gsets)) {
+        sel.gsets <- intersect(sel.gsets, rownames(F))
+        F <- F[sel.gsets, ]
+      }
+      F <- F[order(-rowMeans(F**2)), ]
+
+      F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
+      if (is.fc) colnames(F)[1] <- "sd.FC"
+      F <- round(F, digits = 3)
+      gs <- substring(rownames(F), 1, 100)
+      df <- data.frame(geneset = gs, F, check.names = FALSE)
+
+      DT::datatable(df,
+        rownames = FALSE,
+        class = "compact cell-border stripe hover",
+        extensions = c("Scroller"),
+        selection = list(mode = "single", target = "row", selected = NULL),
+        fillContainer = TRUE,
+        options = list(
+          dom = "lfrtip",
+          scrollX = TRUE, ## scrollY = TRUE,
+          scrollY = "70vh",
+          scroller = TRUE,
+          deferRender = TRUE
+        ) ## end of options.list
+      ) %>%
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+    })
+
+    shiny::callModule(
+      tableModule,
+      id = "gsetTable",
+      func = gsetTable.RENDER,
+      options = NULL,
+      title = tags$div(
+        HTML('<span class="module-label">(c)</span>Geneset table')
+      ),
+      info.text = "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot.",
+      height = c(280, 750), width = c("auto", 1400)
+    )
+  })
+}
