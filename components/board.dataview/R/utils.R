@@ -3,7 +3,7 @@ plotly_default1 <- function(e) {
         plotly::layout(
             #xaxis = list(fixedrange=TRUE),
             #yaxis = list(fixedrange=TRUE),
-            font = list(family = 'Lato')
+            font = list(family = "Lato")
             ## title = pd$gene                    
         ) %>%
         ##plotly::config(displayModeBar = FALSE) %>%

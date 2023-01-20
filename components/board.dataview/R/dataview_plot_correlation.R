@@ -60,18 +60,19 @@ dataview_plot_correlation_server <- function(id,
             jj <- c(head(order(-rho),n/2), tail(order(-rho),n/2))
             top.rho = rho[jj]
             
-            gx1 <- sqrt(rowSums(pgx$X[names(top.rho),samples]**2,na.rm=TRUE))
+            gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples]**2, na.rm = TRUE))
             gx1 <- (gx1 / max(gx1))
-            klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
-                alpha = TRUE)(16))[1+round(15*gx1) ]
-            klr1[which(is.na(klr1))] <- rgb(0.2,0.5,0.8,0.1)
+            klr1 <- omics_pal_c(palette = "bright_blue")(16)[1 + round(15*gx1)]
+            klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
             
             names(top.rho) = sub(".*:","",names(top.rho))
 
+            ## NOTE: currently some labels are pretty long; also the var names are cryptic 
+            ## TODO: check if names can be shortened and variable names can be formatted nicely
             getGeneAnnot <- function(ngs, genes) {
-                ann <- ngs$genes[,grep("name|title|chr|map",colnames(ngs$genes),ignore.case=TRUE)]
-                apply(ann[genes,],1, function(x)
-                    paste(mapply(paste0,colnames(ann),": ",x),collapse='\n'))
+                ann <- ngs$genes[,grep("name|title|chr|map", colnames(ngs$genes), ignore.case = TRUE)]
+                apply(ann[genes,], 1, function(x)
+                    paste(mapply(paste0, colnames(ann), ": <b>", x), collapse = '</b><br>'))
             }
             annot <- getGeneAnnot(pgx, names(top.rho))
             
@@ -80,7 +81,7 @@ dataview_plot_correlation_server <- function(id,
                 rho = top.rho,
                 color = klr1,
                 value = gx1,
-                annot = annot
+                annot = paste0(annot, '<extra></extra>')
             )
 
             res <- list(df, gene)
@@ -89,11 +90,11 @@ dataview_plot_correlation_server <- function(id,
         }
         
         plot_data <- shiny::reactive({
-            shiny::req(pgx$X,pgx$Y)
+            shiny::req(pgx$X, pgx$Y)
             shiny::req(r.gene())             
             samples <- r.samples()
             gene <- r.gene()
-            pd <- getTopCorrelatedGenes(pgx, gene=gene, n=40, samples=samples)
+            pd <- getTopCorrelatedGenes(pgx, gene = gene, n = 40, samples = samples)
             pd
         })
         
@@ -118,26 +119,57 @@ dataview_plot_correlation_server <- function(id,
             shiny::req(pd)
             
             df <- pd[[1]]
-            df$genes <- factor(df$genes, levels=df$genes)
+            df$genes <- factor(df$genes, levels = df$genes)
 
-            ## plot as regular bar plot            
-            plotly::plot_ly(data = df,
-                type = 'bar', ## name = pd$gene
-                x = ~genes,
-                y = ~rho,
-                ## hoverinfo = "text",
-                hovertext = ~annot,
-                marker = list(color = ~color)
+            
+            ## NOTE: a second y axis seems useful (even cooler would be a positive on the left and a negative on the right)
+            ## NOTE: because of the plotly bheavior, we need to increas the margfin manually (otherwise labels get cut off); also it is not possible to adjust the alignment of axis labels (how annoying...)
+            ## TODO: decide if dual axis should be kept; ask Carson for potential workaround to align labels to the right
+            ay <- list(
+              #tickfont = list(color = "black"),
+              overlaying = "y",
+              side = "right",
+              title = ""
             )
+            
+            ## plot as regular bar plot 
+            plotly::plot_ly(
+              data = df,
+              x = ~genes,
+              y = ~rho,
+              type = 'bar',
+              marker = list(
+               color = ~color#,
+               #line = list(color = omics_colors("super_dark_grey"), width = .5)
+              ),
+              hovertemplate = ~annot
+            ) %>% 
+            plotly::add_trace(
+              data = df,
+              x = ~genes,
+              y = ~rho,
+              type = 'bar',
+              name = '', 
+              yaxis = "y2", 
+              mode = "lines+markers"
+            ) %>% 
+            plotly::layout(
+              xaxis = list(title = FALSE), 
+              yaxis2 = ay,
+              font = list(family = "Lato"),
+              showlegend = FALSE,
+              bargap = .4,
+              margin = list(l = 10, r = 30, b = 10, t = 10)
+            ) %>%
+            plotly_default1()
+            
         }
         
         modal_plotly.RENDER <- function() {
             plotly.RENDER() %>%
                 plotly::layout(
                     ## showlegend = TRUE,
-                    font = list(
-                        size = 16
-                    )
+                    font = list(size = 16)
                 )
         }
         

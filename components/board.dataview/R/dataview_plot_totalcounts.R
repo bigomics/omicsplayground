@@ -40,9 +40,9 @@ dataview_plot_totalcounts_server <- function(id,
           tbl = getCountsTable()
           req(tbl)
           
-          ylab = "total counts"
+          ylab = "Total counts"
           if(data_groupby != "<ungrouped>") {
-              ylab = "mean total counts"
+              ylab = "Mean total counts"
           }
           
           res <- list(
@@ -89,15 +89,29 @@ dataview_plot_totalcounts_server <- function(id,
           shiny::req(res)
           df <- res[[1]]
 
-          fig <- plotly::plot_ly(
+          fig <- 
+            plotly::plot_ly(
               data = df,
               x = ~sample,
               y = ~counts,
-              type = 'bar'
-          ) %>% plotly::layout(
-              yaxis = list( title = res$ylab),
-              xaxis = list( title = "")              
-          )
+              type = 'bar',
+              marker = list(
+                color = omics_colors("mid_blue")
+              ), 
+              hovertemplate = ~paste0(
+                "Sample: <b>", sample, "</b><br>", 
+                res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+                "<extra></extra>"
+              )
+            ) %>% 
+            plotly::layout(
+              xaxis = list(title = FALSE),
+              yaxis = list(title = res$ylab),
+              font = list(family = "Lato"),
+              margin = list(l = 10, r = 10, b = 10, t = 10)   
+            ) %>% 
+            plotly_default1()
+            
           fig
       }
       

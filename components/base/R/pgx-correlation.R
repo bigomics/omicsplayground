@@ -620,13 +620,24 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
         ##par(oma=c(0,0,0,1))
         ##psych::cor.plot( 
         corrplot::corrplot(
-                      logQ, is.corr=FALSE, type="upper",        
-                      mar = c(0,0,0,2),
-                      p.mat = Q, sig.level = 0.05, ##insig = "blank",
-                      tl.cex = cex, tl.col="black", tl.offset = 1,
-                      cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
-                      pch.col = "grey50",
-                      order="hclust")
+          corr = logQ, 
+          type = "upper",        
+          col = omics_pal_c("blue_red")(25),
+          is.corr = FALSE, 
+          mar = c(0, 0, 0, 2),
+          p.mat = Q, 
+          sig.level = 0.05, 
+          #insig = "blank",
+          tl.cex = cex, 
+          tl.col = omics_colors("super_dark_grey"), 
+          tl.offset = 1,
+          cl.align.text = "l", 
+          cl.offset = 0.25, 
+          cl.cex = 0.7, 
+          pch.col = omics_colors("super_dark_grey"),
+          order = "hclust",
+          number.digits = 2
+        )
         
     }
 

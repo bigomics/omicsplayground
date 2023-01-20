@@ -177,52 +177,91 @@ dataview_plot_tsne_server <- function(id,
 
             df <- data[[1]]
             gene <- data[[2]]
+            symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up", "star-diamond", "square-cross", "diamond-wide")
             
-            p <- plotly::plot_ly(
-                df,
-                type = 'scatter',
-                mode = 'markers'
+            if (!is.null(plot_data()$group)) { ## TODO: doesn't update in case grouping is changed
+              fig <- 
+                plotly::plot_ly(
+                  data = df,
+                  type = 'scatter',
+                  mode = 'markers',
+                  x = ~pos_x,
+                  y = ~pos_y,
+                  symbol = ~group,
+                  symbols = symbols[1:length(unique(df$group))],
+                  color = ~expression,
+                  colors = omics_pal_c(palette = "bright_blue")(100),
+                  marker = list(
+                    size = 10,                
+                    line = list(
+                      color = omics_colors("super_dark_grey"),
+                      width = 1.2
+                    )       
+                  ), 
+                  hovertemplate = ~paste(
+                    "Gene:<b>", gene,
+                    "</b><br>Sample:<b>", name, "</b><br>",
+                    "Expression:<b>", sprintf("%1.3f", expression), "</b>",
+                    "<extra></extra>"
+                  )
+                )
+              
+            } else {
+              fig <- 
+                plotly::plot_ly(
+                  data = df,
+                  type = 'scatter',
+                  mode = 'markers',
+                  x = ~pos_x,
+                  y = ~pos_y,
+                  color = ~expression,
+                  colors = omics_pal_c(palette = "bright_blue")(100),
+                  marker = list(
+                    size = 10,                
+                    line = list(
+                      color = omics_colors("super_dark_grey"),
+                      width = 1.2
+                    )       
+                  ), 
+                  hovertemplate = ~paste(
+                    "Gene:<b>", gene,
+                    "</b><br>Sample:<b>", name ,
+                    "</b><br>Expression:<b>", sprintf("%1.3f", expression), 
+                    "</b><extra></extra>"
+                  )
+                )
+          }
+          fig %>%
+            plotly::layout(
+              xaxis = list(title = 'tSNE-x'),
+              yaxis = list(title = 'tSNE-y'),
+              margin = list(l = 10, r = 10, b = 10, t = 10) 
             ) %>%
-                plotly::add_markers(
-                    x = ~pos_x,
-                    y = ~pos_y,
-                    color = ~expression,
-                    #text = ~name,
-                    hovertext = ~paste("Sample:",name,"<br>Gene:",gene,
-                        "<br>Expression:",expression),                    
-                    marker = list(
-                        size = 10,                    
-                        scale = "Viridis",
-                        reversescale = FALSE                
-                    )
-                ) %>%
-                plotly::layout(
-                    showlegend = FALSE,
-                    xaxis = list(title = 'tSNE-x'),
-                    yaxis = list(title = 'tSNE-y')
-                ) %>%
-                plotly_default1() ## %>% toWebGL()
-            p
+            plotly::colorbar(
+              title = "<b>Expression:</b>",
+              width = .001,
+              ticklen = 6
+            ) %>%
+            plotly_default1() ## %>% toWebGL()
+        
         }
         
         plotly.RENDER <- function() {
-            p <- plotly.RENDER0() %>%
-                plotly::hide_colorbar()
-            p
+            fig <- plotly.RENDER0() #%>%
+            #    plotly::hide_colorbar()
+            fig
         }
         
         modal_plotly.RENDER <- function() {
-            p <- plotly.RENDER0() %>%
+          fig <- plotly.RENDER0() %>%
                 plotly::layout(
-                    font = list(
-                        size = 18
-                    ),
-                    legend = list(
-                        font = list(size = 18)
-                    )
+                  font = list(size = 18),
+                  legend = list(
+                      font = list(size = 18)
+                  )
                 )
-            p <- plotly::style(p, marker.size = 20)           
-            p
+          fig <- plotly::style(fig, marker.size = 20)           
+          fig
         }
         
         PlotModuleServer(
