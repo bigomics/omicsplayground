@@ -384,12 +384,12 @@ ExpressionBoard <- function(id, inputData) {
       ct
     })
 
-    expression_plot_topgenes_server(
-      id = "topgenes",
-      inputData = inputData,
-      res = filteredDiffExprTable,
-      ii = genetable$rows_current
-    )
+    expression_plot_topgenes_server(id = "topgenes",
+                                    comp = shiny::reactive(input$gx_contrast),
+                                    inputData = inputData,
+                                    res = filteredDiffExprTable,
+                                    ii = genetable$rows_current,
+                                    watermark = FALSE)
 
 
     # MA old code refactored into plot module #####

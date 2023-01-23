@@ -18,9 +18,6 @@ expression_plot_topgenes_ui <- function(id,
                                         height,
                                         width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    actionButton(ns("button1"), "some action")
-  )
 
   info_text <- "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
 
@@ -56,6 +53,7 @@ expression_plot_topgenes_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
+#' @param comp
 #' @param inputData
 #' @param res
 #' @param ii
@@ -65,6 +63,7 @@ expression_plot_topgenes_ui <- function(id,
 #'
 #' @export
 expression_plot_topgenes_server <- function(id,
+                                            comp,
                                             inputData,
                                             res,
                                             ii,
@@ -73,6 +72,7 @@ expression_plot_topgenes_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
+      comp <- comp() #input$gx_contrast
       ngs <- inputData()
       shiny::req(ngs)
 
@@ -89,10 +89,9 @@ expression_plot_topgenes_server <- function(id,
         return(NULL)
       }
 
-      comp <- 1
+
       grouped <- 0
       logscale <- 1
-      comp <- input$gx_contrast
       grouped <- !input$gx_ungroup
       logscale <- input$gx_logscale
       showothers <- input$gx_showothers
@@ -113,7 +112,7 @@ expression_plot_topgenes_server <- function(id,
       sumlen.grpnames <- sum(nchar(strsplit(sub(".*:", "", comp), split = "_vs_")[[1]]))
       if (show.names && sumlen.grpnames <= 20) srt <- 0
 
-      return(
+      return(list(
         res = res,
         ngs = ngs,
         comp = comp,
@@ -123,7 +122,7 @@ expression_plot_topgenes_server <- function(id,
         srt = srt,
         logscale = logscale,
         show.names = show.names
-      )
+      ))
     })
 
 
@@ -132,6 +131,7 @@ expression_plot_topgenes_server <- function(id,
       shiny::req(pd)
 
       nc <- 8
+      mar1 = 3.5
 
       par(mfrow = c(2, nc), mar = c(mar1, 3.5, 1, 1), mgp = c(2, 0.8, 0), oma = c(0.1, 0.6, 0, 0.6))
       i <- 1
@@ -142,7 +142,15 @@ expression_plot_topgenes_server <- function(id,
         pgx.plotExpression(
           pd[["ngs"]],
           pd[["gene"]],
-          comgscale = pd[["logscale"]],
+          pd[["comp"]],
+          pd[["grouped"]],
+          max.points = 200,
+          logscale = pd[["logscale"]],
+          collapse.others = TRUE,
+          showothers = pd[["showothers"]],
+          ylab=ylab,
+          xlab="",
+          srt=pd[["srt"]],
           names = show.names,
           main = ""
         )
@@ -169,8 +177,8 @@ expression_plot_topgenes_server <- function(id,
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(90, 105), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      res = c(90,105), ## resolution of plots
+      pdf.width=14, pdf.height=3.5,
       add.watermark = watermark
     )
   }) ## end of moduleServer

@@ -124,10 +124,10 @@ ExpressionUI <- function(id) {
         shiny::tabPanel(
           "Top genes",
           expression_plot_topgenes_ui(
-            id = "topgenes",
+            id = ns("topgenes"),
             label = "A",
-            height = c(0.45 * fullH, 700), # c(imgH,420)
-            width = c("auto", 1200)
+            height =  c(imgH,420),
+            width = c('auto',1600)
           ), # c('auto',1600)
 
           shiny::br(),
