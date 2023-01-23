@@ -51,7 +51,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       ngs <- inputData()
       shiny::req(ngs)
       ct <- colnames(ngs$model.parameters$contr.matrix)
-      ## ct <- c(ct,"<sd>")
       ct <- sort(ct)
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
@@ -65,7 +64,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::req(input$fa_contrast)
 
       ## ----- get comparison
-      comparison <- 2
       comparison <- input$fa_contrast
       if (!(comparison %in% names(ngs$gset.meta$meta))) {
         return(NULL)
@@ -74,9 +72,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       ## ----- get KEGG id
       xml.dir <- file.path(FILES, "kegg-xml")
       kegg.available <- gsub("hsa|.xml", "", dir(xml.dir, pattern = "*.xml"))
-      kegg.available
       kegg.ids <- getKeggID(rownames(ngs$gsetX))
-      kegg.ids
       ## sometimes no KEGG in genesets...
       if (length(kegg.ids) == 0) {
         shinyWidgets::sendSweetAlert(
@@ -85,7 +81,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
           text = "",
           type = "warning"
         )
-        dbg("[FunctionalBoard::getKeggTable] no KEGG terms in gsetX")
         df <- data.frame()
         return(df)
       }
@@ -99,9 +94,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       meta <- ngs$gset.meta$meta[[comparison]]
       meta <- meta[kegg.gsets, ]
       mm <- selected_gsetmethods()
-      dbg("[FunctionalBoard::getKeggTable] 1: gset methods = ", mm)
       mm <- intersect(mm, colnames(meta$q))
-      dbg("[FunctionalBoard::getKeggTable] 2: gset methods = ", mm)
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
 
       df <- data.frame(
@@ -109,7 +102,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         logFC = meta$meta.fx, meta.q = meta.q,
         check.names = FALSE
       )
-      ## df <- df[order(-fx),]
       df <- df[!duplicated(df$kegg.id), ] ## take out duplicated gene sets...
       df <- df[order(-abs(df$logFC)), ]
       return(df)
@@ -189,7 +181,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       in.ids0 <- in.ids
       in.ids <- unique(as.character(in.ids))
       out.ids <- character(length(in.ids))
-      ### res <- try(suppressWarnings( plotly::select(db.obj, keys = in.ids,
+
       res <- try(suppressWarnings(
         AnnotationDbi::select(db.obj,
           keys = in.ids,
@@ -206,12 +198,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         }
         if (sum(na.idx) > 0) {
           n.na <- length(unique(res[na.idx, 1]))
-          if (n.na > 0) {
-            print(paste(
-              "Note:", n.na, "of", length(in.ids),
-              "unique input IDs unmapped."
-            ))
-          }
           if (na.rm) {
             res <- res[!na.idx, ]
           }
@@ -256,26 +242,21 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       }
     }
 
-    if (1) {
-      suppressMessages(require(pathview))
-      unlockBinding("geneannot.map", as.environment("package:pathview"))
-      assignInNamespace("geneannot.map", my.geneannot.map, ns = "pathview", as.environment("package:pathview"))
-      assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
-      lockBinding("geneannot.map", as.environment("package:pathview"))
-    }
+    # random global server actions ..
+    suppressMessages(require(pathview))
+    unlockBinding("geneannot.map", as.environment("package:pathview"))
+    assignInNamespace("geneannot.map", my.geneannot.map, ns = "pathview", as.environment("package:pathview"))
+    assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
+    lockBinding("geneannot.map", as.environment("package:pathview"))
 
     kegg_graph.RENDER <- shiny::reactive({
       ngs <- inputData()
       alertDataLoaded(session, ngs)
-      ## NULL.IMG <- list(src=NULL, contentType = 'image/png')
-      ## NULL.IMG <- list(src=NA, contentType = 'image/png')
       NULL.IMG <- list(src = "", contentType = "image/png")
       if (is.null(ngs)) {
         return(NULL.IMG)
       }
 
-
-      comparison <- 1
       comparison <- input$fa_contrast
       if (is.null(comparison) || length(comparison) == 0) {
         return(NULL.IMG)
@@ -302,15 +283,12 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         return(NULL.IMG)
       }
 
-      sel.row <- 1
       sel.row <- kegg_table$rows_selected()
-      ## if(is.null(sel.row) || length(sel.row)==0) return(NULL)
       if (is.null(sel.row) || length(sel.row) == 0) {
         return(NULL.IMG)
       }
       sel.row <- as.integer(sel.row)
 
-      pathway.id <- "05213"
       pathway.id <- "04110" ## CELL CYCLE
       pathway.name <- pw.genes <- "x"
       if (is.null(sel.row) || length(sel.row) == 0) {
@@ -320,7 +298,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       if (!is.null(sel.row) && length(sel.row) > 0) {
         pathway.id <- df[sel.row, "kegg.id"]
         pathway.name <- df[sel.row, "pathway"]
-        ## pw.genes <- GSETS[[as.character(pathway.name)]]
         pw.genes <- unlist(getGSETS(as.character(pathway.name)))
       }
 
@@ -331,10 +308,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       ## We temporarily switch the working directory to always readable
       ## TMP folder
       curwd <- getwd()
-      curwd
       tmpdir <- tempdir()
-      tmpdir
-      dbg("[FunctionalBoard::kegg_graph] switch to /tmp folder=", tmpdir, "\n")
       setwd(tmpdir)
       pv.out <- pathview::pathview(
         gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
@@ -348,14 +322,8 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
 
       ## back to previous working folder
       setwd(curwd)
-      dbg("[FunctionalBoard::kegg_graph] back to working folder=", getwd(), "\n")
 
-      ## width  <- session$clientData$output_kegg_graph_width
-      ## height <- session$clientData$output_kegg_graph_height
       outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-      dbg("[FunctionalBoard::kegg_graph] outfile=", outfile, "\n")
-      dbg("[FunctionalBoard::kegg_graph] file.exists(outfile)=", file.exists(outfile), "\n")
-      file.exists(outfile)
       if (!file.exists(outfile)) {
         return(NULL.IMG)
       }
@@ -363,16 +331,11 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       list(
         src = outfile,
         contentType = "image/png",
-        ## width = 1040*0.8, height = 800*0.9, ## actual size: 1040x800
-        ## width = 900, height = 600, ## actual size: 1040x800
         width = "100%", height = "100%", ## actual size: 1040x800
-        ## width = img[2], height = img[1], ## actual size: 1040x800
         alt = "pathview image"
       )
-      ##    }, deleteFile = TRUE)
     })
 
-    ## output$kegg_table <- shiny::renderDataTable({
     kegg_table.RENDER <- shiny::reactive({
       ngs <- inputData()
       shiny::req(ngs)
@@ -380,7 +343,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         return(NULL)
       }
 
-      comparison <- 1
       comparison <- input$fa_contrast
 
       if (is.null(comparison)) {
@@ -397,7 +359,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       ## add hyperlink
       url <- paste0("https://www.genome.jp/kegg-bin/show_pathway?map=hsa", df$kegg.id, "&show_description=show")
       df$kegg.id <- paste0("<a href='", url, "' target='_blank'>", df$kegg.id, "</a>")
-      ## df$pathway <- wrapHyperLink(df$pathway, df$pathway)
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
@@ -409,14 +370,13 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, ## scrollY = TRUE,
+          scrollX = TRUE,
           scrollY = tabH, scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("logFC",
-          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
           background = color_from_middle(df[, "logFC"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
@@ -434,7 +394,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
 
       kk <- rownames(fx)
       kk <- as.character(df$pathway)
-      ## if(is.na(kk) || kk=="" || !(kk %in% rownames(fx))) return(NULL)
+
       if (length(kk) < 3) {
         return(NULL)
       }
@@ -444,8 +404,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       } else {
         score <- fx[kk, , drop = FALSE]
       }
-      dim(score)
-      ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY...
 
       score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
       score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
@@ -460,11 +418,9 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         score <- score[order(-score[, 1]), 1, drop = FALSE]
       } else {
         ii <- hclust(d1)$order
-        ## ii <- order(-rowMeans(score))
         jj <- hclust(d2)$order
         score <- score[ii, jj, drop = FALSE]
       }
-      dim(score)
       rownames(score) <- substring(rownames(score), 1, 50)
 
       score2 <- score
@@ -478,7 +434,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       colnames(score2) <- shortstring(colnames(score2), 30)
       colnames(score2) <- paste0(colnames(score2), " ")
 
-      ## heatmap(score2, scale="none", mar=c(8,20))
       bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
       par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
 
@@ -494,9 +449,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::req(ngs)
       df <- getKeggTable()
       if (is.null(df) || nrow(df) == 0) {
-        dbg("[FunctionalBoard::kegg_actmap.RENDER] emtpy KEGG table")
-        ## par(mfrow=c(1,1), mar=c(1,1,1,1)*0, oma=c(0,2,0,1)*0 )
-        ## frame()
         return(NULL)
       }
       meta <- ngs$gset.meta$meta
@@ -508,16 +460,18 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::req(ngs)
       df <- getKeggTable()
       if (is.null(df) || nrow(df) == 0) {
-        dbg("[FunctionalBoard::kegg_actmap.RENDER] emtpy KEGG table")
-        ## par(mfrow=c(1,1), mar=c(1,1,1,1)*0, oma=c(0,2,0,1)*0 )
-        ## frame()
         return(NULL)
       }
       meta <- ngs$gset.meta$meta
       plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms = 50, nfc = 100)
     })
 
-    kegg_info1 <- "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
+    kegg_info1 <- strwrap("<strong>KEGG pathways</strong> are a collection of
+    manually curated pathways representing the current knowledge of molecular
+    interactions, reactions and relation networks as pathway maps. In the
+    pathway map, genes are colored according to their upregulation (red) or
+    downregulation (blue) in the contrast profile. Each pathway is scored for
+    the selected contrast profile and reported in the table below.")
 
     kegg_graph.opts <- shiny::tagList()
 
@@ -527,7 +481,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       title = "Kegg pathway map",
       func = kegg_graph.RENDER,
       plotlib = "image",
-      ## renderFunc = "renderImage", outputFunc = "imageOutput",
       options = kegg_graph.opts,
       download.fmt = "png", just.info = TRUE,
       info.text = kegg_info1, info.width = "350px",
@@ -536,10 +489,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     )
 
     kegg_table_info <- "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
-
-    kegg_table_opts <- shiny::tagList(
-      ## selectInput(ns("kegg_table_logfc"),"logFC threshold for Fisher-test",c(0.2,0.5,1))
-    )
+    kegg_table_opts <- shiny::tagList()
 
     kegg_table <- shiny::callModule(
       tableModule,
@@ -590,7 +540,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         return(NULL)
       }
 
-      ## sub2 <- getSigGO(comparison, methods, nterms=250, ntop=25, ngs=ngs)
       sub2 <- go <- ngs$meta.go$graph
       if (is.null(go)) {
         shinyWidgets::sendSweetAlert(
@@ -599,7 +548,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
           text = "",
           type = "warning"
         )
-        dbg("[GO_network.RENDER] ***ERROR*** no META.GO in pgx object!")
         return(NULL)
       }
 
@@ -613,12 +561,9 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       igraph::V(sub2)$label[which(is.na(score) | score == 0)] <- ""
       pos <- sub2$layout
 
-      dbg("[FunctionalBoard::GO_network.RENDER] 1: sum(is.na(score)))=", sum(is.na(score)))
-      dbg("[FunctionalBoard::GO_network.RENDER] 1: all(score=0)=", all(score == 0))
       all.zero <- all(score == 0)
 
       if (!all.zero && input$GO_prunetree) {
-        ## cat("pruning GO graph\n")
         vv <- igraph::V(sub2)[which(!is.na(score) & abs(score) > 0)]
         sp <- igraph::shortest_paths(sub2, from = "all", to = vv, mode = "all", output = "vpath")
         sp.vv <- unique(unlist(sp$vpath))
@@ -627,18 +572,12 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         score <- score[igraph::V(sub2)$name]
       }
 
-      dbg("[FunctionalBoard::GO_network.RENDER] 2: len.V(sub2)=", length(igraph::V(sub2)))
-      if (length(igraph::V(sub2)) == 0) {
-        ## return(NULL)
-      }
-
       ## remove root?
       removeroot <- TRUE
       if (removeroot) {
         sub2 <- igraph::induced_subgraph(sub2, which(igraph::V(sub2)$name != "all"))
         if (input$GO_prunetree) pos <- igraph::layout_with_fr(sub2)
         score <- score[igraph::V(sub2)$name]
-        ## pos <- pos[igraph::V(sub2)$name,]
       }
       roots <- c("all", neighbors(go, igraph::V(go)["all"], mode = "all")$name)
       roots <- intersect(roots, igraph::V(sub2)$name)
@@ -655,7 +594,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
 
       ## color clusters
       if (input$GO_colorclusters) {
-        ## clust = igraph::cluster_louvain(igraph::as.undirected(sub2))$membership
         clust <- igraph::cluster_louvain(igraph::as.undirected(go))$membership
         names(clust) <- igraph::V(go)$name
         cc <- c(
@@ -668,8 +606,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         if (length(jj) > 0) igraph::V(sub2)$color[jj] <- NA
       }
 
-
-      ## pos <- pos[igraph::V(sub2)$name,]
       gr <- visNetwork::toVisNetworkData(sub2)
       gr$nodes$color[is.na(gr$nodes$color)] <- "#F9F9F9"
       gr$nodes$value <- pmax(abs(gr$nodes$value), 0.001)
@@ -679,17 +615,14 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       no.score <- (is.na(score) | score == 0)
       gr$nodes$label[which(no.score)] <- NA
 
-      ## if(input$fa_boxnode) {
       gr$nodes$shape <- c("box", "circle")[1 + 1 * no.score]
       gr$nodes$label <- sapply(gr$nodes$label, breakstring, n = 25, nmax = 95, force = TRUE, brk = "\n")
 
-      ## gr.def <- breakstring(gr$nodes$Definition,80)
       gr.def <- sapply(gr$nodes$Definition, breakstring, n = 50, brk = "<br>")
       gr$nodes$title <- paste0(
         gr$nodes$Term, "  (", gr$nodes$id, ")<br>",
         "<small>", gr.def, "</small>"
       )
-      ## gr$edges$title = edge.info
 
       ## rendering
       font.size <- 20
@@ -709,12 +642,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
           scaling = list(min = 1 * cex, max = 80 * cex)
         ) %>%
         visNetwork::visPhysics(stabilization = FALSE) %>%
-        ## visInteraction(hideEdgesOnDrag = TRUE) %>%
-        ## visInteraction(navigationButtons = TRUE) %>%
-        ## visOptions(nodesIdSelection = TRUE) %>%
-        ## visOptions(selectedBy="component") %>%
         visNetwork::visOptions(highlightNearest = list(enabled = T, degree = 1, hover = TRUE)) %>%
-        ## visEvents(select="function(nodes){Shiny.onInputChange('current_node_id',nodes.nodes);;}") %>%
         visNetwork::visPhysics(enabled = FALSE)
     })
 
@@ -727,13 +655,10 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       ngs <- inputData()
       shiny::req(ngs, input$fa_contrast)
       if (is.null(ngs$meta.go)) {
-        dbg("[FunctionalBoard::GO_table.RENDER] no META.GO in pgx object!")
         return(NULL)
       }
 
-      comparison <- 1
       comparison <- input$fa_contrast
-      ## req(input$fa_contrast)
       if (is.null(comparison)) {
         return(NULL)
       }
@@ -741,15 +666,10 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       go <- ngs$meta.go$graph
       scores <- ngs$meta.go$pathscore[, comparison]
 
-      dbg("[GO_table.RENDER] 1: len.scores = ", length(scores))
-
       scores <- scores[which(!is.na(scores) & !is.infinite(scores))]
       scores <- round(scores, digits = 3)
-      ## scores <- sort(scores, decreasing=TRUE)
       scores <- scores[order(-abs(scores))]
       go.term <- igraph::V(go)[names(scores)]$Term
-
-      dbg("[GO_table.RENDER] 2: len.scores = ", length(scores))
 
       ## get FC and q-value.  match with enrichment table
       gs.meta <- ngs$gset.meta$meta[[comparison]]
@@ -761,8 +681,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       qv <- apply(gs.meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE) ## meta-q
       fx <- gs.meta$meta.fx
 
-      dbg("[GO_table.RENDER] 2: dim(gs.meta) = ", paste(dim(gs.meta), collapse = "x"))
-
       go.term1 <- substring(go.term, 1, 80)
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
       dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
@@ -770,7 +688,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       dt$id <- wrapHyperLink(as.character(dt$id), id2) ## add link
 
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
-      numeric.cols
 
       DT::datatable(dt,
         rownames = FALSE, escape = c(-1, -2),
@@ -780,39 +697,29 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, ## scrollY = TRUE,
+          scrollX = TRUE,
           scrollY = tabH, scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
           background = color_from_middle(dt1[, "score"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
     })
 
-    ## normalize=1;maxterm=50;maxfc=10
     plotGOactmap <- function(score, go, normalize, maxterm, maxfc) {
       rownames(score) <- igraph::V(go)[rownames(score)]$Term
-
-      dbg("[plotGOactmap] 0: sum(isna(score)) = ", sum(is.na(score)))
-      dbg("[plotGOactmap] 0: min(score,na.rm=0) = ", min(score, na.rm = FALSE))
-      dbg("[plotGOactmap] 0: max(score,na.rm=0) = ", max(score, na.rm = FALSE))
-      dbg("[plotGOactmap] 0: min(score,na.rm=1) = ", min(score, na.rm = TRUE))
-      dbg("[plotGOactmap] 0: max(score,na.rm=1) = ", max(score, na.rm = TRUE))
 
       ## avoid errors!!!
       score[is.na(score) | is.infinite(score)] <- 0
       score[is.na(score)] <- 0
 
       ## reduce score matrix
-      ## score = head(score[order(-rowSums(abs(score))),],40)
       score <- score[head(order(-rowSums(score**2, na.rm = TRUE)), maxterm), , drop = FALSE] ## max number terms
       score <- score[, head(order(-colSums(score**2, na.rm = TRUE)), maxfc), drop = FALSE] ## max comparisons/FC
-      ## if(NCOL(score)==1) score <- cbind(score,score)
       score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
 
       ## normalize colums
@@ -835,7 +742,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         score <- score[order(-score[, 1]), 1, drop = FALSE]
       } else {
         ii <- hclust(d1)$order
-        ## ii <- order(-rowMeans(score))
         jj <- hclust(d2)$order
         score <- score[ii, jj, drop = FALSE]
       }
@@ -859,7 +765,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::req(ngs)
 
       if (is.null(ngs$meta.go)) {
-        dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
         return(NULL)
       }
 
@@ -879,12 +784,10 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::req(ngs)
 
       if (is.null(ngs$meta.go)) {
-        dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
         return(NULL)
       }
 
       score <- ngs$meta.go$pathscore
-      ## if(is.null(score)) return(NULL)
       go <- ngs$meta.go$graph
 
       plotGOactmap(
@@ -922,7 +825,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       res = 72,
       add.watermark = WATERMARK
     )
-    ## output <- attachModule(output, GO_network_module)
 
     GO_actmap.opts <- shiny::tagList(
       withTooltip(shiny::checkboxInput(ns("go_normalize"), "normalize activation matrix", FALSE), "Click to normalize the columns of the activation matrices.")
@@ -1004,11 +906,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       abline(h = 0, lty = 2)
 
       gset.name <- names(gsets)
-      if (0 && shownames) {
-        n0 <- sapply(gsets0[names(gsets)], length)
-        n1 <- sapply(gsets, length)
-        gset.name <- paste0(gset.name, " (", n1, "/", n0, ")")
-      }
       gset.name <- sapply(gset.name, function(s) shortstring(s, 48, dots = 0.5))
       mtext(gset.name,
         side = 1, at = 1:length(gsets),
@@ -1056,7 +953,6 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
             col = "grey35", line = 0.2
           )
         }
-        ## text(sample(jj,1), y0, m, pos=4, cex=0.5)    }
       }
     } ## end of firePlot()
 
@@ -1064,9 +960,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       {
         ngs <- inputData()
         shiny::req(ngs)
-        ## df <- getFilteredKeggTable()
 
-        cmp <- 1
         cmp <- input$fa_contrast
 
         sel <- "B-cell related"
@@ -1078,9 +972,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
           return(NULL)
         }
 
-        ## gsets <- GSETS[ COLLECTIONS[[sel]] ]
         gsets <- getGSETS(COLLECTIONS[[sel]])
-        ## gsets0 <- gsets0[ intersect( names(gsets0), names(zx)) ]
         shownames <- input$fire_shownames
         pgx.firePlot(ngs, cmp, gsets, shownames = shownames)
       },
