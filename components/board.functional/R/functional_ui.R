@@ -44,8 +44,10 @@ FunctionalUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          plotWidget(ns("kegg_graph")),
-          plotWidget(ns("kegg_actmap"))
+          #plotWidget(ns("kegg_graph")),
+          functional_plot_kegg_graph_ui(ns("kegg_graph")),
+          #plotWidget(ns("kegg_actmap"))
+          functional_plot_kegg_actmap_ui(ns("kegg_actmap"))
         ),
         div(
           class = "col-md-6",

@@ -60,8 +60,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     ## ================================================================================
     getKeggTable <- shiny::reactive({
       ngs <- inputData()
-      shiny::req(ngs)
-      shiny::req(input$fa_contrast)
+      shiny::req(ngs, input$fa_contrast)
 
       ## ----- get comparison
       comparison <- input$fa_contrast
@@ -249,92 +248,92 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
     lockBinding("geneannot.map", as.environment("package:pathview"))
 
-    kegg_graph.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      alertDataLoaded(session, ngs)
-      NULL.IMG <- list(src = "", contentType = "image/png")
-      if (is.null(ngs)) {
-        return(NULL.IMG)
-      }
-
-      comparison <- input$fa_contrast
-      if (is.null(comparison) || length(comparison) == 0) {
-        return(NULL.IMG)
-      }
-      if (comparison == "") {
-        return(NULL.IMG)
-      }
-
-      ## get fold-change vector
-      fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
-      pp <- rownames(ngs$gx.meta$meta[[comparison]])
-
-      if ("hgnc_symbol" %in% colnames(ngs$genes)) {
-        names(fc) <- ngs$genes[pp, "hgnc_symbol"]
-      } else {
-        names(fc) <- toupper(ngs$genes[pp, "gene_name"])
-      }
-      fc <- fc[order(-abs(fc))]
-      fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
-
-      ## get selected KEGG id
-      df <- getFilteredKeggTable()
-      if (is.null(df)) {
-        return(NULL.IMG)
-      }
-
-      sel.row <- kegg_table$rows_selected()
-      if (is.null(sel.row) || length(sel.row) == 0) {
-        return(NULL.IMG)
-      }
-      sel.row <- as.integer(sel.row)
-
-      pathway.id <- "04110" ## CELL CYCLE
-      pathway.name <- pw.genes <- "x"
-      if (is.null(sel.row) || length(sel.row) == 0) {
-        return(NULL.IMG)
-      }
-
-      if (!is.null(sel.row) && length(sel.row) > 0) {
-        pathway.id <- df[sel.row, "kegg.id"]
-        pathway.name <- df[sel.row, "pathway"]
-        pw.genes <- unlist(getGSETS(as.character(pathway.name)))
-      }
-
-      ## folder with predownloaded XML files
-      xml.dir <- file.path(FILES, "kegg-xml")
-      xml.dir <- normalizePath(xml.dir) ## absolute path
-
-      ## We temporarily switch the working directory to always readable
-      ## TMP folder
-      curwd <- getwd()
-      tmpdir <- tempdir()
-      setwd(tmpdir)
-      pv.out <- pathview::pathview(
-        gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
-        gene.annotpkg = "org.Hs.eg.db", species = "hsa",
-        out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
-        low = list(gene = "dodgerblue2", cpd = "purple"),
-        high = list(gene = "firebrick2", cpd = "yellow"),
-        kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
-      )
-      Sys.sleep(0.2) ## wait for graph
-
-      ## back to previous working folder
-      setwd(curwd)
-
-      outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-      if (!file.exists(outfile)) {
-        return(NULL.IMG)
-      }
-
-      list(
-        src = outfile,
-        contentType = "image/png",
-        width = "100%", height = "100%", ## actual size: 1040x800
-        alt = "pathview image"
-      )
-    })
+    #kegg_graph.RENDER <- shiny::reactive({
+    #  ngs <- inputData()
+    #  alertDataLoaded(session, ngs)
+    #  NULL.IMG <- list(src = "", contentType = "image/png")
+    #  if (is.null(ngs)) {
+    #    return(NULL.IMG)
+    #  }
+#
+    #  comparison <- input$fa_contrast
+    #  if (is.null(comparison) || length(comparison) == 0) {
+    #    return(NULL.IMG)
+    #  }
+    #  if (comparison == "") {
+    #    return(NULL.IMG)
+    #  }
+#
+    #  ## get fold-change vector
+    #  fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
+    #  pp <- rownames(ngs$gx.meta$meta[[comparison]])
+#
+    #  if ("hgnc_symbol" %in% colnames(ngs$genes)) {
+    #    names(fc) <- ngs$genes[pp, "hgnc_symbol"]
+    #  } else {
+    #    names(fc) <- toupper(ngs$genes[pp, "gene_name"])
+    #  }
+    #  fc <- fc[order(-abs(fc))]
+    #  fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
+#
+    #  ## get selected KEGG id
+    #  df <- getFilteredKeggTable()
+    #  if (is.null(df)) {
+    #    return(NULL.IMG)
+    #  }
+#
+    #  sel.row <- kegg_table$rows_selected()
+    #  if (is.null(sel.row) || length(sel.row) == 0) {
+    #    return(NULL.IMG)
+    #  }
+    #  sel.row <- as.integer(sel.row)
+#
+    #  pathway.id <- "04110" ## CELL CYCLE
+    #  pathway.name <- pw.genes <- "x"
+    #  if (is.null(sel.row) || length(sel.row) == 0) {
+    #    return(NULL.IMG)
+    #  }
+#
+    #  if (!is.null(sel.row) && length(sel.row) > 0) {
+    #    pathway.id <- df[sel.row, "kegg.id"]
+    #    pathway.name <- df[sel.row, "pathway"]
+    #    pw.genes <- unlist(getGSETS(as.character(pathway.name)))
+    #  }
+#
+    #  ## folder with predownloaded XML files
+    #  xml.dir <- file.path(FILES, "kegg-xml")
+    #  xml.dir <- normalizePath(xml.dir) ## absolute path
+#
+    #  ## We temporarily switch the working directory to always readable
+    #  ## TMP folder
+    #  curwd <- getwd()
+    #  tmpdir <- tempdir()
+    #  setwd(tmpdir)
+    #  pv.out <- pathview::pathview(
+    #    gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
+    #    gene.annotpkg = "org.Hs.eg.db", species = "hsa",
+    #    out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
+    #    low = list(gene = "dodgerblue2", cpd = "purple"),
+    #    high = list(gene = "firebrick2", cpd = "yellow"),
+    #    kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
+    #  )
+    #  Sys.sleep(0.2) ## wait for graph
+#
+    #  ## back to previous working folder
+    #  setwd(curwd)
+#
+    #  outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
+    #  if (!file.exists(outfile)) {
+    #    return(NULL.IMG)
+    #  }
+#
+    #  list(
+    #    src = outfile,
+    #    contentType = "image/png",
+    #    width = "100%", height = "100%", ## actual size: 1040x800
+    #    alt = "pathview image"
+    #  )
+    #})
 
     kegg_table.RENDER <- shiny::reactive({
       ngs <- inputData()
@@ -384,109 +383,120 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     })
 
 
-    normalize <- 1
-    nterms <- 40
-    nfc <- 10
-    plotKEGGactmap <- function(meta, df, normalize, nterms, nfc) {
-      fx <- sapply(meta, function(x) x$meta.fx)
-      qv <- sapply(meta, function(x) x$meta.q)
-      rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+    #normalize <- 1
+    #nterms <- 40
+    #nfc <- 10
+    #plotKEGGactmap <- function(meta, df, normalize, nterms, nfc) {
+    #  fx <- sapply(meta, function(x) x$meta.fx)
+    #  qv <- sapply(meta, function(x) x$meta.q)
+    #  rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+#
+    #  kk <- rownames(fx)
+    #  kk <- as.character(df$pathway)
+#
+    #  if (length(kk) < 3) {
+    #    return(NULL)
+    #  }
+#
+    #  if (mean(is.na(qv)) < 0.01) {
+    #    score <- fx[kk, , drop = FALSE] * (1 - qv[kk, , drop = FALSE])**2
+    #  } else {
+    #    score <- fx[kk, , drop = FALSE]
+    #  }
+#
+    #  score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
+    #  score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
+    #  score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+    #  d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
+    #  d2 <- as.dist(1 - cor(score, use = "pairwise"))
+    #  d1[is.na(d1)] <- 1
+    #  d2[is.na(d2)] <- 1
+    #  ii <- 1:nrow(score)
+    #  jj <- 1:ncol(score)
+    #  if (NCOL(score) == 1) {
+    #    score <- score[order(-score[, 1]), 1, drop = FALSE]
+    #  } else {
+    #    ii <- hclust(d1)$order
+    #    jj <- hclust(d2)$order
+    #    score <- score[ii, jj, drop = FALSE]
+    #  }
+    #  rownames(score) <- substring(rownames(score), 1, 50)
+#
+    #  score2 <- score
+    #  if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
+    #  score2 <- sign(score2) * abs(score2 / max(abs(score2)))**3 ## fudging
+    #  rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$", "",
+    #    rownames(score2),
+    #    ignore.case = TRUE
+    #  ))
+    #  rownames(score2) <- substring(rownames(score2), 1, 40)
+    #  colnames(score2) <- shortstring(colnames(score2), 30)
+    #  colnames(score2) <- paste0(colnames(score2), " ")
+#
+    #  bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
+    #  par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
+#
+    #  corrplot::corrplot(score2,
+    #    is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
+    #    tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+    #    mar = c(bmar, 0, 0.5, 0)
+    #  )
+    #}
 
-      kk <- rownames(fx)
-      kk <- as.character(df$pathway)
+    #kegg_actmap.RENDER <- shiny::reactive({
+    #  ngs <- inputData()
+    #  shiny::req(ngs)
+    #  df <- getKeggTable()
+    #  if (is.null(df) || nrow(df) == 0) {
+    #    return(NULL)
+    #  }
+    #  meta <- ngs$gset.meta$meta
+    #  plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms = 50, nfc = 25)
+    #})
+#
+    #kegg_actmap.RENDER2 <- shiny::reactive({
+    #  ngs <- inputData()
+    #  shiny::req(ngs)
+    #  df <- getKeggTable()
+    #  if (is.null(df) || nrow(df) == 0) {
+    #    return(NULL)
+    #  }
+    #  meta <- ngs$gset.meta$meta
+    #  plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms = 50, nfc = 100)
+    #})
 
-      if (length(kk) < 3) {
-        return(NULL)
-      }
+    #kegg_info1 <- strwrap("<strong>KEGG pathways</strong> are a collection of
+    #manually curated pathways representing the current knowledge of molecular
+    #interactions, reactions and relation networks as pathway maps. In the
+    #pathway map, genes are colored according to their upregulation (red) or
+    #downregulation (blue) in the contrast profile. Each pathway is scored for
+    #the selected contrast profile and reported in the table below.")
 
-      if (mean(is.na(qv)) < 0.01) {
-        score <- fx[kk, , drop = FALSE] * (1 - qv[kk, , drop = FALSE])**2
-      } else {
-        score <- fx[kk, , drop = FALSE]
-      }
+    #kegg_graph.opts <- shiny::tagList()
 
-      score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
-      score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
-      score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
-      d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
-      d2 <- as.dist(1 - cor(score, use = "pairwise"))
-      d1[is.na(d1)] <- 1
-      d2[is.na(d2)] <- 1
-      ii <- 1:nrow(score)
-      jj <- 1:ncol(score)
-      if (NCOL(score) == 1) {
-        score <- score[order(-score[, 1]), 1, drop = FALSE]
-      } else {
-        ii <- hclust(d1)$order
-        jj <- hclust(d2)$order
-        score <- score[ii, jj, drop = FALSE]
-      }
-      rownames(score) <- substring(rownames(score), 1, 50)
+    #shiny::callModule(
+    #  plotModule,
+    #  id = "kegg_graph", label = "a",
+    #  title = "Kegg pathway map",
+    #  func = kegg_graph.RENDER,
+    #  plotlib = "image",
+    #  options = kegg_graph.opts,
+    #  download.fmt = "png", just.info = TRUE,
+    #  info.text = kegg_info1, info.width = "350px",
+    #  height = c(0.53 * rowH, 700), width = c("100%", 1280),
+    #  add.watermark = WATERMARK
+    #)
+    functional_plot_kegg_graph_server("kegg_graph",
+                                      inputData,
+                                      getFilteredKeggTable,
+                                      kegg_table,
+                                      reactive(input$fa_contrast))
 
-      score2 <- score
-      if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
-      score2 <- sign(score2) * abs(score2 / max(abs(score2)))**3 ## fudging
-      rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$", "",
-        rownames(score2),
-        ignore.case = TRUE
-      ))
-      rownames(score2) <- substring(rownames(score2), 1, 40)
-      colnames(score2) <- shortstring(colnames(score2), 30)
-      colnames(score2) <- paste0(colnames(score2), " ")
+    functional_plot_kegg_actmap_server("kegg_actmap",
+                                       inputData,
+                                       getKeggTable,
+                                       reactive(input$kegg_normalize))
 
-      bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
-      par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
-
-      corrplot::corrplot(score2,
-        is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
-        tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
-        mar = c(bmar, 0, 0.5, 0)
-      )
-    }
-
-    kegg_actmap.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-      df <- getKeggTable()
-      if (is.null(df) || nrow(df) == 0) {
-        return(NULL)
-      }
-      meta <- ngs$gset.meta$meta
-      plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms = 50, nfc = 25)
-    })
-
-    kegg_actmap.RENDER2 <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-      df <- getKeggTable()
-      if (is.null(df) || nrow(df) == 0) {
-        return(NULL)
-      }
-      meta <- ngs$gset.meta$meta
-      plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms = 50, nfc = 100)
-    })
-
-    kegg_info1 <- strwrap("<strong>KEGG pathways</strong> are a collection of
-    manually curated pathways representing the current knowledge of molecular
-    interactions, reactions and relation networks as pathway maps. In the
-    pathway map, genes are colored according to their upregulation (red) or
-    downregulation (blue) in the contrast profile. Each pathway is scored for
-    the selected contrast profile and reported in the table below.")
-
-    kegg_graph.opts <- shiny::tagList()
-
-    shiny::callModule(
-      plotModule,
-      id = "kegg_graph", label = "a",
-      title = "Kegg pathway map",
-      func = kegg_graph.RENDER,
-      plotlib = "image",
-      options = kegg_graph.opts,
-      download.fmt = "png", just.info = TRUE,
-      info.text = kegg_info1, info.width = "350px",
-      height = c(0.53 * rowH, 700), width = c("100%", 1280),
-      add.watermark = WATERMARK
-    )
 
     kegg_table_info <- "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
     kegg_table_opts <- shiny::tagList()
@@ -502,22 +512,22 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       height = c(270, 700)
     )
 
-    kegg_actmap.opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("kegg_normalize"), "normalize activation matrix", FALSE), "Click to normalize the columns of the activation matrices.")
-    )
-    shiny::callModule(
-      plotModule,
-      id = "kegg_actmap",
-      func = kegg_actmap.RENDER,
-      func2 = kegg_actmap.RENDER2,
-      title = "Activation matrix", label = "c",
-      info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
-      options = kegg_actmap.opts,
-      pdf.height = 9, pdf.width = 9,
-      height = c(rowH, 750), width = c("100%", 1400),
-      res = 72,
-      add.watermark = WATERMARK
-    )
+    #kegg_actmap.opts <- shiny::tagList(
+    #  withTooltip(shiny::checkboxInput(ns("kegg_normalize"), "normalize activation matrix", FALSE), "Click to normalize the columns of the activation matrices.")
+    #)
+    #shiny::callModule(
+    #  plotModule,
+    #  id = "kegg_actmap",
+    #  func = kegg_actmap.RENDER,
+    #  func2 = kegg_actmap.RENDER2,
+    #  title = "Activation matrix", label = "c",
+    #  info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    #  options = kegg_actmap.opts,
+    #  pdf.height = 9, pdf.width = 9,
+    #  height = c(rowH, 750), width = c("100%", 1400),
+    #  res = 72,
+    #  add.watermark = WATERMARK
+    #)
 
 
 

@@ -13,25 +13,32 @@
 #'
 #' @export
 functional_plot_kegg_actmap_ui <- function(id,
-                                          label = "",
-                                          height = c(600, 800)) {
+                                           label = "",
+                                           rowH = 660) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Variable importance.</b>. An importance score for each
-  variable is calculated using multiple machine learning algorithms, including
-  LASSO, elastic nets, random forests, and extreme gradient boosting. By
-  combining several methods, the platform aims to select the best possible
-  biomarkers. The top features are plotted according to cumulative ranking by
-  the algorithms.")
+  info_text <- strwrap("The <strong>KEGG activation matrix</strong> visualizes
+                       the activation levels of pathways (or pathway keywords)
+                       across multiple contrast profiles. This facilitates to
+                       quickly see and detect the similarities of certain
+                       pathways between contrasts. The size of the circles
+                       correspond to their relative activation, and are colored
+                       according to their upregulation (red) or downregulation
+                       (blue) in the contrast profile.")
+
+  plot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("kegg_normalize"),
+                                     "normalize activation matrix",
+                                     FALSE),
+                "Click to normalize the columns of the activation matrices.")
+  )
 
   PlotModuleUI(ns("plot"),
-               title = "Variable importance",
+               title = "Activation matrix",
                label = label,
-               plotlib = "base",
+               plotlib = "image",
                info.text = info_text,
-               options = NULL,
-               download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               options = plot_opts,
+               height = c(rowH, 750), width = c("100%", 1400)
   )
 }
 
@@ -44,50 +51,115 @@ functional_plot_kegg_actmap_ui <- function(id,
 #' @return
 #' @export
 functional_plot_kegg_actmap_server <- function(id,
-                                              calcVariableImportance,
-                                              watermark = FALSE) {
+                                               inputData,
+                                               getKeggTable,
+                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
+      plotKEGGactmap <- function(meta, df,
+                                 normalize = 1, nterms = 40, nfc = 10) {
+        fx <- sapply(meta, function(x) x$meta.fx)
+        qv <- sapply(meta, function(x) x$meta.q)
+        rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+
+        kk <- rownames(fx)
+        kk <- as.character(df$pathway)
+
+        if (length(kk) < 3) {
+          return(NULL)
+        }
+
+        if (mean(is.na(qv)) < 0.01) {
+          score <- fx[kk, , drop = FALSE] * (1 - qv[kk, , drop = FALSE])**2
+        } else {
+          score <- fx[kk, , drop = FALSE]
+        }
+
+        score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
+        score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
+        score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+        d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
+        d2 <- as.dist(1 - cor(score, use = "pairwise"))
+        d1[is.na(d1)] <- 1
+        d2[is.na(d2)] <- 1
+        ii <- 1:nrow(score)
+        jj <- 1:ncol(score)
+        if (NCOL(score) == 1) {
+          score <- score[order(-score[, 1]), 1, drop = FALSE]
+        } else {
+          ii <- hclust(d1)$order
+          jj <- hclust(d2)$order
+          score <- score[ii, jj, drop = FALSE]
+        }
+        rownames(score) <- substring(rownames(score), 1, 50)
+
+        score2 <- score
+        if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
+        score2 <- sign(score2) * abs(score2 / max(abs(score2)))**3 ## fudging
+        rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$", "",
+                                         rownames(score2),
+                                         ignore.case = TRUE
+        ))
+        rownames(score2) <- substring(rownames(score2), 1, 40)
+        colnames(score2) <- shortstring(colnames(score2), 30)
+        colnames(score2) <- paste0(colnames(score2), " ")
+
+        bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
+        par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
+
+        corrplot::corrplot(score2,
+                           is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
+                           tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+                           mar = c(bmar, 0, 0.5, 0)
+        )
+      }
+
       plot_data <- shiny::reactive({
-        res <- calcVariableImportance()
-        shiny::req(res)
+        pgx <- inputData()
+        df <- getKeggTable()
 
         res <- list(
-          R = res$R
+          pgx = pgx,
+          df = df
         )
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot_RENDER <- shiny::reactive({
         res <- plot_data()
-        shiny::req(res)
+        pgx <- res$pgx
+        df <- res$df
 
-        R <- res$R
-        R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
-        R <- pmax(R, 0.05)
+        if (is.null(df) || nrow(df) == 0) {
+          return(NULL)
+        }
+        meta <- pgx$gset.meta$meta
+        plotKEGGactmap(meta, df, normalize = input$kegg_normalize,
+                       nterms = 50, nfc = 25)
+      })
 
-        par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 4, 0, 4))
-        R.top <- head(R, 40)
-        barplot(t(R.top),
-                las = 3, horiz = FALSE,
-                cex.names = 0.75, ylab = "cumulative importance"
-        )
-        klr <- grey.colors(ncol(R))
-        legend("topright",
-               legend = rev(colnames(R)), fill = rev(klr),
-               cex = 0.8, y.intersp = 0.8
-        )
+      plot_RENDER2 <- shiny::reactive({
+        res <- plot_data()
+        pgx <- res$pgx
+        df <- res$df
+
+        if (is.null(df) || nrow(df) == 0) {
+          return(NULL)
+        }
+        meta <- pgx$gset.meta$meta
+        plotKEGGactmap(meta, df, normalize = input$kegg_normalize,
+                       nterms = 50, nfc = 100)
       })
 
       PlotModuleServer(
         "plot",
-        plotlib = "base", # does not use plotly
-        func = plot.RENDER,
-        func2 = plot.RENDER, # no separate modal plot render
+        plotlib = "image",
+        func = plot_RENDER,
+        func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(78, 235),
-        pdf.width = 10, pdf.height = 5,
+        res = 72,
+        pdf.height = 9, pdf.width = 9,
         add.watermark = watermark
       )
     } ## end of moduleServer

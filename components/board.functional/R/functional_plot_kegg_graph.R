@@ -13,25 +13,26 @@
 #'
 #' @export
 functional_plot_kegg_graph_ui <- function(id,
-                                         label = "",
-                                         height = c(600, 800)) {
+                                          label = "",
+                                          rowH = 660) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Variable importance.</b>. An importance score for each
-  variable is calculated using multiple machine learning algorithms, including
-  LASSO, elastic nets, random forests, and extreme gradient boosting. By
-  combining several methods, the platform aims to select the best possible
-  biomarkers. The top features are plotted according to cumulative ranking by
-  the algorithms.")
+  info_text <- strwrap("<strong>KEGG pathways</strong> are a collection of
+    manually curated pathways representing the current knowledge of molecular
+    interactions, reactions and relation networks as pathway maps. In the
+    pathway map, genes are colored according to their upregulation (red) or
+    downregulation (blue) in the contrast profile. Each pathway is scored for
+    the selected contrast profile and reported in the table below.")
 
   PlotModuleUI(ns("plot"),
-               title = "Variable importance",
+               title = "Kegg pathway map",
                label = label,
-               plotlib = "base",
+               plotlib = "image",
                info.text = info_text,
+               info.width = "350px",
                options = NULL,
-               download.fmt = c("png", "pdf", "csv"),
-               width = c("auto", "100%"),
-               height = height
+               download.fmt = "png",
+               height = c(0.53 * rowH, 700),
+               width = c("100%", 1280),
   )
 }
 
@@ -44,50 +45,127 @@ functional_plot_kegg_graph_ui <- function(id,
 #' @return
 #' @export
 functional_plot_kegg_graph_server <- function(id,
-                                             calcVariableImportance,
-                                             watermark = FALSE) {
+                                              inputData,
+                                              getFilteredKeggTable,
+                                              kegg_table,
+                                              fa_contrast,
+                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        res <- calcVariableImportance()
-        shiny::req(res)
+        pgx <- inputData()
+        df <- getFilteredKeggTable()
+        kegg_table <- kegg_table()
+        fa_contrast <- fa_contrast()
 
         res <- list(
-          R = res$R
+          pgx = pgx,
+          df = df,
+          kegg_table = kegg_table,
+          fa_contrast = fa_contrast
         )
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot_RENDER <- shiny::reactive({
         res <- plot_data()
-        shiny::req(res)
+        pgx <- res$pgx
+        df <- res$df
+        fa_contrast <- res$fa_contrast
+        kegg_table <- res$kegg_table
 
-        R <- res$R
-        R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
-        R <- pmax(R, 0.05)
+        ###############
 
-        par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 4, 0, 4))
-        R.top <- head(R, 40)
-        barplot(t(R.top),
-                las = 3, horiz = FALSE,
-                cex.names = 0.75, ylab = "cumulative importance"
+        NULL.IMG <- list(src = "", contentType = "image/png")
+        if (is.null(pgx)) {
+          return(NULL.IMG)
+        }
+
+        comparison <- fa_contrast
+        if (is.null(comparison) || length(comparison) == 0) {
+          return(NULL.IMG)
+        }
+        if (comparison == "") {
+          return(NULL.IMG)
+        }
+
+        ## get fold-change vector
+        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
+        pp <- rownames(pgx$gx.meta$meta[[comparison]])
+
+        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
+          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
+        } else {
+          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
+        }
+        fc <- fc[order(-abs(fc))]
+        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
+
+        ## get selected KEGG id
+        #df <- getFilteredKeggTable()
+        if (is.null(df)) {
+          return(NULL.IMG)
+        }
+
+        sel.row <- kegg_table$rows_selected()
+        if (is.null(sel.row) || length(sel.row) == 0) {
+          return(NULL.IMG)
+        }
+        sel.row <- as.integer(sel.row)
+
+        pathway.id <- "04110" ## CELL CYCLE
+        pathway.name <- pw.genes <- "x"
+        if (is.null(sel.row) || length(sel.row) == 0) {
+          return(NULL.IMG)
+        }
+
+        if (!is.null(sel.row) && length(sel.row) > 0) {
+          pathway.id <- df[sel.row, "kegg.id"]
+          pathway.name <- df[sel.row, "pathway"]
+          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
+        }
+
+        ## folder with predownloaded XML files
+        xml.dir <- file.path(FILES, "kegg-xml")
+        xml.dir <- normalizePath(xml.dir) ## absolute path
+
+        ## We temporarily switch the working directory to always readable
+        ## TMP folder
+        curwd <- getwd()
+        tmpdir <- tempdir()
+        setwd(tmpdir)
+        pv.out <- pathview::pathview(
+          gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
+          gene.annotpkg = "org.Hs.eg.db", species = "hsa",
+          out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
+          low = list(gene = "dodgerblue2", cpd = "purple"),
+          high = list(gene = "firebrick2", cpd = "yellow"),
+          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
         )
-        klr <- grey.colors(ncol(R))
-        legend("topright",
-               legend = rev(colnames(R)), fill = rev(klr),
-               cex = 0.8, y.intersp = 0.8
+        Sys.sleep(0.2) ## wait for graph
+
+        ## back to previous working folder
+        setwd(curwd)
+
+        outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
+        if (!file.exists(outfile)) {
+          return(NULL.IMG)
+        }
+
+        list(
+          src = outfile,
+          contentType = "image/png",
+          width = "100%", height = "100%", ## actual size: 1040x800
+          alt = "pathview image"
         )
       })
 
       PlotModuleServer(
         "plot",
-        plotlib = "base", # does not use plotly
-        func = plot.RENDER,
-        func2 = plot.RENDER, # no separate modal plot render
+        plotlib = "image",
+        func = plot_RENDER,
+        func2 = plot_RENDER,
         csvFunc = plot_data,
-        res = c(78, 235),
-        pdf.width = 10, pdf.height = 5,
         add.watermark = watermark
       )
     } ## end of moduleServer
