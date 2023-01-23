@@ -328,7 +328,8 @@ ExpressionBoard <- function(id, inputData) {
 
     expression_plot_topfoldchange_server(
       id = "plots_topfoldchange",
-      inputData = inputData,
+      comp = shiny::reactive(input$gx_contrast),
+      ngs = inputData,
       sel = genetable$rows_selected,
       res = filteredDiffExprTable,
       watermark = FALSE
@@ -636,54 +637,54 @@ ExpressionBoard <- function(id, inputData) {
     #
     #     plots_topfoldchange.RENDER <- shiny::reactive({
     #
-    #         ngs = inputData()
-    #         shiny::req(ngs)
-    #
-    #         ## get table
-    #         ##sel=1;pp=rownames(ngs$X)[1]
-    #         sel = genetable$rows_selected()
-    #         if(is.null(sel) || length(sel)==0) {
-    #             frame()
-    #             text(0.5,0.5, "No gene selected", col='black')
-    #             return(NULL)
-    #         }
-    #
-    #         res = filteredDiffExprTable()
-    #         if(is.null(res) || is.null(sel)) return(NULL)
-    #         psel <- rownames(res)[sel]
-    #         gene <- ngs$genes[psel,"gene_name"]
-    #
-    #         ##fc <- res$meta.fx
-    #         comp=1
-    #         comp = input$gx_contrast
-    #         if(is.null(comp) || length(comp)==0) return(NULL)
-    #         fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
-    #         top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
-    #         top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
-    #         fc.top <- c(fc[top.up], fc[top.dn])
-    #         fc.top <- fc.top[head(order(-abs(fc.top)),15)]
-    #         fc.top <- sort(fc.top)
-    #         fc.top <- head(c(fc.top, rep(NA,99)),15)
-    #
-    #         klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
-    #         ##klr.pal <- BLUERED(16)[c(3,14)]
-    #         klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
-    #
-    #         par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
-    #         par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
-    #         nch <- max(nchar(names(fc.top)))
-    #         m1 <- ifelse(nch > 12, 12, 8)
-    #         m1 <- ifelse(nch > 30, 16, m1)
-    #
-    #         ##par( mar=c(4,m1,2,0.5) )
-    #         par( mar=c(3.2,m1-0.5,1,1) )
-    #         cex1 <- 0.9
-    #         nn <- sum(!is.na(fc.top))
-    #         if(nn>15) cex1 <- 0.8
-    #         barplot(fc.top, col=klr, horiz=TRUE, las=1,
-    #                 xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
-    #                 cex.names=cex1, xlab="fold change (log2)")
-    #         title(gene, cex.main=1, line=-0.15)
+            # ngs = inputData()
+            # shiny::req(ngs)
+            #
+            # ## get table
+            # ##sel=1;pp=rownames(ngs$X)[1]
+            # sel = genetable$rows_selected()
+            # if(is.null(sel) || length(sel)==0) {
+            #     frame()
+            #     text(0.5,0.5, "No gene selected", col='black')
+            #     return(NULL)
+            # }
+            #
+            # res = filteredDiffExprTable()
+            # if(is.null(res) || is.null(sel)) return(NULL)
+            # psel <- rownames(res)[sel]
+            # gene <- ngs$genes[psel,"gene_name"]
+            #
+            # ##fc <- res$meta.fx
+            # comp=1
+            # comp = input$gx_contrast
+            # if(is.null(comp) || length(comp)==0) return(NULL)
+            # fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
+            # top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
+            # top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
+            # fc.top <- c(fc[top.up], fc[top.dn])
+            # fc.top <- fc.top[head(order(-abs(fc.top)),15)]
+            # fc.top <- sort(fc.top)
+            # fc.top <- head(c(fc.top, rep(NA,99)),15)
+            #
+            # klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
+            # ##klr.pal <- BLUERED(16)[c(3,14)]
+            # klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
+            #
+            # par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
+            # par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
+            # nch <- max(nchar(names(fc.top)))
+            # m1 <- ifelse(nch > 12, 12, 8)
+            # m1 <- ifelse(nch > 30, 16, m1)
+            #
+            # ##par( mar=c(4,m1,2,0.5) )
+            # par( mar=c(3.2,m1-0.5,1,1) )
+            # cex1 <- 0.9
+            # nn <- sum(!is.na(fc.top))
+            # if(nn>15) cex1 <- 0.8
+            # barplot(fc.top, col=klr, horiz=TRUE, las=1,
+            #         xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
+            #         cex.names=cex1, xlab="fold change (log2)")
+            # title(gene, cex.main=1, line=-0.15)
     #
     #     })
     #

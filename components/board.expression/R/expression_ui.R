@@ -107,7 +107,7 @@ ExpressionUI <- function(id) {
             div(
               class = "col-md-3",
               expression_plot_topfoldchange_ui(
-                id = "plots_topfoldchange",
+                id = ns("plots_topfoldchange"),
                 label = "D",
                 height = c(imgH, imgH),
                 width = c("auto", imgH)

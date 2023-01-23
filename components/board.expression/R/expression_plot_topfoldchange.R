@@ -18,10 +18,6 @@ expression_plot_topfoldchange_ui <- function(id,
                                              height,
                                              width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    actionButton(ns("button1"), "some action")
-  )
-
   info_text <- "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
   PlotModuleUI(ns("pltmod"),
@@ -29,7 +25,6 @@ expression_plot_topfoldchange_ui <- function(id,
     label = label,
     plotlib = "base",
     info.text = info_text,
-    options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -41,7 +36,8 @@ expression_plot_topfoldchange_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param inputData
+#' @param comp
+#' @param ngs
 #' @param sel
 #' @param res
 #' @param watermark
@@ -50,7 +46,8 @@ expression_plot_topfoldchange_ui <- function(id,
 #'
 #' @export
 expression_plot_topfoldchange_server <- function(id,
-                                                 inputData,
+                                                 comp,
+                                                 ngs,
                                                  sel,
                                                  res,
                                                  watermark = FALSE) {
@@ -58,19 +55,19 @@ expression_plot_topfoldchange_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
 
-      ## get table
-      ## sel=1;pp=rownames(ngs$X)[1]
+      comp <- comp() #input$gx_contrast
+      ngs <- ngs()
       sel <- sel()
+      res <- res()
+
       if (is.null(sel) || length(sel) == 0) {
         frame()
         text(0.5, 0.5, "No gene selected", col = "black")
         return(NULL)
       }
 
-      res <- res()
+
       if (is.null(res) || is.null(sel)) {
         return(NULL)
       }
@@ -78,8 +75,7 @@ expression_plot_topfoldchange_server <- function(id,
       gene <- ngs$genes[psel, "gene_name"]
 
       ## fc <- res$meta.fx
-      comp <- 1
-      comp <- input$gx_contrast
+
       if (is.null(comp) || length(comp) == 0) {
         return(NULL)
       }
@@ -95,11 +91,11 @@ expression_plot_topfoldchange_server <- function(id,
       ## klr.pal <- BLUERED(16)[c(3,14)]
       klr <- klr.pal[1 + 1 * (sign(fc.top) < 0)]
 
-      return(
+      return(list(
         fc.top = fc.top,
         klr = klr,
         gene = gene
-      )
+      ))
     })
 
     plotly.RENDER <- function() {
