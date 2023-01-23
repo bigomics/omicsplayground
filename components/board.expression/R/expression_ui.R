@@ -67,6 +67,7 @@ ExpressionUI <- function(id) {
 
   fullH <- 800 ## full height of page
   rowH <- 340 ## full height of page
+  imgH <- 340 ## height of images
 
   tagList(
     div(
@@ -81,16 +82,16 @@ ExpressionUI <- function(id) {
               class = "col-md-3",
               expression_plot_volcano_ui(ns("plots_volcano"),
                 label = "A",
-                height = c(0.45 * fullH, 700),
-                width = c("auto", 1200)
+                height = c(imgH, imgH),
+                width = c("auto", imgH)
               ),
             ),
             div(
               class = "col-md-3",
               expression_plot_maplot_ui(ns("plots_maplot"),
                 label = "B",
-                height = c(0.45 * fullH, 700),
-                width = c("auto", 1200)
+                height = c(imgH, imgH),
+                width = c("auto", imgH)
               ),
             ),
             div(
@@ -98,8 +99,8 @@ ExpressionUI <- function(id) {
               expression_plot_boxplot_ui(
                 id = "plots_boxplot",
                 label = "C",
-                height = c(0.45 * fullH, 700),
-                width = c("auto", 1200)
+                height = c(imgH, imgH),
+                width = c("auto", imgH)
               ),
             ),
             div(
@@ -107,8 +108,8 @@ ExpressionUI <- function(id) {
               expression_plot_topfoldchange_ui(
                 id = "plots_topfoldchange",
                 label = "D",
-                height = c(0.45 * fullH, 700),
-                width = c("auto", 1200)
+                height = c(imgH, imgH),
+                width = c("auto", imgH)
               ),
             )
           ),
