@@ -316,8 +316,11 @@ ExpressionBoard <- function(id, inputData) {
     )
 
     expression_plot_boxplot_server(
-      id = "plots_barplot",
-      inputData = inputData,
+      id = "plots_boxplot",
+      comp = shiny::reactive(input$gx_contrast),
+      grouped = shiny::reactive(input$boxplot_grouped),
+      logscale = shiny::reactive(input$boxplot_logscale),
+      ngs = inputData,
       sel = genetable$rows_selected,
       res = filteredDiffExprTable,
       watermark = FALSE

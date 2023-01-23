@@ -88,7 +88,8 @@ ExpressionUI <- function(id) {
             ),
             div(
               class = "col-md-3",
-              expression_plot_maplot_ui(ns("plots_maplot"),
+              expression_plot_maplot_ui(
+                id = ns("plots_maplot"),
                 label = "B",
                 height = c(imgH, imgH),
                 width = c("auto", imgH)
@@ -97,7 +98,7 @@ ExpressionUI <- function(id) {
             div(
               class = "col-md-3",
               expression_plot_boxplot_ui(
-                id = "plots_boxplot",
+                id = ns("plots_boxplot"),
                 label = "C",
                 height = c(imgH, imgH),
                 width = c("auto", imgH)
