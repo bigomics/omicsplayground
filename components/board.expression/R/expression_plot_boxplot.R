@@ -62,8 +62,6 @@ expression_plot_boxplot_ui <- function(id,
 #' @export
 expression_plot_boxplot_server <- function(id,
                                            comp,
-                                           grouped,
-                                           logscale,
                                            ngs,
                                            sel,
                                            res,
@@ -74,8 +72,8 @@ expression_plot_boxplot_server <- function(id,
     plot_data <- shiny::reactive({
 
       comp <- comp() #input$gx_contrast
-      grouped <- grouped()  #input$boxplot_grouped
-      logscale <- logscale() #input$boxplot_logscale
+      grouped <- input$boxplot_grouped
+      logscale <- input$boxplot_logscale
       ngs <- ngs()
       sel <- sel()
       res <- res()
