@@ -33,10 +33,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     <center><iframe width='500' height='333'
     src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
     frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-    gyroscope; picture-in-picture' allowfullscreen></iframe></center>
-")
-
-
+    gyroscope; picture-in-picture' allowfullscreen></iframe></center>")
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -59,11 +56,9 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
 
-
     ## ================================================================================
     ## KEGG pathways
     ## ================================================================================
-
     getKeggTable <- shiny::reactive({
       ngs <- inputData()
       shiny::req(ngs)
