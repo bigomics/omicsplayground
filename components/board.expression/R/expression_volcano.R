@@ -43,10 +43,10 @@ expression_plot_volcano_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param pgx_fdr
-#' @param pgx_contrast
-#' @param pgx_lfc
-#' @param pgx_features
+#' @param comp1
+#' @param fdr
+#' @param lfc
+#' @param features
 #' @param res
 #' @param sel1
 #' @param df1
@@ -56,38 +56,39 @@ expression_plot_volcano_ui <- function(id,
 #'
 #' @export
 expression_plot_volcano_server <- function(id,
-                                           pgx_fdr = 0.1,
-                                           pgx_contrast,
-                                           pgx_lfc = 1.0,
-                                           pgx_features,
+                                           comp1,
+                                           fdr,
+                                           lfc,
+                                           features,
                                            res,
                                            sel1,
                                            df1,
                                            sel2,
                                            df2,
-                                           fam.genes,
                                            watermark = FALSE) {
-  moduleServer(id, function(input, output, session, watermark) {
+  moduleServer(id, function(input, output, session) {
 
-    # calculate required inputs for plotting
-    serverSideComputation <- function(pgx_fdr,
-                                      pgx_contrast,
-                                      pgx_lfc,
-                                      pgx_features,
-                                      res,
-                                      sel1,
-                                      df1,
-                                      sel2,
-                                      df2,
-                                      fam.genes) {
-      comp1 <- pgx_contrast
-      # alertDataLoaded(session,gx)
-      # res <- res()
-      fdr <- as.numeric(pgx_fdr)
+    # reactive function listening for changes in input
+    plot_data <- shiny::reactive({
+      # calculate required inputs for plotting
+
+
+      comp1 = comp1()
+      fdr = as.numeric(fdr())
+      lfc = as.numeric(lfc())
+      features = features()
+      res = res()
+      sel1= sel1()
+      df1 = df1()
+      sel2 = sel2()
+      df2 = df2()
+
+      # comp1 <- input$gx_contrast()
+      # fdr <- as.numeric(input$gx_fdr())
       # res = fullDiffExprTable()
-      lfc <- as.numeric(pgx_lfc)
+      # lfc <- as.numeric(input$gx_lfc())
       fam.genes <- res$gene_name
-      ## fam.genes = unique(unlist(pgx$families[input$pgx_features]))
+      ## fam.genes = unique(unlist(gx$families[features]))
 
       if (is.null(res)) {
         return(NULL)
@@ -95,12 +96,12 @@ expression_plot_volcano_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      if (is.null(pgx_features)) {
+      if (is.null(features)) {
         return(NULL)
       }
-      if (pgx_features != "<all>") {
-        ## gset <- GSETS[input$pgx_features]
-        gset <- getGSETS(pgx_features)
+      if (features != "<all>") {
+        ## gset <- GSETS[features]
+        gset <- getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
 
@@ -165,22 +166,6 @@ expression_plot_volcano_server <- function(id,
         fdr = fdr,
         lfc = lfc
       ))
-    }
-
-    # reactive function listening for changes in input
-    plot_data <- shiny::reactive({
-      serverSideComputation(
-        pgx_fdr(),
-        pgx_contrast(),
-        pgx_lfc(),
-        pgx_features(),
-        res(),
-        sel1(),
-        df1(),
-        sel2(),
-        df2(),
-        fam.genes
-      )
     })
 
 
