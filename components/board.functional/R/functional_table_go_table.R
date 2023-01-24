@@ -6,81 +6,112 @@
 
 functional_table_go_table_ui <- function(id) {
   ns <- shiny::NS(id)
-  tableWidget(ns("dsea_table"))
+  tableWidget(ns("table"))
 }
 
 
 functional_table_go_table_server <- function(id,
-                                               getActiveDSEA)
+                                             inputData,
+                                             fa_contrast,
+                                             tabH,
+                                             selected_gsetmethods)
 {
   moduleServer(id, function(input, output, session)
   {
     ns <- session$ns
 
-    table_data <- shiny::reactive({
-      dsea <- getActiveDSEA()
-      shiny::req(dsea)
+    matchGOid2gset <- function(id, gsets) {
+      gsets.id <- sub("\\)$", "", sub(".*\\(GO_", "GO:", gsets))
+      match(id, gsets.id)
+    }
 
-      dt <- dsea$table
-      return(dt)
+    table_data <- shiny::reactive({
+      res <- list(
+        pgx = inputData(),
+        fa_contrast = fa_contrast()
+      )
+      return(res)
     })
 
     table_RENDER <- function() {
       res <- table_data()
-      res$moa <- shortstring(res$moa, 60)
-      res$target <- shortstring(res$target, 30)
-      res$drug <- shortstring(res$drug, 60)
+      pgx <- res$pgx
+      comparison <- res$fa_contrast
 
-      colnames(res) <- sub("moa", "MOA", colnames(res))
-      DT::datatable(res,
-                    rownames = FALSE,
+      if (is.null(pgx$meta.go)) {
+        return(NULL)
+      }
+      if (is.null(comparison)) {
+        return(NULL)
+      }
+
+      go <- pgx$meta.go$graph
+      scores <- pgx$meta.go$pathscore[, comparison]
+
+      scores <- scores[which(!is.na(scores) & !is.infinite(scores))]
+      scores <- round(scores, digits = 3)
+      scores <- scores[order(-abs(scores))]
+      go.term <- igraph::V(go)[names(scores)]$Term
+
+      ## get FC and q-value.  match with enrichment table
+      gs.meta <- pgx$gset.meta$meta[[comparison]]
+      ii <- matchGOid2gset(names(scores), rownames(gs.meta))
+      gs.meta <- gs.meta[ii, , drop = FALSE]
+      gs.meta$GO.id <- rownames(scores)
+      mm <- selected_gsetmethods()
+      mm <- intersect(mm, colnames(gs.meta$q))
+      qv <- apply(gs.meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE) ## meta-q
+      fx <- gs.meta$meta.fx
+
+      go.term1 <- substring(go.term, 1, 80)
+      dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
+      dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
+      id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
+      dt$id <- wrapHyperLink(as.character(dt$id), id2) ## add link
+
+      numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
+
+      DT::datatable(dt,
+                    rownames = FALSE, escape = c(-1, -2),
                     class = "compact cell-border stripe hover",
                     extensions = c("Scroller"),
-                    selection = list(mode = "single",
-                                     target = "row",
-                                     selected = NULL),
+                    selection = list(mode = "single", target = "row", selected = 1),
                     fillContainer = TRUE,
                     options = list(
                       dom = "lfrtip",
-                      scroller = TRUE, scrollX = TRUE,
-                      scrollY = "70vh",
-                      deferRender = TRUE
-                    )
+                      scrollX = TRUE,
+                      scrollY = tabH, scroller = TRUE, deferRender = TRUE
+                    ) ## end of options.list
       ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px",
-                        lineHeight = "70%") %>%
-        DT::formatStyle("NES",
-                        background = color_from_middle(res[, "NES"],
+        DT::formatSignif(numeric.cols, 4) %>%
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle("score",
+                        background = color_from_middle(dt1[, "score"],
                                                        "lightblue",
                                                        "#f5aeae"),
-                                                       backgroundSize = "98% 88%",
-                        backgroundRepeat = "no-repeat",
+                                                       backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
                         backgroundPosition = "center"
         )
     }
 
-    info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
-                         correlating your signature with known drug profiles
-                         from the L1000 database. Because the L1000 has multiple
-                         perturbation experiment for a single drug, drugs are
-                         scored by running the GSEA algorithm on the
-                         contrast-drug profile correlation space. In this way,
-                         we obtain a single score for multiple profiles of a
-                         single drug.")
+    info_text <- strwrap("<strong>GO score table.</strong> The scoring of a GO
+                         term is performed by considering the cumulative score
+                         of all terms from that term to the root node. That
+                         means that GO terms that are supported by higher level
+                         terms levels are preferentially scored.")
 
     table_opts <- shiny::tagList()
-    dsea_table <- shiny::callModule(
+
+    shiny::callModule(
       tableModule,
-      id = "dsea_table",
+      id = "table",
       label = "",
       func = table_RENDER,
       options = table_opts,
       info.text = info_text,
-      title = "Enrichment table",
-      height = c(360, 700)
+      title = "GO score table",
+      height = c(270, 700)
     )
-
-    return(dsea_table)
 
   })  ## end of moduleServer
 } ## end of server

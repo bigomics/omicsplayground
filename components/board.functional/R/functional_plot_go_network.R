@@ -40,14 +40,14 @@ functional_plot_go_network_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Gene Ontology graph",
-               label = label,
-               plotlib = "visnetwork",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("pdf", "png"),
-               height = c(0.55 * rowH, 750),
-               width = c("100%", 1400),
+    title = "Gene Ontology graph",
+    label = label,
+    plotlib = "visnetwork",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("pdf", "png"),
+    height = c(0.55 * rowH, 750),
+    width = c("100%", 1400)
   )
 }
 
@@ -68,8 +68,6 @@ functional_plot_go_network_server <- function(id,
       plot_data <- shiny::reactive({
         pgx <- inputData()
         fa_contrast <- fa_contrast()
-
-        shiny::req(pgx, fa_contrast)
 
         res <- list(
           pgx = pgx,
@@ -158,50 +156,49 @@ functional_plot_go_network_server <- function(id,
 
         gr <- visNetwork::toVisNetworkData(sub2)
         gr$nodes$color[is.na(gr$nodes$color)] <- "#F9F9F9"
-          gr$nodes$value <- pmax(abs(gr$nodes$value), 0.001)
-          gr$nodes$x <- pos[, 1] * 60
-          gr$nodes$y <- pos[, 2] * 90
-          gr$nodes$label <- gr$nodes$Term
-          no.score <- (is.na(score) | score == 0)
-          gr$nodes$label[which(no.score)] <- NA
+        gr$nodes$value <- pmax(abs(gr$nodes$value), 0.001)
+        gr$nodes$x <- pos[, 1] * 60
+        gr$nodes$y <- pos[, 2] * 90
+        gr$nodes$label <- gr$nodes$Term
+        no.score <- (is.na(score) | score == 0)
+        gr$nodes$label[which(no.score)] <- NA
 
-          gr$nodes$shape <- c("box", "circle")[1 + 1 * no.score]
-          gr$nodes$label <- sapply(gr$nodes$label, breakstring, n = 25, nmax = 95, force = TRUE, brk = "\n")
+        gr$nodes$shape <- c("box", "circle")[1 + 1 * no.score]
+        gr$nodes$label <- sapply(gr$nodes$label, breakstring, n = 25, nmax = 95, force = TRUE, brk = "\n")
 
-          gr.def <- sapply(gr$nodes$Definition, breakstring, n = 50, brk = "<br>")
-          gr$nodes$title <- paste0(
-            gr$nodes$Term, "  (", gr$nodes$id, ")<br>",
-            "<small>", gr.def, "</small>"
-          )
+        gr.def <- sapply(gr$nodes$Definition, breakstring, n = 50, brk = "<br>")
+        gr$nodes$title <- paste0(
+          gr$nodes$Term, "  (", gr$nodes$id, ")<br>",
+          "<small>", gr.def, "</small>"
+        )
 
-          ## rendering
+        ## rendering
+        font.size <- 20
+        cex <- 1
+        if (input$GO_prunetree) {
           font.size <- 20
-          cex <- 1
-          if (input$GO_prunetree) {
-            font.size <- 20
-            cex <- 0.6
-          }
+          cex <- 0.6
+        }
 
-          visNetwork::visNetwork(gr$nodes, gr$edges) %>%
-            visNetwork::visEdges(
-              smooth = FALSE, hidden = FALSE, arrows = list(enabled = TRUE),
-              scaling = list(min = 10 * cex, max = 30 * cex), width = 5 * cex
-            ) %>%
-            visNetwork::visNodes(
-              font = list(size = font.size * cex, vadjust = 0),
-              scaling = list(min = 1 * cex, max = 80 * cex)
-            ) %>%
-            visNetwork::visPhysics(stabilization = FALSE) %>%
-            visNetwork::visOptions(highlightNearest = list(enabled = T, degree = 1, hover = TRUE)) %>%
-            visNetwork::visPhysics(enabled = FALSE)
+        visNetwork::visNetwork(gr$nodes, gr$edges) %>%
+          visNetwork::visEdges(
+            smooth = FALSE, hidden = FALSE, arrows = list(enabled = TRUE),
+            scaling = list(min = 10 * cex, max = 30 * cex), width = 5 * cex
+          ) %>%
+          visNetwork::visNodes(
+            font = list(size = font.size * cex, vadjust = 0),
+            scaling = list(min = 1 * cex, max = 80 * cex)
+          ) %>%
+          visNetwork::visPhysics(stabilization = FALSE) %>%
+          visNetwork::visOptions(highlightNearest = list(enabled = T, degree = 1, hover = TRUE)) %>%
+          visNetwork::visPhysics(enabled = FALSE)
       })
 
       PlotModuleServer(
         "plot",
-        plotlib = "visnetwork", # does not use plotly
+        plotlib = "visnetwork",
         func = plot_RENDER,
-        func2 = plot_RENDER, # no separate modal plot render
-        csvFunc = plot_data,
+        # csvFunc = plot_data,
         res = 72,
         pdf.width = 10, pdf.height = 8,
         add.watermark = watermark
