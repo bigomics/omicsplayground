@@ -35,10 +35,11 @@ functional_plot_kegg_actmap_ui <- function(id,
   PlotModuleUI(ns("plot"),
                title = "Activation matrix",
                label = label,
-               plotlib = "image",
+               plotlib = "base",
                info.text = info_text,
                options = plot_opts,
-               height = c(rowH, 750), width = c("100%", 1400)
+               height = c(rowH, 750),
+               width = c("100%", 1400)
   )
 }
 
@@ -154,7 +155,7 @@ functional_plot_kegg_actmap_server <- function(id,
 
       PlotModuleServer(
         "plot",
-        plotlib = "image",
+        plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,

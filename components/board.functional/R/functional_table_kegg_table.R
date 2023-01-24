@@ -6,81 +6,102 @@
 
 functional_table_kegg_table_ui <- function(id) {
   ns <- shiny::NS(id)
-  tableWidget(ns("dsea_table"))
+  tableWidget(ns("table"))
 }
 
 
 functional_table_kegg_table_server <- function(id,
-                                               getActiveDSEA)
+                                               inputData,
+                                               getFilteredKeggTable,
+                                               fa_contrast,
+                                               tabH)
 {
   moduleServer(id, function(input, output, session)
   {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      dsea <- getActiveDSEA()
-      shiny::req(dsea)
-
-      dt <- dsea$table
-      return(dt)
+      res <- list(
+        pgx = inputData(),
+        df = getFilteredKeggTable(),
+        fa_contrast = fa_contrast
+      )
+      return(res)
     })
 
     table_RENDER <- function() {
       res <- table_data()
-      res$moa <- shortstring(res$moa, 60)
-      res$target <- shortstring(res$target, 30)
-      res$drug <- shortstring(res$drug, 60)
+      pgx <- res$pgx
+      df <- res$df
+      comparison <- res$fa_contrast
 
-      colnames(res) <- sub("moa", "MOA", colnames(res))
-      DT::datatable(res,
-                    rownames = FALSE,
+      if (is.null(pgx$meta.go)) return(NULL)
+      if (is.null(comparison)) return(NULL)
+      if (is.null(df)) return(NULL)
+      if (nrow(df) == 0) return(NULL)
+
+      ## add hyperlink
+      url <- paste0("https://www.genome.jp/kegg-bin/show_pathway?map=hsa",
+                    df$kegg.id,
+                    "&show_description=show")
+      df$kegg.id <- paste0("<a href='", url, "' target='_blank'>",
+                           df$kegg.id, "</a>")
+
+      numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
+
+      DT::datatable(df,
+                    rownames = FALSE, escape = c(-1, -2),
                     class = "compact cell-border stripe hover",
                     extensions = c("Scroller"),
-                    selection = list(mode = "single",
-                                     target = "row",
-                                     selected = NULL),
+                    selection = list(mode = "single", target = "row",
+                                     selected = 1),
                     fillContainer = TRUE,
                     options = list(
                       dom = "lfrtip",
-                      scroller = TRUE, scrollX = TRUE,
-                      scrollY = "70vh",
-                      deferRender = TRUE
-                    )
+                      scrollX = TRUE,
+                      scrollY = tabH, scroller = TRUE, deferRender = TRUE
+                    ) ## end of options.list
       ) %>%
+        DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px",
                         lineHeight = "70%") %>%
-        DT::formatStyle("NES",
-                        background = color_from_middle(res[, "NES"],
+        DT::formatStyle("logFC",
+                        background = color_from_middle(df[, "logFC"],
                                                        "lightblue",
                                                        "#f5aeae"),
-                                                       backgroundSize = "98% 88%",
+                        backgroundSize = "98% 88%",
                         backgroundRepeat = "no-repeat",
                         backgroundPosition = "center"
         )
     }
 
-    info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
-                         correlating your signature with known drug profiles
-                         from the L1000 database. Because the L1000 has multiple
-                         perturbation experiment for a single drug, drugs are
-                         scored by running the GSEA algorithm on the
-                         contrast-drug profile correlation space. In this way,
-                         we obtain a single score for multiple profiles of a
-                         single drug.")
+    info_text <- strwrap("<strong>Enrichment table.</strong> The table is
+                         interactive; enabling user to sort on different
+                         variables and select a pathway by clicking on the row
+                         in the table. The scoring is performed by considering
+                         the total number of genes in the pathway (n), the
+                         number of genes in the pathway supported by the contrast
+                         profile (k), the ratio of k/n, and the ratio of
+                         |upregulated or downregulated genes|/k. Additionally,
+                         the table contains the list of the upregulated and
+                         downregulated genes for each pathway and a q value from
+                         the Fisher’s test for the overlap.")
 
     table_opts <- shiny::tagList()
-    dsea_table <- shiny::callModule(
+
+    my_table <- shiny::callModule(
       tableModule,
-      id = "dsea_table",
+      id = "table",
       label = "",
       func = table_RENDER,
       options = table_opts,
       info.text = info_text,
+      info.width = '350px',
       title = "Enrichment table",
-      height = c(360, 700)
+      height = c(270, 700)
     )
 
-    return(dsea_table)
+    return(my_table)
 
   })  ## end of moduleServer
 } ## end of server

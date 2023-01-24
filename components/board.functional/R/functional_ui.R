@@ -51,7 +51,8 @@ FunctionalUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          tableWidget(ns("kegg_table"))
+          #tableWidget(ns("kegg_table"))
+          functional_table_kegg_table_ui(ns("kegg_table"))
         )
       ),
       tags$div(
