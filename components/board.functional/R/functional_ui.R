@@ -77,7 +77,8 @@ FunctionalUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          plotWidget(ns("GO_actmap"))
+          #plotWidget(ns("GO_actmap"))
+          functional_plot_go_actmap_ui(ns("GO_actmap"))
         )
       ),
       tags$div(

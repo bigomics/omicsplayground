@@ -68,7 +68,8 @@ functional_plot_go_network_server <- function(id,
       plot_data <- shiny::reactive({
         pgx <- inputData()
         fa_contrast <- fa_contrast()
-        shiny::req(fa_contrast)
+
+        shiny::req(pgx, fa_contrast)
 
         res <- list(
           pgx = pgx,

@@ -454,93 +454,93 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
         )
     })
 
-    plotGOactmap <- function(score, go, normalize, maxterm, maxfc) {
-      rownames(score) <- igraph::V(go)[rownames(score)]$Term
+    #plotGOactmap <- function(score, go, normalize, maxterm, maxfc) {
+    #  rownames(score) <- igraph::V(go)[rownames(score)]$Term
+#
+    #  ## avoid errors!!!
+    #  score[is.na(score) | is.infinite(score)] <- 0
+    #  score[is.na(score)] <- 0
+#
+    #  ## reduce score matrix
+    #  score <- score[head(order(-rowSums(score**2, na.rm = TRUE)), maxterm), , drop = FALSE] ## max number terms
+    #  score <- score[, head(order(-colSums(score**2, na.rm = TRUE)), maxfc), drop = FALSE] ## max comparisons/FC
+    #  score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+#
+    #  ## normalize colums
+    #  if (normalize) {
+    #    ## column scale???
+    #    score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2, na.rm = TRUE))))
+    #  }
+    #  score <- score / max(abs(score), na.rm = TRUE) ## global normalize
+    #  score <- sign(score) * abs(score)**0.5 ## fudging for better colors
+#
+    #  d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
+    #  d2 <- as.dist(1 - cor(score, use = "pairwise"))
+    #  d1 <- dist(score)
+    #  d2 <- dist(t(score))
+    #  d1[is.na(d1)] <- 1
+    #  d2[is.na(d2)] <- 1
+    #  ii <- 1:nrow(score)
+    #  jj <- 1:ncol(score)
+    #  if (NCOL(score) == 1) {
+    #    score <- score[order(-score[, 1]), 1, drop = FALSE]
+    #  } else {
+    #    ii <- hclust(d1)$order
+    #    jj <- hclust(d2)$order
+    #    score <- score[ii, jj, drop = FALSE]
+    #  }
+#
+    #  colnames(score) <- substring(colnames(score), 1, 30)
+    #  rownames(score) <- substring(rownames(score), 1, 50)
+    #  colnames(score) <- paste0(colnames(score), " ")
+#
+    #  bmar <- 0 + pmax((50 - nrow(score)) * 0.25, 0)
+    #  par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
+#
+    #  corrplot::corrplot(score,
+    #    is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
+    #    tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+    #    mar = c(bmar, 0, 0, 0)
+    #  )
+    #}
 
-      ## avoid errors!!!
-      score[is.na(score) | is.infinite(score)] <- 0
-      score[is.na(score)] <- 0
+    #GO_actmap.RENDER <- shiny::reactive({
+    #  ngs <- inputData()
+    #  shiny::req(ngs)
 
-      ## reduce score matrix
-      score <- score[head(order(-rowSums(score**2, na.rm = TRUE)), maxterm), , drop = FALSE] ## max number terms
-      score <- score[, head(order(-colSums(score**2, na.rm = TRUE)), maxfc), drop = FALSE] ## max comparisons/FC
-      score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
+    #  if (is.null(ngs$meta.go)) {
+    #    return(NULL)
+    #  }
 
-      ## normalize colums
-      if (normalize) {
-        ## column scale???
-        score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2, na.rm = TRUE))))
-      }
-      score <- score / max(abs(score), na.rm = TRUE) ## global normalize
-      score <- sign(score) * abs(score)**0.5 ## fudging for better colors
+    #  score <- ngs$meta.go$pathscore
+    #  go <- ngs$meta.go$graph
 
-      d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
-      d2 <- as.dist(1 - cor(score, use = "pairwise"))
-      d1 <- dist(score)
-      d2 <- dist(t(score))
-      d1[is.na(d1)] <- 1
-      d2[is.na(d2)] <- 1
-      ii <- 1:nrow(score)
-      jj <- 1:ncol(score)
-      if (NCOL(score) == 1) {
-        score <- score[order(-score[, 1]), 1, drop = FALSE]
-      } else {
-        ii <- hclust(d1)$order
-        jj <- hclust(d2)$order
-        score <- score[ii, jj, drop = FALSE]
-      }
+    #  plotGOactmap(
+    #    score = score, go = go,
+    #    normalize = input$go_normalize,
+    #    maxterm = 50,
+    #    maxfc = 25
+    #  )
+    #})
 
-      colnames(score) <- substring(colnames(score), 1, 30)
-      rownames(score) <- substring(rownames(score), 1, 50)
-      colnames(score) <- paste0(colnames(score), " ")
-
-      bmar <- 0 + pmax((50 - nrow(score)) * 0.25, 0)
-      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
-
-      corrplot::corrplot(score,
-        is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
-        tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
-        mar = c(bmar, 0, 0, 0)
-      )
-    }
-
-    GO_actmap.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-
-      if (is.null(ngs$meta.go)) {
-        return(NULL)
-      }
-
-      score <- ngs$meta.go$pathscore
-      go <- ngs$meta.go$graph
-
-      plotGOactmap(
-        score = score, go = go,
-        normalize = input$go_normalize,
-        maxterm = 50,
-        maxfc = 25
-      )
-    })
-
-    GO_actmap.RENDER2 <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-
-      if (is.null(ngs$meta.go)) {
-        return(NULL)
-      }
-
-      score <- ngs$meta.go$pathscore
-      go <- ngs$meta.go$graph
-
-      plotGOactmap(
-        score = score, go = go,
-        normalize = input$go_normalize,
-        maxterm = 50,
-        maxfc = 100
-      )
-    })
+    #GO_actmap.RENDER2 <- shiny::reactive({
+    #  ngs <- inputData()
+    #  shiny::req(ngs)
+#
+    #  if (is.null(ngs$meta.go)) {
+    #    return(NULL)
+    #  }
+#
+    #  score <- ngs$meta.go$pathscore
+    #  go <- ngs$meta.go$graph
+#
+    #  plotGOactmap(
+    #    score = score, go = go,
+    #    normalize = input$go_normalize,
+    #    maxterm = 50,
+    #    maxfc = 100
+    #  )
+    #})
 
     #GO_info1 <- "The <strong>Gene Ontology</strong> (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse."
 
@@ -574,24 +574,27 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
                                       inputData,
                                       reactive(input$fa_contrast))
 
-    GO_actmap.opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("go_normalize"), "normalize activation matrix", FALSE), "Click to normalize the columns of the activation matrices.")
-    )
-    go_info <- "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile."
+    #GO_actmap.opts <- shiny::tagList(
+    #  withTooltip(shiny::checkboxInput(ns("go_normalize"), "normalize activation matrix", FALSE), "Click to normalize the columns of the activation matrices.")
+    #)
+    #go_info <- "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile."
 
-    shiny::callModule(
-      plotModule,
-      id = "GO_actmap",
-      func = GO_actmap.RENDER,
-      func2 = GO_actmap.RENDER2,
-      title = "Activation matrix", label = "c",
-      info.text = go_info,
-      options = GO_actmap.opts,
-      pdf.height = 9, pdf.width = 9,
-      height = c(rowH, 750), width = c("100%", 1400),
-      res = 72,
-      add.watermark = WATERMARK
-    )
+    #shiny::callModule(
+    #  plotModule,
+    #  id = "GO_actmap",
+    #  func = GO_actmap.RENDER,
+    #  func2 = GO_actmap.RENDER2,
+    #  title = "Activation matrix", label = "c",
+    #  info.text = go_info,
+    #  options = GO_actmap.opts,
+    #  pdf.height = 9, pdf.width = 9,
+    #  height = c(rowH, 750), width = c("100%", 1400),
+    #  res = 72,
+    #  add.watermark = WATERMARK
+    #)
+
+    functional_plot_go_actmap_server("GO_actmap",
+                                     inputData)
 
     GO_table <- shiny::callModule(
       tableModule,
@@ -602,148 +605,5 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       height = c(270, 700)
     )
 
-    ## ================================================================================
-    ## Fire plot (dev)
-    ## ================================================================================
-
-    pgx.firePlot <- function(ngs, cmp, gsets, shownames = TRUE) {
-      k0 <- which(ngs$model.parameters$exp.matrix[, cmp] < 0)
-      gx <- rowMeans(ngs$X[, k0])
-      fx <- ngs$gx.meta$meta[[cmp]]$meta.fx
-      names(fx) <- rownames(ngs$gx.meta$meta[[1]])
-      names(gx) <- toupper(sub(".*:", "", names(gx)))
-      names(fx) <- toupper(sub(".*:", "", names(fx)))
-
-      ## gene set expression as mean of members
-      gsets0 <- gsets
-      gsets <- lapply(gsets, intersect, names(fx))
-      zx <- sapply(gsets, function(gg) mean(fx[gg], na.rm = TRUE))
-      zx <- zx * (1 - exp(-(sapply(gsets, length) / 10)**1)) ## moderate by set size
-
-      gsets <- head(gsets[order(-abs(zx[names(gsets)]))], 60)
-      gsets <- gsets[order(zx[names(gsets)])] ## order by gset expression
-
-      yy <- lapply(gsets, function(g) gx[g])
-      dx <- unlist(lapply(gsets, function(g) fx[g]))
-      dx <- sign(dx) * abs(dx / max(abs(dx)))**0.66
-      xx <- mapply(rep, 1:length(yy), sapply(yy, length))
-
-      BLUERED1 <- colorRampPalette(
-        rev(c(
-          "#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#DDDDDD",
-          "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"
-        ))
-      )
-      klr <- paste0(BLUERED1(15)[8 + 7 * dx], "88")
-
-      xx0 <- unlist(xx)
-      yy0 <- unlist(yy)
-      gg0 <- as.vector(unlist(gsets))
-
-      ## plot the genesets with gene members
-      ii <- order(abs(dx))
-      par(mfrow = c(2, 1), mar = c(0, 3.5, 2, 2), mgp = c(2.1, 0.8, 0))
-      dy <- 0.02 * diff(range(yy0))
-      base::plot(xx0[ii], yy0[ii] + dy,
-        col = klr[ii],
-        xaxs = "i", xlim = c(-2, max(xx0) + 3),
-        xaxt = "n", xlab = "", ylab = "expression (log2.CPM)",
-        pch = 19, cex = 1.66 * abs(dx)[ii], ylim = c(-4, max(yy0) * 1.05)
-      )
-      title(cmp, cex.main = 1.0, line = 0.9)
-      abline(h = 0, lty = 2)
-
-      gset.name <- names(gsets)
-      gset.name <- sapply(gset.name, function(s) shortstring(s, 48, dots = 0.5))
-      mtext(gset.name,
-        side = 1, at = 1:length(gsets),
-        las = 3, cex = 0.75, line = 0.8, col = "grey35", xpd = TRUE
-      )
-
-      ## label some top FC genes
-      if (shownames) {
-        top.genes <- head(names(sort(-abs(fx[unique(gg0)]))), 25)
-        idx <- 1:length(gsets)
-        ii <- order(-abs(fx[gg0]))
-        g <- top.genes[1]
-        jj <- c()
-        for (g in top.genes) {
-          i0 <- ii[match(g, gg0[ii])]
-          jj <- c(jj, i0)
-          idx <- setdiff(idx, xx0[i0])
-          ii <- ii[which(xx0[ii] %in% idx)]
-        }
-
-        jj <- setdiff(jj, NA)
-        boxes <- sapply(nchar(gg0[jj]), function(n) paste(rep("█", n), collapse = ""))
-        text(xx0[jj], yy0[jj], labels = boxes, cex = 0.8, pos = 3, offset = 0.4, col = "#FFFFFF99")
-        text(xx0[jj], yy0[jj], gg0[jj], cex = 0.75, pos = 3, offset = 0.4)
-        for (i in 1:2) {
-          points(xx0[jj], yy0[jj], col = klr[jj], pch = 19, cex = 1.66 * abs(dx)[jj])
-        }
-      }
-
-      ## plot the "missing" genes
-      gsets1 <- mapply(setdiff, gsets0[names(gsets)], gsets)
-      tt <- sort(table(unlist(gsets1)), decreasing = TRUE)
-      tt <- tt / max(tt)
-      head(tt, 10)
-      top.missing <- head(names(tt), 10)
-      m <- top.missing[1]
-      for (i in 1:length(top.missing)) {
-        m <- top.missing[i]
-        jj <- which(sapply(gsets1, function(gs) (m %in% gs)))
-        y0 <- -0.2 - 0.40 * i
-        points(jj, rep(y0, length(jj)), col = "grey60", pch = 21, cex = 0.7)
-        if (shownames) {
-          mtext(m,
-            side = 4, at = y0, las = 1, cex = 0.55,
-            col = "grey35", line = 0.2
-          )
-        }
-      }
-    } ## end of firePlot()
-
-    output$fa_fireplot <- shiny::renderPlot(
-      {
-        ngs <- inputData()
-        shiny::req(ngs)
-
-        cmp <- input$fa_contrast
-
-        sel <- "B-cell related"
-        sel <- "KEGG metabolic pathways"
-        sel <- "Hallmark collection"
-        sel <- 5
-        sel <- input$fire_xpcollection
-        if (is.null(sel)) {
-          return(NULL)
-        }
-
-        gsets <- getGSETS(COLLECTIONS[[sel]])
-        shownames <- input$fire_shownames
-        pgx.firePlot(ngs, cmp, gsets, shownames = shownames)
-      },
-      res = 85
-    )
-
-    output$fireplot_UI <- shiny::renderUI({
-      shiny::fillRow(
-        height = fullH,
-        flex = c(2, 1),
-        shiny::fillCol(
-          flex = c(NA, 1),
-          shiny::inputPanel(
-            shiny::selectInput(ns("fire_xpcollection"), NULL,
-              choices = setdiff(names(COLLECTIONS), "<all>")
-            ),
-            shiny::checkboxInput(ns("fire_shownames"), "shownames", TRUE),
-            cellArgs = list(width = "100%")
-          ),
-          shiny::plotOutput("fa_fireplot")
-        ),
-        shiny::br()
-      )
-    })
   }) ## end-of-moduleServer
 }
