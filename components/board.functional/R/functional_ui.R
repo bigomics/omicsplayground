@@ -71,7 +71,8 @@ FunctionalUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          plotWidget(ns("GO_network")),
+          #plotWidget(ns("GO_network")),
+          functional_plot_go_network_ui(ns("GO_network")),
           tableWidget(ns("GO_table"))
         ),
         div(
