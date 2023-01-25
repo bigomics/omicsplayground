@@ -28,12 +28,12 @@ correlation_plot_cor_graph_ui <- function(id,
 
   PlotModuleUI(ns("plot"),
     title = "Partial correlation network",
-    plotlib = "generic",
-    outputFunc = uiOutput,
-    outputFunc2 = uiOutput,
+    plotlib = "visnetwork",
     label = "a",
     info.text = info_text,
     options = cor_graph.opts,
+    width = c(700, 720),
+    height = c(700, 1000),
     download.fmt = c("png", "pdf", "csv"),
   )
 }
@@ -65,7 +65,6 @@ correlation_plot_cor_graph_server <- function(id,
       rho.min <- input$cor_graph_threshold
 
       layout <- input$cor_graph_layout
-      ## fixed <- input$cor_graph_fixed
       numnodes <- nrow(res$cor)
       vsize <- ifelse(numnodes > 50, 10, 12)
       vsize <- ifelse(numnodes > 100, 8, vsize)
@@ -107,32 +106,10 @@ correlation_plot_cor_graph_server <- function(id,
       graph
     })
 
-    func <- shiny::reactive({
-      visNetwork::visNetworkOutput(
-        outputId = ns("cor_graph"),
-        width = 700,
-        height = 700
-      )
-    })
-
-    func2 <- shiny::reactive({
-      visNetwork::visNetworkOutput(
-        outputId = ns("cor_graph2"),
-        width = 720,
-        height = 1000
-      )
-    })
-
-    output$cor_graph <- visNetwork::renderVisNetwork(cor_graph.VISNETWORK())
-    output$cor_graph2 <- visNetwork::renderVisNetwork(cor_graph.VISNETWORK())
-
     PlotModuleServer(
       "plot",
-      plotlib = "generic",
-      renderFunc = renderUI,
-      renderFunc2 = renderUI,
-      func = func,
-      func2 = func2,
+      plotlib = "visnetwork",
+      func = cor_graph.VISNETWORK,
       csvFunc = plot_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
