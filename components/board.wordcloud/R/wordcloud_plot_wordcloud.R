@@ -23,7 +23,7 @@ wordcloud_plot_wordcloud_ui <- function(id, height) {
     info.text = info_text,
     options = wordcloud_opts,
     height = height,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "csv")
   )
 }
 
@@ -32,10 +32,13 @@ wordcloud_plot_wordcloud_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
+    plot_data <- shiny::reactive({
+      getCurrentWordEnrichment()
+    })
+
     wordcloud.RENDER <- shiny::reactive({
 
-      topFreq <- getCurrentWordEnrichment()
-      df <- topFreq
+      df <- plot_data()
 
       ## update selectors
       words <- sort(df$word)
@@ -69,6 +72,7 @@ wordcloud_plot_wordcloud_server <- function(id,
     PlotModuleServer(
       "plot",
       func = wordcloud.RENDER,
+      csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res=72,
       add.watermark = watermark
