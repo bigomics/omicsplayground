@@ -675,7 +675,7 @@ PlotModuleServer <- function(
 ##                  echarts4r = echarts4r::renderEcharts4r,
 ##                  scatterD3 = scatterD3::renderScatterD3,
                   pairsD3 = pairsD3::renderPairsD3,
-                  visNetwork = visNetwork::renderVisNetwork,
+                  visnetwork = visNetwork::renderVisNetwork,
                   ggplot = shiny::renderPlot,
                   grid = function(x) shiny::renderPlot(grid::grid.draw(x, recording=FALSE)),
                   iheatmapr = iheatmapr::renderIheatmap,
