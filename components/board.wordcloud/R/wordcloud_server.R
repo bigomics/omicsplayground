@@ -3,68 +3,65 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-WordCloudBoard <- function(id, pgx)
-{
-  moduleServer(id, function(input, output, session)
-  {
-
+WordCloudBoard <- function(id, pgx) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    wc_infotext = paste("This module performs WordCloud analysis or 'keyword enrichment', i.e. it computes the enrichment of keywords for the contrasts. Frequently appearing words in the top ranked gene sets form an unbiased description of the contrast.
+    wc_infotext <- paste("This module performs WordCloud analysis or 'keyword enrichment', i.e. it computes the enrichment of keywords for the contrasts. Frequently appearing words in the top ranked gene sets form an unbiased description of the contrast.
 <br><br><br><br>
 <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
 ")
 
-    ##================================================================================
-    ##======================= OBSERVE FUNCTIONS ======================================
-    ##================================================================================
+    ## ================================================================================
+    ## ======================= OBSERVE FUNCTIONS ======================================
+    ## ================================================================================
 
-    shiny::observeEvent( input$wc_info, {
-        shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>WordCloud Analysis Board</strong>"),
-            shiny::HTML(wc_infotext),
-            easyClose = TRUE, size="l" ))
+    shiny::observeEvent(input$wc_info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>WordCloud Analysis Board</strong>"),
+        shiny::HTML(wc_infotext),
+        easyClose = TRUE, size = "l"
+      ))
     })
 
     shiny::observe({
-        shiny::req(pgx$gset.meta)
-        ct <- names(pgx$gset.meta$meta)
-        ct <- sort(ct)
-        shiny::updateSelectInput(session, "wc_contrast", choices=ct )
+      shiny::req(pgx$gset.meta)
+      ct <- names(pgx$gset.meta$meta)
+      ct <- sort(ct)
+      shiny::updateSelectInput(session, "wc_contrast", choices = ct)
     })
 
-    ##---------------------------------------------------------------
-    ##------------- Functions for WordCloud -------------------------
-    ##---------------------------------------------------------------
+    ## ---------------------------------------------------------------
+    ## ------------- Functions for WordCloud -------------------------
+    ## ---------------------------------------------------------------
 
     getWordFreqResults <- shiny::reactive({
-        shiny::req(pgx$gset.meta)
-        if("wordcloud" %in% names(pgx)) {
-            res <- pgx$wordcloud
-        } else {
-            dbg("**** CALCULATING WORDCLOUD ****\n")
-            progress <- shiny::Progress$new()
-            res <- pgx.calculateWordCloud(pgx, progress=progress, pg.unit=1)
-            on.exit(progress$close())
+      shiny::req(pgx$gset.meta)
+      if ("wordcloud" %in% names(pgx)) {
+        res <- pgx$wordcloud
+      } else {
+        dbg("**** CALCULATING WORDCLOUD ****\n")
+        progress <- shiny::Progress$new()
+        res <- pgx.calculateWordCloud(pgx, progress = progress, pg.unit = 1)
+        on.exit(progress$close())
 
-            ## save in object??
-            pgx[["wordcloud"]] <- res
-        }
-        return(res)
+        ## save in object??
+        pgx[["wordcloud"]] <- res
+      }
+      return(res)
     })
 
     getCurrentWordEnrichment <- shiny::reactive({
+      res <- getWordFreqResults()
+      shiny::req(res, input$wc_contrast)
 
-        res <- getWordFreqResults()
-        shiny::req(res, input$wc_contrast)
+      contr <- 1
+      contr <- input$wc_contrast
+      gsea1 <- res$gsea[[contr]]
+      topFreq <- data.frame(gsea1, tsne = res$tsne, umap = res$umap)
+      topFreq <- topFreq[order(-topFreq$NES), ]
 
-        contr=1
-        contr <- input$wc_contrast
-        gsea1 <- res$gsea[[ contr ]]
-        topFreq <- data.frame( gsea1, tsne=res$tsne, umap=res$umap)
-        topFreq <- topFreq[order(-topFreq$NES),]
-
-        return(topFreq)
+      return(topFreq)
     })
 
     ## ================================================================================
@@ -115,6 +112,5 @@ WordCloudBoard <- function(id, pgx)
       wordcloud_enrichmentTable = wordcloud_enrichmentTable,
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
-
   })
 }

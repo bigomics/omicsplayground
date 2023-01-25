@@ -4,21 +4,22 @@
 ##
 
 WordCloudInputs <- function(id) {
-  ns <- shiny::NS(id)  ## namespace
+  ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
-    withTooltip( shiny::selectInput(ns("wc_contrast"),"Contrast:", choices=NULL),
-                 "Select the contrast corresponding to the comparison of interest.",
-                 placement="top")
+    withTooltip(shiny::selectInput(ns("wc_contrast"), "Contrast:", choices = NULL),
+      "Select the contrast corresponding to the comparison of interest.",
+      placement = "top"
+    )
   )
 }
 
 WordCloudUI <- function(id) {
-  fullH = 750
-  rowH = 660  ## row height of panel
-  tabH = 200  ## row height of panel
-  tabH = '70vh'  ## row height of panel
-  ns <- shiny::NS(id)  ## namespace
+  fullH <- 750
+  rowH <- 660 ## row height of panel
+  tabH <- 200 ## row height of panel
+  tabH <- "70vh" ## row height of panel
+  ns <- shiny::NS(id) ## namespace
   shiny::tabsetPanel(
     id = ns("tabs"),
     tabs <- shiny::tabPanel(
@@ -27,15 +28,15 @@ WordCloudUI <- function(id) {
         class = "row",
         div(
           class = "col-md-4",
-          wordcloud_plot_enrichment_ui(ns("gseaplots"), 0.5*rowH)
+          wordcloud_plot_enrichment_ui(ns("gseaplots"), 0.5 * rowH)
         ),
         div(
           class = "col-md-4",
-          wordcloud_plot_wordcloud_ui(ns("wordcloud"), 0.5*rowH)
+          wordcloud_plot_wordcloud_ui(ns("wordcloud"), 0.5 * rowH)
         ),
         div(
           class = "col-md-4",
-          wordcloud_plot_wordtsne_ui(ns("wordtsne"), 0.5*rowH)
+          wordcloud_plot_wordtsne_ui(ns("wordtsne"), 0.5 * rowH)
         )
       ),
       div(
