@@ -145,7 +145,7 @@ PlotModuleUI <- function(id,
           outputId = ns("download"),
           label = "Download",
         ),
-
+        inputId = ns("download_dropdown"),
         circle = TRUE, size = "xs", ## status = "danger",
         icon = shiny::icon("download"), width = "40px", right=FALSE,
         tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
@@ -793,6 +793,42 @@ PlotModuleServer <- function(
           output$renderfigure <- render
           output$renderpopup  <- render2
 
+          ##--------------------------------------------------------------------------------
+          ##---------------------------- DROPDOWN ONLY-ONE-AT-A-TIME -----------------------
+          ##--------------------------------------------------------------------------------
+
+          observeEvent(list(input$info), {
+            if(!is.null(input$download_dropdown_state) &&
+               input$download_dropdown_state){
+              shinyWidgets::toggleDropdownButton(inputId = "download_dropdown")
+            }
+            if(!is.null(input$options_state) &&
+               input$options_state){
+              shinyWidgets::toggleDropdownButton(inputId = "options")
+            }
+          }, ignoreInit = TRUE)
+
+          observeEvent(list(input$download_dropdown), {
+            if(!is.null(input$info_state) &&
+               input$info_state){
+              shinyWidgets::toggleDropdownButton(inputId = "info")
+            }
+            if(!is.null(input$options_state) &&
+               input$options_state){
+              shinyWidgets::toggleDropdownButton(inputId = "options")
+            }
+          }, ignoreInit = TRUE)
+
+          observeEvent(list(input$options), {
+            if(!is.null(input$info_state) &&
+               input$info_state){
+              shinyWidgets::toggleDropdownButton(inputId = "info")
+            }
+            if(!is.null(input$download_dropdown_state) &&
+               input$download_dropdown_state){
+              shinyWidgets::toggleDropdownButton(inputId = "download_dropdown")
+            }
+          }, ignoreInit = TRUE)
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- RETURN VALUE --------------------------------------
