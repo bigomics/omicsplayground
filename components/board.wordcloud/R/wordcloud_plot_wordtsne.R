@@ -48,7 +48,6 @@ wordcloud_plot_wordtsne_server <- function(id,
       ## cex=2.5
       df$abs.NES <- abs(df$NES)**2
 
-
       if (input$wordtsne_algo == "tsne") {
         pos <- cbind(x = df$tsne.x, y = df$tsne.y)
       } else {
@@ -65,10 +64,7 @@ wordcloud_plot_wordtsne_server <- function(id,
           x = pos[, 1], y = pos[, 2],
           color = klr,
           size = ~abs.NES,
-          ## sizes = c(5,100),
           marker = list(
-            ## size = 16,
-            ## sizes=c(20,400),
             line = list(color = "grey20", width = 0.6)
           )
         ) %>%
@@ -76,7 +72,6 @@ wordcloud_plot_wordtsne_server <- function(id,
           x = pos[, 1], y = pos[, 2],
           text = df$label,
           font = list(size = 12),
-          ## xref = "x", yref = "y",
           showarrow = FALSE
         )
 

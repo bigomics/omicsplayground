@@ -55,7 +55,6 @@ WordCloudBoard <- function(id, pgx) {
       res <- getWordFreqResults()
       shiny::req(res, input$wc_contrast)
 
-      contr <- 1
       contr <- input$wc_contrast
       gsea1 <- res$gsea[[contr]]
       topFreq <- data.frame(gsea1, tsne = res$tsne, umap = res$umap)
@@ -71,7 +70,6 @@ WordCloudBoard <- function(id, pgx) {
     WATERMARK <- FALSE
 
     # Enrichment plots
-
     wordcloud_plot_enrichment_server(
       "gseaplots",
       getWordFreqResults = getWordFreqResults,
@@ -81,7 +79,6 @@ WordCloudBoard <- function(id, pgx) {
     )
 
     # Word cloud
-
     wordcloud_plot_wordcloud_server(
       "wordcloud",
       getCurrentWordEnrichment = getCurrentWordEnrichment,
@@ -89,7 +86,6 @@ WordCloudBoard <- function(id, pgx) {
     )
 
     # Word t-SNE
-
     wordcloud_plot_wordtsne_server(
       "wordtsne",
       getCurrentWordEnrichment = getCurrentWordEnrichment,
@@ -97,14 +93,12 @@ WordCloudBoard <- function(id, pgx) {
     )
 
     # Enrichment table
-
     wordcloud_enrichmentTable <- wordcloud_table_enrichment_server(
       "wordcloud_enrichmentTable",
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
 
     # Leading-edge table
-
     wordcloud_leadingEdgeTable <- wordcloud_table_leading_edge_server(
       "wordcloud_leadingEdgeTable",
       pgx = pgx,
