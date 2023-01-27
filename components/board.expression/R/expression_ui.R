@@ -142,8 +142,6 @@ ExpressionUI <- function(id) {
                                         label='A',
                                         height = c(imgH, 500),
                                         width = c("auto", 1600)),
-          # plotWidget(ns("volcanoAll")),
-
           shiny::br(),
           tags$div(
             HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
@@ -153,7 +151,10 @@ ExpressionUI <- function(id) {
         ),
         shiny::tabPanel(
           "Volcano (methods)",
-          plotWidget(ns("volcanoMethods")),
+          expression_plot_volcanoMethods_ui(id = ns("volcanoMethods"),
+                                            label ='A',
+                                            height = c(imgH, 450),
+                                            width = c("auto", 1600)),
           shiny::br(),
           tags$div(
             HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
