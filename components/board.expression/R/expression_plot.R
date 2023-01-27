@@ -14,21 +14,21 @@
 #' #' @export
 #' expression_plot_FnName_ui <- function(id,
 #'                                       label='',
-#'                                       height=c(600, 800)) {
+#'                                       height,
+#'                                       width) {
 #'   ns <- shiny::NS(id)
+#'
 #'   info_text = ""
+#'
 #'   PlotModuleUI(ns(""),
 #'                title = "",
 #'                label = label,
 #'                plotlib = "plotly",
-#'                ##outputFunc = plotly::plotlyOutput,
-#'                ##outputFunc2 = plotly::plotlyOutput,
 #'                info.text = info_text,
 #'                options = NULL,
 #'                download.fmt=c("png","pdf","csv"),
-#'                width = c("auto","100%"),
-#'                height = height
-#'
+#'                height = height,
+#'                width = width)
 #' }
 #'
 #' #' Expression plot Server function
@@ -43,12 +43,8 @@
 #' {
 #'   moduleServer( id, function(input, output, session) {
 #'
-#'         #calculate required inputs for plotting
-#'         serverSideComputation <- function(...){
-#'           #code here
-#'         }
 #'
-#'         #reactive function listeninng for changes in input
+#'         #reactive function listening for changes in input
 #'         plot_data <- shiny::reactive({
 #'           #code here
 #'         })
