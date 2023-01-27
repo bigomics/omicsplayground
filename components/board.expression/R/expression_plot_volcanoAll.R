@@ -54,8 +54,6 @@ expression_plot_volcanoAll_server <- function(id,
 
           ngs <- inputData()
           features = features()
-          fdr =  fdr()
-          lfc = lfc()
 
 
           if (is.null(ngs)) {
@@ -76,8 +74,8 @@ expression_plot_volcanoAll_server <- function(id,
 
           fdr <- 1
           lfc <- 0
-          fdr <- as.numeric(fdr)
-          lfc <- as.numeric(lfc)
+          fdr <- as.numeric(fdr())
+          lfc <- as.numeric(lfc())
 
           sel.genes <- rownames(ngs$X)
           if (features != "<all>") {
