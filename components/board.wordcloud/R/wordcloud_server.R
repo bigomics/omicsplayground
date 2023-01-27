@@ -55,7 +55,6 @@ WordCloudBoard <- function(id, pgx) {
       res <- getWordFreqResults()
       shiny::req(res, input$wc_contrast)
 
-      contr <- 1
       contr <- input$wc_contrast
       gsea1 <- res$gsea[[contr]]
       topFreq <- data.frame(gsea1, tsne = res$tsne, umap = res$umap)
