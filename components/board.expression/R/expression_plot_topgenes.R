@@ -16,7 +16,7 @@
 expression_plot_topgenes_ui <- function(id,
                                         label = "",
                                         height,
-                                        width) {
+                                        width){
   ns <- shiny::NS(id)
 
   info_text <- "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."

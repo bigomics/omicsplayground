@@ -391,6 +391,18 @@ ExpressionBoard <- function(id, inputData) {
                                     ii = genetable$rows_current,
                                     watermark = FALSE)
 
+    # tab differential expression > Volcano All ####
+
+    expression_plot_volcanoAll_server(id = "volcanoAll",
+                                      inputData = inputData,
+                                      getAllContrasts = getAllContrasts,
+                                      features = shiny::reactive(input$gx_features),
+                                      fdr =  shiny::reactive(input$gx_fdr),
+                                      lfc = shiny::reactive(input$gx_lfc),
+                                      watermark = FALSE)
+
+
+
 
     # MA old code refactored into plot module #####
     # plots_maplot.RENDER <- shiny::reactive({
@@ -850,233 +862,222 @@ ExpressionBoard <- function(id, inputData) {
 
     #  end topgenes old code refactor into plotmodule #####
 
-    ## ================================================================================
-    ## Volcano (all contrasts)
-    ## ================================================================================
 
+    # Volcano (all contrasts) start code refactored to plotmodule  ########
+#
+#
+#     volcanoAll.RENDER <- shiny::reactive({
+#
+#       ngs <- inputData()
+#       if (is.null(ngs)) {
+#         return(NULL)
+#       }
+#       ct <- getAllContrasts()
+#       F <- ct$F
+#       Q <- ct$Q
+#
+#       ## comp = names(ngs$gx.meta$meta)
+#       comp <- names(F)
+#       if (length(comp) == 0) {
+#         return(NULL)
+#       }
+#       if (is.null(input$gx_features)) {
+#         return(NULL)
+#       }
+#
+#       fdr <- 1
+#       lfc <- 0
+#       fdr <- as.numeric(input$gx_fdr)
+#       lfc <- as.numeric(input$gx_lfc)
+#
+#       sel.genes <- rownames(ngs$X)
+#       if (input$gx_features != "<all>") {
+#         gset <- getGSETS(input$gx_features)
+#         sel.genes <- unique(unlist(gset))
+#       }
+#
+#       ng <- length(comp)
+#       nn <- c(2, max(ceiling(ng / 2), 5))
+#       ## if(ng>12) nn = c(3,8)
+#       par(mfrow = nn, mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
+#       nr <- 2
+#       nc <- ceiling(sqrt(ng))
+#       if (ng > 24) {
+#         nc <- max(ceiling(ng / 3), 6)
+#         nr <- 3
+#       } else if (TRUE && ng <= 4) {
+#         nc <- 4
+#         nr <- 1
+#       } else {
+#         nc <- max(ceiling(ng / 2), 6)
+#         nr <- 2
+#       }
+#       nr
+#       nc
+#       par(mfrow = c(nr, nc))
+#
+#       ymax <- 15
+#       nlq <- -log10(1e-99 + unlist(Q))
+#       ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
+#       xmax <- max(1, 1.2 * quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
+#
+#       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
+#         plt <- list()
+#         i <- 1
+#         for (i in 1:length(comp)) {
+#           qval <- Q[[i]]
+#           fx <- F[[i]]
+#           fc.gene <- names(qval)
+#           is.sig <- (qval <= fdr & abs(fx) >= lfc)
+#           sig.genes <- fc.gene[which(is.sig)]
+#           genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
+#           genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
+#           xy <- data.frame(x = fx, y = -log10(qval))
+#           is.sig2 <- factor(is.sig, levels = c(FALSE, TRUE))
+#
+#           plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+#             xy,
+#             title = comp[i], cex.title = 0.85,
+#             var = is.sig2, type = "factor",
+#             col = c("#bbbbbb", "#1e60bb"),
+#             legend.pos = "none", ## plotlib="ggplot",
+#             hilight = NULL, hilight2 = genes2,
+#             xlim = xmax * c(-1, 1), ylim = c(0, ymax),
+#             xlab = "difference  (log2FC)",
+#             ylab = "significance  (-log10q)",
+#             hilight.lwd = 0, hilight.col = "#1e60bb", hilight.cex = 1.5,
+#             cex = 0.45, cex.lab = 0.62
+#           )
+#           ## ggplot2::theme(legend.position='none')
+#           ## ggplot2::theme_bw(base_size=11)
+#
+#           if (!interactive()) shiny::incProgress(1 / length(comp))
+#         }
+#       }) ## progress
+#
+#
+#       ## patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
+#       ##    ggplot2::theme_bw(base_size=11) &
+#       ##    ggplot2::theme(legend.position='none')
+#
+#
+#       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+#     })
+#
+#     # volcanoAll_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+#
+#     shiny::callModule(plotModule,
+#       id = "volcanoAll",
+#       func = volcanoAll.RENDER,
+#       func2 = volcanoAll.RENDER,
+#       info.text = volcanoAll_text,
+#       pdf.width = 16, pdf.height = 5,
+#       height = c(imgH, 500), width = c("auto", 1600),
+#       res = c(70, 90),
+#       title = "Volcano plots for all contrasts",
+#       add.watermark = WATERMARK
+#     )
 
-    volcanoAll.RENDER <- shiny::reactive({
-      ## volcanoAll.RENDER <- shiny::reactive({
+    # END Volcano (all contrasts) start code  ########
 
-      ngs <- inputData()
-      if (is.null(ngs)) {
-        return(NULL)
-      }
-      ct <- getAllContrasts()
-      F <- ct$F
-      Q <- ct$Q
-
-      ## comp = names(ngs$gx.meta$meta)
-      comp <- names(F)
-      if (length(comp) == 0) {
-        return(NULL)
-      }
-      if (is.null(input$gx_features)) {
-        return(NULL)
-      }
-
-      fdr <- 1
-      lfc <- 0
-      fdr <- as.numeric(input$gx_fdr)
-      lfc <- as.numeric(input$gx_lfc)
-
-      sel.genes <- rownames(ngs$X)
-      if (input$gx_features != "<all>") {
-        gset <- getGSETS(input$gx_features)
-        sel.genes <- unique(unlist(gset))
-      }
-
-      ## -------------------------------------------------
-      ## plot layout
-      ## -------------------------------------------------
-      ng <- length(comp)
-      nn <- c(2, max(ceiling(ng / 2), 5))
-      ## if(ng>12) nn = c(3,8)
-      par(mfrow = nn, mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
-      nr <- 2
-      nc <- ceiling(sqrt(ng))
-      if (ng > 24) {
-        nc <- max(ceiling(ng / 3), 6)
-        nr <- 3
-      } else if (TRUE && ng <= 4) {
-        nc <- 4
-        nr <- 1
-      } else {
-        nc <- max(ceiling(ng / 2), 6)
-        nr <- 2
-      }
-      nr
-      nc
-      par(mfrow = c(nr, nc))
-
-      ymax <- 15
-      nlq <- -log10(1e-99 + unlist(Q))
-      ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
-      xmax <- max(1, 1.2 * quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
-
-      shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
-        plt <- list()
-        i <- 1
-        for (i in 1:length(comp)) {
-          qval <- Q[[i]]
-          fx <- F[[i]]
-          fc.gene <- names(qval)
-          is.sig <- (qval <= fdr & abs(fx) >= lfc)
-          sig.genes <- fc.gene[which(is.sig)]
-          genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
-          genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
-          xy <- data.frame(x = fx, y = -log10(qval))
-          is.sig2 <- factor(is.sig, levels = c(FALSE, TRUE))
-
-          plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
-            xy,
-            title = comp[i], cex.title = 0.85,
-            var = is.sig2, type = "factor",
-            col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", ## plotlib="ggplot",
-            hilight = NULL, hilight2 = genes2,
-            xlim = xmax * c(-1, 1), ylim = c(0, ymax),
-            xlab = "difference  (log2FC)",
-            ylab = "significance  (-log10q)",
-            hilight.lwd = 0, hilight.col = "#1e60bb", hilight.cex = 1.5,
-            cex = 0.45, cex.lab = 0.62
-          )
-          ## ggplot2::theme(legend.position='none')
-          ## ggplot2::theme_bw(base_size=11)
-
-          if (!interactive()) shiny::incProgress(1 / length(comp))
-        }
-      }) ## progress
-
-
-      ## patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
-      ##    ggplot2::theme_bw(base_size=11) &
-      ##    ggplot2::theme(legend.position='none')
-
-
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
-    })
-
-    volcanoAll_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
-
-    shiny::callModule(plotModule,
-      id = "volcanoAll",
-      func = volcanoAll.RENDER,
-      func2 = volcanoAll.RENDER,
-      info.text = volcanoAll_text,
-      pdf.width = 16, pdf.height = 5,
-      height = c(imgH, 500), width = c("auto", 1600),
-      res = c(70, 90),
-      title = "Volcano plots for all contrasts",
-      add.watermark = WATERMARK
-    )
-
-
-    ## ================================================================================
-    ## Volcano (all2 contrasts)
-    ## ================================================================================
-
-    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ## PLOTS SEEMS NOT TO REFRESH/DRAW CORRECTLY. Maybe viz.Contrast is isolated????
-    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # volcanoAll2 not used code ###########
 
     ## volcanoAll2.RENDER <- shiny::reactive({
-    volcanoAll2.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      if (is.null(ngs)) {
-        return(NULL)
-      }
+    # volcanoAll2.RENDER <- shiny::reactive({
+    #   ngs <- inputData()
+    #   if (is.null(ngs)) {
+    #     return(NULL)
+    #   }
+    #
+    #
+    #   fdr <- 1
+    #   lfc <- 0
+    #   fdr <- as.numeric(input$gx_fdr)
+    #   lfc <- as.numeric(input$gx_lfc)
+    #
+    #   sel.genes <- rownames(ngs$X)
+    #   if (input$gx_features != "<all>") {
+    #     ## gset <- GSETS[input$gx_features]
+    #     gset <- getGSETS(input$gx_features)
+    #     sel.genes <- unique(unlist(gset))
+    #   }
+    #
+    #   comp <- names(ngs$gx.meta$meta)
+    #   ng <- length(comp)
+    #   nn <- c(2, max(ceiling(ng / 2), 5))
+    #   ## if(ng>12) nn = c(3,8)
+    #   par(mfrow = nn, mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
+    #   nr <- 2
+    #   nc <- ceiling(sqrt(ng))
+    #   if (ng > 24) {
+    #     nc <- max(ceiling(ng / 3), 6)
+    #     nr <- 3
+    #   } else if (TRUE && ng <= 4) {
+    #     nc <- 4
+    #     nr <- 1
+    #   } else {
+    #     nc <- max(ceiling(ng / 2), 6)
+    #     nr <- 2
+    #   }
+    #   nr
+    #   nc
+    #   ## par(mfrow=c(nr,nc))
+    #
+    #   tests <- "meta"
+    #   methods <- NULL
+    #   methods <- selected_gxmethods()
+    #   plist <- viz.Contrasts(
+    #     pgx = ngs, ## pgxRT=inputData,
+    #     methods = methods, type = "volcano", fixed.axis = TRUE,
+    #     psig = fdr, fc = lfc, ntop = 10, cex = 0.5, cex.lab = 0.7,
+    #     plots.only = TRUE, title = NULL, subtitle = NULL, caption = NULL
+    #   )
+    #
+    #   fig <- viz.showFigure(plist) + plot_layout(nrow = nr, ncol = nc) &
+    #     ggplot2::theme_bw(base_size = 11) &
+    #     ## ggplot2::theme_bw(base_size=16) &
+    #     ggplot2::theme(legend.position = "none")
+    #
+    #   fig
+    # })
+    #
+    # volcanoAll2_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+    #
+    # volcanoAll2_caption <- "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
+    #
+    # shiny::callModule(
+    #   plotModule,
+    #   id = "volcanoAll2",
+    #   func = volcanoAll2.RENDER,
+    #   func2 = volcanoAll2.RENDER,
+    #   ## plotlib = 'ggplot',
+    #   info.text = volcanoAll2_text,
+    #   ## caption = volcanoAll_caption,
+    #   pdf.width = 16, pdf.height = 5,
+    #   ## height = imgH, res=75,
+    #   height = c(imgH, 500), width = c("auto", 1600),
+    #   res = c(75, 95),
+    #   title = "Volcano plots for all contrasts",
+    #   add.watermark = WATERMARK
+    # )
+    #
+    #
+    # output$volcanoAll2_UI <- shiny::renderUI({
+    #   shiny::fillCol(
+    #     ## id = ns("topgenes"),
+    #     height = rowH,
+    #     flex = c(1, NA, NA), ## height = 370,
+    #     plotWidget(ns("volcanoAll2")),
+    #     shiny::br(),
+    #     shiny::div(shiny::HTML(volcanoAll_caption), class = "caption")
+    #   )
+    # })
+
+    # end volcanoAll2 not used code ###########
 
 
-      fdr <- 1
-      lfc <- 0
-      fdr <- as.numeric(input$gx_fdr)
-      lfc <- as.numeric(input$gx_lfc)
+    # Volcano (all methods) code refactored to plotmodule ########
 
-      sel.genes <- rownames(ngs$X)
-      if (input$gx_features != "<all>") {
-        ## gset <- GSETS[input$gx_features]
-        gset <- getGSETS(input$gx_features)
-        sel.genes <- unique(unlist(gset))
-      }
-
-      ## -------------------------------------------------
-      ## plot layout
-      ## -------------------------------------------------
-      comp <- names(ngs$gx.meta$meta)
-      ng <- length(comp)
-      nn <- c(2, max(ceiling(ng / 2), 5))
-      ## if(ng>12) nn = c(3,8)
-      par(mfrow = nn, mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
-      nr <- 2
-      nc <- ceiling(sqrt(ng))
-      if (ng > 24) {
-        nc <- max(ceiling(ng / 3), 6)
-        nr <- 3
-      } else if (TRUE && ng <= 4) {
-        nc <- 4
-        nr <- 1
-      } else {
-        nc <- max(ceiling(ng / 2), 6)
-        nr <- 2
-      }
-      nr
-      nc
-      ## par(mfrow=c(nr,nc))
-
-      tests <- "meta"
-      methods <- NULL
-      methods <- selected_gxmethods()
-      plist <- viz.Contrasts(
-        pgx = ngs, ## pgxRT=inputData,
-        methods = methods, type = "volcano", fixed.axis = TRUE,
-        psig = fdr, fc = lfc, ntop = 10, cex = 0.5, cex.lab = 0.7,
-        plots.only = TRUE, title = NULL, subtitle = NULL, caption = NULL
-      )
-
-      fig <- viz.showFigure(plist) + plot_layout(nrow = nr, ncol = nc) &
-        ggplot2::theme_bw(base_size = 11) &
-        ## ggplot2::theme_bw(base_size=16) &
-        ggplot2::theme(legend.position = "none")
-
-      fig
-    })
-
-    volcanoAll2_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
-
-    volcanoAll2_caption <- "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
-
-    shiny::callModule(
-      plotModule,
-      id = "volcanoAll2",
-      func = volcanoAll2.RENDER,
-      func2 = volcanoAll2.RENDER,
-      ## plotlib = 'ggplot',
-      info.text = volcanoAll2_text,
-      ## caption = volcanoAll_caption,
-      pdf.width = 16, pdf.height = 5,
-      ## height = imgH, res=75,
-      height = c(imgH, 500), width = c("auto", 1600),
-      res = c(75, 95),
-      title = "Volcano plots for all contrasts",
-      add.watermark = WATERMARK
-    )
-
-
-    output$volcanoAll2_UI <- shiny::renderUI({
-      shiny::fillCol(
-        ## id = ns("topgenes"),
-        height = rowH,
-        flex = c(1, NA, NA), ## height = 370,
-        plotWidget(ns("volcanoAll2")),
-        shiny::br(),
-        shiny::div(shiny::HTML(volcanoAll_caption), class = "caption")
-      )
-    })
-
-    ## ================================================================================
-    ## Volcano (all methods)
-    ## ================================================================================
 
     volcanoMethods.RENDER <- shiny::reactive({
       comp <- input$gx_contrast
@@ -1171,6 +1172,9 @@ ExpressionBoard <- function(id, inputData) {
       pdf.width = 18, pdf.height = 6,
       add.watermark = WATERMARK
     )
+
+    # end Volcano (all methods) code refactored to plotmodule ########
+
 
     ## ================================================================================
     ## Statistics Table
