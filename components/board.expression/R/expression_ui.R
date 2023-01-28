@@ -179,7 +179,7 @@ ExpressionUI <- function(id) {
             class = "row",
             div(
               class = "col-md-8",
-              tableWidget(ns("genetable"))
+              expression_table_genetable_ui(id = ns("genetable"))
             ),
             div(
               class = "col-md-4",

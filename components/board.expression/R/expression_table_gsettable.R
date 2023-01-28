@@ -12,9 +12,9 @@
 #' #'
 #' #' @export
 #' expression_table_TableName_ui <- function(id,
-#'                                         label='',
-#'                                         height,
-#'                                         width) {
+#'                                           label='',
+#'                                           height,
+#'                                           width) {
 #'
 #'   ns <- shiny::NS(id)
 #'
