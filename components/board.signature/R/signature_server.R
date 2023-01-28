@@ -11,7 +11,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods)
 
     fullH = 800   ## full height of page
     tabH = '70vh'
-    
+
 infotext =
     "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
 
@@ -31,11 +31,11 @@ infotext =
 
     IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
     APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
-    
+
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
-    
+
     shiny::observeEvent( input$info, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
@@ -45,13 +45,13 @@ infotext =
 
     ##------------------------ observe/reactive function  -----------------------------
 
-    shiny::observeEvent(input$example1, { 
+    shiny::observeEvent(input$example1, {
         shiny::updateTextAreaInput(session,"genelistUP", value=IMMCHECK.GENES)
     })
-    shiny::observeEvent(input$example2, { 
+    shiny::observeEvent(input$example2, {
         shiny::updateTextAreaInput(session,"genelistUP", value=APOPTOSIS.GENES)
     })
-    shiny::observeEvent(input$example3, { 
+    shiny::observeEvent(input$example3, {
         shiny::updateTextAreaInput(session,"genelistUP", value=CELLCYCLE.GENES)
     })
 
@@ -96,13 +96,13 @@ infotext =
         return(gg)
     }) %>% shiny::debounce(1000)
 
-    
+
     getCurrentMarkers <- shiny::reactive({
         ##
-        ## Get current selection of markers/genes 
+        ## Get current selection of markers/genes
         ##
         ##
-        
+
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
@@ -113,9 +113,9 @@ infotext =
         ##if(is.null(input$contrast)) return(NULL)
         ##if(is.null(input$feature)) return(NULL)
         shiny::req(input$type, input$feature)
-        
+
         dbg("<signature:getCurrentMarkers> called\n")
-        
+
         level = "gene"
         features = toupper(ngs$genes$gene_name)
         xfeatures = toupper(ngs$genes[rownames(ngs$X),"gene_name"])
@@ -123,7 +123,7 @@ infotext =
         if(input$feature=="<custom>") {
             gset <- input_genelistUP()
             if(is.null(gset) || length(gset)==0 || gset[1]=="") return(NULL)
-            ##gset <- toupper(gset)        
+            ##gset <- toupper(gset)
             if(length(gset)==1) {
                 gene <- sub("^[@#]","",gset[1])
                 if(grepl("^@",gset[1]) && gene %in% xfeatures) {
@@ -158,10 +158,10 @@ infotext =
         } else {
             return(NULL)
         }
-        
+
         return(gset)
     })
-    
+
     getSingleSampleEnrichment <- shiny::reactive({
         ##
         ## Calls calcSingleSampleValues() and calculates single-sample
@@ -176,7 +176,7 @@ infotext =
         X = ngs$X
         sel = colnames(X)
         X <- X[,sel]
-        
+
         ## get the signature
         gset <- strsplit(IMMCHECK.GENES,split=" ")[[1]]
         gset <- getCurrentMarkers()
@@ -188,7 +188,7 @@ infotext =
         y = 1*(toupper(xgene) %in% toupper(gset))
         names(y) <- rownames(X)
         table(y)
-        
+
         ## expression by group
         ##grp = ngs$samples[colnames(X),"group"]
         grp <- ngs$model.parameters$group
@@ -197,45 +197,45 @@ infotext =
         colnames(gX) = groups
         dim(gX)
         dim(ngs$X)
-        
+
         ## for large datasets pre-grouping is faster
         ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
         do.rho   = TRUE
         dbg("getSingleSampleEnrichment:: 2 : do.rho")
         ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
         ##ss.bysample <- cbind(ss.bysample, rho=ss1)
-        ss.bysample <- cbind(rho=ss1)        
-        
+        ss.bysample <- cbind(rho=ss1)
+
         res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
         return(res)
     })
 
 
     sigCalculateGSEA <- shiny::reactive({
-        ## 
+        ##
         ## Calculate fgsea for current marker selection and active
         ## datasets.
         ##
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
-        
+
         ## observe input list
         gset = head(rownames(ngs$X),100)
         gset <- getCurrentMarkers()
         if(is.null(gset)) return(NULL)
         ##if(is.null(input$enplotsdb)) return(NULL)
-        
+
         ## get all logFC of this dataset
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         F <- meta$fc
         rownames(F) <- toupper(rownames(F))
-                        
+
         ## cleanup matrix
         F = as.matrix(F)
         dim(F)
         F =  F[,which(!duplicated(colnames(F))),drop=FALSE]
-        
+
         ## cleanup names and uppercase for mouse genes
         rownames(F) <- toupper(sub(".*:","",rownames(F)))
         gset <- toupper(sub(".*:","",gset))
@@ -246,7 +246,7 @@ infotext =
             cat("FATAL:: sigCalculateGSEA : gset empty!\n")
             return(NULL)
         }
-        
+
         ## ------------ prioritize with quick correlation
 
         y = 1*(toupper(rownames(F)) %in% toupper(gset))
@@ -256,28 +256,28 @@ infotext =
         ##wt.rho = apply(F,2, function(x) weightedCorr((x), y, weights=wt, method="Pearson"))
         rho[is.na(rho)] <- 0
         names(rho) = colnames(F)
-        
+
         ## ------- restrict to top 100 comparisons (fgsea is otherwise to
         ## ------- slow) but we do not expect many with so many
         ## ------- comparisons
-        ntop = 100    
+        ntop = 100
         jj <- head(order(-abs(rho)), ntop )
         F <- F[,jj,drop=FALSE]
         F <- F[!duplicated(rownames(F)),,drop=FALSE]
         F <- F + 1e-4*matrix(rnorm(length(F)),nrow(F),ncol(F))
         dim(F)
-        
+
         ## ------------- do fast GSEA
         gmt = list("gset"=unique(gset))
         res <- NULL
         enrich_method="rcor"
         enrich_method="fgsea"
         ##enrich_method <- input$rankmethod
-        
+
         if(enrich_method=="fgsea") {
             i=1
-            dbg("sigCalculateGSEA:: starting fgsea...\n")            
-            shiny::withProgress(message="computing GSEA ...", value=0.8, {
+            dbg("sigCalculateGSEA:: starting fgsea...\n")
+            shiny::withProgress(message="Computing GSEA ...", value=0.8, {
                 res <- lapply(1:ncol(F), function(i) {
                     suppressWarnings( suppressMessages(
                         res <- fgsea::fgsea(gmt, stats=F[,i], nperm=1000)
@@ -303,13 +303,13 @@ infotext =
         ## columns are: NES, pval, fdr, contrast
         res1 <- as.matrix(res1)
         res1 <- res1[match(colnames(F),rownames(res1)),,drop=FALSE]
-        
+
         if( nrow(res1) != ncol(F)) {
             cat("WARNING sigCalculateGSEA:: fgsea results are corrupted?\n")
             cat("WARNING sigCalculateGSEA:: got contrasts: ",res$contrast,"\n")
             cat("WARNING sigCalculateGSEA:: colnames.F= ",colnames(F),"\n")
         }
-        
+
         ## make nice table
         ##nes   <- unlist(sapply(res, function(x) x$NES))
         ##pval  <- unlist(sapply(res, function(x) x$pval))
@@ -317,17 +317,17 @@ infotext =
         pval <- res1[,"pval"]
         qval <- p.adjust( pval, method="fdr")
         rho <- rho[colnames(F)]
-        
+
         output <- as.matrix(cbind(NES=nes, p=pval, q=qval, rho=rho))
-        rownames(output) <- colnames(F)    
+        rownames(output) <- colnames(F)
         output <- output[order(-abs(output[,"NES"])),,drop=FALSE]
-        F <- F[,rownames(output),drop=FALSE]    
+        F <- F[,rownames(output),drop=FALSE]
         gsea <- list(F=as.matrix(F), gset=gset, output=output)
         dbg("sigCalculateGSEA:: done!\n")
         return(gsea)
     })
 
-    ##X=gX;method=c("rho","gsva") 
+    ##X=gX;method=c("rho","gsva")
     calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
         ##
         ## Calculates single-sample enrichment values for given matrix and
@@ -337,12 +337,12 @@ infotext =
         ## very fast rank difference
 
         dbg("<signature:calcSingleSampleValues> called\n")
-        
+
         if(is.null(names(y)) && length(y)!=nrow(X) ) {
             cat("<signature:calcSingleSampleValues> FATAL ERROR: y must be named if not matched\n")
             return(NULL)
         }
-        
+
         if(!is.null(names(y)) && length(y)!=nrow(X) ) {
             y <- y[match(rownames(X),names(y))]
         }
@@ -352,16 +352,16 @@ infotext =
         y <- y[jj]
 
         dbg("<signature:calcSingleSampleValues> 1\n")
-        
+
         if(sum(y!=0)==0) {
-            cat("<signature:calcSingleSampleValues> WARNING: y is all zero!\n")        
+            cat("<signature:calcSingleSampleValues> WARNING: y is all zero!\n")
             matzero <- matrix(0, nrow=ncol(X), ncol=length(method))
             colnames(matzero) <- method
             rownames(matzero) <- colnames(X)
             return(matzero)
         }
         ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)[,1]
-        
+
         S = list()
         if("rho" %in% method) {
             S[["rho"]] <- cor(apply(X, 2, ss.rank), y, use="pairwise")[,1]
@@ -369,7 +369,7 @@ infotext =
         }
 
         dbg("<signature:calcSingleSampleValues> 2\n")
-        
+
         ## calculate GSVA
         if("gsva" %in% method) {
 
@@ -381,7 +381,7 @@ infotext =
             fc = as.vector(res.gsva[1,])
             names(fc) = res.colnames
             S[["gsva"]] = fc[colnames(X)]
-        }    
+        }
         s.names = names(S)
         if(length(S)>1) {
             S1 = do.call(cbind, S)
@@ -402,16 +402,16 @@ infotext =
     ##================================================================================
     ## Enrichment {data-height=800}
     ##================================================================================
-    
+
     enplots.RENDER <- shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
-        
+
 
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
-        
+
 
         ## filter with table selection/search
         ii  <- enrichmentContrastTable$rows_all()
@@ -420,7 +420,7 @@ infotext =
         F <- as.matrix(gsea$F[,ct,drop=FALSE])
         qv <- gsea$output[ct,"q"]
         gset <- gsea$gset
-        
+
 
         cex.main=1.1
         nc=3
@@ -448,13 +448,13 @@ infotext =
         }
     })
 
-    
+
     enplots_info = "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
     enplots.opts = NULL
     shiny::callModule(
         plotModule,
-        id = "enplots", 
+        id = "enplots",
         func = enplots.RENDER,
         func2 = enplots.RENDER,
         plotlib="base",
@@ -470,16 +470,16 @@ infotext =
     ##================================================================================
     ## Volcano {data-height=800}
     ##================================================================================
-    
+
     volcanoPlots.RENDER <- shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
-        
+
 
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
-        
+
         ## filter with table selection/search
         ii  <- enrichmentContrastTable$rows_all()
         shiny::req(ii)
@@ -494,20 +494,20 @@ infotext =
         score <- abs(F) * -log(qv)
         gset=head(rownames(F),100)
         gset <- intersect(gsea$gset,rownames(F))
-        
+
         sel <- enrichmentGeneTable$rows_selected()
         sel.gene <- NULL
         if(length(sel)) {
             df <- getEnrichmentGeneTable()
             sel.gene <- df$gene[sel]
         }
-                
+
 
         cex.main=1.2
         par(mfrow=c(2,2), mar=c(2,4,3,1), mgp=c(2.2,0.8,0) )
-        if(ncol(F)>4) {        
+        if(ncol(F)>4) {
             par(mfrow=c(3,3), mar=c(1,4,3,1), mgp=c(2.2,0.8,0) )
-            cex.main=1            
+            cex.main=1
         }
         if(ncol(F)>9) {
             par(mfrow=c(4,4), mar=c(0.2,2,3,0.6))
@@ -545,7 +545,7 @@ infotext =
     volcanoPlots.opts = NULL
     shiny::callModule(
         plotModule,
-        id = "volcanoPlots", 
+        id = "volcanoPlots",
         func = volcanoPlots.RENDER,
         func2 = volcanoPlots.RENDER,
         plotlib="base",
@@ -557,7 +557,7 @@ infotext =
         res = c(90,100),
         add.watermark = WATERMARK
     )
-    
+
     ##================================================================================
     ## Overlap/similarity
     ##================================================================================
@@ -572,13 +572,13 @@ infotext =
         markers <- head(rownames(ngs$X),100)
         markers <- getCurrentMarkers()
         if(is.null(markers)) return(NULL)
-        
+
         ## fold change just for ranking of genes
         ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
         F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
         rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
         fx <- rowMeans(F**2)
-        
+
         ## fisher test
         ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
         ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)),NA)
@@ -587,9 +587,9 @@ infotext =
         rownames(N) = rownames(GSETxGENE)
         ##N <- N[which(!(N[,1]==0 & N[,3]==0)), ]
         N <- N[which(N[,1]>0 | N[,3]>0), ]
-        odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2]) 
+        odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2])
         dim(N)
-        
+
         ## WOW THIS IS FAST!!!!!!!
         pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
         head(pv)
@@ -617,7 +617,7 @@ infotext =
         ncommon <- Matrix::colSums(Matrix::t(GSETxGENE[aa,,drop=FALSE])*as.vector(y)!=0)
         ntotal  <- Matrix::rowSums(GSETxGENE[aa,,drop=FALSE]!=0)
         A$ratio <- ncommon / ntotal
-        ratio.kk <- paste0(ncommon,"/",ntotal)    
+        ratio.kk <- paste0(ncommon,"/",ntotal)
 
         gg <- colnames(GSETxGENE)
         gset <- names(y)[which(y!=0)]
@@ -632,13 +632,13 @@ infotext =
                 others <- paste0("(+",length(gg)-10," others)")
                 gg <- c(head(gg,10),others)
             }
-            commongenes[[i]] <- paste(gg,collapse=",")        
+            commongenes[[i]] <- paste(gg,collapse=",")
         }
-        ##commongenes <- sapply(commongenes,paste,collapse=",")        
+        ##commongenes <- sapply(commongenes,paste,collapse=",")
         commongenes <- unlist(commongenes)
-        
+
         ## construct results dataframe
-        gset.names <- substring(rownames(A),1,72)    
+        gset.names <- substring(rownames(A),1,72)
         ##aa <- apply(A, 2, formatC, format="e", digits=3)
         A$ratio <- round(A$ratio, digits=3)
         A$log.OR <- round(log10(A$odds.ratio), digits=3)
@@ -647,13 +647,13 @@ infotext =
         score = (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
         score = round(score, digits=3)
         df <- cbind(db=db, geneset=gset.names, score=score, "k/K"=ratio.kk, A, common.genes=commongenes)
-        
+
         if(DEV) {
             df <- df[,c("db","geneset","score","k/K","ratio","odds.ratio","log.OR","q.fisher","common.genes")]
         } else {
             df <- df[,c("db","geneset","score","k/K","odds.ratio","q.fisher","common.genes")]
         }
-        
+
         ##df <- df[order(-df$odds.ratio),]
         df <- df[order(-df$score),]
         dbg("[getOverlapTable] done! \n")
@@ -672,7 +672,7 @@ infotext =
         df1 <- df[sel,]
         df1$geneset = as.character(rownames(df1))
         df1$db = factor(df1$db)
-        
+
         ntop = 1000
         ntop = as.integer(input$overlapScorePlot_ntop)
         df1 = df1[head(order(-df1$score),ntop),]
@@ -682,7 +682,7 @@ infotext =
         df1$idx = factor(1:nrow(df1), levels=1:nrow(df1))
         df1$idx <- as.integer(df1$idx)
         klr = rep(RColorBrewer::brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
-        
+
         plt <- plotly::plot_ly(
             df1, x = ~idx, y = ~score,
             type='bar',  ## orientation='v',
@@ -707,7 +707,7 @@ infotext =
                     showline = FALSE,
                     showticklabels = FALSE,
                     showgrid = FALSE,
-                    zeroline = FALSE)) 
+                    zeroline = FALSE))
 
         if( min(nrow(df1),ntop) < 100 && input$overlapScorePlot_shownames) {
             ## labeling the y-axis inside bars
@@ -720,19 +720,19 @@ infotext =
                                 showarrow = FALSE, align='right')
         }
 
-        plt    
+        plt
     })
 
     overlapTable.RENDER <- shiny::reactive({
 
         df <- getOverlapTable()
-        shiny::req(df)    
+        shiny::req(df)
 
         df$geneset <- wrapHyperLink(df$geneset, df$geneset)
 
         numeric.cols <- which(sapply(df, is.numeric))
         numeric.cols <- intersect(c("p.fisher","q.fisher"),colnames(df))
-        
+
         DT::datatable(df, class='compact cell-border stripe',
                       rownames=FALSE, escape = c(-1,-2),
                       extensions = c('Scroller'),
@@ -742,7 +742,7 @@ infotext =
                           dom = 'frtip',
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE ## deferRender=TRUE,
-                      )  ## end of options.list 
+                      )  ## end of options.list
                       ) %>%
             DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -767,7 +767,7 @@ infotext =
 
     shiny::callModule(
         plotModule,
-        id = "overlapScorePlot", 
+        id = "overlapScorePlot",
         func = overlapScorePlot.RENDER,
         plotlib = "plotly",
         title = "Signature overlap scores", label="a",
@@ -777,7 +777,7 @@ infotext =
         height = 0.45*fullH, res=100,
         add.watermark = WATERMARK
     )
-    
+
     overlapTable <- shiny::callModule(
         tableModule,
         id = "overlapTable",
@@ -796,17 +796,17 @@ infotext =
         ##if(!input$tsne.all) return(NULL)
 
 
-        
+
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
-        dbg("<signature:markers.RENDER> called\n")        
-        
+        dbg("<signature:markers.RENDER> called\n")
+
         markers <- ngs$families[[2]]
         markers <- COLLECTIONS[[10]]
         markers <- getCurrentMarkers()
         if(is.null(markers)) return(NULL)
-        
+
         level = "gene"
         ##markers <- intersect(markers,ngs$genes$gene_name)
         ##jj <- match(markers,ngs$genes$gene_name)
@@ -814,12 +814,12 @@ infotext =
         jj <- match(toupper(markers), toupper(xgene))
         jj <- setdiff(jj,NA)
         gx <- ngs$X[jj,,drop=FALSE]
-        
+
         if(nrow(gx)==0) {
             cat("WARNING:: Markers:: markers do not match!!\n")
             return(NULL)
         }
-        
+
         ## get t-SNE positions of samples
         pos = ngs$tsne2d[colnames(gx),]
         gx = gx - min(gx,na.rm=TRUE) + 0.001 ## subtract background
@@ -829,11 +829,11 @@ infotext =
         zx <- t(apply(gx,1,function(x) tapply(x,as.character(grp),mean)))
         gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
         rownames(gx) = sub(".*:","",rownames(gx))
-        
+
         ## ---------------- get GSVA values
         res <- getSingleSampleEnrichment()
         if(is.null(res)) return(NULL)
-        
+
         S <- res$by.sample
         if(NCOL(S)==1) {
             fc = S[,1]
@@ -845,9 +845,9 @@ infotext =
         ##fc1 = sign(fc) * (fc/(1e-8+max(abs(fc))))**2
         fc1 = tanh(1.0*fc / (1e-4+sd(fc)))
         fc1 = fc1[rownames(pos)]
-        
+
         cex1 = 1.2
-        cex1 <- 0.7*c(1.6,1.2,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 0.7*c(1.6,1.2,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
         cex2 <- ifelse(level=="gene",1,0.8)
         klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
 
@@ -872,8 +872,8 @@ infotext =
             rho <- cor(t(top.gx), fc1)[,1]
             top.gx = top.gx[order(-rho),,drop=FALSE]
         }
-        
-        i=1    
+
+        i=1
         for(i in 0:min(nmax,nrow(top.gx))) {
             jj <- 1:ncol(top.gx)
             if(i==0) {
@@ -881,7 +881,7 @@ infotext =
                 tt = "INPUT SIGNATURE"
                 jj <- order(abs(fc1))
             } else {
-                colvar = pmax(top.gx[i,],0) 
+                colvar = pmax(top.gx[i,],0)
                 colvar = 1+round(15*(colvar/(0.7*max(colvar)+0.3*max(top.gx))))
                 klr1 = klrpal[colvar]
                 gene <- substring(sub(".*:","",rownames(top.gx)[i]),1,80)
@@ -889,7 +889,7 @@ infotext =
                 jj <- order(abs(top.gx[i,]))
             }
             klr1 = paste0(gplots::col2hex(klr1),"99")
-            
+
             base::plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
                  xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
                  fg = gray(ifelse(i==0,0.1,0.8)), bty = "o",
@@ -899,15 +899,15 @@ infotext =
 
         }
 
-        dbg("<signature:markers.RENDER> done!\n")        
-        
+        dbg("<signature:markers.RENDER> done!\n")
+
     })
 
 
     markers_info = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
 
     markers_caption = "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
-    
+
     markers.opts = shiny::tagList(
         withTooltip(shiny::radioButtons(ns("markers_sortby"),"Sort by:",
                             choices=c("correlation","probability","name"), inline=TRUE),
@@ -916,14 +916,14 @@ infotext =
         withTooltip(shiny::radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
-               "Choose layout.", 
+               "Choose layout.",
                placement="top", options = list(container = "body")),
     )
 
     shiny::callModule(
         plotModule,
         id = "markers",
-        title = "Markers plot", 
+        title = "Markers plot",
         func = markers.RENDER,
         func2 = markers.RENDER,
         plotlib = "base",
@@ -933,18 +933,18 @@ infotext =
         height = c(fullH-100,750), res=c(100,95),
         add.watermark = WATERMARK
     )
-    
+
     ##================================================================================
     ## Enrichment {data-height=800}
     ##================================================================================
-    
+
     enrichmentContrastTable.RENDER <- shiny::reactive({
-        
+
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
 
         dbg("enrichmentContrastTable.RENDER: reacted")
-        
+
         output <- as.matrix(gsea$output)
         output <- round(output, digits=4)
         output <- data.frame( contrast=rownames(output), output)
@@ -952,25 +952,25 @@ infotext =
             output$p <- NULL
             output$rho <- NULL
         }
-        
+
         color_fx = as.numeric(output[,"NES"])
-        color_fx[is.na(color_fx)] <- 0  ## yikes...        
+        color_fx[is.na(color_fx)] <- 0  ## yikes...
         numeric.cols <- which(sapply(output, is.numeric))
         numeric.cols
-        
+
         DT::datatable(output, class='compact cell-border stripe',
                       rownames=FALSE,
                       extensions = c('Scroller'),
                       ##selection='none',
                       selection = list(mode='single', target='row', selected=1),
                       ##selection = list(target='row', selected=1),
-                      fillContainer=TRUE,                      
+                      fillContainer=TRUE,
                       options = list(
                           dom = 'lrtip',
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE,
                           deferRender=FALSE)
-                      ) %>%  ## end of options.list 
+                      ) %>%  ## end of options.list
             DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("NES",
@@ -978,29 +978,29 @@ infotext =
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
-        
+
     })
 
-       
+
     getEnrichmentGeneTable <- shiny::reactive({
-        
+
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         shiny::req(ngs)
 
         dbg("[getEnrichmentGeneTable] reacted!")
-        
+
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
 
         dbg("[getEnrichmentGeneTable] 1:")
-        
+
         i=1
         i <- enrichmentContrastTable$rows_selected()
         if(is.null(i) || length(i)==0) return(NULL)
 
         dbg("[getEnrichmentGeneTable] 2:")
-        
+
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         fc <- meta$fc
         qv <- meta$qv
@@ -1008,32 +1008,32 @@ infotext =
         rownames(qv) <- toupper(rownames(qv))
 
         dbg("[getEnrichmentGeneTable] 3:")
-        
+
         contr <- rownames(gsea$output)[i]
         fc <- fc[,contr,drop=FALSE]
         ##qv <- qv[,contr,drop=FALSE]
 
         dbg("[getEnrichmentGeneTable] 4:")
-        
+
         gset <- getCurrentMarkers()
         if(is.null(gset)) return(NULL)
 
         gset <- setdiff(toupper(gset),c("",NA))
         genes <- intersect(gset,rownames(fc))
         dd1 <- setdiff(genes,rownames(fc))
-        dd2 <- setdiff(genes,rownames(qv))        
+        dd2 <- setdiff(genes,rownames(qv))
         fc <- fc[genes,,drop=FALSE]
         qv <- qv[genes,,drop=FALSE]
 
         dbg("[getEnrichmentGeneTable] 5:")
-        
+
         gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))],1,40)
         names(gene.tt) <- rownames(fc)
         df <- data.frame(gene=rownames(fc), title=gene.tt, fc, check.names=FALSE)
         ##df <- df[order(-abs(df$FC)),]
 
         dbg("[getEnrichmentGeneTable] done!")
-        
+
         df
 
     })
@@ -1042,13 +1042,13 @@ infotext =
 
         df <- getEnrichmentGeneTable()
         shiny::req(df)
-        
+
         color_fx = as.numeric(df[,3:ncol(df)])
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
         numeric.cols <- colnames(df)[3:ncol(df)]
         numeric.cols
-        
+
         DT::datatable(df, class='compact cell-border stripe',
                       rownames=FALSE,
                       extensions = c('Scroller'),
@@ -1060,7 +1060,7 @@ infotext =
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE,
                           deferRender=FALSE
-                      )) %>%  ## end of options.list 
+                      )) %>%  ## end of options.list
             DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(
@@ -1068,17 +1068,17 @@ infotext =
                         background = color_from_middle(color_fx,'lightblue','#f5aeae'),
                         backgroundSize = '98% 88%',
                         backgroundRepeat = 'no-repeat',
-                        backgroundPosition = 'center')    
+                        backgroundPosition = 'center')
     })
 
     info.text1 = "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
 
     enrichmentContrastTable <- shiny::callModule(
         tableModule,
-        id = "enrichmentContrastTable", 
+        id = "enrichmentContrastTable",
         func = enrichmentContrastTable.RENDER,
         info.text = info.text1,
-        caption2 = info.text1,                
+        caption2 = info.text1,
         title = "Enrichment by contrasts", label="a",
         height = c(230,700)
     )
@@ -1086,10 +1086,10 @@ infotext =
     info.text2 = "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
     enrichmentGeneTable <- shiny::callModule(
         tableModule,
-        id = "enrichmentGeneTable", 
+        id = "enrichmentGeneTable",
         func = enrichmentGeneTable.RENDER,
         info.text = info.text2,
-        caption2 = info.text2,        
+        caption2 = info.text2,
         title = "Genes in signature", label="b",
         height = c(360,700)
     )
