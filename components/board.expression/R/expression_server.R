@@ -476,6 +476,12 @@ ExpressionBoard <- function(id, inputData) {
                                     height = c(tabH, 700),
                                     watermark=FALSE)
 
+    expression_table_FDRtable_server(id = "FDRtable",
+                                     ngs = inputData,
+                                     GX.DEFAULTTEST = GX.DEFAULTTEST,
+                                     height =  c(tabH, 700),
+                                     watermark=FALSE)
+
 
 
 
@@ -780,6 +786,8 @@ ExpressionBoard <- function(id, inputData) {
 
     #end fctable table refactoring #######
 
+    #FDRtable table code  #########
+
     ## ================================================================================
     ## FDR table
     ## ================================================================================
@@ -865,6 +873,8 @@ ExpressionBoard <- function(id, inputData) {
       caption = FDRtable_caption,
       height = c(tabH, 700)
     )
+
+    #end FDRtable table code  #########
 
     ## ----------------------------------------------------------------------
     ## reactive values to return to parent environment

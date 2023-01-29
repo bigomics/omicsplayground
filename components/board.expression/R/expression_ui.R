@@ -193,7 +193,7 @@ ExpressionUI <- function(id) {
         ),
         shiny::tabPanel(
           "FDR table",
-          tableWidget(ns("FDRtable"))
+          expression_table_FDRtable_ui(ns("FDRtable"))
         )
       )
     )
