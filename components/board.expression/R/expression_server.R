@@ -413,9 +413,64 @@ ExpressionBoard <- function(id, inputData) {
                                           lfc = shiny::reactive(input$gx_lfc),
                                           watermark = FALSE)
 
+    # tab differential expression > Volcano Methods ####
+
+    # tables ####
+
+    gx_related_genesets <- shiny::reactive({
+
+      ngs <- inputData()
+      res <- filteredDiffExprTable()
+      if (is.null(res) || nrow(res) == 0) {
+        return(NULL)
+      }
+      contr <- input$gx_contrast
+      if (is.null(contr)) {
+        return(NULL)
+      }
+      ## get table
+      sel.row <- 1
+      ## sel.row = input$genetable_rows_selected
+      sel.row <- genetable$rows_selected()
+      if (is.null(sel.row)) {
+        return(NULL)
+      }
+      gene0 <- rownames(res)[sel.row]
+      gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
+
+      j <- which(toupper(rownames(ngs$GMT)) == gene1)
+      gset <- names(which(ngs$GMT[j, ] != 0))
+      gset <- intersect(gset, rownames(ngs$gsetX))
+      if (length(gset) == 0) {
+        return(NULL)
+      }
+
+      fx <- ngs$gset.meta$meta[[contr]]$meta.fx
+      names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
+      fx <- round(fx[gset], digits = 4)
+
+      rho <- cor(t(ngs$gsetX[gset, ]), ngs$X[gene0, ])[, 1]
+      rho <- round(rho, digits = 3)
+      gset1 <- substring(gset, 1, 60)
+
+      df <- data.frame(geneset = gset1, rho = rho, fx = fx, check.names = FALSE)
+      rownames(df) <- gset
+      df <- df[order(-abs(df$fx)), ]
+
+      return(df)
+    })
+
     genetable <- expression_table_genetable_server(id = "genetable",
                                                    res = filteredDiffExprTable,
                                                    height=c(tabH - 10, 700))
+
+    gsettable <- expression_table_gsettable_server(id = "gsettable",
+                                                   gx_related_genesets = gx_related_genesets,
+                                                   height = c(tabH - 10, 700),
+                                                   width = c("100%", 800),
+                                                   watermark=FALSE)
+
+
 
 
     #genetable table refactoring #########
@@ -512,98 +567,102 @@ ExpressionBoard <- function(id, inputData) {
 
     #end genetable table refactoring #########
 
-    ## NEED RETHINK: reacts too often
-    gx_related_genesets <- shiny::reactive({
+    # #gsettable refactoring ########
+    #
+    # ## NEED RETHINK: reacts too often
+    # gx_related_genesets <- shiny::reactive({
+    #
+    #   ngs <- inputData()
+    #   res <- filteredDiffExprTable()
+    #   if (is.null(res) || nrow(res) == 0) {
+    #     return(NULL)
+    #   }
+    #   contr <- input$gx_contrast
+    #   if (is.null(contr)) {
+    #     return(NULL)
+    #   }
+    #   ## get table
+    #   sel.row <- 1
+    #   ## sel.row = input$genetable_rows_selected
+    #   sel.row <- genetable$rows_selected()
+    #   if (is.null(sel.row)) {
+    #     return(NULL)
+    #   }
+    #   gene0 <- rownames(res)[sel.row]
+    #   gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
+    #
+    #   j <- which(toupper(rownames(ngs$GMT)) == gene1)
+    #   gset <- names(which(ngs$GMT[j, ] != 0))
+    #   gset <- intersect(gset, rownames(ngs$gsetX))
+    #   if (length(gset) == 0) {
+    #     return(NULL)
+    #   }
+    #
+    #   fx <- ngs$gset.meta$meta[[contr]]$meta.fx
+    #   names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
+    #   fx <- round(fx[gset], digits = 4)
+    #
+    #   rho <- cor(t(ngs$gsetX[gset, ]), ngs$X[gene0, ])[, 1]
+    #   rho <- round(rho, digits = 3)
+    #   gset1 <- substring(gset, 1, 60)
+    #
+    #   df <- data.frame(geneset = gset1, rho = rho, fx = fx, check.names = FALSE)
+    #   rownames(df) <- gset
+    #   df <- df[order(-abs(df$fx)), ]
+    #
+    #   return(df)
+    # })
+    #
+    # gsettable.RENDER <- shiny::reactive({
+    #   df <- gx_related_genesets()
+    #   if (is.null(df)) {
+    #     return(NULL)
+    #   }
+    #
+    #   df$geneset <- wrapHyperLink(df$geneset, rownames(df))
+    #
+    #   DT::datatable(df,
+    #     ## class = 'compact cell-border stripe',
+    #     class = "compact",
+    #     rownames = FALSE, escape = c(-1, -2),
+    #     extensions = c("Scroller"),
+    #     fillContainer = TRUE,
+    #     options = list(
+    #       ## dom = 'lfrtip',
+    #       dom = "frtip",
+    #       paging = TRUE,
+    #       pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+    #       scrollX = TRUE,
+    #       ## scrollY = tabV,
+    #       scrollY = FALSE,
+    #       scroller = FALSE,
+    #       deferRender = TRUE,
+    #       search = list(
+    #         regex = TRUE,
+    #         caseInsensitive = TRUE
+    #         ## search = 'GOBP:'
+    #       )
+    #     ), ## end of options.list
+    #     selection = list(mode = "single", target = "row", selected = NULL)
+    #   ) %>%
+    #     ## formatSignif(1:ncol(df),4) %>%
+    #     DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+    #     DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
+    #   # }, server=FALSE)
+    # })
+    #
+    # gsettable_text <- "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
+    #
+    # gsettable <- shiny::callModule(
+    #   tableModule,
+    #   id = "gsettable",
+    #   func = gsettable.RENDER,
+    #   info.text = gsettable_text, label = "II",
+    #   title = "Gene sets with gene",
+    #   height = c(tabH - 10, 700), width = c("100%", 800)
+    # )
 
-      ngs <- inputData()
-      res <- filteredDiffExprTable()
-      if (is.null(res) || nrow(res) == 0) {
-        return(NULL)
-      }
-      contr <- input$gx_contrast
-      if (is.null(contr)) {
-        return(NULL)
-      }
-      ## get table
-      sel.row <- 1
-      ## sel.row = input$genetable_rows_selected
-      sel.row <- genetable$rows_selected()
-      if (is.null(sel.row)) {
-        return(NULL)
-      }
-      gene0 <- rownames(res)[sel.row]
-      gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
-
-      j <- which(toupper(rownames(ngs$GMT)) == gene1)
-      gset <- names(which(ngs$GMT[j, ] != 0))
-      gset <- intersect(gset, rownames(ngs$gsetX))
-      if (length(gset) == 0) {
-        return(NULL)
-      }
-
-      fx <- ngs$gset.meta$meta[[contr]]$meta.fx
-      names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
-      fx <- round(fx[gset], digits = 4)
-
-      rho <- cor(t(ngs$gsetX[gset, ]), ngs$X[gene0, ])[, 1]
-      rho <- round(rho, digits = 3)
-      gset1 <- substring(gset, 1, 60)
-
-      df <- data.frame(geneset = gset1, rho = rho, fx = fx, check.names = FALSE)
-      rownames(df) <- gset
-      df <- df[order(-abs(df$fx)), ]
-
-      return(df)
-    })
-
-    gsettable.RENDER <- shiny::reactive({
-      df <- gx_related_genesets()
-      if (is.null(df)) {
-        return(NULL)
-      }
-
-      df$geneset <- wrapHyperLink(df$geneset, rownames(df))
-
-      DT::datatable(df,
-        ## class = 'compact cell-border stripe',
-        class = "compact",
-        rownames = FALSE, escape = c(-1, -2),
-        extensions = c("Scroller"),
-        fillContainer = TRUE,
-        options = list(
-          ## dom = 'lfrtip',
-          dom = "frtip",
-          paging = TRUE,
-          pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE,
-          ## scrollY = tabV,
-          scrollY = FALSE,
-          scroller = FALSE,
-          deferRender = TRUE,
-          search = list(
-            regex = TRUE,
-            caseInsensitive = TRUE
-            ## search = 'GOBP:'
-          )
-        ), ## end of options.list
-        selection = list(mode = "single", target = "row", selected = NULL)
-      ) %>%
-        ## formatSignif(1:ncol(df),4) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
-      # }, server=FALSE)
-    })
-
-    gsettable_text <- "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
-
-    gsettable <- shiny::callModule(
-      tableModule,
-      id = "gsettable",
-      func = gsettable.RENDER,
-      info.text = gsettable_text, label = "II",
-      title = "Gene sets with gene",
-      height = c(tabH - 10, 700), width = c("100%", 800)
-    )
+    #end gsettable refactoring ########
 
     ## ================================================================================
     ## Foldchange (all)

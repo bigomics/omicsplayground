@@ -183,7 +183,8 @@ ExpressionUI <- function(id) {
             ),
             div(
               class = "col-md-4",
-              tableWidget(ns("gsettable"))
+              expression_table_gsettable_ui(id = ns("gsettable"),
+                                            label = "II")
             )
           )
         ),
