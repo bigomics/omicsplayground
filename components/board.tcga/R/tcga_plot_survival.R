@@ -15,12 +15,6 @@
 tcga_plot_survival_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
 
-  # tcga_tcgasurv_info <- div(
-  #   "This", tags$strong("TCGA analysis module"),
-  #   "computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast.",
-  #   "Each cohort is dichotomized into positively and negatively correlated with your signature.",
-  #   "The survival probabilities are computed and tested using the Kaplan-Meier method."
-  # )
   tcga_tcgasurv_info <- "This <b>TCGA analysis module</b> computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
 
   tcga_tcgasurv_opts <- tagList(
