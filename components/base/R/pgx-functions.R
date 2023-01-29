@@ -1319,13 +1319,9 @@ alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     s1 <- trimws(s[nna])
     hugo <- NULL
     if(org == "hs") {
-        eg <- sapply(mget(s1, envir=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
-        eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, envir=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+        hugo <- limma::alias2SymbolTable( s1, species="Hs")
     } else if(org == "mm") {
-        eg <- sapply(mget(s1, envir=org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
-        eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, envir=org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+        hugo <- limma::alias2SymbolTable( s1, species="Mm")
     } else {
         stop("[alias2hugo] invalid organism")
     }
