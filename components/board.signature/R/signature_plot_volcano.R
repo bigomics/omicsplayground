@@ -17,11 +17,11 @@ signature_plot_volcano_ui <- function(id, height, width) {
   info_text <- "<b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts. For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left."
 
   PlotModuleUI(ns("plot"),
-               title = "Volcano plots",
-               info.text = info_text,
-               download.fmt = c("png", "pdf"),
-               height = height,
-               width = width
+    title = "Volcano plots",
+    info.text = info_text,
+    download.fmt = c("png", "pdf"),
+    height = height,
+    width = width
   )
 }
 
@@ -42,71 +42,76 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     volcanoPlots.RENDER <- shiny::reactive({
       ngs <- inputData()
-      alertDataLoaded(session,ngs)
-      if(is.null(ngs)) return(NULL)
+      alertDataLoaded(session, ngs)
+      if (is.null(ngs)) {
+        return(NULL)
+      }
 
       gsea <- sigCalculateGSEA()
-      if(is.null(gsea)) return(NULL)
+      if (is.null(gsea)) {
+        return(NULL)
+      }
 
       ## filter with table selection/search
-      ii  <- enrichmentContrastTable$rows_selected()
-      if(is.null(ii)){
-        ii  <- enrichmentContrastTable$rows_all()
+      ii <- enrichmentContrastTable$rows_selected()
+      if (is.null(ii)) {
+        ii <- enrichmentContrastTable$rows_all()
       }
       shiny::req(ii)
 
-      ct = colnames(ngs$model.parameters$contr.matrix)
+      ct <- colnames(ngs$model.parameters$contr.matrix)
       ct <- rownames(gsea$output)[ii]
 
       mm <- selected_gxmethods()
-      meta <- pgx.getMetaMatrix(ngs, methods=mm)
-      F  <- meta$fc[,ct,drop=FALSE]
-      qv <- meta$qv[,ct,drop=FALSE]
+      meta <- pgx.getMetaMatrix(ngs, methods = mm)
+      F <- meta$fc[, ct, drop = FALSE]
+      qv <- meta$qv[, ct, drop = FALSE]
       score <- abs(F) * -log(qv)
-      gset=head(rownames(F),100)
-      gset <- intersect(gsea$gset,rownames(F))
+      gset <- head(rownames(F), 100)
+      gset <- intersect(gsea$gset, rownames(F))
 
       sel <- enrichmentGeneTable$rows_selected()
       sel.gene <- NULL
-      if(length(sel)) {
+      if (length(sel)) {
         df <- getEnrichmentGeneTable()
         sel.gene <- df$gene[sel]
       }
 
-      if(ncol(F)==1){
-        cex.main=1.2
+      if (ncol(F) == 1) {
+        cex.main <- 1.2
       } else {
-        cex.main=1.2
-        par(mfrow=c(2,2), mar=c(2,4,3,1), mgp=c(2.2,0.8,0) )
+        cex.main <- 1.2
+        par(mfrow = c(2, 2), mar = c(2, 4, 3, 1), mgp = c(2.2, 0.8, 0))
       }
-      if(ncol(F)>4) {
-        par(mfrow=c(3,3), mar=c(1,4,3,1), mgp=c(2.2,0.8,0) )
-        cex.main=1
+      if (ncol(F) > 4) {
+        par(mfrow = c(3, 3), mar = c(1, 4, 3, 1), mgp = c(2.2, 0.8, 0))
+        cex.main <- 1
       }
-      if(ncol(F)>9) {
-        par(mfrow=c(4,4), mar=c(0.2,2,3,0.6))
-        cex.main=0.9
+      if (ncol(F) > 9) {
+        par(mfrow = c(4, 4), mar = c(0.2, 2, 3, 0.6))
+        cex.main <- 0.9
       }
-      for(i in 1:min(16,length(ct))) {
-        gset2 = head(gset[order(-score[gset,i])],30)
-        cex2 = 0.8
-        if(!is.null(sel.gene)) {
+      for (i in 1:min(16, length(ct))) {
+        gset2 <- head(gset[order(-score[gset, i])], 30)
+        cex2 <- 0.8
+        if (!is.null(sel.gene)) {
           gset2 <- sel.gene
-          cex2 = 1.3
+          cex2 <- 1.3
         }
-        xy <- cbind(fc=F[,i,drop=FALSE], z=-log10(qv[,i,drop=FALSE]))
+        xy <- cbind(fc = F[, i, drop = FALSE], z = -log10(qv[, i, drop = FALSE]))
         pgx.scatterPlotXY.BASE(
-          xy, var=NULL, type="factor", title='',
+          xy,
+          var = NULL, type = "factor", title = "",
           xlab = "differential expression (log2FC)",
           ylab = "significance (-log10q)",
           hilight = gset, hilight2 = gset2,
           cex = 0.9, cex.lab = cex2, cex.title = 1.0,
-          legend = FALSE, col=c("grey80","grey80"),
-          opacity = 1)
-        title(ct[i], cex.main=cex.main, line=0.3)
+          legend = FALSE, col = c("grey80", "grey80"),
+          opacity = 1
+        )
+        title(ct[i], cex.main = cex.main, line = 0.3)
       }
       p <- grDevices::recordPlot()
       p
