@@ -28,6 +28,8 @@ expression_table_fctable_ui <- function(id) {
 expression_table_fctable_server <- function(id,
                                             ngs, #inputData()
                                             res, #filteredDiffExprTable
+                                            metaFC,
+                                            metaQ,
                                             height,
                                             watermark=FALSE){
   moduleServer( id, function(input, output, session) {
