@@ -9,15 +9,13 @@ TcgaInputs <- function(id) {
   ns <- NS(id)
 
   bigdash::tabSettings(
-
     hr(),
     br(),
-
     withTooltip(
       radioButtons(
         ns("sigtype"),
         "Signature type:",
-        choices = c("contrast","genelist"),
+        choices = c("contrast", "genelist"),
         selected = "contrast",
         inline = TRUE
       ),
@@ -25,7 +23,6 @@ TcgaInputs <- function(id) {
       placement = "right",
       options = list(container = "body")
     ),
-
     conditionalPanel(
       "input.sigtype == 'contrast'",
       ns = ns,
@@ -36,7 +33,6 @@ TcgaInputs <- function(id) {
         options = list(container = "body")
       ),
     ),
-
     conditionalPanel(
       "input.sigtype == 'genelist'",
       ns = ns,
@@ -54,9 +50,7 @@ TcgaInputs <- function(id) {
         placement = "bottom"
       )
     ),
-
     br(),
-
     withTooltip(
       actionLink(ns("tcga_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",

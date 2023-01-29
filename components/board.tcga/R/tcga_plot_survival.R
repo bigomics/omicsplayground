@@ -28,7 +28,6 @@ tcga_plot_survival_ui <- function(id, height, width) {
       placement = "left",
       options = list(container = "body")
     ),
-
     withTooltip(
       radioButtons(ns("tcga_tcgasurv_ntop"), "N cor genes:", c(25, 100, 250, 1000), selected = 100, inline = TRUE),
       "Number of top genes for calculating the correlation.",
@@ -38,13 +37,13 @@ tcga_plot_survival_ui <- function(id, height, width) {
   )
 
   PlotModuleUI(ns("plot"),
-               title = "TCGA survival analysis",
-               label = "a",
-               info.text = tcga_tcgasurv_info,
-               height = height,
-               width = width,
-               options = tcga_tcgasurv_opts,
-               download.fmt = c("png", "pdf"),
+    title = "TCGA survival analysis",
+    label = "a",
+    info.text = tcga_tcgasurv_info,
+    height = height,
+    width = width,
+    options = tcga_tcgasurv_opts,
+    download.fmt = c("png", "pdf"),
   )
 }
 

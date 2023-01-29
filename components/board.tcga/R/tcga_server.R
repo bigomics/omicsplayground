@@ -3,10 +3,8 @@
 ##
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
-TcgaBoard <- function(id, inputData)
-{
-  moduleServer(id, function(input, output, session)
-  {
+TcgaBoard <- function(id, inputData) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 800
     tabH <- "70vh"
@@ -31,7 +29,9 @@ TcgaBoard <- function(id, inputData)
 
     observe({
       ngs <- inputData()
-      if (is.null(ngs)) return(NULL)
+      if (is.null(ngs)) {
+        return(NULL)
+      }
       comparisons <- colnames(ngs$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       updateSelectInput(session, "contrast", choices = comparisons, selected = head(comparisons, 1))
@@ -53,7 +53,5 @@ TcgaBoard <- function(id, inputData)
       genelist = shiny::reactive(input$genelist),
       watermark = WATERMARK
     )
-
-
   })
 }
