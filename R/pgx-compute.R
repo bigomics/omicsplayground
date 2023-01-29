@@ -161,20 +161,18 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
 
     ## convert group-wise contrast to sample-wise
-    is.group1=is.group2=FALSE
-    if("group" %in% colnames(samples)) is.group1 <- all(rownames(contrasts) %in% samples$group)
-    if("condition" %in% colnames(samples)) is.group2 <- all(rownames(contrasts) %in% samples$condition)
-    is.group.contrast <- (is.group1 || is.group2)
+    grp.idx <- grep("group|condition", tolower(colnames(samples)))
+    is.group.contrast <- all(rownames(contrasts) %in% samples[,grp.idx])
+    is.group.contrast
     if(is.group.contrast && nrow(contrasts)<nrow(samples)) {
         ## group
         message("[createPGX] converting group contrast to sample-wise contrasts...")
-        if(is.group1) grp <- as.character(samples$group)
-        if(is.group2) grp <- as.character(samples$condition)            
+        grp <- as.character(samples[,grp.idx])            
         contrasts.new <- contrasts[grp,,drop=FALSE]
         rownames(contrasts.new) <- rownames(samples)
         contrasts <- contrasts.new
     }
-    
+        
     ## sanity check...
     if( !all(rownames(contrasts)==rownames(samples)) &&
         !all(rownames(contrasts)==colnames(counts)) ) {

@@ -496,8 +496,19 @@ server = function(input, output, session) {
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
             ## we allow sticky sessions.
-            message("[SERVER] not logged? forcing logout() JS callback...")            
+            message("[SERVER] auth = firebase : logout triggered")
+            message("[SERVER] forcing logout() JS callback...")
             shinyjs::runjs("logout()")
+        }
+
+        if(opt$AUTHENTICATION == 'apache-mellon' && !logged) {
+            message("[SERVER] auth = apache-mellon : logout triggered")
+            message("[SERVER] forcing logout() JS callback...")
+            shinyjs::runjs("logout()")
+            shinyalert::shinyalert(
+                title = "Warning!",
+                text = "Please close your browser."
+            )
         }
         
         ##--------- start timer --------------
