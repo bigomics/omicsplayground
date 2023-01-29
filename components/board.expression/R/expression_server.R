@@ -284,7 +284,9 @@ ExpressionBoard <- function(id, inputData) {
 
     # Plotting ###
 
-    # tab differential expression > Plots ####
+    # tab differential expression > Plot ####
+
+
 
     expression_plot_volcano_server(
       id = "plots_volcano",
@@ -411,9 +413,9 @@ ExpressionBoard <- function(id, inputData) {
                                           lfc = shiny::reactive(input$gx_lfc),
                                           watermark = FALSE)
 
-    expression_table_genetable_server(id = "genetable",
-                                      res = filteredDiffExprTable,
-                                      height=c(tabH - 10, 700))
+    genetable <- expression_table_genetable_server(id = "genetable",
+                                                   res = filteredDiffExprTable,
+                                                   height=c(tabH - 10, 700))
 
 
     #genetable table refactoring #########

@@ -13,9 +13,13 @@
 #' @export
 expression_table_genetable_ui <- function(id) {
 
+  message("expression_table_genetable_ui called")
+
   ns <- shiny::NS(id)
 
   tableWidget(ns("table"))
+
+  message("expression_table_genetable_ui done")
 
 }
 
@@ -31,11 +35,24 @@ expression_table_genetable_server <- function(id,
                                               watermark=FALSE){
   moduleServer(id, function(input, output, session) {
 
+    message("expression_table_genetable_server called")
 
-    score_table.RENDER <- shiny::reactive({
+    ns <- session$ns
+
+    genetable_opts <- shiny::tagList(
+      withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
+                  "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
+                  placement = "top", options = list(container = "body")
+      ),
+      withTooltip(shiny::checkboxInput(ns("gx_showqvalues"), "show indivivual q-values", FALSE),
+                  "Show q-values of each indivivual statistical method in the table.",
+                  placement = "top", options = list(container = "body")
+      )
+    )
+
+    table.RENDER <- shiny::reactive({
 
       res <- res()
-      ## res <- fullDiffExprTable()
 
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
@@ -97,21 +114,12 @@ expression_table_genetable_server <- function(id,
     genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results.
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
-    genetable_opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
-                  "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
-                  placement = "top", options = list(container = "body")
-      ),
-      withTooltip(shiny::checkboxInput(ns("gx_showqvalues"), "show indivivual q-values", FALSE),
-                  "Show q-values of each indivivual statistical method in the table.",
-                  placement = "top", options = list(container = "body")
-      )
-    )
+
 
     genetable <- shiny::callModule(
       tableModule,
       id = "table",
-      func = genetable.RENDER,
+      func = table.RENDER,
       info.text = genetable_text,
       label = "I", info.width = "500px",
       options = genetable_opts,
@@ -119,7 +127,9 @@ expression_table_genetable_server <- function(id,
       title = "Differential expression analysis"
     )
 
-    return(score_table)
+    message("expression_table_genetable_server done")
+
+    return(genetable)
   }
   )
 }
