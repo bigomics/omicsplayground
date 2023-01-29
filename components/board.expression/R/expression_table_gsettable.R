@@ -11,8 +11,7 @@
 #' @param width
 #'
 #' @export
-expression_table_gsettable_ui <- function(id,
-                                          label='') {
+expression_table_gsettable_ui <- function(id) {
 
   ns <- shiny::NS(id)
 
@@ -32,6 +31,8 @@ expression_table_gsettable_server <- function(id,
                                               width,
                                               watermark=FALSE){
   moduleServer( id, function(input, output, session) {
+
+    ns <- session$ns
 
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()

@@ -183,14 +183,13 @@ ExpressionUI <- function(id) {
             ),
             div(
               class = "col-md-4",
-              expression_table_gsettable_ui(id = ns("gsettable"),
-                                            label = "II")
+              expression_table_gsettable_ui(id = ns("gsettable"))
             )
           )
         ),
         shiny::tabPanel(
           "Foldchange (all)",
-          tableWidget(ns("fctable"))
+          expression_table_fctable_ui(ns("fctable"))
         ),
         shiny::tabPanel(
           "FDR table",
