@@ -18,9 +18,6 @@ expression_plot_boxplot_ui <- function(id,
                                        height,
                                        width){
   ns <- shiny::NS(id)
-  # options <- tagList(
-  #   actionButton(ns("button1"), "some action")
-  # )
 
   plots_boxplot_opts = shiny::tagList(
         withTooltip( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
@@ -50,8 +47,6 @@ expression_plot_boxplot_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param grouped
-#' @param logscale
 #' @param ngs
 #' @param sel
 #' @param res
