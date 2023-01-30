@@ -15,7 +15,7 @@ expression_table_fctable_ui <- function(id) {
 
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  tableWidget(ns("fctable"))
 
 }
 
@@ -31,6 +31,7 @@ expression_table_fctable_server <- function(id,
                                             metaFC,
                                             metaQ,
                                             height,
+                                            tabV,
                                             watermark=FALSE){
   moduleServer( id, function(input, output, session) {
 

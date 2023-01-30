@@ -85,7 +85,7 @@ ExpressionUI <- function(id) {
                 div(
                   class = "col-md-3",
                   expression_plot_volcano_ui(ns("plots_volcano"),
-                                             label = "A",
+                                             label = "a",
                                              height = c(imgH, imgH),
                                              width = c("auto", imgH)
                   ),
@@ -94,7 +94,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_maplot_ui(
                     id = ns("plots_maplot"),
-                    label = "B",
+                    label = "b",
                     height = c(imgH, imgH),
                     width = c("auto", imgH)
                   ),
@@ -103,7 +103,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_boxplot_ui(
                     id = ns("plots_boxplot"),
-                    label = "C",
+                    label = "c",
                     height = c(imgH, imgH),
                     width = c("auto", imgH)
                   ),
@@ -112,13 +112,14 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_topfoldchange_ui(
                     id = ns("plots_topfoldchange"),
-                    label = "D",
+                    label = "d",
                     height = c(imgH, imgH),
                     width = c("auto", imgH)
                   ),
                 )
               ),
               tags$div(
+                class = "caption",
                 HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
                             significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
                             respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change

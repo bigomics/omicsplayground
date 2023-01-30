@@ -232,6 +232,7 @@ ExpressionBoard <- function(id, inputData) {
       ngs <- inputData()
       ## if(is.null(ngs)) return(NULL)
       shiny::req(ngs, input$gx_features, input$gx_fdr, input$gx_lfc)
+      # browser()
 
       comp <- 1
       test <- "trend.limma"
@@ -476,6 +477,7 @@ ExpressionBoard <- function(id, inputData) {
                                     metaFC = metaFC,
                                     metaQ = metaQ,
                                     height = c(tabH, 700),
+                                    tabV = tabV,
                                     watermark=FALSE)
 
     expression_table_FDRtable_server(id = "FDRtable",

@@ -15,7 +15,7 @@ expression_table_gsettable_ui <- function(id) {
 
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  tableWidget(ns("gsettable"))
 
 }
 
@@ -78,8 +78,10 @@ expression_table_gsettable_server <- function(id,
       tableModule,
       id = "gsettable",
       func = gsettable.RENDER,
-      info.text = gsettable_text, label = "II",
-      title = "Gene sets with gene",
+      info.text = gsettable_text,
+      title = tags$div(
+        HTML('<span class="module-label">(II)</span>Gene sets with gene')
+      ),
       height = height, width = width
     )
     return(gsettable)

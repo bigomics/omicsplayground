@@ -61,20 +61,12 @@ expression_plot_topfoldchange_server <- function(id,
       sel <- sel()
       res <- res()
 
-      if (is.null(sel) || length(sel) == 0) {
-        frame()
-        text(0.5, 0.5, "No gene selected", col = "black")
-        return(NULL)
-      }
-
-
-      if (is.null(res) || is.null(sel)) {
-        return(NULL)
-      }
       psel <- rownames(res)[sel]
       gene <- ngs$genes[psel, "gene_name"]
 
-      ## fc <- res$meta.fx
+      if (is.null(sel) || length(sel) == 0) { # Ugly
+        return(list(sel = sel))
+      }
 
       if (is.null(comp) || length(comp) == 0) {
         return(NULL)
@@ -88,10 +80,10 @@ expression_plot_topfoldchange_server <- function(id,
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
 
       klr.pal <- RColorBrewer::brewer.pal(4, "Paired")[2:1]
-      ## klr.pal <- BLUERED(16)[c(3,14)]
       klr <- klr.pal[1 + 1 * (sign(fc.top) < 0)]
 
       return(list(
+        sel = sel,
         fc.top = fc.top,
         klr = klr,
         gene = gene
@@ -101,6 +93,16 @@ expression_plot_topfoldchange_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
+
+      if (is.null(pd[["sel"]]) || length(pd[["sel"]]) == 0) {
+        frame()
+        text(0.5, 0.5, "No gene selected", col = "black")
+        return(NULL)
+      }
+
+      if (is.null(res) || is.null(sel)) {
+        return(NULL)
+      }
 
       par(mfrow = c(1, 1), mar = c(4, 4, 2, 2) * 1, mgp = c(2, 0.8, 0), oma = c(1, 1, 1, 0.5) * 0.2)
       par(mfrow = c(1, 1), mar = c(6, 3, 0, 1), mgp = c(2, 0.8, 0), oma = c(1, 0, 0, 0))

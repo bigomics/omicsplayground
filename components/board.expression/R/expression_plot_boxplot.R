@@ -65,25 +65,12 @@ expression_plot_boxplot_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-
       comp <- comp() #input$gx_contrast
       grouped <- input$boxplot_grouped
       logscale <- input$boxplot_logscale
       ngs <- ngs()
       sel <- sel()
       res <- res()
-
-
-      if (is.null(sel) || length(sel) == 0) {
-        frame()
-        text(0.5, 0.5, "No gene selected", col = "black")
-        return(NULL)
-      }
-
-
-      if (is.null(res) || is.null(sel)) {
-        return(NULL)
-      }
 
       psel <- rownames(res)[sel]
       gene <- ngs$genes[1, "gene_name"]
@@ -95,6 +82,7 @@ expression_plot_boxplot_server <- function(id,
         ngs = ngs,
         gene = gene,
         comp = comp,
+        sel = sel,
         grouped = grouped,
         logscale = logscale,
         srt = srt)
@@ -104,6 +92,16 @@ expression_plot_boxplot_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
+
+      if (is.null(pd[["sel"]]) || length(pd[["sel"]]) == 0) {
+        frame()
+        text(0.5, 0.5, "No gene selected", col = "black")
+        return(NULL)
+      }
+
+      if (is.null(res) || is.null(sel)) {
+        return(NULL)
+      }
 
       par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
       pgx.plotExpression(pd[["ngs"]],

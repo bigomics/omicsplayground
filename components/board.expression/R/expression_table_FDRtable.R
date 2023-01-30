@@ -15,7 +15,7 @@ expression_table_FDRtable_ui <- function(id) {
 
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  tableWidget(ns("FDRtable"))
 
 }
 
