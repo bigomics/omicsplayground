@@ -39,7 +39,6 @@ expression_plot_topgenes_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Expression of top differentially expressed genes",
     label = label,
-    plotlib = "ggplot",
     info.text = info_text,
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -127,6 +126,7 @@ expression_plot_topgenes_server <- function(id,
 
 
     plotly.RENDER <- function() {
+
       pd <- plot_data()
       shiny::req(pd)
 
@@ -141,17 +141,18 @@ expression_plot_topgenes_server <- function(id,
         gene <- rownames(pd[["res"]])[i]
         pgx.plotExpression(
           pd[["ngs"]],
-          pd[["gene"]],
+          # pd[["gene"]],
+          gene,
           pd[["comp"]],
           pd[["grouped"]],
           max.points = 200,
           logscale = pd[["logscale"]],
           collapse.others = TRUE,
           showothers = pd[["showothers"]],
-          ylab=ylab,
+          ylab=pd[["ylab"]],
           xlab="",
           srt=pd[["srt"]],
-          names = show.names,
+          names = pd[["show.names"]],
           main = ""
         )
         title(gene, cex.main = 1, line = -0.6)
@@ -173,7 +174,6 @@ expression_plot_topgenes_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "ggplot",
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
