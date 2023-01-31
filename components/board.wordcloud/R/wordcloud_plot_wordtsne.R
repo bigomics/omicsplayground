@@ -64,6 +64,7 @@ wordcloud_plot_wordtsne_server <- function(id,
           x = pos[, 1], y = pos[, 2],
           color = klr,
           size = ~abs.NES,
+
           marker = list(
             line = list(color = "grey20", width = 0.6)
           )
