@@ -45,7 +45,7 @@ compare_table_corr_score_server <- function(id,
     score_table <- shiny::callModule(
       tableModule,
       id = "table",
-      func = score_table.RENDER, ## ns=ns,
+      func = score_table.RENDER,
       info.text = score_table_info,
       title = tags$div(
         HTML('<span class="module-label">(b)</span>Correlation score')
