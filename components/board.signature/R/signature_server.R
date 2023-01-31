@@ -111,12 +111,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         return(NULL)
       }
 
-      type <- "<custom>"
-      type <- "contrast"
       type <- input$type
-      ## if(is.null(type)) return(NULL)
-      ## if(is.null(input$contrast)) return(NULL)
-      ## if(is.null(input$feature)) return(NULL)
       shiny::req(input$type, input$feature)
 
       dbg("<signature:getCurrentMarkers> called\n")
@@ -130,7 +125,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         if (is.null(gset) || length(gset) == 0 || gset[1] == "") {
           return(NULL)
         }
-        ## gset <- toupper(gset)
         if (length(gset) == 1) {
           gene <- sub("^[@#]", "", gset[1])
           if (grepl("^@", gset[1]) && gene %in% xfeatures) {
@@ -147,7 +141,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         }
       } else if (type == "contrast" &&
         input$feature %in% names(ngs$gx.meta$meta)) {
-        contr <- 1
         contr <- input$feature
         fx <- ngs$gx.meta$meta[[contr]]$meta.fx
         probes <- rownames(ngs$gx.meta$meta[[contr]])
@@ -158,7 +151,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
         gset <- top.genes
       } else if (input$feature %in% names(iGSETS)) {
-        ## gset <- toupper(GSETS[[input$feature]])
         gset <- toupper(unlist(getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = gset0)
@@ -186,7 +178,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       if (is.null(gset)) {
         return(NULL)
       }
-      ## if(is.null(input$enplotsdb)) return(NULL)
 
       ## get all logFC of this dataset
       meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
@@ -195,14 +186,12 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
       ## cleanup matrix
       F <- as.matrix(F)
-      dim(F)
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
       ## cleanup names and uppercase for mouse genes
       rownames(F) <- toupper(sub(".*:", "", rownames(F)))
       gset <- toupper(sub(".*:", "", gset))
       gset <- intersect(toupper(gset), rownames(F))
-      length(gset)
 
       if (length(gset) == 0) {
         cat("FATAL:: sigCalculateGSEA : gset empty!\n")
@@ -214,8 +203,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       y <- 1 * (toupper(rownames(F)) %in% toupper(gset))
       ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)[, 1]
       rho <- cor(apply(F, 2, ss.rank), y, use = "pairwise")[, 1]
-      ## wt = c(mean(y==0),mean(y==1))[1+y]
-      ## wt.rho = apply(F,2, function(x) weightedCorr((x), y, weights=wt, method="Pearson"))
       rho[is.na(rho)] <- 0
       names(rho) <- colnames(F)
 
@@ -227,18 +214,15 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       F <- F[, jj, drop = FALSE]
       F <- F[!duplicated(rownames(F)), , drop = FALSE]
       F <- F + 1e-4 * matrix(rnorm(length(F)), nrow(F), ncol(F))
-      dim(F)
 
       ## ------------- do fast GSEA
       gmt <- list("gset" = unique(gset))
       res <- NULL
-      enrich_method <- "rcor"
       enrich_method <- "fgsea"
       ## enrich_method <- input$rankmethod
 
       if (enrich_method == "fgsea") {
         i <- 1
-        dbg("sigCalculateGSEA:: starting fgsea...\n")
         shiny::withProgress(message = "Computing GSEA ...", value = 0.8, {
           res <- lapply(1:ncol(F), function(i) {
             suppressWarnings(suppressMessages(
@@ -249,7 +233,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
             return(res)
           })
         })
-        dbg("sigCalculateGSEA:: fgsea done!\n")
         res1 <- data.frame(do.call(rbind, res))
         res1$ES <- NULL
       } else {
@@ -273,8 +256,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       }
 
       ## make nice table
-      ## nes   <- unlist(sapply(res, function(x) x$NES))
-      ## pval  <- unlist(sapply(res, function(x) x$pval))
       nes <- res1[, "NES"]
       pval <- res1[, "pval"]
       qval <- p.adjust(pval, method = "fdr")
@@ -285,7 +266,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       output <- output[order(-abs(output[, "NES"])), , drop = FALSE]
       F <- F[, rownames(output), drop = FALSE]
       gsea <- list(F = as.matrix(F), gset = gset, output = output)
-      dbg("sigCalculateGSEA:: done!\n")
       return(gsea)
     })
 
@@ -315,14 +295,12 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       fx <- rowMeans(F**2)
 
       ## fisher test
-      ## ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
       ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)), NA)
       N <- cbind(
         k1 = Matrix::rowSums(GSETxGENE != 0), n1 = ncol(GSETxGENE),
         k2 = Matrix::rowSums(GSETxGENE[, ii] != 0), n2 = length(ii)
       )
       rownames(N) <- rownames(GSETxGENE)
-      ## N <- N[which(!(N[,1]==0 & N[,3]==0)), ]
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
       dim(N)
@@ -332,21 +310,14 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       head(pv)
       names(pv) <- rownames(N)
       pv <- pv[match(names(odds.ratio), names(pv))]
-      ## qv = p.adjust(pv, method="fdr")
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
       dim(A)
 
       ## limit the list??
-      table(qv < 0.05)
-      table(qv < 0.2)
-      table(qv < 0.999)
       A <- A[which(A$q.fisher < 0.999), ]
-      ## A <- A[which( A$q.fisher < 0.05),]
-      dim(A)
 
       ## get shared genes
-      dbg("[getOverlapTable] determining shared genes...\n")
       aa <- rownames(A)
 
       y <- 1 * (colnames(GSETxGENE) %in% toupper(markers))
@@ -360,8 +331,6 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       gset <- names(y)[which(y != 0)]
       G1 <- GSETxGENE[aa, which(y != 0)]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
-      ## commongenes <- lapply(commongenes, function(x) x[order(-fx[x])])
-      ## commongenes <- parallel::mclapply(commongenes, function(x) x[order(-fx[x])])
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
         gg <- gg[order(-abs(fx[gg]))]
@@ -371,12 +340,10 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         }
         commongenes[[i]] <- paste(gg, collapse = ",")
       }
-      ## commongenes <- sapply(commongenes,paste,collapse=",")
       commongenes <- unlist(commongenes)
 
       ## construct results dataframe
       gset.names <- substring(rownames(A), 1, 72)
-      ## aa <- apply(A, 2, formatC, format="e", digits=3)
       A$ratio <- round(A$ratio, digits = 3)
       A$log.OR <- round(log10(A$odds.ratio), digits = 3)
       A$odds.ratio <- round(A$odds.ratio, digits = 3)
@@ -391,9 +358,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       }
 
-      ## df <- df[order(-df$odds.ratio),]
       df <- df[order(-df$score), ]
-      dbg("[getOverlapTable] done! \n")
       return(df)
     })
 
@@ -405,22 +370,15 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       ngs <- inputData()
       shiny::req(ngs)
 
-      dbg("[getEnrichmentGeneTable] reacted!")
-
       gsea <- sigCalculateGSEA()
       if (is.null(gsea)) {
         return(NULL)
       }
 
-      dbg("[getEnrichmentGeneTable] 1:")
-
-      i <- 1
       i <- enrichmentContrastTable$rows_selected()
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
-
-      dbg("[getEnrichmentGeneTable] 2:")
 
       meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
       fc <- meta$fc
@@ -428,13 +386,8 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       rownames(fc) <- toupper(rownames(fc))
       rownames(qv) <- toupper(rownames(qv))
 
-      dbg("[getEnrichmentGeneTable] 3:")
-
       contr <- rownames(gsea$output)[i]
       fc <- fc[, contr, drop = FALSE]
-      ## qv <- qv[,contr,drop=FALSE]
-
-      dbg("[getEnrichmentGeneTable] 4:")
 
       gset <- getCurrentMarkers()
       if (is.null(gset)) {
@@ -448,14 +401,9 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       fc <- fc[genes, , drop = FALSE]
       qv <- qv[genes, , drop = FALSE]
 
-      dbg("[getEnrichmentGeneTable] 5:")
-
       gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))], 1, 40)
       names(gene.tt) <- rownames(fc)
       df <- data.frame(gene = rownames(fc), title = gene.tt, fc, check.names = FALSE)
-      ## df <- df[order(-abs(df$FC)),]
-
-      dbg("[getEnrichmentGeneTable] done!")
 
       df
     })

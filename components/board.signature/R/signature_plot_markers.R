@@ -66,8 +66,6 @@ signature_plot_markers_server <- function(id,
       ##
       ## very fast rank difference
 
-      dbg("<signature:calcSingleSampleValues> called\n")
-
       if (is.null(names(y)) && length(y) != nrow(X)) {
         cat("<signature:calcSingleSampleValues> FATAL ERROR: y must be named if not matched\n")
         return(NULL)
@@ -80,8 +78,6 @@ signature_plot_markers_server <- function(id,
       jj <- which(!is.na(y))
       X <- X[jj, ]
       y <- y[jj]
-
-      dbg("<signature:calcSingleSampleValues> 1\n")
 
       if (sum(y != 0) == 0) {
         cat("<signature:calcSingleSampleValues> WARNING: y is all zero!\n")
@@ -96,8 +92,6 @@ signature_plot_markers_server <- function(id,
       if ("rho" %in% method) {
         S[["rho"]] <- cor(apply(X, 2, ss.rank), y, use = "pairwise")[, 1]
       }
-
-      dbg("<signature:calcSingleSampleValues> 2\n")
 
       ## calculate GSVA
       if ("gsva" %in% method) {
@@ -116,12 +110,9 @@ signature_plot_markers_server <- function(id,
         S1 <- S[[1]]
       }
 
-      dbg("<signature:calcSingleSampleValues> done!\n")
-
       S1 <- as.matrix(S1)
       rownames(S1) <- colnames(X)
       colnames(S1) <- s.names
-      ## S1 <- S1[order(-S1[,"gsva"]),]
       return(S1)
     }
 
@@ -149,12 +140,9 @@ signature_plot_markers_server <- function(id,
         return(NULL)
       }
 
-      ## y = 1*(rownames(X) %in% gset)
-      ## rownames(X)=toupper(rownames(X)); gset=toupper(gset)
       xgene <- ngs$genes[rownames(X), "gene_name"]
       y <- 1 * (toupper(xgene) %in% toupper(gset))
       names(y) <- rownames(X)
-      table(y)
 
       ## expression by group
       ## grp = ngs$samples[colnames(X),"group"]
@@ -162,15 +150,11 @@ signature_plot_markers_server <- function(id,
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
       colnames(gX) <- groups
-      dim(gX)
-      dim(ngs$X)
 
       ## for large datasets pre-grouping is faster
       ss.bygroup <- calcSingleSampleValues(gX, y, method = c("rho", "gsva"))
       do.rho <- TRUE
-      dbg("getSingleSampleEnrichment:: 2 : do.rho")
       ss1 <- calcSingleSampleValues(X[, ], y, method = c("rho"))
-      ## ss.bysample <- cbind(ss.bysample, rho=ss1)
       ss.bysample <- cbind(rho = ss1)
 
       res <- list(by.sample = ss.bysample, by.group = ss.bygroup)
@@ -182,8 +166,6 @@ signature_plot_markers_server <- function(id,
       if (is.null(ngs)) {
         return(NULL)
       }
-
-      dbg("<signature:markers.RENDER> called\n")
 
       markers <- ngs$families[[2]]
       markers <- COLLECTIONS[[10]]
@@ -206,7 +188,6 @@ signature_plot_markers_server <- function(id,
       ## get t-SNE positions of samples
       pos <- ngs$tsne2d[colnames(gx), ]
       gx <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
-      dim(gx)
       grp <- ngs$model.parameters$group
       zx <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
@@ -283,7 +264,6 @@ signature_plot_markers_server <- function(id,
           inset = c(-0.1, -0.05), bty = "n"
         )
       }
-      dbg("<signature:markers.RENDER> done!\n")
       p <- grDevices::recordPlot()
       p
     })

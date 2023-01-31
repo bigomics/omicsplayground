@@ -19,8 +19,6 @@ signature_table_enrich_by_contrasts_server <- function(id,
         return(NULL)
       }
 
-      dbg("enrichmentContrastTable.RENDER: reacted")
-
       output <- as.matrix(gsea$output)
       output <- round(output, digits = 4)
       output <- data.frame(contrast = rownames(output), output)
@@ -32,7 +30,6 @@ signature_table_enrich_by_contrasts_server <- function(id,
       color_fx <- as.numeric(output[, "NES"])
       color_fx[is.na(color_fx)] <- 0 ## yikes...
       numeric.cols <- which(sapply(output, is.numeric))
-      numeric.cols
 
       DT::datatable(output,
         class = "compact cell-border stripe",

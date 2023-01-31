@@ -21,18 +21,15 @@ signature_table_genes_in_signature_server <- function(id,
       color_fx[is.na(color_fx)] <- 0 ## yikes...
 
       numeric.cols <- colnames(df)[3:ncol(df)]
-      numeric.cols
 
       DT::datatable(df,
         class = "compact cell-border stripe",
         rownames = FALSE,
         extensions = c("Scroller"),
-        ## selection='none',
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lrftip",
-          ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, scrollY = tabH, scroller = TRUE,
           deferRender = FALSE
         )
