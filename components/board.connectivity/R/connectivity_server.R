@@ -47,7 +47,6 @@ ConnectivityBoard <- function(id, inputData) {
       sigdb0 <- dir(SIGDB.DIR, pattern = "sigdb-.*h5")
       sigdb <- names(ngs$connectivity) ## only precomputed inside PGX object??
       sigdb <- sort(intersect(sigdb, sigdb0))
-      sigdb
       sel <- sigdb[1]
       shiny::updateSelectInput(session, "cmap_sigdb", choices = sigdb, selected = sel)
     })
@@ -530,75 +529,6 @@ ConnectivityBoard <- function(id, inputData) {
       height = c(260, 720), width = c("auto", 1280)
     )
 
-    ## ============================================================================
-    ## FC correlation/scatter plots
-    ## ============================================================================
-
-    mfplots <- c(4, 5)
-    cmap_FCFCscatter <- function(fc, F, mfplots, ylab) {
-      ## get the foldchanges of selected comparison and neighbourhood
-      F0 <- F
-      F[is.na(F)] <- 0 ## really??
-      names(fc) <- toupper(names(fc))
-      gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
-      fc <- fc[gg]
-
-      nplots <- mfplots[1] * mfplots[2]
-      F <- F[gg, 1:min(nplots, ncol(F)), drop = FALSE]
-      F0 <- F0[gg, colnames(F), drop = FALSE]
-      i <- 1
-      par(
-        mfrow = mfplots, mar = c(5.1, 1.6, 0.2, 0.5),
-        mgp = c(2.6, 0.7, 0), oma = c(0, 3, 0, 0)
-      )
-      i <- 1
-      for (i in 1:ncol(F)) {
-        ct1 <- colnames(F)[i]
-        ct1x <- sub("\\]", "]\n", ct1)
-        nna <- (is.na(fc) | is.na(F0[, ct1]))
-        col <- c("grey15", "grey70")[1 + nna]
-        base::plot(F[, ct1], fc,
-          pch = 20, cex = 0.5,
-          cex.lab = 0.9, cex.axis = 0.9,
-          xlab = ct1x, ylab = "", col = col
-        )
-        abline(v = 0, h = 0, lty = 2, lwd = 0.5)
-        abline(lm(fc ~ F0[, ct1]), col = "red")
-        if (i %% mfplots[2] == 1) {
-          mtext(ylab, 2, line = 3, cex = 0.60)
-        }
-      }
-    }
-
-    mfplots <- c(4, 5)
-    cmap_FCFCenplot <- function(fc, F, mfplots, ylab, res) {
-      names(fc) <- toupper(names(fc))
-      nplots <- mfplots[1] * mfplots[2]
-      i <- 1
-      par(mfrow = mfplots, mar = c(0.1, 4, 2.6, 1))
-      for (i in 1:min(ncol(F), nplots)) {
-        j1 <- head(order(F[, i]), 100)
-        j2 <- head(order(-F[, i]), 100)
-        gset.dn <- rownames(F)[j1]
-        gset.up <- rownames(F)[j2]
-        gset.both <- c(gset.dn, gset.up)
-        rnk <- fc
-        pw <- colnames(F)[i]
-        gsea.enplot(abs(rnk), gset.both,
-                    xlab = "",
-                    main = pw, cex.main = 0.8, len.main = 32
-        )
-        R <- res[match(pw, res$pathway), , drop = FALSE]
-        legend("topright",
-          cex = 0.75, y.intersp = 0.85, bty = "n",
-          c(
-            paste("NES=", round(R$NES[1], 3)),
-            paste("padj=", round(R$padj[1], 4))
-          )
-        )
-      }
-    }
-
     getTopProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
       ##
@@ -627,53 +557,18 @@ ConnectivityBoard <- function(id, inputData) {
       return(F)
     })
 
-    cmap_FCFCplots.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      alertDataLoaded(session, ngs)
+    ## ============================================================================
+    ## FC correlation/scatter plots
+    ## ============================================================================
 
-      shiny::req(ngs, input$cmap_contrast)
-      res1 <- getCurrentContrast()
-      fc <- res1$fc
-      ct <- res1$name
-      F <- getTopProfiles()
-      if (NCOL(F) == 0) {
-        return(NULL)
-      }
-      F <- F[, 1:min(ncol(F), 10), drop = FALSE]
-
-      if (input$fcfc_plottype == "scatter") {
-        mfplots <- c(2, 5)
-        cmap_FCFCscatter(fc, F, mfplots, ylab = ct)
-      } else {
-        mfplots <- c(3, 4)
-        df <- getConnectivityScores()
-        cmap_FCFCenplot(fc, F, mfplots, ylab, df)
-      }
-    })
-
-    cmap_FCFCplots.opts <- shiny::tagList(
-      shiny::radioButtons(ns("fcfc_plottype"), "Plot type:", c("scatter", "enrichment"),
-        inline = TRUE
-      )
-    )
-
-    cmap_FCFCplots_info <- "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings."
-
-    cmap_FCFCplots_caption <- "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal."
-
-    shiny::callModule(
-      plotModule,
+    connectivity_plot_cmap_FCFCplots_server(
       "cmap_FCFCplots",
-      label = "a",
-      func = cmap_FCFCplots.RENDER,
-      func2 = cmap_FCFCplots.RENDER,
-      options = cmap_FCFCplots.opts,
-      title = "FC scatter plots",
-      info.text = cmap_FCFCplots_info,
-      pdf.height = 4.5, pdf.width = 10,
-      height = c(360, 600), width = c("auto", 1280),
-      res = c(90, 110),
-      add.watermark = WATERMARK
+      inputData,
+      reactive(input$cmap_contrast),
+      getCurrentContrast,
+      getTopProfiles,
+      getConnectivityScores,
+      watermark = WATERMARK
     )
 
 

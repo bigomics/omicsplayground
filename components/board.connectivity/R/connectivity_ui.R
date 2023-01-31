@@ -64,7 +64,7 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            plotWidget(ns("cmap_FCFCplots"))
+            connectivity_plot_cmap_FCFCplots_ui(ns("cmap_FCFCplots"))
           ),
           div(
             class = "col-md-6",
