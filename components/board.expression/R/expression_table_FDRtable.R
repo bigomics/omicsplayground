@@ -27,7 +27,8 @@ expression_table_FDRtable_ui <- function(id) {
 #' @export
 expression_table_FDRtable_server <- function(id,
                                              ngs,
-                                             GX.DEFAULTTEST,
+                                             methods, #input$gx_statmethod
+                                             tabV,
                                              height, #c(tabH, 700)
                                              watermark=FALSE){
   moduleServer( id, function(input, output, session) {
@@ -36,9 +37,9 @@ expression_table_FDRtable_server <- function(id,
 
     FDRtable.RENDER <- shiny::reactive({
 
-      methods <- GX.DEFAULTTEST
-      methods <- input$gx_statmethod
-      ## methods = input$gx_statmethod
+      #methods <- GX.DEFAULTTEST
+      methods <- methods() #input$gx_statmethod
+
       if (is.null(methods)) {
         return(NULL)
       }

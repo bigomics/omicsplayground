@@ -482,7 +482,8 @@ ExpressionBoard <- function(id, inputData) {
 
     expression_table_FDRtable_server(id = "FDRtable",
                                      ngs = inputData,
-                                     GX.DEFAULTTEST = GX.DEFAULTTEST,
+                                     methods = shiny::reactive(input$gx_statmethod),
+                                     tabV = tabV,
                                      height =  c(tabH, 700),
                                      watermark=FALSE)
 
