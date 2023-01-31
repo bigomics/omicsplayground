@@ -130,7 +130,7 @@ ExpressionUI <- function(id) {
               "Top genes",
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
-                label = "A",
+                label = "a",
                 height =  c(imgH,420),
                 width = c('auto',1600)
               ),
@@ -145,7 +145,7 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Volcano (all)",
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
-                                            label='A',
+                                            label='a',
                                             height = c(imgH, 500),
                                             width = c("auto", 1600)),
               shiny::br(),
@@ -159,7 +159,7 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Volcano (methods)",
               expression_plot_volcanoMethods_ui(id = ns("volcanoMethods"),
-                                                label ='A',
+                                                label ='a',
                                                 height = c(imgH, 450),
                                                 width = c("auto", 1600)),
               shiny::br(),

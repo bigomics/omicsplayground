@@ -23,7 +23,7 @@ expression_plot_volcanoAll_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
                title = "Volcano plots for all contrasts",
                label = label,
-               plotlib = "ggplot",
+               plotlib = "grid",
                info.text = info_text,
                options = NULL,
                download.fmt=c("png","pdf","csv"),
@@ -164,22 +164,22 @@ expression_plot_volcanoAll_server <- function(id,
           gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
         }
 
-        modal_plot.RENDER <- function() {
-          plot.RENDER() %>%
-            plotly::layout(
-              ## showlegend = TRUE,
-              font = list(
-                size = 16
-              )
-            )
-        }
+        # modal_plot.RENDER <- function() {
+        #   plot.RENDER() %>%
+        #     plotly::layout(
+        #       ## showlegend = TRUE,
+        #       font = list(
+        #         size = 16
+        #       )
+        #     )
+        # }
 
 
         PlotModuleServer(
           "pltmod",
-          plotlib = "ggplot",
+          plotlib = "grid",
           func = plot.RENDER,
-          func2 = modal_plot.RENDER,
+          # func2 = modal_plot.RENDER,
           csvFunc = plot_data,   ##  *** downloadable data as CSV
           res = c(70, 90),                ## resolution of plots
           pdf.width = 6, pdf.height = 6,

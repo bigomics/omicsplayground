@@ -115,23 +115,23 @@ expression_plot_boxplot_server <- function(id,
       )
     }
 
-    modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
-        )
-      fig <- plotly::style(fig, marker.size = 20)
-      fig
-    }
+    # modal_plotly.RENDER <- function() {
+    #   fig <- plotly.RENDER() %>%
+    #     plotly::layout(
+    #       font = list(size = 18),
+    #       legend = list(
+    #         font = list(size = 18)
+    #       )
+    #     )
+    #   fig <- plotly::style(fig, marker.size = 20)
+    #   fig
+    # }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "base",
       func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,
+      #func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

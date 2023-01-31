@@ -39,7 +39,7 @@ expression_plot_topgenes_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Expression of top differentially expressed genes",
     label = label,
-    plotlib = "base",
+    plotlib = "ggplot",
     info.text = info_text,
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -173,7 +173,7 @@ expression_plot_topgenes_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
+      plotlib = "ggplot",
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

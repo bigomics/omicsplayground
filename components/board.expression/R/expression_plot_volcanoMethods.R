@@ -24,7 +24,7 @@ expression_plot_volcanoMethods_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
                title = "Volcano plots for all methods",
                label = label,
-               plotlib = "plotly",
+               plotlib = "ggplot",
                info.text = info_text,
                options = NULL,
                download.fmt=c("png","pdf","csv"),
@@ -150,22 +150,22 @@ expression_plot_volcanoMethods_server <- function(id,
 
 
 
-        modal_plot.RENDER <- function() {
-          plot.RENDER() %>%
-            plotly::layout(
-              ## showlegend = TRUE,
-              font = list(
-                size = 16
-              )
-            )
-        }
+        # modal_plot.RENDER <- function() {
+        #   plot.RENDER() %>%
+        #     plotly::layout(
+        #       ## showlegend = TRUE,
+        #       font = list(
+        #         size = 16
+        #       )
+        #     )
+        # }
 
 
         PlotModuleServer(
           "pltmod",
-          plotlib = "plotly",
+          plotlib = "ggplot",
           func = plot.RENDER,
-          func2 = modal_plot.RENDER,
+          # func2 = modal_plot.RENDER,
           csvFunc = plot_data,   ##  *** downloadable data as CSV
           res = c(80,170),                ## resolution of plots
           pdf.width = 6, pdf.height = 6,
