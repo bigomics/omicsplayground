@@ -62,11 +62,8 @@ enrichment_plot_volcano_server <- function(id,
       gs <- gs[1]
 
       gset <- getGSETS(gs)[[1]]
-      dbg("[subplot_volcano.RENDER] head.gset = ", head(gset, 5))
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
-
-      dbg("[subplot_volcano.RENDER] head.sel.genes = ", head(sel.genes, 5))
 
       fdr <- 1
       fdr <- as.numeric(gs_fdr())

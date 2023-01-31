@@ -173,15 +173,11 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
       }
       if (1 && !(gsfeatures %in% c(NA, "", "*", "<all>")) &&
         gsfeatures %in% names(COLLECTIONS)) {
-        ## grp = paste(paste0("^",gsfeatures,":"),collapse="|")
-        ## sel <- grep(grp,rownames(mx),ignore.case=TRUE)
         sel <- intersect(rownames(mx), COLLECTIONS[[gsfeatures]])
         mx <- mx[sel, , drop = FALSE]
       }
-      ## outputs = lapply(outputs, function(m) m[rownames(mx),])
 
       rpt <- NULL
-      ## length(gsmethod)==1 && any(grepl("gsea",gsmethod))
       if (is.null(outputs) || length(gsmethod) > 1) {
         ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
@@ -244,8 +240,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
 
           G <- Matrix::t(ngs$GMT[pp, jj] != 0)
           ngenes <- Matrix::rowSums(G)
-          ## meta.fc <- as.vector(G %*% fc[pp] / ngenes)
-          ## names(meta.fc) <- rownames(G)
           meta.fc <- ngs$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(ngs$gset.meta$meta[[comp]])
 
@@ -282,7 +276,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
         rpt <- outputs[[gsmethod]]
       }
 
-      ## rpt <- rpt[order(-abs(rpt$logFC)),]
       rpt <- rpt[order(-rpt$logFC), ] ## positive
       rpt <- data.frame(rpt)
 
@@ -302,9 +295,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
 
       ## just show significant genes
       if (!input$gs_showall && nrow(res) > 0) {
-        ## nmeth <- length(input$gs_statmethod)
-        ## sel <- which(res$stars == star.symbols(nmeth))
-        ## sel <- which(nchar(res$stars) == nmeth)
         lfc <- as.numeric(input$gs_lfc)
         fdr <- as.numeric(input$gs_fdr)
         dbg("[EnrichmentBoard::getFilteredGeneSetTable] lfc = ", lfc)
@@ -329,8 +319,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
         res <- res[order(-fx), , drop = FALSE]
       }
 
-      ## limit to 1000 rows???
-      ## rpt <- head(rpt, 1000)
       res <- data.frame(res)
 
       if (nrow(res) == 0) {
@@ -345,77 +333,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
     ## ----------------------------------------------------------------------
     subplot.MAR <- c(3, 3.5, 1.5, 0.5)
     subplot.MAR <- c(2.8, 4, 4, 0.8)
-
-    ## ----------------------------------------------------------------------
-    ## 0: Single enrichment plot
-    ## ----------------------------------------------------------------------
-
-    # subplot_enplot.RENDER <- shiny::reactive({
-    # ##subplot_enplot.RENDER <- shiny::reactive({
-    #
-    #     dbg("[subplot_enplot.RENDER] reacted")
-    #     pgx <- inputData()
-    #     shiny::req(pgx)
-    #
-    #     comp=1;gs=100
-    #     gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"
-    #     comp = input$gs_contrast
-    #
-    #     ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
-    #     fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-    #     names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
-    #
-    #     gs = gset_selected()
-    #     if(is.null(gs)) return(NULL)
-    #     ##gs.genes = GSETS[[gs]]
-    #     gs.genes = getGSETS(gs)[[1]]
-    #
-    #     par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.4,0.4) )
-    #     par(mar =  c(2.8,4,3.8,0.8))
-    #     p1 <- NULL
-    #     ##p1 <- ggenplot(fc, gs.genes, main=gs )
-    #     gsea.enplot(fc, gs.genes, main=gs, cex.lab=0.9,
-    #                 len.main=65, main.line=1.7)
-    #     return(p1)
-    # })
-    #
-    # subplot_enplot.RENDER2 <- shiny::reactive({
-    #
-    #     dbg("[subplot_enplot.RENDER] reacted")
-    #     pgx <- inputData()
-    #     shiny::req(pgx)
-    #
-    #     comp=1;gs=100
-    #     gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"
-    #     comp = input$gs_contrast
-    #
-    #     ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
-    #     fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-    #     names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
-    #
-    #     gs = gset_selected()
-    #     if(is.null(gs)) return(NULL)
-    #     ##gs.genes = GSETS[[gs]]
-    #     gs.genes = getGSETS(gs)[[1]]
-    #
-    #     p1 <- gsea.enplotly(fc, gs.genes, main=gs)
-    #     return(p1)
-    # })
-    #
-    #
-    # shiny::callModule(
-    #     plotModule,
-    #     id = "subplot_enplot",
-    #     func = subplot_enplot.RENDER,
-    #     func2 = subplot_enplot.RENDER2,
-    #     plotlib="base", plotlib2="plotly",
-    #     info.text = '',
-    #     pdf.width=6, pdf.height=4,
-    #     res = c(68,110),
-    #     height = imgH,
-    #     title="Enrichment plot", label="a",
-    #     add.watermark = WATERMARK
-    # )
 
     ## ================================================================================
     ## Enrichment table
@@ -458,26 +375,12 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
       ## gxmethods <- c("trend.limma","ttest.welch")
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
-      ## limma1 = sapply(mx[,c("fc","p","q")], function(x) x[,"trend.limma"])
-      ## limma1.fc <- rowMeans(mx$fc[,gxmethods,drop=FALSE],na.rm=TRUE)
       limma1.fc <- mx$meta.fx
       limma1.pq <- sapply(mx[, c("p", "q")], function(x) {
         apply(x[, gxmethods, drop = FALSE], 1, max, na.rm = TRUE)
       })
       limma1 <- cbind(fc = limma1.fc, limma1.pq)
-      ## limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
       rownames(limma1) <- rownames(mx)
-
-      ## filter on significance?????
-      if (FALSE && !input$gs_showall) {
-        lfc <- 1
-        fdr <- 0.05
-        lfc <- as.numeric(input$gs_lfc)
-        fdr <- as.numeric(input$gs_fdr)
-        is.sig <- abs(limma1[, "fc"]) >= lfc & limma1[, "q"] <= fdr
-        table(is.sig)
-        limma1 <- limma1[is.sig, , drop = FALSE]
-      }
 
       ## in multi-mode we select *common* genes
       ns <- length(gs)
@@ -494,12 +397,8 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
       genes <- rpt[, "gene_name"]
       genes1 <- ngs$genes[rownames(limma1), "gene_name"]
       limma1 <- limma1[match(genes, genes1), , drop = FALSE] ## align limma1
-      ## avg.rho <- rowMeans(cor(t(ngs$X[rownames(limma1),,drop=FALSE]),
-      ##                        t(ngs$gsetX[gs,,drop=FALSE])))
-      ## rpt = cbind(rpt, limma1, gset.rho=avg.rho)
       rpt <- cbind(rpt, limma1)
       rpt <- rpt[which(!is.na(rpt$fc) & !is.na(rownames(rpt))), , drop = FALSE]
-      ## rpt = data.frame(rpt, check.names=FALSE)
 
       if (nrow(rpt) > 0) {
         rpt <- rpt[order(-abs(rpt$fc)), , drop = FALSE]
@@ -510,8 +409,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
     gene_selected <- shiny::reactive({
       ngs <- inputData()
       shiny::req(ngs)
-      i <- 1
-      ## i = as.integer(input$genetable_rows_selected)
       i <- as.integer(genetable$rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()
@@ -523,101 +420,6 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
       probe <- rownames(ngs$genes)[match(gene, ngs$genes$gene_name)]
       return(list(gene = gene, probe = probe))
     })
-
-    ## ================================================================================
-    ## FDR table
-    ## ================================================================================
-
-    # FDRtable.RENDER <- shiny::reactive({
-    #
-    #     ngs <- inputData()
-    #     shiny::req(ngs, input$gs_statmethod)
-    #
-    #     meta <- ngs$gset.meta
-    #     test = GSET.DEFAULTMETHODS
-    #     test <- input$gs_statmethod
-    #     ##if(is.null(test)) return(NULL)
-    #
-    #     if(length(test)==1) {
-    #         sig.up   = meta$sig.counts[[test]][["up"]]
-    #         sig.down = meta$sig.counts[[test]][["down"]]
-    #         rownames(sig.up) = paste0(rownames(sig.up),"::",test[1])
-    #         rownames(sig.down) = paste0(rownames(sig.down),"::",test[1])
-    #     } else {
-    #         sig.up = c()
-    #         sig.down = c()
-    #         for(i in 1:length(test)) {
-    #             sig1 = meta$sig.counts[[test[i]]][["up"]]
-    #             sig2 = meta$sig.counts[[test[i]]][["down"]]
-    #             rownames(sig1) = paste0(rownames(sig1),"::",test[i])
-    #             rownames(sig2) = paste0(rownames(sig2),"::",test[i])
-    #             sig.up <- rbind(sig.up, sig1)
-    #             sig.down <- rbind(sig.down, sig2)
-    #         }
-    #     }
-    #     sig.up <- sig.up[order(rownames(sig.up)),,drop=FALSE]
-    #     sig.down <- sig.down[order(rownames(sig.down)),,drop=FALSE]
-    #     pvals = sort( c(1e-16, 10**seq(-8,-2,2), 0.05, 0.1, 0.2, 0.5,1))
-    #     kk = intersect(colnames(sig.up),pvals)
-    #     sig.up = sig.up[,match(kk,colnames(sig.up)),drop=FALSE]
-    #     sig.down = sig.down[,match(kk,colnames(sig.down)),drop=FALSE]
-    #
-    #     colnames(sig.up)[1] = paste("UP   FDR = ",colnames(sig.up)[1])
-    #     colnames(sig.down)[1] = paste("DOWN   FDR = ",colnames(sig.down)[1])
-    #     colnames(sig.down) = paste0("  ",colnames(sig.down))
-    #     sigcount = cbind( sig.down, sig.up[rownames(sig.down),] )
-    #     dim(sigcount)
-    #     maxsig = 0.99 * max(sigcount,na.rm=TRUE)
-    #     ##gs.up %>% kableExtra::kable("html") %>%
-    #     ##    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-    #     ##                  font_size = 10)
-    #
-    #     contr = sub("::.*","",rownames(sigcount))
-    #     ##contr = rownames(sigcount)
-    #     metd  = sub(".*::","",rownames(sigcount))
-    #     D = data.frame( method=metd, contrast=contr, sigcount, check.names=FALSE)
-    #
-    #     ##width  <- session$clientData$output_kegg_graph_width
-    #     ##height <- session$clientData$output_kegg_graph_height
-    #
-    #     DT::datatable( D, rownames=FALSE,
-    #                   class = 'compact cell-border stripe hover',
-    #                   extensions = c('Scroller'),
-    #                   fillContainer = TRUE,
-    #                   options=list(
-    #                       dom = 'frtip',
-    #                       pageLength = 999,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-    #                       scrollX = TRUE,
-    #                       scrollY = tabH,
-    #                       scroller=TRUE,
-    #                       deferRender=TRUE
-    #                   )  ## end of options.list
-    #                   ) %>%
-    #         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
-    #             DT::formatStyle(colnames(sig.up),
-    #                             background = DT::styleColorBar(c(0,maxsig), '#f5aeae'),
-    #                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-    #                             backgroundPosition = 'center')  %>%
-    #             DT::formatStyle(colnames(sig.down),
-    #                             background = DT::styleColorBar(c(0,maxsig), 'lightblue'),
-    #                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-    #                             backgroundPosition = 'center')
-    # })
-    #
-    # FDRtable_text = "The <strong>FDR table</strong> panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. Using the table the user can determine which statistical methods perform better for a particular contrast."
-    #
-    # FDRtable_caption = "<b>FDR table.</b> Number of significant gene sets versus different FDR thresholds, for all contrasts and all methods. The blue color denote the number of downregulated genes, the red color for upregulated genes."
-    #
-    # shiny::callModule(
-    #     tableModule,
-    #     id = "FDRtable",
-    #     func = FDRtable.RENDER,
-    #     title = 'Number of significant gene sets',
-    #     info.text = FDRtable_text,
-    #     caption = FDRtable_caption,
-    #     height = c(295,750),
-    #     width = c('100%',1600)
-    # )
 
     ## ================================================================================
     ## =========================== MODULES ============================================

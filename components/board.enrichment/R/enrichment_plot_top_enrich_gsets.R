@@ -32,8 +32,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       gx.meta <- ngs$gx.meta$meta[[comp]]
-      ## rnk0 <- gx.meta[,"fc"][,"trend.limma"]
-      ## names(rnk0) = gx.meta[,"gene_name"]
       rnk0 <- gx.meta$meta.fx
       names(rnk0) <- ngs$genes[rownames(gx.meta), "gene_name"]
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) ## scaling/centering should be done in calculation...
@@ -64,7 +62,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
           genes <- toupper(genes)
           names(rnk0) <- toupper(names(rnk0))
           ylab <- ""
-          ## if(i %in% c(1,6)) ylab = "Ranked list metric"
           if (i %% rowcol[2] == 1) ylab <- "Rank metric"
           xlab <- ""
           gs1 <- breakstring(gs, 28, 50, force = FALSE)
@@ -109,7 +106,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       jj <- gseatable$rows_current()
       shiny::req(jj)
 
-      dbg("[topEnriched.RENDER] dim.rpt", dim(rpt))
       if (nrow(rpt) == 0) {
         return(NULL)
       }

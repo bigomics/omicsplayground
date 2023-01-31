@@ -98,7 +98,6 @@ enrichment_plot_scatter_server <- function(id,
 
         cex1 <- c(1.4, 0.8, 0.3)[cut(length(gx), c(0, 100, 500, 99999))]
         gset1 <- breakstring(substring(gset, 1, 80), 32)
-        # tt = paste( breakstring(gset,40,80), "\nvs.", gene,"expression")
         tt <- paste(breakstring(gset, 40, 80), " vs. ", gene)
         base::plot(gx, sx,
           col = klr, main = tt,
