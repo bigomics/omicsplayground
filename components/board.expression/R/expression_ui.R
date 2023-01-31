@@ -137,6 +137,7 @@ ExpressionUI <- function(id) {
 
               shiny::br(),
               tags$div(
+                class = "caption",
                 HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
                             (both positively and negatively) expressed genes for the selected contrast.")
               )
@@ -149,6 +150,7 @@ ExpressionUI <- function(id) {
                                             width = c("auto", 1600)),
               shiny::br(),
               tags$div(
+                class = "caption",
                 HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
                         plots of genes for all contrasts. Experimental contrasts with better statistical significance will
                         show volcano plots with 'higher' wings.")
@@ -162,6 +164,7 @@ ExpressionUI <- function(id) {
                                                 width = c("auto", 1600)),
               shiny::br(),
               tags$div(
+                class = "caption",
                 HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
                         of genes by multiple differential expression methods for the selected contrast.
                         Methods showing better statistical significance will show volcano plots with 'higher' wings.")
@@ -176,6 +179,7 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Table",
               tags$div(
+                class = "caption",
                 HTML("<b>Differential Expression Analysis.</b> Compare expression between
                         two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
               ),
