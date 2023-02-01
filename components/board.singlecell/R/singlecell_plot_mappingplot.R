@@ -1,98 +1,207 @@
-#' ##
-#' ## This file is part of the Omics Playground project.
-#' ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
-#' ##
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+#' Single cell plot UI input function
 #'
-#' #' Single cell plot UI input function
-#' #'
-#' #' @description A shiny Module for plotting (UI code).
-#' #'
-#' #' @param id
-#' #' @param label
-#' #' @param height
-#' #'
-#' #' @export
-#' singlecell_plot_FnName_ui <- function(id,
-#'                                       label='',
-#'                                       height,
-#'                                       width) {
-#'   ns <- shiny::NS(id)
+#' @description A shiny Module for plotting (UI code).
 #'
-#'   info_text = ""
+#' @param id
+#' @param label
+#' @param height
+#' @param width
 #'
-#'   PlotModuleUI(ns(""),
-#'                title = "",
-#'                label = label,
-#'                plotlib = "plotly",
-#'                info.text = info_text,
-#'                options = NULL,
-#'                download.fmt=c("png","pdf","csv"),
-#'                height = height,
-#'                width = width)
-#' }
+#' @export
+singlecell_plot_mappingplot_ui <- function(id,
+                                           label='',
+                                           height,
+                                           width){
+  ns <- shiny::NS(id)
+
+  VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")
+
+  mapping.opts = shiny::tagList(
+    withTooltip(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
+                "Specify the plot type: dotmap, or heatmap.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::selectInput(ns("refset2"), "reference:", choices=NULL),
+                "Select a reference dataset for the cell type prediction.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::selectInput(ns("dcmethod2"),"method:", choices=NULL),
+                "Choose a method for the cell type prediction.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::selectInput(ns("group2"), "group by:", "group", selected = NULL),
+                "Group the samples/cells by grouping factor.",
+                placement="top", options=list(container="body"))
+  )
+
+  mapping_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+
+
+  PlotModuleUI(ns("plot"),
+               label = label,
+               info.text = mapping_info,
+               options = mapping.opts,
+               download.fmt=c("png","pdf","csv"),
+               height = height,
+               width = width)
+}
+
+#' Single cell plot Server function
 #'
-#' #' Single cell plot Server function
-#' #'
-#' #' @description A shiny Module for plotting (server code).
-#' #'
-#' #' @param id
-#' #'
-#' #' @return
-#' #' @export
-#' singlecell_plot_FnName_server <- function(id, watermark = FALSE)
-#' {
-#'   moduleServer( id, function(input, output, session) {
+#' @description A shiny Module for plotting (server code).
 #'
+#' @param id
 #'
-#'         #reactive function listening for changes in input
-#'         plot_data <- shiny::reactive({
-#'           #code here
-#'         })
-#'
-#'         plot.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           #plot code here
-#'         }
-#'
-#'         plotly.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           df <- pd
-#'
-#'           ## plot as regular plot
-#'           plotly::plot_ly(data = df,
-#'                           type = '',
-#'                           x = "",
-#'                           y = "",
-#'                           ## hoverinfo = "text",
-#'                           hovertext = ~annot,
-#'                           marker = list(color = ~color)
-#'           )
-#'         }
-#'
-#'         modal_plotly.RENDER <- function() {
-#'           plotly.RENDER() %>%
-#'             plotly::layout(
-#'               ## showlegend = TRUE,
-#'               font = list(
-#'                 size = 16
-#'               )
-#'             )
-#'         }
-#'
-#'
-#'         PlotModuleServer(
-#'           "plot",
-#'           plotlib = "plotly",
-#'           func = plotly.RENDER,
-#'           func2 = modal_plotly.RENDER,
-#'           csvFunc = plot_data,   ##  *** downloadable data as CSV
-#'           res = c(80,170),                ## resolution of plots
-#'           pdf.width = 6, pdf.height = 6,
-#'           add.watermark = watermark
-#'         )
-#'     }## end of moduleServer
-#' }
+#' @export
+singlecell_plot_mappingplot_server <- function(id,
+                                               inputData,
+                                               pfGetClusterPositions,
+                                               getDeconvResults2,
+                                               watermark = FALSE){
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
+    plot_data <- shiny::reactive({
+
+      ngs <- inputData()
+      dbg("[SingleCellBoard:mapping.plotFUNC] called")
+
+      clust.pos <- pfGetClusterPositions()
+      if(is.null(clust.pos)) return(NULL)
+      pos <- ngs$tsne2d
+      pos <- clust.pos
+
+      score <- ngs$deconv[["LM22"]][["meta"]]
+      score = getDeconvResults2()
+      if(is.null(score) || length(score)==0  ) return(NULL)
+
+      ## normalize
+      score <- score[rownames(pos),,drop=FALSE]
+      score[is.na(score)] <- 0
+      score <- pmax(score,0)
+      ##score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
+      ##score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
+      score <- score / (1e-20 + rowSums(score))
+      score <- tanh(score/mean(abs(score)))
+      score <- score / max(score,na.rm=TRUE)
+      summary(as.vector(score))
+
+      ## take top10 features
+      jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
+      score <- score[,jj.top]
+      score <- score[,order(-colMeans(score**2))]
+      score <- score[,1:min(50,ncol(score))]
+      ii <- hclust(dist(score))$order
+      jj <- hclust(dist(t(score)))$order
+      score <- score[ii,jj]
+      score0 <- score
+      pos <- pos[rownames(score),]
+
+      grpvar <- input$group2
+      refset <- input$refset2
+
+      return(list(
+        grpvar = grpvar,
+        score = score,
+        ngs = ngs,
+        pos = pos
+      ))
+
+      })
+
+    plot.render <- function(){
+
+
+      pd <- plot_data()
+      if(pd[["grpvar"]]!="<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples))
+      {
+        grp <- pd[["ngs"]]$samples[rownames(pd[["score"]]),pd[["grpvar"]]]
+        pd[["pos"]] <- apply(pd[["pos"]],2,function(x) tapply(x,grp,median))
+        pd[["score"]] <- apply(pd[["score"]],2,function(x) tapply(x,grp,mean))
+        ii <- hclust(dist(pd[["score"]]))$order
+        jj <- hclust(dist(t(pd[["score"]])))$order
+        pd[["score"]] <- pd[["score"]][ii,jj]
+      }
+      b0 <- 0.1 + 0.70*pmax(30 - ncol(pd[["score"]]), 0)
+
+      if(input$view2 == "dotmap") {
+
+        ##gx.heatmap(pd[["score"]])
+        par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.25 )
+        score3 <- pd[["score"]]**1.5
+        rownames(score3) <- paste("",rownames(score3),"  ")
+        tl.srt=90
+        tl.cex=ifelse(nrow(pd[["score"]])>60,0.7,0.85)
+        if(max(sapply(rownames(score3),nchar))>30) tl.srt=45
+        corrplot::corrplot( t(score3), mar=c(b0,1,4,0.5),
+                            cl.lim = c(0,max(score3)), cl.pos = "n",
+                            tl.cex = tl.cex, tl.col = "grey20",
+                            tl.srt = tl.srt )
+
+        ##mtext(pd[["grpvar"]], side=1, line=0.5)
+        ##title(sub=pd[["grpvar"]], line=0)
+        ##mtext(refset, side=4, line=0.5)
+      }
+
+      if(input$view2 == "heatmap") {
+        usermode = "PRO"
+        if(!is.null(usermode) && usermode >= 'PRO') {
+          kk <- head(colnames(score)[order(-colMeans(score**2))],18)
+          kk <- intersect(colnames(score),kk)
+          all.scores <- ngs$deconv[["LM22"]]
+          all.scores <- ngs$deconv[[input$refset2]]
+          grpvar <- input$group2
+          if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples)) {
+            grp <- ngs$samples[rownames(all.scores[[1]]),grpvar]
+            for(i in 1:length(all.scores)) {
+              all.scores[[i]] <- apply(all.scores[[i]],2,
+                                       function(x) tapply(x,grp,mean))
+              ii <- rownames(score)
+              all.scores[[i]] <- all.scores[[i]][ii,kk]
+            }
+          }
+
+          nm <- length(all.scores)
+          m=3;n=2
+          if(nm>6) {m=3;n=3}
+          if(nm>9) {m=4;n=3}
+          rr <- 2+max(nchar(colnames(score)))/2
+          par(mfrow=c(m,n), mar=c(0,0.3,2,0.3), oma=c(10,0,0,rr), xpd=TRUE)
+          k=1
+          for(k in 1:length(all.scores)) {
+            ii <- rownames(score)
+            score1 <- all.scores[[k]][ii,kk]
+            ##score1 <- score1[rownames(score0),kk]
+            if(k%%n!=0) colnames(score1) <- rep("",ncol(score1))
+            if((k-1)%/%n!=(nm-1)%/%n) rownames(score1) <- rep("",nrow(score1))
+            score1 <- score1 / (1e-8+rowSums(score1))
+            if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score1))
+            gx.imagemap( t(score1**1), cex=0.85, main="", clust=FALSE)
+            title(main=names(all.scores)[k], cex.main=1.1, line=0.4, font.main=1)
+          }
+
+        } else {
+          score1 <- score
+          score1 <- score1 / (1e-8+rowSums(score1))
+          if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score))
+          gx.heatmap( t(score1**2), scale="none",
+                      cexRow=1, cexCol=0.6, col=heat.colors(16),
+                      mar=c(b0,15), key=FALSE, keysize=0.5)
+        }
+
+      }
+    }
+
+    PlotModuleServer(
+      "plot",
+      func = plot.render,
+      res = c(85,95),
+      pdf.width = 8, pdf.height = 8,
+      add.watermark = watermark
+    )
+
+  })## end of moduleServer
+}

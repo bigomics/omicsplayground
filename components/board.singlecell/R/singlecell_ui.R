@@ -88,7 +88,10 @@ SingleCellUI <- function(id) {
                             of the data set. The reference set can be a cell type reference database but also cancer types,
                             tissue types or cell lines.")
                         ),
-                        plotWidget(ns("mappingplot"))
+                        singlecell_plot_mappingplot_ui(id = ns("mappingplot"),
+                                                       label='A',
+                                                       height = c(fullH-80,780),
+                                                       width = c("100%",1000))
                     ),
                     div(
                         class = "col-md-6",
