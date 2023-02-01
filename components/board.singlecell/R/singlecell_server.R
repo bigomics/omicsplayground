@@ -93,6 +93,26 @@ SingleCellBoard <- function(id, inputData)
         shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
     })
 
+    shiny::observe({
+      ngs <- inputData()
+      ##if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
+
+      ##if(is.null(input$crosstaboptions)) return(NULL)
+      pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+      pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+      kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+      nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
+      pheno0 = pheno0[which(nphenolevel>1)]
+      genes <- sort(as.character(ngs$genes$gene_name))
+      pheno1 <- c("<cell type>",pheno0)
+      genes1 <- c("<none>",genes)
+      shiny::updateSelectInput(session, "crosstabvar", choices=pheno1)
+      shiny::updateSelectInput(session, "crosstabpheno", choices=pheno1)
+      shiny::updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
+
+    })
+
 
 
     # REACTIVE FUNCTIONS #########
@@ -173,6 +193,10 @@ SingleCellBoard <- function(id, inputData)
                                        inputData = inputData,
                                        getDeconvResults2 = getDeconvResults2,
                                        pfGetClusterPositions = pfGetClusterPositions)
+
+    singlecell_plot_crosstabPlot_server(id,
+                                        inputData,
+                                        watermark = FALSE)
 
     #icpplot plot refactored into plot module #########
 
@@ -622,10 +646,7 @@ SingleCellBoard <- function(id, inputData)
 
     # end Type mapping (heatmap) ##########
 
-
-
-
-    # Proportions #######
+    # crosstabPlot refactored into plotmodule ##########
 
     ##output$statsplot <- shiny::renderPlot({
     crosstab.plotFUNC <- shiny::reactive({
@@ -839,56 +860,39 @@ SingleCellBoard <- function(id, inputData)
     })
 
 
-    crosstab.opts <- shiny::tagList(
-        withTooltip(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
-                           "Choose a predefined phenotype group on the x-axis.",
-                           placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
-               "Choose a predefined phenotype group on the y-axis.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
-               "Visualize the expression barplot of a gene by specifying the gene name.",
-               placement="top", options = list(container = "body"))
-        ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
-        ##selectInput("crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
-        ##br(), cellArgs=list(width='80px')
-    )
+    # crosstab.opts <- shiny::tagList(
+    #     withTooltip(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+    #                        "Choose a predefined phenotype group on the x-axis.",
+    #                        placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+    #            "Choose a predefined phenotype group on the y-axis.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+    #            "Visualize the expression barplot of a gene by specifying the gene name.",
+    #            placement="top", options = list(container = "body"))
+    #     ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
+    #     ##selectInput("crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
+    #     ##br(), cellArgs=list(width='80px')
+    # )
 
     crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
 
-    shiny::callModule(
-        plotModule,
-        id = "crosstabPlot",
-        func = crosstab.plotFUNC,
-        func2 = crosstab.plotFUNC,
-        options = crosstab.opts,
-        info.text = crosstabModule_info,
-        pdf.width=12, pdf.height=8,
-        height = c(fullH-80,760), width = c("100%",900),
-        res = c(110,110),
-        add.watermark = WATERMARK
-    )
+    # shiny::callModule(
+    #     plotModule,
+    #     id = "crosstabPlot",
+    #     func = crosstab.plotFUNC,
+    #     func2 = crosstab.plotFUNC,
+    #     options = crosstab.opts,
+    #     info.text = crosstabModule_info,
+    #     pdf.width=12, pdf.height=8,
+    #     height = c(fullH-80,760), width = c("100%",900),
+    #     res = c(110,110),
+    #     add.watermark = WATERMARK
+    # )
 
-    shiny::observe({
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        shiny::req(ngs)
 
-        ##if(is.null(input$crosstaboptions)) return(NULL)
-        pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-        pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
-        pheno0 = pheno0[which(nphenolevel>1)]
-        genes <- sort(as.character(ngs$genes$gene_name))
-        pheno1 <- c("<cell type>",pheno0)
-        genes1 <- c("<none>",genes)
-        shiny::updateSelectInput(session, "crosstabvar", choices=pheno1)
-        shiny::updateSelectInput(session, "crosstabpheno", choices=pheno1)
-        shiny::updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
 
-    })
-
+    # end crosstabPlot refactored into plotmodule ##########
     ##==========================================================================
     ## Markers
     ##==========================================================================

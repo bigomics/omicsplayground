@@ -71,7 +71,7 @@ SingleCellUI <- function(id) {
                             )
                         ),
                         singlecell_plot_phenoplot_ui(id = ns("phenoplot"),
-                                                     label='',
+                                                     label='a',
                                                      height = c(fullH-100,750),
                                                      width = c("100%",500)
                                                      )
@@ -89,7 +89,7 @@ SingleCellUI <- function(id) {
                             tissue types or cell lines.")
                         ),
                         singlecell_plot_mappingplot_ui(id = ns("mappingplot"),
-                                                       label='A',
+                                                       label='a',
                                                        height = c(fullH-80,780),
                                                        width = c("100%",1000))
                     ),
@@ -101,7 +101,10 @@ SingleCellUI <- function(id) {
                             it provides useful information about the proportion of different cell types in samples
                             obtained by the bulk sequencing method.")
                         ),
-                        plotWidget(ns("crosstabPlot"))
+                        singlecell_plot_crosstabPlot_ui(id = ns("crosstabPlot"),
+                                                        label='c',
+                                                        height = c(fullH-80,760),
+                                                        width = c("100%",900))
                     )
                 )
             ),
