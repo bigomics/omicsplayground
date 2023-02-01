@@ -67,28 +67,22 @@ expression_plot_volcano_server <- function(id,
                                            df2,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       # calculate required inputs for plotting
 
 
-      comp1 = comp1()
-      fdr = as.numeric(fdr())
-      lfc = as.numeric(lfc())
-      features = features()
-      res = res()
-      sel1= sel1()
-      df1 = df1()
-      sel2 = sel2()
-      df2 = df2()
+      comp1 <- comp1()
+      fdr <- as.numeric(fdr())
+      lfc <- as.numeric(lfc())
+      features <- features()
+      res <- res()
+      sel1 <- sel1()
+      df1 <- df1()
+      sel2 <- sel2()
+      df2 <- df2()
 
-      # comp1 <- input$gx_contrast()
-      # fdr <- as.numeric(input$gx_fdr())
-      # res = fullDiffExprTable()
-      # lfc <- as.numeric(input$gx_lfc())
       fam.genes <- res$gene_name
-      ## fam.genes = unique(unlist(gx$families[features]))
 
       if (is.null(res)) {
         return(NULL)
@@ -100,7 +94,6 @@ expression_plot_volcano_server <- function(id,
         return(NULL)
       }
       if (features != "<all>") {
-        ## gset <- GSETS[features]
         gset <- getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
@@ -136,7 +129,6 @@ expression_plot_volcano_server <- function(id,
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
-        ## gset <- GSETS[[gs]]
         gset <- unlist(getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(
@@ -153,8 +145,6 @@ expression_plot_volcano_server <- function(id,
       }
       xlim <- c(-1, 1) * max(abs(x), na.rm = TRUE)
       ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
-
-      ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
 
       return(list(
         x = x,

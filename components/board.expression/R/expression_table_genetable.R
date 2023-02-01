@@ -12,7 +12,6 @@
 #'
 #' @export
 expression_table_genetable_ui <- function(id) {
-
   # message("expression_table_genetable_ui called")
 
   ns <- shiny::NS(id)
@@ -20,7 +19,6 @@ expression_table_genetable_ui <- function(id) {
   tableWidget(ns("genetable"))
 
   # message("expression_table_genetable_ui done")
-
 }
 
 #' Server side table code: expression board
@@ -30,28 +28,26 @@ expression_table_genetable_ui <- function(id) {
 #'
 #' @export
 expression_table_genetable_server <- function(id,
-                                              res, #filteredDiffExprTable
+                                              res, # filteredDiffExprTable
                                               height,
-                                              watermark=FALSE){
+                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     message("expression_table_genetable_server called")
 
     ns <- session$ns
 
     genetable_opts <- shiny::tagList(
       withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
-                  "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
-                  placement = "top", options = list(container = "body")
+        "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
+        placement = "top", options = list(container = "body")
       ),
       withTooltip(shiny::checkboxInput(ns("gx_showqvalues"), "show indivivual q-values", FALSE),
-                  "Show q-values of each indivivual statistical method in the table.",
-                  placement = "top", options = list(container = "body")
+        "Show q-values of each indivivual statistical method in the table.",
+        placement = "top", options = list(container = "body")
       )
     )
 
     table.RENDER <- shiny::reactive({
-
       res <- res()
 
       if (is.null(res) || nrow(res) == 0) {
@@ -78,40 +74,40 @@ expression_table_genetable_server <- function(id,
       numeric.cols <- colnames(res)[numeric.cols]
 
       DT::datatable(res,
-                    rownames = FALSE,
-                    ## class = 'compact cell-border stripe hover',
-                    class = "compact hover",
-                    extensions = c("Scroller"),
-                    selection = list(mode = "single", target = "row", selected = 1),
-                    fillContainer = TRUE,
-                    options = list(
-                      dom = "frtip",
-                      paging = TRUE,
-                      pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE,
-                      scrollY = FALSE,
-                      scroller = FALSE,
-                      deferRender = TRUE,
-                      search = list(
-                        regex = TRUE,
-                        caseInsensitive = TRUE
-                        ## , search = 'M[ae]'
-                      )
-                    ) ## end of options.list
+        rownames = FALSE,
+        ## class = 'compact cell-border stripe hover',
+        class = "compact hover",
+        extensions = c("Scroller"),
+        selection = list(mode = "single", target = "row", selected = 1),
+        fillContainer = TRUE,
+        options = list(
+          dom = "frtip",
+          paging = TRUE,
+          pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          scrollX = TRUE,
+          scrollY = FALSE,
+          scroller = FALSE,
+          deferRender = TRUE,
+          search = list(
+            regex = TRUE,
+            caseInsensitive = TRUE
+            ## , search = 'M[ae]'
+          )
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(colnames(res)[fx.col],
-                        ## background = DT::styleColorBar(c(0,3), 'lightblue'),
-                        background = color_from_middle(fx, "lightblue", "#f5aeae"),
-                        backgroundSize = "98% 88%",
-                        backgroundRepeat = "no-repeat",
-                        backgroundPosition = "center"
+          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
+          background = color_from_middle(fx, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%",
+          backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
         )
-    })# %>%
+    }) # %>%
     #  bindCache(filteredDiffExprTable(), input$gx_showqvalues)
 
-    genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results.
+    genetable_text <- "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results.
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
 
@@ -131,6 +127,5 @@ expression_table_genetable_server <- function(id,
     message("expression_table_genetable_server done")
 
     return(genetable)
-  }
-  )
+  })
 }

@@ -16,16 +16,19 @@
 expression_plot_boxplot_ui <- function(id,
                                        label = "",
                                        height,
-                                       width){
+                                       width) {
   ns <- shiny::NS(id)
 
-  plots_boxplot_opts = shiny::tagList(
-        withTooltip( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
-               "Group expression values by conditions.",
-               placement="right", options = list(container = "body")),
-        withTooltip( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
-               "Show logarithmic (log2CPM) expression values.",
-               placement="right", options = list(container = "body")))
+  plots_boxplot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("boxplot_grouped"), "grouped", TRUE),
+      "Group expression values by conditions.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("boxplot_logscale"), "log scale", TRUE),
+      "Show logarithmic (log2CPM) expression values.",
+      placement = "right", options = list(container = "body")
+    )
+  )
 
   info_text <- "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
 
@@ -65,7 +68,7 @@ expression_plot_boxplot_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      comp <- comp() #input$gx_contrast
+      comp <- comp() # input$gx_contrast
       grouped <- input$boxplot_grouped
       logscale <- input$boxplot_logscale
       ngs <- ngs()
@@ -85,8 +88,8 @@ expression_plot_boxplot_server <- function(id,
         sel = sel,
         grouped = grouped,
         logscale = logscale,
-        srt = srt)
-        )
+        srt = srt
+      ))
     })
 
     plotly.RENDER <- function() {
@@ -115,23 +118,11 @@ expression_plot_boxplot_server <- function(id,
       )
     }
 
-    # modal_plotly.RENDER <- function() {
-    #   fig <- plotly.RENDER() %>%
-    #     plotly::layout(
-    #       font = list(size = 18),
-    #       legend = list(
-    #         font = list(size = 18)
-    #       )
-    #     )
-    #   fig <- plotly::style(fig, marker.size = 20)
-    #   fig
-    # }
-
     PlotModuleServer(
       "pltmod",
       plotlib = "base",
       func = plotly.RENDER,
-      #func2 = modal_plotly.RENDER,
+      # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

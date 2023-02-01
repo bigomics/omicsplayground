@@ -16,7 +16,7 @@
 expression_plot_topgenes_ui <- function(id,
                                         label = "",
                                         height,
-                                        width){
+                                        width) {
   ns <- shiny::NS(id)
 
   info_text <- "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
@@ -71,7 +71,7 @@ expression_plot_topgenes_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      comp <- comp() #input$gx_contrast
+      comp <- comp() # input$gx_contrast
       ngs <- inputData()
       shiny::req(ngs)
 
@@ -81,7 +81,6 @@ expression_plot_topgenes_server <- function(id,
       }
 
       ## filter on active rows (using search)
-      ## ii  <- genetable$rows_all()
       ii <- ii()
       res <- res[ii, , drop = FALSE]
       if (nrow(res) == 0) {
@@ -100,7 +99,6 @@ expression_plot_topgenes_server <- function(id,
 
       ny <- nrow(ngs$samples) ## ???!!
       show.names <- ifelse(!grouped & ny > 25, FALSE, TRUE)
-      ## nx = ifelse(grouped, ngrp, length(y))
       nx <- ifelse(grouped, 3, ny)
       nc <- 4
       nc <- 8
@@ -126,12 +124,11 @@ expression_plot_topgenes_server <- function(id,
 
 
     plotly.RENDER <- function() {
-
       pd <- plot_data()
       shiny::req(pd)
 
       nc <- 8
-      mar1 = 3.5
+      mar1 <- 3.5
 
       par(mfrow = c(2, nc), mar = c(mar1, 3.5, 1, 1), mgp = c(2, 0.8, 0), oma = c(0.1, 0.6, 0, 0.6))
       i <- 1
@@ -149,9 +146,9 @@ expression_plot_topgenes_server <- function(id,
           logscale = pd[["logscale"]],
           collapse.others = TRUE,
           showothers = pd[["showothers"]],
-          ylab=pd[["ylab"]],
-          xlab="",
-          srt=pd[["srt"]],
+          ylab = pd[["ylab"]],
+          xlab = "",
+          srt = pd[["srt"]],
           names = pd[["show.names"]],
           main = ""
         )
@@ -177,8 +174,8 @@ expression_plot_topgenes_server <- function(id,
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(90,105), ## resolution of plots
-      pdf.width=14, pdf.height=3.5,
+      res = c(90, 105), ## resolution of plots
+      pdf.width = 14, pdf.height = 3.5,
       add.watermark = watermark
     )
   }) ## end of moduleServer

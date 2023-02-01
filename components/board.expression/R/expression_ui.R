@@ -73,7 +73,6 @@ ExpressionUI <- function(id) {
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
     div(
       tagList(
-
         div(
           style = "max-height:50vh;",
           shiny::tabsetPanel(
@@ -85,9 +84,9 @@ ExpressionUI <- function(id) {
                 div(
                   class = "col-md-3",
                   expression_plot_volcano_ui(ns("plots_volcano"),
-                                             label = "a",
-                                             height = c(imgH, imgH),
-                                             width = c("auto", imgH)
+                    label = "a",
+                    height = c(imgH, imgH),
+                    width = c("auto", imgH)
                   ),
                 ),
                 div(
@@ -131,10 +130,9 @@ ExpressionUI <- function(id) {
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
                 label = "a",
-                height =  c(imgH,420),
-                width = c('auto',1600)
+                height = c(imgH, 420),
+                width = c("auto", 1600)
               ),
-
               shiny::br(),
               tags$div(
                 class = "caption",
@@ -145,9 +143,10 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Volcano (all)",
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
-                                            label='a',
-                                            height = c(imgH, 500),
-                                            width = c("auto", 1600)),
+                label = "a",
+                height = c(imgH, 500),
+                width = c("auto", 1600)
+              ),
               shiny::br(),
               tags$div(
                 class = "caption",
@@ -158,10 +157,12 @@ ExpressionUI <- function(id) {
             ),
             shiny::tabPanel(
               "Volcano (methods)",
-              expression_plot_volcanoMethods_ui(id = ns("volcanoMethods"),
-                                                label ='a',
-                                                height = c(imgH, 450),
-                                                width = c("auto", 1600)),
+              expression_plot_volcanoMethods_ui(
+                id = ns("volcanoMethods"),
+                label = "a",
+                height = c(imgH, 450),
+                width = c("auto", 1600)
+              ),
               shiny::br(),
               tags$div(
                 class = "caption",
@@ -206,8 +207,7 @@ ExpressionUI <- function(id) {
             )
           )
         )
-
-      )
       )
     )
+  )
 }

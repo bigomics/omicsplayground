@@ -55,8 +55,7 @@ expression_plot_topfoldchange_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-
-      comp <- comp() #input$gx_contrast
+      comp <- comp() # input$gx_contrast
       ngs <- ngs()
       sel <- sel()
       res <- res()
@@ -110,7 +109,6 @@ expression_plot_topfoldchange_server <- function(id,
       m1 <- ifelse(nch > 12, 12, 8)
       m1 <- ifelse(nch > 30, 16, m1)
 
-      ## par( mar=c(4,m1,2,0.5) )
       par(mar = c(3.2, m1 - 0.5, 1, 1))
       cex1 <- 0.9
       nn <- sum(!is.na(pd[["fc.top"]]))
@@ -122,18 +120,6 @@ expression_plot_topfoldchange_server <- function(id,
       )
       title(pd[["gene"]], cex.main = 1, line = -0.15)
     }
-
-    # modal_plotly.RENDER <- function() {
-    #   fig <- plotly.RENDER() %>%
-    #     plotly::layout(
-    #       font = list(size = 18),
-    #       legend = list(
-    #         font = list(size = 18)
-    #       )
-    #     )
-    #   fig <- plotly::style(fig, marker.size = 20)
-    #   fig
-    # }
 
     PlotModuleServer(
       "pltmod",

@@ -107,8 +107,6 @@ ExpressionBoard <- function(id, inputData) {
         return(NULL)
       }
 
-      message("[getDEGtable] called")
-
       ## build meta table
       mx <- ngs$gx.meta$meta[[comparison]]
       if (is.null(mx)) {
@@ -159,8 +157,6 @@ ExpressionBoard <- function(id, inputData) {
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
 
-      message("[getDEGtable] creating results table")
-
       ## gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
       aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(ngs$genes))
       gene.annot <- ngs$genes[rownames(mx), aa]
@@ -173,7 +169,6 @@ ExpressionBoard <- function(id, inputData) {
       rownames(res) <- rownames(mx)
 
       if (add.pq) {
-        message("[getDEGtable] adding PQ table")
         ## add extra columns
         ## res <- cbind( res, q=mx$q, p=mx$p)
         colnames(mx.q) <- paste0("q.", colnames(mx.q))
@@ -292,7 +287,7 @@ ExpressionBoard <- function(id, inputData) {
     expression_plot_volcano_server(
       id = "plots_volcano",
       comp1 = shiny::reactive(input$gx_contrast),
-      fdr= shiny::reactive(input$gx_fdr),
+      fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
       features = shiny::reactive(input$gx_features),
       res = fullDiffExprTable,
@@ -387,39 +382,44 @@ ExpressionBoard <- function(id, inputData) {
       ct
     })
 
-    expression_plot_topgenes_server(id = "topgenes",
-                                    comp = shiny::reactive(input$gx_contrast),
-                                    inputData = inputData,
-                                    res = filteredDiffExprTable,
-                                    ii = genetable$rows_current,
-                                    watermark = FALSE)
+    expression_plot_topgenes_server(
+      id = "topgenes",
+      comp = shiny::reactive(input$gx_contrast),
+      inputData = inputData,
+      res = filteredDiffExprTable,
+      ii = genetable$rows_current,
+      watermark = FALSE
+    )
 
     # tab differential expression > Volcano All ####
 
-    expression_plot_volcanoAll_server(id = "volcanoAll",
-                                      inputData = inputData,
-                                      getAllContrasts = getAllContrasts,
-                                      features = shiny::reactive(input$gx_features),
-                                      fdr =  shiny::reactive(input$gx_fdr),
-                                      lfc = shiny::reactive(input$gx_lfc),
-                                      watermark = FALSE)
+    expression_plot_volcanoAll_server(
+      id = "volcanoAll",
+      inputData = inputData,
+      getAllContrasts = getAllContrasts,
+      features = shiny::reactive(input$gx_features),
+      fdr = shiny::reactive(input$gx_fdr),
+      lfc = shiny::reactive(input$gx_lfc),
+      watermark = FALSE
+    )
 
     # tab differential expression > Volcano Methods ####
 
-    expression_plot_volcanoMethods_server(id = "volcanoMethods",
-                                          inputData = inputData,
-                                          comp = shiny::reactive(input$gx_contrast),
-                                          features = shiny::reactive(input$gx_features),
-                                          fdr = shiny::reactive(input$gx_fdr),
-                                          lfc = shiny::reactive(input$gx_lfc),
-                                          watermark = FALSE)
+    expression_plot_volcanoMethods_server(
+      id = "volcanoMethods",
+      inputData = inputData,
+      comp = shiny::reactive(input$gx_contrast),
+      features = shiny::reactive(input$gx_features),
+      fdr = shiny::reactive(input$gx_fdr),
+      lfc = shiny::reactive(input$gx_lfc),
+      watermark = FALSE
+    )
 
     # tab differential expression > Volcano Methods ####
 
     # rendering tables ####
 
     gx_related_genesets <- shiny::reactive({
-
       ngs <- inputData()
       res <- filteredDiffExprTable()
       if (is.null(res) || nrow(res) == 0) {
@@ -461,31 +461,39 @@ ExpressionBoard <- function(id, inputData) {
       return(df)
     })
 
-    genetable <- expression_table_genetable_server(id = "genetable",
-                                                   res = filteredDiffExprTable,
-                                                   height=c(tabH - 10, 700))
+    genetable <- expression_table_genetable_server(
+      id = "genetable",
+      res = filteredDiffExprTable,
+      height = c(tabH - 10, 700)
+    )
 
-    gsettable <- expression_table_gsettable_server(id = "gsettable",
-                                                   gx_related_genesets = gx_related_genesets,
-                                                   height = c(tabH - 10, 700),
-                                                   width = c("100%", 800),
-                                                   watermark=FALSE)
+    gsettable <- expression_table_gsettable_server(
+      id = "gsettable",
+      gx_related_genesets = gx_related_genesets,
+      height = c(tabH - 10, 700),
+      width = c("100%", 800),
+      watermark = FALSE
+    )
 
-    expression_table_fctable_server(id = "fctable",
-                                    ngs = inputData,
-                                    res = filteredDiffExprTable,
-                                    metaFC = metaFC,
-                                    metaQ = metaQ,
-                                    height = c(tabH, 700),
-                                    tabV = tabV,
-                                    watermark=FALSE)
+    expression_table_fctable_server(
+      id = "fctable",
+      ngs = inputData,
+      res = filteredDiffExprTable,
+      metaFC = metaFC,
+      metaQ = metaQ,
+      height = c(tabH, 700),
+      tabV = tabV,
+      watermark = FALSE
+    )
 
-    expression_table_FDRtable_server(id = "FDRtable",
-                                     ngs = inputData,
-                                     methods = shiny::reactive(input$gx_statmethod),
-                                     tabV = tabV,
-                                     height =  c(tabH, 700),
-                                     watermark=FALSE)
+    expression_table_FDRtable_server(
+      id = "FDRtable",
+      ngs = inputData,
+      methods = shiny::reactive(input$gx_statmethod),
+      tabV = tabV,
+      height = c(tabH, 700),
+      watermark = FALSE
+    )
 
     # reactive values to return to parent environment  #########
 
