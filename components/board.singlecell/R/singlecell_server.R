@@ -10,7 +10,7 @@ SingleCellBoard <- function(id, inputData)
   {
 
     ns <- session$ns ## NAMESPACE
-    
+
     fullH = 750  ## full height of panel
     imgH  = 680  ## row height of panel
     tabH  = 200  ## row height of panel
@@ -26,7 +26,7 @@ SingleCellBoard <- function(id, inputData)
 
 <br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
-    
+
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -38,7 +38,7 @@ SingleCellBoard <- function(id, inputData)
             easyClose = TRUE, size="l" ))
     })
 
-    ## update filter choices upon change of data set 
+    ## update filter choices upon change of data set
     shiny::observe({
         ngs <- inputData()
         shiny::req(ngs)
@@ -53,7 +53,7 @@ SingleCellBoard <- function(id, inputData)
             shiny::updateSelectInput(session, "clustmethod",
                               choices=clustmethods )
         }
-        
+
     })
 
     shiny::observe({
@@ -64,7 +64,7 @@ SingleCellBoard <- function(id, inputData)
         refsel <- unique(c(grep("LM22",refsets,value=TRUE),refsets))[1]
         shiny::updateSelectInput(session,"refset",choices=refsets, selected=refsel)
         shiny::updateSelectInput(session,"refset2",choices=refsets, selected=refsel)
-        
+
         ## dcmethods <- names(ngs$deconv[[1]])
         ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
         ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
@@ -73,8 +73,8 @@ SingleCellBoard <- function(id, inputData)
         grpvars <- c("<ungrouped>",colnames(ngs$samples))
         sel <- grpvars[1]
         if(ncol(ngs$X) > 30) sel <- grpvars[2]
-        shiny::updateSelectInput(session, "group2", choices=grpvars, selected=sel)        
-        
+        shiny::updateSelectInput(session, "group2", choices=grpvars, selected=sel)
+
     })
 
     shiny::observeEvent( input$refset, {
@@ -92,23 +92,23 @@ SingleCellBoard <- function(id, inputData)
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
         shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
     })
-        
-    
+
+
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-    
-    pfGetClusterPositions <- shiny::reactive({
+
+    pfGetClusterPositions <- shiny::reactive({ #used by many plots
         ngs <- inputData()
         shiny::req(ngs)
-        
+
         dbg("[pfGetClusterPositions] called")
-        
+
         ##zx <- filtered_matrix1()
         zx = ngs$X
         kk = colnames(zx)
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        if(length(kk)==0) return(NULL)        
+        if(length(kk)==0) return(NULL)
         zx <- zx[,kk,drop=FALSE]
         zx = head(zx[order(-apply(zx,1,sd)),],1000)
         zx = t(scale(t(zx)))  ## scale??
@@ -124,114 +124,79 @@ SingleCellBoard <- function(id, inputData)
             rownames(pos) <- colnames(zx)
         } else if(has.clust) {
             pos <- ngs$cluster$pos[[m]][,1:2]
-        } else {            
+        } else {
             pos <- ngs$tsne2d
         }
         dim(pos)
         pos <- pos[colnames(zx),]
-        pos = scale(pos) ## scale 
+        pos = scale(pos) ## scale
         colnames(pos) = paste0("dim",1:ncol(pos))
-        rownames(pos) = colnames(zx)    
+        rownames(pos) = colnames(zx)
+
+
+        #code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
+
+        # dbg("[pfGetClusterPositions2] computing distances and clusters...")
+        # dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
+        #
+        # ##dist = as.dist(dist(pos))
+        # dist = 0.001+dist(pos)**2
+        #
+        # dbg("[pfGetClusterPositions2] creating graph")
+        #
+        # gr = igraph::graph_from_adjacency_matrix(
+        #   1.0/dist, diag=FALSE, mode="undirected")
+        #
+        # dbg("[pfGetClusterPositions2] cluster louvain")
+        #
+        # clust <- igraph::cluster_louvain(gr)$membership
+        #
+        # dbg("pfGetClusterPositions2:: done!")
+        # return( list(pos=pos, clust=clust) )
 
         return(pos)
     })
 
-    pfGetClusterPositions2 <- shiny::reactive({
-        ngs <- inputData()
-        shiny::req(ngs)
-        
-        dbg("[pfGetClusterPositions2] called")
-        
-        ##zx <- filtered_matrix1()
-        zx = ngs$X
-        kk = colnames(zx)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        if(length(kk)==0) return(NULL)        
-        zx <- zx[,kk,drop=FALSE]
-        zx = head(zx[order(-apply(zx,1,sd)),],1000)
-        zx = t(scale(t(zx)))  ## scale??
 
-        pos = NULL
-        m = "tsne"
-        m <- input$clustmethod
-        has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
-        has.clust
-        if(!has.clust && m=="pca") {
+    #icpplot plot refactored into plot module
 
-            pos = irlba::irlba(zx,nv=3)$v
-            rownames(pos) <- colnames(zx)
-        } else if(has.clust) {
-            pos <- ngs$cluster$pos[[m]][,1:2]
-        } else {            
-            pos <- ngs$tsne2d
-        }
-        dim(pos)
-        pos <- pos[colnames(zx),]
-        pos = scale(pos) ## scale 
-        colnames(pos) = paste0("dim",1:ncol(pos))
-        rownames(pos) = colnames(zx)    
-
-        ##if(input$pca.gx=="<cluster>")
-
-        dbg("[pfGetClusterPositions2] computing distances and clusters...")
-        dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
-        
-        ##dist = as.dist(dist(pos))
-        dist = 0.001+dist(pos)**2
-
-        dbg("[pfGetClusterPositions2] creating graph")
-        
-        gr = igraph::graph_from_adjacency_matrix(
-            1.0/dist, diag=FALSE, mode="undirected")
-
-        dbg("[pfGetClusterPositions2] cluster louvain")
-        
-        clust <- igraph::cluster_louvain(gr)$membership
-
-        dbg("pfGetClusterPositions2:: done!")
-        return( list(pos=pos, clust=clust) )
-    })
-
-    
-    ##==========================================================================
-    ## Cell type
-    ##==========================================================================
-
-    getDeconvResults <- shiny::reactive({
+    getDeconvResults <- shiny::reactive({ #used only by icoplot
         ngs <- inputData()
         shiny::req(ngs)
         dbg("[SingleCellBoard:getDeconvResults] called")
         method="meta";refset = "LM22"
         method <- input$dcmethod
-        if(is.null(method)) return(NULL)               
+        if(is.null(method)) return(NULL)
         refset <- input$refset
         if(!("deconv" %in% names(ngs))) return(NULL)
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
-        results <- pmax(results,0)        
+        results <- pmax(results,0)
 
         ## limit to  top50??
         ##ii <- head(order(-colSums(results)),100))
         ##results <- results[,ii,drop=FALSE]
-        
+
         return(results)
     })
 
+
+
     icp.plotFUNC <- shiny::reactive({
 
-        
+
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        shiny::req(ngs)        
+        shiny::req(ngs)
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
         dbg("[SingleCellBoard:icp.plotFUNC] called")
         pos <- ngs$tsne2d
-        pos <- clust.pos        
+        pos <- clust.pos
         score <- ngs$deconv[[1]][["meta"]]
         score = getDeconvResults()
         if(is.null(score) || length(score)==0  ) return(NULL)
-        
+
         ## normalize
         score <- score[rownames(pos),,drop=FALSE]
         score[is.na(score)] <- 0
@@ -246,7 +211,7 @@ SingleCellBoard <- function(id, inputData)
         ## take top10 features
         jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
         score <- score[,jj.top]
-        score <- score[,order(-colMeans(score**2))]    
+        score <- score[,order(-colMeans(score**2))]
         score <- score[,1:min(50,ncol(score))]
         ii <- hclust(dist(score))$order
         jj <- hclust(dist(t(score)))$order
@@ -255,15 +220,15 @@ SingleCellBoard <- function(id, inputData)
         score0 <- score
         pos <- pos[rownames(score),]
         b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
-        
+
         ##if(input$view=="distribution")
         {
             cex1 = 1.2
             cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
             klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
-            ##klrpal = paste0(gplots::col2hex(klrpal),"AA")    
+            ##klrpal = paste0(gplots::col2hex(klrpal),"AA")
             klrpal = paste0(gplots::col2hex(klrpal),"66")
-            
+
             lyo <- input$layout
             ntop = 25
             par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
@@ -278,12 +243,12 @@ SingleCellBoard <- function(id, inputData)
                 ntop = 36
             }
 
-            i=1    
+            i=1
             jj <- NULL
-            jj <- head(order(-colMeans(score**2)),ntop)                
+            jj <- head(order(-colMeans(score**2)),ntop)
             if(input$sortby=="name") {
                 jj <- jj[order(colnames(score)[jj])]
-            }            
+            }
             colnames(score)[jj]
             for(j in jj) {
                 gx = pmax(score[,j],0)
@@ -300,9 +265,9 @@ SingleCellBoard <- function(id, inputData)
                        inset=c(-0.05,-0.0) )
             }
             refset <- input$refset
-            mtext(refset, outer=TRUE, line=0.5, cex=1.0)            
+            mtext(refset, outer=TRUE, line=0.5, cex=1.0)
         }
-        
+
     })
 
     icp.opts = shiny::tagList(
@@ -319,12 +284,12 @@ SingleCellBoard <- function(id, inputData)
         withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
-               "Choose layout.", 
-               placement="top", options = list(container = "body"))        
+               "Choose layout.",
+               placement="top", options = list(container = "body"))
     )
 
     icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-    
+
     shiny::callModule(
         plotModule,
         id = "icpplot",
@@ -334,12 +299,14 @@ SingleCellBoard <- function(id, inputData)
         options = icp.opts,
         info.text = icp_info,
         caption2 = icp_info,
-        pdf.width=12, pdf.height=6, 
+        pdf.width=12, pdf.height=6,
         height = c(fullH-80,700), width = c("100%",1400),
         res = c(85,95),
         add.watermark = WATERMARK
     )
-    
+
+    #end icpplot plot refactored into plot module
+
     ##===========================================================================
     ## Phenotypes
     ##===========================================================================
@@ -354,7 +321,7 @@ SingleCellBoard <- function(id, inputData)
         dbg("[SingleCellBoard:pheno.plotFUNC] called")
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
-        
+
         pos <- ngs$tsne2d
         pos <- clust.pos
         sel <- rownames(pos)
@@ -365,8 +332,8 @@ SingleCellBoard <- function(id, inputData)
         if(length(pheno)>4) par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
         if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
         if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-        
-        cex1 <- 1.2*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+
+        cex1 <- 1.2*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
@@ -377,8 +344,8 @@ SingleCellBoard <- function(id, inputData)
             t2 <- (length(unique(y))/length(y)) > fmin
             (t1 && t2)
         }
-        
-        i=6    
+
+        i=6
         for(i in 1:min(20,length(pheno))) {
 
             px=4
@@ -416,13 +383,13 @@ SingleCellBoard <- function(id, inputData)
                         grp.pos <- matrix(grp.pos,nrow=1)
                         rownames(grp.pos) <- setdiff(y,NA)[1]
                     }
-                    
+
                     labels = rownames(grp.pos)
-                    ## title("\u2591\u2592\u2593") 
+                    ## title("\u2591\u2592\u2593")
                     boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
                     boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
                     ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
-                    cex2 <- c(1.3,1.1,0.9,0.7)[cut(length(labels),breaks=c(-1,5,10,20,999))]    
+                    cex2 <- c(1.3,1.1,0.9,0.7)[cut(length(labels),breaks=c(-1,5,10,20,999))]
                     text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
                     text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
                     text( grp.pos, labels=labels, font=2, cex=cex2)
@@ -440,7 +407,7 @@ SingleCellBoard <- function(id, inputData)
     )
 
     phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-   
+
     shiny::callModule(
         plotModule,
         id = "phenoplot",
@@ -454,7 +421,7 @@ SingleCellBoard <- function(id, inputData)
         res = c(85,85),
         add.watermark = WATERMARK
     )
-    
+
     ##=========================================================================
     ## Type mapping (heatmap)
     ##=========================================================================
@@ -468,7 +435,7 @@ SingleCellBoard <- function(id, inputData)
         if(is.null(method)) return(NULL)
         shiny::req(input$refset2)
         dbg("[SingleCellBoard:getDeconvResults2] called")
-        
+
         refset = "LM22"
         refset <- input$refset2
         if(!("deconv" %in% names(ngs))) return(NULL)
@@ -476,28 +443,28 @@ SingleCellBoard <- function(id, inputData)
         ## threshold everything (because DCQ can be negative!!!)
         results <- pmax(results,0)
 
-        
+
         return(results)
     })
-    
+
     mapping.plotFUNC <- shiny::reactive({
 
-        
+
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         shiny::req(ngs)
         shiny::req(input$refset2)
         dbg("[SingleCellBoard:mapping.plotFUNC] called")
-        
+
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
         pos <- ngs$tsne2d
         pos <- clust.pos
-        
+
         score <- ngs$deconv[["LM22"]][["meta"]]
         score = getDeconvResults2()
         if(is.null(score) || length(score)==0  ) return(NULL)
-        
+
         ## normalize
         score <- score[rownames(pos),,drop=FALSE]
         score[is.na(score)] <- 0
@@ -512,14 +479,14 @@ SingleCellBoard <- function(id, inputData)
         ## take top10 features
         jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
         score <- score[,jj.top]
-        score <- score[,order(-colMeans(score**2))]    
+        score <- score[,order(-colMeans(score**2))]
         score <- score[,1:min(50,ncol(score))]
         ii <- hclust(dist(score))$order
         jj <- hclust(dist(t(score)))$order
         score <- score[ii,jj]
         score0 <- score
         pos <- pos[rownames(score),]
-        
+
         grpvar <- input$group2
         refset <- input$refset2
 
@@ -530,10 +497,10 @@ SingleCellBoard <- function(id, inputData)
             score <- apply(score,2,function(x) tapply(x,grp,mean))
             ii <- hclust(dist(score))$order
             jj <- hclust(dist(t(score)))$order
-            score <- score[ii,jj]        
-        }    
+            score <- score[ii,jj]
+        }
         b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
-        
+
         if(input$view2 == "dotmap") {
 
             ##gx.heatmap(score)
@@ -550,12 +517,12 @@ SingleCellBoard <- function(id, inputData)
 
             ##mtext(grpvar, side=1, line=0.5)
             ##title(sub=grpvar, line=0)
-            ##mtext(refset, side=4, line=0.5)            
+            ##mtext(refset, side=4, line=0.5)
         }
 
         if(input$view2 == "heatmap") {
             usermode = "PRO"
-            if(!is.null(usermode) && usermode >= 'PRO') {            
+            if(!is.null(usermode) && usermode >= 'PRO') {
                 kk <- head(colnames(score)[order(-colMeans(score**2))],18)
                 kk <- intersect(colnames(score),kk)
                 all.scores <- ngs$deconv[["LM22"]]
@@ -569,7 +536,7 @@ SingleCellBoard <- function(id, inputData)
                         ii <- rownames(score)
                         all.scores[[i]] <- all.scores[[i]][ii,kk]
                     }
-                }    
+                }
 
                 nm <- length(all.scores)
                 m=3;n=2
@@ -589,22 +556,22 @@ SingleCellBoard <- function(id, inputData)
                     gx.imagemap( t(score1**1), cex=0.85, main="", clust=FALSE)
                     title(main=names(all.scores)[k], cex.main=1.1, line=0.4, font.main=1)
                 }
-                
+
             } else {
                 score1 <- score
-                score1 <- score1 / (1e-8+rowSums(score1))            
+                score1 <- score1 / (1e-8+rowSums(score1))
                 if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score))
-                gx.heatmap( t(score1**2), scale="none", 
+                gx.heatmap( t(score1**2), scale="none",
                            cexRow=1, cexCol=0.6, col=heat.colors(16),
                            mar=c(b0,15), key=FALSE, keysize=0.5)
             }
-            
-        }    
+
+        }
     })
 
-    VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
+    VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")
     message("[SingleCellBoard::mapping.plotFUNC] 1")
-    
+
     mapping.opts = shiny::tagList(
         withTooltip(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
                "Specify the plot type: dotmap, or heatmap.",
@@ -631,13 +598,13 @@ SingleCellBoard <- function(id, inputData)
         options = mapping.opts,
         info.text = mapping_info,
         ##caption = icp_caption,
-        pdf.width=8, pdf.height=8, 
+        pdf.width=8, pdf.height=8,
         height = c(fullH-80,780), width = c("100%",1000),
         res = c(85,95),
         add.watermark = WATERMARK
     )
     ##output <- attachModule(output, icp_module
-    
+
     ##======================================================================
     ## Proportions
     ##======================================================================
@@ -652,7 +619,7 @@ SingleCellBoard <- function(id, inputData)
         shiny::req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
 
         dbg("[SingleCellBoard::crosstab.plotFUNC] called")
-        
+
         scores = ngs$deconv[[1]][[1]]  ## just an example...
         if(input$crosstabvar == "<cell type>") {
             scores <- getDeconvResults2()
@@ -666,24 +633,24 @@ SingleCellBoard <- function(id, inputData)
             rownames(scores) <- rownames(ngs$Y)
             colnames(scores) <- sub("^x","",colnames(scores))
         }
-        
+
         dim(scores)
         message("[SingleCellBoard::crosstab.plotFUNC] 1 : dim(scores) = ",
                 paste(dim(scores),collapse="x"),"\n")
-        
+
         ## restrict to selected sample set
         kk <- head(1:nrow(scores),1000)
         kk <- 1:nrow(scores)
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         scores <- scores[kk,,drop=FALSE]
         scores <- scores[,which(colSums(scores)>0),drop=FALSE]
-        scores[which(is.na(scores))] <- 0    
+        scores[which(is.na(scores))] <- 0
         dim(scores)
 
         ## limit to top25??
         topsel <- head(order(-colSums(scores)),25)
         scores <- scores[,topsel]
-        
+
         message("[SingleCellBoard::crosstab.plotFUNC] 2 : dim(scores) = ",
                 paste(dim(scores),collapse="x"),"\n")
 
@@ -693,9 +660,9 @@ SingleCellBoard <- function(id, inputData)
         ## expected counts per stat level
         ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
         kk.counts <- colSums(2**ngs$X[,kk,drop=FALSE])  ## approximate counts from log2X
-        grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]  
-        
-        getProportionsTable <- function(pheno, is.gene=FALSE) {    
+        grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]
+
+        getProportionsTable <- function(pheno, is.gene=FALSE) {
             dbg("[SingleCellBoard::getProportionsTable()] called")
             y <- NULL
             ##if("gene" %in% input$crosstaboptions) {
@@ -719,8 +686,8 @@ SingleCellBoard <- function(id, inputData)
                 pheno <- "<cell type>"
             } else {
                 return(NULL)
-            }   
-            
+            }
+
             ## calculate proportions by group
             grp <- factor(as.character(y))
             ngrp <- length(levels(grp))
@@ -731,7 +698,7 @@ SingleCellBoard <- function(id, inputData)
                 rownames(grp.score) <- y[1]
                 colnames(grp.score) <- colnames(scores)
             }
-            
+
             ## weighted counts
             grp.score[is.na(grp.score)] <- 0
             grps <- levels(grp)
@@ -739,10 +706,10 @@ SingleCellBoard <- function(id, inputData)
             fy <-  (table(y) / sum(!is.na(y)))
             jj <- match(rownames(grp.score),names(fy))
             grp.score <-  grp.score * as.vector(fy[jj])
-            ## normalize to total 100% 
+            ## normalize to total 100%
             grp.score <- grp.score / (1e-20+sum(grp.score))
             dim(grp.score)
-            
+
             ## reduce to maximum number of items (x-axis)
             if(0 && ncol(grp.score) > 25 ) {
                 ##jj <- which(colSums(grp.score) > 0.001)
@@ -760,7 +727,7 @@ SingleCellBoard <- function(id, inputData)
                 grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
                 dim(grp.score)
             }
-            
+
             ## normalize to total 100% and reduce to maximum number of items (y-axis)
             if(nrow(grp.score) > 10 ) {
                 jj <- order(-rowSums(grp.score))
@@ -773,7 +740,7 @@ SingleCellBoard <- function(id, inputData)
                 grp.score <- grp.score0
             }
             grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
-            
+
 
             ## cluster columns??
             ##dist1 <- dist(t(scale(grp.score)))
@@ -795,7 +762,7 @@ SingleCellBoard <- function(id, inputData)
         if(is.null(pheno)) return(NULL)
 
         ##pheno="cluster"
-        grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)    
+        grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
         grp.score2 <- NULL
         gene = ngs$genes$gene_name[1]
         gene = input$crosstabgene
@@ -805,27 +772,27 @@ SingleCellBoard <- function(id, inputData)
             grp.score2  <- grp.score2[,match(kk,colnames(grp.score2))]
             grp.score1  <- grp.score1[,match(kk,colnames(grp.score1))]
         }
-        
+
         jj <- match(colnames(grp.score1),names(grp.counts))
         grp.counts <- grp.counts[jj] / 1e6  ## per million
         names(grp.counts) = colnames(grp.score1)
 
         ##-------------- plot by estimated cell.type ----------------------
-        
+
         ##par(mar = c(4,6,2,3))
         plotly::layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
         if(!is.null(grp.score2)) {
             plotly::layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
         }
-        
+
         ## top bar with counts
         par(mar = c(0,5,5.3,3), mgp=c(2.0,0.8,0) )
         xlim <- c(0,1.2*length(grp.counts))  ## reserves space for legend
         barplot( grp.counts, col="grey50", ylab="counts (M)", cex.axis=0.8,
-                cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y", 
+                cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y",
                 ylim=c(0.01, max(grp.counts)), yaxs="i" )
         ## title(pheno, cex.main=1.2, line=2, col="grey40")
-        
+
         ## middle plot (gene)
         if(!is.null(grp.score2)) {
             klrpal2 = COLORS[1:nrow(grp.score2)]
@@ -850,7 +817,7 @@ SingleCellBoard <- function(id, inputData)
                    fill=rev(klrpal1), xpd=TRUE, cex=0.8, y.intersp=0.8,
                    bg="white", bty="n")
         }
-        
+
     })
 
 
@@ -903,11 +870,11 @@ SingleCellBoard <- function(id, inputData)
         shiny::updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
 
     })
-    
+
     ##==========================================================================
     ## Markers
     ##==========================================================================
-    
+
     ##output$markersplot <- shiny::renderPlot({
     markers.plotFUNC <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
@@ -919,7 +886,7 @@ SingleCellBoard <- function(id, inputData)
         if(is.null(clust.pos)) return(NULL)
         ##pos <- ngs$tsne2d
         pos <- clust.pos
-        
+
         ##markers <- ngs$families[["CD family"]]
         if(is.null(input$mrk_features)) return(NULL)
         if(input$mrk_features=="") return(NULL)
@@ -938,7 +905,7 @@ SingleCellBoard <- function(id, inputData)
             } else {
                 markers <- ngs$genes$gene_name
             }
-            ##markers <- intersect(markers, rownames(ngs$X))       
+            ##markers <- intersect(markers, rownames(ngs$X))
             markers <- intersect(toupper(markers),toupper(ngs$genes$gene_name))
             jj <- match(markers,toupper(ngs$genes$gene_name))
             pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
@@ -970,15 +937,15 @@ SingleCellBoard <- function(id, inputData)
         if(!"group" %in% names(ngs$model.parameters)) {
             stop("[markers.plotFUNC] FATAL: no group in model.parameters")
         }
-               
+
         ## prioritize gene with large variance (groupwise)
         ##grp <- as.character(ngs$samples[rownames(pos),"group"])
         grp <- ngs$model.parameters$group[rownames(pos)]
         zx <- t(apply(gx,1,function(x) tapply(x,grp,mean)))
         gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
-        gx <- gx - min(gx,na.rm=TRUE) + 0.01 ## subtract background??    
+        gx <- gx - min(gx,na.rm=TRUE) + 0.01 ## subtract background??
         rownames(gx) = sub(".*:","",rownames(gx))
-        
+
         ##gx <- tanh(gx/sd(gx) ) ## softmax
         cex1 = 1.0
         cex1 <- 0.8*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
@@ -999,14 +966,14 @@ SingleCellBoard <- function(id, inputData)
 
         plevel="gene"
         plevel <- input$mrk_level
-        
+
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
         ##par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
-        i=1    
+        i=1
         for(i in 1:min(NP,nrow(top.gx))) {
 
-            colvar = pmax(top.gx[i,],0) 
+            colvar = pmax(top.gx[i,],0)
             colvar = 1+round(15*(colvar/(0.7*max(colvar)+0.3*max(top.gx))))
             klr0 = klrpal[colvar]
 
@@ -1026,7 +993,7 @@ SingleCellBoard <- function(id, inputData)
             } else {
                 gset <- sub(".*:","",rownames(top.gx)[i])
                 gset1 <- breakstring(substring(gset,1,80),24,force=TRUE)
-                gset1 <- tolower(gset1) 
+                gset1 <- tolower(gset1)
                 ##title( gset1, cex.main=0.9, line=0.4, col="grey40", font.main=1)
                 legend( "topleft", legend=gset1, cex=0.95, bg="#AAAAAA88",
                        text.font=2, y.intersp=0.8, bty="n",
@@ -1034,7 +1001,7 @@ SingleCellBoard <- function(id, inputData)
             }
         }
         mtext(term, outer=TRUE, cex=1.0, line=0.6)
-        
+
     })
 
     markersplot.opts = shiny::tagList(
@@ -1063,7 +1030,7 @@ SingleCellBoard <- function(id, inputData)
         func2 = markers.plotFUNC,
         options = markersplot.opts,
         info.text = markersplot_info,
-        pdf.height = 10, pdf.width=10, 
+        pdf.height = 10, pdf.width=10,
         height = c(fullH-80,780), width = c("100%",1000),
         res = c(85,90),
         add.watermark = WATERMARK
@@ -1071,8 +1038,8 @@ SingleCellBoard <- function(id, inputData)
 
     shiny::observe({
         ngs <- inputData()
-        shiny::req(ngs,input$mrk_level)    
-        
+        shiny::req(ngs,input$mrk_level)
+
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
         if(input$mrk_level=="geneset") {
@@ -1097,22 +1064,22 @@ SingleCellBoard <- function(id, inputData)
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         shiny::req(ngs)
-        
+
         if(is.null(input$cytovar1)) return(NULL)
         if(is.null(input$cytovar2)) return(NULL)
         if(input$cytovar1=="") return(NULL)
         if(input$cytovar2=="") return(NULL)
-        
+
         dbg("[SingleCellBoard::cyto.plotFUNC] called")
 
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)    
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         gene1 <- input$cytovar1
         gene2 <- input$cytovar2
         ##if(gene1 == gene2) return(NULL)
         par(mfrow=c(1,1), mar=c(10,5,4,1))
         pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
                      col="grey60", cex.names=1, lab.unit="(log2CPM)")
-        
+
     })
 
     cyto.opts = shiny::tagList(
@@ -1146,13 +1113,13 @@ SingleCellBoard <- function(id, inputData)
         ## just at new data load
         genes <- NULL
         g1=g2=NULL
-        
+
         F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
         F <- F[order(-apply(F,1,sd)),]
         genes <- rownames(F)
         g1 <- rownames(F)[1]
         g2 <- rownames(F)[2]
-        
+
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
 
@@ -1160,7 +1127,7 @@ SingleCellBoard <- function(id, inputData)
         shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
     })
 
-    
+
     ##==========================================================================
     ## CNV
     ##==========================================================================
@@ -1170,7 +1137,7 @@ SingleCellBoard <- function(id, inputData)
         shiny::req(ngs)
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV with SMA40 ...")
-        
+
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
         shiny::withProgress( message='calculating CNV (sma40)...', value=0.33, {
             res <- pgx.CNAfromExpression(ngs, nsmooth=40)
@@ -1183,8 +1150,8 @@ SingleCellBoard <- function(id, inputData)
         shiny::req(ngs)
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV using inferCNV...")
-        
-        
+
+
         shiny::withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
             res <- pgx.inferCNV(ngs, refgroup=NULL)
         })
@@ -1192,16 +1159,16 @@ SingleCellBoard <- function(id, inputData)
     })
 
 
-    # Currently not used Stefan 
+    # Currently not used Stefan
 
     # cna.plotFUNC <- shiny::reactive({
 
-    #     ##return(NULL)    
+    #     ##return(NULL)
     #     ngs <- inputData()
     #     shiny::req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
 
     #     dbg("[SingleCellBoard:cna.plotFUNC] reacted")
-        
+
     #     if(input$cna_method=="inferCNV") {
     #         res <- getCNAfromExpression.inferCNV()
     #         par(mfrow=c(1,1))
@@ -1216,7 +1183,7 @@ SingleCellBoard <- function(id, inputData)
     #             ngs, res, annot=annotvar, order.by=order.by,
     #             downsample=10 )
     #     }
-        
+
     # })
 
     # cna.opts = shiny::tagList(
@@ -1240,7 +1207,7 @@ SingleCellBoard <- function(id, inputData)
     #     options = cna.opts,
     #     title = "Inferred copy number variation (CNV)",
     #     info.text = cnaModule_info,
-    #     pdf.width=10, pdf.height=8, 
+    #     pdf.width=10, pdf.height=8,
     #     height = c(fullH - 60,700), width = c('100%',1000),
     #     res = 110,
     #     add.watermark = WATERMARK
@@ -1249,21 +1216,21 @@ SingleCellBoard <- function(id, inputData)
     # shiny::observe({
     #     ngs <- inputData()
     #     ##if(is.null(ngs)) return(NULL)
-    #     shiny::req(ngs)        
+    #     shiny::req(ngs)
     #     ## levels for sample filter
     #     dbg("[SingleCellBoard:cna:observe] reacted")
-        
+
     #     annotvar <- c(colnames(ngs$Y),"<none>")
     #     shiny::updateSelectInput(session, "cna_annotvar", choices=annotvar)
-        
+
     # })
 
     # Currently not used Stefan 22.03.22
-    
+
     ##===========================================================================
-    ## iTALK 
+    ## iTALK
     ##===========================================================================
-    
+
 #     italk_getResults <- shiny::reactive({
 #         ngs <- inputData()
 #         ## if(is.null(ngs)) return(NULL)
@@ -1271,7 +1238,7 @@ SingleCellBoard <- function(id, inputData)
 #         shiny::req(input$italk_groups)
 
 #         dbg("[SingleCellBoard:italk_getResults] reacted")
-        
+
 #         db <- iTALK::database
 #         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
 #         length(db.genes)
@@ -1279,14 +1246,14 @@ SingleCellBoard <- function(id, inputData)
 #         xgenes <- toupper(ngs$genes[rownames(ngs$X),"gene_name"])
 #         db.genes <- intersect(db.genes, xgenes)
 #         length(db.genes)
-        
+
 #         ## make groups
 #         ph <- "group"
 #         ph <- "cell.type"
 #         ph <- input$italk_groups
-#         ct <- as.character(ngs$samples[,ph])    
+#         ct <- as.character(ngs$samples[,ph])
 #         table(ct)
-        
+
 #         ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
 #         pp1 <- rownames(ngs$X)[match(db.genes, toupper(xgenes))]
 #         gx <- t(ngs$X[pp1,,drop=FALSE])
@@ -1294,27 +1261,27 @@ SingleCellBoard <- function(id, inputData)
 #         colnames(gx) <- db.genes ## UPPERCASE
 #         gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
 #         dim(gx0)
-        
+
 #         top_genes <- 50
 #         top_genes <- input$italk_netview_topgenes
 
 #         colnames(gx) <- toupper(colnames(gx))
 #         data1 <- data.frame(cell_type=ct, gx)
 #         dim(data1)
-        
+
 #         ## find the ligand-receptor pairs from highly expressed genes
 #         cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
 #         ct.names = unique(as.character(data1$cell_type))
 #         cell_col <- cell_col[1:length(ct.names)]
 #         names(cell_col) <- ct.names
-        
+
 #         comm_type='cytokine'
 #         comm_type <- input$italk_category
-        
+
 #         mode = "absolute"
 #         ##mode <- input$italk_mode
 #         if(mode=="absolute") {
-#             highly_exprs_genes <- iTALK::rawParse(data1, top_genes=50, stats='mean')    
+#             highly_exprs_genes <- iTALK::rawParse(data1, top_genes=50, stats='mean')
 #             res_cat <- iTALK::FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
 #             dim(res_cat)
 #             xx <- res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs
@@ -1323,13 +1290,13 @@ SingleCellBoard <- function(id, inputData)
 #             ## contrast <- input$fa_contrast
 #             ## group <- ngs$model.parameters$exp.matrix[,contrast]
 #             ## data1$compare_groups <- group
-#             ## data1 <- data1[which(data1$compare_groups!=0),]        
+#             ## data1 <- data1[which(data1$compare_groups!=0),]
 #             ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
 #             ## deg_t  <- DEG(data %>% plotly::filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
 #             ## deg_nk <- DEG(data %>% plotly::filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
 #             ## ## find significant ligand-receptor pairs and do the plotting
 #             ## res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
-#             ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
+#             ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]
 #         }
 
 #         gx0.genes <- toupper(colnames(gx0))
@@ -1358,7 +1325,7 @@ SingleCellBoard <- function(id, inputData)
 #         shiny::req(res)
 #         ##if(is.null(res)) return(NULL)
 #         res_cat <- res$table
-#         if(nrow(res_cat)<1) return(NULL) 
+#         if(nrow(res_cat)<1) return(NULL)
 
 #         ntop=25
 #         ntop = as.integer(input$italk_LRPlot_ntop)
@@ -1376,7 +1343,7 @@ SingleCellBoard <- function(id, inputData)
 #         res <- italk_getResults()
 #         shiny::req(ngs,res)
 #         ##if(is.null(res)) return(NULL)
-        
+
 #         dbg("[SingleCellBoard:italk_heatmap.RENDER] reacted")
 
 #         res_cat <- res$table
@@ -1418,7 +1385,7 @@ SingleCellBoard <- function(id, inputData)
 #     )
 
 #     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
-    
+
 #     shiny::callModule(
 #         plotModule,
 #         id = "italk_heatmap",
@@ -1431,7 +1398,7 @@ SingleCellBoard <- function(id, inputData)
 #         height = imgH, res=80,
 #         add.watermark = WATERMARK
 #     )
-    
+
 #     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
 #     shiny::callModule(
@@ -1447,7 +1414,7 @@ SingleCellBoard <- function(id, inputData)
 #                    "Select the number of topgenes to search for ligand-receptor pairs.",
 #                    placement="top" )
 #         ),
-#         pdf.width=6, pdf.height=8, 
+#         pdf.width=6, pdf.height=8,
 #         height = imgH, res=80,
 #         add.watermark = WATERMARK
 #     )
@@ -1461,7 +1428,7 @@ SingleCellBoard <- function(id, inputData)
 #         if(length(ct)>0) sel <- ct[1]
 #         shiny::updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
 #     })
-        
+
     # Currently not used Stefan 22.03.22
 
     ##==========================================================================
@@ -1469,23 +1436,23 @@ SingleCellBoard <- function(id, inputData)
     ##==========================================================================
 
     # monocle_getResults <- shiny::reactive({
-        
+
     #     ngs <- inputData()
     #     shiny::req(ngs)
     #     ##if(is.null(ngs)) return(NULL)
 
     #     dbg("[SingleCellBoard:monocle_getResults] reacted")
-        
+
     #     ## Create a Progress object
     #     progress <- shiny::Progress$new()
-    #     on.exit(progress$close())    
+    #     on.exit(progress$close())
     #     progress$set(message = "Calculating trajectories", value = 0)
-        
+
     #     ##------------------------------------------------------------
     #     ## Step 0: Make Monocle object from ngs
     #     ##------------------------------------------------------------
 
-    #     NGENES=2000        
+    #     NGENES=2000
     #     jj <- head(order(-apply(log(1+ngs$counts),1,sd,na.rm=TRUE)),NGENES)
     #     ngs$counts <- ngs$counts[jj,]
     #     ngs$genes  <- ngs$genes[rownames(ngs$counts),]
@@ -1505,7 +1472,7 @@ SingleCellBoard <- function(id, inputData)
     #     rownames(G) <- rownames(X)
     #     G$gene_name <- rownames(G)
     #     G$gene_short_name <- rownames(G)
-        
+
     #     cds <- monocle3::new_cell_data_set(
     #                          expression_data = X,
     #                          cell_metadata = ngs$samples,
@@ -1521,22 +1488,22 @@ SingleCellBoard <- function(id, inputData)
 
     #     cds <- methods::new("cell_data_set",
     #                         assays = SummarizedExperiment::Assays(
-    #                                                            list(counts = as(expression_data, 
+    #                                                            list(counts = as(expression_data,
     #                                                                             "dgCMatrix"))),
     #                         colData = SingleCellExperiment::colData(sce),
-    #                         int_elementMetadata = sce@int_elementMetadata, 
+    #                         int_elementMetadata = sce@int_elementMetadata,
     #                         int_colData = sce@int_colData,
-    #                         int_metadata = sce@int_metadata, 
+    #                         int_metadata = sce@int_metadata,
     #                         metadata = sce@metadata,
     #                         NAMES = sce@NAMES,
-    #                         elementMetadata = sce@elementMetadata, 
+    #                         elementMetadata = sce@elementMetadata,
     #                         rowRanges = sce@rowRanges)
-        
+
     #     metadata(cds)$cds_version <- Biobase::package.version("monocle3")
     #     clusters <- stats::setNames( S4Vectors::SimpleList(), character(0))
     #     cds <- monocle3::estimate_size_factors(cds)
     #     cds
-        
+
     #     ##------------------------------------------------------------
     #     ## Step 1: Normalize and pre-process the data
     #     ##------------------------------------------------------------
@@ -1544,7 +1511,7 @@ SingleCellBoard <- function(id, inputData)
     #     ##cds <- monocle3::preprocess_cds(cds, num_dim = 100, residual_model_formula_str = "~ batch")
     #     cds <- monocle3::preprocess_cds(cds, num_dim = 40)
     #     ##plot_pc_variance_explained(cds)
-        
+
     #     ##------------------------------------------------------------
     #     ## Step 2: Reduce the dimensions using UMAP
     #     ##------------------------------------------------------------
@@ -1557,7 +1524,7 @@ SingleCellBoard <- function(id, inputData)
     #     ##------------------------------------------------------------
     #     progress$inc(0.2, detail = "clustering cells")
     #     cds <- cluster_cells(cds, reduction_method="UMAP")
-        
+
     #     ##------------------------------------------------------------
     #     ## Step 4: Learn trajectory graph
     #     ##------------------------------------------------------------
@@ -1581,7 +1548,7 @@ SingleCellBoard <- function(id, inputData)
     #     progress$inc(0.2, detail = "done")
 
     #     dbg("monocle_getResults: DONE!")
-        
+
     #     return(cds)
     # })
 
@@ -1590,13 +1557,13 @@ SingleCellBoard <- function(id, inputData)
     # monocle_plotTopMarkers.RENDER <- shiny::reactive({
 
     #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] reacted")
-        
+
     #     cds <- monocle_getResults()
 
     #     shiny::req(cds,input$monocle_groupby)
 
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 1")        
-        
+    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 1")
+
     #     ## Find marker genes expressed by each cluster
     #     pheno1 = "cluster"
     #     pheno1 = input$monocle_groupby
@@ -1604,8 +1571,8 @@ SingleCellBoard <- function(id, inputData)
     #     pheno1
     #     marker_test_res = top_markers(cds, group_cells_by=pheno1, cores=4)
 
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 2") 
-        
+    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 2")
+
     #     NTOP = 1
     #     NTOP = 3
     #     NTOP = as.integer(input$monocle_ntop)
@@ -1616,9 +1583,9 @@ SingleCellBoard <- function(id, inputData)
     #     ##top_n(1, marker_test_q_value)
     #     ##top_n(1, pseudo_R2)
 
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 3")         
-        
-    #     top_specific_marker_ids = unique(top_specific_markers %>% pull(gene_id))    
+    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 3")
+
+    #     top_specific_marker_ids = unique(top_specific_markers %>% pull(gene_id))
     #     scale_max1 = 0.8 * log(max(assay(cds))+0.1)
     #     ##par(mar=c(0,0,0,0))
     #     g <- monocle3::plot_genes_by_group(cds,
@@ -1640,17 +1607,17 @@ SingleCellBoard <- function(id, inputData)
 
 
     #     cds <- monocle_getResults()
-    #     shiny::req(cds,input$monocle_groupby)    
+    #     shiny::req(cds,input$monocle_groupby)
 
     #     pheno1 = ".cluster"
     #     pheno1 = input$monocle_groupby
-    #     if(pheno1=="cluster") pheno1 <- ".cluster"    
+    #     if(pheno1=="cluster") pheno1 <- ".cluster"
 
     #     if(pheno1=="pseudotime") {
     #         root_cells <- input$monocle_rootcells
     #         cds = order_cells(cds, root_cells=root_cells)
     #     }
-        
+
     #     size1 <- ifelse( ncol(cds) < 100, 2, 1)
 
     #     g <- monocle3::plot_cells(cds,
@@ -1667,16 +1634,16 @@ SingleCellBoard <- function(id, inputData)
     # monocle_plotGene.RENDER <- shiny::reactive({
 
     #     dbg("monocle_plotGene.RENDER: reacted")
-        
+
     #     cds <- monocle_getResults()
-    #     shiny::req(cds, input$monocle_plotgene)   
+    #     shiny::req(cds, input$monocle_plotgene)
 
     #     genes = "CD14"
     #     genes = input$monocle_plotgene
-        
+
     #     size1 <- ifelse( ncol(cds) < 100, 2, 1)
     #     g <- monocle3::plot_cells(cds, genes = genes[1],
-    #                               cell_size = size1, 
+    #                               cell_size = size1,
     #                               show_trajectory_graph=FALSE,
     #                               label_cell_groups=FALSE)
     #     g <- g + ggplot2::theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
@@ -1687,11 +1654,11 @@ SingleCellBoard <- function(id, inputData)
     # ##------- plotTopMarkers module -------
     # shiny::callModule(
     #     plotModule,
-    #     id = "monocle_plotTopMarkers", 
+    #     id = "monocle_plotTopMarkers",
     #     func = monocle_plotTopMarkers.RENDER,
     #     func2 = monocle_plotTopMarkers.RENDER,
     #     plotlib = "ggplot",
-    #     title = "Top markers by group", label="a", 
+    #     title = "Top markers by group", label="a",
     #     info.text = "The heatmap visualizes the expression of group-specific markers.",
     #     options = shiny::tagList(
     #         shiny::selectInput(ns("monocle_groupby"),"Group by:",choices=NULL),
@@ -1719,7 +1686,7 @@ SingleCellBoard <- function(id, inputData)
     # )
 
     # ##------- plotGene module -------
-    # monocle_plotGene.opts = shiny::tagList(    
+    # monocle_plotGene.opts = shiny::tagList(
     #     shiny::selectInput(ns("monocle_plotgene"),"Gene:",choices=NULL)
     # )
     # shiny::callModule(
@@ -1734,7 +1701,7 @@ SingleCellBoard <- function(id, inputData)
     #     height = 0.45*imgH, res = c(80,95),
     #     add.watermark = WATERMARK
     # )
-    
+
     return(NULL)
 
   })
