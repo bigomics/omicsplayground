@@ -14,13 +14,13 @@ SingleCellInputs <- function(id) {
                 "Toggle options", placement="top"),
         shiny::br(),br(),
         shiny::conditionalPanel(
-            "input.options % 2 == 1", ns=ns, 
+            "input.options % 2 == 1", ns=ns,
             shiny::tagList(
                 withTooltip(shiny::selectInput(ns("samplefilter"),"Filter samples:",
                                     choices=NULL, multiple=TRUE),
                         "Filter relevant samples (cells).",
                         placement="top", options = list(container = "body")),
-                
+
                 withTooltip(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
                                     selected="default"),
                         "Specify a layout for the figures: t-SNE or PCA-based layout.",
@@ -31,6 +31,11 @@ SingleCellInputs <- function(id) {
 }
 
 SingleCellUI <- function(id) {
+
+    fullH = 750  ## full height of panel
+    imgH  = 680  ## row height of panel
+    tabH  = 200  ## row height of panel
+
     ns <- shiny::NS(id)  ## namespace
     shiny::fillCol(
         flex = c(1),
@@ -51,7 +56,10 @@ SingleCellUI <- function(id) {
                                 However, we plan to expand the collection of methods and databases and to infer other cell types."
                             )
                         ),
-                        plotWidget(ns("icpplot"))
+                        singlecell_plot_icpplot_ui(ns("icpplot"),
+                                                   label='a',
+                                                   height = c(fullH-80,700),
+                                                   width = c("100%",1400))
                     ),
                     div(
                         class = "col-md-6",
@@ -62,7 +70,11 @@ SingleCellUI <- function(id) {
                                 phenotype that is controlled by the experimental condition or unwanted batch effects."
                             )
                         ),
-                        plotWidget(ns("phenoplot"))
+                        singlecell_plot_phenoplot_ui(id = ns("phenoplot"),
+                                                     label='',
+                                                     height = c(fullH-100,750),
+                                                     width = c("100%",500)
+                                                     )
                     )
                 )
             ),
@@ -101,7 +113,7 @@ SingleCellUI <- function(id) {
                             standard deviation are shown. The red color shading is proportional to the (absolute)
                             expression of the gene in corresponding samples.")
                         ),
-                        plotWidget(ns("markersplot")) 
+                        plotWidget(ns("markersplot"))
                     ),
                     div(
                         class = "col-md-6",
@@ -129,7 +141,7 @@ SingleCellUI <- function(id) {
             # shiny::tabPanel("iTALK",
             #     shiny::fillCol(
             #     height = 750,
-            #     flex = c(NA,NA,1), 
+            #     flex = c(NA,NA,1),
             #     tags$div(
             #         HTML("<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile
             #         and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell
@@ -179,7 +191,7 @@ SingleCellUI <- function(id) {
             #             plotWidget(ns("monocle_plotGene"))
             #         )
             #     )
-            # ))            
+            # ))
         )
     )
 }

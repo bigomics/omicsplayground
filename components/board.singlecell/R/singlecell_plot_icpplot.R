@@ -1,98 +1,198 @@
-#' ##
-#' ## This file is part of the Omics Playground project.
-#' ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
-#' ##
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+#' Single cell plot UI input function
 #'
-#' #' Single cell plot UI input function
-#' #'
-#' #' @description A shiny Module for plotting (UI code).
-#' #'
-#' #' @param id
-#' #' @param label
-#' #' @param height
-#' #'
-#' #' @export
-#' singlecell_plot_FnName_ui <- function(id,
-#'                                       label='',
-#'                                       height,
-#'                                       width) {
-#'   ns <- shiny::NS(id)
+#' @description A shiny Module for plotting (UI code).
 #'
-#'   info_text = ""
+#' @param id
+#' @param label
+#' @param height
+#' @param width
 #'
-#'   PlotModuleUI(ns(""),
-#'                title = "",
-#'                label = label,
-#'                plotlib = "plotly",
-#'                info.text = info_text,
-#'                options = NULL,
-#'                download.fmt=c("png","pdf","csv"),
-#'                height = height,
-#'                width = width)
-#' }
+#' @export
+singlecell_plot_icpplot_ui <- function(id,
+                                       label='',
+                                       height,
+                                       width){
+  ns <- shiny::NS(id)
+
+  icp.opts = shiny::tagList(
+    withTooltip(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
+                "Select a reference dataset for the cell type prediction.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
+                "Choose a method for the cell type prediction.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::radioButtons(ns("sortby"),"Sort by:",
+                                    choices=c("probability","name"), inline=TRUE),
+                "Sort by name or probability.", placement="top",
+                options = list(container = "body")),
+    withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
+                                    ## selected="6x6",
+                                    inline=TRUE),
+                "Choose layout.",
+                placement="top", options = list(container = "body"))
+  )
+
+  icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+
+
+  PlotModuleUI(id = ns("plot"),
+               label = label,
+               info.text = icp_info,
+               options = icp.opts,
+               download.fmt=c("png","pdf","csv"),
+               height = height,
+               width = width)
+}
+
+#' Single cell plot Server function
 #'
-#' #' Single cell plot Server function
-#' #'
-#' #' @description A shiny Module for plotting (server code).
-#' #'
-#' #' @param id
-#' #'
-#' #' @return
-#' #' @export
-#' singlecell_plot_FnName_server <- function(id, watermark = FALSE)
-#' {
-#'   moduleServer( id, function(input, output, session) {
+#' @description A shiny Module for plotting (server code).
 #'
+#' @param id
 #'
-#'         #reactive function listening for changes in input
-#'         plot_data <- shiny::reactive({
-#'           #code here
-#'         })
-#'
-#'         plot.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           #plot code here
-#'         }
-#'
-#'         plotly.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           df <- pd
-#'
-#'           ## plot as regular plot
-#'           plotly::plot_ly(data = df,
-#'                           type = '',
-#'                           x = "",
-#'                           y = "",
-#'                           ## hoverinfo = "text",
-#'                           hovertext = ~annot,
-#'                           marker = list(color = ~color)
-#'           )
-#'         }
-#'
-#'         modal_plotly.RENDER <- function() {
-#'           plotly.RENDER() %>%
-#'             plotly::layout(
-#'               ## showlegend = TRUE,
-#'               font = list(
-#'                 size = 16
-#'               )
-#'             )
-#'         }
-#'
-#'
-#'         PlotModuleServer(
-#'           "plot",
-#'           plotlib = "plotly",
-#'           func = plotly.RENDER,
-#'           func2 = modal_plotly.RENDER,
-#'           csvFunc = plot_data,   ##  *** downloadable data as CSV
-#'           res = c(80,170),                ## resolution of plots
-#'           pdf.width = 6, pdf.height = 6,
-#'           add.watermark = watermark
-#'         )
-#'     }## end of moduleServer
-#' }
+#' @export
+singlecell_plot_icpplot_server <- function(id,
+                                           inputData,
+                                           pfGetClusterPositions,
+                                           watermark = FALSE){
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
+    plot_data <- shiny::reactive({
+
+      dbg("[SingleCellBoard:getDeconvResults] called")
+      ngs <- inputData()
+      method="meta"
+      refset = "LM22"
+      method <- input$dcmethod
+      if(is.null(method)) return(NULL)
+      refset <- input$refset
+
+      if(!("deconv" %in% names(ngs))) return(NULL)
+      results <- ngs$deconv[[refset]][[method]]
+      ## threshold everything (because DCQ can be negative!!!)
+      results <- pmax(results,0)
+
+      ## limit to  top50??
+      ##ii <- head(order(-colSums(results)),100))
+      ##results <- results[,ii,drop=FALSE]
+
+      clust.pos <- pfGetClusterPositions()
+
+      # alertDataLoaded(session,ngs)
+
+      if(is.null(clust.pos)) return(NULL)
+      dbg("[SingleCellBoard:icp.plotFUNC] called")
+      pos <- ngs$tsne2d
+      pos <- clust.pos
+      score <- ngs$deconv[[1]][["meta"]]
+      score = results
+      if(is.null(score) || length(score)==0  ) return(NULL)
+
+      ## normalize
+      score <- score[rownames(pos),,drop=FALSE]
+      score[is.na(score)] <- 0
+      score <- pmax(score,0)
+      ##score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
+      ##score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
+      score <- score / (1e-20 + rowSums(score))
+      score <- tanh(score/mean(abs(score)))
+      score <- score / max(score,na.rm=TRUE)
+      summary(as.vector(score))
+
+      ## take top10 features
+      jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
+      score <- score[,jj.top]
+      score <- score[,order(-colMeans(score**2))]
+      score <- score[,1:min(50,ncol(score))]
+      ii <- hclust(dist(score))$order
+      jj <- hclust(dist(t(score)))$order
+      score <- score[ii,jj]
+
+      score0 <- score
+      pos <- pos[rownames(score),]
+      b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
+
+      return(list(
+        score = score,
+        pos = pos
+        ))
+    })
+
+    plot.render <- function(){
+      pd = plot_data()
+      cex1 = 1.2
+      cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pd[['pos']]),breaks=c(-1,40,200,1000,1e10))]
+      klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+      ##klrpal = paste0(gplots::col2hex(klrpal),"AA")
+      klrpal = paste0(gplots::col2hex(klrpal),"66")
+
+      lyo <- input$layout
+      ntop = 25
+      par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
+      par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
+      if(ncol(pd[['score']])>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+      if(lyo == "4x4") {
+        par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2)*0.6)
+        ntop = 16
+      }
+      if(lyo == "6x6") {
+        par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+        ntop = 36
+      }
+
+      i=1
+      jj <- NULL
+      jj <- head(order(-colMeans(score**2)),ntop)
+      if(input$sortby=="name") {
+        jj <- jj[order(colnames(score)[jj])]
+      }
+      colnames(score)[jj]
+      for(j in jj) {
+        gx = pmax(score[,j],0)
+        gx = 1+round(15*gx/(1e-8+max(score)))
+        klr0 = klrpal[gx]
+        ii <- order(gx)
+        ## ii <- sample(nrow(pos))
+        base::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
+                    xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
+                    fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
+                    xlab="", ylab="")
+        legend( "topleft", legend=colnames(score)[j], bg="#AAAAAA88",
+                cex=1.2, text.font=1, y.intersp=0.8, bty="n",
+                inset=c(-0.05,-0.0) )
+      }
+      refset <- input$refset
+      mtext(refset, outer=TRUE, line=0.5, cex=1.0)
+
+    }
+
+    PlotModuleServer(
+      id = "plot",
+      func = plot.render,
+      res = c(85,95),
+      pdf.width = 12, pdf.height = 6,
+      add.watermark = watermark
+      )
+
+    # shiny::callModule(
+    #   plotModule,
+    #   id = "icpplot",
+    #   func = icp.plotFUNC,
+    #   func2 = icp.plotFUNC,
+    #   ##title = "Cell type profiling (deconvolution)",
+    #   options = icp.opts,
+    #   info.text = icp_info,
+    #   caption2 = icp_info,
+    #   pdf.width=12, pdf.height=6,
+    #   height = c(fullH-80,700), width = c("100%",1400),
+    #   res = c(85,95),
+    #   add.watermark = WATERMARK
+  })## end of moduleServer
+}

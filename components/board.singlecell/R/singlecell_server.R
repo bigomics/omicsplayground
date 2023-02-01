@@ -158,275 +158,291 @@ SingleCellBoard <- function(id, inputData)
     })
 
 
-    #icpplot plot refactored into plot module
-
-    getDeconvResults <- shiny::reactive({ #used only by icoplot
-        ngs <- inputData()
-        shiny::req(ngs)
-        dbg("[SingleCellBoard:getDeconvResults] called")
-        method="meta";refset = "LM22"
-        method <- input$dcmethod
-        if(is.null(method)) return(NULL)
-        refset <- input$refset
-        if(!("deconv" %in% names(ngs))) return(NULL)
-        results <- ngs$deconv[[refset]][[method]]
-        ## threshold everything (because DCQ can be negative!!!)
-        results <- pmax(results,0)
-
-        ## limit to  top50??
-        ##ii <- head(order(-colSums(results)),100))
-        ##results <- results[,ii,drop=FALSE]
-
-        return(results)
-    })
+    # plots -------------------------------------------------------------------
 
 
+    # icpplot -----------------------------------------------------------------
 
-    icp.plotFUNC <- shiny::reactive({
+    singlecell_plot_icpplot_server(id = "icpplot",
+                                   inputData = inputData,
+                                   pfGetClusterPositions = pfGetClusterPositions
+                                   )
+
+    singlecell_plot_phenoplot_server(id = "phenoplot",
+                                     inputData = inputData,
+                                     pfGetClusterPositions = pfGetClusterPositions
+                                     )
+
+    #icpplot plot refactored into plot module #########
+
+    # getDeconvResults <- shiny::reactive({ #used only by icoplot
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #     dbg("[SingleCellBoard:getDeconvResults] called")
+    #     method="meta";refset = "LM22"
+    #     method <- input$dcmethod
+    #     if(is.null(method)) return(NULL)
+    #     refset <- input$refset
+    #     if(!("deconv" %in% names(ngs))) return(NULL)
+    #     results <- ngs$deconv[[refset]][[method]]
+    #     ## threshold everything (because DCQ can be negative!!!)
+    #     results <- pmax(results,0)
+    #
+    #     ## limit to  top50??
+    #     ##ii <- head(order(-colSums(results)),100))
+    #     ##results <- results[,ii,drop=FALSE]
+    #
+    #     return(results)
+    # })
+    #
+    #
+    #
+    # icp.plotFUNC <- shiny::reactive({
+    #
+    #
+    #     ngs <- inputData()
+    #     alertDataLoaded(session,ngs)
+    #     shiny::req(ngs)
+    #     clust.pos <- pfGetClusterPositions()
+    #     if(is.null(clust.pos)) return(NULL)
+    #     dbg("[SingleCellBoard:icp.plotFUNC] called")
+    #     pos <- ngs$tsne2d
+    #     pos <- clust.pos
+    #     score <- ngs$deconv[[1]][["meta"]]
+    #     score = getDeconvResults()
+    #     if(is.null(score) || length(score)==0  ) return(NULL)
+    #
+    #     ## normalize
+    #     score <- score[rownames(pos),,drop=FALSE]
+    #     score[is.na(score)] <- 0
+    #     score <- pmax(score,0)
+    #     ##score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
+    #     ##score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
+    #     score <- score / (1e-20 + rowSums(score))
+    #     score <- tanh(score/mean(abs(score)))
+    #     score <- score / max(score,na.rm=TRUE)
+    #     summary(as.vector(score))
+    #
+    #     ## take top10 features
+    #     jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
+    #     score <- score[,jj.top]
+    #     score <- score[,order(-colMeans(score**2))]
+    #     score <- score[,1:min(50,ncol(score))]
+    #     ii <- hclust(dist(score))$order
+    #     jj <- hclust(dist(t(score)))$order
+    #     score <- score[ii,jj]
+    #
+    #     score0 <- score
+    #     pos <- pos[rownames(score),]
+    #     b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
+    #
+    #     ##if(input$view=="distribution")
+    #     {
+    #         cex1 = 1.2
+    #         cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
+    #         klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+    #         ##klrpal = paste0(gplots::col2hex(klrpal),"AA")
+    #         klrpal = paste0(gplots::col2hex(klrpal),"66")
+    #
+    #         lyo <- input$layout
+    #         ntop = 25
+    #         par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
+    #         par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
+    #         if(ncol(score)>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+    #         if(lyo == "4x4") {
+    #             par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2)*0.6)
+    #             ntop = 16
+    #         }
+    #         if(lyo == "6x6") {
+    #             par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+    #             ntop = 36
+    #         }
+    #
+    #         i=1
+    #         jj <- NULL
+    #         jj <- head(order(-colMeans(score**2)),ntop)
+    #         if(input$sortby=="name") {
+    #             jj <- jj[order(colnames(score)[jj])]
+    #         }
+    #         colnames(score)[jj]
+    #         for(j in jj) {
+    #             gx = pmax(score[,j],0)
+    #             gx = 1+round(15*gx/(1e-8+max(score)))
+    #             klr0 = klrpal[gx]
+    #             ii <- order(gx)
+    #             ## ii <- sample(nrow(pos))
+    #             base::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
+    #                  xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
+    #                  fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
+    #                  xlab="", ylab="")
+    #             legend( "topleft", legend=colnames(score)[j], bg="#AAAAAA88",
+    #                    cex=1.2, text.font=1, y.intersp=0.8, bty="n",
+    #                    inset=c(-0.05,-0.0) )
+    #         }
+    #         refset <- input$refset
+    #         mtext(refset, outer=TRUE, line=0.5, cex=1.0)
+    #     }
+    #
+    # })
+    #
+    # icp.opts = shiny::tagList(
+    #     withTooltip(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
+    #            "Select a reference dataset for the cell type prediction.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
+    #            "Choose a method for the cell type prediction.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::radioButtons(ns("sortby"),"Sort by:",
+    #                         choices=c("probability","name"), inline=TRUE),
+    #            "Sort by name or probability.", placement="top",
+    #            options = list(container = "body")),
+    #     withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
+    #                         ## selected="6x6",
+    #                         inline=TRUE),
+    #            "Choose layout.",
+    #            placement="top", options = list(container = "body"))
+    # )
+    #
+    # icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+    #
+    # shiny::callModule(
+    #     plotModule,
+    #     id = "icpplot",
+    #     func = icp.plotFUNC,
+    #     func2 = icp.plotFUNC,
+    #     ##title = "Cell type profiling (deconvolution)",
+    #     options = icp.opts,
+    #     info.text = icp_info,
+    #     caption2 = icp_info,
+    #     pdf.width=12, pdf.height=6,
+    #     height = c(fullH-80,700), width = c("100%",1400),
+    #     res = c(85,95),
+    #     add.watermark = WATERMARK
+    # )
+
+    #end icpplot plot refactored into plot module ##########
 
 
-        ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        shiny::req(ngs)
-        clust.pos <- pfGetClusterPositions()
-        if(is.null(clust.pos)) return(NULL)
-        dbg("[SingleCellBoard:icp.plotFUNC] called")
-        pos <- ngs$tsne2d
-        pos <- clust.pos
-        score <- ngs$deconv[[1]][["meta"]]
-        score = getDeconvResults()
-        if(is.null(score) || length(score)==0  ) return(NULL)
-
-        ## normalize
-        score <- score[rownames(pos),,drop=FALSE]
-        score[is.na(score)] <- 0
-        score <- pmax(score,0)
-        ##score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
-        ##score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
-        score <- score / (1e-20 + rowSums(score))
-        score <- tanh(score/mean(abs(score)))
-        score <- score / max(score,na.rm=TRUE)
-        summary(as.vector(score))
-
-        ## take top10 features
-        jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
-        score <- score[,jj.top]
-        score <- score[,order(-colMeans(score**2))]
-        score <- score[,1:min(50,ncol(score))]
-        ii <- hclust(dist(score))$order
-        jj <- hclust(dist(t(score)))$order
-        score <- score[ii,jj]
-
-        score0 <- score
-        pos <- pos[rownames(score),]
-        b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
-
-        ##if(input$view=="distribution")
-        {
-            cex1 = 1.2
-            cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-            klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
-            ##klrpal = paste0(gplots::col2hex(klrpal),"AA")
-            klrpal = paste0(gplots::col2hex(klrpal),"66")
-
-            lyo <- input$layout
-            ntop = 25
-            par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
-            par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
-            if(ncol(score)>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
-            if(lyo == "4x4") {
-                par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2)*0.6)
-                ntop = 16
-            }
-            if(lyo == "6x6") {
-                par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
-                ntop = 36
-            }
-
-            i=1
-            jj <- NULL
-            jj <- head(order(-colMeans(score**2)),ntop)
-            if(input$sortby=="name") {
-                jj <- jj[order(colnames(score)[jj])]
-            }
-            colnames(score)[jj]
-            for(j in jj) {
-                gx = pmax(score[,j],0)
-                gx = 1+round(15*gx/(1e-8+max(score)))
-                klr0 = klrpal[gx]
-                ii <- order(gx)
-                ## ii <- sample(nrow(pos))
-                base::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
-                     xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
-                     fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
-                     xlab="", ylab="")
-                legend( "topleft", legend=colnames(score)[j], bg="#AAAAAA88",
-                       cex=1.2, text.font=1, y.intersp=0.8, bty="n",
-                       inset=c(-0.05,-0.0) )
-            }
-            refset <- input$refset
-            mtext(refset, outer=TRUE, line=0.5, cex=1.0)
-        }
-
-    })
-
-    icp.opts = shiny::tagList(
-        withTooltip(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
-               "Select a reference dataset for the cell type prediction.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
-               "Choose a method for the cell type prediction.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::radioButtons(ns("sortby"),"Sort by:",
-                            choices=c("probability","name"), inline=TRUE),
-               "Sort by name or probability.", placement="top",
-               options = list(container = "body")),
-        withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
-                            ## selected="6x6",
-                            inline=TRUE),
-               "Choose layout.",
-               placement="top", options = list(container = "body"))
-    )
-
-    icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
-    shiny::callModule(
-        plotModule,
-        id = "icpplot",
-        func = icp.plotFUNC,
-        func2 = icp.plotFUNC,
-        ##title = "Cell type profiling (deconvolution)",
-        options = icp.opts,
-        info.text = icp_info,
-        caption2 = icp_info,
-        pdf.width=12, pdf.height=6,
-        height = c(fullH-80,700), width = c("100%",1400),
-        res = c(85,95),
-        add.watermark = WATERMARK
-    )
-
-    #end icpplot plot refactored into plot module
-
-    ##===========================================================================
-    ## Phenotypes
-    ##===========================================================================
+    #phenoplot refactored into plot module #########
 
     ##output$phenoplot <- shiny::renderPlot({
-    pheno.plotFUNC <- shiny::reactive({
-        ##if(!input$tsne.all) return(NULL)
+    # pheno.plotFUNC <- shiny::reactive({
+    #     ##if(!input$tsne.all) return(NULL)
+    #
+    #     ngs <- inputData()
+    #     ##if(is.null(ngs)) return(NULL)
+    #     shiny::req(ngs)
+    #     dbg("[SingleCellBoard:pheno.plotFUNC] called")
+    #     clust.pos <- pfGetClusterPositions()
+    #     if(is.null(clust.pos)) return(NULL)
+    #
+    #     pos <- ngs$tsne2d
+    #     pos <- clust.pos
+    #     sel <- rownames(pos)
+    #     pheno = colnames(ngs$Y)
+    #
+    #     ## layout
+    #     par(mfrow = c(2,2), mar=c(0.3,0.7,2.8,0.7))
+    #     if(length(pheno)>4) par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+    #     if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
+    #     if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
+    #
+    #     cex1 <- 1.2*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
+    #     cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
+    #     cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
+    #
+    #     ## is it a float/number???
+    #     is.num <- function(y, fmin=0.1) {
+    #         suppressWarnings(numy <- as.numeric(as.character(y)))
+    #         t1 <- !all(is.na(numy)) && is.numeric(numy)
+    #         t2 <- (length(unique(y))/length(y)) > fmin
+    #         (t1 && t2)
+    #     }
+    #
+    #     i=6
+    #     for(i in 1:min(20,length(pheno))) {
+    #
+    #         px=4
+    #         px=pheno[i]
+    #         y = ngs$Y[sel,px]
+    #         y[which(y %in% c(NA,""," ","NA","na"))] <- NA
+    #         if(sum(!is.na(y))==0) next
+    #
+    #         if(is.num(y)) {
+    #             klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+    #             y = rank(as.numeric(y))
+    #             ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
+    #             klr0 = klrpal[ny]
+    #         } else {
+    #             y = factor(as.character(y))
+    #             klrpal = COLORS
+    #             klrpal <- paste0(gplots::col2hex(klrpal),"99")
+    #             klr0 = klrpal[y]
+    #         }
+    #
+    #         jj = which(is.na(klr0))
+    #         if(length(jj)) klr0[jj] <- "#AAAAAA22"
+    #         base::plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
+    #              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+    #
+    #         if(!is.num(y)) {
+    #             if(input$labelmode=="legend") {
+    #                 legend("bottomright", legend=levels(y), fill=klrpal,
+    #                        cex=0.9, y.intersp=0.8, bg="white")
+    #             } else {
+    #                 grp.pos <- apply(pos,2,function(x) tapply(x,y,mean,na.rm=TRUE))
+    #                 grp.pos <- apply(pos,2,function(x) tapply(x,y,median,na.rm=TRUE))
+    #                 nvar <- length(setdiff(y,NA))
+    #                 if(nvar==1) {
+    #                     grp.pos <- matrix(grp.pos,nrow=1)
+    #                     rownames(grp.pos) <- setdiff(y,NA)[1]
+    #                 }
+    #
+    #                 labels = rownames(grp.pos)
+    #                 ## title("\u2591\u2592\u2593")
+    #                 boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+    #                 boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
+    #                 ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
+    #                 cex2 <- c(1.3,1.1,0.9,0.7)[cut(length(labels),breaks=c(-1,5,10,20,999))]
+    #                 text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
+    #                 text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
+    #                 text( grp.pos, labels=labels, font=2, cex=cex2)
+    #                 ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
+    #             }
+    #         }
+    #         title(tolower(pheno[i]), cex.main=1.3, line=0.5, col="grey40")
+    #     }
+    # })
+    #
+    #
+    # phenoplot.opts <- shiny::tagList(
+    #     withTooltip( shiny::radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
+    #            "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
+    # )
+    #
+    # phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
+    #
+    # shiny::callModule(
+    #     plotModule,
+    #     id = "phenoplot",
+    #     func = pheno.plotFUNC,
+    #     func2 = pheno.plotFUNC,
+    #     options = phenoplot.opts,
+    #     info.text = phenoModule_info,
+    #     caption2 = phenoModule_info,
+    #     pdf.width=5, pdf.height=8,
+    #     height = c(fullH-100,750), width = c("100%",500),
+    #     res = c(85,85),
+    #     add.watermark = WATERMARK
+    # )
 
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        shiny::req(ngs)
-        dbg("[SingleCellBoard:pheno.plotFUNC] called")
-        clust.pos <- pfGetClusterPositions()
-        if(is.null(clust.pos)) return(NULL)
-
-        pos <- ngs$tsne2d
-        pos <- clust.pos
-        sel <- rownames(pos)
-        pheno = colnames(ngs$Y)
-
-        ## layout
-        par(mfrow = c(2,2), mar=c(0.3,0.7,2.8,0.7))
-        if(length(pheno)>4) par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
-        if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
-        if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-
-        cex1 <- 1.2*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-        cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
-        cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
-
-        ## is it a float/number???
-        is.num <- function(y, fmin=0.1) {
-            suppressWarnings(numy <- as.numeric(as.character(y)))
-            t1 <- !all(is.na(numy)) && is.numeric(numy)
-            t2 <- (length(unique(y))/length(y)) > fmin
-            (t1 && t2)
-        }
-
-        i=6
-        for(i in 1:min(20,length(pheno))) {
-
-            px=4
-            px=pheno[i]
-            y = ngs$Y[sel,px]
-            y[which(y %in% c(NA,""," ","NA","na"))] <- NA
-            if(sum(!is.na(y))==0) next
-
-            if(is.num(y)) {
-                klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
-                y = rank(as.numeric(y))
-                ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
-                klr0 = klrpal[ny]
-            } else {
-                y = factor(as.character(y))
-                klrpal = COLORS
-                klrpal <- paste0(gplots::col2hex(klrpal),"99")
-                klr0 = klrpal[y]
-            }
-
-            jj = which(is.na(klr0))
-            if(length(jj)) klr0[jj] <- "#AAAAAA22"
-            base::plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
-                 xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
-
-            if(!is.num(y)) {
-                if(input$labelmode=="legend") {
-                    legend("bottomright", legend=levels(y), fill=klrpal,
-                           cex=0.9, y.intersp=0.8, bg="white")
-                } else {
-                    grp.pos <- apply(pos,2,function(x) tapply(x,y,mean,na.rm=TRUE))
-                    grp.pos <- apply(pos,2,function(x) tapply(x,y,median,na.rm=TRUE))
-                    nvar <- length(setdiff(y,NA))
-                    if(nvar==1) {
-                        grp.pos <- matrix(grp.pos,nrow=1)
-                        rownames(grp.pos) <- setdiff(y,NA)[1]
-                    }
-
-                    labels = rownames(grp.pos)
-                    ## title("\u2591\u2592\u2593")
-                    boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-                    boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
-                    ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
-                    cex2 <- c(1.3,1.1,0.9,0.7)[cut(length(labels),breaks=c(-1,5,10,20,999))]
-                    text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
-                    text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
-                    text( grp.pos, labels=labels, font=2, cex=cex2)
-                    ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
-                }
-            }
-            title(tolower(pheno[i]), cex.main=1.3, line=0.5, col="grey40")
-        }
-    })
-
-
-    phenoplot.opts <- shiny::tagList(
-        withTooltip( shiny::radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
-               "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
-    )
-
-    phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-
-    shiny::callModule(
-        plotModule,
-        id = "phenoplot",
-        func = pheno.plotFUNC,
-        func2 = pheno.plotFUNC,
-        options = phenoplot.opts,
-        info.text = phenoModule_info,
-        caption2 = phenoModule_info,
-        pdf.width=5, pdf.height=8,
-        height = c(fullH-100,750), width = c("100%",500),
-        res = c(85,85),
-        add.watermark = WATERMARK
-    )
+    # end phenoplot #########
 
     ##=========================================================================
     ## Type mapping (heatmap)
     ##=========================================================================
 
-    getDeconvResults2 <- shiny::reactive({
+    getDeconvResults2 <- shiny::reactive({ #used by many functions
         ngs <- inputData()
         shiny::req(ngs)
 
