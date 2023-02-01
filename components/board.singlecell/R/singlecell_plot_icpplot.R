@@ -3,7 +3,7 @@
 #' ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 #' ##
 #'
-#' #' Expression plot UI input function
+#' #' Single cell plot UI input function
 #' #'
 #' #' @description A shiny Module for plotting (UI code).
 #' #'
@@ -12,7 +12,7 @@
 #' #' @param height
 #' #'
 #' #' @export
-#' expression_plot_FnName_ui <- function(id,
+#' singlecell_plot_FnName_ui <- function(id,
 #'                                       label='',
 #'                                       height,
 #'                                       width) {
@@ -31,7 +31,7 @@
 #'                width = width)
 #' }
 #'
-#' #' Expression plot Server function
+#' #' Single cell plot Server function
 #' #'
 #' #' @description A shiny Module for plotting (server code).
 #' #'
@@ -39,7 +39,7 @@
 #' #'
 #' #' @return
 #' #' @export
-#' expression_plot_FnName_server <- function(id, watermark = FALSE)
+#' singlecell_plot_FnName_server <- function(id, watermark = FALSE)
 #' {
 #'   moduleServer( id, function(input, output, session) {
 #'
