@@ -53,7 +53,6 @@ SingleCellBoard <- function(id, inputData)
             shiny::updateSelectInput(session, "clustmethod",
                               choices=clustmethods )
         }
-
     })
 
     shiny::observe({
@@ -197,6 +196,11 @@ SingleCellBoard <- function(id, inputData)
     singlecell_plot_crosstabPlot_server(id,
                                         inputData,
                                         watermark = FALSE)
+
+    singlecell_plot_markersplot_server(id = "markersplot",
+                                       inputData = inputData,
+                                       pfGetClusterPositions = pfGetClusterPositions,
+                                       watermark = FALSE)
 
     #icpplot plot refactored into plot module #########
 
@@ -649,215 +653,214 @@ SingleCellBoard <- function(id, inputData)
     # crosstabPlot refactored into plotmodule ##########
 
     ##output$statsplot <- shiny::renderPlot({
-    crosstab.plotFUNC <- shiny::reactive({
-        ##if(!input$tsne.all) return(NULL)
-
-        ngs <- inputData()
-
-        shiny::req(ngs)
-        shiny::req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
-
-        dbg("[SingleCellBoard::crosstab.plotFUNC] called")
-
-        scores = ngs$deconv[[1]][[1]]  ## just an example...
-        if(input$crosstabvar == "<cell type>") {
-            scores <- getDeconvResults2()
-            if(is.null(scores)) return(NULL)
-            scores <- pmax(scores,0) ## ??
-        } else {
-            x <- as.character(ngs$Y[,1])
-            x <- as.character(ngs$Y[,input$crosstabvar])
-            x[is.na(x)] <- "_"
-            scores <- model.matrix( ~ 0 + x )
-            rownames(scores) <- rownames(ngs$Y)
-            colnames(scores) <- sub("^x","",colnames(scores))
-        }
-
-        dim(scores)
-        message("[SingleCellBoard::crosstab.plotFUNC] 1 : dim(scores) = ",
-                paste(dim(scores),collapse="x"),"\n")
-
-        ## restrict to selected sample set
-        kk <- head(1:nrow(scores),1000)
-        kk <- 1:nrow(scores)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        scores <- scores[kk,,drop=FALSE]
-        scores <- scores[,which(colSums(scores)>0),drop=FALSE]
-        scores[which(is.na(scores))] <- 0
-        dim(scores)
-
-        ## limit to top25??
-        topsel <- head(order(-colSums(scores)),25)
-        scores <- scores[,topsel]
-
-        message("[SingleCellBoard::crosstab.plotFUNC] 2 : dim(scores) = ",
-                paste(dim(scores),collapse="x"),"\n")
-
-        message("[SingleCellBoard::crosstab.plotFUNC] 2 : length(kk) = ",
-                length(kk),"\n")
-
-        ## expected counts per stat level
-        ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
-        kk.counts <- colSums(2**ngs$X[,kk,drop=FALSE])  ## approximate counts from log2X
-        grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]
-
-        getProportionsTable <- function(pheno, is.gene=FALSE) {
-            dbg("[SingleCellBoard::getProportionsTable()] called")
-            y <- NULL
-            ##if("gene" %in% input$crosstaboptions) {
-            if( is.gene ) {
-                xgene <- ngs$genes[rownames(ngs$X),]$gene_name
-                gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
-                gx.highTH <- mean(gx, na.rm=TRUE)
-                y <- paste(pheno,c("low","high"))[ 1 + 1*(gx >= gx.highTH)]
-                table(y)
-            } else if(pheno %in% colnames(ngs$samples)) {
-                y <- ngs$samples[kk,1]
-                y <- ngs$samples[kk,pheno]
-                pheno <- tolower(pheno)
-            } else if(pheno == "<cell type>") {
-                res1 <- getDeconvResults2()
-                res1 <- pmax(res1,0) ## ??
-                res1 <- res1[kk,,drop=FALSE]
-                ##res1 <- res1[,which(colSums(res1)>0),drop=FALSE]
-                y <- colnames(res1)[max.col(res1)]  ## take maximum col??
-                remove(res1)
-                pheno <- "<cell type>"
-            } else {
-                return(NULL)
-            }
-
-            ## calculate proportions by group
-            grp <- factor(as.character(y))
-            ngrp <- length(levels(grp))
-            grp.score <- apply(scores, 2, function(x) tapply(x,grp,mean,na.rm=TRUE))
-            ngrp
-            if(ngrp==1) {
-                grp.score <- matrix(grp.score,nrow=1)
-                rownames(grp.score) <- y[1]
-                colnames(grp.score) <- colnames(scores)
-            }
-
-            ## weighted counts
-            grp.score[is.na(grp.score)] <- 0
-            grps <- levels(grp)
-            grp.score
-            fy <-  (table(y) / sum(!is.na(y)))
-            jj <- match(rownames(grp.score),names(fy))
-            grp.score <-  grp.score * as.vector(fy[jj])
-            ## normalize to total 100%
-            grp.score <- grp.score / (1e-20+sum(grp.score))
-            dim(grp.score)
-
-            ## reduce to maximum number of items (x-axis)
-            if(0 && ncol(grp.score) > 25 ) {
-                ##jj <- which(colSums(grp.score) > 0.001)
-                jj <- order(-colSums(grp.score))
-                j1 <- head(jj, 25)  ## define maximum number of items
-                j0 <- setdiff(jj, j1)
-                grp.score0 <- grp.score[,j1,drop=FALSE]
-                grp.counts0 <- grp.counts[j1]
-                if(length(j0)>0) {
-                    grp.score0 <- cbind( grp.score0, "other"=rowSums(grp.score[,j0,drop=FALSE]))
-                    grp.counts0 <- c(grp.counts0, "other"=sum(grp.counts[j0]))
-                }
-                grp.score <- grp.score0
-                grp.counts <- grp.counts0
-                grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
-                dim(grp.score)
-            }
-
-            ## normalize to total 100% and reduce to maximum number of items (y-axis)
-            if(nrow(grp.score) > 10 ) {
-                jj <- order(-rowSums(grp.score))
-                j1 <- head(jj, 10)  ## define maximum number of items
-                j0 <- setdiff(jj, j1)
-                grp.score0 <- grp.score[j1,,drop=FALSE]
-                if(length(j0)>0) {
-                    grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
-                }
-                grp.score <- grp.score0
-            }
-            grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
-
-
-            ## cluster columns??
-            ##dist1 <- dist(t(scale(grp.score)))
-            dist1 <- dist(t(grp.score))
-            dist1[is.na(dist1)] <- mean(dist1,na.rm=TRUE)
-            jj <- hclust(dist1)$order
-            grp.score <- grp.score[,jj,drop=FALSE]
-            return(grp.score)
-        }
-
-        ## select phenotype variable
-        head(ngs$samples)
-        pheno=1
-        pheno="cluster"
-        pheno="activated"
-        pheno="cell.type"
-        pheno="<cell type>"
-        pheno <- input$crosstabpheno
-        if(is.null(pheno)) return(NULL)
-
-        ##pheno="cluster"
-        grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
-        grp.score2 <- NULL
-        gene = ngs$genes$gene_name[1]
-        gene = input$crosstabgene
-        if(gene != "<none>") {
-            grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
-            kk <- colnames(grp.score2)[order(grp.score2[1,])]
-            grp.score2  <- grp.score2[,match(kk,colnames(grp.score2))]
-            grp.score1  <- grp.score1[,match(kk,colnames(grp.score1))]
-        }
-
-        jj <- match(colnames(grp.score1),names(grp.counts))
-        grp.counts <- grp.counts[jj] / 1e6  ## per million
-        names(grp.counts) = colnames(grp.score1)
-
-        ##-------------- plot by estimated cell.type ----------------------
-
-        ##par(mar = c(4,6,2,3))
-        plotly::layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
-        if(!is.null(grp.score2)) {
-            plotly::layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
-        }
-
-        ## top bar with counts
-        par(mar = c(0,5,5.3,3), mgp=c(2.0,0.8,0) )
-        xlim <- c(0,1.2*length(grp.counts))  ## reserves space for legend
-        barplot( grp.counts, col="grey50", ylab="counts (M)", cex.axis=0.8,
-                cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y",
-                ylim=c(0.01, max(grp.counts)), yaxs="i" )
-        ## title(pheno, cex.main=1.2, line=2, col="grey40")
-
-        ## middle plot (gene)
-        if(!is.null(grp.score2)) {
-            klrpal2 = COLORS[1:nrow(grp.score2)]
-            klrpal2 = rev(grey.colors(nrow(grp.score2),start=0.45))
-            par(mar = c(0,5,0.3,3), mgp=c(2.4,0.9,0) )
-            barplot( 100*grp.score2, col=klrpal2, las=3, srt=45,
-                    xlim=1.3*xlim, ylim=c(0,99.99),
-                    names.arg = rep(NA, ncol(grp.score2)),
-                    ylab="(%)", cex.axis=0.90)
-            legend(1.02*xlim[2], 100, legend=rownames(grp.score2),
-                   fill=klrpal2, xpd=TRUE, cex=0.8, y.intersp=0.8,
-                   bg="white", bty="n")
-        }
-
-        if(1) {
-            ## main proportion graph
-            klrpal1 = COLORS[1:nrow(grp.score1)]
-            par(mar = c(4,5,0.3,3), mgp=c(2.4,0.9,0) )
-            barplot( 100*grp.score1, col=klrpal1, las=3, srt=45, xlim=1.3*xlim,
-                    ylim=c(0,99.99), ylab="proportion (%)", cex.axis=0.90)
-            legend(1.02*xlim[2], 100, legend=rev(rownames(grp.score1)),
-                   fill=rev(klrpal1), xpd=TRUE, cex=0.8, y.intersp=0.8,
-                   bg="white", bty="n")
-        }
-
-    })
+    # crosstab.plotFUNC <- shiny::reactive({
+    #     ##if(!input$tsne.all) return(NULL)
+    #
+    #     ngs <- inputData()
+    #
+    #     shiny::req(ngs)
+    #     shiny::req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
+    #
+    #     dbg("[SingleCellBoard::crosstab.plotFUNC] called")
+    #
+    #     scores = ngs$deconv[[1]][[1]]  ## just an example...
+    #     if(input$crosstabvar == "<cell type>") {
+    #         scores <- getDeconvResults2()
+    #         if(is.null(scores)) return(NULL)
+    #         scores <- pmax(scores,0) ## ??
+    #     } else {
+    #         x <- as.character(ngs$Y[,1])
+    #         x <- as.character(ngs$Y[,input$crosstabvar])
+    #         x[is.na(x)] <- "_"
+    #         scores <- model.matrix( ~ 0 + x )
+    #         rownames(scores) <- rownames(ngs$Y)
+    #         colnames(scores) <- sub("^x","",colnames(scores))
+    #     }
+    #
+    #     dim(scores)
+    #     message("[SingleCellBoard::crosstab.plotFUNC] 1 : dim(scores) = ",
+    #             paste(dim(scores),collapse="x"),"\n")
+    #
+    #     ## restrict to selected sample set
+    #     kk <- head(1:nrow(scores),1000)
+    #     kk <- 1:nrow(scores)
+    #     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+    #     scores <- scores[kk,,drop=FALSE]
+    #     scores <- scores[,which(colSums(scores)>0),drop=FALSE]
+    #     scores[which(is.na(scores))] <- 0
+    #     dim(scores)
+    #
+    #     ## limit to top25??
+    #     topsel <- head(order(-colSums(scores)),25)
+    #     scores <- scores[,topsel]
+    #
+    #     message("[SingleCellBoard::crosstab.plotFUNC] 2 : dim(scores) = ",
+    #             paste(dim(scores),collapse="x"),"\n")
+    #
+    #     message("[SingleCellBoard::crosstab.plotFUNC] 2 : length(kk) = ",
+    #             length(kk),"\n")
+    #
+    #     ## expected counts per stat level
+    #     ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
+    #     kk.counts <- colSums(2**ngs$X[,kk,drop=FALSE])  ## approximate counts from log2X
+    #     grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]
+    #
+    #     getProportionsTable <- function(pheno, is.gene=FALSE) {
+    #         dbg("[SingleCellBoard::getProportionsTable()] called")
+    #         y <- NULL
+    #         ##if("gene" %in% input$crosstaboptions) {
+    #         if( is.gene ) {
+    #             xgene <- ngs$genes[rownames(ngs$X),]$gene_name
+    #             gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
+    #             gx.highTH <- mean(gx, na.rm=TRUE)
+    #             y <- paste(pheno,c("low","high"))[ 1 + 1*(gx >= gx.highTH)]
+    #             table(y)
+    #         } else if(pheno %in% colnames(ngs$samples)) {
+    #             y <- ngs$samples[kk,1]
+    #             y <- ngs$samples[kk,pheno]
+    #             pheno <- tolower(pheno)
+    #         } else if(pheno == "<cell type>") {
+    #             res1 <- getDeconvResults2()
+    #             res1 <- pmax(res1,0) ## ??
+    #             res1 <- res1[kk,,drop=FALSE]
+    #             ##res1 <- res1[,which(colSums(res1)>0),drop=FALSE]
+    #             y <- colnames(res1)[max.col(res1)]  ## take maximum col??
+    #             remove(res1)
+    #             pheno <- "<cell type>"
+    #         } else {
+    #             return(NULL)
+    #         }
+    #
+    #         ## calculate proportions by group
+    #         grp <- factor(as.character(y))
+    #         ngrp <- length(levels(grp))
+    #         grp.score <- apply(scores, 2, function(x) tapply(x,grp,mean,na.rm=TRUE))
+    #         ngrp
+    #         if(ngrp==1) {
+    #             grp.score <- matrix(grp.score,nrow=1)
+    #             rownames(grp.score) <- y[1]
+    #             colnames(grp.score) <- colnames(scores)
+    #         }
+    #
+    #         ## weighted counts
+    #         grp.score[is.na(grp.score)] <- 0
+    #         grps <- levels(grp)
+    #         grp.score
+    #         fy <-  (table(y) / sum(!is.na(y)))
+    #         jj <- match(rownames(grp.score),names(fy))
+    #         grp.score <-  grp.score * as.vector(fy[jj])
+    #         ## normalize to total 100%
+    #         grp.score <- grp.score / (1e-20+sum(grp.score))
+    #         dim(grp.score)
+    #
+    #         ## reduce to maximum number of items (x-axis)
+    #         if(0 && ncol(grp.score) > 25 ) {
+    #             ##jj <- which(colSums(grp.score) > 0.001)
+    #             jj <- order(-colSums(grp.score))
+    #             j1 <- head(jj, 25)  ## define maximum number of items
+    #             j0 <- setdiff(jj, j1)
+    #             grp.score0 <- grp.score[,j1,drop=FALSE]
+    #             grp.counts0 <- grp.counts[j1]
+    #             if(length(j0)>0) {
+    #                 grp.score0 <- cbind( grp.score0, "other"=rowSums(grp.score[,j0,drop=FALSE]))
+    #                 grp.counts0 <- c(grp.counts0, "other"=sum(grp.counts[j0]))
+    #             }
+    #             grp.score <- grp.score0
+    #             grp.counts <- grp.counts0
+    #             grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+    #             dim(grp.score)
+    #         }
+    #
+    #         ## normalize to total 100% and reduce to maximum number of items (y-axis)
+    #         if(nrow(grp.score) > 10 ) {
+    #             jj <- order(-rowSums(grp.score))
+    #             j1 <- head(jj, 10)  ## define maximum number of items
+    #             j0 <- setdiff(jj, j1)
+    #             grp.score0 <- grp.score[j1,,drop=FALSE]
+    #             if(length(j0)>0) {
+    #                 grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
+    #             }
+    #             grp.score <- grp.score0
+    #         }
+    #         grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+    #
+    #
+    #         ## cluster columns??
+    #         ##dist1 <- dist(t(scale(grp.score)))
+    #         dist1 <- dist(t(grp.score))
+    #         dist1[is.na(dist1)] <- mean(dist1,na.rm=TRUE)
+    #         jj <- hclust(dist1)$order
+    #         grp.score <- grp.score[,jj,drop=FALSE]
+    #         return(grp.score)
+    #     }
+    #
+    #     ## select phenotype variable
+    #     head(ngs$samples)
+    #     pheno=1
+    #     pheno="cluster"
+    #     pheno="activated"
+    #     pheno="cell.type"
+    #     pheno="<cell type>"
+    #     pheno <- input$crosstabpheno
+    #     if(is.null(pheno)) return(NULL)
+    #
+    #     ##pheno="cluster"
+    #     grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
+    #     grp.score2 <- NULL
+    #     gene = ngs$genes$gene_name[1]
+    #     gene = input$crosstabgene
+    #     if(gene != "<none>") {
+    #         grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
+    #         kk <- colnames(grp.score2)[order(grp.score2[1,])]
+    #         grp.score2  <- grp.score2[,match(kk,colnames(grp.score2))]
+    #         grp.score1  <- grp.score1[,match(kk,colnames(grp.score1))]
+    #     }
+    #
+    #     jj <- match(colnames(grp.score1),names(grp.counts))
+    #     grp.counts <- grp.counts[jj] / 1e6  ## per million
+    #     names(grp.counts) = colnames(grp.score1)
+    #
+    #
+    #     ##par(mar = c(4,6,2,3))
+    #     plotly::layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
+    #     if(!is.null(grp.score2)) {
+    #         plotly::layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
+    #     }
+    #
+    #     ## top bar with counts
+    #     par(mar = c(0,5,5.3,3), mgp=c(2.0,0.8,0) )
+    #     xlim <- c(0,1.2*length(grp.counts))  ## reserves space for legend
+    #     barplot( grp.counts, col="grey50", ylab="counts (M)", cex.axis=0.8,
+    #             cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y",
+    #             ylim=c(0.01, max(grp.counts)), yaxs="i" )
+    #     ## title(pheno, cex.main=1.2, line=2, col="grey40")
+    #
+    #     ## middle plot (gene)
+    #     if(!is.null(grp.score2)) {
+    #         klrpal2 = COLORS[1:nrow(grp.score2)]
+    #         klrpal2 = rev(grey.colors(nrow(grp.score2),start=0.45))
+    #         par(mar = c(0,5,0.3,3), mgp=c(2.4,0.9,0) )
+    #         barplot( 100*grp.score2, col=klrpal2, las=3, srt=45,
+    #                 xlim=1.3*xlim, ylim=c(0,99.99),
+    #                 names.arg = rep(NA, ncol(grp.score2)),
+    #                 ylab="(%)", cex.axis=0.90)
+    #         legend(1.02*xlim[2], 100, legend=rownames(grp.score2),
+    #                fill=klrpal2, xpd=TRUE, cex=0.8, y.intersp=0.8,
+    #                bg="white", bty="n")
+    #     }
+    #
+    #     if(1) {
+    #         ## main proportion graph
+    #         klrpal1 = COLORS[1:nrow(grp.score1)]
+    #         par(mar = c(4,5,0.3,3), mgp=c(2.4,0.9,0) )
+    #         barplot( 100*grp.score1, col=klrpal1, las=3, srt=45, xlim=1.3*xlim,
+    #                 ylim=c(0,99.99), ylab="proportion (%)", cex.axis=0.90)
+    #         legend(1.02*xlim[2], 100, legend=rev(rownames(grp.score1)),
+    #                fill=rev(klrpal1), xpd=TRUE, cex=0.8, y.intersp=0.8,
+    #                bg="white", bty="n")
+    #     }
+    #
+    # })
 
 
     # crosstab.opts <- shiny::tagList(
@@ -875,7 +878,7 @@ SingleCellBoard <- function(id, inputData)
     #     ##br(), cellArgs=list(width='80px')
     # )
 
-    crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
+    # crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
 
     # shiny::callModule(
     #     plotModule,
@@ -893,170 +896,171 @@ SingleCellBoard <- function(id, inputData)
 
 
     # end crosstabPlot refactored into plotmodule ##########
-    ##==========================================================================
-    ## Markers
-    ##==========================================================================
+
+    # markers plot refactoring into plotmodule #########
 
     ##output$markersplot <- shiny::renderPlot({
-    markers.plotFUNC <- shiny::reactive({
-        ##if(!input$tsne.all) return(NULL)
+    # markers.plotFUNC <- shiny::reactive({
+    #     ##if(!input$tsne.all) return(NULL)
+    #
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
+    #
+    #     clust.pos <- pfGetClusterPositions()
+    #     if(is.null(clust.pos)) return(NULL)
+    #     ##pos <- ngs$tsne2d
+    #     pos <- clust.pos
+    #
+    #     ##markers <- ngs$families[["CD family"]]
+    #     if(is.null(input$mrk_features)) return(NULL)
+    #     if(input$mrk_features=="") return(NULL)
+    #
+    #     term = ""
+    #     if(input$mrk_level=="gene") {
+    #         markers <- ngs$families[["Transcription factors (ChEA)"]]
+    #         if(input$mrk_search!="") {
+    #             term = input$mrk_search
+    #             jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
+    #             markers <- ngs$genes$gene_name[jj]
+    #             term = paste("filter:",term)
+    #         } else if(input$mrk_features %in% names(ngs$families)) {
+    #             markers <- ngs$families[[input$mrk_features]]
+    #             term = input$mrk_features
+    #         } else {
+    #             markers <- ngs$genes$gene_name
+    #         }
+    #         ##markers <- intersect(markers, rownames(ngs$X))
+    #         markers <- intersect(toupper(markers),toupper(ngs$genes$gene_name))
+    #         jj <- match(markers,toupper(ngs$genes$gene_name))
+    #         pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
+    #         gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
+    #
+    #     } else if(input$mrk_level=="geneset") {
+    #         ##markers <- ngs$families[["Immune checkpoint (custom)"]]
+    #         markers <- COLLECTIONS[[1]]
+    #         if(is.null(input$mrk_features)) return(NULL)
+    #         ft <- input$mrk_features
+    #         if(input$mrk_search=="" && ft %in% names(COLLECTIONS)) {
+    #             markers <- COLLECTIONS[[input$mrk_features]]
+    #             markers <- intersect(markers, rownames(ngs$gsetX))
+    #             term = input$mrk_features
+    #         } else if(input$mrk_search!="") {
+    #             term = input$mrk_search
+    #             jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
+    #             markers <- rownames(ngs$gsetX)[jj]
+    #             term = paste("filter:",term)
+    #         } else {
+    #             markers <- rownames(ngs$gsetX)
+    #         }
+    #         gx <- ngs$gsetX[markers,rownames(pos),drop=FALSE]
+    #     } else {
+    #         cat("fatal error")
+    #         return(NULL)
+    #     }
+    #
+    #     if(!"group" %in% names(ngs$model.parameters)) {
+    #         stop("[markers.plotFUNC] FATAL: no group in model.parameters")
+    #     }
+    #
+    #     ## prioritize gene with large variance (groupwise)
+    #     ##grp <- as.character(ngs$samples[rownames(pos),"group"])
+    #     grp <- ngs$model.parameters$group[rownames(pos)]
+    #     zx <- t(apply(gx,1,function(x) tapply(x,grp,mean)))
+    #     gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
+    #     gx <- gx - min(gx,na.rm=TRUE) + 0.01 ## subtract background??
+    #     rownames(gx) = sub(".*:","",rownames(gx))
+    #
+    #     ##gx <- tanh(gx/sd(gx) ) ## softmax
+    #     cex1 = 1.0
+    #     cex1 <- 0.8*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
+    #     klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60","red4", "red3"))(16)
+    #     klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
+    #     klrpal = paste0(gplots::col2hex(klrpal),"66")
+    #
+    #     NP=25
+    #     if(input$mrk_level=="gene") NP=36
+    #     top.gx = head(gx,NP)  ## match number of plot below!
+    #     if(input$mrk_sortby=="name") {
+    #         top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+    #     } else {
+    #         top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
+    #     }
+    #     top.gx = pmax(top.gx,0)
+    #     ##top.gx <- tanh(top.gx/mean(top.gx))
+    #
+    #     plevel="gene"
+    #     plevel <- input$mrk_level
+    #
+    #     par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
+    #     par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
+    #     ##par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
+    #     i=1
+    #     for(i in 1:min(NP,nrow(top.gx))) {
+    #
+    #         colvar = pmax(top.gx[i,],0)
+    #         colvar = 1+round(15*(colvar/(0.7*max(colvar)+0.3*max(top.gx))))
+    #         klr0 = klrpal[colvar]
+    #
+    #         ii <- order(colvar)
+    #         ##ii <- sample(nrow(pos))
+    #         base::plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
+    #              xlim=1.1*range(pos[,1]), ylim=1.1*range(pos[,2]),
+    #              fg = gray(0.8), bty = "o",
+    #              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+    #
+    #         if(plevel=="gene") {
+    #             gene <- sub(".*:","",rownames(top.gx)[i])
+    #             ##title( gene, cex.main=1.0, line=0.3, col="grey40", font.main=1)
+    #             legend( "topleft", legend=gene, bg="#AAAAAA88",
+    #                    cex=1.2, text.font=1, y.intersp=0.8,
+    #                    bty="n", inset=c(-0.05,-0.0) )
+    #         } else {
+    #             gset <- sub(".*:","",rownames(top.gx)[i])
+    #             gset1 <- breakstring(substring(gset,1,80),24,force=TRUE)
+    #             gset1 <- tolower(gset1)
+    #             ##title( gset1, cex.main=0.9, line=0.4, col="grey40", font.main=1)
+    #             legend( "topleft", legend=gset1, cex=0.95, bg="#AAAAAA88",
+    #                    text.font=2, y.intersp=0.8, bty="n",
+    #                    inset=c(-0.05,-0.0) )
+    #         }
+    #     }
+    #     mtext(term, outer=TRUE, cex=1.0, line=0.6)
+    #
+    # })
 
-        ngs <- inputData()
-        shiny::req(ngs)
+    # markersplot.opts = shiny::tagList(
+    #     withTooltip(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
+    #            "Specify the level of the marker analysis: gene or gene set level.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
+    #                        multiple=FALSE),
+    #            "Select a particular functional group for the analysis.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::textInput(ns("mrk_search"),"Filter:"),
+    #            "Filter markers by a specific keywords.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
+    #                         choices=c("intensity","name"), inline=TRUE),
+    #            "Sort by name or intensity.", placement="top",
+    #            options = list(container = "body"))
+    # )
 
-        clust.pos <- pfGetClusterPositions()
-        if(is.null(clust.pos)) return(NULL)
-        ##pos <- ngs$tsne2d
-        pos <- clust.pos
+    # markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
 
-        ##markers <- ngs$families[["CD family"]]
-        if(is.null(input$mrk_features)) return(NULL)
-        if(input$mrk_features=="") return(NULL)
+    # shiny::callModule(
+    #     plotModule,
+    #     id = "markersplot",
+    #     func = markers.plotFUNC,
+    #     func2 = markers.plotFUNC,
+    #     options = markersplot.opts,
+    #     info.text = markersplot_info,
+    #     pdf.height = 10, pdf.width=10,
+    #     height = c(fullH-80,780), width = c("100%",1000),
+    #     res = c(85,90),
+    #     add.watermark = WATERMARK
+    # )
 
-        term = ""
-        if(input$mrk_level=="gene") {
-            markers <- ngs$families[["Transcription factors (ChEA)"]]
-            if(input$mrk_search!="") {
-                term = input$mrk_search
-                jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
-                markers <- ngs$genes$gene_name[jj]
-                term = paste("filter:",term)
-            } else if(input$mrk_features %in% names(ngs$families)) {
-                markers <- ngs$families[[input$mrk_features]]
-                term = input$mrk_features
-            } else {
-                markers <- ngs$genes$gene_name
-            }
-            ##markers <- intersect(markers, rownames(ngs$X))
-            markers <- intersect(toupper(markers),toupper(ngs$genes$gene_name))
-            jj <- match(markers,toupper(ngs$genes$gene_name))
-            pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
-            gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
-
-        } else if(input$mrk_level=="geneset") {
-            ##markers <- ngs$families[["Immune checkpoint (custom)"]]
-            markers <- COLLECTIONS[[1]]
-            if(is.null(input$mrk_features)) return(NULL)
-            ft <- input$mrk_features
-            if(input$mrk_search=="" && ft %in% names(COLLECTIONS)) {
-                markers <- COLLECTIONS[[input$mrk_features]]
-                markers <- intersect(markers, rownames(ngs$gsetX))
-                term = input$mrk_features
-            } else if(input$mrk_search!="") {
-                term = input$mrk_search
-                jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
-                markers <- rownames(ngs$gsetX)[jj]
-                term = paste("filter:",term)
-            } else {
-                markers <- rownames(ngs$gsetX)
-            }
-            gx <- ngs$gsetX[markers,rownames(pos),drop=FALSE]
-        } else {
-            cat("fatal error")
-            return(NULL)
-        }
-
-        if(!"group" %in% names(ngs$model.parameters)) {
-            stop("[markers.plotFUNC] FATAL: no group in model.parameters")
-        }
-
-        ## prioritize gene with large variance (groupwise)
-        ##grp <- as.character(ngs$samples[rownames(pos),"group"])
-        grp <- ngs$model.parameters$group[rownames(pos)]
-        zx <- t(apply(gx,1,function(x) tapply(x,grp,mean)))
-        gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
-        gx <- gx - min(gx,na.rm=TRUE) + 0.01 ## subtract background??
-        rownames(gx) = sub(".*:","",rownames(gx))
-
-        ##gx <- tanh(gx/sd(gx) ) ## softmax
-        cex1 = 1.0
-        cex1 <- 0.8*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-        klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60","red4", "red3"))(16)
-        klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
-        klrpal = paste0(gplots::col2hex(klrpal),"66")
-
-        NP=25
-        if(input$mrk_level=="gene") NP=36
-        top.gx = head(gx,NP)  ## match number of plot below!
-        if(input$mrk_sortby=="name") {
-            top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
-        } else {
-            top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
-        }
-        top.gx = pmax(top.gx,0)
-        ##top.gx <- tanh(top.gx/mean(top.gx))
-
-        plevel="gene"
-        plevel <- input$mrk_level
-
-        par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
-        par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
-        ##par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
-        i=1
-        for(i in 1:min(NP,nrow(top.gx))) {
-
-            colvar = pmax(top.gx[i,],0)
-            colvar = 1+round(15*(colvar/(0.7*max(colvar)+0.3*max(top.gx))))
-            klr0 = klrpal[colvar]
-
-            ii <- order(colvar)
-            ##ii <- sample(nrow(pos))
-            base::plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
-                 xlim=1.1*range(pos[,1]), ylim=1.1*range(pos[,2]),
-                 fg = gray(0.8), bty = "o",
-                 xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
-
-            if(plevel=="gene") {
-                gene <- sub(".*:","",rownames(top.gx)[i])
-                ##title( gene, cex.main=1.0, line=0.3, col="grey40", font.main=1)
-                legend( "topleft", legend=gene, bg="#AAAAAA88",
-                       cex=1.2, text.font=1, y.intersp=0.8,
-                       bty="n", inset=c(-0.05,-0.0) )
-            } else {
-                gset <- sub(".*:","",rownames(top.gx)[i])
-                gset1 <- breakstring(substring(gset,1,80),24,force=TRUE)
-                gset1 <- tolower(gset1)
-                ##title( gset1, cex.main=0.9, line=0.4, col="grey40", font.main=1)
-                legend( "topleft", legend=gset1, cex=0.95, bg="#AAAAAA88",
-                       text.font=2, y.intersp=0.8, bty="n",
-                       inset=c(-0.05,-0.0) )
-            }
-        }
-        mtext(term, outer=TRUE, cex=1.0, line=0.6)
-
-    })
-
-    markersplot.opts = shiny::tagList(
-        withTooltip(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
-               "Specify the level of the marker analysis: gene or gene set level.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
-                           multiple=FALSE),
-               "Select a particular functional group for the analysis.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::textInput(ns("mrk_search"),"Filter:"),
-               "Filter markers by a specific keywords.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
-                            choices=c("intensity","name"), inline=TRUE),
-               "Sort by name or intensity.", placement="top",
-               options = list(container = "body"))
-    )
-
-    markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
-
-    shiny::callModule(
-        plotModule,
-        id = "markersplot",
-        func = markers.plotFUNC,
-        func2 = markers.plotFUNC,
-        options = markersplot.opts,
-        info.text = markersplot_info,
-        pdf.height = 10, pdf.width=10,
-        height = c(fullH-80,780), width = c("100%",1000),
-        res = c(85,90),
-        add.watermark = WATERMARK
-    )
+    # end markers plot refactoring into plotmodule #########
 
     shiny::observe({
         ngs <- inputData()

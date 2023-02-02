@@ -119,7 +119,10 @@ SingleCellUI <- function(id) {
                             standard deviation are shown. The red color shading is proportional to the (absolute)
                             expression of the gene in corresponding samples.")
                         ),
-                        plotWidget(ns("markersplot"))
+                        singlecell_plot_markersplot_ui(id = ns("markersplot"),
+                                                       label = 'A',
+                                                       height = c(fullH-80,780),
+                                                       width = c("100%",1000))
                     ),
                     div(
                         class = "col-md-6",
