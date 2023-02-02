@@ -55,6 +55,8 @@ singlecell_plot_crosstabPlot_ui <- function(id,
 #' @export
 singlecell_plot_crosstabPlot_server <- function(id,
                                                 inputData,
+                                                samplefilter,
+                                                getDeconvResults2,
                                                 watermark = FALSE){
   moduleServer(id, function(input, output, session) {
 
@@ -89,7 +91,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       ## restrict to selected sample set
       kk <- head(1:nrow(scores),1000)
       kk <- 1:nrow(scores)
-      kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+      kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter())
       scores <- scores[kk,,drop=FALSE]
       scores <- scores[,which(colSums(scores)>0),drop=FALSE]
       scores[which(is.na(scores))] <- 0

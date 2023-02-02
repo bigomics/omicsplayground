@@ -209,8 +209,10 @@ SingleCellBoard <- function(id, inputData)
                                        getDeconvResults2 = getDeconvResults2,
                                        pfGetClusterPositions = pfGetClusterPositions)
 
-    singlecell_plot_crosstabPlot_server(id,
-                                        inputData,
+    singlecell_plot_crosstabPlot_server(id = "crosstabPlot",
+                                        inputData = inputData,
+                                        samplefilter = shiny::reactive(input$samplefilter),
+                                        getDeconvResults2=getDeconvResults2,
                                         watermark = FALSE)
 
     singlecell_plot_markersplot_server(id = "markersplot",
