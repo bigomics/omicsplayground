@@ -16,22 +16,23 @@
 singlecell_plot_mappingplot_ui <- function(id,
                                            label='',
                                            height,
-                                           width){
+                                           width,
+                                           parent){
   ns <- shiny::NS(id)
 
   VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")
 
   mapping.opts = shiny::tagList(
-    withTooltip(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
+    withTooltip(shiny::selectInput(parent("view2"),"plot type:",VIEWTYPES2),
                 "Specify the plot type: dotmap, or heatmap.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("refset2"), "reference:", choices=NULL),
+    withTooltip(shiny::selectInput(parent("refset2"), "reference:", choices=NULL),
                 "Select a reference dataset for the cell type prediction.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("dcmethod2"),"method:", choices=NULL),
+    withTooltip(shiny::selectInput(parent("dcmethod2"),"method:", choices=NULL),
                 "Choose a method for the cell type prediction.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("group2"), "group by:", "group", selected = NULL),
+    withTooltip(shiny::selectInput(parent("group2"), "group by:", "group", selected = NULL),
                 "Group the samples/cells by grouping factor.",
                 placement="top", options=list(container="body"))
   )
@@ -59,7 +60,8 @@ singlecell_plot_mappingplot_server <- function(id,
                                                inputData,
                                                pfGetClusterPositions,
                                                getDeconvResults2,
-                                               watermark = FALSE){
+                                               watermark = FALSE,
+                                               parent){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns

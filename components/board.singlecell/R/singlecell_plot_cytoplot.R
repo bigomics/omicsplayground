@@ -16,14 +16,15 @@
 singlecell_plot_cytoplot_ui <- function(id,
                                         label='',
                                         height,
-                                        width){
+                                        width,
+                                        parent){
   ns <- shiny::NS(id)
 
   cyto.opts = shiny::tagList(
-    withTooltip(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+    withTooltip(shiny::selectInput(parent("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
                 "Select your prefered gene on the x-axis.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+    withTooltip(shiny::selectInput(parent("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
                 "Choose your prefered gene on the y-axis.",
                 placement="top", options = list(container = "body"))
   )
@@ -52,7 +53,8 @@ singlecell_plot_cytoplot_server <- function(id,
                                             pfGetClusterPositions,
                                             samplefilter, #input$samplefilter
                                             selectSamplesFromSelectedLevels,
-                                            watermark = FALSE){
+                                            watermark = FALSE,
+                                            parent){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns

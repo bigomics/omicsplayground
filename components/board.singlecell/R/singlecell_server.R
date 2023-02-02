@@ -128,6 +128,27 @@ SingleCellBoard <- function(id, inputData)
 
     })
 
+    shiny::observe({
+      ngs <- inputData()
+      ##if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
+      ## just at new data load
+      genes <- NULL
+      g1=g2=NULL
+
+      F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
+      F <- F[order(-apply(F,1,sd)),]
+      genes <- rownames(F)
+      g1 <- rownames(F)[1]
+      g2 <- rownames(F)[2]
+
+      if(length(g1)==0) g1 <- genes[1]
+      if(length(g2)==0) g2 <- genes[2]
+
+      shiny::updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
+      shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
+    })
+
 
 
     # REACTIVE FUNCTIONS #########
@@ -196,7 +217,11 @@ SingleCellBoard <- function(id, inputData)
 
     singlecell_plot_icpplot_server(id = "icpplot",
                                    inputData = inputData,
-                                   pfGetClusterPositions = pfGetClusterPositions
+                                   pfGetClusterPositions = pfGetClusterPositions,
+                                   method = shiny::reactive(input$dcmethod),
+                                   refset = shiny::reactive(input$refset),
+                                   lyo = shiny::reactive(input$layout),
+                                   sortby = shiny::reactive(input$sortby)
                                    )
 
     singlecell_plot_phenoplot_server(id = "phenoplot",
@@ -207,18 +232,21 @@ SingleCellBoard <- function(id, inputData)
     singlecell_plot_mappingplot_server(id = "mappingplot",
                                        inputData = inputData,
                                        getDeconvResults2 = getDeconvResults2,
-                                       pfGetClusterPositions = pfGetClusterPositions)
+                                       pfGetClusterPositions = pfGetClusterPositions,
+                                       parent = ns)
 
     singlecell_plot_crosstabPlot_server(id = "crosstabPlot",
                                         inputData = inputData,
                                         samplefilter = shiny::reactive(input$samplefilter),
                                         getDeconvResults2=getDeconvResults2,
-                                        watermark = FALSE)
+                                        watermark = FALSE,
+                                        parent = ns)
 
     singlecell_plot_markersplot_server(id = "markersplot",
                                        inputData = inputData,
                                        pfGetClusterPositions = pfGetClusterPositions,
-                                       watermark = FALSE)
+                                       watermark = FALSE,
+                                       parent = ns)
 
     #icpplot plot refactored into plot module #########
 
@@ -1134,26 +1162,6 @@ SingleCellBoard <- function(id, inputData)
     #     add.watermark = WATERMARK
     # )
 
-    shiny::observe({
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        shiny::req(ngs)
-        ## just at new data load
-        genes <- NULL
-        g1=g2=NULL
-
-        F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
-        F <- F[order(-apply(F,1,sd)),]
-        genes <- rownames(F)
-        g1 <- rownames(F)[1]
-        g2 <- rownames(F)[2]
-
-        if(length(g1)==0) g1 <- genes[1]
-        if(length(g2)==0) g2 <- genes[2]
-
-        shiny::updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
-        shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
-    })
 
     # end CytoPlot refactored into plotmodule ##########
 

@@ -16,21 +16,22 @@
 singlecell_plot_icpplot_ui <- function(id,
                                        label='',
                                        height,
-                                       width){
+                                       width,
+                                       parent) {
   ns <- shiny::NS(id)
 
   icp.opts = shiny::tagList(
-    withTooltip(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
+    withTooltip(shiny::selectInput(parent("refset"), "Reference:", choices=NULL),
                 "Select a reference dataset for the cell type prediction.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
+    withTooltip(shiny::selectInput(parent("dcmethod"),"Method:", choices=NULL),
                 "Choose a method for the cell type prediction.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::radioButtons(ns("sortby"),"Sort by:",
+    withTooltip(shiny::radioButtons(parent("sortby"),"Sort by:",
                                     choices=c("probability","name"), inline=TRUE),
                 "Sort by name or probability.", placement="top",
                 options = list(container = "body")),
-    withTooltip(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
+    withTooltip(shiny::radioButtons(parent("layout"),"Layout:", choices=c("4x4","6x6"),
                                     ## selected="6x6",
                                     inline=TRUE),
                 "Choose layout.",
@@ -59,7 +60,11 @@ singlecell_plot_icpplot_ui <- function(id,
 singlecell_plot_icpplot_server <- function(id,
                                            inputData,
                                            pfGetClusterPositions,
-                                           watermark = FALSE){
+                                           method, #input$dcmethod
+                                           refset, #input$refset
+                                           lyo, #input$layout
+                                           sortby, #input$sortby
+                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -70,9 +75,11 @@ singlecell_plot_icpplot_server <- function(id,
       ngs <- inputData()
       method="meta"
       refset = "LM22"
-      method <- input$dcmethod
+      method <- method() #input$dcmethod
       if(is.null(method)) return(NULL)
-      refset <- input$refset
+      refset <- refset() #
+      lyo <- lyo()
+      sortby= sortby()
 
       if(!("deconv" %in% names(ngs))) return(NULL)
       results <- ngs$deconv[[refset]][[method]]
@@ -121,50 +128,51 @@ singlecell_plot_icpplot_server <- function(id,
 
       return(list(
         score = score,
-        pos = pos
+        pos = pos,
+        lyo = lyo,
+        sortby = sortby
         ))
     })
 
     plot.render <- function(){
       pd = plot_data()
+      browser()
       cex1 = 1.2
       cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pd[['pos']]),breaks=c(-1,40,200,1000,1e10))]
       klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
       ##klrpal = paste0(gplots::col2hex(klrpal),"AA")
       klrpal = paste0(gplots::col2hex(klrpal),"66")
-
-      lyo <- input$layout
       ntop = 25
       par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
       par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
       if(ncol(pd[['score']])>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
-      if(lyo == "4x4") {
+      if(pd[["lyo"]] == "4x4") {
         par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2)*0.6)
         ntop = 16
       }
-      if(lyo == "6x6") {
+      if(pd[["lyo"]] == "6x6") {
         par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
         ntop = 36
       }
 
       i=1
       jj <- NULL
-      jj <- head(order(-colMeans(score**2)),ntop)
-      if(input$sortby=="name") {
-        jj <- jj[order(colnames(score)[jj])]
+      jj <- head(order(-colMeans(pd[["score"]]**2)),ntop)
+      if(pd[["sortby"]]=="name") {
+        jj <- jj[order(colnames(pd[["score"]])[jj])]
       }
-      colnames(score)[jj]
+      colnames(pd[["score"]])[jj]
       for(j in jj) {
-        gx = pmax(score[,j],0)
-        gx = 1+round(15*gx/(1e-8+max(score)))
+        gx = pmax(pd[["score"]][,j],0)
+        gx = 1+round(15*gx/(1e-8+max(pd[["score"]])))
         klr0 = klrpal[gx]
         ii <- order(gx)
         ## ii <- sample(nrow(pos))
-        base::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
-                    xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
+        base::plot( pd[["pos"]][ii,], pch=19, cex=1*cex1, col=klr0[ii],
+                    xlim=1.2*range(pd[["pos"]][,1]), ylim=1.2*range(pd[["pos"]][,2]),
                     fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
                     xlab="", ylab="")
-        legend( "topleft", legend=colnames(score)[j], bg="#AAAAAA88",
+        legend( "topleft", legend=colnames(pd[["score"]])[j], bg="#AAAAAA88",
                 cex=1.2, text.font=1, y.intersp=0.8, bty="n",
                 inset=c(-0.05,-0.0) )
       }

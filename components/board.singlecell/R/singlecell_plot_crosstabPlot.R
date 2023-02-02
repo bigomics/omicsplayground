@@ -16,17 +16,18 @@
 singlecell_plot_crosstabPlot_ui <- function(id,
                                             label='',
                                             height,
-                                            width){
+                                            width,
+                                            parent){
   ns <- shiny::NS(id)
 
   crosstab.opts <- shiny::tagList(
-    withTooltip(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+    withTooltip(shiny::selectInput(parent("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
                 "Choose a predefined phenotype group on the x-axis.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+    withTooltip(shiny::selectInput(parent("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
                 "Choose a predefined phenotype group on the y-axis.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+    withTooltip(shiny::selectInput(parent("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
                 "Visualize the expression barplot of a gene by specifying the gene name.",
                 placement="top", options = list(container = "body"))
     ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
@@ -57,7 +58,8 @@ singlecell_plot_crosstabPlot_server <- function(id,
                                                 inputData,
                                                 samplefilter,
                                                 getDeconvResults2,
-                                                watermark = FALSE){
+                                                watermark = FALSE,
+                                                parent){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns

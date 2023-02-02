@@ -61,9 +61,10 @@ SingleCellUI <- function(id) {
                                   )
                                 ),
                                 singlecell_plot_icpplot_ui(ns("icpplot"),
-                                                           label='a',
+                                                           label='',
                                                            height = c(fullH-80,700),
-                                                           width = c("100%",1400))
+                                                           width = c("100%",1400),
+                                                           parent = ns)
                               ),
                               div(
                                 class = "col-md-6",
@@ -76,10 +77,9 @@ SingleCellUI <- function(id) {
                                   )
                                 ),
                                 singlecell_plot_phenoplot_ui(id = ns("phenoplot"),
-                                                             label='a',
+                                                             label='',
                                                              height = c(fullH-100,750),
-                                                             width = c("100%",500)
-                                )
+                                                             width = c("100%",500))
                               )
                             )
             ),
@@ -95,9 +95,10 @@ SingleCellUI <- function(id) {
                             tissue types or cell lines.")
                                 ),
                                 singlecell_plot_mappingplot_ui(id = ns("mappingplot"),
-                                                               label='a',
+                                                               label='',
                                                                height = c(fullH-80,780),
-                                                               width = c("100%",1000))
+                                                               width = c("100%",1000),
+                                                               parent = ns)
                               ),
                               div(
                                 class = "col-md-6",
@@ -108,9 +109,10 @@ SingleCellUI <- function(id) {
                             obtained by the bulk sequencing method.")
                                 ),
                                 singlecell_plot_crosstabPlot_ui(id = ns("crosstabPlot"),
-                                                                label='a',
+                                                                label='',
                                                                 height = c(fullH-80,760),
-                                                                width = c("100%",900))
+                                                                width = c("100%",900),
+                                                                parent = ns)
                               )
                             )
             ),
@@ -127,9 +129,10 @@ SingleCellUI <- function(id) {
                             expression of the gene in corresponding samples.")
                                 ),
                                 singlecell_plot_markersplot_ui(id = ns("markersplot"),
-                                                               label = 'a',
+                                                               label = '',
                                                                height = c(fullH-80,780),
-                                                               width = c("100%",1000))
+                                                               width = c("100%",1000),
+                                                               parent = ns)
                               ),
                               div(
                                 class = "col-md-6",
@@ -139,9 +142,10 @@ SingleCellUI <- function(id) {
                             of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis.")
                                 ),
                                 singlecell_plot_cytoplot_ui(id = ns("cytoplot"),
-                                                            label='a',
+                                                            label='',
                                                             height = c(fullH-80,780),
-                                                            width = c("100%",600))
+                                                            width = c("100%",600),
+                                                            parent = ns)
 
 
                               )

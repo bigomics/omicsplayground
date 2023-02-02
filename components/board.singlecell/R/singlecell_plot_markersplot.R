@@ -16,21 +16,22 @@
 singlecell_plot_markersplot_ui <- function(id,
                                           label='',
                                           height,
-                                          width){
+                                          width,
+                                          parent){
   ns <- shiny::NS(id)
 
   markersplot.opts = shiny::tagList(
-    withTooltip(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
+    withTooltip(shiny::selectInput(parent("mrk_level"),"Level:", choices=c("gene","geneset")),
                 "Specify the level of the marker analysis: gene or gene set level.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
+    withTooltip(shiny::selectInput(parent("mrk_features"),"Feature set:", choices=NULL,
                                    multiple=FALSE),
                 "Select a particular functional group for the analysis.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::textInput(ns("mrk_search"),"Filter:"),
+    withTooltip(shiny::textInput(parent("mrk_search"),"Filter:"),
                 "Filter markers by a specific keywords.",
                 placement="top", options = list(container = "body")),
-    withTooltip(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
+    withTooltip(shiny::radioButtons(parent("mrk_sortby"),"Sort by:",
                                     choices=c("intensity","name"), inline=TRUE),
                 "Sort by name or intensity.", placement="top",
                 options = list(container = "body"))
@@ -58,7 +59,8 @@ singlecell_plot_markersplot_ui <- function(id,
 singlecell_plot_markersplot_server <- function(id,
                                                inputData,
                                                pfGetClusterPositions,
-                                               watermark = FALSE){
+                                               watermark = FALSE,
+                                               parent){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
