@@ -112,6 +112,22 @@ SingleCellBoard <- function(id, inputData)
 
     })
 
+    shiny::observe({
+      ngs <- inputData()
+      shiny::req(ngs,input$mrk_level)
+
+      choices <- names(ngs$families)
+      selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
+      if(input$mrk_level=="geneset") {
+        nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
+        choices <- names(COLLECTIONS)[nn>=5]
+        selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
+      }
+      shiny::updateSelectInput(session, "features", choices=choices, selected=selected)
+      shiny::updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
+
+    })
+
 
 
     # REACTIVE FUNCTIONS #########
@@ -1062,75 +1078,59 @@ SingleCellBoard <- function(id, inputData)
 
     # end markers plot refactoring into plotmodule #########
 
-    shiny::observe({
-        ngs <- inputData()
-        shiny::req(ngs,input$mrk_level)
-
-        choices <- names(ngs$families)
-        selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
-        if(input$mrk_level=="geneset") {
-            nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
-            choices <- names(COLLECTIONS)[nn>=5]
-            selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
-        }
-        shiny::updateSelectInput(session, "features", choices=choices, selected=selected)
-        shiny::updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
-
-    })
 
 
-    ##======================================================================
-    ## CytoPlot
-    ##======================================================================
+
+    # CytoPlot refactored into plotmodule ##########
 
     ##output$cytoplot <- shiny::renderPlot({
-    cyto.plotFUNC <- shiny::reactive({
-        ##if(!input$tsne.all) return(NULL)
+    # cyto.plotFUNC <- shiny::reactive({
+    #     ##if(!input$tsne.all) return(NULL)
+    #
+    #     ngs <- inputData()
+    #     ##if(is.null(ngs)) return(NULL)
+    #     shiny::req(ngs)
+    #
+    #     if(is.null(input$cytovar1)) return(NULL)
+    #     if(is.null(input$cytovar2)) return(NULL)
+    #     if(input$cytovar1=="") return(NULL)
+    #     if(input$cytovar2=="") return(NULL)
+    #
+    #     dbg("[SingleCellBoard::cyto.plotFUNC] called")
+    #
+    #     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+    #     gene1 <- input$cytovar1
+    #     gene2 <- input$cytovar2
+    #     ##if(gene1 == gene2) return(NULL)
+    #     par(mfrow=c(1,1), mar=c(10,5,4,1))
+    #     pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
+    #                  col="grey60", cex.names=1, lab.unit="(log2CPM)")
+    #
+    # })
 
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        shiny::req(ngs)
+    # cyto.opts = shiny::tagList(
+    #     withTooltip(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+    #            "Select your prefered gene on the x-axis.",
+    #            placement="top", options = list(container = "body")),
+    #     withTooltip(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+    #            "Choose your prefered gene on the y-axis.",
+    #            placement="top", options = list(container = "body"))
+    # )
+    #
+    # cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
 
-        if(is.null(input$cytovar1)) return(NULL)
-        if(is.null(input$cytovar2)) return(NULL)
-        if(input$cytovar1=="") return(NULL)
-        if(input$cytovar2=="") return(NULL)
-
-        dbg("[SingleCellBoard::cyto.plotFUNC] called")
-
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        gene1 <- input$cytovar1
-        gene2 <- input$cytovar2
-        ##if(gene1 == gene2) return(NULL)
-        par(mfrow=c(1,1), mar=c(10,5,4,1))
-        pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
-                     col="grey60", cex.names=1, lab.unit="(log2CPM)")
-
-    })
-
-    cyto.opts = shiny::tagList(
-        withTooltip(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
-               "Select your prefered gene on the x-axis.",
-               placement="top", options = list(container = "body")),
-        withTooltip(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
-               "Choose your prefered gene on the y-axis.",
-               placement="top", options = list(container = "body"))
-    )
-
-    cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
-
-    shiny::callModule(
-        plotModule,
-        id = "cytoplot",
-        func = cyto.plotFUNC,
-        func2 = cyto.plotFUNC,
-        options = cyto.opts,
-        info.text = cytoModule_info,
-        pdf.width=6, pdf.height=8,
-        height = c(fullH-80,780), width = c("100%",600),
-        res = c(80,80),
-        add.watermark = WATERMARK
-    )
+    # shiny::callModule(
+    #     plotModule,
+    #     id = "cytoplot",
+    #     func = cyto.plotFUNC,
+    #     func2 = cyto.plotFUNC,
+    #     options = cyto.opts,
+    #     info.text = cytoModule_info,
+    #     pdf.width=6, pdf.height=8,
+    #     height = c(fullH-80,780), width = c("100%",600),
+    #     res = c(80,80),
+    #     add.watermark = WATERMARK
+    # )
 
     shiny::observe({
         ngs <- inputData()
@@ -1152,6 +1152,8 @@ SingleCellBoard <- function(id, inputData)
         shiny::updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
         shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
     })
+
+    # end CytoPlot refactored into plotmodule ##########
 
 
     ##==========================================================================

@@ -1,98 +1,93 @@
-#' ##
-#' ## This file is part of the Omics Playground project.
-#' ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
-#' ##
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+#' Single cell plot UI input function
 #'
-#' #' Expression plot UI input function
-#' #'
-#' #' @description A shiny Module for plotting (UI code).
-#' #'
-#' #' @param id
-#' #' @param label
-#' #' @param height
-#' #'
-#' #' @export
-#' expression_plot_FnName_ui <- function(id,
-#'                                       label='',
-#'                                       height,
-#'                                       width) {
-#'   ns <- shiny::NS(id)
+#' @description A shiny Module for plotting (UI code).
 #'
-#'   info_text = ""
+#' @param id
+#' @param label
+#' @param height
+#' @param width
 #'
-#'   PlotModuleUI(ns(""),
-#'                title = "",
-#'                label = label,
-#'                plotlib = "plotly",
-#'                info.text = info_text,
-#'                options = NULL,
-#'                download.fmt=c("png","pdf","csv"),
-#'                height = height,
-#'                width = width)
-#' }
+#' @export
+singlecell_plot_cytoplot_ui <- function(id,
+                                        label='',
+                                        height,
+                                        width){
+  ns <- shiny::NS(id)
+
+  cyto.opts = shiny::tagList(
+    withTooltip(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+                "Select your prefered gene on the x-axis.",
+                placement="top", options = list(container = "body")),
+    withTooltip(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+                "Choose your prefered gene on the y-axis.",
+                placement="top", options = list(container = "body"))
+  )
+
+  cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
+
+
+  PlotModuleUI(ns("plot"),
+               label = label,
+               info.text = cytoModule_info,
+               options = cyto.opts,
+               download.fmt=c("png","pdf","csv"),
+               height = height,
+               width = width)
+}
+
+#' Single cell plot Server function
 #'
-#' #' Expression plot Server function
-#' #'
-#' #' @description A shiny Module for plotting (server code).
-#' #'
-#' #' @param id
-#' #'
-#' #' @return
-#' #' @export
-#' expression_plot_FnName_server <- function(id, watermark = FALSE)
-#' {
-#'   moduleServer( id, function(input, output, session) {
+#' @description A shiny Module for plotting (server code).
 #'
+#' @param id
 #'
-#'         #reactive function listening for changes in input
-#'         plot_data <- shiny::reactive({
-#'           #code here
-#'         })
-#'
-#'         plot.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           #plot code here
-#'         }
-#'
-#'         plotly.RENDER <- function() {
-#'           pd <- plot_data()
-#'           shiny::req(pd)
-#'
-#'           df <- pd
-#'
-#'           ## plot as regular plot
-#'           plotly::plot_ly(data = df,
-#'                           type = '',
-#'                           x = "",
-#'                           y = "",
-#'                           ## hoverinfo = "text",
-#'                           hovertext = ~annot,
-#'                           marker = list(color = ~color)
-#'           )
-#'         }
-#'
-#'         modal_plotly.RENDER <- function() {
-#'           plotly.RENDER() %>%
-#'             plotly::layout(
-#'               ## showlegend = TRUE,
-#'               font = list(
-#'                 size = 16
-#'               )
-#'             )
-#'         }
-#'
-#'
-#'         PlotModuleServer(
-#'           "plot",
-#'           plotlib = "plotly",
-#'           func = plotly.RENDER,
-#'           func2 = modal_plotly.RENDER,
-#'           csvFunc = plot_data,   ##  *** downloadable data as CSV
-#'           res = c(80,170),                ## resolution of plots
-#'           pdf.width = 6, pdf.height = 6,
-#'           add.watermark = watermark
-#'         )
-#'     }## end of moduleServer
-#' }
+#' @export
+singlecell_plot_cytoplot_server <- function(id,
+                                            inputData,
+                                            pfGetClusterPositions,
+                                            samplefilter, #input$samplefilter
+                                            selectSamplesFromSelectedLevels,
+                                            watermark = FALSE){
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
+    cyto.plotFUNC <- shiny::reactive({
+      ##if(!input$tsne.all) return(NULL)
+
+      ngs <- inputData()
+      ##if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
+
+      if(is.null(input$cytovar1)) return(NULL)
+      if(is.null(input$cytovar2)) return(NULL)
+      if(input$cytovar1=="") return(NULL)
+      if(input$cytovar2=="") return(NULL)
+
+      dbg("[SingleCellBoard::cyto.plotFUNC] called")
+
+      kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
+      gene1 <- input$cytovar1
+      gene2 <- input$cytovar2
+      ##if(gene1 == gene2) return(NULL)
+      par(mfrow=c(1,1), mar=c(10,5,4,1))
+      pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
+                    col="grey60", cex.names=1, lab.unit="(log2CPM)")
+
+    })
+
+    PlotModuleServer(
+      "plot",
+      func = cyto.plotFUNC,
+      res = c(80,80),
+      pdf.width = 6, pdf.height = 8,
+      add.watermark = watermark
+    )
+
+  })## end of moduleServer
+}

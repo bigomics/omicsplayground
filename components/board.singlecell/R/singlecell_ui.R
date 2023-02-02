@@ -102,7 +102,7 @@ SingleCellUI <- function(id) {
                             obtained by the bulk sequencing method.")
                         ),
                         singlecell_plot_crosstabPlot_ui(id = ns("crosstabPlot"),
-                                                        label='c',
+                                                        label='a',
                                                         height = c(fullH-80,760),
                                                         width = c("100%",900))
                     )
@@ -120,7 +120,7 @@ SingleCellUI <- function(id) {
                             expression of the gene in corresponding samples.")
                         ),
                         singlecell_plot_markersplot_ui(id = ns("markersplot"),
-                                                       label = 'A',
+                                                       label = 'a',
                                                        height = c(fullH-80,780),
                                                        width = c("100%",1000))
                     ),
@@ -130,7 +130,12 @@ SingleCellUI <- function(id) {
                             HTML("<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression
                             of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis.")
                         ),
-                        plotWidget(ns("cytoplot"))
+                        singlecell_plot_cytoplot_ui(id = ns("cytoplot"),
+                                                    label='a',
+                                                    height = c(fullH-80,780),
+                                                    width = c("100%",600))
+
+
                     )
                 )
             )
