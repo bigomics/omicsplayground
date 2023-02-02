@@ -1,0 +1,333 @@
+---
+title: "Omicsplayground Theme + Color Palettes"
+output: 
+  html_document:
+    theme: united
+    highlight: kate     
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      dev = "ragg_png", dpi = 400, retina = 1,
+                      fig.height = 5, fig.width = 8)
+
+source(here::here("components", "base", "R", "ggplot-theme.R"))
+source(here::here("components", "base", "R", "ggplot-colors.R")) #"omicsplayground", 
+```
+
+# Setup
+
+```{r basic-ggplots, fig.show="hold", out.width="50%"}
+library(ggplot2)
+
+(p1 <- ggplot(iris, aes(Sepal.Width, Sepal.Length, color = Petal.Width)) + 
+  geom_point(size = 3))
+
+(p2 <- ggplot(mpg, aes(class, fill = class)) + 
+  geom_bar(show.legend = FALSE))
+```
+  
+
+# Quick Overview
+
+The `theme_omics()` function adds a custom theme to a ggplot.
+
+```{r omics-theme}
+(p1 <- p1 + theme_omics())
+
+(p2 <- p2 + theme_omics())
+```
+  
+
+There are dedicated scale functions for custom sequential, diverging and categorical color palettes based on the style guide.
+The function family `scale_color|fill_omics_*` can be used to apply these colors to `color` and `fill` aesthetics. Depending if the variables are continuous or discrete, the functions end with `_c` and `_d`, respectively.
+
+```{r omics-scales}
+(p1 <- p1 + scale_color_omics_c())
+
+(p2 <- p2 + scale_fill_omics_d())
+```
+  
+
+
+# Available Color Palettes
+
+## Sequential Palettes
+
+### Brand Blue (Default)
+
+```{r omics-scale-continuous-brand-blue}
+p1 + scale_color_omics_c(palette = "brand_blue")
+```
+
+### Bright Blue
+
+```{r omics-scale-continuous-bright-blue}
+p1 + scale_color_omics_c(palette = "bright_blue")
+```
+
+### Red
+
+```{r omics-scale-continuous-red}
+p1 + scale_color_omics_c(palette = "red")
+```
+
+### Turquoise
+
+```{r omics-scale-continuous-turquoise}
+p1 + scale_color_omics_c(palette = "turquoise")
+```
+
+### Orange
+
+```{r omics-scale-continuous-orange}
+p1 + scale_color_omics_c(palette = "orange")
+```
+
+### Yellow
+
+```{r omics-scale-continuous-yellow}
+p1 + scale_color_omics_c(palette = "yellow")
+```
+
+### Purple
+
+```{r omics-scale-continuous-purple}
+p1 + scale_color_omics_c(palette = "purple")
+```
+
+### Green
+
+```{r omics-scale-continuous-green}
+p1 + scale_color_omics_c(palette = "green")
+```
+
+### Light Green
+
+```{r omics-scale-continuous-light-green}
+p1 + scale_color_omics_c(palette = "light_green")
+```
+
+### Grey
+
+```{r omics-scale-continuous-grey}
+p1 + scale_color_omics_c(palette = "grey")
+```
+
+
+## Diverging Palettes
+
+Diverging palettes are a gradient consisting of two hues that are blended towards the center values (midpoint). The palettes are designed in a way that colors usually associated with "bad" or "lows" such as red and orange are pointing towards the minimal values. Keep in mind that the midpoint should be picked with care and be meaningful to the reader (i.e. why are values below the midpoint different from those above the threshold?).
+
+### Blue-Red
+
+```{r omics-scale-continuous-blue-red}
+p1 + scale_color_omics_c(palette = "blue_red")
+```
+
+### Turquoise-Yellow
+
+```{r omics-scale-continuous-turquoise-yellow}
+p1 + scale_color_omics_c(palette = "turq_yellow")
+```
+
+### Purple-Orange
+
+```{r omics-scale-continuous-purple-orange}
+p1 + scale_color_omics_c(palette = "purple_orange")
+```
+
+### Blue-Grey-Red
+
+```{r omics-scale-continuous-blue-red-grey}
+p1 + scale_color_omics_c(palette = "blue_red_grey")
+```
+
+### Turquoise-Grey-Yellow
+
+```{r omics-scale-continuous-turquoise-yellow-grey}
+p1 + scale_color_omics_c(palette = "turq_yellow_grey")
+```
+
+### Purple-Grey-Orange
+
+```{r omics-scale-continuous-purple-orange-grey}
+p1 + scale_color_omics_c(palette = "purple_orange_grey")
+```
+
+
+## Categorical Palettes
+
+All categorical color palettes are variants of the same color palette called `default`. The categorical palette is limited to a eight unique colors, with the first being the brand blue. For most use cases, categorical colors should be limited to 4-6 and never exceed 8 categories.
+
+### Default
+
+```{r omics-scale-discrete-default}
+p2 + scale_fill_omics_d(palette = "default")
+```
+
+### Light
+
+```{r omics-scale-discrete-light}
+p2 + scale_fill_omics_d(palette = "light")
+```
+
+### Super-Light
+
+```{r omics-scale-discrete-super-light}
+p2 + scale_fill_omics_d(palette = "super_light")
+```
+
+### Dark
+
+```{r omics-scale-discrete-dark}
+p2 + scale_fill_omics_d(palette = "dark")
+```
+
+### Super-Dark
+
+```{r omics-scale-discrete-super-dark}
+p2 + scale_fill_omics_d(palette = "super_dark")
+```
+
+### Muted
+
+```{r omics-scale-discrete-muted}
+p2 + scale_fill_omics_d(palette = "muted")
+```
+  
+
+# Working with Color Palettes
+
+## Reverse the Direction of a Palette
+
+For sequential palettes, the default direction is the golden standard for most use cases: the highest values have the highest contrasts, i.e. the darkest shade on a light background. You can change that behavior by setting the `reverse` argument in the `scale_*_omics_c()` function to `TRUE`. reverting the direction can be useful when the viewer should focus on the lowest values or when using a dark background
+
+```{r omics-scale-reverse-continuous}
+p1 + scale_color_omics_c(reverse = TRUE)
+```
+
+The same applies to diverging palettes. As diverging palettes are getting darker towards both ends of the data range, changing the direction is uncomplicated in most cases. Keep in mind though that humans associate colors with feelings and features. The palettes are designed in a way that colors usually associated with "bad" or "lows" such as red and orange are pointing towards the minimal values.
+
+```{r omics-scale-reverse-diverging}
+p1 + scale_color_omics_c(palette = "blue_red_grey", reverse = TRUE)
+```
+  
+Categorical palettes can be reversed as well. Keep in mind that by default the color for the first category is the brand color. When reversing the palette, the brand blue might be not be contained in your palette.
+
+```{r omics-scale-reverse-categorical}
+p2 + scale_fill_omics_d(reverse = TRUE)
+```
+
+## Custom Order for Categorical Palettes
+
+You can also build categorical palettes on your own, either by shuffling a palette (`omics_pal_d`) or by picking colors from the BigOmics the palettes or directly from the data colors (`omics_colors`).
+
+```{r}
+my_cols <- omics_pal_d(palette = "default")(7)
+
+set.seed(2022)
+my_shuffled_cols <- sample(my_cols)
+p2 + scale_fill_manual(values = my_shuffled_cols)
+
+my_ordered_cols <- my_cols[c(2,1,5,3,7,4,6)]
+p2 + scale_fill_manual(values = my_ordered_cols)
+
+my_picked_colors <- omics_colors("brand_blue", "bright_blue", "super_dark_grey", 
+                                 "mid_grey", "green", "orange", "red")
+p2 + scale_fill_manual(values = unname(my_picked_colors))
+```
+
+
+  
+
+# Theme Settings
+
+## Change the Default style
+
+Set `style = "light"` to use a light-toned theme.
+
+```{r omics-theme-style}
+p1 + theme_omics(style = "light")
+
+p2 + theme_omics(style = "light")
+```
+  
+
+## Change the Size of Elements
+
+`base_size` as in the ggplot2 function `theme_*()`.
+
+```{r omics-theme-base-size}
+p1 + theme_omics(base_size = 25)
+
+p2 + theme_omics(base_size = 8)
+```
+  
+
+## Change the Panel Grid
+
+Use any combination of `x`, `X`, `y`, and `Y` for the `grid` argument to add major grid lines. 
+
+```{r omics-theme-grid}
+p1 + theme_omics(grid = "xy") ## "XY", "xY" or "Xy" also work
+
+p2 + theme_omics(grid = "y") ## "Y" also works
+```
+  
+
+Use `none` to remove all grid lines. 
+
+```{r omics-theme-grid-none}
+p1 + theme_omics(grid = "none") ## "None" also works
+```
+  
+
+## Handle Axis Titles
+
+By adjusting `axistitle`, you can keep or remove single or all titles.
+
+```{r omics-theme-axistitle}
+p1 + theme_omics(axistitle = "y") ## "Y" also works
+
+p2 + theme_omics(axistitle = "none") ## "none" also works
+```
+  
+
+## Handle Axis Text
+
+By adjusting `axistext`, you can keep or remove single or all text at the breaks.
+
+```{r omics-theme-axistext}
+p1 + theme_omics(axistext = "none") ## "None" also works
+
+p2 + theme_omics(axistext = "y", axistitle = "y", grid = "y") ## "Y" also works
+```
+  
+
+## Add a Panel Border
+
+The argument `panelborder` controls the absence (default) or presence of a panel border surrounding the data area.
+
+```{r omics-theme-panelborder}
+p1 + theme_omics(panelborder = TRUE)
+```
+  
+
+## Add a Margin to a Plot
+
+By default, there is no margin around the plot to ensure that the margin is controlled by the app settings so that the plot is as large as possible. You can easily ad some margin by changing the `margin` argument.
+
+```{r omics-theme-margin}
+p1 + 
+  theme_omics(margin = 5) +
+  ## add an outline to illustrate the effect
+  theme(plot.background = element_rect(color = "black"))
+
+p2 + 
+  theme_omics(margin = 50) +
+  ## add an outline to illustrate the effect
+  theme(plot.background = element_rect(color = "black"))
+```
