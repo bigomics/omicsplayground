@@ -60,8 +60,11 @@ singlecell_plot_mappingplot_server <- function(id,
                                                inputData,
                                                pfGetClusterPositions,
                                                getDeconvResults2,
-                                               watermark = FALSE,
-                                               parent){
+                                               grpvar, #input$group2
+                                               refset, #input$refset2
+                                               group, # input$group2
+                                               view, #input$view2
+                                               watermark = FALSE){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -102,22 +105,25 @@ singlecell_plot_mappingplot_server <- function(id,
       score0 <- score
       pos <- pos[rownames(score),]
 
-      grpvar <- input$group2
-      refset <- input$refset2
+      grpvar <- grpvar() #input$group2
+      refset <- refset() #input$refset2
+      view = view()
 
       return(list(
         grpvar = grpvar,
         score = score,
+        refset = refset,
         ngs = ngs,
-        pos = pos
+        pos = pos,
+        view = view
       ))
 
       })
 
     plot.render <- function(){
 
-
       pd <- plot_data()
+
       if(pd[["grpvar"]]!="<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples))
       {
         grp <- pd[["ngs"]]$samples[rownames(pd[["score"]]),pd[["grpvar"]]]
@@ -129,7 +135,7 @@ singlecell_plot_mappingplot_server <- function(id,
       }
       b0 <- 0.1 + 0.70*pmax(30 - ncol(pd[["score"]]), 0)
 
-      if(input$view2 == "dotmap") {
+      if(pd[["view"]] == "dotmap") {
 
         ##gx.heatmap(pd[["score"]])
         par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.25 )
@@ -148,20 +154,19 @@ singlecell_plot_mappingplot_server <- function(id,
         ##mtext(refset, side=4, line=0.5)
       }
 
-      if(input$view2 == "heatmap") {
+      if(pd[["view"]] == "heatmap") {
         usermode = "PRO"
         if(!is.null(usermode) && usermode >= 'PRO') {
-          kk <- head(colnames(score)[order(-colMeans(score**2))],18)
-          kk <- intersect(colnames(score),kk)
-          all.scores <- ngs$deconv[["LM22"]]
-          all.scores <- ngs$deconv[[input$refset2]]
-          grpvar <- input$group2
-          if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples)) {
-            grp <- ngs$samples[rownames(all.scores[[1]]),grpvar]
+          kk <- head(colnames(pd[["score"]])[order(-colMeans(pd[["score"]]**2))],18)
+          kk <- intersect(colnames(pd[["score"]]),kk)
+          all.scores <- pd[["ngs"]]$deconv[["LM22"]]
+          all.scores <- pd[["ngs"]]$deconv[[pd[["refset"]]]]
+          if(pd[["grpvar"]]!="<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples)) {
+            grp <- pd[["ngs"]]$samples[rownames(all.scores[[1]]),pd[["grpvar"]]]
             for(i in 1:length(all.scores)) {
               all.scores[[i]] <- apply(all.scores[[i]],2,
                                        function(x) tapply(x,grp,mean))
-              ii <- rownames(score)
+              ii <- rownames(pd[["score"]])
               all.scores[[i]] <- all.scores[[i]][ii,kk]
             }
           }
@@ -170,11 +175,11 @@ singlecell_plot_mappingplot_server <- function(id,
           m=3;n=2
           if(nm>6) {m=3;n=3}
           if(nm>9) {m=4;n=3}
-          rr <- 2+max(nchar(colnames(score)))/2
+          rr <- 2+max(nchar(colnames(pd[["score"]])))/2
           par(mfrow=c(m,n), mar=c(0,0.3,2,0.3), oma=c(10,0,0,rr), xpd=TRUE)
           k=1
           for(k in 1:length(all.scores)) {
-            ii <- rownames(score)
+            ii <- rownames(pd[["score"]])
             score1 <- all.scores[[k]][ii,kk]
             ##score1 <- score1[rownames(score0),kk]
             if(k%%n!=0) colnames(score1) <- rep("",ncol(score1))
@@ -186,9 +191,9 @@ singlecell_plot_mappingplot_server <- function(id,
           }
 
         } else {
-          score1 <- score
+          score1 <- pd[["score"]]
           score1 <- score1 / (1e-8+rowSums(score1))
-          if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score))
+          if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(pd[["score"]]))
           gx.heatmap( t(score1**2), scale="none",
                       cexRow=1, cexCol=0.6, col=heat.colors(16),
                       mar=c(b0,15), key=FALSE, keysize=0.5)

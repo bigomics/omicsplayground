@@ -136,7 +136,7 @@ singlecell_plot_icpplot_server <- function(id,
 
     plot.render <- function(){
       pd = plot_data()
-      browser()
+
       cex1 = 1.2
       cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pd[['pos']]),breaks=c(-1,40,200,1000,1e10))]
       klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)

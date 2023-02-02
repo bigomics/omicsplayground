@@ -233,7 +233,10 @@ SingleCellBoard <- function(id, inputData)
                                        inputData = inputData,
                                        getDeconvResults2 = getDeconvResults2,
                                        pfGetClusterPositions = pfGetClusterPositions,
-                                       parent = ns)
+                                       grpvar = shiny::reactive(input$group2),
+                                       refset = shiny::reactive(input$refset2),
+                                       group = shiny::reactive(input$group2),
+                                       view = shiny::reactive(input$view2))
 
     singlecell_plot_crosstabPlot_server(id = "crosstabPlot",
                                         inputData = inputData,
