@@ -18,10 +18,6 @@ expression_plot_topfoldchange_ui <- function(id,
                                              height,
                                              width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    actionButton(ns("button1"), "some action")
-  )
-
   info_text <- "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
   PlotModuleUI(ns("pltmod"),
@@ -29,7 +25,6 @@ expression_plot_topfoldchange_ui <- function(id,
     label = label,
     plotlib = "base",
     info.text = info_text,
-    options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -41,7 +36,8 @@ expression_plot_topfoldchange_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param inputData
+#' @param comp
+#' @param ngs
 #' @param sel
 #' @param res
 #' @param watermark
@@ -50,7 +46,8 @@ expression_plot_topfoldchange_ui <- function(id,
 #'
 #' @export
 expression_plot_topfoldchange_server <- function(id,
-                                                 inputData,
+                                                 comp,
+                                                 ngs,
                                                  sel,
                                                  res,
                                                  watermark = FALSE) {
@@ -58,28 +55,18 @@ expression_plot_topfoldchange_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-
-      ## get table
-      ## sel=1;pp=rownames(ngs$X)[1]
+      comp <- comp() # input$gx_contrast
+      ngs <- ngs()
       sel <- sel()
-      if (is.null(sel) || length(sel) == 0) {
-        frame()
-        text(0.5, 0.5, "No gene selected", col = "black")
-        return(NULL)
-      }
-
       res <- res()
-      if (is.null(res) || is.null(sel)) {
-        return(NULL)
-      }
+
       psel <- rownames(res)[sel]
       gene <- ngs$genes[psel, "gene_name"]
 
-      ## fc <- res$meta.fx
-      comp <- 1
-      comp <- input$gx_contrast
+      if (is.null(sel) || length(sel) == 0) { # Ugly
+        return(list(sel = sel))
+      }
+
       if (is.null(comp) || length(comp) == 0) {
         return(NULL)
       }
@@ -92,19 +79,29 @@ expression_plot_topfoldchange_server <- function(id,
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
 
       klr.pal <- RColorBrewer::brewer.pal(4, "Paired")[2:1]
-      ## klr.pal <- BLUERED(16)[c(3,14)]
       klr <- klr.pal[1 + 1 * (sign(fc.top) < 0)]
 
-      return(
+      return(list(
+        sel = sel,
         fc.top = fc.top,
         klr = klr,
         gene = gene
-      )
+      ))
     })
 
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
+
+      if (is.null(pd[["sel"]]) || length(pd[["sel"]]) == 0) {
+        frame()
+        text(0.5, 0.5, "No gene selected", col = "black")
+        return(NULL)
+      }
+
+      if (is.null(res) || is.null(sel)) {
+        return(NULL)
+      }
 
       par(mfrow = c(1, 1), mar = c(4, 4, 2, 2) * 1, mgp = c(2, 0.8, 0), oma = c(1, 1, 1, 0.5) * 0.2)
       par(mfrow = c(1, 1), mar = c(6, 3, 0, 1), mgp = c(2, 0.8, 0), oma = c(1, 0, 0, 0))
@@ -112,7 +109,6 @@ expression_plot_topfoldchange_server <- function(id,
       m1 <- ifelse(nch > 12, 12, 8)
       m1 <- ifelse(nch > 30, 16, m1)
 
-      ## par( mar=c(4,m1,2,0.5) )
       par(mar = c(3.2, m1 - 0.5, 1, 1))
       cex1 <- 0.9
       nn <- sum(!is.na(pd[["fc.top"]]))
@@ -125,23 +121,11 @@ expression_plot_topfoldchange_server <- function(id,
       title(pd[["gene"]], cex.main = 1, line = -0.15)
     }
 
-    modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
-        )
-      fig <- plotly::style(fig, marker.size = 20)
-      fig
-    }
-
     PlotModuleServer(
       "pltmod",
       plotlib = "base",
       func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,
+      # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

@@ -87,15 +87,11 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
-      ## pval = res$P.Value
-      ## pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
 
       ## filter genes by gene family or gene set
       fam.genes <- unique(unlist(ngs$families[10]))
-      ## fam.genes = unique(unlist(ngs$families[input$gx_features]))
       fam.genes <- res$gene_name
       if (gx_features() != "<all>") {
-        ## gset <- GSETS[input$gx_features]
         gset <- getGSETS(gx_features())
         fam.genes <- unique(unlist(gset))
       }
@@ -121,10 +117,8 @@ expression_plot_maplot_server <- function(id,
       sel.genes <- intersect(sig.genes, sel.genes)
 
       ## are there any genes/genesets selected?
-      # sel1 = genetable$rows_selected()
       sel1 <- sel1()
       df1 <- df1()
-      # sel2 = gsettable$rows_selected()
       sel2 <- sel2()
       df2 <- df2()
       lab.cex <- 1
@@ -168,9 +162,6 @@ expression_plot_maplot_server <- function(id,
         head(sel.genes[order(-impt(sel.genes))], 10)
       )
 
-
-
-
       return(list(
         x = x,
         y = y,
@@ -200,8 +191,6 @@ expression_plot_maplot_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]], label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
-        ## xlim=xlim, ylim=ylim, ## hi.col="#222222",
-        ## use.fdr=TRUE,
         psig = pd[["fdr"]], lfc = pd[["lfc"]],
         xlab = "average expression (log2.CPM)",
         ylab = "effect size (log2.FC)",

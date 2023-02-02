@@ -18,8 +18,16 @@ expression_plot_boxplot_ui <- function(id,
                                        height,
                                        width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    actionButton(ns("button1"), "some action")
+
+  plots_boxplot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("boxplot_grouped"), "grouped", TRUE),
+      "Group expression values by conditions.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("boxplot_logscale"), "log scale", TRUE),
+      "Show logarithmic (log2CPM) expression values.",
+      placement = "right", options = list(container = "body")
+    )
   )
 
   info_text <- "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
@@ -29,7 +37,7 @@ expression_plot_boxplot_ui <- function(id,
     label = label,
     plotlib = "base",
     info.text = info_text,
-    options = NULL,
+    options = plots_boxplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -41,7 +49,8 @@ expression_plot_boxplot_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param inputData
+#' @param comp
+#' @param ngs
 #' @param sel
 #' @param res
 #' @param watermark
@@ -50,7 +59,8 @@ expression_plot_boxplot_ui <- function(id,
 #'
 #' @export
 expression_plot_boxplot_server <- function(id,
-                                           inputData,
+                                           comp,
+                                           ngs,
                                            sel,
                                            res,
                                            watermark = FALSE) {
@@ -58,49 +68,43 @@ expression_plot_boxplot_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-
-      ## get table
-      ## sel=1
+      comp <- comp() # input$gx_contrast
+      grouped <- input$boxplot_grouped
+      logscale <- input$boxplot_logscale
+      ngs <- ngs()
       sel <- sel()
-      if (is.null(sel) || length(sel) == 0) {
-        frame()
-        text(0.5, 0.5, "No gene selected", col = "black")
-        return(NULL)
-      }
-
       res <- res()
-      if (is.null(res) || is.null(sel)) {
-        return(NULL)
-      }
 
       psel <- rownames(res)[sel]
       gene <- ngs$genes[1, "gene_name"]
-      comp <- 1
-      grouped <- TRUE
-      logscale <- TRUE
-      srt <- 45
+
       gene <- ngs$genes[psel, "gene_name"]
-      comp <- input$gx_contrast
-      shiny::req(comp)
-      grouped <- input$boxplot_grouped
-      logscale <- input$boxplot_logscale
       srt <- ifelse(grouped, 0, 35)
 
-      return(
+      return(list(
         ngs = ngs,
         gene = gene,
         comp = comp,
+        sel = sel,
         grouped = grouped,
         logscale = logscale,
         srt = srt
-      )
+      ))
     })
 
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
+
+      if (is.null(pd[["sel"]]) || length(pd[["sel"]]) == 0) {
+        frame()
+        text(0.5, 0.5, "No gene selected", col = "black")
+        return(NULL)
+      }
+
+      if (is.null(res) || is.null(sel)) {
+        return(NULL)
+      }
 
       par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
       pgx.plotExpression(pd[["ngs"]],
@@ -114,23 +118,11 @@ expression_plot_boxplot_server <- function(id,
       )
     }
 
-    modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
-        )
-      fig <- plotly::style(fig, marker.size = 20)
-      fig
-    }
-
     PlotModuleServer(
       "pltmod",
       plotlib = "base",
       func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,
+      # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
