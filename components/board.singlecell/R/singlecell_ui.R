@@ -37,107 +37,115 @@ SingleCellUI <- function(id) {
     tabH  = 200  ## row height of panel
 
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        flex = c(1),
-        height = 780,
-        shiny::tabsetPanel(
+    div(
+      boardHeader(title = "Single Cell Board", info_link = ns("infotext")),
+      div(
+        shiny::fillCol(
+          flex = c(1),
+          height = 780,
+          shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Cell type",
-                div(
-                    class = "row",
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML(
-                                "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution
+                            div(
+                              class = "row",
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  class = "caption",
+                                  HTML(
+                                    "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution
                                 methods and reference datasets from the literature. Currently, we have implemented a total
                                 of 8 methods and 9 reference datasets to predict immune cell types (4 datasets),
                                 tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset).
                                 However, we plan to expand the collection of methods and databases and to infer other cell types."
-                            )
-                        ),
-                        singlecell_plot_icpplot_ui(ns("icpplot"),
-                                                   label='a',
-                                                   height = c(fullH-80,700),
-                                                   width = c("100%",1400))
-                    ),
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML(
-                                "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the
+                                  )
+                                ),
+                                singlecell_plot_icpplot_ui(ns("icpplot"),
+                                                           label='a',
+                                                           height = c(fullH-80,700),
+                                                           width = c("100%",1400))
+                              ),
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  class = "caption",
+                                  HTML(
+                                    "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the
                                 t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular
                                 phenotype that is controlled by the experimental condition or unwanted batch effects."
+                                  )
+                                ),
+                                singlecell_plot_phenoplot_ui(id = ns("phenoplot"),
+                                                             label='a',
+                                                             height = c(fullH-100,750),
+                                                             width = c("100%",500)
+                                )
+                              )
                             )
-                        ),
-                        singlecell_plot_phenoplot_ui(id = ns("phenoplot"),
-                                                     label='a',
-                                                     height = c(fullH-100,750),
-                                                     width = c("100%",500)
-                                                     )
-                    )
-                )
             ),
             shiny::tabPanel("Mapping",
-                div(
-                    class = "row",
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML("<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable
+                            div(
+                              class = "row",
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  class = "caption",
+                                  HTML("<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable
                             of the data set. The reference set can be a cell type reference database but also cancer types,
                             tissue types or cell lines.")
-                        ),
-                        singlecell_plot_mappingplot_ui(id = ns("mappingplot"),
-                                                       label='a',
-                                                       height = c(fullH-80,780),
-                                                       width = c("100%",1000))
-                    ),
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML("<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables
+                                ),
+                                singlecell_plot_mappingplot_ui(id = ns("mappingplot"),
+                                                               label='a',
+                                                               height = c(fullH-80,780),
+                                                               width = c("100%",1000))
+                              ),
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  HTML("<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables
                             (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data,
                             it provides useful information about the proportion of different cell types in samples
                             obtained by the bulk sequencing method.")
-                        ),
-                        singlecell_plot_crosstabPlot_ui(id = ns("crosstabPlot"),
-                                                        label='a',
-                                                        height = c(fullH-80,760),
-                                                        width = c("100%",900))
-                    )
-                )
+                                ),
+                                singlecell_plot_crosstabPlot_ui(id = ns("crosstabPlot"),
+                                                                label='a',
+                                                                height = c(fullH-80,760),
+                                                                width = c("100%",900))
+                              )
+                            )
             ),
             shiny::tabPanel("Markers",
-                div(
-                    class = "row",
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML("<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a
+                            div(
+                              class = "row",
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  class = "caption",
+                                  HTML("<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a
                             distribution pattern strongly correlated with some phenotype. The top genes with the highest
                             standard deviation are shown. The red color shading is proportional to the (absolute)
                             expression of the gene in corresponding samples.")
-                        ),
-                        singlecell_plot_markersplot_ui(id = ns("markersplot"),
-                                                       label = 'a',
-                                                       height = c(fullH-80,780),
-                                                       width = c("100%",1000))
-                    ),
-                    div(
-                        class = "col-md-6",
-                        tags$div(
-                            HTML("<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression
+                                ),
+                                singlecell_plot_markersplot_ui(id = ns("markersplot"),
+                                                               label = 'a',
+                                                               height = c(fullH-80,780),
+                                                               width = c("100%",1000))
+                              ),
+                              div(
+                                class = "col-md-6",
+                                tags$div(
+                                  class = "caption",
+                                  HTML("<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression
                             of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis.")
-                        ),
-                        singlecell_plot_cytoplot_ui(id = ns("cytoplot"),
-                                                    label='a',
-                                                    height = c(fullH-80,780),
-                                                    width = c("100%",600))
+                                ),
+                                singlecell_plot_cytoplot_ui(id = ns("cytoplot"),
+                                                            label='a',
+                                                            height = c(fullH-80,780),
+                                                            width = c("100%",600))
 
 
-                    )
-                )
+                              )
+                            )
             )
             # These tabPanels are not shown in the UI Stefan 22.03.2022
             # shiny::tabPanel("CNV",
@@ -206,7 +214,12 @@ SingleCellUI <- function(id) {
             #         )
             #     )
             # ))
+          )
         )
-    )
+
+      )
+
+      )
+
 }
 

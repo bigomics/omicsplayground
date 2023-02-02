@@ -31,7 +31,7 @@ SingleCellBoard <- function(id, inputData)
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
 
-    shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$infotext, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Single Cell Board</strong>"),
             shiny::HTML(infotext),
