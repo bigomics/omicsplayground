@@ -59,8 +59,11 @@ singlecell_plot_markersplot_ui <- function(id,
 singlecell_plot_markersplot_server <- function(id,
                                                inputData,
                                                pfGetClusterPositions,
-                                               watermark = FALSE,
-                                               parent){
+                                               mrk_level,
+                                               mrk_features,
+                                               mrk_search,
+                                               mrk_sortby,
+                                               watermark = FALSE){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -71,26 +74,31 @@ singlecell_plot_markersplot_server <- function(id,
       ngs <- inputData()
       shiny::req(ngs)
 
+      mrk_level <- mrk_level()
+      mrk_features <- mrk_features()
+      mrk_search <- mrk_search()
+      mrk_sortby <- mrk_sortby()
+
       clust.pos <- pfGetClusterPositions()
       if(is.null(clust.pos)) return(NULL)
       ##pos <- ngs$tsne2d
       pos <- clust.pos
 
       ##markers <- ngs$families[["CD family"]]
-      if(is.null(input$mrk_features)) return(NULL)
-      if(input$mrk_features=="") return(NULL)
+      if(is.null(mrk_features)) return(NULL)
+      if(mrk_features=="") return(NULL)
 
       term = ""
-      if(input$mrk_level=="gene") {
+      if(mrk_level=="gene") {
         markers <- ngs$families[["Transcription factors (ChEA)"]]
-        if(input$mrk_search!="") {
-          term = input$mrk_search
+        if(mrk_search!="") {
+          term = mrk_search
           jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
           markers <- ngs$genes$gene_name[jj]
           term = paste("filter:",term)
-        } else if(input$mrk_features %in% names(ngs$families)) {
-          markers <- ngs$families[[input$mrk_features]]
-          term = input$mrk_features
+        } else if(mrk_features %in% names(ngs$families)) {
+          markers <- ngs$families[[mrk_features]]
+          term = mrk_features
         } else {
           markers <- ngs$genes$gene_name
         }
@@ -100,17 +108,17 @@ singlecell_plot_markersplot_server <- function(id,
         pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
         gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
 
-      } else if(input$mrk_level=="geneset") {
+      } else if(mrk_level=="geneset") {
         ##markers <- ngs$families[["Immune checkpoint (custom)"]]
         markers <- COLLECTIONS[[1]]
-        if(is.null(input$mrk_features)) return(NULL)
-        ft <- input$mrk_features
-        if(input$mrk_search=="" && ft %in% names(COLLECTIONS)) {
-          markers <- COLLECTIONS[[input$mrk_features]]
+        if(is.null(mrk_features)) return(NULL)
+        ft <- mrk_features
+        if(mrk_search=="" && ft %in% names(COLLECTIONS)) {
+          markers <- COLLECTIONS[[mrk_features]]
           markers <- intersect(markers, rownames(ngs$gsetX))
-          term = input$mrk_features
-        } else if(input$mrk_search!="") {
-          term = input$mrk_search
+          term = mrk_features
+        } else if(mrk_search!="") {
+          term = mrk_search
           jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
           markers <- rownames(ngs$gsetX)[jj]
           term = paste("filter:",term)
@@ -143,9 +151,9 @@ singlecell_plot_markersplot_server <- function(id,
       klrpal = paste0(gplots::col2hex(klrpal),"66")
 
       NP=25
-      if(input$mrk_level=="gene") NP=36
+      if(mrk_level=="gene") NP=36
       top.gx = head(gx,NP)  ## match number of plot below!
-      if(input$mrk_sortby=="name") {
+      if(mrk_sortby=="name") {
         top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
       } else {
         top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
@@ -154,7 +162,7 @@ singlecell_plot_markersplot_server <- function(id,
       ##top.gx <- tanh(top.gx/mean(top.gx))
 
       plevel="gene"
-      plevel <- input$mrk_level
+      plevel <- mrk_level
 
       par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
       par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)

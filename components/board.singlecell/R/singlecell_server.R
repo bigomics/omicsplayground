@@ -241,15 +241,29 @@ SingleCellBoard <- function(id, inputData)
     singlecell_plot_crosstabPlot_server(id = "crosstabPlot",
                                         inputData = inputData,
                                         samplefilter = shiny::reactive(input$samplefilter),
+                                        crosstabvar = shiny::reactive(input$crosstabvar),
+                                        pheno = shiny::reactive(input$crosstabpheno),
+                                        gene = shiny::reactive(input$crosstabgene),
                                         getDeconvResults2=getDeconvResults2,
-                                        watermark = FALSE,
-                                        parent = ns)
+                                        watermark = FALSE)
 
     singlecell_plot_markersplot_server(id = "markersplot",
                                        inputData = inputData,
                                        pfGetClusterPositions = pfGetClusterPositions,
-                                       watermark = FALSE,
-                                       parent = ns)
+                                       mrk_level = shiny::reactive(input$mrk_level),
+                                       mrk_features = shiny::reactive(input$mrk_features),
+                                       mrk_search = shiny::reactive(input$mrk_search),
+                                       mrk_sortby = shiny::reactive(input$mrk_sortby),
+                                       watermark = FALSE)
+
+    singlecell_plot_cytoplot_server(id = "cytoplot",
+                                    inputData = inputData,
+                                    pfGetClusterPositions = pfGetClusterPositions,
+                                    samplefilter = shiny::reactive(input$samplefilter),
+                                    cytovar1 = shiny::reactive(input$cytovar1),
+                                    cytovar2 = shiny::reactive(input$cytovar2),
+                                    selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
+                                    watermark = FALSE)
 
     #icpplot plot refactored into plot module #########
 

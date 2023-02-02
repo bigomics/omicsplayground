@@ -58,8 +58,10 @@ singlecell_plot_crosstabPlot_server <- function(id,
                                                 inputData,
                                                 samplefilter,
                                                 getDeconvResults2,
-                                                watermark = FALSE,
-                                                parent){
+                                                crosstabvar, #input$crosstabvar
+                                                pheno, #input$crosstabpheno
+                                                gene, #input$crosstabgene
+                                                watermark = FALSE){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -69,17 +71,20 @@ singlecell_plot_crosstabPlot_server <- function(id,
       ##if(!input$tsne.all) return(NULL)
 
       ngs <- inputData()
+      crosstabvar <- crosstabvar()
+      gene <- gene()
+      pheno <- pheno()
 
       dbg("[SingleCellBoard::crosstab.plotFUNC] called")
 
       scores = ngs$deconv[[1]][[1]]  ## just an example...
-      if(input$crosstabvar == "<cell type>") {
+      if(crosstabvar == "<cell type>") {
         scores <- getDeconvResults2()
         if(is.null(scores)) return(NULL)
         scores <- pmax(scores,0) ## ??
       } else {
         x <- as.character(ngs$Y[,1])
-        x <- as.character(ngs$Y[,input$crosstabvar])
+        x <- as.character(ngs$Y[,crosstabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix( ~ 0 + x )
         rownames(scores) <- rownames(ngs$Y)
@@ -210,14 +215,14 @@ singlecell_plot_crosstabPlot_server <- function(id,
       pheno="activated"
       pheno="cell.type"
       pheno="<cell type>"
-      pheno <- input$crosstabpheno
+      pheno <- pheno
       if(is.null(pheno)) return(NULL)
 
       ##pheno="cluster"
       grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
       grp.score2 <- NULL
       gene = ngs$genes$gene_name[1]
-      gene = input$crosstabgene
+      gene = gene
       if(gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1,])]
@@ -242,6 +247,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       pd <- plot_data()
 
+      grp.score2 = pd[["grp.score2"]]
+      grp.counts = pd[["grp.counts"]]
+      grp.score1 = pd[["grp.score1"]]
       ##-------------- plot by estimated cell.type ----------------------
 
       ##par(mar = c(4,6,2,3))

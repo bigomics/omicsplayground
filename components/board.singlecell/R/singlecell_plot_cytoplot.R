@@ -52,9 +52,10 @@ singlecell_plot_cytoplot_server <- function(id,
                                             inputData,
                                             pfGetClusterPositions,
                                             samplefilter, #input$samplefilter
+                                            cytovar1,
+                                            cytovar2,
                                             selectSamplesFromSelectedLevels,
-                                            watermark = FALSE,
-                                            parent){
+                                            watermark = FALSE){
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -66,16 +67,20 @@ singlecell_plot_cytoplot_server <- function(id,
       ##if(is.null(ngs)) return(NULL)
       shiny::req(ngs)
 
-      if(is.null(input$cytovar1)) return(NULL)
-      if(is.null(input$cytovar2)) return(NULL)
-      if(input$cytovar1=="") return(NULL)
-      if(input$cytovar2=="") return(NULL)
+      cytovar1 <- cytovar1()
+      cytovar2 <- cytovar2()
+      samplefilter <- samplefilter()
+
+      if(is.null(cytovar1)) return(NULL)
+      if(is.null(cytovar2)) return(NULL)
+      if(cytovar1=="") return(NULL)
+      if(cytovar2=="") return(NULL)
 
       dbg("[SingleCellBoard::cyto.plotFUNC] called")
 
       kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
-      gene1 <- input$cytovar1
-      gene2 <- input$cytovar2
+      gene1 <- cytovar1
+      gene2 <- cytovar2
       ##if(gene1 == gene2) return(NULL)
       par(mfrow=c(1,1), mar=c(10,5,4,1))
       pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
