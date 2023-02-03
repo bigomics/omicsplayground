@@ -109,7 +109,7 @@ dataview_plot_genetypes_server <- function(id,
           y = ~family,
           type = "bar",
           marker = list(
-            color = omics_colors("mid_blue")
+            color = omics_colors("brand_blue")
           ),
           hovertemplate = ~ paste0(
             "Gene family: <b>", family, "</b><br>",

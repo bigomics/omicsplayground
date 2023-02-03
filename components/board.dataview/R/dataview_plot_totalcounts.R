@@ -92,7 +92,7 @@ dataview_plot_totalcounts_server <- function(id,
           y = ~counts,
           type = "bar",
           marker = list(
-            color = omics_colors("mid_blue")
+            color = omics_colors("brand_blue")
           ),
           hovertemplate = ~ paste0(
             "Sample: <b>", sample, "</b><br>",

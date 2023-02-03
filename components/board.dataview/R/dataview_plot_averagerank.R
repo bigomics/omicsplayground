@@ -134,7 +134,7 @@ dataview_plot_averagerank_server <- function(id,
           fill = "tozeroy",
           fillcolor = "#00000000",
           line = list(
-            color = omics_colors("mid_blue"),
+            color = omics_colors("brand_blue"),
             width = 2.5
           )
         ) %>%

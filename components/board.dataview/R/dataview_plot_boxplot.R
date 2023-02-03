@@ -77,12 +77,12 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
           x = ~sample,
           y = ~value,
           type = "box",
-          # color = omics_colors("mid_blue"),
+          # color = omics_colors("brand_blue"),
           marker = list(
-            color = omics_colors("mid_blue"),
+            color = omics_colors("brand_blue"),
             fillcolor = omics_colors("light_blue")
           ),
-          line = list(color = omics_colors("mid_blue")),
+          line = list(color = omics_colors("brand_blue")),
           ## NOTE: I'd like to show less labels as tooltips; could format them nicely but didn't find any information on how to remove some
           ## TODO: decide if it's fine like that; check if it is possible to reduce the number of tooltips
           hoverinfo = "y"
