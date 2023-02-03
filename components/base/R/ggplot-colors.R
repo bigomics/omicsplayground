@@ -92,14 +92,12 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
     `light_green`         = unname(generate_colors(omics_colors("light_green"))),
     `grey`                = unname(omics_colors(c("mid_grey", "super_dark_grey"))),
     ## diverging palettes based on multiple data colours
-    `blue_red`            = unname(omics_colors(c("red", "terra_cotta", "brand_blue"))),
-    `blue_orange`      = unname(omics_colors(c("orange", "brand_blue"))),
+    `blue_red`            = unname(omics_colors(c("red", "brand_blue"))),
+    `blue_orange`         = unname(omics_colors(c("orange", "brand_blue"))),
     `turq_yellow`         = unname(omics_colors(c("yellow", "grey", "turquoise"))),
-    `purple_orange`       = unname(omics_colors(c("orange", "purple"))),
-    `blue_red_grey`       = unname(omics_colors(c("red", "terra_cotta", "mid_grey", "brand_blue"))),
-    `blue_orange_grey` = unname(omics_colors(c("orange", "mid_grey", "brand_blue"))),
-    `turq_yellow_grey`    = unname(omics_colors(c("yellow", "mid_grey", "turquoise"))),
-    `purple_orange_grey`  = unname(omics_colors(c("orange", "mid_grey", "purple")))
+    `blue_red_grey`       = unname(omics_colors(c("red", "mid_grey", "brand_blue"))),
+    `blue_orange_grey`    = unname(omics_colors(c("orange", "mid_grey", "brand_blue"))),
+    `turq_yellow_grey`    = unname(omics_colors(c("yellow", "mid_grey", "turquoise")))
   )
 
   pal <- omics_palettes[[palette]]
@@ -128,7 +126,7 @@ omics_pal_d <- function(palette = "default", reverse = FALSE) {
   if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light" or "expanded".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
 
-  cat_colors <- unname(omics_colors("brand_blue", "red", "terra_cotta", "turquoise", "yellow", "purple", "green", "orange", "light_green", "bright_blue", "pastel_blue", "dark_grey"))
+  cat_colors <- unname(omics_colors("brand_blue", "red", "orange", "yellow", "turquoise", "purple", "green", "light_green", "bright_blue", "pastel_blue", "dark_grey"))
 
   omics_palettes <- list(
     `default`     = cat_colors,
