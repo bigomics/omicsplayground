@@ -57,7 +57,7 @@ dataview_plot_correlation_server <- function(id,
 
       gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples]**2, na.rm = TRUE))
       gx1 <- (gx1 / max(gx1))
-      klr1 <- omics_pal_c(palette = "bright_blue")(16)[1 + round(15 * gx1)]
+      klr1 <- omics_pal_c(palette = "brand_blue")(16)[1 + round(15 * gx1)]
       klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
 
       names(top.rho) <- sub(".*:", "", names(top.rho))

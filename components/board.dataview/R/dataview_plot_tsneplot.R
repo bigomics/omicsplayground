@@ -189,7 +189,7 @@ dataview_plot_tsne_server <- function(id,
             symbol = ~group,
             symbols = symbols[1:length(unique(df$group))],
             color = ~expression,
-            colors = omics_pal_c(palette = "bright_blue")(100),
+            colors = omics_pal_c(palette = "brand_blue")(100),
             marker = list(
               size = 10,
               line = list(
@@ -213,7 +213,7 @@ dataview_plot_tsne_server <- function(id,
             x = ~pos_x,
             y = ~pos_y,
             color = ~expression,
-            colors = omics_pal_c(palette = "bright_blue")(100),
+            colors = omics_pal_c(palette = "brand_blue")(100),
             marker = list(
               size = 10,
               line = list(
