@@ -1,0 +1,261 @@
+---
+title: "Omicsplayground Corporate Colors and Palettes"
+author: "Cédric Scherer"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: united
+    highlight: kate     
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, 
+  dev = "ragg_png", dpi = 400, retina = 1,
+  fig.height = 4, fig.width = 8, 
+  fig.show = "hold", out.width = "50%"
+)
+
+source(here::here("components", "base", "R", "ggplot-colors.R"))
+```
+
+# Setup
+
+Small utility function to visualize color palettes and a desatured version of the same palette with the help of the `{prismatic}` package.
+
+```{r function-plot-pal}
+plot_pal <- function(pal) { 
+  plot(prismatic::color(pal))
+  plot(prismatic::clr_desaturate(prismatic::color(pal), 1))
+}
+```
+
+
+# Corporate Colors
+
+Retrieve single colors or a set of colors with `omics_colors()`.
+
+```{r omics-colors}
+omics_colors("brand_blue")
+omics_colors(c("brand_blue", "red", "mid_grey"))
+omics_colors()[1:3]
+```
+
+### All Available Colors
+
+```{r all-omics-colors}
+plot_pal(omics_colors(1:16))
+```
+
+
+# Corporate Color Palettes
+
+## Sequential Color Palettes
+
+Single-hue sequential color palettes map a number of light to dark shades of the same color family to numeric values. Such color palettes are sued in case the main attention is on one end of the value range. The colors with the highest visual weight should be mapped to the values of interest.
+
+Create sequential color palettes with `omics_pal_c()`. By default, the colors with the highest contrast are mapped to the highest values (optimal for most use cases).
+
+### Default: `brand_blue` 
+
+BS Color "Bleu De France" (primary)
+
+```{r seq-pal-brand-blue}
+plot_pal(omics_pal_c()(7))
+```
+
+### `bright_blue`
+
+```{r seq-pal-bright-blue}
+plot_pal(omics_pal_c(palette = "bright_blue")(7))
+```
+
+### `pastel_blue` 
+
+BS Color "Dark Pastel Blue" (secondary)
+
+```{r seq-pal-pastel-blue}
+plot_pal(omics_pal_c(palette = "pastel_blue")(7))
+```
+
+### `red`
+
+```{r seq-pal-red}
+plot_pal(omics_pal_c(palette = "red")(7))
+```
+
+### `terra_cotta` 
+
+BS Color "Dark Terra Cotta" (warning)
+
+```{r seq-pal-terra-cotta}
+plot_pal(omics_pal_c(palette = "terra_cotta")(7))
+```
+
+### `turquoise`
+
+BS Color "Viridian Green" (success)
+
+```{r seq-pal-turquoise}
+plot_pal(omics_pal_c(palette = "turquoise")(7))
+```
+
+### `yellow`
+
+```{r seq-pal-yellow}
+plot_pal(omics_pal_c(palette = "yellow")(7))
+```
+
+### `orange` (BS Color "Indian Yellow = warning)
+
+```{r seq-pal-orange}
+plot_pal(omics_pal_c(palette = "orange")(7))
+```
+
+### `purple`
+
+```{r seq-pal-purple}
+plot_pal(omics_pal_c(palette = "purple")(7))
+```
+
+### `green`
+
+```{r seq-pal-green}
+plot_pal(omics_pal_c(palette = "green")(7))
+```
+
+### `light_green`
+
+```{r seq-pal-light_green}
+plot_pal(omics_pal_c(palette = "light_green")(7))
+```
+
+### `grey`
+
+```{r seq-pal-grey}
+plot_pal(omics_pal_c(palette = "grey")(7))
+```
+
+
+## Diverging Color Palettes
+
+Diverging palettes are a gradient consisting of two hues that are blended towards the center values (midpoint). The palettes are designed in a way that colors usually associated with "bad" or "lows" such as red and orange are pointing towards the minimal values. Keep in mind that the midpoint should be picked with care and be meaningful to the reader (i.e. why are values below the midpoint different from those above the threshold?).
+
+Create diverging color palettes with `omics_pal_c()`. By default, the *alarming* colors such as red, orange, and yellow are mapped to the lower, most often negative. 
+
+In general, there are two types of diverging palettes: those that blend two main colors and a version with grey as midpoint color.
+
+### `brand_blue`
+
+```{r div-pal-blue-red}
+plot_pal(omics_pal_c(palette = "blue_red")(7))
+```
+
+### `blue_orange`
+
+```{r div-pal-blue-orange}
+plot_pal(omics_pal_c(palette = "blue_orange")(7))
+```
+
+### `turq_yellow`
+
+```{r div-pal-turq-yellow}
+plot_pal(omics_pal_c(palette = "turq_yellow")(7))
+```
+
+### `blue_red_grey`
+
+```{r div-pal-blue-red-grey}
+plot_pal(omics_pal_c(palette = "blue_red_grey")(7))
+```
+
+### `blue_orange`
+
+```{r div-pal-midblue-orange-grey}
+plot_pal(omics_pal_c(palette = "blue_orange_grey")(7))
+```
+
+### `turq_yellow_grey`
+
+```{r div-pal-turq-yellow-grey}
+plot_pal(omics_pal_c(palette = "turq_yellow_grey")(7))
+```
+
+
+## Categorical Color Palettes
+
+Categorical color palettes are used for qualitative data and should feature a number of distinct colors of similar visual weight. For most use cases, categorical colors should be limited to 4-6 and never exceed 8 categories.
+
+Create categorical color palettes with `omics_pal_d()`. All categorical color palettes are for now variants of the same color palette called `default`. The categorical palette is limited to a eight unique colors, with the first being the brand blue. However, given the limited number of available colors palettes with more than four colors do not ensure similar visual weights.
+
+### `default`
+
+```{r cat-pal-default}
+plot_pal(omics_pal_d()(10))
+```
+
+### `dark`
+
+```{r cat-pal-dark}
+plot_pal(omics_pal_d(palette = "dark")(10))
+```
+
+### `super_dark`
+
+```{r cat-pal-super-dark}
+plot_pal(omics_pal_d(palette = "super_dark")(10))
+```
+
+### `light`
+
+```{r cat-pal-light}
+plot_pal(omics_pal_d(palette = "light")(10))
+```
+
+### `super_light`
+
+```{r cat-pal-super-light}
+plot_pal(omics_pal_d(palette = "super_light")(10))
+```
+
+### `muted`
+
+```{r cat-pal-muted}
+plot_pal(omics_pal_d(palette = "muted")(10))
+```
+
+
+# Working with Color Palettes
+
+### Reverse a Palette
+
+```{r reverse-a}
+plot_pal(omics_pal_c(reverse = TRUE)(7))
+```
+
+```{r reverse-b}
+plot_pal(omics_pal_c(palette = "blue_red_grey", reverse = TRUE)(7))
+```
+
+```{r reverse-c}
+plot_pal(omics_pal_d(reverse = TRUE)(4))
+```
+
+
+### Only Pick a Subset of Colors
+
+```{r subset}
+plot_pal(omics_pal_d()(10)[c(1:3, 7, 10)])
+```
+
+
+<details><summary>Session Info</summary>
+
+```{r sessionInfo, echo=FALSE}
+Sys.time()
+sessionInfo()
+```
+
+</details>

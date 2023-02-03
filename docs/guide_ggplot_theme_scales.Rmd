@@ -1,5 +1,7 @@
 ---
-title: "Omicsplayground Theme + Color Palettes"
+title: "Omicsplayground Theme + Scales for ggplot2"
+author: "Cédric Scherer"
+date: "`r Sys.Date()`"
 output: 
   html_document:
     theme: united
@@ -14,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.height = 5, fig.width = 8)
 
 source(here::here("components", "base", "R", "ggplot-theme.R"))
-source(here::here("components", "base", "R", "ggplot-colors.R")) #"omicsplayground", 
+source(here::here("components", "base", "R", "ggplot-colors.R")) 
 ```
 
 # Setup
@@ -56,64 +58,8 @@ The function family `scale_color|fill_omics_*` can be used to apply these colors
 
 ## Sequential Palettes
 
-### Brand Blue (Default)
-
 ```{r omics-scale-continuous-brand-blue}
 p1 + scale_color_omics_c(palette = "brand_blue")
-```
-
-### Bright Blue
-
-```{r omics-scale-continuous-bright-blue}
-p1 + scale_color_omics_c(palette = "bright_blue")
-```
-
-### Red
-
-```{r omics-scale-continuous-red}
-p1 + scale_color_omics_c(palette = "red")
-```
-
-### Turquoise
-
-```{r omics-scale-continuous-turquoise}
-p1 + scale_color_omics_c(palette = "turquoise")
-```
-
-### Orange
-
-```{r omics-scale-continuous-orange}
-p1 + scale_color_omics_c(palette = "orange")
-```
-
-### Yellow
-
-```{r omics-scale-continuous-yellow}
-p1 + scale_color_omics_c(palette = "yellow")
-```
-
-### Purple
-
-```{r omics-scale-continuous-purple}
-p1 + scale_color_omics_c(palette = "purple")
-```
-
-### Green
-
-```{r omics-scale-continuous-green}
-p1 + scale_color_omics_c(palette = "green")
-```
-
-### Light Green
-
-```{r omics-scale-continuous-light-green}
-p1 + scale_color_omics_c(palette = "light_green")
-```
-
-### Grey
-
-```{r omics-scale-continuous-grey}
-p1 + scale_color_omics_c(palette = "grey")
 ```
 
 
@@ -121,40 +67,8 @@ p1 + scale_color_omics_c(palette = "grey")
 
 Diverging palettes are a gradient consisting of two hues that are blended towards the center values (midpoint). The palettes are designed in a way that colors usually associated with "bad" or "lows" such as red and orange are pointing towards the minimal values. Keep in mind that the midpoint should be picked with care and be meaningful to the reader (i.e. why are values below the midpoint different from those above the threshold?).
 
-### Blue-Red
-
 ```{r omics-scale-continuous-blue-red}
 p1 + scale_color_omics_c(palette = "blue_red")
-```
-
-### Turquoise-Yellow
-
-```{r omics-scale-continuous-turquoise-yellow}
-p1 + scale_color_omics_c(palette = "turq_yellow")
-```
-
-### Purple-Orange
-
-```{r omics-scale-continuous-purple-orange}
-p1 + scale_color_omics_c(palette = "purple_orange")
-```
-
-### Blue-Grey-Red
-
-```{r omics-scale-continuous-blue-red-grey}
-p1 + scale_color_omics_c(palette = "blue_red_grey")
-```
-
-### Turquoise-Grey-Yellow
-
-```{r omics-scale-continuous-turquoise-yellow-grey}
-p1 + scale_color_omics_c(palette = "turq_yellow_grey")
-```
-
-### Purple-Grey-Orange
-
-```{r omics-scale-continuous-purple-orange-grey}
-p1 + scale_color_omics_c(palette = "purple_orange_grey")
 ```
 
 
@@ -162,40 +76,8 @@ p1 + scale_color_omics_c(palette = "purple_orange_grey")
 
 All categorical color palettes are variants of the same color palette called `default`. The categorical palette is limited to a eight unique colors, with the first being the brand blue. For most use cases, categorical colors should be limited to 4-6 and never exceed 8 categories.
 
-### Default
-
 ```{r omics-scale-discrete-default}
 p2 + scale_fill_omics_d(palette = "default")
-```
-
-### Light
-
-```{r omics-scale-discrete-light}
-p2 + scale_fill_omics_d(palette = "light")
-```
-
-### Super-Light
-
-```{r omics-scale-discrete-super-light}
-p2 + scale_fill_omics_d(palette = "super_light")
-```
-
-### Dark
-
-```{r omics-scale-discrete-dark}
-p2 + scale_fill_omics_d(palette = "dark")
-```
-
-### Super-Dark
-
-```{r omics-scale-discrete-super-dark}
-p2 + scale_fill_omics_d(palette = "super_dark")
-```
-
-### Muted
-
-```{r omics-scale-discrete-muted}
-p2 + scale_fill_omics_d(palette = "muted")
 ```
   
 
@@ -331,3 +213,13 @@ p2 +
   ## add an outline to illustrate the effect
   theme(plot.background = element_rect(color = "black"))
 ```
+
+
+<details><summary>Session Info</summary>
+
+```{r sessionInfo, echo=FALSE}
+Sys.time()
+sessionInfo()
+```
+
+</details>
