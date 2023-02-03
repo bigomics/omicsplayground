@@ -21,6 +21,12 @@ WORKDIR = getwd()
 message(">>>>> working directory = ",WORKDIR)
 message(">>>>> LOADING INITIAL LIBS")
 
+## session control
+SERVER_NAME = paste(sample(LETTERS,5),collapse="")
+ACTIVE_SESSIONS = c()
+MAX_SESSIONS = 1
+message("SERVER_NAME = ",SERVER_NAME)
+
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
@@ -274,7 +280,31 @@ server = function(input, output, session) {
     dbg("[SERVER] 0: SESSION = ",session$token)
     ##dbg("[SERVER] 0: names(session) = ",names(session))
 
+    ## max session control
+    ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
+    cat("ACTIVE_SESSIONS = \n  ", paste(ACTIVE_SESSIONS,collapse='\n   '), "\n")
+    if(length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
+        dbg("ERROR: Too many sessions. stopping session!!!\n")
+        srv <- paste0(isolate(session$clientData$url_hostname),":",SERVER_NAME)
+        sever_screen_503 <- shiny::tagList(
+            shiny::tags$h1(
+                "Sorry, the Playground is crowded!", style="color:white;font-family:lato;"
+            ),
+            shiny::p("Our server is at capacity or someone else is already using
+                this account. Please try again later.", style="font-size:15px;"),            
+            shiny::br(),
+            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
+                width=350,height=200)),
+            shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
+            shiny::br(),shiny::br(),
+            sever::reload_button("Retry", class = "info")
+        )
+        sever::sever(sever_screen_503, bg_color = "#000000") ## lightblue=2780e3        
+        #Sys.sleep(10)
+        session$close()
+    }
     
+    ## setup Sever screen
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
     if(1 && has.honcho) {
@@ -284,7 +314,6 @@ server = function(input, output, session) {
         ## No honcho, no email....
         sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
     }
-    
     setwd(WORKDIR)  ## for some reason it can change!!
     dbg("[SERVER] 1: getwd = ",getwd())
     
@@ -790,13 +819,15 @@ server = function(input, output, session) {
     
     ## This code will be run after the client has disconnected
     ## Note!!!: Strange behaviour, sudden session ending.
-    session$onSessionEnded(function() {
+    onSessionEnded(function(s=session$token) {
         message("******** doing session cleanup ********")
-        ## fill me...
+
+        cat("removing from active sessions :",s,"\n")
+        ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
+
         if(opt$AUTHENTICATION == "shinyproxy") {
             session$sendCustomMessage("shinyproxy-logout", list())            
-        }
-        
+        }        
     })    
 
     ##-------------------------------------------------------------
@@ -928,7 +959,7 @@ createUI <- function(tabs)
     )
     names(header) <- NULL
     
-    footer.gif = shiny::tagList(
+    footer = shiny::tagList(
         shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
             background="#2780e3", color="#ffffff",
@@ -936,7 +967,6 @@ createUI <- function(tabs)
             loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
         )
     )
-    footer = footer.gif
     
     ##-------------------------------------
     ## create TAB list
@@ -1014,8 +1044,7 @@ ui = tagList(
 
 onStop(function() {
     message("*************** onStop:: doing application cleanup ****************")
-    message("[APP] App died... ")
-    
+    message("[APP] App died... ")    
     ## Fill me...
 })
 
