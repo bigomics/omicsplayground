@@ -28,7 +28,7 @@ Small utility function to visualize color palettes and a desatured version of th
 ```{r function-plot-pal}
 plot_pal <- function(pal) { 
   plot(prismatic::color(pal))
-  plot(prismatic::clr_desaturate(prismatic::color(pal), 1))
+  plot(prismatic::color(colorspace::desaturate(pal, 1)))
 }
 ```
 
@@ -40,13 +40,33 @@ Retrieve single colors or a set of colors with `omics_colors()`.
 ```{r omics-colors}
 omics_colors("brand_blue")
 omics_colors(c("brand_blue", "red", "mid_grey"))
-omics_colors()[1:3]
+omics_colors()[1:4]
 ```
 
 ### All Available Colors
 
-```{r all-omics-colors}
-plot_pal(omics_colors(1:16))
+```{r omics-colors.all}
+omics_colors()[1:14]
+plot_pal(omics_colors(1:14))
+```
+
+
+### Main Colors
+
+```{r omics-colors-main}
+plot_pal(omics_colors(1:8))
+```
+
+### Additional Bright Colors
+
+```{r omics-colors-add-on}
+plot_pal(omics_colors(c(9:11)))
+```
+
+### Grey Colors
+
+```{r omics-colors-greys}
+plot_pal(omics_colors(c(8, 12:14)))
 ```
 
 
@@ -66,32 +86,10 @@ BS Color "Bleu De France" (primary)
 plot_pal(omics_pal_c()(7))
 ```
 
-### `bright_blue`
+### `dark_orange` 
 
-```{r seq-pal-bright-blue}
-plot_pal(omics_pal_c(palette = "bright_blue")(7))
-```
-
-### `pastel_blue` 
-
-BS Color "Dark Pastel Blue" (secondary)
-
-```{r seq-pal-pastel-blue}
-plot_pal(omics_pal_c(palette = "pastel_blue")(7))
-```
-
-### `red`
-
-```{r seq-pal-red}
-plot_pal(omics_pal_c(palette = "red")(7))
-```
-
-### `terra_cotta` 
-
-BS Color "Dark Terra Cotta" (warning)
-
-```{r seq-pal-terra-cotta}
-plot_pal(omics_pal_c(palette = "terra_cotta")(7))
+```{r seq-pal-dark-orange}
+plot_pal(omics_pal_c(palette = "dark_orange")(7))
 ```
 
 ### `turquoise`
@@ -102,16 +100,12 @@ BS Color "Viridian Green" (success)
 plot_pal(omics_pal_c(palette = "turquoise")(7))
 ```
 
-### `yellow`
+### `terra_cotta` 
 
-```{r seq-pal-yellow}
-plot_pal(omics_pal_c(palette = "yellow")(7))
-```
+BS Color "Dark Terra Cotta" (warning)
 
-### `orange` (BS Color "Indian Yellow = warning)
-
-```{r seq-pal-orange}
-plot_pal(omics_pal_c(palette = "orange")(7))
+```{r seq-pal-terra-cotta}
+plot_pal(omics_pal_c(palette = "terra_cotta")(7))
 ```
 
 ### `purple`
@@ -126,16 +120,36 @@ plot_pal(omics_pal_c(palette = "purple")(7))
 plot_pal(omics_pal_c(palette = "green")(7))
 ```
 
-### `light_green`
+### `pastel_blue` 
 
-```{r seq-pal-light_green}
-plot_pal(omics_pal_c(palette = "light_green")(7))
+BS Color "Dark Pastel Blue" (secondary)
+
+```{r seq-pal-pastel-blue}
+plot_pal(omics_pal_c(palette = "pastel_blue")(7))
 ```
 
 ### `grey`
 
 ```{r seq-pal-grey}
 plot_pal(omics_pal_c(palette = "grey")(7))
+```
+
+### `red`
+
+```{r seq-pal-red}
+plot_pal(omics_pal_c(palette = "red")(7))
+```
+
+### `bright_blue`
+
+```{r seq-pal-bright-blue}
+plot_pal(omics_pal_c(palette = "bright_blue")(7))
+```
+
+### `orange`
+
+```{r seq-pal-orange}
+plot_pal(omics_pal_c(palette = "orange")(7))
 ```
 
 
@@ -159,10 +173,16 @@ plot_pal(omics_pal_c(palette = "blue_red")(7))
 plot_pal(omics_pal_c(palette = "blue_orange")(7))
 ```
 
-### `turq_yellow`
+### `pastel_blue_orange`
 
-```{r div-pal-turq-yellow}
-plot_pal(omics_pal_c(palette = "turq_yellow")(7))
+```{r div-pal-pastelblue-orange}
+plot_pal(omics_pal_c(palette = "pastel_blue_orange")(7))
+```
+
+### `turq_orange`
+
+```{r div-pal-turq-orange}
+plot_pal(omics_pal_c(palette = "turq_orange")(7))
 ```
 
 ### `blue_red_grey`
@@ -171,16 +191,22 @@ plot_pal(omics_pal_c(palette = "turq_yellow")(7))
 plot_pal(omics_pal_c(palette = "blue_red_grey")(7))
 ```
 
-### `blue_orange`
+### `blue_orange_grey`
 
-```{r div-pal-midblue-orange-grey}
+```{r div-pal-blue-orange-grey}
 plot_pal(omics_pal_c(palette = "blue_orange_grey")(7))
 ```
 
-### `turq_yellow_grey`
+### `pastel_blue_orange_grey`
 
-```{r div-pal-turq-yellow-grey}
-plot_pal(omics_pal_c(palette = "turq_yellow_grey")(7))
+```{r div-pal-pastelblue-orange-grey}
+plot_pal(omics_pal_c(palette = "pastel_blue_orange_grey")(7))
+```
+
+### `turq_orange_grey`
+
+```{r div-pal-turq-orange-grey}
+plot_pal(omics_pal_c(palette = "turq_orange_grey")(7))
 ```
 
 
@@ -193,37 +219,71 @@ Create categorical color palettes with `omics_pal_d()`. All categorical color pa
 ### `default`
 
 ```{r cat-pal-default}
-plot_pal(omics_pal_d()(10))
+plot_pal(omics_pal_d()(8))
 ```
 
 ### `dark`
 
 ```{r cat-pal-dark}
-plot_pal(omics_pal_d(palette = "dark")(10))
+plot_pal(omics_pal_d(palette = "dark")(8))
 ```
 
 ### `super_dark`
 
 ```{r cat-pal-super-dark}
-plot_pal(omics_pal_d(palette = "super_dark")(10))
+plot_pal(omics_pal_d(palette = "super_dark")(8))
 ```
 
 ### `light`
 
 ```{r cat-pal-light}
-plot_pal(omics_pal_d(palette = "light")(10))
+plot_pal(omics_pal_d(palette = "light")(8))
 ```
 
 ### `super_light`
 
 ```{r cat-pal-super-light}
-plot_pal(omics_pal_d(palette = "super_light")(10))
+plot_pal(omics_pal_d(palette = "super_light")(8))
 ```
 
 ### `muted`
 
 ```{r cat-pal-muted}
-plot_pal(omics_pal_d(palette = "muted")(10))
+plot_pal(omics_pal_d(palette = "muted")(8))
+```
+
+### `muted_light`
+
+```{r cat-pal-muted-light}
+plot_pal(omics_pal_d(palette = "muted_light")(8))
+```
+
+### `expanded`
+
+(only to be used in extreme cases as it resamples the same categorical colors in different shades and allows to color many more categories than recommended)
+
+```{r cat-pal-expanded, fig.show='asis', out.width="100%"}
+plot_pal(omics_pal_d(palette = "expanded")(32))
+```
+
+## Categorical Palettes to Highlight a Specific Group
+
+### `highlight_blue`
+
+```{r cat-pal-hl1}
+plot_pal(omics_pal_d(palette = "highlight_blue")(6))
+```
+
+### `highlight_red`
+
+```{r cat-pal-hl2}
+plot_pal(omics_pal_d(palette = "highlight_red")(6))
+```
+
+### `highlight_orange`
+
+```{r cat-pal-hl3}
+plot_pal(omics_pal_d(palette = "highlight_orange")(6))
 ```
 
 
@@ -247,7 +307,7 @@ plot_pal(omics_pal_d(reverse = TRUE)(4))
 ### Only Pick a Subset of Colors
 
 ```{r subset}
-plot_pal(omics_pal_d()(10)[c(1:3, 7, 10)])
+plot_pal(omics_pal_d(palette = "highlight_blue")(5)[c(1, 3, 5)])
 ```
 
 
