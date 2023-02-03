@@ -29,25 +29,24 @@ generate_colors <- function(hex, discrete = FALSE) {
 #'
 #' @export
 omics_colors <- function(...) {
-  ## mixture of Matt's data colors + BS colors
   omics_cols <- c(
-    ## colors
+    ## main colors
     `brand_blue`      = "#3181de", ## BS color (primary)
-    `bright_blue`     = "#2fb5e3",
-    `pastel_blue`     = "#81a1c1", ## BS color (secondary)
+    `dark_orange`     = "#BC7408",
     `turquoise`       = "#009c9f", ## BS color (success)
+    `terra_cotta`     = "#bf616a", ## BS color (danger)
+    `purple`          = "#A06EC5",
+    `green`           = "#5B9B5B",
+    `pastel_blue`     = "#81a1c1", ## BS color (secondary)
+    `dark_grey`       = "#989898",
+    ## back-up colors
     `red`             = "#f23451",
     `orange`          = "#e3a45a", ## BS color (warning)
-    `yellow`          = "#ffd90e",
-    `terra_cotta`     = "#bf616a", ## BS color (danger)
-    `purple`          = "#c7a4ff",
-    `green`           = "#99d4a9",
-    `light_green`     = "#c7dd03",
-    ## greys
-    `light_grey`      = "#f8f8f8",
+    `bright_blue`     = "#2fb5e3",
+    ## grey shades
+    `super_dark_grey` = "#3b4252", ## BS color (dark)
     `mid_grey`        = "#d8d8d8",
-    `dark_grey`       = "#989898",
-    `super_dark_grey` = "#3b4252"  ## BS color (dark)
+    `grey`            = "#eeeeee"
   )
 
   cols <- c(...)
@@ -75,29 +74,32 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
 
   palette <- stringr::str_to_lower(palette)
 
-  if (!palette %in% c("brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "blue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "blue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", or "purple_orange_grey".')
+  if (!palette %in% c("brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey" or "purple_orange_grey".')
+  if (!is.logical(reverse)) stop('reverse should be logical.')
 
   omics_palettes <- list(
     ## sequential palettes based on gradients of unique data colours
-    `brand_blue`          = unname(generate_colors(omics_colors("brand_blue"))),
-    `bright_blue`         = unname(generate_colors(omics_colors("bright_blue"))),
-    `pastel_blue`         = unname(generate_colors(omics_colors("pastel_blue"))),
-    `turquoise`           = unname(generate_colors(omics_colors("turquoise"))),
-    `red`                 = unname(generate_colors(omics_colors("red"))),
-    `terra_cotta`         = unname(generate_colors(omics_colors("terra_cotta"))),
-    `yellow`              = unname(generate_colors(omics_colors("orange"))),
-    `orange`              = unname(generate_colors(omics_colors("yellow"))),
-    `purple`              = unname(generate_colors(omics_colors("purple"))),
-    `green`               = unname(generate_colors(omics_colors("green"))),
-    `light_green`         = unname(generate_colors(omics_colors("light_green"))),
-    `grey`                = unname(omics_colors(c("mid_grey", "super_dark_grey"))),
+    `brand_blue`              = unname(generate_colors(omics_colors("brand_blue"))),
+    `dark_orange`             = unname(generate_colors(omics_colors("dark_orange"))),
+    `turquoise`               = unname(generate_colors(omics_colors("turquoise"))),
+    `terra_cotta`             = unname(generate_colors(omics_colors("terra_cotta"))),
+    `purple`                  = unname(generate_colors(omics_colors("purple"))),
+    `green`                   = unname(generate_colors(omics_colors("green"))),
+    `pastel_blue`             = unname(generate_colors(omics_colors("pastel_blue"))),
+    `red`                     = unname(generate_colors(omics_colors("red"))),
+    `bright_blue`             = unname(generate_colors(omics_colors("bright_blue"))),
+    `orange`                  = unname(generate_colors(omics_colors("orange"))),
+    `light_green`             = unname(generate_colors(omics_colors("light_green"))),
+    `grey`                    = unname(omics_colors(c("grey", "super_dark_grey"))),
     ## diverging palettes based on multiple data colours
-    `blue_red`            = unname(omics_colors(c("red", "brand_blue"))),
-    `blue_orange`         = unname(omics_colors(c("orange", "brand_blue"))),
-    `turq_yellow`         = unname(omics_colors(c("yellow", "grey", "turquoise"))),
-    `blue_red_grey`       = unname(omics_colors(c("red", "mid_grey", "brand_blue"))),
-    `blue_orange_grey`    = unname(omics_colors(c("orange", "mid_grey", "brand_blue"))),
-    `turq_yellow_grey`    = unname(omics_colors(c("yellow", "mid_grey", "turquoise")))
+    `blue_red`                = unname(omics_colors(c("red", "brand_blue"))),
+    `blue_orange`      = unname(omics_colors(c("dark_orange", "bright_blue"))),
+    `pastel_blue_orange`      = unname(omics_colors(c("orange", "pastel_blue"))),
+    `turq_orange`             = unname(omics_colors(c("dark_orange", "turquoise"))),
+    `blue_red_grey`           = unname(omics_colors(c("red", "grey", "brand_blue"))),
+    `blue_orange_grey` = unname(omics_colors(c("dark_orange", "grey", "brand_blue"))),
+    `pastel_blue_orange_grey` = unname(omics_colors(c("orange", "grey", "pastel_blue"))),
+    `turq_orange_grey`        = unname(omics_colors(c("dark_orange", "grey", "turquoise")))
   )
 
   pal <- omics_palettes[[palette]]
@@ -123,20 +125,26 @@ omics_pal_d <- function(palette = "default", reverse = FALSE) {
 
   palette <- stringr::str_to_lower(palette)
 
-  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light" or "expanded".')
+  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red", "highlight_orange")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red" or "highlight_orange".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
 
-  cat_colors <- unname(omics_colors("brand_blue", "red", "orange", "yellow", "turquoise", "purple", "green", "light_green", "bright_blue", "pastel_blue", "dark_grey"))
+  cat_colors <- unname(omics_colors("brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "dark_grey"))
+  hl1_colors <- c(unname(omics_colors("brand_blue")), colorRampPalette(omics_colors("grey", "dark_grey"))(5))
+  hl2_colors <- c(unname(omics_colors("red")), colorRampPalette(omics_colors("grey", "dark_grey"))(5))
+  hl3_colors <- c(unname(omics_colors("dark_orange")), colorRampPalette(omics_colors("grey", "dark_grey"))(5))
 
   omics_palettes <- list(
-    `default`     = cat_colors,
-    `light`       = colorspace::lighten(cat_colors, .3),
-    `dark`        = colorspace::darken(cat_colors, .2),
-    `super_light` = colorspace::lighten(cat_colors, .6),
-    `super_dark`  = colorspace::darken(cat_colors, .4),
-    `muted`       = colorspace::desaturate(cat_colors, .5),
-    `muted_light` = colorspace::desaturate(colorspace::lighten(cat_colors, .6), .3),
-    `expanded`    = c(cat_colors, colorspace::darken(cat_colors, .4), colorspace::desaturate(cat_colors, .5), colorspace::lighten(cat_colors, .6))
+    `default`          = cat_colors,
+    `light`            = colorspace::lighten(cat_colors, .3),
+    `dark`             = colorspace::darken(cat_colors, .2),
+    `super_light`      = colorspace::lighten(cat_colors, .6),
+    `super_dark`       = colorspace::darken(cat_colors, .4),
+    `muted`            = colorspace::desaturate(cat_colors, .5),
+    `muted_light`      = colorspace::desaturate(colorspace::lighten(cat_colors, .6), .3),
+    `expanded`         = c(cat_colors, colorspace::darken(cat_colors, .4), colorspace::lighten(cat_colors, .6), colorspace::desaturate(cat_colors, .5)),
+    `highlight_blue`   = hl1_colors,
+    `highlight_red`    = hl2_colors,
+    `highlight_orange` = hl3_colors
   )
 
   pal <- omics_palettes[[palette]]
@@ -161,17 +169,48 @@ omics_pal_d <- function(palette = "default", reverse = FALSE) {
 #'   scale_color_omics_c()
 #' ggplot(iris, aes(Sepal.Width, Sepal.Length, color = Petal.Width)) +
 #'   geom_point(size = 4) +
-#'   scale_color_omics_c("TURQ_yellow_GREY", reverse = TRUE)
+#'   scale_color_omics_c("turq_orange_GREY", reverse = TRUE)
 #' @export
 scale_color_omics_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
 
   palette <- stringr::str_to_lower(palette)
 
-  if (!palette %in% c("brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "blue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", or "purple_orange_grey".')
+  if (!palette %in% c("brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey" or "purple_orange_grey".')
+  if (!is.logical(reverse)) stop('reverse should be logical.')
 
   pal <- omics_pal_c(palette = palette, reverse = reverse)
 
   ggplot2::scale_color_gradientn(colours = pal(256), ...)
+}
+
+#' Fill scale constructor for continuous omics color palettes
+#'
+#' @param palette Character name of palette in omics_palettes
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments passed to discrete_scale() or
+#'            scale_fill_gradientn(), used respectively when discrete is TRUE
+#'            or FALSE
+#'
+#' @examples
+#' library(ggplot2)
+#' ggplot(mpg, aes(displ, cty, fill = hwy)) +
+#'   geom_point(shape = 21, size = 4, stroke = 1) +
+#'   scale_fill_omics_c()
+#' ggplot(iris, aes(Sepal.Width, Sepal.Length, fill = Petal.Width)) +
+#'   geom_point(shape = 21, size = 4, stroke = 1) +
+#'   scale_fill_omics_c("blue_red_grey", reverse = TRUE)
+#'
+#' @export
+scale_fill_omics_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
+
+  palette <- stringr::str_to_lower(palette)
+
+  if (!palette %in% c("brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "dark_orange", "turquoise", "terra_cotta", "purple", "green", "pastel_blue", "grey", "red", "orange", "blue_red", "blue_orange", "pastel_blue_orange", "turq_orange", "purple_orange", "blue_red_grey", "blue_orange_grey", "pastel_blue_orange_grey", "turq_orange_grey" or "purple_orange_grey".')
+  if (!is.logical(reverse)) stop('reverse should be logical.')
+
+  pal <- omics_pal_c(palette = palette, reverse = reverse)
+
+  ggplot2::scale_fill_gradientn(colours = pal(256), ...)
 }
 
 #' Color scale constructor for discrete omics colors
@@ -196,41 +235,12 @@ scale_color_omics_d <- function(palette = "default", reverse = FALSE, ...) {
 
   palette <- stringr::str_to_lower(palette)
 
-  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded")) stop('palette should be one of "default", "light", "super_light", "super_dark", "muted", "muted_light" or "expanded".')
+  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red", "highlight_orange")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red" or "highlight_orange".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
 
   pal <- omics_pal_d(palette = palette, reverse = reverse)
 
   ggplot2::discrete_scale("colour", paste0("omics_", palette), palette = pal, ...)
-}
-
-#' Fill scale constructor for continuous omics color palettes
-#'
-#' @param palette Character name of palette in omics_palettes
-#' @param reverse Boolean indicating whether the palette should be reversed
-#' @param ... Additional arguments passed to discrete_scale() or
-#'            scale_fill_gradientn(), used respectively when discrete is TRUE
-#'            or FALSE
-#'
-#' @examples
-#' library(ggplot2)
-#' ggplot(mpg, aes(displ, cty, fill = hwy)) +
-#'   geom_point(shape = 21, size = 4, stroke = 1) +
-#'   scale_fill_omics_c()
-#' ggplot(iris, aes(Sepal.Width, Sepal.Length, fill = Petal.Width)) +
-#'   geom_point(shape = 21, size = 4, stroke = 1) +
-#'   scale_fill_omics_c("blue_red_grey", "blue_orange_grey", reverse = TRUE)
-#'
-#' @export
-scale_fill_omics_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
-
-  palette <- stringr::str_to_lower(palette)
-
-  if (!palette %in% c("brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "blue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", "purple_orange_grey")) stop('palette should be one of "brand_blue", "bright_blue", "pastel_blue", "red", "terra_cotta", "turquoise", "yellow", "orange", "purple", "green", "light_green", "grey", "blue_red", "blue_orange", "turq_yellow", "purple_orange", "blue_red_grey", "blue_orange_grey", "turq_yellow_grey", or "purple_orange_grey".')
-
-  pal <- omics_pal_c(palette = palette, reverse = reverse)
-
-  ggplot2::scale_fill_gradientn(colours = pal(256), ...)
 }
 
 
@@ -260,7 +270,7 @@ scale_fill_omics_d <- function(palette = "default", reverse = FALSE, ...) {
 
   palette <- stringr::str_to_lower(palette)
 
-  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light" or "expanded".')
+  if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red", "highlight_orange")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red" or "highlight_orange".')
   if (!is.logical(reverse)) stop('reverse should be logical.')
 
   pal <- omics_pal_d(palette = palette, reverse = reverse)
