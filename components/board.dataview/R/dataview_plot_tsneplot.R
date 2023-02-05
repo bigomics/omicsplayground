@@ -178,7 +178,7 @@ dataview_plot_tsne_server <- function(id,
       gene <- data[[2]]
       symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up", "star-diamond", "square-cross", "diamond-wide")
 
-      if (!is.null(plot_data()$group)) { ## TODO: doesn't update in case grouping is changed
+      if (!is.null(df$group)) {
         fig <-
           plotly::plot_ly(
             data = df,
@@ -200,7 +200,8 @@ dataview_plot_tsne_server <- function(id,
             hovertemplate = ~ paste(
               "Gene:<b>", gene,
               "</b><br>Sample:<b>", name, "</b><br>",
-              "Expression:<b>", sprintf("%1.3f", expression), "</b>",
+              "Expression:<b>", sprintf("%1.3f", expression), "</b><br>",
+              "Group:<b>", sprintf("%s", as.character(df$group)), "</b>",
               "<extra></extra>"
             )
           )
