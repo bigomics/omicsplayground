@@ -99,18 +99,11 @@ PlotModuleUI <- function(id,
     options.button <- ""
 
     if(!just.info && !is.null(options) && length(options)>0) {
-        options.button <- shinyWidgets::dropdownButton(
-            ##shiny::tags$h3("Options"),
-            options,
-            ##shiny::br(),
-            ##dload,
-            circle = TRUE, size = "xs", ## status = "danger",
-            ##icon = shiny::icon("gear"),
-            ##icon = shiny::icon("align-justify"),
-            icon = shiny::icon("bars"),
-            width = "250px",
-            inputId = ns("options"),
-            tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
+        options.button <- DropdowMenu(
+          options,
+          size = "xs",
+          icon = shiny::icon("bars"),
+          status = "default"
         )
     }
 
@@ -133,22 +126,26 @@ PlotModuleUI <- function(id,
         )
     }
 
-    dload.button <- shinyWidgets::dropdownButton(
-      shiny::selectInput(
-        inputId = ns("downloadOption"),
-        label = "Format",
-        choices = download.fmt
-      ),
+    dload.button <- DropdowMenu(
+      div(
+        style = "width: 150px;",
+        shiny::selectInput(
+          inputId = ns("downloadOption"),
+          label = "Format",
+          choices = download.fmt
+        ),
         pdf_size,
         shiny::br(),
-        shiny::downloadButton(
-          outputId = ns("download"),
-          label = "Download",
-        ),
-        inputId = ns("download_dropdown"),
-        circle = TRUE, size = "xs", ## status = "danger",
-        icon = shiny::icon("download"), width = "40px", right=FALSE,
-        tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
+        div(
+          shiny::downloadButton(
+            outputId = ns("download"),
+            label = "Download",
+          )
+        )
+      ),
+      size = "xs",
+      icon = shiny::icon("download"),
+      status = "default"
     )
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
@@ -161,7 +158,7 @@ PlotModuleUI <- function(id,
         zoom.button <- modalTrigger(ns("zoombutton"),
             ns("plotPopup"),
             icon("window-maximize"),
-            class="btn-circle-xs"
+            class="btn-circle-xs dropdown-button"
         )
     }
 
@@ -171,13 +168,12 @@ PlotModuleUI <- function(id,
         label1,
 ##      shiny::HTML(paste("<center>",title,"</center>")),
         shiny::div(class='plotmodule-title', title=title, title),
-        shinyWidgets::dropdownButton(
+        DropdowMenu(
             shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = shiny::icon("info"), width = info.width,
-            inputId = ns("info"), right=FALSE,
-            tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
+            size = "xs",
+            icon = shiny::icon("info"),
+            status = "default"
         ),
         options.button,
         shiny::div(class='download-button', title='download', dload.button),
@@ -792,43 +788,6 @@ PlotModuleServer <- function(
 
           output$renderfigure <- render
           output$renderpopup  <- render2
-
-          ##--------------------------------------------------------------------------------
-          ##---------------------------- DROPDOWN ONLY-ONE-AT-A-TIME -----------------------
-          ##--------------------------------------------------------------------------------
-
-          observeEvent(list(input$info), {
-            if(!is.null(input$download_dropdown_state) &&
-               input$download_dropdown_state){
-              shinyWidgets::toggleDropdownButton(inputId = "download_dropdown")
-            }
-            if(!is.null(input$options_state) &&
-               input$options_state){
-              shinyWidgets::toggleDropdownButton(inputId = "options")
-            }
-          }, ignoreInit = TRUE)
-
-          observeEvent(list(input$download_dropdown), {
-            if(!is.null(input$info_state) &&
-               input$info_state){
-              shinyWidgets::toggleDropdownButton(inputId = "info")
-            }
-            if(!is.null(input$options_state) &&
-               input$options_state){
-              shinyWidgets::toggleDropdownButton(inputId = "options")
-            }
-          }, ignoreInit = TRUE)
-
-          observeEvent(list(input$options), {
-            if(!is.null(input$info_state) &&
-               input$info_state){
-              shinyWidgets::toggleDropdownButton(inputId = "info")
-            }
-            if(!is.null(input$download_dropdown_state) &&
-               input$download_dropdown_state){
-              shinyWidgets::toggleDropdownButton(inputId = "download_dropdown")
-            }
-          }, ignoreInit = TRUE)
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- RETURN VALUE --------------------------------------

@@ -10,7 +10,7 @@ modalTrigger <- function(
     class
   )
 
-  tags$button(
+  tags$a(
     id = id,
     ...,
     `data-bs-toggle` = "modal",
@@ -44,7 +44,7 @@ modalUI <- function(
       "fullscreen" = "modal-fullscreen",
       ""
   )
-  
+
   tags$div(
     class = "modal fade",
     id = id,
@@ -79,23 +79,23 @@ modalUI <- function(
 }
 
 
-modalDialog2 <- function (..., header = NULL, footer = modalButton("Dismiss"), 
-    size = c("m", "s", "l", "xl","fullscreen"), easyClose = FALSE, fade = TRUE) 
+modalDialog2 <- function (..., header = NULL, footer = modalButton("Dismiss"),
+    size = c("m", "s", "l", "xl","fullscreen"), easyClose = FALSE, fade = TRUE)
 {
     size <- match.arg(size)
-    backdrop <- if (!easyClose) 
+    backdrop <- if (!easyClose)
         "static"
-    keyboard <- if (!easyClose) 
+    keyboard <- if (!easyClose)
         "false"
-    div(id = "shiny-modal", class = "modal", class = if (fade) 
-        "fade", tabindex = "-1", `data-backdrop` = backdrop, 
-        `data-bs-backdrop` = backdrop, `data-keyboard` = keyboard, 
-        `data-bs-keyboard` = keyboard, div(class = "modal-dialog", 
-            class = switch(size, s = "modal-sm", m = NULL, l = "modal-lg", 
+    div(id = "shiny-modal", class = "modal", class = if (fade)
+        "fade", tabindex = "-1", `data-backdrop` = backdrop,
+        `data-bs-backdrop` = backdrop, `data-keyboard` = keyboard,
+        `data-bs-keyboard` = keyboard, div(class = "modal-dialog",
+            class = switch(size, s = "modal-sm", m = NULL, l = "modal-lg",
                            xl = "modal-xl", fullscreen = "modal-fullscreen"),
-            div(class = "modal-content", 
-                if (!is.null(header)) 
-                  div(class = "modal-header", header), div(class = "modal-body", ...), 
-                if (!is.null(footer)) 
+            div(class = "modal-content",
+                if (!is.null(header))
+                  div(class = "modal-header", header), div(class = "modal-body", ...),
+                if (!is.null(footer))
                   div(class = "modal-footer", footer))), tags$script(HTML("if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\./)) {\n         var modal = new bootstrap.Modal(document.getElementById('shiny-modal'));\n         modal.show();\n      } else {\n         $('#shiny-modal').modal().focus();\n      }")))
 }

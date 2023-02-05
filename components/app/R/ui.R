@@ -2,7 +2,7 @@ app_ui <- function() {
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
-    user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
+    user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))
 
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {
@@ -17,7 +17,7 @@ app_ui <- function() {
         ## Add Google Tag manager body code
         gtag2 <- htmltools::includeHTML("www/google-tags-noscript.html")
         gtag2 <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag2)
-    } 
+    }
 
      createUI <- function(tabs)
     {
@@ -40,10 +40,10 @@ app_ui <- function() {
             ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
         )
-        
+
         footer <- shiny::tagList(
             SocialMediaModuleUI("socialmodal"),
-            SendReferralModuleUI("sendreferral"),                             
+            SendReferralModuleUI("sendreferral"),
             shinybusy::busy_start_up(
                 text = "\nPrepping your personal playground...", mode = "auto",
                 background="#2780e3", color="#ffffff",
@@ -67,7 +67,7 @@ app_ui <- function() {
                 link = "/login"
             )
         }
-        
+
         bigdash::bigPage(
             header,
             sidebar = bigdash::sidebar(
@@ -188,12 +188,12 @@ app_ui <- function() {
                     bigdash::navbarDropdownItem(
                         "Github issues",
                         link = "https://github.com/bigomics/omicsplayground/issues",
-                        target = "_blank"                        
+                        target = "_blank"
                     ),
                     bigdash::navbarDropdownItem(
                         "www.bigomics.ch",
                         link = "http://bigomics.ch",
-                        target = "_blank"                        
+                        target = "_blank"
                     )
                 ),
                 bigdash::navbarDropdown(
@@ -201,12 +201,12 @@ app_ui <- function() {
                     bigdash::navbarDropdownItem(
                         "Documentation",
                         link = "https://omicsplayground.readthedocs.io",
-                        target = "_blank"                        
+                        target = "_blank"
                     ),
                     bigdash::navbarDropdownItem(
                         "Video tutorials",
                         link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
-                        target = "_blank"                        
+                        target = "_blank"
                     ),
                     bigdash::navbarDropdownItem(
                         "Case studies",
@@ -217,7 +217,7 @@ app_ui <- function() {
                 bigdash::navbarDropdown(
                     ##"User",
                     ##shiny::div(class='label label-info current-user',id='authentication-user'),
-                    shiny::textOutput("current_user", inline = TRUE), 
+                    shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
                         "Settings",
                         "userSettings"
@@ -225,10 +225,10 @@ app_ui <- function() {
                     upgrade.tab,
                     logout.tab
                 )
-            ), 
+            ),
             settings = bigdash::settings(
                 "Settings"
-            ), 
+            ),
             bigdash::sidebarHelp(
                 bigdash::sidebarTabHelp(
                     "welcome-tab",
@@ -458,11 +458,15 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "userSettings",
-                    UserInputs("user"), 
+                    UserInputs("user"),
                     UserUI("user")
                 )
             ),
-            tagList(footer)
+            tagList(footer),
+            # This JS script is sourced at this point because if sourced before creating
+            # the UI elements, the snippet to prevent `dropdown-menu` to propagate clicks
+            # will not be applied
+            tags$script(src = "dropdown-helper.js")
         )
     }
 
@@ -480,7 +484,7 @@ app_ui <- function() {
     dbg("[ui.R] creating UI... ")
     ui <- createUI(tabs)
     dbg("[ui.R] UI done!")
-  
+
     return(ui)
 }
 
