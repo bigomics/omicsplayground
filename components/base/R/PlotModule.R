@@ -169,7 +169,7 @@ PlotModuleUI <- function(id,
 ##      shiny::HTML(paste("<center>",title,"</center>")),
         shiny::div(class='plotmodule-title', title=title, title),
         DropdowMenu(
-            shiny::tags$p(shiny::HTML(info.text)),
+            shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
             shiny::br(),
             size = "xs",
             icon = shiny::icon("info"),
