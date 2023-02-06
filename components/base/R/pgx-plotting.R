@@ -3965,7 +3965,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
 
 
 
-pgx.boxplot <- function(
+pgx.boxplot.PLOTLY <- function(
   data,
   x = NULL,
   y = NULL,
