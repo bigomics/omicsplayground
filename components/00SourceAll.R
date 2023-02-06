@@ -102,8 +102,6 @@ if(!file.exists('00SourceAll.R')) {
   source('board.connectivity/R/connectivity_plot_enrichmentGraph.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_plot_leadingEdgeGraph.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_server.R',encoding='UTF-8')
-  source('board.connectivity/R/connectivity_table_connectivityScoreTable.R',encoding='UTF-8')
-  source('board.connectivity/R/connectivity_table_connectivityScoreTable2.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_ui.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_cor_graph.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_partial_correlation.R',encoding='UTF-8')

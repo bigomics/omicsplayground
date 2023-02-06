@@ -16,23 +16,40 @@ connectivity_plot_leadingEdgeGraph_ui <- function(id,
                                           label = "",
                                           rowH = 660) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>KEGG pathways</strong> are a collection of
-    manually curated pathways representing the current knowledge of molecular
-    interactions, reactions and relation networks as pathway maps. In the
-    pathway map, genes are colored according to their upregulation (red) or
-    downregulation (blue) in the contrast profile. Each pathway is scored for
-    the selected contrast profile and reported in the table below.")
+
+  info_text <- strwrap(
+    "<b>Leading-edge graph.</b> Network of shared leading-edge genes between
+    top-N most similar signatures. The edge width corresponds to the number of
+    signatures that share that pair of genes in their top differentially expressed
+    genes. In the plot options you can set the threshold of the edges."
+  )
+
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::sliderInput(ns("LEgraph_threshold"), "edge threshold:", 0, 1, 0, 0.01),
+      "Threshold value for edges."
+    ),
+    withTooltip(
+      shiny::radioButtons(ns("LEgraph_ntop"), "N-neighbours:", c(5, 10, 25, 100),
+                          selected = 10, inline = TRUE),
+      "Number of simlar experiments to consider."
+    ),
+    withTooltip(
+      shiny::radioButtons(ns("LEgraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
+                          selected = "cumFC", inline = TRUE
+      ),
+      "Parameter for node size."
+    )
+  )
 
   PlotModuleUI(ns("plot"),
-               title = "Kegg pathway map",
+               title = "Leading-edge graph",
                label = label,
-               plotlib = "image",
+               plotlib = "visnetwork",
                info.text = info_text,
-               info.width = "350px",
-               options = NULL,
-               download.fmt = "png",
-               height = c(0.53 * rowH, 700),
-               width = c("100%", 1280),
+               options = plot_opts,
+               height = c(720, 720),
+               width = c("auto", 1300)
   )
 }
 
@@ -45,124 +62,152 @@ connectivity_plot_leadingEdgeGraph_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_leadingEdgeGraph_server <- function(id,
-                                              inputData,
-                                              getFilteredKeggTable,
-                                              kegg_table,
-                                              fa_contrast,
-                                              watermark = FALSE) {
+                                                      getConnectivityScores,
+                                                      connectivityScoreTable,
+                                                      getCurrentContrast,
+                                                      getTopProfiles,
+                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plot_data <- shiny::reactive({
-        res <- list(
-          pgx = inputData(),
-          df = getFilteredKeggTable(),
-          kegg_table = kegg_table,
-          fa_contrast = fa_contrast()
+
+      cumulativeFCtable <- shiny::reactive({
+        F <- getTopProfiles()
+        F[is.na(F)] <- 0
+
+        ## maximum 10??
+        MAXF <- 20
+
+        ## multiply with sign of rho
+        df <- getConnectivityScores()
+        rho1 <- df$rho[match(colnames(F), df$pathway)]
+        F <- t(t(F) * sign(rho1))
+
+        ## add current contrast
+        cc <- getCurrentContrast()
+        shiny::req(cc)
+        fc <- cc$fc[rownames(F)]
+        fc[is.na(fc)] <- 0
+        F <- cbind(fc[rownames(F)], F)
+        colnames(F)[1] <- "thisFC"
+        colnames(F)[1] <- cc$name
+
+        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+        F
+      })
+
+      getLeadingEdgeGraph <- shiny::reactive({
+        df <- getConnectivityScores()
+        if (is.null(df)) {
+          return(NULL)
+        }
+        df$score[is.na(df$score)] <- 0
+        df <- df[which(df$score > 0), ]
+
+        ## always only top-N from selection
+        ntop <- as.integer(input$LEgraph_ntop)
+        ii <- connectivityScoreTable$rows_all()
+        shiny::req(ii)
+        ii <- head(order(-abs(df$score)), 25)
+        ii <- head(ii, ntop)
+        df <- df[ii, , drop = FALSE]
+
+        le.genes <- sort(unique(unlist(df$leadingEdge)))
+        A <- 1 * sapply(df$leadingEdge, function(g) le.genes %in% g)
+        rownames(A) <- le.genes
+        A <- head(A[order(-rowMeans(A)), , drop = FALSE], 100)
+        adjM <- (A %*% t(A))
+        adjM <- adjM / max(adjM, na.rm = TRUE)
+
+        gr <- igraph::graph_from_adjacency_matrix(
+          adjM,
+          mode = "undirected", weighted = TRUE, diag = FALSE
         )
-        return(res)
+
+        ## set graph threshold to some sensible value [0,1]
+        wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 150)[1] ## about 150 edges
+        shiny::updateSliderInput(session, "LEgraph_threshold", value = 0)
+
+        return(gr)
       })
 
       plot_RENDER <- shiny::reactive({
-        res <- plot_data()
-        pgx <- res$pgx
-        df <- res$df
-        fa_contrast <- res$fa_contrast
-        kegg_table <- res$kegg_table
-
-        ###############
-
-        NULL.IMG <- list(src = "", contentType = "image/png")
-        if (is.null(pgx)) {
-          return(NULL.IMG)
+        gr <- getLeadingEdgeGraph()
+        if (is.null(gr)) {
+          return(NULL)
+        }
+        minwt <- 0.5
+        minwt <- input$LEgraph_threshold
+        minwt <- min(c(minwt, 0.99 * max(abs(igraph::E(gr)$weight), na.rm = TRUE)))
+        gr <- igraph::subgraph.edges(gr, which(abs(igraph::E(gr)$weight) >= minwt))
+        if (length(igraph::V(gr)) == 0) {
+          return(NULL)
         }
 
-        comparison <- fa_contrast
-        if (is.null(comparison) || length(comparison) == 0) {
-          return(NULL.IMG)
-        }
-        if (comparison == "") {
-          return(NULL.IMG)
-        }
+        fc <- cumFC <- NULL
+        fc <- getCurrentContrast()$fc
+        fc <- fc[igraph::V(gr)$name]
+        cumFC <- cumulativeFCtable()
 
-        ## get fold-change vector
-        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
-        pp <- rownames(pgx$gx.meta$meta[[comparison]])
+        cumFC <- cumFC[igraph::V(gr)$name, ]
+        fontsize <- 22
+        fc <- fc / max(abs(fc))
 
-        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
+        sizevar <- input$LEgraph_sizevar
+        vsize <- 15
+        if (sizevar == "centrality") {
+          vsize <- log(1 + igraph::betweenness(gr))
+        } else if (sizevar == "cumFC") {
+          fc1 <- rowMeans(cumFC)
+          vsize <- abs(fc1[match(igraph::V(gr)$name, names(fc1))])**2
+        } else if (sizevar == "FC") {
+          vsize <- abs(fc[match(igraph::V(gr)$name, names(fc))])**2
         } else {
-          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
+          vsize <- 1
         }
-        fc <- fc[order(-abs(fc))]
-        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
+        vsize <- 3 + 12 * (abs(vsize) / max(abs(vsize), na.rm = TRUE))**0.5
 
-        ## get selected KEGG id
-        #df <- getFilteredKeggTable()
-        if (is.null(df)) {
-          return(NULL.IMG)
-        }
-
-        sel.row <- kegg_table$rows_selected()
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-        sel.row <- as.integer(sel.row)
-
-        pathway.id <- "04110" ## CELL CYCLE
-        pathway.name <- pw.genes <- "x"
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-
-        if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id <- df[sel.row, "kegg.id"]
-          pathway.name <- df[sel.row, "pathway"]
-          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
-        }
-
-        ## folder with predownloaded XML files
-        xml.dir <- file.path(FILES, "kegg-xml")
-        xml.dir <- normalizePath(xml.dir) ## absolute path
-
-        ## We temporarily switch the working directory to always readable
-        ## TMP folder
-        curwd <- getwd()
-        tmpdir <- tempdir()
-        setwd(tmpdir)
-        pv.out <- pathview::pathview(
-          gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
-          gene.annotpkg = "org.Hs.eg.db", species = "hsa",
-          out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
-          low = list(gene = "dodgerblue2", cpd = "purple"),
-          high = list(gene = "firebrick2", cpd = "yellow"),
-          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
+        bluered.pal <- colorRampPalette(
+          colors = c("royalblue4", "royalblue2", "grey90", "indianred3", "firebrick4")
         )
-        Sys.sleep(0.2) ## wait for graph
+        vcolor <- bluered.pal(65)[33 + round(32 * fc)]
+        vcolor <- paste0(vcolor, "AA") ## add transparency
 
-        ## back to previous working folder
-        setwd(curwd)
+        ## defaults graph parameters
+        gene <- igraph::V(gr)$name
+        igraph::V(gr)$label <- igraph::V(gr)$name
+        igraph::V(gr)$title <- paste0("<b>", gene, "</b><br>", GENE.TITLE[toupper(gene)])
+        igraph::V(gr)$size <- vsize ## rather small
+        igraph::V(gr)$color <- vcolor
 
-        outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-        if (!file.exists(outfile)) {
-          return(NULL.IMG)
-        }
+        ew <- abs(igraph::E(gr)$weight)
+        igraph::E(gr)$width <- 1.5 * (0.2 + 10 * (ew / max(ew, na.rm = TRUE))**2)
+        igraph::E(gr)$color <- "#DDD" ## lightgrey
 
-        list(
-          src = outfile,
-          contentType = "image/png",
-          width = "100%", height = "100%", ## actual size: 1040x800
-          alt = "pathview image"
-        )
+        visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
+
+        ## ------------------ plot using visNetwork (zoomable) -----------------
+        graph <- visNetwork::visNetwork(
+          nodes = visdata$nodes,
+          edges = visdata$edges
+        ) %>%
+          visNetwork::visNodes(font = list(size = fontsize)) %>%
+          visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+          visNetwork::visIgraphLayout(layout = "layout_nicely")
+        graph
       })
 
-      PlotModuleServer(
+
+      plt <- PlotModuleServer(
         "plot",
-        plotlib = "image",
+        plotlib = "visnetwork",
         func = plot_RENDER,
         func2 = plot_RENDER,
-        csvFunc = plot_data,
+        csvFunc = getLeadingEdgeGraph,
+        pdf.height = 8, pdf.width = 8,
+        res = c(90, 100),
         add.watermark = watermark
       )
+      return(getLeadingEdgeGraph)
     } ## end of moduleServer
   )
 }

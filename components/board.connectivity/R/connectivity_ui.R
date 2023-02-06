@@ -53,13 +53,6 @@ ConnectivityUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "FC correlation",
-        tags$div(
-          HTML(paste(
-            "<b>(a)</b> <b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal.",
-            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES.",
-            "<b>(c)</b> <b>Pairs plot.</b> Pairwise scatterplots of two differential expression profiles for selected contrasts. Similar profiles will show high correlation with points close to the diagonal."
-          ))
-        ),
         div(
           class = "row",
           div(
@@ -71,69 +64,88 @@ ConnectivityUI <- function(id) {
             tableWidget(ns("connectivityScoreTable"))
           )
         ),
-        plotWidget(ns("cmapPairsPlot"))
+        connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot")),
+        tags$div(
+          HTML(paste(
+            "<b>(a)</b> <b>FC scatter plots.</b> Scatter plots of gene expression
+            foldchange values between two contrasts. Foldchanges that are similar
+            show high correlation, i.e. are close to the diagonal.",
+            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores
+            (NES) and Pearson correlation (rho) of reference profiles with respect
+            to the currently selected contrast. The top 100 up/down genes are
+            considered for the calculation of rho or NES. The score is calculated
+            as rho^2*NES.",
+            "<b>(c)</b> <b>Pairs plot.</b> Pairwise scatterplots of two
+            differential expression profiles for selected contrasts. Similar
+            profiles will show high correlation with points close to the diagonal."
+          ))
+        )
       ),
       shiny::tabPanel(
         "FC heatmap",
-        tags$div(
-          HTML(paste(
-            "<b>(a)</b> <b>Meta-foldchange.</b> The barplot visualizes the cumulative foldchange between the top-10 most similar profiles.",
-            "<b>(b)</b> <b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
-            "<b>(c)</b> <b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
-          ))
-        ),
         div(
           class = "row",
           div(
             class = "col-md-6",
-            plotWidget(ns("cumFCplot"))
+            connectivity_plot_cumFCplot_ui(ns("cumFCplot"))
           ),
           div(
             class = "col-md-6",
-            plotWidget(ns("cumEnrichmentPlot"))
+            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"))
           )
         ),
         shiny::br(),
-        plotWidget(ns("connectivityHeatmap"))
+        connectivity_plot_connectivityHeatmap_ui(ns("connectivityHeatmap")),
+        tags$div(
+          HTML(paste(
+            "<b>(a)</b> <b>Meta-foldchange.</b> The barplot visualizes the
+            cumulative foldchange between the top-10 most similar profiles.",
+            "<b>(b)</b> <b>Meta-enrichment.</b> The barplot visualizes the
+            cumulative enrichment of the top-10 most similar profiles.",
+            "<b>(c)</b> <b>Connectivity Heatmap.</b> Similarity of the contrasts
+            profiles as a heatmap. Contrasts that are similar will be clustered
+            close together."
+          ))
+        )
       ),
       shiny::tabPanel(
         "Meta-graph",
+        div(
+          class = "row",
+          div(
+            class = "col-md-6",
+            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"))
+          ),
+          div(
+            class = "col-md-6",
+            connectivity_plot_enrichmentGraph_ui(ns("enrichmentGraph"))
+          )
+        ),
         tags$div(
           HTML(paste(
             "<b>(a)</b> <b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes.",
             "<b>(b)</b> <b>Enrichment graph.</b> Network of shared enrichmed genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets."
           ))
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            plotWidget(ns("leadingEdgeGraph"))
-          ),
-          div(
-            class = "col-md-6",
-            plotWidget(ns("enrichmentGraph"))
-          )
         )
       ),
       shiny::tabPanel(
         "Experiment clustering",
-        tags$div(
-          HTML(paste(
-            "<b>(a)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
-            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. "
-          ))
-        ),
         div(
           class = "row",
           div(
             class = "col-md-6",
-            plotWidget(ns("connectivityMap"))
+            connectivity_plot_connectivityMap_ui(ns("connectivityMap"))
           ),
           div(
             class = "col-md-6",
             tableWidget(ns("connectivityScoreTable2"))
           )
+        ),
+        tags$div(
+          HTML(paste(
+            "<b>(a)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
+            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. "
+          ))
         )
       )
     )

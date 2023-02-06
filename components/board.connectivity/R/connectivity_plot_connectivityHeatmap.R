@@ -16,23 +16,32 @@ connectivity_plot_connectivityHeatmap_ui <- function(id,
                                           label = "",
                                           rowH = 660) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>KEGG pathways</strong> are a collection of
-    manually curated pathways representing the current knowledge of molecular
-    interactions, reactions and relation networks as pathway maps. In the
-    pathway map, genes are colored according to their upregulation (red) or
-    downregulation (blue) in the contrast profile. Each pathway is scored for
-    the selected contrast profile and reported in the table below.")
-
+  info_text <- strwrap(
+    "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap.
+    Contrasts that are similar will be clustered close together."
+  )
+  plot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
+                "Take the absolute foldchange for calculating the cumulative sum.",
+                placement = "right", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::radioButtons(ns("cumFCplot_order"), "Order:",
+                          choiceValues = c("FC", "cumFC"),
+                          choiceNames = c("this FC", "cumFC"),
+                          selected = "cumFC", inline = TRUE
+      ),
+      "How to order the cumulative barplot.",
+      placement = "right", options = list(container = "body")
+    )
+  )
   PlotModuleUI(ns("plot"),
-               title = "Kegg pathway map",
+               title = "Connectivity Heatmap",
                label = label,
-               plotlib = "image",
+               plotlib = "base",
                info.text = info_text,
-               info.width = "350px",
-               options = NULL,
-               download.fmt = "png",
-               height = c(0.53 * rowH, 700),
-               width = c("100%", 1280),
+               options = plot_opts,
+               height = c(480, 550), width = c("auto", 1400)
   )
 }
 
@@ -45,122 +54,72 @@ connectivity_plot_connectivityHeatmap_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_connectivityHeatmap_server <- function(id,
-                                              inputData,
-                                              getFilteredKeggTable,
-                                              kegg_table,
-                                              fa_contrast,
-                                              watermark = FALSE) {
+                                                         getTopProfiles,
+                                                         getConnectivityScores,
+                                                         getCurrentContrast,
+                                                         watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plot_data <- shiny::reactive({
-        res <- list(
-          pgx = inputData(),
-          df = getFilteredKeggTable(),
-          kegg_table = kegg_table,
-          fa_contrast = fa_contrast()
-        )
-        return(res)
+
+      cumulativeFCtable <- shiny::reactive({
+        F <- getTopProfiles()
+        F[is.na(F)] <- 0
+
+        ## maximum 10??
+        MAXF <- 20
+
+        ## multiply with sign of rho
+        df <- getConnectivityScores()
+        rho1 <- df$rho[match(colnames(F), df$pathway)]
+        F <- t(t(F) * sign(rho1))
+
+        ## add current contrast
+        cc <- getCurrentContrast()
+        shiny::req(cc)
+        fc <- cc$fc[rownames(F)]
+        fc[is.na(fc)] <- 0
+        F <- cbind(fc[rownames(F)], F)
+        colnames(F)[1] <- "thisFC"
+        colnames(F)[1] <- cc$name
+
+        if (input$cumFCplot_absfc) {
+          F <- abs(F)
+        }
+        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+        F
       })
 
       plot_RENDER <- shiny::reactive({
-        res <- plot_data()
-        pgx <- res$pgx
-        df <- res$df
-        fa_contrast <- res$fa_contrast
-        kegg_table <- res$kegg_table
-
-        ###############
-
-        NULL.IMG <- list(src = "", contentType = "image/png")
-        if (is.null(pgx)) {
-          return(NULL.IMG)
+        ##
+        F <- cumulativeFCtable()
+        shiny::req(F)
+        F <- F[, 1:min(NCOL(F), 25), drop = FALSE]
+        if (input$cumFCplot_order == "FC") {
+          F <- F[order(-abs(F[, 1])), ]
         }
-
-        comparison <- fa_contrast
-        if (is.null(comparison) || length(comparison) == 0) {
-          return(NULL.IMG)
-        }
-        if (comparison == "") {
-          return(NULL.IMG)
-        }
-
-        ## get fold-change vector
-        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
-        pp <- rownames(pgx$gx.meta$meta[[comparison]])
-
-        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
-        } else {
-          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
-        }
-        fc <- fc[order(-abs(fc))]
-        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
-
-        ## get selected KEGG id
-        #df <- getFilteredKeggTable()
-        if (is.null(df)) {
-          return(NULL.IMG)
-        }
-
-        sel.row <- kegg_table$rows_selected()
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-        sel.row <- as.integer(sel.row)
-
-        pathway.id <- "04110" ## CELL CYCLE
-        pathway.name <- pw.genes <- "x"
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-
-        if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id <- df[sel.row, "kegg.id"]
-          pathway.name <- df[sel.row, "pathway"]
-          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
-        }
-
-        ## folder with predownloaded XML files
-        xml.dir <- file.path(FILES, "kegg-xml")
-        xml.dir <- normalizePath(xml.dir) ## absolute path
-
-        ## We temporarily switch the working directory to always readable
-        ## TMP folder
-        curwd <- getwd()
-        tmpdir <- tempdir()
-        setwd(tmpdir)
-        pv.out <- pathview::pathview(
-          gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
-          gene.annotpkg = "org.Hs.eg.db", species = "hsa",
-          out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
-          low = list(gene = "dodgerblue2", cpd = "purple"),
-          high = list(gene = "firebrick2", cpd = "yellow"),
-          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
-        )
-        Sys.sleep(0.2) ## wait for graph
-
-        ## back to previous working folder
-        setwd(curwd)
-
-        outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-        if (!file.exists(outfile)) {
-          return(NULL.IMG)
-        }
-
-        list(
-          src = outfile,
-          contentType = "image/png",
-          width = "100%", height = "100%", ## actual size: 1040x800
-          alt = "pathview image"
+        F1 <- head(F, 80)
+        par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
+        gx.splitmap(t(F1),
+                    split = 1,
+                    ## cluster_columns = FALSE,
+                    cluster_columns = TRUE,
+                    cluster_rows = TRUE,
+                    rowlab.maxlen = 80,
+                    ## zsym = TRUE,
+                    symm.scale = TRUE,
+                    mar = c(15, 0, 0, 60),
+                    key.offset = c(0.90, 0.2),
+                    cexRow = 0.9, cexCol = 0.75
         )
       })
-
       PlotModuleServer(
         "plot",
-        plotlib = "image",
+        plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER,
-        csvFunc = plot_data,
+        csvFunc = cumulativeFCtable,
+        pdf.width = 14, pdf.height = 5.5,
+        res = c(90, 90),
         add.watermark = watermark
       )
     } ## end of moduleServer

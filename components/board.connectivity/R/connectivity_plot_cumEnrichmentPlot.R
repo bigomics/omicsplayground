@@ -16,23 +16,36 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
                                           label = "",
                                           rowH = 660) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>KEGG pathways</strong> are a collection of
-    manually curated pathways representing the current knowledge of molecular
-    interactions, reactions and relation networks as pathway maps. In the
-    pathway map, genes are colored according to their upregulation (red) or
-    downregulation (blue) in the contrast profile. Each pathway is scored for
-    the selected contrast profile and reported in the table below.")
+  info_text <- strwrap(
+    "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment
+    of the top-10 most similar profiles. Gene sets that are frequently shared
+    with high enrichment will show a higher cumulative scores. You can choose
+    between signed or absolute enrichment in the options."
+  )
+
+  plot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("cumgsea_absfc"), "Absolute foldchange", FALSE),
+                "Take the absolute foldchange for calculating the cumulative sum.",
+                placement = "right", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::radioButtons(ns("cumgsea_order"), "Order:",
+                          choiceValues = c("FC", "cumFC"),
+                          choiceNames = c("this FC", "cumFC"),
+                          selected = "cumFC", inline = TRUE
+      ),
+      "How to order the cumulative barplot.",
+      placement = "right", options = list(container = "body")
+    )
+  )
 
   PlotModuleUI(ns("plot"),
-               title = "Kegg pathway map",
+               title = "Cumulative enrichment",
                label = label,
-               plotlib = "image",
+               plotlib = "base",
                info.text = info_text,
-               info.width = "350px",
-               options = NULL,
-               download.fmt = "png",
-               height = c(0.53 * rowH, 700),
-               width = c("100%", 1280),
+               options = plot_opts,
+               height = c(300, 720), width = c("auto", 1000)
   )
 }
 
@@ -46,121 +59,137 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 #' @export
 connectivity_plot_cumEnrichmentPlot_server <- function(id,
                                               inputData,
-                                              getFilteredKeggTable,
-                                              kegg_table,
-                                              fa_contrast,
+                                              cmap_sigdb,
+                                              getConnectivityScores,
+                                              connectivityScoreTable,
+                                              getEnrichmentMatrix,
+                                              getCurrentContrast,
                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plot_data <- shiny::reactive({
-        res <- list(
-          pgx = inputData(),
-          df = getFilteredKeggTable(),
-          kegg_table = kegg_table,
-          fa_contrast = fa_contrast()
-        )
-        return(res)
+
+      cumEnrichmentTable <- shiny::reactive({
+        cmap_sigdb <- cmap_sigdb()
+        shiny::req(cmap_sigdb)
+        if (!grepl(".h5$", cmap_sigdb)) {
+          return(NULL)
+        }
+
+        df <- getConnectivityScores()
+        if (is.null(df)) {
+          return(NULL)
+        }
+        ii <- connectivityScoreTable$rows_all()
+        shiny::req(ii)
+
+        sel <- head(df$pathway[ii], 10)
+        sigdb <- cmap_sigdb
+        F <- getEnrichmentMatrix(sigdb, select = sel)
+        if (is.null(F)) {
+          return(NULL)
+        }
+
+        ## multiply with sign of enrichment
+        rho1 <- df$rho[match(colnames(F), df$pathway)]
+        F <- t(t(F) * sign(rho1))
+
+        if (input$cumgsea_absfc) {
+          F <- abs(F)
+        }
+        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+
+        ## add current contrast
+        ct <- getCurrentContrast()
+        gx <- ct$gs[match(rownames(F), names(ct$gs))]
+        names(gx) <- rownames(F)
+        gx[is.na(gx)] <- 0
+        F <- cbind(gx, F)
+        colnames(F)[1] <- ct$name
+
+        F
       })
 
       plot_RENDER <- shiny::reactive({
-        res <- plot_data()
-        pgx <- res$pgx
-        df <- res$df
-        fa_contrast <- res$fa_contrast
-        kegg_table <- res$kegg_table
-
-        ###############
-
-        NULL.IMG <- list(src = "", contentType = "image/png")
-        if (is.null(pgx)) {
-          return(NULL.IMG)
+        ##
+        F <- cumEnrichmentTable()
+        if (is.null(F)) {
+          frame()
+          return(NULL)
         }
 
-        comparison <- fa_contrast
-        if (is.null(comparison) || length(comparison) == 0) {
-          return(NULL.IMG)
-        }
-        if (comparison == "") {
-          return(NULL.IMG)
-        }
-
-        ## get fold-change vector
-        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
-        pp <- rownames(pgx$gx.meta$meta[[comparison]])
-
-        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
+        NSETS <- 20
+        if (input$cumgsea_order == "FC") {
+          F <- F[order(-abs(F[, 1])), ]
+          F <- head(F, NSETS)
+          F <- F[order(F[, 1]), , drop = FALSE]
         } else {
-          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
-        }
-        fc <- fc[order(-abs(fc))]
-        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
-
-        ## get selected KEGG id
-        #df <- getFilteredKeggTable()
-        if (is.null(df)) {
-          return(NULL.IMG)
+          F <- F[order(-rowMeans(F**2)), ]
+          F <- head(F, NSETS)
+          F <- F[order(rowMeans(F)), , drop = FALSE]
         }
 
-        sel.row <- kegg_table$rows_selected()
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-        sel.row <- as.integer(sel.row)
+        rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
+        rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
+        rownames(F) <- shortstring(rownames(F), 72)
+        maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
+        xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
 
-        pathway.id <- "04110" ## CELL CYCLE
-        pathway.name <- pw.genes <- "x"
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-
-        if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id <- df[sel.row, "kegg.id"]
-          pathway.name <- df[sel.row, "pathway"]
-          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
-        }
-
-        ## folder with predownloaded XML files
-        xml.dir <- file.path(FILES, "kegg-xml")
-        xml.dir <- normalizePath(xml.dir) ## absolute path
-
-        ## We temporarily switch the working directory to always readable
-        ## TMP folder
-        curwd <- getwd()
-        tmpdir <- tempdir()
-        setwd(tmpdir)
-        pv.out <- pathview::pathview(
-          gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
-          gene.annotpkg = "org.Hs.eg.db", species = "hsa",
-          out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
-          low = list(gene = "dodgerblue2", cpd = "purple"),
-          high = list(gene = "firebrick2", cpd = "yellow"),
-          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
+        par(mfrow = c(1, 2), mar = c(4, 1, 0, 0.5), mgp = c(2.4, 1, 0))
+        frame()
+        col1 <- grey.colors(ncol(F), start = 0.15)
+        pgx.stackedBarplot(
+          F,
+          las = 1, cex.names = 0.8, col = col1, hz = TRUE,
+          xlab = "cumulative enrichment"
         )
-        Sys.sleep(0.2) ## wait for graph
 
-        ## back to previous working folder
-        setwd(curwd)
-
-        outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-        if (!file.exists(outfile)) {
-          return(NULL.IMG)
-        }
-
-        list(
-          src = outfile,
-          contentType = "image/png",
-          width = "100%", height = "100%", ## actual size: 1040x800
-          alt = "pathview image"
-        )
+        fname <- sub("\\].*", "]", colnames(F))
       })
 
+      plot_RENDER2 <- shiny::reactive({
+        ##
+        F <- cumEnrichmentTable()
+        if (is.null(F)) {
+          frame()
+          return(NULL)
+        }
+
+        NSETS <- 40
+        if (input$cumgsea_order == "FC") {
+          F <- F[order(-abs(F[, 1])), ]
+          F <- head(F, NSETS)
+          F <- F[order(F[, 1]), , drop = FALSE]
+        } else {
+          F <- F[order(-rowMeans(F**2)), ]
+          F <- head(F, NSETS)
+          F <- F[order(rowMeans(F)), , drop = FALSE]
+        }
+
+        rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
+        rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
+        rownames(F) <- shortstring(rownames(F), 72)
+        maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
+        xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
+
+        par(mfrow = c(1, 2), mar = c(4.5, 1, 0.4, 1), mgp = c(2.4, 1, 0))
+        frame()
+        col1 <- grey.colors(ncol(F), start = 0.15)
+        pgx.stackedBarplot(
+          F,
+          las = 1, cex.names = 0.78, col = col1, hz = TRUE,
+          xlab = "cumulative enrichment"
+        )
+
+        fname <- sub("\\].*", "]", colnames(F))
+      })
       PlotModuleServer(
         "plot",
-        plotlib = "image",
+        plotlib = "base",
         func = plot_RENDER,
-        func2 = plot_RENDER,
-        csvFunc = plot_data,
+        func2 = plot_RENDER2,
+        csvFunc = cumEnrichmentTable,
+        pdf.height = 8, pdf.width = 12,
+        res = c(72, 90),
         add.watermark = watermark
       )
     } ## end of moduleServer
