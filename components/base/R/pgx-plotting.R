@@ -3962,3 +3962,44 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
 
     return(plt)
 }
+
+
+
+pgx.boxplot <- function(
+  data,
+  x = NULL,
+  y = NULL,
+  type = "box",
+  color = omics_colors("brand_blue"),
+  fillcolor = omics_colors("light_blue"),
+  linecolor = omics_colors("brand_blue"),
+  hoverinfo = "y",
+  hoverformat = ".2f",
+  yaxistitle = FALSE,
+  xaxistitle = FALSE,
+  font_family = "Lato",
+  margin = list(l = 10, r = 10, b = 10, t = 10)
+  ){
+
+  plotly::plot_ly(
+    data = data,
+    x = ~get(x),
+    y = ~get(y),
+    type = type,
+    marker = list(
+      color = color,
+      fillcolor = fillcolor
+    ),
+    line = list(color = linecolor),
+    hoverinfo = hoverinfo
+  ) %>%
+    plotly::layout(
+      yaxis = list(title = yaxistitle,
+                   hoverformat = hoverformat),
+      xaxis = list(title = xaxistitle),
+      font = list(family = font_family),
+      margin = margin
+    ) %>%
+    plotly_default1()
+
+}
