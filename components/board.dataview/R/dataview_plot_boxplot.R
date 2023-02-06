@@ -73,11 +73,12 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
       colnames(long.df) <- c("gene", "sample", "value")
 
       ## boxplot
-      fig <- pgx.boxplot(data = long.df,
-                         x = "sample",
-                         y = "value",
-                         yaxistitle = "Counts (log2)"
-                         )
+      fig <- pgx.boxplot.PLOTLY(
+        data = long.df,
+        x = "sample",
+        y = "value",
+        yaxistitle = "Counts (log2)"
+        )
       fig
     }
 

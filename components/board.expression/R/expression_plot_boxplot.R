@@ -35,8 +35,8 @@ expression_plot_boxplot_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Differential expression",
     label = label,
-    plotlib = "base",
     info.text = info_text,
+    plotlib = "plotly",
     options = plots_boxplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -106,8 +106,13 @@ expression_plot_boxplot_server <- function(id,
         return(NULL)
       }
 
-      par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
-      pgx.plotExpression(pd[["ngs"]],
+      # par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
+
+      browser()
+
+
+      fig <- pgx.plotExpression(
+        pd[["ngs"]],
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
@@ -116,11 +121,13 @@ expression_plot_boxplot_server <- function(id,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]]
       )
+      fig
+
     }
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
+      plotlib = "plotly",
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

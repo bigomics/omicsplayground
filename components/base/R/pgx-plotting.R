@@ -1266,13 +1266,26 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         grp.klr1[is.na(grp.klr1)] <- "grey90"
         names(grp.klr1) <- as.character(xlevels)
         ##col=grp.klr1;las=3;names.cex=cex;
-        gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
-                  first = xlevels[1],
-                  col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
-                  max.points=max.points, xlab=xlab, names=names,
-                  ## sig.stars=TRUE, max.stars=5,
-                  las=3, names.cex=cex, srt=srt)
-        title(main, cex.main=1.0, line=0)
+        fig <- pgx.barplot.PLOTLY(
+          data = data.frame(
+            gx = gx,
+            xgroup = xgroup
+          ),
+          x = "xgroup",
+          y = "gx",
+          title = main
+          )
+
+        fig
+
+
+        # gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
+        #           first = xlevels[1],
+        #           col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
+        #           max.points=max.points, xlab=xlab, names=names,
+        #           ## sig.stars=TRUE, max.stars=5,
+        #           las=3, names.cex=cex, srt=srt)
+        # title(main, cex.main=1.0, line=0)
     }
 
 }
@@ -3970,6 +3983,7 @@ pgx.boxplot.PLOTLY <- function(
   x = NULL,
   y = NULL,
   type = "box",
+  title = NULL,
   color = omics_colors("brand_blue"),
   fillcolor = omics_colors("light_blue"),
   linecolor = omics_colors("brand_blue"),
@@ -3994,6 +4008,50 @@ pgx.boxplot.PLOTLY <- function(
     hoverinfo = hoverinfo
   ) %>%
     plotly::layout(
+      title = title,
+      yaxis = list(title = yaxistitle,
+                   hoverformat = hoverformat),
+      xaxis = list(title = xaxistitle),
+      font = list(family = font_family),
+      margin = margin
+    ) %>%
+    plotly_default1()
+
+}
+
+
+
+pgx.barplot.PLOTLY <- function(
+  data,
+  x = NULL,
+  y = NULL,
+  type = "bar",
+  title = NULL,
+  color = omics_colors("brand_blue"),
+  fillcolor = omics_colors("light_blue"),
+  linecolor = omics_colors("brand_blue"),
+  hoverinfo = "y",
+  hoverformat = ".2f",
+  yaxistitle = FALSE,
+  xaxistitle = FALSE,
+  font_family = "Lato",
+  margin = list(l = 10, r = 10, b = 10, t = 10)
+){
+
+  plotly::plot_ly(
+    data = data,
+    x = ~get(x),
+    y = ~get(y),
+    type = type,
+    marker = list(
+      color = color,
+      fillcolor = fillcolor
+    ),
+    line = list(color = linecolor),
+    hoverinfo = hoverinfo
+  ) %>%
+    plotly::layout(
+      title = title,
       yaxis = list(title = yaxistitle,
                    hoverformat = hoverformat),
       xaxis = list(title = xaxistitle),
