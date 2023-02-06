@@ -24,7 +24,6 @@ wgcna_plot_module_graph_server <- function(id,
                                            labels2rainbow,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     moduleGraph.RENDER <- shiny::reactive({
       require(igraph)
       out <- wgcna.compute()
@@ -44,10 +43,10 @@ wgcna_plot_module_graph_server <- function(id,
       clust <- hclust(dist(t(MEs)))
       clust
       phylo <- ape::as.phylo(clust)
-      gr <- igraph::as.igraph(phylo, directed=FALSE)
+      gr <- igraph::as.igraph(phylo, directed = FALSE)
 
       is.tip <- grepl("^ME", igraph::V(gr)$name)
-      module.nr   <- as.integer(sub("^ME|Node.*","", igraph::V(gr)$name))
+      module.nr <- as.integer(sub("^ME|Node.*", "", igraph::V(gr)$name))
       module.size <- table(out$net$colors)
       module.size <- module.size / mean(module.size)
       module.size
@@ -55,10 +54,10 @@ wgcna_plot_module_graph_server <- function(id,
       igraph::V(gr)$label <- igraph::V(gr)$name
       igraph::V(gr)$label[!is.tip] <- NA
       igraph::V(gr)$color <- me.colors[as.character(module.nr)]
-      igraph::V(gr)$size  <- 24 * (module.size[as.character(module.nr)])**0.5
+      igraph::V(gr)$size <- 24 * (module.size[as.character(module.nr)])**0.5
       igraph::V(gr)$size[is.na(igraph::V(gr)$size)] <- 0
 
-      par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
+      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0)
       igraph::plot.igraph(
         gr,
         layout = igraph::layout.kamada.kawai,

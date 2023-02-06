@@ -23,19 +23,19 @@ wgcna_plot_eigengene_clustering_server <- function(id,
                                                    wgcna.compute,
                                                    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     eigenClustering.RENDER <- shiny::reactive({
-
       out <- wgcna.compute()
 
-      MET = out$net$MEs
-      if(NCOL(MET)<=2) MET <- cbind(MET,MET)  ## error if ncol(MET)<=2 !!!!
+      MET <- out$net$MEs
+      if (NCOL(MET) <= 2) MET <- cbind(MET, MET) ## error if ncol(MET)<=2 !!!!
 
       ## Plot the relationships among the eigengenes and the trait
       WGCNA::plotEigengeneNetworks(
-        MET, "", marDendro = c(0,4,1,2),
-        marHeatmap = c(3,4,1,2), cex.lab = 0.8,
-        xLabelsAngle = 90)
+        MET, "",
+        marDendro = c(0, 4, 1, 2),
+        marHeatmap = c(3, 4, 1, 2), cex.lab = 0.8,
+        xLabelsAngle = 90
+      )
       p <- grDevices::recordPlot()
       p
     })

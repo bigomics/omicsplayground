@@ -9,7 +9,7 @@ wgcna_plot_gclustering_ui <- function(id, height, width) {
   info_text <- "<b>TOM umap.</b> UMAP visualization of TOM correlation of genes."
 
   umap.opts <- shiny::tagList(
-    shiny::selectInput(ns('clust_method'),'method:', choices=c("tsne2d","umap2d","pca2d"))
+    shiny::selectInput(ns("clust_method"), "method:", choices = c("tsne2d", "umap2d", "pca2d"))
   )
 
   PlotModuleUI(
@@ -28,18 +28,17 @@ wgcna_plot_gclustering_server <- function(id,
                                           wgcna.compute,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     umap.RENDER <- shiny::reactive({
       out <- wgcna.compute()
 
-      method="tsne2d"
+      method <- "tsne2d"
       method <- input$clust_method
 
-      par(mfrow=c(1,1), mar=c(2,3,1,1))
+      par(mfrow = c(1, 1), mar = c(2, 3, 1, 1))
       me1 <- paste0("ME", out$net$colors)
       pos <- out$clust[[method]]
 
-      pgx.scatterPlotXY.BASE(pos, var=me1, col=out$me.colors)
+      pgx.scatterPlotXY.BASE(pos, var = me1, col = out$me.colors)
       p <- grDevices::recordPlot()
       p
     })
