@@ -290,8 +290,8 @@ server = function(input, output, session) {
             shiny::tags$h1(
                 "Sorry, the Playground is full!", style="color:white;font-family:lato;"
             ),
-            shiny::p("Our servers are overloaded  or someone else is already using
-                this account. Please try again later.", style="font-size:15px;"),            
+            shiny::p("Someone else is already using this account, or our servers are at capacity.
+                      Please try again later.", style="font-size:15px;"),            
             shiny::br(),
 #            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
 #                width=350,height=200)),
