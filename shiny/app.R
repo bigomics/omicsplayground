@@ -288,13 +288,13 @@ server = function(input, output, session) {
         srv <- paste0(isolate(session$clientData$url_hostname),":",SERVER_NAME)
         sever_screen_503 <- shiny::tagList(
             shiny::tags$h1(
-                "Sorry, the Playground is crowded!", style="color:white;font-family:lato;"
+                "Sorry, the Playground is full!", style="color:white;font-family:lato;"
             ),
-            shiny::p("Our server is at capacity or someone else is already using
+            shiny::p("Our servers are overloaded  or someone else is already using
                 this account. Please try again later.", style="font-size:15px;"),            
             shiny::br(),
-            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
-                width=350,height=200)),
+#            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
+#                width=350,height=200)),
             shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
             shiny::br(),shiny::br(),
             sever::reload_button("Retry", class = "info")
