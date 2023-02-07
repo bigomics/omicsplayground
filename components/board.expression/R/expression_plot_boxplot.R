@@ -108,8 +108,6 @@ expression_plot_boxplot_server <- function(id,
 
       # par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
 
-      browser()
-
 
       fig <- pgx.plotExpression(
         pd[["ngs"]],

@@ -1266,6 +1266,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         grp.klr1[is.na(grp.klr1)] <- "grey90"
         names(grp.klr1) <- as.character(xlevels)
         ##col=grp.klr1;las=3;names.cex=cex;
+
         fig <- pgx.barplot.PLOTLY(
           data = data.frame(
             gx = gx,
@@ -4035,21 +4036,34 @@ pgx.barplot.PLOTLY <- function(
   yaxistitle = FALSE,
   xaxistitle = FALSE,
   font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 10, t = 10)
+  margin = list(l = 10, r = 10, b = 10, t = 12)
 ){
 
+  # calculate error bars
+
+
+
+  # calculate summary statistics for groups
+  data_stats <- do.call(data.frame,
+                        aggregate(data[[y]],
+                                  list(data[[x]]),
+                                  function(val)
+                                    c(mean = mean(val), sd = sd(val))))
+  # browser()
+
   plotly::plot_ly(
-    data = data,
-    x = ~get(x),
-    y = ~get(y),
+    data = data_stats,
+    x = ~data_stats[[1]],
+    y = ~data_stats[[2]],
+    error_y = list(array = ~data_stats[[3]]),
     type = type,
     marker = list(
       color = color,
       fillcolor = fillcolor
     ),
-    line = list(color = linecolor),
+    line = ~list(color = linecolor),
     hoverinfo = hoverinfo
-  ) %>%
+    ) %>%
     plotly::layout(
       title = title,
       yaxis = list(title = yaxistitle,
