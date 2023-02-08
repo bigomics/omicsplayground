@@ -57,14 +57,14 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_cmap_FCFCplots_ui(ns("cmap_FCFCplots"))
+            connectivity_plot_cmap_FCFCplots_ui(ns("cmap_FCFCplots"),label = "a")
           ),
           div(
             class = "col-md-6",
             tableWidget(ns("connectivityScoreTable"))
           )
         ),
-        connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot")),
+        connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot"),label = "c"),
         tags$div(
           HTML(paste(
             "<b>(a)</b> <b>FC scatter plots.</b> Scatter plots of gene expression
@@ -87,15 +87,15 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_cumFCplot_ui(ns("cumFCplot"))
+            connectivity_plot_cumFCplot_ui(ns("cumFCplot"),label = "a")
           ),
           div(
             class = "col-md-6",
-            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"))
+            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"),label = "b")
           )
         ),
         shiny::br(),
-        connectivity_plot_connectivityHeatmap_ui(ns("connectivityHeatmap")),
+        connectivity_plot_connectivityHeatmap_ui(ns("connectivityHeatmap"), label = "c"),
         tags$div(
           HTML(paste(
             "<b>(a)</b> <b>Meta-foldchange.</b> The barplot visualizes the
@@ -114,11 +114,11 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"))
+            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"),label = "a")
           ),
           div(
             class = "col-md-6",
-            connectivity_plot_enrichmentGraph_ui(ns("enrichmentGraph"))
+            connectivity_plot_enrichmentGraph_ui(ns("enrichmentGraph"), label = "b")
           )
         ),
         tags$div(
@@ -134,7 +134,7 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_connectivityMap_ui(ns("connectivityMap"))
+            connectivity_plot_connectivityMap_ui(ns("connectivityMap"), label = "a")
           ),
           div(
             class = "col-md-6",

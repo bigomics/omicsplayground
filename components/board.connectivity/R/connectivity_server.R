@@ -456,7 +456,7 @@ ConnectivityBoard <- function(id, inputData) {
 
     connectivityScoreTable <- shiny::callModule(
       tableModule,
-      id = "connectivityScoreTable", label = "b",
+      id = "connectivityScoreTable",
       func = connectivityScoreTable.RENDER,
       info.text = connectivityScoreTable_info,
       options = connectivityScoreTable_opts,
