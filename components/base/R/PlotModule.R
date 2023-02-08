@@ -150,8 +150,8 @@ PlotModuleUI <- function(id,
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
 
-    if(!is.null(label) && label!="") label <- paste0("(",label,")")
-    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
+    if(!is.null(label) && label!="") label <- paste0("&nbsp;(",label,")")
+    label <- shiny::div(class = "plotmodule-title", shiny::HTML(label))
 
     zoom.button <- NULL
     if(1 && show.maximize) {
@@ -164,10 +164,8 @@ PlotModuleUI <- function(id,
 
     header <- shiny::fillRow(
         flex = c(NA,1,NA,NA,NA,NA),
-        ##flex=c(NA,NA,1),
-        label1,
-##      shiny::HTML(paste("<center>",title,"</center>")),
         shiny::div(class='plotmodule-title', title=title, title),
+        label,
         DropdowMenu(
             shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
             shiny::br(),
