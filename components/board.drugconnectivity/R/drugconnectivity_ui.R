@@ -39,17 +39,17 @@ DrugConnectivityUI <- function(id) {
             div(class = "col-md-10",
               div(class = "row",
                 div(class = "col-md-6",
-                  drugconnectivity_plot_enplots_ui(ns("dsea_enplots"))
+                  drugconnectivity_plot_enplots_ui(ns("dsea_enplots"),label = "a")
                 ),
                 div(class = "col-md-6",
-                  drugconnectivity_plot_moa_ui(ns("dsea_moaplot"))
+                  drugconnectivity_plot_moa_ui(ns("dsea_moaplot"),label = "b")
                 )
               ),
               br(),
               drugconnectivity_table_dsea_ui(ns("dsea_table"))
             ),
             div(class = "col-md-2",
-              drugconnectivity_plot_actmap_ui(ns("dsea_actmap"))
+              drugconnectivity_plot_actmap_ui(ns("dsea_actmap"),label = "d")
             )
           ),
           div(
@@ -73,14 +73,14 @@ DrugConnectivityUI <- function(id) {
               shiny::fillCol(
                 flex = c(1.15, 0.05, 1),
                 #plotWidget(ns("cmap_enplot")),
-                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot")),
+                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot"),label = "a"),
                 shiny::br(),
                 #tableWidget(ns("cmap_table"))
                 drugconnectivity_table_cmap_ui(ns("cmap_table"))
               ),
               shiny::br(),
               #plotWidget(ns("dsea_cmap"))
-              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"))
+              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"),label = "c")
             ),
             div(
               HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
