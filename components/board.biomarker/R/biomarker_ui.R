@@ -59,13 +59,13 @@ BiomarkerUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          biomarker_plot_importance_ui(ns("pdx_importance")),
-          biomarker_plot_heatmap_ui(ns("pdx_heatmap"))
+          biomarker_plot_importance_ui(ns("pdx_importance"),label = "a"),
+          biomarker_plot_heatmap_ui(ns("pdx_heatmap"),label = "b")
         ),
         div(
           class = "col-md-6",
-          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree")),
-          biomarker_plot_boxplots_ui(ns("pdx_boxplots"))
+          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"),label = "c"),
+          biomarker_plot_boxplots_ui(ns("pdx_boxplots"),label = "d")
         )
       ),
       tags$div(
