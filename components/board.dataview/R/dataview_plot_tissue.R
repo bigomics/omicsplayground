@@ -7,7 +7,7 @@
 dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
   info_text <- paste(
-    "Tissue expression for the selected gene in the tissue expression ",
+    "Top 15 tissues for the selected gene in the tissue expression ",
     a_GTEx, " dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
   )
 
@@ -57,18 +57,22 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         tx <- tx[jj]
         tissue.klr <- tissue.klr[jj]
       }
-
-      list(
-        df = data.frame(
-          tissue = names(tx),
-          x = tx,
-          group = grp,
-          color = tissue.klr
-        ),
-        gene = hgnc.gene,
-        ylab = ylab
+      df = data.frame(
+        tissue = names(tx),
+        x = tx,
+        group = grp,
+        color = tissue.klr
       )
-    })
+      df <- df[with(df,order(-x)),]
+      df <- df[1:15,] #select top 15 tissues
+
+      return(
+        list(
+          df = df,
+          gene = hgnc.gene,
+          ylab = ylab
+      ))
+      })
 
     plot.RENDER.base <- function() {
       pdat <- plot_data()
