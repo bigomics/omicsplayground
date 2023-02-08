@@ -84,26 +84,43 @@ DataViewUI <- function(id) {
             class = "row",
             div(
               class = "col-md-4",
-              dataview_plot_expression_ui(ns("expressionplot"), height = imgH)
+              dataview_plot_expression_ui(
+                ns("expressionplot"),
+                height = imgH,
+                label = "a")
             ),
             div(
               class = "col-md-4",
-              dataview_plot_averagerank_ui(ns("averagerankplot"), height = imgH)
+              dataview_plot_averagerank_ui(
+                ns("averagerankplot"),
+                height = imgH,
+                label = "b"
+                )
             ),
             div(
               class = "col-md-4",
-              dataview_plot_tsne_ui(ns("tsneplot"), height = imgH)
+              dataview_plot_tsne_ui(
+                ns("tsneplot"),
+                height = imgH,
+                label = "c"
+                )
             )
           ),
           div(
             class = "row",
             div(
               class = "col-md-6",
-              dataview_plot_correlation_ui(ns("correlationplot"), height = imgH)
+              dataview_plot_correlation_ui(
+                ns("correlationplot"),
+                height = imgH,
+                label = "d")
             ),
             div(
               class = "col-md-6",
-              dataview_plot_tissue_ui(ns("tissueplot"), height = imgH)
+              dataview_plot_tissue_ui(
+                ns("tissueplot"),
+                height = imgH,
+                label = "e")
             )
           ),
           tags$div(
@@ -125,26 +142,40 @@ DataViewUI <- function(id) {
         class = "row",
         div(
           class = "col-md-4",
-          dataview_plot_totalcounts_ui(ns("counts_total"), height = imgH)
+          dataview_plot_totalcounts_ui(
+            ns("counts_total"),
+            height = imgH,
+            label = "a")
         ),
         div(
           class = "col-md-4",
-          dataview_plot_boxplot_ui(ns("counts_boxplot"), height = imgH)
+          dataview_plot_boxplot_ui(
+            ns("counts_boxplot"),
+            height = imgH,
+            label = "b")
         ),
         div(
           class = "col-md-4",
-          dataview_plot_histogram_ui(ns("counts_histplot"), height = imgH)
+          dataview_plot_histogram_ui(
+            ns("counts_histplot"),
+            height = imgH,
+            label = "c")
         )
       ),
       div(
         class = "row",
         div(
           class = "col-md-5",
-          dataview_plot_genetypes_ui(ns("counts_genetypes"), height = imgH)
+          dataview_plot_genetypes_ui(
+            ns("counts_genetypes"),
+            height = imgH,label = "d"
+            )
         ),
         div(
           class = "col-md-7",
-          dataview_plot_abundance_ui(ns("counts_abundance"), height = imgH)
+          dataview_plot_abundance_ui(
+            ns("counts_abundance"),
+            height = imgH,label = "e")
         )
       ),
       tags$div(
@@ -177,7 +208,8 @@ DataViewUI <- function(id) {
           shiny::div(
             dataview_plot_phenoheatmap_ui(
               ns("phenoheatmap"),
-              height = imgH
+              height = imgH,
+              label = "a"
             ),
             style = "overflow-y: auto;"
           )
@@ -186,11 +218,13 @@ DataViewUI <- function(id) {
           class = "col-md-6",
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
-            height = imgH
+            height = imgH,
+            label = "b"
           )
         )
       ),
-      dataview_table_samples_ui(ns("sampletable")),
+      dataview_table_samples_ui(
+        ns("sampletable")),
       tags$div(
         class = "caption",
         HTML(
