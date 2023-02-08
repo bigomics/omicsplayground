@@ -51,7 +51,7 @@ wordcloud_table_enrichment_server <- function(id,
       func = wordcloud_enrichmentTable.RENDER,
       info.text = wordcloud_enrichmentTable_info,
       title = tags$div(
-        HTML('<span class="module-label">(e)</span>Enrichment table')
+        HTML('<span class="module-label">(d)</span>Enrichment table')
       ),
       height = c(270, 700)
     )

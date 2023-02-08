@@ -63,7 +63,7 @@ wordcloud_table_leading_edge_server <- function(id,
       func = wordcloud_leadingEdgeTable.RENDER,
       info.text = "Keyword leading edge table.",
       title = tags$div(
-        HTML('<span class="module-label">(f)</span>Leading-edge table')
+        HTML('<span class="module-label">(e)</span>Leading-edge table')
       ),
       height = c(270, 700)
     )

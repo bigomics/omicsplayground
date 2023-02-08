@@ -56,8 +56,7 @@ WordCloudUI <- function(id) {
                     The green curve corresponds to 'running statistics' of the keyword enrichment score.
                     <b>(b)</b> <b>Word cloud.</b> The size of the words are relative to the normalized enrichment score
                     (NES) from the GSEA computation. <b>(c)</b> <b>Word t-SNE</b> of keywords extracted from the titles/descriptions
-                    of the genesets. <b>(d)</b> <b>Activation matrix</b> showing keyword enrichment across contrasts.
-                    <b>(e)</b> <b>Enrichment table</b> of keywords for selected contrast. <b>(f)</b> <b>Leading edge terms</b>
+                    of the genesets. <b>(d)</b> <b>Enrichment table</b> of keywords for selected contrast. <b>(e)</b> <b>Leading edge terms</b>
                     for selected keyword.")
       )
     )
