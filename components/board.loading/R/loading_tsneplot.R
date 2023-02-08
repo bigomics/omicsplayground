@@ -5,10 +5,7 @@
 
 loading_tsne_ui <- function(id, label='', height=c(350,600)) {
     ns <- shiny::NS(id)
-    ## options (hamburger menu)
-    options <- tagList(
-        actionButton(ns("button1"),"some action")
-    )
+
     info_text = paste0('<b>Similarity clustering</b> of fold-change signatures colored by data sets using t-SNE. Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.')
     
     PlotModuleUI(
@@ -16,8 +13,7 @@ loading_tsne_ui <- function(id, label='', height=c(350,600)) {
         outputFunc = plotly::plotlyOutput,
         outputFunc2 = plotly::plotlyOutput,        
         info.text = info_text,
-        options = options,
-        download.fmt=c("png","pdf","csv"),         
+        download.fmt = c("png","pdf","csv"),         
         width = c("auto","100%"),
         height = height,
         label = label,
