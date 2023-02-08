@@ -1210,7 +1210,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
     names(grp.klr) <- group.names
     ## if(is.null(comp) && grouped) grp.klr <- rep("grey60",length(grp.klr))
     if(any(grepl("other",xgroup))) {
-        grp.klr <- c("other"="grey85", grp.klr)
+        grp.klr <- c("other"="#d9d9d9", grp.klr)
     }
     grp.klr
 
@@ -1241,7 +1241,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
             if(!logscale) ylab = "expression (CPM)"
         }
         klr = grp.klr[as.character(xgroup)]
-        klr[is.na(klr)] <- "grey90"
+        klr[is.na(klr)] <- "#e5e5e5"
 
         fig <- pgx.barplot.PLOTLY(
           data = data.frame(
@@ -1286,6 +1286,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
           ),
           x = "xgroup",
           y = "gx",
+          fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
           title = main
           )
 
@@ -4054,8 +4055,6 @@ pgx.barplot.PLOTLY <- function(
 
   # calculate error bars
 
-
-
   # calculate summary statistics for groups
   data_stats <- do.call(data.frame,
                         aggregate(data[[y]],
@@ -4069,8 +4068,7 @@ pgx.barplot.PLOTLY <- function(
     error_y = list(array = ~data_stats[[3]]),
     type = type,
     marker = list(
-      color = color,
-      fillcolor = fillcolor
+      color = fillcolor
     ),
     line = ~list(color = linecolor),
     hoverinfo = hoverinfo
