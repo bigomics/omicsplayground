@@ -4031,12 +4031,13 @@ pgx.barplot.PLOTLY <- function(
   color = omics_colors("brand_blue"),
   fillcolor = omics_colors("light_blue"),
   linecolor = omics_colors("brand_blue"),
+  titlecolor = "#1f77b4",
   hoverinfo = "y",
   hoverformat = ".2f",
   yaxistitle = FALSE,
   xaxistitle = FALSE,
   font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 10, t = 12)
+  margin = list(l = 10, r = 10, b = 10, t = 30)
 ){
 
   # calculate error bars
@@ -4065,7 +4066,8 @@ pgx.barplot.PLOTLY <- function(
     hoverinfo = hoverinfo
     ) %>%
     plotly::layout(
-      title = title,
+      title = list(text = title,
+                   font = list(color = titlecolor)),
       yaxis = list(title = yaxistitle,
                    hoverformat = hoverformat),
       xaxis = list(title = xaxistitle),
