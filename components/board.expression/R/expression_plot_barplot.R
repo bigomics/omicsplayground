@@ -27,6 +27,10 @@ expression_plot_barplot_ui <- function(id,
     withTooltip(shiny::checkboxInput(ns("barplot_logscale"), "log scale", TRUE),
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
+                "Show the 'others' class (if any)",
+                placement = "right", options = list(container = "body")
     )
   )
 
@@ -71,6 +75,7 @@ expression_plot_barplot_server <- function(id,
       comp <- comp() # input$gx_contrast
       grouped <- input$barplot_grouped
       logscale <- input$barplot_logscale
+      showothers <- input$barplot_showothers
       ngs <- ngs()
       sel <- sel()
       res <- res()
@@ -88,6 +93,7 @@ expression_plot_barplot_server <- function(id,
         sel = sel,
         grouped = grouped,
         logscale = logscale,
+        showothers = showothers,
         srt = srt
       ))
     })
@@ -114,13 +120,13 @@ expression_plot_barplot_server <- function(id,
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
+        showothers = pd[['showothers']],
         max.points = 200, ## slow!!
         names = TRUE,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]]
       )
       fig
-
     }
 
     PlotModuleServer(
