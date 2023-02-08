@@ -1275,7 +1275,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         ##grp.klr1 <- grp.klr[levels(xgroup)]
         xlevels <- levels(xgroup)
         grp.klr1 <- grp.klr[as.character(xlevels)]
-        grp.klr1[is.na(grp.klr1)] <- "grey90"
+        grp.klr1[is.na(grp.klr1)] <- "e5e5e5"
         names(grp.klr1) <- as.character(xlevels)
         ##col=grp.klr1;las=3;names.cex=cex;
 
@@ -4065,7 +4065,8 @@ pgx.barplot.PLOTLY <- function(
     data = data_stats,
     x = ~data_stats[[1]],
     y = ~data_stats[[2]],
-    error_y = list(array = ~data_stats[[3]]),
+    error_y = list(array = ~data_stats[[3]],
+                   color = "#000000"),
     type = type,
     marker = list(
       color = fillcolor
