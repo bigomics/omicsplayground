@@ -100,8 +100,8 @@ ExpressionUI <- function(id) {
                 ),
                 div(
                   class = "col-md-3",
-                  expression_plot_boxplot_ui(
-                    id = ns("plots_boxplot"),
+                  expression_plot_barplot_ui(
+                    id = ns("plots_barplot"),
                     label = "c",
                     height = c(imgH, imgH),
                     width = c("auto", imgH)

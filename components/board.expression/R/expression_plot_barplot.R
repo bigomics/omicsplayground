@@ -9,24 +9,28 @@
 #'
 #' @param id
 #' @param label
-#' @param height
+#' @param heightt
 #' @param width
 #'
 #' @export
-expression_plot_boxplot_ui <- function(id,
+expression_plot_barplot_ui <- function(id,
                                        label = "",
                                        height,
                                        width) {
   ns <- shiny::NS(id)
 
-  plots_boxplot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("boxplot_grouped"), "grouped", TRUE),
+  plots_barplot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("barplot_grouped"), "grouped", TRUE),
       "Group expression values by conditions.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("boxplot_logscale"), "log scale", TRUE),
+    withTooltip(shiny::checkboxInput(ns("barplot_logscale"), "log scale", TRUE),
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
+                "Show the 'others' class (if any)",
+                placement = "right", options = list(container = "body")
     )
   )
 
@@ -35,9 +39,9 @@ expression_plot_boxplot_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Differential expression",
     label = label,
-    plotlib = "base",
     info.text = info_text,
-    options = plots_boxplot_opts,
+    plotlib = "plotly",
+    options = plots_barplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -58,7 +62,7 @@ expression_plot_boxplot_ui <- function(id,
 #'
 #'
 #' @export
-expression_plot_boxplot_server <- function(id,
+expression_plot_barplot_server <- function(id,
                                            comp,
                                            ngs,
                                            sel,
@@ -69,8 +73,9 @@ expression_plot_boxplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
-      grouped <- input$boxplot_grouped
-      logscale <- input$boxplot_logscale
+      grouped <- input$barplot_grouped
+      logscale <- input$barplot_logscale
+      showothers <- input$barplot_showothers
       ngs <- ngs()
       sel <- sel()
       res <- res()
@@ -88,6 +93,7 @@ expression_plot_boxplot_server <- function(id,
         sel = sel,
         grouped = grouped,
         logscale = logscale,
+        showothers = showothers,
         srt = srt
       ))
     })
@@ -106,21 +112,24 @@ expression_plot_boxplot_server <- function(id,
         return(NULL)
       }
 
-      par(mfrow = c(1, 1), mar = c(4, 3, 1.5, 1.5), mgp = c(2, 0.8, 0), oma = c(1, 0.5, 0, 0.5))
-      pgx.plotExpression(pd[["ngs"]],
+      fig <- pgx.plotExpression(
+        pd[["ngs"]],
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
+        showothers = pd[['showothers']],
         max.points = 200, ## slow!!
         names = TRUE,
         logscale = pd[["logscale"]],
-        srt = pd[["srt"]]
+        srt = pd[["srt"]],
+        xlab = "Groups"
       )
+      fig
     }
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
+      plotlib = "plotly",
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

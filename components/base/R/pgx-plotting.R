@@ -1210,7 +1210,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
     names(grp.klr) <- group.names
     ## if(is.null(comp) && grouped) grp.klr <- rep("grey60",length(grp.klr))
     if(any(grepl("other",xgroup))) {
-        grp.klr <- c("other"="grey85", grp.klr)
+        grp.klr <- c("other"="#d9d9d9", grp.klr)
     }
     grp.klr
 
@@ -1241,19 +1241,31 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
             if(!logscale) ylab = "expression (CPM)"
         }
         klr = grp.klr[as.character(xgroup)]
-        klr[is.na(klr)] <- "grey90"
-        gx.min = 0
-        if(min(gx)<0) gx.min <- min(gx)
-        ylim <- c(gx.min,1.3*max(gx))
-        bx = barplot( gx[], col=klr[], ylim=ylim,
-                     ## offset = 0, ylim=c(gx.min,max(gx)),
-                     las=3, ylab=ylab, names.arg=NA, border = NA)
-        if(nx<20 && names==TRUE) {
-            y0 <- min(ylim) - 0.03*diff(ylim)
-            text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
-                 xpd=TRUE, cex=ifelse(nx>10,0.7,0.9)*cex )
+        klr[is.na(klr)] <- "#e5e5e5"
+
+        fig <- pgx.barplot.PLOTLY(
+          data = data.frame(
+            gx = gx,
+            xgroup = factor(names(gx), levels = names(gx))
+          ),
+          x = "xgroup",
+          y = "gx",
+          title = main
+        )
+
+        # gx.min = 0
+        # if(min(gx)<0) gx.min <- min(gx)
+        # ylim <- c(gx.min,1.3*max(gx))
+        # bx = barplot( gx[], col=klr[], ylim=ylim,
+        #              ## offset = 0, ylim=c(gx.min,max(gx)),
+        #              las=3, ylab=ylab, names.arg=NA, border = NA)
+        if(nx>20 && names==FALSE) { # remove x axis to labels if condition is met
+          fig <- plotly::layout(p = fig, xaxis = list(showticklabels = FALSE))
+          return(fig)
         }
-        title(main, cex.main=1.0, line=0)
+
+
+        return(fig)
     } else {
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -1263,16 +1275,33 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         ##grp.klr1 <- grp.klr[levels(xgroup)]
         xlevels <- levels(xgroup)
         grp.klr1 <- grp.klr[as.character(xlevels)]
-        grp.klr1[is.na(grp.klr1)] <- "grey90"
+        grp.klr1[is.na(grp.klr1)] <- "e5e5e5"
         names(grp.klr1) <- as.character(xlevels)
         ##col=grp.klr1;las=3;names.cex=cex;
-        gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
-                  first = xlevels[1],
-                  col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
-                  max.points=max.points, xlab=xlab, names=names,
-                  ## sig.stars=TRUE, max.stars=5,
-                  las=3, names.cex=cex, srt=srt)
-        title(main, cex.main=1.0, line=0)
+
+        fig <- pgx.barplot.PLOTLY(
+          data = data.frame(
+            gx = gx,
+            xgroup = xgroup
+          ),
+          x = "xgroup",
+          y = "gx",
+          fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
+          title = main,
+          yaxistitle = ylab,
+          xaxistitle = xlab
+          )
+
+        return(fig)
+
+
+        # gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
+        #           first = xlevels[1],
+        #           col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
+        #           max.points=max.points, xlab=xlab, names=names,
+        #           ## sig.stars=TRUE, max.stars=5,
+        #           las=3, names.cex=cex, srt=srt)
+        # title(main, cex.main=1.0, line=0)
     }
 
 }
@@ -3961,4 +3990,101 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
 
 
     return(plt)
+}
+
+
+
+pgx.boxplot.PLOTLY <- function(
+  data,
+  x = NULL,
+  y = NULL,
+  type = "box",
+  title = NULL,
+  color = omics_colors("brand_blue"),
+  fillcolor = omics_colors("light_blue"),
+  linecolor = omics_colors("brand_blue"),
+  hoverinfo = "y",
+  hoverformat = ".2f",
+  yaxistitle = FALSE,
+  xaxistitle = FALSE,
+  font_family = "Lato",
+  margin = list(l = 10, r = 10, b = 10, t = 10)
+  ){
+
+  plotly::plot_ly(
+    data = data,
+    x = ~get(x),
+    y = ~get(y),
+    type = type,
+    marker = list(
+      color = color,
+      fillcolor = fillcolor
+    ),
+    line = list(color = linecolor),
+    hoverinfo = hoverinfo
+  ) %>%
+    plotly::layout(
+      title = title,
+      yaxis = list(title = yaxistitle,
+                   hoverformat = hoverformat),
+      xaxis = list(title = xaxistitle),
+      font = list(family = font_family),
+      margin = margin
+    ) %>%
+    plotly_default1()
+
+}
+
+
+
+pgx.barplot.PLOTLY <- function(
+  data,
+  x = NULL,
+  y = NULL,
+  type = "bar",
+  title = NULL,
+  color = omics_colors("brand_blue"),
+  fillcolor = omics_colors("light_blue"),
+  linecolor = omics_colors("brand_blue"),
+  titlecolor = "#1f77b4",
+  hoverinfo = "y",
+  hoverformat = ".2f",
+  yaxistitle = FALSE,
+  xaxistitle = FALSE,
+  font_family = "Lato",
+  margin = list(l = 10, r = 10, b = 65, t = 30)
+){
+
+  # calculate error bars
+
+  # calculate summary statistics for groups
+  data_stats <- do.call(data.frame,
+                        aggregate(data[[y]],
+                                  list(data[[x]]),
+                                  function(val)
+                                    c(mean = mean(val), sd = sd(val))))
+  plotly::plot_ly(
+    data = data_stats,
+    x = ~data_stats[[1]],
+    y = ~data_stats[[2]],
+    error_y = list(array = ~data_stats[[3]],
+                   color = "#000000"),
+    type = type,
+    marker = list(
+      color = fillcolor
+    ),
+    line = ~list(color = linecolor),
+    hoverinfo = hoverinfo
+    ) %>%
+    plotly::layout(
+      title = list(text = title,
+                   font = list(color = titlecolor)),
+      yaxis = list(title = yaxistitle,
+                   hoverformat = hoverformat),
+      xaxis = list(title = xaxistitle),
+      font = list(family = font_family),
+      margin = margin
+    ) %>%
+    plotly_default1()
+
 }
