@@ -9,22 +9,22 @@
 #'
 #' @param id
 #' @param label
-#' @param height
+#' @param heightt
 #' @param width
 #'
 #' @export
-expression_plot_boxplot_ui <- function(id,
+expression_plot_barplot_ui <- function(id,
                                        label = "",
                                        height,
                                        width) {
   ns <- shiny::NS(id)
 
-  plots_boxplot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("boxplot_grouped"), "grouped", TRUE),
+  plots_barplot_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("barplot_grouped"), "grouped", TRUE),
       "Group expression values by conditions.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("boxplot_logscale"), "log scale", TRUE),
+    withTooltip(shiny::checkboxInput(ns("barplot_logscale"), "log scale", TRUE),
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
     )
@@ -37,7 +37,7 @@ expression_plot_boxplot_ui <- function(id,
     label = label,
     info.text = info_text,
     plotlib = "plotly",
-    options = plots_boxplot_opts,
+    options = plots_barplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -58,7 +58,7 @@ expression_plot_boxplot_ui <- function(id,
 #'
 #'
 #' @export
-expression_plot_boxplot_server <- function(id,
+expression_plot_barplot_server <- function(id,
                                            comp,
                                            ngs,
                                            sel,
@@ -69,8 +69,8 @@ expression_plot_boxplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
-      grouped <- input$boxplot_grouped
-      logscale <- input$boxplot_logscale
+      grouped <- input$barplot_grouped
+      logscale <- input$barplot_logscale
       ngs <- ngs()
       sel <- sel()
       res <- res()

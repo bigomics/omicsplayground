@@ -313,8 +313,8 @@ ExpressionBoard <- function(id, inputData) {
       watermark = FALSE
     )
 
-    expression_plot_boxplot_server(
-      id = "plots_boxplot",
+    expression_plot_barplot_server(
+      id = "plots_barplot",
       comp = shiny::reactive(input$gx_contrast),
       ngs = inputData,
       sel = genetable$rows_selected,
