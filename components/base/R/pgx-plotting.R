@@ -4037,7 +4037,7 @@ pgx.barplot.PLOTLY <- function(
   yaxistitle = FALSE,
   xaxistitle = FALSE,
   font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 10, t = 30)
+  margin = list(l = 10, r = 10, b = 65, t = 30)
 ){
 
   # calculate error bars
