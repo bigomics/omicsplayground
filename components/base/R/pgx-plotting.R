@@ -1242,18 +1242,30 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         }
         klr = grp.klr[as.character(xgroup)]
         klr[is.na(klr)] <- "grey90"
-        gx.min = 0
-        if(min(gx)<0) gx.min <- min(gx)
-        ylim <- c(gx.min,1.3*max(gx))
-        bx = barplot( gx[], col=klr[], ylim=ylim,
-                     ## offset = 0, ylim=c(gx.min,max(gx)),
-                     las=3, ylab=ylab, names.arg=NA, border = NA)
-        if(nx<20 && names==TRUE) {
-            y0 <- min(ylim) - 0.03*diff(ylim)
-            text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
-                 xpd=TRUE, cex=ifelse(nx>10,0.7,0.9)*cex )
+
+        fig <- pgx.barplot.PLOTLY(
+          data = data.frame(
+            gx = gx,
+            xgroup = factor(names(gx), levels = names(gx))
+          ),
+          x = "xgroup",
+          y = "gx",
+          title = main
+        )
+
+        # gx.min = 0
+        # if(min(gx)<0) gx.min <- min(gx)
+        # ylim <- c(gx.min,1.3*max(gx))
+        # bx = barplot( gx[], col=klr[], ylim=ylim,
+        #              ## offset = 0, ylim=c(gx.min,max(gx)),
+        #              las=3, ylab=ylab, names.arg=NA, border = NA)
+        if(nx>20 && names==FALSE) { # remove x axis to labels if condition is met
+          fig <- plotly::layout(p = fig, xaxis = list(showticklabels = FALSE))
+          return(fig)
         }
-        title(main, cex.main=1.0, line=0)
+
+
+        return(fig)
     } else {
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -1277,7 +1289,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
           title = main
           )
 
-        fig
+        return(fig)
 
 
         # gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
@@ -4050,8 +4062,6 @@ pgx.barplot.PLOTLY <- function(
                                   list(data[[x]]),
                                   function(val)
                                     c(mean = mean(val), sd = sd(val))))
-  # browser()
-
   plotly::plot_ly(
     data = data_stats,
     x = ~data_stats[[1]],
