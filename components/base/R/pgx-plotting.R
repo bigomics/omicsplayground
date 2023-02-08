@@ -1287,7 +1287,9 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
           x = "xgroup",
           y = "gx",
           fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
-          title = main
+          title = main,
+          yaxistitle = ylab,
+          xaxistitle = xlab
           )
 
         return(fig)

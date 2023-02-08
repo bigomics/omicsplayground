@@ -121,7 +121,8 @@ expression_plot_barplot_server <- function(id,
         max.points = 200, ## slow!!
         names = TRUE,
         logscale = pd[["logscale"]],
-        srt = pd[["srt"]]
+        srt = pd[["srt"]],
+        xlab = "Groups"
       )
       fig
     }
