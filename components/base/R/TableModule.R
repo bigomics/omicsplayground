@@ -108,12 +108,33 @@ tableModule <- function(input, output, session,
     height.2 <- ifnotchar.int(height[2])
 
     output$datatable <- DT::renderDT({
-         func()
+        # If the options `scrollX` or `autoWidth` are set,
+        # the global defaults of the global.R
+        # will be overwritten. This ensures those options
+        # are kept so that the header scrolls properly.
+        dt <- func()
+        active_options <- names(dt$x$options)
+        if("scrollX" %in% active_options){
+            dt$x$options$scrollX <- TRUE
+        }
+        if("autoWidth" %in% active_options){
+            dt$x$options$autoWidth <- FALSE
+        }
+        dt
     },
     fillContainer = T)
     output$datatable2 <- DT::renderDT({
-         func2()
-    })
+        dt <- func2()
+        active_options <- names(dt$x$options)
+        if("scrollX" %in% active_options){
+            dt$x$options$scrollX <- TRUE
+        }
+        if("autoWidth" %in% active_options){
+            dt$x$options$autoWidth <- FALSE
+        }
+        dt
+    },
+    fillContainer = T)
 
     output$popuptable <- shiny::renderUI({
         if(any(class(caption2)=="reactive")) {
