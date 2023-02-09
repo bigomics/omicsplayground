@@ -9,7 +9,8 @@ tableModule <- function(input, output, session,
                         caption=NULL, caption2=caption,
                         csvFunc=NULL, filename="data.csv", ##inputs=NULL,
                         width=c("100%","100%"), height=c("auto","auto"),
-                        options = NULL, info.width="300px"
+                        options = NULL, info.width="300px",
+                        selector = c("none","single", "multi","key")[1]
                         )
 {
     ##require(bsutils)
@@ -108,10 +109,11 @@ tableModule <- function(input, output, session,
     height.2 <- ifnotchar.int(height[2])
 
     output$datatable <- DT::renderDT({
-        # If the options `scrollX` or `autoWidth` are set,
+        # If the options `scrollX` or `autoWidth` or `selector` are set,
         # the global defaults of the global.R
         # will be overwritten. This ensures those options
-        # are kept so that the header scrolls properly.
+        # are kept so that the header scrolls properly, and clickable
+        # properties for tables.
         dt <- func()
         active_options <- names(dt$x$options)
         if("scrollX" %in% active_options){
@@ -120,9 +122,13 @@ tableModule <- function(input, output, session,
         if("autoWidth" %in% active_options){
             dt$x$options$autoWidth <- FALSE
         }
+        if(!is.null(selector)){
+          dt$x$selection$mode = selector
+        }
         dt
     },
     fillContainer = T)
+
     output$datatable2 <- DT::renderDT({
         dt <- func2()
         active_options <- names(dt$x$options)
@@ -132,6 +138,10 @@ tableModule <- function(input, output, session,
         if("autoWidth" %in% active_options){
             dt$x$options$autoWidth <- FALSE
         }
+        if(!is.null(selector)){
+          dt$x$selection$mode = selector
+        }
+
         dt
     },
     fillContainer = T)
