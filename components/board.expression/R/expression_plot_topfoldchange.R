@@ -114,15 +114,6 @@ expression_plot_topfoldchange_server <- function(id,
       nn <- sum(!is.na(pd[["fc.top"]]))
       if (nn > 15) cex1 <- 0.8
 
-
-
-      # barplot(pd[["fc.top"]],
-      #   col = pd[["klr"]], horiz = TRUE, las = 1,
-      #   xlim = c(-1, 1) * max(abs(pd[["fc.top"]]), na.rm = TRUE),
-      #   cex.names = cex1, xlab = "fold change (log2)"
-      # )
-      # title(pd[["gene"]], cex.main = 1, line = -0.15)
-
       pgx.barplot.PLOTLY(
         data = data.frame(
           x = names(pd[["fc.top"]]),
