@@ -119,6 +119,7 @@ expression_table_genetable_server <- function(id,
       info.text = genetable_text,
       info.width = "500px",
       options = genetable_opts,
+      selector = "single",
       title = tags$div(
         HTML('<span class="module-label">(I)</span>Differential expression analysis')
       )

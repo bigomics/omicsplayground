@@ -76,6 +76,7 @@ expression_table_gsettable_server <- function(id,
       id = "gsettable",
       func = gsettable.RENDER,
       info.text = gsettable_text,
+      selector = "single",
       title = tags$div(
         HTML('<span class="module-label">(II)</span>Gene sets with gene')
       ),
