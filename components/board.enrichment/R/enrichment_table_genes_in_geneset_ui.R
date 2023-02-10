@@ -71,6 +71,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       id = "genetable",
       func = genetable.RENDER,
       info.text = genetable_text,
+      selector = "single",
       title = tags$div(
         HTML('<span class="module-label">(II)</span>Genes in gene set')
       ),
