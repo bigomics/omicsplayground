@@ -6,21 +6,21 @@
 ClusteringBoard <- function(id, pgx)
 {
     moduleServer(id, function(input, output, session) {
-        
+
         ns <- session$ns ## NAMESPACE
         fullH = 850  ## full height of page
-        
+
         clust_infotext = paste('
 The <strong>Clustering Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
 
-<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot. 
+<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot.
 
-<br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups. 
+<br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups.
 
 <br><br><br>
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/hyDEk_MCaTk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
-') 
+')
 
     ##================================================================================
     ##============================ MODULES ===========================================
@@ -30,37 +30,43 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           ##colnames(getFilteredMatrix())
           selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
       })
-      
-      
-    plot_clustpca_server("PCAplot", pgx, r.samples = r.samples, watermark=FALSE)
 
-      
+
+    plot_clustpca_server("PCAplot",
+                         pgx,
+                         r.samples = r.samples,
+                         hmpca.colvar = shiny::reactive(input$hmpca.colvar),
+                         hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
+                         watermark=FALSE,
+                         parent = ns)
+
+
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
-    
+
     shiny::observeEvent( input$clust_info, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Clustering Board</strong>"),
             shiny::HTML(clust_infotext),
             easyClose = TRUE, size="l" ))
     })
-       
-    ## update filter choices upon change of data set 
+
+    ## update filter choices upon change of data set
     shiny::observe({
 
         shiny::req(pgx$X)
-        
+
         levels = getLevels(pgx$Y)
         shiny::updateSelectInput(session, "hm_samplefilter", choices=levels)
-        
+
         if(DEV && !is.null(pgx$gset.meta$matrices) ) {
             jj = which(!sapply(pgx$gset.meta$matrices,is.null))
             mat.names = names(pgx$gset.meta$matrices)[jj]
             shiny::updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
                                selected="meta", inline=TRUE)
         }
-        
+
         shiny::updateRadioButtons(session, "hm_splitby", selected='none')
 
         ## update defaults??
@@ -73,14 +79,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         groupings <- c("<ungrouped>",sort(groupings))
         shiny::updateSelectInput(session,"hm_group", choices=groupings)
         contrasts <- pgx.getContrasts(pgx)
-        shiny::updateSelectInput(session,"hm_contrast", choices=contrasts)                
+        shiny::updateSelectInput(session,"hm_contrast", choices=contrasts)
 
     })
 
     shiny::observeEvent( input$hm_splitby, {
 
         shiny::req(pgx$X, pgx$samples)
-        
+
         if(input$hm_splitby=='none') return()
         if(input$hm_splitby=='gene') {
             xgenes <- sort(rownames(pgx$X))
@@ -95,18 +101,18 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             shiny::updateSelectInput(session, "hm_splitvar", choices=cvar, selected=sel)
         }
     })
-    
+
     input_hm_samplefilter <- shiny::reactive({
         input$hm_samplefilter
     }) %>% shiny::debounce(3000)
-    
+
     ## update choices upon change of level
     shiny::observe({
 
         shiny::req(pgx$families, pgx$gsetX)
         shiny::req(input$hm_level)
         ###if(is.null(input$hm_level)) return(NULL)
-        choices = names(pgx$families)        
+        choices = names(pgx$families)
         if(input$hm_level=="geneset") {
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
             choices = names(COLLECTIONS)[nk>=5]
@@ -115,12 +121,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices=choices)
     })
-    
+
 
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-    
+
     getFilteredMatrix <- shiny::reactive({
         ## Returns filtered matrix ready for clustering. Filtering based
         ## on user selected geneset/features or custom list of genes.
@@ -133,7 +139,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         genesets = rownames(pgx$gsetX)
         ft <- input$hm_features
         shiny::req(ft)
-        
+
         if(input$hm_level=="geneset") {
             ##-----------------------------------
             ## Gene set level features
@@ -145,13 +151,13 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             if(input$hm_customfeatures!="") {
                 gsets1 = genesets[grep(input$hm_customfeatures, genesets,ignore.case=TRUE)]
                 if(length(gsets1)>2) gsets = gsets1
-            }        
+            }
             zx = zx[intersect(gsets,rownames(zx)),]
         }
 
         idx <- NULL
         if(input$hm_level=="gene") {
-            
+
             ##-----------------------------------
             ## Gene level features
             ##-----------------------------------
@@ -203,7 +209,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                 gg <- NULL
                 return(NULL)
             }
-            
+
             gg <- gg[which(toupper(gg) %in% toupper(genes))]
             jj <- match(toupper(gg), toupper(genes))
             pp  <- rownames(pgx$X)[jj]
@@ -217,8 +223,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
         dim(zx)
         kk <- selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
-        zx <- zx[,kk,drop=FALSE]    
-        
+        zx <- zx[,kk,drop=FALSE]
+
         if( input$hm_level=="gene" &&
             "chr" %in% names(pgx$genes) &&
             input$hm_filterXY )
@@ -245,7 +251,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
         return(flt)
     })
-    
+
 
     getTopMatrix <- shiny::reactive({
 
@@ -256,7 +262,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         zx <- flt$zx
         if(is.null(flt)) return(NULL)
         if(is.null(zx) || nrow(zx)==0) return(NULL)
-        
+
         nmax = 4000
         nmax = as.integer(input$hm_ntop)
         idx <- NULL
@@ -264,7 +270,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         splitvar <- input$hm_splitvar
         splitby  <- input$hm_splitby
         do.split <- splitby!='none'
-        
+
         if(splitby=="gene" && !splitvar %in% rownames(pgx$X)) return(NULL)
         if(splitby=="phenotype" && !splitvar %in% colnames(pgx$samples)) return(NULL)
 
@@ -282,7 +288,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ##xgene <- rownames(pgx$X)[1]
             gx <- pgx$X[1,]
             gx <- pgx$X[splitvar,colnames(zx)]
-            
+
             ## estimate best K
             within.ssratio <- sapply(1:4, function(k) {km=kmeans(gx,k);km$tot.withinss/km$totss})
             within.ssratio
@@ -292,7 +298,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             k.est
             k.est <- pmax(pmin(k.est,3),2)
             k.est = 2 ## for now...
-            
+
             if (k.est==2) {
                 km <- kmeans(gx, centers=2)
                 km.rnk <- rank(km$centers,ties.method="random")
@@ -300,53 +306,53 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                 grp <- grp.labels[km$cluster]
             } else if(k.est==3) {
                 km  <- kmeans(gx, centers=3)
-                km.rnk <- rank(km$centers,ties.method="random")                
+                km.rnk <- rank(km$centers,ties.method="random")
                 grp.labels <- c("low","mid","high")[km.rnk]
-                grp <- grp.labels[km$cluster]                
+                grp <- grp.labels[km$cluster]
             } else if(k.est==4) {
                 km  <- kmeans(gx, centers=4)
                 km.rnk <- rank(km$centers,ties.method="random")
                 grp.labels <- c("low","mid-low","mid-high","high")[km.rnk]
-                grp <- grp.labels[km$cluster]                
+                grp <- grp.labels[km$cluster]
             }
             grp <- paste0(splitvar,":",grp)
             names(grp) <- colnames(zx)
-        }        
+        }
         ##if(length(grp)==0) splitby <- 'none'
-        if(do.split && length(grp)==0) return(NULL)        
+        if(do.split && length(grp)==0) return(NULL)
 
         ##------------------------------------------------------------
         ## Any BMC scaling??
         ##------------------------------------------------------------
         if(do.split && input$hm_scale=="BMC") {
-            dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")            
+            dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")
             for(g in unique(grp)) {
                 jj <- which(grp == g)
                 zx1 <- zx[,jj,drop=FALSE]
                 zx[,jj] <- zx1 - rowMeans(zx1,na.rm=TRUE)
             }
-        }        
-        
+        }
+
         ##------------------------------------------------------------
         ## Create reduced matrix according to topmode
         ##------------------------------------------------------------
-        
+
         topmode="specific"
         topmode="sd"
         topmode <- input$hm_topmode
         if(topmode == "specific" && length(table(grp))<=1) {
             topmode <- "sd"
         }
-        
+
         addsplitgene <- function(gg) {
             if(do.split && splitvar %in% rownames(pgx$X)) {
                 gg <- unique(c(splitvar,gg))
             }
             gg
         }
-        
+
         if(!do.split && topmode=="specific") topmode <- "sd"
-        grp.zx <- NULL        
+        grp.zx <- NULL
         if(topmode=="pca") {
             dbg("[ClusteringBoard:getTopMatrix] splitting by PCA")
 
@@ -357,7 +363,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             gg <- rownames(zx)
             sv.top <- lapply(1:NPCA,function(i) gg[head(order(-abs(svdres$u[,i])),ntop)] )
             gg.top <- unlist(sv.top)
-            ##gg.top <- addsplitgene(gg.top) 
+            ##gg.top <- addsplitgene(gg.top)
             for(i in 1:length(sv.top)) {
                 sv.top[[i]] <- paste0("PC",i,":",sv.top[[i]])
             }
@@ -376,7 +382,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
             if(length(table(grp))==1) {
                 grp.zx <- t(grp.zx)
-                colnames(grp.zx) <- paste0(splitvar,":",grp[1])                
+                colnames(grp.zx) <- paste0(splitvar,":",grp[1])
             }
             grp.dx <- grp.zx*0
             nc <- ncol(grp.dx)
@@ -390,23 +396,23 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ##idx <- unlist(sapply(1:nc,function(i) rep(i,length(grp.top[[i]]))))
             idx <- unlist(mapply(rep,1:nc,sapply(grp.top,length)))
             idx <- paste0("M",idx)
-            table(idx)        
+            table(idx)
             gg.top <- unlist(grp.top)
             zx <- zx[gg.top,,drop=FALSE]
             dim(zx)
         } else {
             ## Order by SD
-            ## 
+            ##
             dbg("[ClusteringBoard:getTopMatrix] order by SD")
             ii <- order(-apply(zx,1,sd,na.rm=TRUE))
             zx = zx[ii,,drop=FALSE] ## order
             zx = head(zx,nmax)
             ##gg <- addsplitgene(rownames(zx))
             ##zx = zx[gg,,drop=FALSE]
-            
+
         }
         ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-        
+
         ## ------------- cluster the genes???
         if(!is.null(flt$idx))  {
             idx <- flt$idx[rownames(zx)]  ## override
@@ -420,14 +426,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ## system.time( hc <- flashClust::hclust(D, method="ward" ) )
             ## system.time( hc <- nclust(D, link="ward") )
             ngrp = min(CLUSTK, nrow(zx))  ## how many default groups???
-            idx = paste0("S",cutree(hc, ngrp))                            
+            idx = paste0("S",cutree(hc, ngrp))
         }
-        
+
         ## ------------- matched annotation
         ##annot = pgx$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
-        annot = pgx$samples[colnames(zx),,drop=FALSE]  ## Y or full matrix??        
+        annot = pgx$samples[colnames(zx),,drop=FALSE]  ## Y or full matrix??
         kk = grep("sample|patient",colnames(annot),invert=TRUE)
-        annot = annot[,kk,drop=FALSE]  ## no group??    
+        annot = annot[,kk,drop=FALSE]  ## no group??
         samples = colnames(zx) ## original sample list
 
         ## ----------------------------------------------------
@@ -436,8 +442,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         grp.zx <- NULL
         grp.var = "group"
         grp.var <- input$hm_group
-        
-        if(grp.var %in% colnames(pgx$samples)) { 
+
+        if(grp.var %in% colnames(pgx$samples)) {
             gg.grp <- pgx$samples[colnames(zx),grp.var]
             ## take most frequent term as group annotation value
             grp.zx = tapply( colnames(zx), gg.grp, function(k)
@@ -461,7 +467,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
         ##input$top_terms
         filt <- list(
-            ## mat=zx, annot=annot, 
+            ## mat=zx, annot=annot,
             mat = grp.zx,
             annot = grp.annot,
             grp = grp,
@@ -477,82 +483,82 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
-    hm1_splitmap.RENDER <- shiny::reactive({    
-        
+    hm1_splitmap.RENDER <- shiny::reactive({
+
         ##------------------------------------------------------------
         ## ComplexHeatmap based splitted heatmap
         ##------------------------------------------------------------
-                
-        filt <- getTopMatrix()        
+
+        filt <- getTopMatrix()
         shiny::req(filt)
         ##if(is.null(filt)) return(NULL)
-        
+
         ##if(input$hm_group) {
-        zx <- filt$mat    
-        annot = filt$annot                
+        zx <- filt$mat
+        annot = filt$annot
         zx.idx <- filt$idx
 
         if(nrow(zx) <= 1) return(NULL)
-        
+
         show_rownames = TRUE
-        if(nrow(zx) > 100) show_rownames = FALSE   
-        
+        if(nrow(zx) > 100) show_rownames = FALSE
+
         cex1 = ifelse(ncol(zx)>50,0.75,1)
         cex1 = ifelse(ncol(zx)>100,0.5,cex1)
         cex1 = ifelse(ncol(zx)>200,0,cex1)
-        
+
         scale.mode = "none"
         if(input$hm_scale=="relative") scale.mode <- "row.center"
-        if(input$hm_scale=="BMC") scale.mode <- "row.bmc"        
+        if(input$hm_scale=="BMC") scale.mode <- "row.bmc"
         scale.mode
-        
+
         ## split genes dimension in 5 groups
         splity = 5
         splity = 6
         if(!is.null(zx.idx)) splity = zx.idx
-        
+
         ## split samples
-        splitx = NULL    
+        splitx = NULL
         splitx = filt$grp
 
         show_legend=show_colnames=TRUE
         show_legend <- input$hm_legend
         if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
-        
+
         annot$group = NULL  ## no group in annotation??
         show_colnames <- (input$hm_cexCol != 0)
-        ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
-        
+        ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...
+
         if(input$hm_level=="gene") {
             ## strip any prefix
-            rownames(zx) = sub(".*:","",rownames(zx)) 
+            rownames(zx) = sub(".*:","",rownames(zx))
         }
         rownames(zx) <- sub("HALLMARK:HALLMARK_","HALLMARK:",rownames(zx))
         rownames(zx) = gsub(GSET.PREFIX.REGEX,"",rownames(zx))
         rownames(zx) = substring(rownames(zx),1,50)  ## cut long names...
         if(input$hm_level=="geneset")  rownames(zx) <- tolower(rownames(zx))
-        
-        cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)    
+
+        cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)
         cex1 <- as.numeric(input$hm_cexCol)*0.85
         cex2 <- as.numeric(input$hm_cexRow)*0.75
         cex0 <- ifelse(!is.null(splitx) && length(splitx)<=10, 1.05, 0.85)  ## title
-                       
+
         crot <- 0
         totnchar <- nchar(paste0(unique(splitx),collapse=""))
         totnchar
         nx <- length(unique(splitx))
         if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
-        
+
         nrownames = 60
         nrownames = 9999
         if(input$hm_cexRow==0) nrownames <- 0
-        
+
         if(0) {
             split=splity;splitx=splitx;mar=c(5,25); scale=scale.mode; show_legend=show_legend;
             show_colnames = show_colnames; column_title_rot=crot;
             show_rownames = nrownames; softmax=0;
-            ## side.height.fraction=0.03+0.055*NCOL(annot); 
-            cexCol=cex1; cexRow=cex2;title_cex=1.0 
+            ## side.height.fraction=0.03+0.055*NCOL(annot);
+            cexCol=cex1; cexRow=cex2;title_cex=1.0
             col.annot=annot; row.annot=NULL; annot.ht=2.2;
             nmax=-1
         }
@@ -568,15 +574,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         shiny::showNotification('rendering heatmap...')
         plt <- grid::grid.grabExpr(
                          gx.splitmap(
-                             zx, 
+                             zx,
                              split = splity, splitx = splitx,
                              scale = scale.mode, show_legend = show_legend,
                              show_colnames = show_colnames, column_title_rot = crot,
-                             column_names_rot = 45,                             
+                             column_names_rot = 45,
                              show_rownames = nrownames, rownames_width = 40,
                              softmax = 0,
-                             ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                             title_cex = cex0, cexCol = cex1, cexRow = cex2, 
+                             ## side.height.fraction=0.03+0.055*NCOL(annot),
+                             title_cex = cex0, cexCol = cex1, cexRow = cex2,
                              col.annot = annot, row.annot = NULL, annot.ht = 2.3,
                              key.offset = c(0.89,1.01),
                              main=" ", nmax = -1, mar = c(8,16)
@@ -591,12 +597,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ## iHeatmap based splitted heatmap
         ##------------------------------------------------------------
         shiny::req(pgx$genes)
-        
-        ## -------------- variable to split samples        
-        ##scale = ifelse(input$hm_scale=="relative","row.center","none")    
+
+        ## -------------- variable to split samples
+        ##scale = ifelse(input$hm_scale=="relative","row.center","none")
         scale = "none"
         if(input$hm_scale=="relative") scale <- "row.center"
-        if(input$hm_scale=="BMC") scale <- "row.bmc"        
+        if(input$hm_scale=="BMC") scale <- "row.bmc"
         scale
 
         plt <- NULL
@@ -604,23 +610,23 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         filt <- getTopMatrix()
         ##if(is.null(filt)) return(NULL)
         shiny::req(filt)
-        
+
         ##if(input$hm_group) {
-        X <- filt$mat    
-        annot = filt$annot        
+        X <- filt$mat
+        annot = filt$annot
         idx <- filt$idx
-        
+
         ## sample clustering index
         splitx <- NULL
         splitx <- filt$grp
-        
+
         ## iheatmapr needs factors for sharing between groups
         annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
         rownames(annotF) = rownames(annot)
-        
+
         colcex <- as.numeric(input$hm_cexCol)
         rowcex = as.numeric(input$hm_cexRow)
-        
+
         tooltips = NULL
         if(input$hm_level=="gene") {
             getInfo <- function(g) {
@@ -635,7 +641,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             tooltips = breakstring2(aa, 50, brk="<br>")
         }
         ##genetips = rownames(X)
-                
+
         shiny::showNotification('rendering iHeatmap...')
 
         plt <- pgx.splitHeatmapFromMatrix(
@@ -643,17 +649,17 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             idx=idx, splitx=splitx, scale=scale,
             row_annot_width=0.03, rowcex=rowcex,
             colcex=colcex )
-       
+
         ## DOES NOT WORK...
         ##plt <- plt %>%
         ## plotly::config(toImageButtonOptions = list(format='svg', height=800, width=800))
-        
+
         return(plt)
     })
 
     topmodes <- c("sd","pca","specific")
     ##if(DEV) topmodes <- c("sd","specific","pca")
-    
+
     hm_splitmap_opts = shiny::tagList(
         withTooltip( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
                              choices=c("ComplexHeatmap","iHeatmap"),
@@ -701,23 +707,23 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                    placement="right",options = list(container = "body")),
             withTooltip( shiny::numericInput(ns("hm_cexCol"), "cexCol:", 1, 0, 1.4, 0.1, width='100%'),
                    "Specify the column label size. Set to 0 to suppress column labels.",
-                   placement="right", options = list(container = "body"))            
+                   placement="right", options = list(container = "body"))
         ),
         shiny::br()
     )
-    
+
     hm_splitmap_caption = "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
-    
+
     output$hm1_splitmap <- shiny::renderPlot({
         plt <- hm1_splitmap.RENDER()
         grid::grid.draw(plt, recording=FALSE)
     }, res=90)
-    
+
     output$hm2_splitmap <- renderIheatmap({
         hm2_splitmap.RENDER()
     })
 
-    hm_splitmap.switchRENDER <- shiny::reactive({    
+    hm_splitmap.switchRENDER <- shiny::reactive({
         ##req(input$hm_plottype)
         p = NULL
         if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
@@ -727,22 +733,22 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         return(p)
     })
-    
+
     ##output$hm_splitmap_pdf <- shiny::downloadHandler(
     hm_splitmap_downloadPDF <- shiny::downloadHandler(
         filename = "plot.pdf",
         content = function(file) {
             ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
-            PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")            
+            PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
             dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting SWITCH to PDF...")
-            ##showNotification("exporting to PDF")            
+            ##showNotification("exporting to PDF")
             ##wd <- input$hm_pdfwidth
             ##ht <- input$hm_pdfheight
             ##wd <- input$pdf_width
             ##ht <- input$pdf_height
             wd <- input[["hm_splitmap-pdf_width"]]  ## ugly!!
             ht <- input[["hm_splitmap-pdf_height"]] ## ugly!!
-            
+
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=wd, height=ht)
                 grid::grid.draw(hm1_splitmap.RENDER())
@@ -756,16 +762,16 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             if(WATERMARK) {
                 dbg("[ClusteringBoard] adding watermark to PDF...\n")
                 addWatermark.PDF(PDFFILE) ## from pgx-modules.R
-            }            
+            }
             dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting done...")
-            file.copy(PDFFILE,file)        
+            file.copy(PDFFILE,file)
         }
     )
-    
+
     hm_splitmap_downloadPNG <- shiny::downloadHandler(
         filename = "plot.png",
         content = function(file) {
-            PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
+            PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
             dbg("[ClusteringBoard] hm_splitmap_downloadPDF:: exporting SWITCH to PNG...")
             ##showNotification("exporting to PNG")
             wd <- 100*as.integer(input[["hm_splitmap-pdf_width"]])
@@ -780,8 +786,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             } else {
                 save_iheatmap(hm2_splitmap.RENDER(), filename=PNGFILE,  vwidth=wd, vheight=ht)
             }
-            dbg("[ClusteringBoard] hm_splitmap_downloadPNG: exporting done...")            
-            file.copy(PNGFILE,file)        
+            dbg("[ClusteringBoard] hm_splitmap_downloadPNG: exporting done...")
+            file.copy(PNGFILE,file)
         }
     )
 
@@ -789,20 +795,20 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         filename = "plot.html",
         content = function(file) {
             ##HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
-            HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")            
+            HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")
             dbg("renderIheatmap:: exporting SWITCH to HTML...")
             shiny::withProgress({
-                ##write("<body>HTML export error</body>", file=HTMLFILE)    
+                ##write("<body>HTML export error</body>", file=HTMLFILE)
                 p <- hm2_splitmap.RENDER()
                 shiny::incProgress(0.5)
                 save_iheatmap(p, filename=HTMLFILE)
             }, message="exporting to HTML", value=0 )
             dbg("renderIheatmap:: ... exporting done")
-            file.copy(HTMLFILE,file)        
+            file.copy(HTMLFILE,file)
         }
     )
-    
-    
+
+
     ## call plotModule
     hm_splitmap_module <- shiny::callModule(
         plotModule,
@@ -815,9 +821,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         outputFunc = "uiOutput",
         download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
-        height = fullH-80, ##???        	
+        height = fullH-80, ##???
         width = '100%',
-        pdf.width = 10, pdf.height = 8, 
+        pdf.width = 10, pdf.height = 8,
         title ="Clustered Heatmap",
         info.text = hm_splitmap_text,
         info.width = "350px",
@@ -831,10 +837,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     ##================================================================================
     ##================================ PCA/tSNE ======================================
     ##================================================================================
-    
-    hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
+
+    hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other.
 <br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
-    
+
     shiny::observe({
         shiny::req(pgx$Y)
         ##input$menuitem  ## upon menuitem change
@@ -862,16 +868,16 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ## take full matrix
         flt <- getFilteredMatrix()
         zx <- flt$zx
-        
+
         clustmethod="tsne";pdim=2
         do3d <- ("3D" %in% input$hmpca_options)
         pdim = c(2,3)[ 1 + 1*do3d]
-        
+
         pos = NULL
         force.compute = FALSE
         clustmethod = input$hm_clustmethod
         clustmethod0 <- paste0(clustmethod,pdim,"d")
-        
+
         if(clustmethod=="default" && !force.compute) {
             if(pdim==2 && !is.null(pgx$tsne2d) ) {
                 pos <- pgx$tsne2d[colnames(zx),]
@@ -887,24 +893,24 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ## This should not be necessary anymore as we prefer to
             ## precompute all clusterings.
-            shiny::showNotification(paste("computing ",clustmethod,"...\n"))            
+            shiny::showNotification(paste("computing ",clustmethod,"...\n"))
 
             ntop = 1000
-            ## ntop = as.integer(input$hm_ntop2)    
+            ## ntop = as.integer(input$hm_ntop2)
             zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
             if(nrow(zx) > ntop) {
                 ##zx = head(zx,ntop)  ## OK?
                 zx = zx[1:ntop,,drop=FALSE]  ## OK?
-            }            
+            }
             if("normalize" %in% input$hmpca_options) {
                 zx <- scale(t(scale(t(zx))))
             }
-            perplexity = max(1,min((ncol(zx)-1)/3, 30))	
+            perplexity = max(1,min((ncol(zx)-1)/3, 30))
             perplexity
             res <- pgx.clusterMatrix(
-                zx, dims = pdim, perplexity = perplexity, 
-                ntop = 999999, prefix = "C",         
-                find.clusters = FALSE, kclust = 1,                 
+                zx, dims = pdim, perplexity = perplexity,
+                ntop = 999999, prefix = "C",
+                find.clusters = FALSE, kclust = 1,
                 row.center = TRUE, row.scale = FALSE,
                 method = clustmethod)
             if(pdim==2) pos <- res$pos2d
@@ -915,26 +921,26 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         pos = scale(pos) ## scale
         ##colnames(pos) = paste0("dim",1:ncol(pos))
         ##rownames(pos) = colnames(zx)
-        
+
         idx <- NULL
         dbg("[hm_getClusterPositions] done")
 
-        clust = list(pos=pos, clust=idx) 
+        clust = list(pos=pos, clust=idx)
         return(clust)
     })
-    
+
     hm_PCAplot.RENDER <- shiny::reactive({
 
         ##pgx <- inputData()
         shiny::req(pgx$Y)
 
-        do3d = ("3D" %in% input$hmpca_options)        
+        do3d = ("3D" %in% input$hmpca_options)
         clust <- hm_getClusterPositions()
         pos <- clust$pos
         sel <- rownames(pos)
         df <- cbind(pos, pgx$Y[sel,])
         if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
-        
+
         colvar = shapevar = linevar = textvar = NULL
         if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])
         if(input$hmpca.shapevar %in% colnames(df)) shapevar <- factor(df[,input$hmpca.shapevar])
@@ -1058,10 +1064,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
         if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
-        plt <- plt %>% 
+        plt <- plt %>%
             plotly::config(displayModeBar = TRUE) %>%
             ##config(modeBarButtonsToRemove = all.plotly.buttons ) %>%
-            plotly::config(displaylogo = FALSE) %>% 
+            plotly::config(displaylogo = FALSE) %>%
             plotly::config(toImageButtonOptions = list(format='svg', height=800, width=800))
         ##print(plt)
         return(plt)
@@ -1083,7 +1089,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                               c("default","tsne","pca","umap"),inline=TRUE),
                 "Choose the layout method for clustering to visualise.")
     )
-    
+
     hm_PCAplot_caption <- shiny::reactive({
         text1 = "The plot visualizes the similarity of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar (in expression) are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
         if(input$hmpca.colvar!="<none>") {
@@ -1098,24 +1104,24 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     pca_caption_static = "<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
 
     shiny::callModule(
-        plotModule, 
+        plotModule,
         id = "hm_PCAplot",
         func = hm_PCAplot.RENDER, ## ns=ns,
-        plotlib = "plotly", 
+        plotlib = "plotly",
         options = hm_PCAplot_opts,
         height = c(fullH-80,700), width=c("auto",800),
         pdf.width=8, pdf.height=8,
         title="PCA/tSNE plot",
         info.text = hm_PCAplot_text,
-        add.watermark = WATERMARK        
+        add.watermark = WATERMARK
     )
-    
+
     ##================================================================================
     ## Parallel coordinates
     ##================================================================================
 
     hm_parcoord.ranges <- shiny::reactiveValues()
-    
+
     hm_parcoord.matrix <- shiny::reactive({
 
         filt <- getTopMatrix()
@@ -1130,9 +1136,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         zx <- round(zx, digits=3)
         list(mat=zx, clust=filt$idx)
     })
-    
+
     hm_parcoord.RENDER <- shiny::reactive({
-        
+
         pc <- hm_parcoord.matrix()
         shiny::req(pc)
         zx <- pc$mat
@@ -1149,19 +1155,19 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                 values = zx[,i]
             )
         }
-        
+
         clust.id <- as.integer(factor(pc$clust))
         table(clust.id)
-        
+
         df <- data.frame(clust.id=clust.id, zx)
         klrpal = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
         ##klrpal = rep(c("red","blue","green","yellow","magenta","cyan","black","grey"),99)
         klrpal = klrpal[1:max(clust.id)]
         ##klrpal <- setNames(klrpal, sort(unique(clust.id)))
         klrpal2 <- lapply(1:length(klrpal),function(i) c((i-1)/(length(klrpal)-1),klrpal[i]))
-        
-        plt <-  plotly::plot_ly(df, source = "pcoords") %>%    
-            plotly::add_trace(type = 'parcoords', 
+
+        plt <-  plotly::plot_ly(df, source = "pcoords") %>%
+            plotly::add_trace(type = 'parcoords',
                       line = list(color = ~clust.id,
                                   ## colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))
                                   ##colorscale = 'Jet',
@@ -1179,7 +1185,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             plotly::config(displaylogo = FALSE) %>%
             plotly::event_register("plotly_restyle")
 
-        plt 
+        plt
 
     })
 
@@ -1192,15 +1198,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ## If the restyle isn't related to a dimension, exit early.
         if (!length(dimension)) return()
         if (is.na(dimension)) return()
-        
+
         pc <- hm_parcoord.matrix()
         shiny::req(pc)
         ## careful of the indexing in JS (0) versus R (1)!
         dimension_name <- colnames(pc$mat)[[dimension + 1]]
         ## a given dimension can have multiple selected ranges
-        ## these will come in as 3D arrays, but a list of vectors 
+        ## these will come in as 3D arrays, but a list of vectors
         ## is nicer to work with
-        info <- d[[1]][[1]]    
+        info <- d[[1]][[1]]
         if (length(dim(info)) == 3) {
             hm_parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[,i,])
         } else {
@@ -1241,19 +1247,19 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap.")
 
     shiny::callModule(
-        plotModule,     
+        plotModule,
         ## hm_parcoord_module <- plotModule(
         "hm_parcoord",
         func = hm_parcoord.RENDER, ## ns = ns,
         plotlib = "plotly", ## renderFunc="renderPlotly",
-        ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!! 
+        ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!!
         ## download.fmt = c("html"),
         options = hm_parcoord_opts,
         height = c(0.45*fullH,600), width = c("100%",1000),
         pdf.width=10, pdf.height=6, info.width="350px",
         title = "Parallel coordinates", label = "a",
         info.text = hm_parcoord_text,
-        add.watermark = WATERMARK        
+        add.watermark = WATERMARK
         ## caption = hm_parcoord_text,
     )
 
@@ -1276,10 +1282,10 @@ displays the expression levels of selected genes across all conditions in the an
                     ##scrollY = 170,
                     scrollY = '70vh',
                     scroller=TRUE, deferRender=TRUE
-                )  ## end of options.list 
+                )  ## end of options.list
             ) %>%
             DT::formatSignif(numeric.cols,3) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     })
 
     hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
@@ -1298,10 +1304,10 @@ displays the expression levels of selected genes across all conditions in the an
     ##================================================================================
 
     clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
-    
+
     shiny::observe({
 
-        ##pgx <- inputData()    
+        ##pgx <- inputData()
         shiny::req(pgx$X,pgx$gsetX,pgx$families)
 
         if(is.null(input$xann_level)) return(NULL)
@@ -1328,24 +1334,24 @@ displays the expression levels of selected genes across all conditions in the an
         } else {
             ann.types = sel = "<all>"
         }
-        shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)    
+        shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
     })
 
 
     getClustAnnotCorrelation <- shiny::reactive({
-        
+
         ##pgx <- inputData()
         shiny::req(pgx$X,pgx$Y,pgx$gsetX,pgx$families)
 
         filt <- getTopMatrix()
         shiny::req(filt)
-        
+
         zx  <- filt$mat
         idx <- filt$idx
         samples <- filt$samples
 
         if(nrow(zx) <= 1) return(NULL)
-        
+
         ann.level="geneset"
         ann.refset="Hallmark collection"
         ann.level = input$xann_level
@@ -1353,22 +1359,22 @@ displays the expression levels of selected genes across all conditions in the an
         ann.refset = input$xann_refset
         ##if(is.null(ann.refset)) return(NULL)
         shiny::req(input$xann_level, input$xann_refset)
-        
+
         ref = NULL
-        ref = pgx$gsetX[,,drop=FALSE]    
-        ref = pgx$X[,,drop=FALSE]    
+        ref = pgx$gsetX[,,drop=FALSE]
+        ref = pgx$X[,,drop=FALSE]
         if(ann.level=="gene" && ann.refset %in% names(pgx$families) ) {
             gg = pgx$families[[ann.refset]]
             jj = match(toupper(gg), toupper(pgx$genes$gene_name))
             jj <- setdiff(jj,NA)
             pp = rownames(pgx$genes)[jj]
-            ref = pgx$X[intersect(pp,rownames(pgx$X)),,drop=FALSE]    
+            ref = pgx$X[intersect(pp,rownames(pgx$X)),,drop=FALSE]
         }
         if(ann.level=="geneset" && ann.refset %in% names(COLLECTIONS)) {
             ss = COLLECTIONS[[ann.refset]]
             ss = intersect(ss, rownames(pgx$gsetX))
             length(ss)
-            ref = pgx$gsetX[ss,]    
+            ref = pgx$gsetX[ss,]
         }
         if(ann.level=="phenotype") {
             ref = t(expandAnnotationMatrix(pgx$Y))
@@ -1377,7 +1383,7 @@ displays the expression levels of selected genes across all conditions in the an
             cat("<clustering:getClustAnnotCorrelation> WARNING:: ref error\n")
             return(NULL)
         }
-        
+
         ##-----------  restrict to top??
         dim(ref)
         if(nrow(ref)>1000) {
@@ -1387,15 +1393,15 @@ displays the expression levels of selected genes across all conditions in the an
         ##-----------  get original data level
         X = pgx$X
         if(input$hm_level=="geneset") X <- pgx$gsetX
-        
+
         ##----------- for each gene cluster compute average correlation
         hm_topmode = "sd"
         hm_topmode <- input$hm_topmode
-        idxx = setdiff(idx, c(NA," ","   "))    
+        idxx = setdiff(idx, c(NA," ","   "))
         rho <- matrix(NA, nrow(ref), length(idxx))
         colnames(rho) <- idxx
         rownames(rho) <- rownames(ref)
-        
+
         i=1
         if(nrow(ref)>0) {
             for(i in 1:length(idxx)) {
@@ -1443,7 +1449,7 @@ displays the expression levels of selected genes across all conditions in the an
         rho = getClustAnnotCorrelation()
         ##if(is.null(rho)) return(NULL)
         shiny::req(rho)
-        
+
         ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
         NTERMS = 6
         NTERMS = 12
@@ -1460,11 +1466,11 @@ displays the expression levels of selected genes across all conditions in the an
 
         klrpal <- omics_pal_d("muted_light")(ncol(rho))
         #klrpal <- paste0(klrpal, "B3")
-        
+
         plot_list <- list()
-        i = 1    
+        i = 1
         for(i in 1:min(9, ncol(rho))) {
-            
+
             x <- rev(head(sort(rho[,i], decreasing = TRUE), NTERMS))
             names(x) <- sub(".*:", "", names(x))
             names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
@@ -1473,54 +1479,54 @@ displays the expression levels of selected genes across all conditions in the an
             y <- factor(y, levels = y)
             anntitle <- function(tt) {
               list(
-                x = 0.5, y = 1.02, 
+                x = 0.5, y = 1.02,
                 xref = "paper", yref = "paper",
-                xanchor = "center", yanchor = "bottom", 
-                text = tt, font = list(size = 13), 
+                xanchor = "center", yanchor = "bottom",
+                text = tt, font = list(size = 13),
                 align = "center", showarrow = FALSE
               )
             }
             ## NOTE: The same plotly code (originally) as in `plot_clustannot.R`
             ##       -> Seems it uses the function from this file, not the other one
-            ## TODO: clean-up; we should stick to the general setup of individual 
+            ## TODO: clean-up; we should stick to the general setup of individual
             ##       scripts for the plotting functions, not inside the server scripts as agreed
-            plot_list[[i]] <- 
+            plot_list[[i]] <-
               plotly::plot_ly(
-                x = x, 
-                y = y, 
-                type = 'bar', 
+                x = x,
+                y = y,
+                type = 'bar',
                 orientation = 'h',
                 hoverinfo = 'text',
                 hovertemplate = ~paste0(
                   ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
                   ##       needs to be fixed (or that information to be removed)
-                  "Annotation: <b>%{y}</b><br>", 
+                  "Annotation: <b>%{y}</b><br>",
                   "Cluster: <b>", colnames(rho)[i], "</b><br>",
                   "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
                   "<extra></extra>"
                 ),
                 ## NOTE: I suggest to not use a categorical palette for the different clusters;
                 ##       the panels alone highlight the different groups and a single color would
-                ##       allow for a fair comparison (in terms of visual weight), solve all 
+                ##       allow for a fair comparison (in terms of visual weight), solve all
                 ##       readability problems and would make the page much more calm
                 ## TODO: if you agree, set to single color instead
                 marker = list(color = klrpal[i])
               ) %>%
               ## labeling the y-axis inside bars
               plotly::add_annotations(
-                x = .01, 
-                y = y, 
-                xref = 'paper', 
+                x = .01,
+                y = y,
+                xref = 'paper',
                 yref = 'y',
                 xanchor = 'left',
-                text = shortstring(y, slen), 
+                text = shortstring(y, slen),
                 font = list(size = 10),
-                showarrow = FALSE, 
+                showarrow = FALSE,
                 align = 'right'
-              ) %>% 
+              ) %>%
               plotly::layout(
                 ## TODO: check x axis ranges! while in the lower row x is scaled from 0 to .9,
-                ##       in the upper it's ranging free (kinda; when you plot the axis, 
+                ##       in the upper it's ranging free (kinda; when you plot the axis,
                 ##       the axis range is the same but the tooltip and axis are out of sync)
                 xaxis = list(
                   range = c(0, .9),
@@ -1543,22 +1549,22 @@ displays the expression levels of selected genes across all conditions in the an
                 bargap = .2,
                 margin = list(l = 5, r = 0, b = 25, t = 20)
               ) %>%
-              plotly_default1() 
+              plotly_default1()
         }
-        
+
         if(length(plot_list) <= 4) {
             nrows = ceiling(length(plot_list) / 2 )
         } else {
             nrows = ceiling(length(plot_list) / 3 )
         }
-        
-        plotly::subplot( 
-          plot_list, 
-          nrows = nrows, 
+
+        plotly::subplot(
+          plot_list,
+          nrows = nrows,
           shareX = TRUE,
-          margin = c(0, 0, .05, .05) 
+          margin = c(0, 0, .05, .05)
         ) %>%
-        plotly::config(displayModeBar = FALSE) 
+        plotly::config(displayModeBar = FALSE)
     })
 
     clustannot_plots_opts = shiny::tagList(
@@ -1577,10 +1583,10 @@ displays the expression levels of selected genes across all conditions in the an
                "Specify a reference set to be used in the annotation.",
                placement="left",options = list(container = "body"))
     )
-    
+
     ##clustannot_plots_module <- plotModule(
     shiny::callModule(
-        plotModule, 
+        plotModule,
         id="clustannot_plots", ##ns=ns,
         ##func=clustannot_plots.RENDER, plotlib = "base",
         func = clustannot_plots.PLOTLY, plotlib="plotly",
@@ -1590,14 +1596,14 @@ displays the expression levels of selected genes across all conditions in the an
         pdf.width=8, pdf.height=5, res=80,
         title="Functional annotation of clusters", label="a",
         info.text = clustannot_plots_text,
-        add.watermark = WATERMARK                
+        add.watermark = WATERMARK
     )
-    
+
     clustannot_table.RENDER <- shiny::reactive({
-        
+
         rho = getClustAnnotCorrelation()
         if(is.null(rho)) return(NULL)
-        
+
         ##rownames(rho) = shortstring(rownames(rho),50)
         rho.name = shortstring(sub(".*:","",rownames(rho)),60)
         ##rho = data.frame(cbind( name=rho.name, rho))
@@ -1621,17 +1627,17 @@ displays the expression levels of selected genes across all conditions in the an
                     scrollY = '70vh',
                     scroller=TRUE,
                     deferRender=TRUE
-                )  ## end of options.list 
+                )  ## end of options.list
             ) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     })
 
     clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
-    
+
     ##clustannot_table_module <- tableModule(
     clustannot_table_module <- shiny::callModule(
-        tableModule, 
-        id = "clustannot_table", 
+        tableModule,
+        id = "clustannot_table",
         func = clustannot_table.RENDER,
         ##options = clustannot_table_opts,
         info.text = clustannot_table_info_text,
@@ -1641,7 +1647,7 @@ displays the expression levels of selected genes across all conditions in the an
     )
 
     clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
-    
+
     output$hm_annotateUI <- shiny::renderUI({
         shiny::fillCol(
             flex = c(1.4,1,NA),
@@ -1651,35 +1657,35 @@ displays the expression levels of selected genes across all conditions in the an
             shiny::div(shiny::HTML(clustannot_caption), class="caption"),
         )
     })
-    
+
     ##================================================================================
     ## Phenotypes {data-height=800}
     ##================================================================================
 
     clust_phenoplot.RENDER <- shiny::reactive({
-        
+
         ##pgx <- inputData()
         shiny::req(pgx$Y)
-        
+
         ## get t-SNE positions
         clust <- hm_getClusterPositions()
         ##pos = pgx$tsne2d
         pos = clust$pos
 
         Y <- pgx$Y[rownames(pos),,drop=FALSE]
-        pheno = colnames(Y)    
+        pheno = colnames(Y)
 
         ## don't show these...
         pheno <- grep("batch|sample|donor|repl|surv",pheno,
                       invert=TRUE, ignore.case=TRUE,value=TRUE)
-        
+
         ## layout
         par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
         if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
         if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-        i=1    
+        i=1
 
-        cex1 <- 1.1*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 1.1*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
@@ -1690,7 +1696,7 @@ displays the expression levels of selected genes across all conditions in the an
             colvar = factor(Y[,pheno[i]])
             colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
             colvar = factor(as.character(colvar))
-            klrpal = COLORS  
+            klrpal = COLORS
             klr1 = klrpal[colvar]
             klr1 = paste0(gplots::col2hex(klr1),"99")
             jj = which(is.na(klr1))
@@ -1719,7 +1725,7 @@ displays the expression levels of selected genes across all conditions in the an
                 text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
                 text( grp.pos, labels=labels, font=2, cex=cex2)
             }
-        }    
+        }
     })
 
     clust_phenoplot.opts = shiny::tagList(
@@ -1727,25 +1733,25 @@ displays the expression levels of selected genes across all conditions in the an
     )
 
     clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
-    
+
     ## clust_phenoplot.module <- plotModule(
     shiny::callModule(
-        plotModule,         
+        plotModule,
         "clust_phenoplot", ## ns=ns,
         func  = clust_phenoplot.RENDER, ## plotlib="base",
         func2 = clust_phenoplot.RENDER, ## plotlib="base",
         options = clust_phenoplot.opts,
         height = c(fullH-80,700), res = 85,
-        pdf.width = 6, pdf.height = 9, 
+        pdf.width = 6, pdf.height = 9,
         info.text = clust_phenoplot_info,
         add.watermark = WATERMARK
     )
 
-    
+
     ##=============================================================================
     ## Feature ranking
     ##=============================================================================
-    
+
     calcFeatureRanking <- shiny::reactive({
 
         shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)
@@ -1767,7 +1773,7 @@ displays the expression levels of selected genes across all conditions in the an
         features <- features[sapply(features,length) >=10 ]
 
         dbg("[calcFeatureRanking] length(features)=",length(features))
-        
+
         ## ------------ Just to get current samples
         ##samples = colnames(X)
         samples <- selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
@@ -1783,7 +1789,7 @@ displays the expression levels of selected genes across all conditions in the an
 
         dbg("[calcFeatureRanking] dim(X)=",dim(X))
         dbg("[calcFeatureRanking] dim(Y)=",dim(Y))
-        
+
         ## ------------ Note: this takes a while. Maybe better precompute off-line...
         sdx = apply(X,1,sd)
         names(sdx) = rownames(X)
@@ -1794,10 +1800,10 @@ displays the expression levels of selected genes across all conditions in the an
         ## ------------ Create a Progress object
         if(!interactive())  {
             progress <- shiny::Progress$new()
-            on.exit(progress$close())    
+            on.exit(progress$close())
             progress$set(message = "Calculating feature-set scores", value = 0)
         }
-        
+
         gene.level = TRUE
         gene.level = (input$hm_level=="gene")
         i=1
@@ -1807,15 +1813,15 @@ displays the expression levels of selected genes across all conditions in the an
 
             grp = Y[,i]
             grp = as.character(grp)
-            
+
             cat("[calcFeatureRanking] head(grp)=",head(grp),"\n")
-            
+
             score = rep(NA, length(features))
             names(score) = names(features)
             j=1
             for(j in 1:length(features)) {
 
-                pp = features[[j]]                
+                pp = features[[j]]
                 if(gene.level) {
                     pp = filterProbes(pgx$genes, features[[j]])
                 }
@@ -1824,8 +1830,8 @@ displays the expression levels of selected genes across all conditions in the an
                 X1 = X[pp,,drop=FALSE]
                 dim(X1)
                 ##cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
-                ##if( nrow(X1) 
-                
+                ##if( nrow(X1)
+
                 s1 = s2 = 1
                 method = input$clust_featureRank_method
                 if(method %in% c("correlation","meta")) {
@@ -1835,35 +1841,35 @@ displays the expression levels of selected genes across all conditions in the an
                     diag(D) = NA
                     s1 = mean(D,na.rm=TRUE)
                 }
-                
+
                 if(method %in% c("p-value","meta")) {
                     jj  <- which(!is.na(grp))
-                    design = model.matrix( ~ grp[jj])                    
+                    design = model.matrix( ~ grp[jj])
                     suppressWarnings( fit <- limma::eBayes( limma::lmFit( X1[,jj], design)) )
                     suppressWarnings( suppressMessages( top <- limma::topTable(fit) ))
                     ##s2 = mean(-log10(top$P.Value))  ## as score
                     s2 = mean(-log10(1e-99 + top$adj.P.Val),na.rm=TRUE)  ## as score
                 }
-                
+
                 f = 1
                 f <- (1 - exp(-(length(pp)/20)**2)) ## penalize smaller sets
                 score[j] = f * (s1 * s2) ** ifelse(method=="meta",0.5,1)
-                
+
             }
             S[,i] = score
         }
         S[is.na(S)] <- 0 ## missing values
         return(S)
     })
-    
+
     clust_featureRank.RENDER <- shiny::reactive({
 
         S <- calcFeatureRanking()
-        
+
         if(is.null(S) || nrow(S)==0 || ncol(S)==0 ) return(NULL)
 
         ## top scoring
-        S = tail( S[order(rowSums(S)),,drop=FALSE], 35)  
+        S = tail( S[order(rowSums(S)),,drop=FALSE], 35)
 
         par(mfrow=c(2,1), mar=c(1,5,3,3) )
         par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,3,0)); frame()
@@ -1876,7 +1882,7 @@ displays the expression levels of selected genes across all conditions in the an
         cc1 = grey.colors(ncol(S))
         legend("bottomright",legend=colnames(S), fill=cc1,
                cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
-        
+
     })
 
 
@@ -1892,9 +1898,9 @@ displays the expression levels of selected genes across all conditions in the an
     )
 
     shiny::callModule(
-        plotModule, 
+        plotModule,
         id="clust_featureRank",
-        title="Feature-set ranking", 
+        title="Feature-set ranking",
         func  = clust_featureRank.RENDER,
         func2 = clust_featureRank.RENDER,
         options = clust_featureRank.opts,
@@ -1903,7 +1909,7 @@ displays the expression levels of selected genes across all conditions in the an
         width=c("auto",800),
         res = c(72,90),
         info.text = clust_featureRank_info,
-        add.watermark = WATERMARK                
+        add.watermark = WATERMARK
     )
 
   })  ## end of moduleServer

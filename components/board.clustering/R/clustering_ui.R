@@ -8,13 +8,13 @@ ClusteringInputs <- function(id) {
     bigdash::tabSettings(
 #        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
 #                "Show more information and video tutorial about this module."),
-#        shiny::hr(), shiny::br(),             
+#        shiny::hr(), shiny::br(),
         withTooltip( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                 "Select a family of features.", placement="top"),
         shiny::conditionalPanel(
             "input.hm_features == '<custom>'", ns=ns,
             withTooltip( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
-                                    height = "150px", width = "100%", 
+                                    height = "150px", width = "100%",
                                     rows=5, placeholder="Paste your custom gene list"),
                     "Paste a custom list of genes to be used as features.",
                     placement="bottom")
@@ -25,12 +25,12 @@ ClusteringInputs <- function(id) {
                     "Select contrast to be used as signature.")
         ),
         withTooltip( shiny::selectInput(ns('hm_group'),'Group by:',choices=NULL),
-                "Group the samples by condition.", 
+                "Group the samples by condition.",
                 placement="top", options = list(container = "body")),
         withTooltip( shiny::selectInput(ns("hm_samplefilter"),"Filter samples:",
                             choices=NULL, multiple=TRUE),
                 "Filter the relevant samples for the analysis.",
-                placement="top", options = list(container = "body")),            
+                placement="top", options = list(container = "body")),
         withTooltip( shiny::actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                 "Toggle advanced options.", placement="top"),
         shiny::br(),
@@ -41,11 +41,11 @@ ClusteringInputs <- function(id) {
                     "Specify the level analysis: gene or geneset level.",
                     placement="top", options = list(container = "body")),
                 withTooltip( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
-                    "Exclude genes on X/Y chromosomes.", 
+                    "Exclude genes on X/Y chromosomes.",
                     placement="top", options = list(container = "body")),
                 withTooltip( shiny::checkboxInput(ns('hm_filterMitoRibo'),
                     'exclude mito/ribo genes',FALSE),
-                    "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
+                    "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.",
                     placement="top", options = list(container = "body"))
             )
         )
@@ -54,7 +54,7 @@ ClusteringInputs <- function(id) {
 
 ClusteringUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-        
+
     div(
         class = "row",
         ## h4("Cluster Samples"),
@@ -63,7 +63,7 @@ ClusteringUI <- function(id) {
             class = "col-md-7",
             shiny::tabsetPanel(
                 id = ns("tabs1"),
-                shiny::tabPanel("Heatmap", 
+                shiny::tabPanel("Heatmap",
                     plotWidget(ns("hm_splitmap")),
                     tags$div( class="caption",
                         HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
@@ -74,7 +74,10 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("PCA/tSNE",
-                    plot_clustpca_ui( ns("PCAplot"), label="", height=c("70vh","70vh") )                     
+                    plot_clustpca_ui(ns("PCAplot"),
+                                    label="",
+                                    height=c("70vh","70vh"),
+                                    parent = ns)
                     ##plotWidget(ns("hm_PCAplot")),
                     ## tags$div( class="caption",
                     ##     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
@@ -87,7 +90,7 @@ ClusteringUI <- function(id) {
                 shiny::tabPanel("Parallel",
                     plotWidget(ns("hm_parcoord")),
                     br(),
-                    tableWidget(ns("hm_parcoord_table")),                            
+                    tableWidget(ns("hm_parcoord_table")),
                     tags$div( class="caption",
                         HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                             the expression levels of selected genes across all conditions.
@@ -117,7 +120,7 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Feature ranking",
-                    plotWidget(ns("clust_featureRank")),      
+                    plotWidget(ns("clust_featureRank")),
                     tags$div( class="caption",
                             HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
                             The plot ranks the discriminative power of feature sets (or gene sets) as the
@@ -129,5 +132,5 @@ ClusteringUI <- function(id) {
         )
     )
 
-    
+
 }
