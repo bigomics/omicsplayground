@@ -50,6 +50,7 @@ wordcloud_table_enrichment_server <- function(id,
       id = "wordcloud_enrichmentTable",
       func = wordcloud_enrichmentTable.RENDER,
       info.text = wordcloud_enrichmentTable_info,
+      selector = "single",
       title = tags$div(
         HTML('<span class="module-label">(e)</span>Enrichment table')
       ),

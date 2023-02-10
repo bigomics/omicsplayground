@@ -72,10 +72,10 @@ drugconnectivity_table_dsea_server <- function(id,
     dsea_table <- shiny::callModule(
       tableModule,
       id = "dsea_table",
-      label = "",
       func = table.RENDER,
       options = table.opts,
       info.text = info_text,
+      selector = "single",
       title = "Enrichment table",
       height = c(360, 700)
     )
