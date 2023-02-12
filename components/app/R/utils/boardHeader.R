@@ -5,8 +5,8 @@ boardHeader <- function(title, info_link) {
         ##h2(input$nav),
         shiny::div(
             id = "navheader-current-section",
-            HTML(paste0(title," &nbsp;")), 
-            withTooltip( 
+            HTML(paste0(title," &nbsp;")),
+            withTooltip(
                 shiny::actionLink(
                     inputId = info_link,
                     label="",
@@ -15,9 +15,6 @@ boardHeader <- function(title, info_link) {
                 ),
                 "Show information and tutorial about this board"
             )
-        ),        
-        shiny::br(),
-        ##shiny::div(shiny::textOutput("current_dataset"), class='current-dataset')
-        shiny::div("Data set name selected", id='navheader-current-dataset')        
+        )
     )
 }
