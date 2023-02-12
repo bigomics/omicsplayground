@@ -125,6 +125,7 @@ tableModule <- function(input, output, session,
         if(!is.null(selector)){
           dt$x$selection$mode = selector
         }
+        dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
         dt
     },
     fillContainer = T)
@@ -141,7 +142,7 @@ tableModule <- function(input, output, session,
         if(!is.null(selector)){
           dt$x$selection$mode = selector
         }
-
+        dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
         dt
     },
     fillContainer = T)
