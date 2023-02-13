@@ -8,12 +8,6 @@ dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
 
   info_text <- paste0("Expression barplot of grouped samples (or cells) for the gene selected in the <code>Search gene</code> Samples (or cells) in the barplot can be ungrouped by setting the <code>grouped</code> under the main <i>Options</i>.")
 
-  opts <- shiny::tagList(
-    shiny::radioButtons(ns("geneplot_type"), "plot type (grouped)", c("bar", "violin", "box"),
-      inline = TRUE
-    )
-  )
-
   PlotModuleUI(
     ns("pltmod"),
     title = "Abundance/expression",
@@ -21,7 +15,6 @@ dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
-    options = opts,
     download.fmt = c("png", "pdf", "csv", "obj"),
     ## width = c("auto","100%"),
     height = height
