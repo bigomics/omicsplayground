@@ -1,7 +1,7 @@
 html {
 
     .tablewidget {
-	padding: 5px 15px 25px 15px; 	
+	padding: 5px 15px 25px 15px;
     }
 
     .tablewidget-header {
@@ -9,7 +9,7 @@ html {
 	height: 24px;
 	margin-bottom: 5px;
     }
-    
+
     .table-caption {
 	font-size: 13px;
 	font-weight: 400;
@@ -18,27 +18,27 @@ html {
 	padding: 5px 0px 10px 0px;
 	bottom: 0px;
     }
-    
+
     .datatables {
 	font-size: 12px;
 	line-height: '70%';
     }
-    
+
     .dataTables_filter {
 	//  float: left !important;
 	// text-align: left !important;
 	// margin-top: -30px;
     }
-    
+
     div.dataTables_wrapper div.dataTables_filter {
 	text-align: left;
     }
 
     div.dataTables_wrapper div.dataTables_filter input {
 	width: 350px;
-	background-color: #f7fafd;	
+	background-color: #f7fafd;
     }
-    
+
     table.dataTable {
 	border-collapse: collapse !important;
     }
@@ -50,11 +50,14 @@ html {
     table.dataTable>thead>tr>th {
 	font-size: 14px;
     }
+    table.dataTable>tbody>tr>td {
+	font-size: 14px;
+    }
 
     .table.dataTable tbody td.active, .table.dataTable tbody tr.active td {
 	background-color: #F7FAFD;
-	color: black; 
+	color: black;
 	font-weight: 600;
     }
-    
+
 }
