@@ -179,11 +179,9 @@ if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
-ENABLED
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
-has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
 ## Main tab titles
@@ -201,32 +199,22 @@ http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
 
-
-    dbg("[INIT.logHandler] >>>>> called! <<<<<")
-    ##dbg("[INIT.logHandler] names(http.req) = ",sort(names(http.req)))
-    dbg("[INIT.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
-
     if(!http.req$PATH_INFO == "/log") {
         return()
     }
 
     query <- shiny::parseQueryString(http.req$QUERY_STRING)
-    dbg("[INIT.logHandler] names(query) = ",names(query))
-    dbg("[INIT.logHandler] query$msg = ",query$msg)
 
     if(is.null(query$msg)) {
-        dbg("[INIT.logHandler] msg is NULL!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
-        dbg("[INIT.logHandler] msg is empty!")
         return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
-        dbg("[INIT.logHandler] missing HONCHO_TOKEN!")
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
@@ -239,23 +227,19 @@ logHandler <- function(http.req){
 
     log.dirs <- "~/ShinyApps/log/*log /var/log/shiny-server/*log"
     suppressWarnings( log.file <- system(paste("grep -l -s",id,log.dirs),intern=TRUE) )
-    log.file
     log.file <- tail(log.file,1)  ## take newest???
-    log.file
 
     if(length(log.file)==0) {
         dbg("[INIT.logHandler] could not resolve log file for session ID = ",id)
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
-    dbg("[logHandler] reading log.file = ",log.file)
     if(!is.null(log.file)) {
         ##the.log <- readr::read_file(log.file)
         ## truncate the log file
         the.log <- paste(system(paste("grep -B100 -A99999",id,log.file),intern=TRUE),collapse='\n')
     }
 
-    dbg("[logHandler] sending log file... ")
     httr::POST(
         uri,
         body = list(
