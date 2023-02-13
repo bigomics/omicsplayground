@@ -104,7 +104,7 @@ WordCloudBoard <- function(id, pgx) {
 
     # Leading-edge table
 
-    wordcloud_leadingEdgeTable <- wordcloud_table_leading_edge_server(
+    wordcloud_table_leading_edge_server(
       "wordcloud_leadingEdgeTable",
       pgx = pgx,
       wc_contrast = shiny::reactive(input$wc_contrast),

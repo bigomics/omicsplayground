@@ -97,7 +97,8 @@ enrichment_table_enrichment_analysis_server <- function(id,
         HTML('<span class="module-label">(I)</span>Enrichment analysis')
       ),
       info.width = "500px",
-      height = c(285, 700)
+      height = c(285, 700),
+      selector = "single"
     )
 
     return(gseatable)
