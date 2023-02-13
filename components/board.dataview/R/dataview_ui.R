@@ -195,7 +195,8 @@ DataViewUI <- function(id) {
         class = "caption",
         HTML("<b>Gene table.</b> The table shows the gene expression values per sample, or average
               expression values across the groups. The column 'rho' reports the correlation with the
-              gene selected in 'Search gene' in the left side bar.")
+              gene selected in 'Search gene' in the left side bar. If the data type selected is counts,
+              the geometric mean is calculated.")
       )
     ),
     ## ----------------------------------------------------------------------------

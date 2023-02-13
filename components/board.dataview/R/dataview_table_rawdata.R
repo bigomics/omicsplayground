@@ -22,11 +22,6 @@ dataview_table_rawdata_server <- function(id,
     table_data <- shiny::reactive({
       ## get current view of raw_counts
 
-      shiny::req(pgx$X, pgx$Y, pgx$genes, pgx$model.parameters)
-      shiny::req(r.gene(), r.data_type())
-
-      dbg("[dataview_rawdata:table_data] reacted!")
-
       ## dereference reactives
       gene <- r.gene()
       data_type <- r.data_type()
@@ -53,24 +48,35 @@ dataview_table_rawdata_server <- function(id,
       x <- x[, samples, drop = FALSE]
 
       ## Quickly (?) calculated correlation to selected gene
-      dbg("[dataview_rawdata:table_data] calculate rho")
-      dbg("[dataview_rawdata:table_data] data_type = ", data_type)
 
-      ## compute correlation (always in logCPM)
+      ## compute statistics
       rho <- sdx <- avg <- NULL
-      logx <- pgx$X[rownames(x), ]
       xgenes <- pgx$genes[rownames(x), "gene_name"]
       k <- which(xgenes == gene)
-      rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
-      rho <- round(rho[rownames(x)], digits = 3)
-      sdx <- round(apply(logx[, samples], 1, sd), digits = 3)
-      avg <- round(rowMeans(x), digits = 3)
+
+      if (data_type == "counts") {
+        #compute the geometric mean, exp(mean(log(x+1)))
+        logx <- log(x[rownames(x), ]+1)
+        rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
+        rho <- round(rho[rownames(logx)], digits = 3)
+        sdx <- round(exp(apply(logx[, samples], 1, sd)),digits = 3)
+        avg <- round(exp(rowMeans(logx)),digits = 3)
+
+      } else {
+        #compute the geometric mean, mean(x)
+        logx <- x
+        rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
+        rho <- round(rho[rownames(logx)], digits = 3)
+        sdx <- round(apply(logx[, samples], 1, sd), digits = 3)
+        avg <- round(rowMeans(logx), digits = 3)
+      }
+
 
       dbg("[dataview_rawdata:table_data] compute groupings")
 
       group <- NULL
       if (groupby %in% colnames(pgx$Y)) {
-        group <- pgx$Y[colnames(x), groupby]
+        group <- pgx$Y[colnames(logx), groupby]
       }
       if (length(samples) > 500 && groupby == "<ungrouped>") {
         group <- pgx$model.parameters$group
@@ -80,10 +86,15 @@ dataview_table_rawdata_server <- function(id,
         allgroups <- sort(unique(group))
         newx <- c()
         for (gr in allgroups) {
-          mx <- rowMeans(x[, which(group == gr), drop = FALSE], na.rm = TRUE)
+          if (data_type == "counts") {
+            mx <- exp(rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE))
+          }else{
+            mx <- rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE)
+          }
+
           newx <- cbind(newx, mx)
         }
-        rownames(newx) <- rownames(x)
+        rownames(newx) <- rownames(logx)
         colnames(newx) <- paste0("avg.", allgroups, "")
         x <- newx
       }
