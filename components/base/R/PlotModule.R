@@ -204,13 +204,16 @@ PlotModuleUI <- function(id,
             caption2 <- shiny::div(caption2, class="caption2")
         }
         shiny::tagList(
-          tryCatch({
+          shiny::div(
+            class = "popup-plot",
+            tryCatch({
             outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE)
-          }, error = function(x){ # This try-catch is used for render functions that
+            }, error = function(x){ # This try-catch is used for render functions that
                                   # do not have the arguments, such as
                                   # iheatmap plots
             outputFunc2(ns("renderpopup"), width=w, height=h)
-          }),
+            })
+          ),
           caption2
         )
     }
