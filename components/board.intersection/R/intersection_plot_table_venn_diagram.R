@@ -345,7 +345,6 @@ intersection_plot_venn_diagram_server <- function(id,
         class = "compact cell-border stripe",
         rownames = FALSE,
         extensions = c("Scroller"), selection = "none",
-        fillContainer = TRUE,
         options = list(
           ## dom = 'lfrtip',
           dom = "tip",
@@ -353,13 +352,18 @@ intersection_plot_venn_diagram_server <- function(id,
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           ## columnDefs = list(list(targets=nsc, searchable = FALSE)),
           scrollX = TRUE,
-          ## scrollY = 150,
-          scrollY = "70vh",
+          scrollY = 215,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+    })
+
+    venntable.RENDER2 <- shiny::reactive({
+      dt <- venntable.RENDER()
+      dt$x$options$scrollY <- 500
+      dt
     })
 
     venntable_opts <- shiny::tagList(
@@ -370,6 +374,7 @@ intersection_plot_venn_diagram_server <- function(id,
       tableModule,
       id = "venntable",
       func = venntable.RENDER,
+      func2 = venntable.RENDER2,
       options = venntable_opts,
       title = tags$div(
         HTML('<span class="module-label">(c)</span>Intersection')
