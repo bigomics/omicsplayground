@@ -69,9 +69,64 @@ DataViewUI <- function(id) {
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
 
-    ## ----------------------------------------------------------------------------
+
+    # QC tab #####
+
     shiny::tabPanel(
-      "Plots",
+      "Sample QC",
+      div(
+        class = "row",
+        div(
+          class = "col-md-4",
+          dataview_plot_totalcounts_ui(
+            ns("counts_total"),
+            height = imgH,
+            label = "a")
+        ),
+        div(
+          class = "col-md-4",
+          dataview_plot_boxplot_ui(
+            ns("counts_boxplot"),
+            height = imgH,
+            label = "b")
+        ),
+        div(
+          class = "col-md-4",
+          dataview_plot_histogram_ui(
+            ns("counts_histplot"),
+            height = imgH,
+            label = "c")
+        )
+      ),
+      div(
+        class = "row",
+        div(
+          class = "col-md-5",
+          dataview_plot_genetypes_ui(
+            ns("counts_genetypes"),
+            height = imgH,label = "d"
+          )
+        ),
+        div(
+          class = "col-md-7",
+          dataview_plot_abundance_ui(
+            ns("counts_abundance"),
+            height = imgH,label = "e")
+        )
+      ),
+      tags$div(
+        class = "caption",
+        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
+            the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
+            <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
+            the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
+            Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
+      )
+    ),
+
+    # plot tab #####
+    shiny::tabPanel(
+      "Gene overview",
       div(
         class = "row",
         div(
@@ -135,61 +190,10 @@ DataViewUI <- function(id) {
       )
     ),
 
-    ## ----------------------------------------------------------------------------
+    # counts tab #####
+
     shiny::tabPanel(
-      "QC",
-      div(
-        class = "row",
-        div(
-          class = "col-md-4",
-          dataview_plot_totalcounts_ui(
-            ns("counts_total"),
-            height = imgH,
-            label = "a")
-        ),
-        div(
-          class = "col-md-4",
-          dataview_plot_boxplot_ui(
-            ns("counts_boxplot"),
-            height = imgH,
-            label = "b")
-        ),
-        div(
-          class = "col-md-4",
-          dataview_plot_histogram_ui(
-            ns("counts_histplot"),
-            height = imgH,
-            label = "c")
-        )
-      ),
-      div(
-        class = "row",
-        div(
-          class = "col-md-5",
-          dataview_plot_genetypes_ui(
-            ns("counts_genetypes"),
-            height = imgH,label = "d"
-            )
-        ),
-        div(
-          class = "col-md-7",
-          dataview_plot_abundance_ui(
-            ns("counts_abundance"),
-            height = imgH,label = "e")
-        )
-      ),
-      tags$div(
-        class = "caption",
-        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
-            the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
-            <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
-            the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
-            Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
-      )
-    ),
-    ## ----------------------------------------------------------------------------
-    shiny::tabPanel(
-      "Counts",
+      "Counts table",
       dataview_table_rawdata_ui(ns("rawdatatable")),
       tags$div(
         class = "caption",
@@ -199,9 +203,9 @@ DataViewUI <- function(id) {
               the geometric mean is calculated.")
       )
     ),
-    ## ----------------------------------------------------------------------------
+    # samples tab #####
     shiny::tabPanel(
-      "Samples",
+      "Sample information",
       div(
         class = "row",
         div(
@@ -240,7 +244,9 @@ DataViewUI <- function(id) {
       )
     ),
 
-    ## ----------------------------------------------------------------------------
+
+    #contrasts tab #####
+
     shiny::tabPanel(
       "Contrasts",
       dataview_table_contrasts_ui(ns("contrastTable")),
@@ -253,7 +259,9 @@ DataViewUI <- function(id) {
         )
       )
     ),
-    ## ----------------------------------------------------------------------------
+
+    # Resource info #####
+
     shiny::tabPanel(
       "Resource info",
       dataview_table_rescources_ui(ns("resources"))
