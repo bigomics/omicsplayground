@@ -4072,6 +4072,10 @@ pgx.barplot.PLOTLY <- function(
 
   }
 
+  ngroups <- length(unique(data_stats[[1]]))
+
+  bargap <- ifelse(ngroups ==2, 0.5, NA)
+
   plotly::plot_ly(
     data = data_stats,
     x = ~data_stats[[1]],
@@ -4095,7 +4099,8 @@ pgx.barplot.PLOTLY <- function(
                    range = yrange),
       xaxis = list(title = xaxistitle),
       font = list(family = font_family),
-      margin = margin
+      margin = margin,
+      bargap=bargap
     ) %>%
     plotly_default1()
 
