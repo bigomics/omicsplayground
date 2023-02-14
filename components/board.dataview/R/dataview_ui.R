@@ -124,7 +124,7 @@ DataViewUI <- function(id) {
       )
     ),
 
-    # plot tab #####
+    # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
       div(
@@ -190,7 +190,7 @@ DataViewUI <- function(id) {
       )
     ),
 
-    # counts tab #####
+    # counts table tab #####
 
     shiny::tabPanel(
       "Counts table",
@@ -203,7 +203,7 @@ DataViewUI <- function(id) {
               the geometric mean is calculated.")
       )
     ),
-    # samples tab #####
+    # Sample information #####
     shiny::tabPanel(
       "Sample information",
       div(

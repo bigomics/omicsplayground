@@ -31,15 +31,21 @@ DataViewBoard <- function(id, pgx) {
     data_infotext <- paste0(
       'The <strong>DataView module</strong> provides information and visualisations of the dataset to quickly lookup a gene,
         check the counts, or view the data tables.<br><br>
-        The <strong>Plots</strong> panel displays figures related to the expression level of the selected gene,
+
+        The <strong>Sample QC</strong> provides an overview of several sample-centric quality control metrics. In this QC tab,
+        the total number of counts (abundance) per sample and their distribution among the samples are displayed.
+        This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
+
+        The <strong>Gene overview</strong> panel displays figures related to the expression level of the selected gene,
         correlation, and average expression ranking within the dataset.
         More information about the gene and hyperlinks to external databases are provided. Furthermore,
         it displays the correlation and tissue expression for a selected gene in external reference datasets.
-        In the <strong>Counts</strong> panel, the total number of counts (abundance) per sample and their distribution among the samples are displayed.
-        This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
-        In <strong>Gene Table</strong> panel, the exact expression values across the samples can be looked up,
-        where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping
-        is also presented in this table. In the <strong>Samples</strong> panel, more complete information about samples can be found.
+
+        In <strong>Counts table</strong> panel, the exact expression values across the samples can be looked up,
+        where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression
+        of a phenotype sample grouping is also presented in this table.
+
+        In the <strong>Sample information</strong> panel, more complete information about samples can be found.
         Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
         <br><br><br>
         <center><iframe width="560" height="315" src="https://www.youtube.com/embed/S32SPINqO8E"
