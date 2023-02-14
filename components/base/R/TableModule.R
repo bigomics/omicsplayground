@@ -125,7 +125,9 @@ tableModule <- function(input, output, session,
         if(!is.null(selector)){
           dt$x$selection$mode = selector
         }
+        # Remove striping and borders from all tables
         dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
+        dt$x$container <- stringr::str_remove(dt$x$container, "table-bordered")
         dt
     },
     fillContainer = T)
@@ -143,6 +145,7 @@ tableModule <- function(input, output, session,
           dt$x$selection$mode = selector
         }
         dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
+        dt$x$container <- stringr::str_remove(dt$x$container, "table-bordered")
         dt
     },
     fillContainer = T)
