@@ -30,9 +30,9 @@ ExpressionBoard <- function(id, inputData) {
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
-    ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
-    ## ================================================================================
+
+    # OBSERVE FUNCTIONS ##########
+
 
     shiny::observeEvent(input$gx_info,
       {
@@ -68,9 +68,15 @@ ExpressionBoard <- function(id, inputData) {
       shiny::updateCheckboxInput(session, "gx_ungroup", value = (ncol(ngs$X) <= 8))
     })
 
-    ## ================================================================================
-    ## ========================= REACTIVE FUNCTIONS ===================================
-    ## ================================================================================
+
+    # observe functions to project DT from invalidating equal row_select
+
+    gsettable_rows_selected <- reactiveVal()
+
+    observe({
+      gsettable_rows_selected(gsettable_rows_selected)
+    })
+
 
     selected_gxmethods <- shiny::reactive({
       ngs <- inputData()
@@ -81,9 +87,12 @@ ExpressionBoard <- function(id, inputData) {
       test
     })
 
-    ## ================================================================================
-    ## ========================= FUNCTIONS ============================================
-    ## ================================================================================
+
+
+
+
+    # functions #########
+
 
     comparison <- 1
     testmethods <- c("trend.limma")
@@ -293,7 +302,7 @@ ExpressionBoard <- function(id, inputData) {
       res = fullDiffExprTable,
       sel1 = genetable$rows_selected,
       df1 = filteredDiffExprTable,
-      sel2 = gsettable$rows_selected,
+      sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets
     )
 
@@ -307,7 +316,7 @@ ExpressionBoard <- function(id, inputData) {
       res = fullDiffExprTable,
       sel1 = genetable$rows_selected,
       df1 = filteredDiffExprTable,
-      sel2 = gsettable$rows_selected,
+      sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       fam.genes = res$gene_name,
       watermark = FALSE
