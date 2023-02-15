@@ -74,13 +74,13 @@ ExpressionBoard <- function(id, inputData) {
     gsettable_rows_selected <- reactiveVal()
 
     observe({
-      gsettable_rows_selected(gsettable$rows_selected)
+      gsettable_rows_selected(gsettable$rows_selected())
     })
 
     genetable_rows_selected <- reactiveVal()
 
     observe({
-      genetable_rows_selected(genetable$rows_selected)
+      genetable_rows_selected(genetable$rows_selected())
     })
 
 
@@ -245,7 +245,6 @@ ExpressionBoard <- function(id, inputData) {
       ngs <- inputData()
       ## if(is.null(ngs)) return(NULL)
       shiny::req(ngs, input$gx_features, input$gx_fdr, input$gx_lfc)
-      # browser()
 
       comp <- 1
       test <- "trend.limma"
