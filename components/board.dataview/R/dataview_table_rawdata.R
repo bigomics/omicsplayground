@@ -28,40 +28,63 @@ dataview_table_rawdata_server <- function(id,
       samples <- r.samples()
       groupby <- r.groupby()
 
+      parse_sample <- function(data){
+        if (samples[1] == "") samples <- colnames(data)
+        samples <- intersect(colnames(data), samples)
+        parsed_data <- data[, samples, drop = FALSE]
+      }
+
       if (is.null(gene) || gene == "" || is.na(gene)) {
         gene <- rownames(pgx$X)[1]
       }
 
       if (data_type == "counts") {
-        x <- pgx$counts
+        x <- parse_sample(pgx$counts)
+        x_cpm <- parse_sample(pgx$X)
       } else if (data_type == "CPM") {
         x <- edgeR::cpm(pgx$counts, log = FALSE)
       } else {
         ## log2CPM
-        x <- pgx$X
+        x <- parse_sample(pgx$X)
       }
+
       x0 <- x
 
       ## ------------------ select samples
-      if (samples[1] == "") samples <- colnames(pgx$X)
-      samples <- intersect(colnames(x), samples)
-      x <- x[, samples, drop = FALSE]
+
 
       ## Quickly (?) calculated correlation to selected gene
 
       ## compute statistics
       rho <- sdx <- avg <- NULL
-      xgenes <- pgx$genes[rownames(x), "gene_name"]
-      k <- which(xgenes == gene)
+
+      if (data_type == "counts") {
+        xgenes <- pgx$genes[rownames(x), "gene_name"]
+        k <- which(xgenes == gene)
+
+        xgenes_cpm <- pgx$genes[rownames(x_cpm), "gene_name"]
+        k_cpm <- which(xgenes_cpm == gene)
+      } else {
+        ## log2CPM
+        xgenes <- pgx$genes[rownames(x), "gene_name"]
+        k <- which(xgenes == gene)
+
+      }
 
       if (data_type == "counts") {
         #compute the geometric mean, exp(mean(log(x+1)))
         logx <- log(x[rownames(x), ]+1)
-        rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
-        rho <- round(rho[rownames(logx)], digits = 3)
-        sdx <- round(exp(apply(logx[, samples], 1, sd)),digits = 3)
-        avg <- round(exp(rowMeans(logx)),digits = 3)
 
+        #correlation should be equal between counts and logCPM, use logCPM
+        rho <- cor(t(x_cpm[,colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
+        rho <- round(rho[rownames(x_cpm)], digits = 3)
+        rho <- rho[match( rownames(x), names(rho))]
+        names(rho) <- rownames(x)
+
+        #geometric std deviation
+        sdx <- round(exp(apply(logx[, samples], 1, sd)),digits = 3)
+        #geometric mean
+        avg <- round(exp(rowMeans(logx)),digits = 3)
       } else {
         #compute the geometric mean, mean(x)
         logx <- x
@@ -70,9 +93,6 @@ dataview_table_rawdata_server <- function(id,
         sdx <- round(apply(logx[, samples], 1, sd), digits = 3)
         avg <- round(rowMeans(logx), digits = 3)
       }
-
-
-      dbg("[dataview_rawdata:table_data] compute groupings")
 
       group <- NULL
       if (groupby %in% colnames(pgx$Y)) {
