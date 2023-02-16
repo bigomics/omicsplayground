@@ -134,6 +134,11 @@ CompareUI <- function(id) {
                                   label = "c"
           )
         )
+      ),
+      tags$div(
+        class = "caption",
+        HTML("<b>Compare datasets</b>. Identification of similar features across datasets and contrasts.  <b>(a)</b> Correlation between selected contrasts.
+            <b>(b)</b> Cumulative fold change of genes on dataset 1.  <b>(c)</b> Cumulative fold change of genes on dataset 2.")
       )
     ),
     shiny::tabPanel(

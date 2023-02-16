@@ -17,7 +17,7 @@ compare_plot_cum_fc1_ui <- function(id,
                                    width,
                                    label) {
   ns <- shiny::NS(id)
-  info_text <- ""
+  info_text <- "Barplot showing the cumulative fold changes on dataset 1"
 
   PlotModuleUI(ns("plot"),
     title = "Cumulative foldchange",
