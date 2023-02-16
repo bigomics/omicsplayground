@@ -36,6 +36,11 @@ LoadingBoard <- function(id,
     ##================================================================================
     loading_tsne_server("tsne", watermark=FALSE)
 
+    pgxtable <- loading_table_datasets_server(
+      "pgxtable",
+      pgxTable_data = pgxTable_data
+    )
+
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
@@ -483,73 +488,7 @@ LoadingBoard <- function(id,
         df
     })
 
-    pgxTable_DT <- function() {
-        df <- pgxTable_data()
-        req(df)
-
-        ##df <- data.frame(nr=rownames(df), df)
-
-        target1 <- grep("date",colnames(df))
-        target2 <- grep("description",colnames(df))
-        target3 <- grep("conditions",colnames(df))
-        target4 <- grep("dataset",colnames(df))
-
-        DT::datatable(
-          df,
-          #          class = 'compact cell-border hover',
-          class = 'compact hover',
-          rownames = TRUE,
-          extensions = c('Scroller'),
-          selection = list(mode='single', target='row', selected=1),
-          fillContainer = TRUE,
-          options=list(
-            ##dom = 'Blfrtip',
-            dom = 'ft',
-            ##columnDefs = list(list(searchable = FALSE, targets = 1)),
-            pageLength = 9999,
-            ##lengthMenu = c(20, 30, 40, 100),
-            scrollX = FALSE,
-            ##scrollY =400, ## scroller=TRUE,
-            ##scrollY = '100vh', ## scroller=TRUE,
-            scrollY = FALSE,
-            deferRender=TRUE,
-            autoWidth = TRUE,
-            columnDefs = list(
-              list(width='60px', targets=target1),
-              list(width='30vw', targets=target2)
-            )
-          )  ## end of options.list
-        )
-    }
-
-    pgxTable.RENDER <- function() {
-        pgxTable_DT() %>%
-            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')
-    }
-
-    pgxTable_modal.RENDER <- function() {
-        pgxTable_DT() %>%
-            DT::formatStyle(0, target='row', fontSize='16px', lineHeight='95%')
-    }
-
-    info_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
-
-    pgxtable <- shiny::callModule(
-        tableModule, id = "pgxtable",
-        func = pgxTable.RENDER,
-        func2 = pgxTable_modal.RENDER,
-        title = "Data files",
-        ##height = c(600,700),
-        height = c("65vh",700),
-        width = c('100%','100%'),
-        info.text = info_text,
-        caption2 = info_text,
-        selector = "single"
-    )
-
-
-
-    ##------------------------------------------------
+        ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------
     res <- list(
