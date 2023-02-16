@@ -32,7 +32,7 @@ drugconnectivity_plot_moa_ui <- function(id,
   PlotModuleUI(ns("plot"),
                title = "Mechanism of action",
                label = label,
-               plotlib = "base",
+               plotlib = "plotly",
                info.text = info_text,
                options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
@@ -85,35 +85,41 @@ drugconnectivity_plot_moa_server <- function(id,
         jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
-        par(mfrow = c(2, 1), mar = c(4, 3.5, 0.1, 0), mgp = c(1.7, 0.65, 0))
-        barplot(moa.top,
-                horiz = FALSE, las = 3,
-                ylab = "enrichment  (NES)",
-                cex.names = 0.96
-        )
+
+        pgx.barplot.PLOTLY(
+          data = data.frame(
+            x=factor(names(moa.top),levels = names(moa.top)),
+            y=as.numeric(moa.top)
+          ),
+          x = "x",
+          y = "y",
+          yaxistitle = "Enrichment score (NES)",
+          xaxistitle = "Mechanism of action",
+          plotRawValues = TRUE,
+          yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
+          )
       })
 
-      plot.RENDER2 <- shiny::reactive({
-        res <- plot_data()
-        shiny::req(res)
-
-        ntop <- 32
-        jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
-        moa.top <- res$NES[jj]
-        names(moa.top) <- res$pathway[jj]
-        par(mfrow = c(2, 1), mar = c(4, 3.5, 0.1, 0), mgp = c(1.7, 0.65, 0))
-        barplot(moa.top,
-                horiz = FALSE, las = 3,
-                ylab = "enrichment  (NES)",
-                cex.names = 1
-        )
-      })
+      # plot.RENDER2 <- shiny::reactive({
+      #   res <- plot_data()
+      #   shiny::req(res)
+      #
+      #   ntop <- 32
+      #   jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
+      #   moa.top <- res$NES[jj]
+      #   names(moa.top) <- res$pathway[jj]
+      #   par(mfrow = c(2, 1), mar = c(4, 3.5, 0.1, 0), mgp = c(1.7, 0.65, 0))
+      #   barplot(moa.top,
+      #           horiz = FALSE, las = 3,
+      #           ylab = "enrichment  (NES)",
+      #           cex.names = 1
+      #   )
+      # })
 
       PlotModuleServer(
         "plot",
-        plotlib = "base", # does not use plotly
+        plotlib = "plotly",
         func = plot.RENDER,
-        func2 = plot.RENDER2,
         csvFunc = plot_data,
         res = c(70, 110),
         pdf.width = 6, pdf.height = 6,

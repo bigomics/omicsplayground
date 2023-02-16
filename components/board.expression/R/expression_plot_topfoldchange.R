@@ -23,7 +23,7 @@ expression_plot_topfoldchange_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Gene in contrasts",
     label = label,
-    plotlib = "base",
+    plotlib = "plotly",
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -113,17 +113,28 @@ expression_plot_topfoldchange_server <- function(id,
       cex1 <- 0.9
       nn <- sum(!is.na(pd[["fc.top"]]))
       if (nn > 15) cex1 <- 0.8
-      barplot(pd[["fc.top"]],
-        col = pd[["klr"]], horiz = TRUE, las = 1,
-        xlim = c(-1, 1) * max(abs(pd[["fc.top"]]), na.rm = TRUE),
-        cex.names = cex1, xlab = "fold change (log2)"
+
+      pgx.barplot.PLOTLY(
+        data = data.frame(
+          x = names(pd[["fc.top"]]),
+          y = as.numeric(pd[["fc.top"]])
+        ),
+        x = "x",
+        y = "y",
+        title = pd[["gene"]],
+        yaxistitle = "Fold change (log2)",
+        xaxistitle = "Groups",
+        yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
+        fillcolor = pd[["klr"]],
+        plotRawValues = TRUE
       )
-      title(pd[["gene"]], cex.main = 1, line = -0.15)
     }
+
+
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
+      plotlib = "plotly",
       func = plotly.RENDER,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

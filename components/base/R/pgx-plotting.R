@@ -4051,39 +4051,56 @@ pgx.barplot.PLOTLY <- function(
   hoverformat = ".2f",
   yaxistitle = FALSE,
   xaxistitle = FALSE,
+  yrange = NULL,
   font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 65, t = 30)
+  margin = list(l = 10, r = 10, b = 65, t = 30),
+  plotRawValues = FALSE #false will calculate mean +/- (sd) across groups
 ){
 
   # calculate error bars
 
   # calculate summary statistics for groups
-  data_stats <- do.call(data.frame,
-                        aggregate(data[[y]],
-                                  list(data[[x]]),
-                                  function(val)
-                                    c(mean = mean(val), sd = sd(val))))
+
+  if(plotRawValues == FALSE){
+    data_stats <- do.call(data.frame,
+                          aggregate(data[[y]],
+                                    list(data[[x]]),
+                                    function(val)
+                                      c(mean = mean(val), sd = sd(val))))
+  }else{
+    data_stats <- data
+
+  }
+
+  ngroups <- length(unique(data_stats[[1]]))
+
+  bargap <- ifelse(ngroups ==2, 0.5, NA)
+
   plotly::plot_ly(
     data = data_stats,
     x = ~data_stats[[1]],
     y = ~data_stats[[2]],
-    error_y = list(array = ~data_stats[[3]],
-                   color = "#000000"),
     type = type,
+    error_y = list(array = unlist(ifelse(!plotRawValues,
+                                         data_stats[3],
+                                         FALSE)),
+                   color = "#000000"),
     marker = list(
       color = fillcolor
     ),
     line = ~list(color = linecolor),
     hoverinfo = hoverinfo
-    ) %>%
+  ) %>%
     plotly::layout(
       title = list(text = title,
                    font = list(color = titlecolor)),
       yaxis = list(title = yaxistitle,
-                   hoverformat = hoverformat),
+                   hoverformat = hoverformat,
+                   range = yrange),
       xaxis = list(title = xaxistitle),
       font = list(family = font_family),
-      margin = margin
+      margin = margin,
+      bargap=bargap
     ) %>%
     plotly_default1()
 
