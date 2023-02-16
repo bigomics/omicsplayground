@@ -56,6 +56,37 @@ CompareBoard <- function(id, inputData) {
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
 
+    cum_fc <- shiny::reactive({
+      ngs1 <- inputData()
+      ngs2 <- dataset2()
+
+      ct1 <- head(names(ngs1$gx.meta$meta), 2)
+      ct2 <- head(names(ngs2$gx.meta$meta), 2)
+      ct1 <- input.contrast1()
+      ct2 <- input.contrast2()
+      shiny::req(ct1)
+      shiny::req(ct2)
+      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
+        return(NULL)
+      }
+      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+        return(NULL)
+      }
+
+      F1 <- pgx.getMetaMatrix(ngs1)$fc[, ct1, drop = FALSE]
+      F2 <- pgx.getMetaMatrix(ngs2)$fc[, ct2, drop = FALSE]
+
+      gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
+      g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
+      g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
+      F1 <- F1[g1, , drop = FALSE]
+      F2 <- F2[g2, , drop = FALSE]
+      colnames(F1) <- paste0("1:", colnames(F1))
+      colnames(F2) <- paste0("2:", colnames(F2))
+
+      return(cbind(F1, F2))
+    })
+
     dataset2 <- shiny::reactive({
       shiny::req(input$dataset2)
       if (input$dataset2 == "<this>") {
@@ -279,10 +310,21 @@ CompareBoard <- function(id, inputData) {
 
     # Cumulative FC
 
-    compare_plot_cum_fc_server(
-      "cumfcplot",
+    compare_plot_cum_fc1_server(
+      "cumfcplot1",
       inputData = inputData,
       dataset2 = dataset2,
+      cum_fc = cum_fc,
+      input.contrast1 = input.contrast1,
+      input.contrast2 = input.contrast2,
+      watermark = WATERMARK
+    )
+
+    compare_plot_cum_fc2_server(
+      "cumfcplot2",
+      inputData = inputData,
+      dataset2 = dataset2,
+      cum_fc = cum_fc,
       input.contrast1 = input.contrast1,
       input.contrast2 = input.contrast2,
       watermark = WATERMARK

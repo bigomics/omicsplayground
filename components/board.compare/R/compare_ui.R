@@ -123,9 +123,15 @@ CompareUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          compare_plot_cum_fc_ui(ns("cumfcplot"),
-            height = c(700, 750),
-            width = c("auto", 900)
+          compare_plot_cum_fc1_ui(ns("cumfcplot1"),
+            height = c(350, 375),
+            width = c("auto", 900),
+            label = "b"
+          ),
+          compare_plot_cum_fc2_ui(ns("cumfcplot2"),
+                                  height = c(350, 375),
+                                  width = c("auto", 900),
+                                  label = "c"
           )
         )
       )
