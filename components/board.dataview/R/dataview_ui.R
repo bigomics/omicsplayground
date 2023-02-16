@@ -194,7 +194,11 @@ DataViewUI <- function(id) {
 
     shiny::tabPanel(
       "Counts table",
-      dataview_table_rawdata_ui(ns("rawdatatable")),
+      dataview_table_rawdata_ui(
+        ns("rawdatatable"),
+        height = c("75vh", 700),
+        width = c("100%", "90%")
+      ),
       tags$div(
         class = "caption",
         HTML("<b>Gene table.</b> The table shows the gene expression values per sample, or average
@@ -229,7 +233,10 @@ DataViewUI <- function(id) {
         )
       ),
       dataview_table_samples_ui(
-        ns("sampletable")),
+        ns("sampletable"),
+        height = c(280,750),
+        width=c('auto','90%')
+      ),
       tags$div(
         class = "caption",
         HTML(
@@ -249,7 +256,11 @@ DataViewUI <- function(id) {
 
     shiny::tabPanel(
       "Contrasts",
-      dataview_table_contrasts_ui(ns("contrastTable")),
+      dataview_table_contrasts_ui(
+        ns("contrastTable"),
+        height = c(500,750),
+        width=c('auto','90%')
+      ),
       tags$div(
         class = "caption",
         HTML(
