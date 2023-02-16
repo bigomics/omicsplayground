@@ -4,9 +4,26 @@
 ##
 
 
-drugconnectivity_table_dsea_ui <- function(id) {
+drugconnectivity_table_dsea_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("dsea_table"))
+
+  info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
+                         correlating your signature with known drug profiles
+                         from the L1000 database. Because the L1000 has multiple
+                         perturbation experiment for a single drug, drugs are
+                         scored by running the GSEA algorithm on the
+                         contrast-drug profile correlation space. In this way,
+                         we obtain a single score for multiple profiles of a
+                         single drug.")
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Enrichment table",
+    label = "b"
+  )
 }
 
 
@@ -59,25 +76,10 @@ drugconnectivity_table_dsea_server <- function(id,
         )
     }
 
-    info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
-                         correlating your signature with known drug profiles
-                         from the L1000 database. Because the L1000 has multiple
-                         perturbation experiment for a single drug, drugs are
-                         scored by running the GSEA algorithm on the
-                         contrast-drug profile correlation space. In this way,
-                         we obtain a single score for multiple profiles of a
-                         single drug.")
-
-    table.opts <- shiny::tagList()
-    dsea_table <- shiny::callModule(
-      tableModule,
-      id = "dsea_table",
+    dsea_table <- TableModuleServer(
+      "datasets",
       func = table.RENDER,
-      options = table.opts,
-      info.text = info_text,
-      selector = "single",
-      title = "Enrichment table",
-      height = c(360, 700)
+      selector = "single"
     )
 
     return(dsea_table)
