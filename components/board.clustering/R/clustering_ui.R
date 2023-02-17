@@ -55,6 +55,8 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 
+    fullH = 850  ## full height of page
+
     div(
         class = "row",
         ## h4("Cluster Samples"),
@@ -64,7 +66,12 @@ ClusteringUI <- function(id) {
             shiny::tabsetPanel(
                 id = ns("tabs1"),
                 shiny::tabPanel("Heatmap",
-                    plotWidget(ns("hm_splitmap")),
+                    clustering_plot_hm_splitmap_ui(id = ns("hm_splitmap"),
+                                                   label = "a",
+                                                   height = fullH-80,
+                                                   width = '100%'),
+                    # plotWidget(ns("hm_splitmap")), #FIXME
+
                     tags$div( class="caption",
                         HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
                         clustering. Red corresponds to overexpression, blue to underexpression of the gene.
