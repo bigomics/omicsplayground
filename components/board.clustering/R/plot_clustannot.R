@@ -4,9 +4,9 @@
 ##
 
 
-##================================================================================
-## Annotate clusters
-##================================================================================
+
+## Annotate clusters ##########
+
 
 clustannot_plot_ui <- function(id, label='', height=c(600,800))
 {
@@ -17,7 +17,7 @@ clustannot_plot_ui <- function(id, label='', height=c(600,800))
   a_GO="<a href='http://geneontology.org/'>Gene Ontology</a>"
 
   info_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
-  
+
   plots_opts = shiny::tagList(
     withTooltip( shiny::selectInput(ns("xann_level"), "Reference level:",
       choices=c("gene","geneset","phenotype"),
@@ -34,19 +34,19 @@ clustannot_plot_ui <- function(id, label='', height=c(600,800))
       "Specify a reference set to be used in the annotation.",
       placement="left",options = list(container = "body"))
   )
-  
+
   PlotModuleUI(
     ns("pltmod"),
     title = "Functional annotation of clusters",
     label = label,
     outputFunc = plotly::plotlyOutput,
-    outputFunc2 = plotly::plotlyOutput,        
+    outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
     options = plots_opts,
-    download.fmt=c("png","pdf","csv"),         
+    download.fmt=c("png","pdf","csv"),
     width = c("auto","100%"),
     height = height
-  )    
+  )
 }
 
 clustannot_table_ui <- function(id, label='', height=c(600,800)) {
@@ -54,18 +54,18 @@ clustannot_table_ui <- function(id, label='', height=c(600,800)) {
   plotWidget(ns("clustannot_table"))
 }
 
-clustannot_server <- function(id, 
+clustannot_server <- function(id,
                               pgx,
                               top_matrix = reactive(NULL),
                               hm_level = reactive("gene"),
-                              hm_topmode = reactive("sd"),                                   
+                              hm_topmode = reactive("sd"),
                               watermark=FALSE)
 {
   moduleServer( id, function(input, output, session) {
     ns <- session$ns
-      
+
     shiny::observe({
-        ##pgx <- inputData()    
+        ##pgx <- inputData()
         shiny::req(pgx$X,pgx$gsetX,pgx$families)
 
         if(is.null(input$xann_level)) return(NULL)
@@ -92,25 +92,25 @@ clustannot_server <- function(id,
         } else {
             ann.types = sel = "<all>"
         }
-        shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)    
+        shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
     })
-    
+
     ## This is used both for plot and table
     get_annot_correlation <- shiny::reactive({
-        
+
         ##pgx <- inputData()
         shiny::req(pgx$X,pgx$Y,pgx$gsetX,pgx$families)
 
         ##filt <- getTopMatrix()
         filt <- top_matrix()
         shiny::req(filt)
-        
+
         zx  <- filt$mat
         idx <- filt$idx
         samples <- filt$samples
 
         if(nrow(zx) <= 1) return(NULL)
-        
+
         ann.level="geneset"
         ann.refset="Hallmark collection"
         ann.level = input$xann_level
@@ -118,22 +118,22 @@ clustannot_server <- function(id,
         ann.refset = input$xann_refset
         ##if(is.null(ann.refset)) return(NULL)
         shiny::req(input$xann_level, input$xann_refset)
-        
+
         ref = NULL
-        ref = pgx$gsetX[,,drop=FALSE]    
-        ref = pgx$X[,,drop=FALSE]    
+        ref = pgx$gsetX[,,drop=FALSE]
+        ref = pgx$X[,,drop=FALSE]
         if(ann.level=="gene" && ann.refset %in% names(pgx$families) ) {
             gg = pgx$families[[ann.refset]]
             jj = match(toupper(gg), toupper(pgx$genes$gene_name))
             jj <- setdiff(jj,NA)
             pp = rownames(pgx$genes)[jj]
-            ref = pgx$X[intersect(pp,rownames(pgx$X)),,drop=FALSE]    
+            ref = pgx$X[intersect(pp,rownames(pgx$X)),,drop=FALSE]
         }
         if(ann.level=="geneset" && ann.refset %in% names(COLLECTIONS)) {
             ss = COLLECTIONS[[ann.refset]]
             ss = intersect(ss, rownames(pgx$gsetX))
             length(ss)
-            ref = pgx$gsetX[ss,]    
+            ref = pgx$gsetX[ss,]
         }
         if(ann.level=="phenotype") {
             ref = t(expandAnnotationMatrix(pgx$Y))
@@ -142,7 +142,7 @@ clustannot_server <- function(id,
             cat("<clustering:get_annot_correlation> WARNING:: ref error\n")
             return(NULL)
         }
-        
+
         ##-----------  restrict to top??
         dim(ref)
         if(nrow(ref)>1000) {
@@ -152,13 +152,13 @@ clustannot_server <- function(id,
         ##-----------  get original data level
         X = pgx$X
         if(hm_level()=="geneset") X <- pgx$gsetX
-        
+
         ##----------- for each gene cluster compute average correlation
-        idxx = setdiff(idx, c(NA," ","   "))    
+        idxx = setdiff(idx, c(NA," ","   "))
         rho <- matrix(NA, nrow(ref), length(idxx))
         colnames(rho) <- idxx
         rownames(rho) <- rownames(ref)
-        
+
         i=1
         if(nrow(ref)>0) {
             for(i in 1:length(idxx)) {
@@ -201,18 +201,18 @@ clustannot_server <- function(id,
         return(rho)
     })
 
-    ##--------------------------------------------------------------------
-    ## Plot
-    ##--------------------------------------------------------------------
+
+    ## Plot ##########
+
     plot_data <- shiny::reactive({
       get_annot_correlation()
     })
 
-    plot.RENDER <- function() {        
+    plot.RENDER <- function() {
 
       rho <- plot_data()
-      shiny::req(rho)      
-      
+      shiny::req(rho)
+
       NTERMS = 6
       NTERMS = 12
       slen=40
@@ -225,22 +225,22 @@ clustannot_server <- function(id,
       if(ncol(rho)<=2) {
         NTERMS=22
       }
-      
+
       klrpal = rep(RColorBrewer::brewer.pal(8,"Set2"),2)
       ##klrpal = paste0(klrpal,"88")
       col.addalpha <- function(clr,a=100)
         paste0("rgba(",paste(col2rgb(clr)[,1],collapse=","),",",a,")")
       ##klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
       klrpal <- paste0(klrpal,"55")
-      
+
       plot_list <- list()
-      i=1    
+      i=1
       for(i in 1:min(9,ncol(rho))) {
-        
+
         x = rev(head(sort(rho[,i],decreasing=TRUE),NTERMS))
         names(x) = sub(".*:","",names(x))
         names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
-        
+
         y = names(x)
         y = factor(y, levels=y)
         anntitle <- function(tt) {
@@ -249,10 +249,10 @@ clustannot_server <- function(id,
             yanchor = "bottom", xanchor = "center",
             align = "center", x=0.5, y=1.02 , showarrow = FALSE )
         }
-        
+
         ## NOTE: The same plotly code (originally) as in `clustering_server.R`
         ##       -> Seems it uses the function from that file, not this one
-        ## TODO: clean-up; we should stick to the general setup of individual 
+        ## TODO: clean-up; we should stick to the general setup of individual
         ##       scripts for the plotting functions
         plot_list[[i]] <- plotly::plot_ly(
           x=x, y=y, type='bar',  orientation='h',
@@ -282,28 +282,28 @@ clustannot_server <- function(id,
           ## labeling the y-axis inside bars
           plotly::add_annotations(xref = 'paper', yref = 'y',
             x = 0.01, y = y, xanchor='left',
-            text = shortstring(y,slen), 
+            text = shortstring(y,slen),
             font = list(size = 10),
             showarrow = FALSE, align = 'right')
         ##layout(margin = c(0,0,0,0))
       }
-      
+
       if(length(plot_list) <= 4) {
         nrows = ceiling(length(plot_list)/2 )
       } else {
         nrows = ceiling(length(plot_list)/3 )
       }
-        
+
       plotly::subplot( plot_list, nrows=nrows, shareX=TRUE,
         ## template = "plotly_dark",
         margin = c(0, 0.0, 0.05, 0.05) ) %>%
-        plotly::config(displayModeBar = FALSE) 
+        plotly::config(displayModeBar = FALSE)
     }
 
     modal_plot.RENDER <- function() {
       plot.RENDER()
     }
-    
+
     PlotModuleServer(
       "pltmod",
       ##plotlib = "plotly",
@@ -312,21 +312,20 @@ clustannot_server <- function(id,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
       renderFunc = plotly::renderPlotly,
-      renderFunc2 = plotly::renderPlotly,        
+      renderFunc2 = plotly::renderPlotly,
       res = c(90,170),                ## resolution of plots
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark
     )
 
-    ##--------------------------------------------------------------------
-    ## Table
-    ##--------------------------------------------------------------------
+
+    ## Table ##########
 
     table.RENDER <- shiny::reactive({
-        
+
       rho <- get_annot_correlation()
       if(is.null(rho)) return(NULL)
-        
+
       ##rownames(rho) = shortstring(rownames(rho),50)
       rho.name = shortstring(sub(".*:","",rownames(rho)),60)
       ##rho = data.frame(cbind( name=rho.name, rho))
@@ -335,7 +334,7 @@ clustannot_server <- function(id,
       if(input$xann_level=="geneset") {
         df$feature <- wrapHyperLink(df$feature, rownames(df))
       }
-      
+
       DT::datatable(
         df, rownames=FALSE, escape = c(-1,-2),
         extensions = c('Buttons','Scroller'),
@@ -350,17 +349,17 @@ clustannot_server <- function(id,
           scrollY = '70vh',
           scroller=TRUE,
           deferRender=TRUE
-        )  ## end of options.list 
+        )  ## end of options.list
       ) %>%
-        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     })
 
     table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
-    
+
     ##clustannot_table_module <- tableModule(
     clustannot_table_module <- shiny::callModule(
-        tableModule, 
-        id = "clustannot_table", 
+        tableModule,
+        id = "clustannot_table",
         func = table.RENDER,
         ##options = clustannot_table_opts,
         info.text = table_info_text,
@@ -369,7 +368,7 @@ clustannot_server <- function(id,
         ##caption = clustannot_caption
     )
 
-    
+
   })
 
 }

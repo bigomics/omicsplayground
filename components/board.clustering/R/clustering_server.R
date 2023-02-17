@@ -22,9 +22,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
 ')
 
-    ##================================================================================
-    ##============================ MODULES ===========================================
-    ##================================================================================
+    # modules ########
 
       r.samples <- reactive({
           ##colnames(getFilteredMatrix())
@@ -41,9 +39,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                          parent = ns)
 
 
-    ##================================================================================
-    ##======================= OBSERVE FUNCTIONS ======================================
-    ##================================================================================
+    # observe functions ########
 
     shiny::observeEvent( input$clust_info, {
         shiny::showModal(shiny::modalDialog(
@@ -123,9 +119,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
 
-    ##================================================================================
-    ##========================= REACTIVE FUNCTIONS ===================================
-    ##================================================================================
+
+    # REACTIVE FUNCTIONS ##############
+
 
     getFilteredMatrix <- shiny::reactive({
         ## Returns filtered matrix ready for clustering. Filtering based
@@ -141,9 +137,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         shiny::req(ft)
 
         if(input$hm_level=="geneset") {
-            ##-----------------------------------
-            ## Gene set level features
-            ##-----------------------------------
+
+            ## Gene set level features #########
+
             gsets = rownames(pgx$gsetX)
             ##gsets = unique(unlist(COLLECTIONS[ft]))
             gsets = unique(COLLECTIONS[[ft]])
@@ -158,9 +154,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         idx <- NULL
         if(input$hm_level=="gene") {
 
-            ##-----------------------------------
-            ## Gene level features
-            ##-----------------------------------
+
+            ## Gene level features ###########
+
             gg = pgx$families[[1]]
             if(ft =="<all>") {
                 gg = rownames(pgx$X)
@@ -321,9 +317,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)
 
-        ##------------------------------------------------------------
-        ## Any BMC scaling??
-        ##------------------------------------------------------------
+
+        ## Any BMC scaling?? ##########
+
         if(do.split && input$hm_scale=="BMC") {
             dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")
             for(g in unique(grp)) {
@@ -333,9 +329,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             }
         }
 
-        ##------------------------------------------------------------
-        ## Create reduced matrix according to topmode
-        ##------------------------------------------------------------
+
+        ## Create reduced matrix according to topmode #######
+
 
         topmode="specific"
         topmode="sd"
@@ -477,17 +473,13 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
 
-    ##================================================================================
-    ##========================= FUNCTIONS ============================================
-    ##================================================================================
+    # functions ##########
 
     hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
     hm1_splitmap.RENDER <- shiny::reactive({
 
-        ##------------------------------------------------------------
-        ## ComplexHeatmap based splitted heatmap
-        ##------------------------------------------------------------
+        ## ComplexHeatmap based splitted heatmap ##########
 
         filt <- getTopMatrix()
         shiny::req(filt)
@@ -593,9 +585,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     hm2_splitmap.RENDER <- shiny::reactive({
 
-        ##------------------------------------------------------------
-        ## iHeatmap based splitted heatmap
-        ##------------------------------------------------------------
+
+        ## iHeatmap based splitted heatmap #########
+
         shiny::req(pgx$genes)
 
         ## -------------- variable to split samples
@@ -834,9 +826,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         add.watermark = WATERMARK
     )
 
-    ##================================================================================
-    ##================================ PCA/tSNE ======================================
-    ##================================================================================
+
+    ##  PCA/tSNE ############
 
     hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other.
 <br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
@@ -1116,9 +1107,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         add.watermark = WATERMARK
     )
 
-    ##================================================================================
-    ## Parallel coordinates
-    ##================================================================================
+    ## Parallel coordinates ##########
 
     hm_parcoord.ranges <- shiny::reactiveValues()
 
@@ -1299,9 +1288,8 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(270,700)
     )
 
-    ##================================================================================
-    ## Annotate clusters
-    ##================================================================================
+    ## Annotate clusters ############
+
 
     clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
 
@@ -1658,9 +1646,8 @@ displays the expression levels of selected genes across all conditions in the an
         )
     })
 
-    ##================================================================================
-    ## Phenotypes {data-height=800}
-    ##================================================================================
+
+    ## Phenotypes #################
 
     clust_phenoplot.RENDER <- shiny::reactive({
 
@@ -1747,10 +1734,7 @@ displays the expression levels of selected genes across all conditions in the an
         add.watermark = WATERMARK
     )
 
-
-    ##=============================================================================
-    ## Feature ranking
-    ##=============================================================================
+    ## Feature ranking ###########
 
     calcFeatureRanking <- shiny::reactive({
 

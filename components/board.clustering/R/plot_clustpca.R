@@ -4,9 +4,8 @@
 ##
 
 
-##================================================================================
-## Annotate clusters
-##================================================================================
+
+## Annotate clusters ############
 
 plot_clustpca_ui <- function(id,
                              label='',
@@ -64,9 +63,8 @@ plot_clustpca_server <- function(id,
   moduleServer( id, function(input, output, session) {
     ns <- session$ns
 
-    ##--------------------------------------------------------------------
-    ## Functions
-    ##--------------------------------------------------------------------
+    ## Functions ############
+
     hm_getClusterPositions <- shiny::reactive({
 
         dbg("[plot_clustpca_server:hm_getClusterPositions] reacted!")
@@ -141,10 +139,8 @@ plot_clustpca_server <- function(id,
         return(clust)
     })
 
+    ## Plot ############
 
-    ##--------------------------------------------------------------------
-    ## Plot
-    ##--------------------------------------------------------------------
     plot_data <- shiny::reactive({
         dbg("[plot_clustpca_server:plot_data] reacted!")
         clust <- hm_getClusterPositions()
