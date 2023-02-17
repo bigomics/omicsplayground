@@ -4,9 +4,30 @@
 ##
 
 
-functional_table_kegg_table_ui <- function(id) {
+functional_table_kegg_table_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("table"))
+
+  info_text <- strwrap("<strong>Enrichment table.</strong> The table is
+                         interactive; enabling user to sort on different
+                         variables and select a pathway by clicking on the row
+                         in the table. The scoring is performed by considering
+                         the total number of genes in the pathway (n), the
+                         number of genes in the pathway supported by the contrast
+                         profile (k), the ratio of k/n, and the ratio of
+                         |upregulated or downregulated genes|/k. Additionally,
+                         the table contains the list of the upregulated and
+                         downregulated genes for each pathway and a q value from
+                         the Fisher’s test for the overlap.")
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Enrichment table",
+    label = "b"
+  )
+
 }
 
 
@@ -75,30 +96,10 @@ functional_table_kegg_table_server <- function(id,
         )
     }
 
-    info_text <- strwrap("<strong>Enrichment table.</strong> The table is
-                         interactive; enabling user to sort on different
-                         variables and select a pathway by clicking on the row
-                         in the table. The scoring is performed by considering
-                         the total number of genes in the pathway (n), the
-                         number of genes in the pathway supported by the contrast
-                         profile (k), the ratio of k/n, and the ratio of
-                         |upregulated or downregulated genes|/k. Additionally,
-                         the table contains the list of the upregulated and
-                         downregulated genes for each pathway and a q value from
-                         the Fisher’s test for the overlap.")
-
-    table_opts <- shiny::tagList()
-
-    my_table <- shiny::callModule(
-      tableModule,
-      id = "table",
-      label = "",
+    my_table <- TableModuleServer(
+      "datasets",
       func = table_RENDER,
-      options = table_opts,
-      info.text = info_text,
-      info.width = '350px',
-      title = "Enrichment table",
-      height = c(270, 700)
+      selector = "none"
     )
 
     return(my_table)

@@ -9,13 +9,13 @@ FunctionalInputs <- function(id) {
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("fa_contrast"), "Contrast:",
                                    choices = NULL),
-      "Select the contrast corresponding to the comparison of interest.",
-      placement = "top"
+                "Select the contrast corresponding to the comparison of interest.",
+                placement = "top"
     ),
     withTooltip(shiny::actionLink(ns("fa_options"), "Options",
                                   icon = icon("cog", lib = "glyphicon")),
-      "Show/hide advanced options",
-      placement = "top"
+                "Show/hide advanced options",
+                placement = "top"
     ),
     shiny::br(),
     shiny::conditionalPanel(
@@ -51,7 +51,11 @@ FunctionalUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          functional_table_kegg_table_ui(ns("kegg_table"))
+          functional_table_kegg_table_ui(
+            ns("kegg_table"),
+            height = c(270, 700),
+            width = c("100%", "90%")
+          )
         )
       ),
       tags$div(
@@ -73,8 +77,10 @@ FunctionalUI <- function(id) {
             ns("GO_network"),
             label = "a"),
           functional_table_go_table_ui(
-            ns("GO_table")
-            )
+            ns("GO_table"),
+            height = c(270, 700),
+            width = c("100%", "90%")
+          )
         ),
         div(
           class = "col-md-6",
@@ -83,7 +89,7 @@ FunctionalUI <- function(id) {
         )
       ),
       tags$div(
-        HTML(strwrap("<b>(a)</b><b>Gene Ontology graph.</b> The graph represents
+        HTML(strwrap("<b>(a)</b> <b>Gene Ontology graph.</b> The graph represents
              the enrichment of the GO terms as a tree structure. <b>(b)</b><b> GO
              score table.</b> The score of a GO term is the cumulative score of
              all higher order terms. <b>(c)</b> <b>Activation matrix</b>
