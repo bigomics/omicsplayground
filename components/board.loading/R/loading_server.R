@@ -6,7 +6,6 @@
 LoadingBoard <- function(id,
                          pgx_dir,
                          pgx,
-                         ##authentication="none",
                          auth,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
@@ -14,8 +13,8 @@ LoadingBoard <- function(id,
                          enable_upload = TRUE,
                          enable_delete = TRUE,
                          enable_save = TRUE,
-                         enable_userdir = TRUE
-                         ##force_reload = reactive(0)
+                         enable_userdir = TRUE,
+                         rvals
                          )
 {
   moduleServer(id, function(input, output, session)
@@ -311,6 +310,7 @@ LoadingBoard <- function(id,
     ##========================== LOAD DATA FROM LIST =================================
     ##================================================================================
 
+
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
@@ -318,8 +318,13 @@ LoadingBoard <- function(id,
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
 
-    shiny::observeEvent( load_react(), {
+    observeEvent(rvals$load_example_trigger, {
+      # click button
+    })
 
+    shiny::observeEvent( load_react(), {
+    #shiny::observeEvent( load_react(), {
+      print('loading example triggered')
         if(!load_react()) {
             return(NULL)
         }
