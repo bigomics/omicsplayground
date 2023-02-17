@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-wgcna_table_genes_ui <- function(id) {
+wgcna_table_genes_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("geneTable"))
+  info_text <- "Genes in the selected WGCNA module."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Module genes",
+    label = "d"
+  )
+
 }
 
 wgcna_table_genes_server <- function(id,
@@ -45,17 +55,10 @@ wgcna_table_genes_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
-    geneTable_info <- "Genes in the selected WGCNA module."
-
-    geneTable_module <- shiny::callModule(
-      tableModule,
-      id = "geneTable",
-      func = geneTable.RENDER, ## ns=ns,
-      info.text = geneTable_info,
-      title = tags$div(
-        HTML('<span class="module-label">(d)</span>Module genes')
-      ),
-      height = c(250, 650)
+    geneTable_module <- TableModuleServer(
+      "datasets",
+      func = geneTable.RENDER,
+      selector = "none"
     )
 
     return(geneTable_module)
