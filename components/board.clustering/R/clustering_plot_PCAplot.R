@@ -7,11 +7,10 @@
 
 ## Annotate clusters ############
 
-plot_clustpca_ui <- function(id,
-                             label='',
-
-                             height=c(600,800),
-                             parent)
+clustering_plot_clustpca_ui <- function(id,
+                                        label='',
+                                        height=c(600,800),
+                                        parent)
 {
   ns <- shiny::NS(id)
 
@@ -52,13 +51,13 @@ plot_clustpca_ui <- function(id,
   )
 }
 
-plot_clustpca_server <- function(id,
-                                 pgx,
-                                 r.samples = reactive(""),
-                                 hmpca.colvar,
-                                 hmpca.shapevar,
-                                 watermark=FALSE,
-                                 parent)
+clustering_plot_clustpca_server <- function(id,
+                                            pgx,
+                                            r.samples = reactive(""),
+                                            hmpca.colvar,
+                                            hmpca.shapevar,
+                                            watermark=FALSE,
+                                            parent)
 {
   moduleServer( id, function(input, output, session) {
     ns <- session$ns

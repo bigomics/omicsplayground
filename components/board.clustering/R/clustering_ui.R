@@ -81,10 +81,11 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("PCA/tSNE",
-                    plot_clustpca_ui(ns("PCAplot"),
-                                    label="",
-                                    height=c("70vh","70vh"),
-                                    parent = ns)
+                    clustering_plot_clustpca_ui(
+                      ns("PCAplot"),
+                      label="",
+                      height=c("70vh","70vh"),
+                      parent = ns)
                     ##plotWidget(ns("hm_PCAplot")),
                     ## tags$div( class="caption",
                     ##     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
