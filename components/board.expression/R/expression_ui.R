@@ -7,10 +7,6 @@
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(
-      shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
-      "Show more information about this module."
-    ),
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
@@ -180,30 +176,50 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Table",
               tags$div(
-                class = "caption",
                 HTML("<b>Differential Expression Analysis.</b> Compare expression between
                         two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
               ),
-              shiny::br(),
               div(
                 class = "row",
                 div(
                   class = "col-md-8",
-                  expression_table_genetable_ui(id = ns("genetable"))
+                  expression_table_genetable_ui(
+                    ns("genetable"),
+                    width = c("100%", "90%"),
+                    height = c("300px", "600px")
+                  )
                 ),
                 div(
                   class = "col-md-4",
-                  expression_table_gsettable_ui(id = ns("gsettable"))
+                  expression_table_gsettable_ui(
+                    ns("gsettable"),
+                    width = c("100%", "90%"),
+                    height = c("300px", "600px")
+                  )
                 )
               )
             ),
             shiny::tabPanel(
               "Foldchange (all)",
-              expression_table_fctable_ui(ns("fctable"))
+              tags$div(
+                HTML("<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts.")
+              ),
+              expression_table_fctable_ui(
+                ns("fctable"),
+                width = c("100%", "90%"),
+                height = c("300px", "600px")
+              )
             ),
             shiny::tabPanel(
               "FDR table",
-              expression_table_FDRtable_ui(ns("FDRtable"))
+              tags$div(
+                HTML("<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes.")
+              ),
+              expression_table_FDRtable_ui(
+                ns("FDRtable"),
+                width = c("100%", "90%"),
+                height = c("300px", "600px")
+              )
             )
           )
         )

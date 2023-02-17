@@ -11,10 +11,27 @@
 #' @param width
 #'
 #' @export
-expression_table_fctable_ui <- function(id) {
+expression_table_fctable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("fctable"))
+  fctable_text <- "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
+
+  fctable_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
+                "Show q-values next to FC values.",
+                placement = "right", options = list(container = "body")
+    )
+  )
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = fctable_text,
+    width = width,
+    height = height,
+    options = fctable_opts,
+    title = "Gene fold changes for all contrasts"
+  )
+
 }
 
 #' Server side table code: expression board
@@ -111,30 +128,14 @@ expression_table_fctable_server <- function(id,
         dt <- dt %>%
           DT::formatSignif(columns = qv.cols, digits = 3)
       }
-
       dt
     })
 
-    fctable_text <- "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
-
-    fctable_caption <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
-
-    fctable_opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
-        "Show q-values next to FC values.",
-        placement = "right", options = list(container = "body")
-      )
-    )
-
-    shiny::callModule(
-      tableModule,
-      id = "fctable",
+    TableModuleServer(
+      "datasets",
       func = fctable.RENDER,
-      title = "Gene fold changes for all contrasts",
-      info.text = fctable_text,
-      options = fctable_opts,
-      caption = fctable_caption,
-      height = height
+      selector = "none"
     )
+
   }) # end module server
 } # end server
