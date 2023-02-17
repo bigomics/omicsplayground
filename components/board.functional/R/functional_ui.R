@@ -44,21 +44,17 @@ FunctionalUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          #plotWidget(ns("kegg_graph")),
           functional_plot_kegg_graph_ui(ns("kegg_graph"),
                                         label = "a"),
-          #plotWidget(ns("kegg_actmap"))
           functional_plot_kegg_actmap_ui(
             ns("kegg_actmap"),label = "c")
         ),
         div(
           class = "col-md-6",
-          #tableWidget(ns("kegg_table"))
           functional_table_kegg_table_ui(ns("kegg_table"))
         )
       ),
       tags$div(
-        class = "caption",
         HTML(strwrap("<b>(a)</b> <b>KEGG pathway map.</b> Genes are colored according to
              their upregulation (red) or downregulation (blue) in the contrast
              profile. <b>(b)</b> <b>Enrichment table</b> reporting enrichment
@@ -73,24 +69,20 @@ FunctionalUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          #plotWidget(ns("GO_network")),
           functional_plot_go_network_ui(
             ns("GO_network"),
             label = "a"),
-          #tableWidget(ns("GO_table"))
           functional_table_go_table_ui(
             ns("GO_table")
             )
         ),
         div(
           class = "col-md-6",
-          #plotWidget(ns("GO_actmap"))
           functional_plot_go_actmap_ui(ns("GO_actmap"),
                                        label = "c")
         )
       ),
       tags$div(
-        class = "caption",
         HTML(strwrap("<b>(a)</b><b>Gene Ontology graph.</b> The graph represents
              the enrichment of the GO terms as a tree structure. <b>(b)</b><b> GO
              score table.</b> The score of a GO term is the cumulative score of
