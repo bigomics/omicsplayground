@@ -3,10 +3,29 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-enrichment_table_enrichment_analysis_ui <- function(id) {
+enrichment_table_enrichment_analysis_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("gseatable"))
+  info_text = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including", a_Spearman, ", ", a_GSVA, ", ", a_ssGSEA, ", ", a_Fisher, ", ", a_GSEA, ", ", a_camera, " and ", a_fry, ".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
+
+
+  gseatable_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("gs_showqvalues"), "show indivivual q-values", FALSE),
+                "Show all q-values of each individual statistical method in the table.",
+                placement = "top", options = list(container = "body")
+    )
+  )
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    options = gseatable_opts,
+    title = "Enrichment analysis",
+    label = "I"
+  )
+
 }
 
 enrichment_table_enrichment_analysis_server <- function(id,
@@ -62,8 +81,8 @@ enrichment_table_enrichment_analysis_server <- function(id,
           paging = TRUE,
           pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = FALSE,
-          scroller = FALSE,
+          scrollY = "200px",
+          scroller = TRUE,
           deferRender = TRUE,
           search = list(
             regex = TRUE,
@@ -78,26 +97,9 @@ enrichment_table_enrichment_analysis_server <- function(id,
         )
     })
 
-    gseatable_text <- paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including", a_Spearman, ", ", a_GSVA, ", ", a_ssGSEA, ", ", a_Fisher, ", ", a_GSEA, ", ", a_camera, " and ", a_fry, ".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
-
-    gseatable_opts <- shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("gs_showqvalues"), "show indivivual q-values", FALSE),
-        "Show all q-values of each individual statistical method in the table.",
-        placement = "top", options = list(container = "body")
-      )
-    )
-
-    gseatable <- shiny::callModule(
-      tableModule,
-      id = "gseatable",
+    gseatable <- TableModuleServer(
+      "datasets",
       func = gseatable.RENDER,
-      info.text = gseatable_text,
-      options = gseatable_opts,
-      title = tags$div(
-        HTML('<span class="module-label">(I)</span>Enrichment analysis')
-      ),
-      info.width = "500px",
-      height = c(285, 700),
       selector = "single"
     )
 

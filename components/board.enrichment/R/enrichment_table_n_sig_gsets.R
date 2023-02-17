@@ -3,10 +3,19 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-enrichment_table_n_sig_gsets_ui <- function(id) {
+enrichment_table_n_sig_gsets_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("FDRtable"))
+  info_text <- "The <strong>FDR table</strong> panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. Using the table the user can determine which statistical methods perform better for a particular contrast."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Number of significant gene sets"
+  )
+
 }
 
 enrichment_table_n_sig_gsets_server <- function(id,
@@ -84,19 +93,11 @@ enrichment_table_n_sig_gsets_server <- function(id,
         )
     })
 
-    FDRtable_text <- "The <strong>FDR table</strong> panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. Using the table the user can determine which statistical methods perform better for a particular contrast."
-
-    FDRtable_caption <- "<b>FDR table.</b> Number of significant gene sets versus different FDR thresholds, for all contrasts and all methods. The blue color denote the number of downregulated genes, the red color for upregulated genes."
-
-    shiny::callModule(
-      tableModule,
-      id = "FDRtable",
+    TableModuleServer(
+      "datasets",
       func = FDRtable.RENDER,
-      title = "Number of significant gene sets",
-      info.text = FDRtable_text,
-      caption = FDRtable_caption,
-      height = c(295, 750),
-      width = c("100%", 1600)
+      selector = "none"
     )
+
   })
 }
