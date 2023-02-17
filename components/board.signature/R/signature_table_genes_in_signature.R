@@ -58,19 +58,6 @@ signature_table_genes_in_signature_server <- function(id,
         )
     })
 
-    # info.text2 <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
-    # enrichmentGeneTable <- shiny::callModule(
-    #   tableModule,
-    #   id = "table",
-    #   func = enrichmentGeneTable.RENDER,
-    #   info.text = info.text2,
-    #   caption2 = info.text2,
-    #   title = tags$div(
-    #     HTML('<span class="module-label">(b)</span>Genes in signature')
-    #   ),
-    #   height = c(360, 700)
-    # )
-
     enrichmentGeneTable <- TableModuleServer(
       "datasets",
       func = enrichmentGeneTable.RENDER,

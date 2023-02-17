@@ -54,19 +54,6 @@ signature_table_overlap_server <- function(id,
         )
     })
 
-    # info.text <- "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
-
-    # overlapTable <- shiny::callModule(
-    #   tableModule,
-    #   id = "table",
-    #   func = overlapTable.RENDER,
-    #   title = tags$div(
-    #     HTML('<span class="module-label">(b)</span>Overlap with other signatures')
-    #   ),
-    #   info.text = info.text,
-    #   height = 0.4 * fullH
-    # )
-
     overlapTable <- TableModuleServer(
       "datasets",
       func = overlapTable.RENDER,
