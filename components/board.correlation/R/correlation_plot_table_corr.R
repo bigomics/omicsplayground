@@ -19,6 +19,8 @@ correlation_plot_table_corr_ui <- function(id,
   ns <- shiny::NS(id)
   info_text <- "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
 
+  cor_table.info <- "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
+
   div(
     PlotModuleUI(ns("plot"),
       title = "Top correlated genes",
@@ -29,7 +31,14 @@ correlation_plot_table_corr_ui <- function(id,
       width = width,
       height = height
     ),
-    tableWidget(ns("cor_table"))
+    TableModuleUI(
+      ns("datasets"),
+      info.text = cor_table.info,
+      height = c(360, 700),
+      width = c("auto", "90%"),
+      title = "Correlation table",
+      label = "b"
+    )
   )
 }
 
@@ -155,19 +164,10 @@ correlation_plot_table_corr_server <- function(id,
         )
     })
 
-    cor_table.info <- "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
-
-    cor_table <- shiny::callModule(
-      tableModule,
-      id = "cor_table",
+    TableModuleServer(
+      "datasets",
       func = cor_table.RENDER,
-      info.text = cor_table.info,
-      caption2 = cor_table.info,
-      title = tags$div(
-        HTML('<span class="module-label">(b)</span>Correlation table')
-      ),
-      height = c(360, 700), width = c("auto", 1400)
-      ## caption = dgca_caption
+      selector = "none"
     )
   }) ## end of moduleServer
 }
