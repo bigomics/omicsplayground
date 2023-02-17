@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-compare_table_corr_score_ui <- function(id, label = "", height = c(600, 800)) {
+compare_table_corr_score_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  info_text <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Correlation score",
+    label = "b"
+  )
+
 }
 
 compare_table_corr_score_server <- function(id,
@@ -40,18 +50,10 @@ compare_table_corr_score_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
-    score_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
-
-    score_table <- shiny::callModule(
-      tableModule,
-      id = "table",
+    score_table <- TableModuleServer(
+      "datasets",
       func = score_table.RENDER,
-      info.text = score_table_info,
-      title = tags$div(
-        HTML('<span class="module-label">(b)</span>Correlation score')
-      ),
-      height = c(235, 750),
-      width = c("auto", 1600)
+      selector = "none"
     )
     return(score_table)
   })
