@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-signature_table_genes_in_signature_ui <- function(id) {
+signature_table_genes_in_signature_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  info_text <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Genes in signature",
+    label = "b"
+  )
+
 }
 
 signature_table_genes_in_signature_server <- function(id,
@@ -15,7 +25,10 @@ signature_table_genes_in_signature_server <- function(id,
   moduleServer(id, function(input, output, session) {
     enrichmentGeneTable.RENDER <- shiny::reactive({
       df <- getEnrichmentGeneTable()
-      shiny::req(df)
+      if (is.null(df)) {
+        shiny::validate(shiny::need(!is.null(df), "Select a signature."))
+        return(NULL)
+      }
 
       color_fx <- as.numeric(df[, 3:ncol(df)])
       color_fx[is.na(color_fx)] <- 0 ## yikes...
@@ -45,17 +58,23 @@ signature_table_genes_in_signature_server <- function(id,
         )
     })
 
-    info.text2 <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
-    enrichmentGeneTable <- shiny::callModule(
-      tableModule,
-      id = "table",
+    # info.text2 <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
+    # enrichmentGeneTable <- shiny::callModule(
+    #   tableModule,
+    #   id = "table",
+    #   func = enrichmentGeneTable.RENDER,
+    #   info.text = info.text2,
+    #   caption2 = info.text2,
+    #   title = tags$div(
+    #     HTML('<span class="module-label">(b)</span>Genes in signature')
+    #   ),
+    #   height = c(360, 700)
+    # )
+
+    enrichmentGeneTable <- TableModuleServer(
+      "datasets",
       func = enrichmentGeneTable.RENDER,
-      info.text = info.text2,
-      caption2 = info.text2,
-      title = tags$div(
-        HTML('<span class="module-label">(b)</span>Genes in signature')
-      ),
-      height = c(360, 700)
+      selector = "single"
     )
     return(enrichmentGeneTable)
   })
