@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-wordcloud_table_leading_edge_ui <- function(id) {
+wordcloud_table_leading_edge_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("wordcloud_leadingEdgeTable"))
+  info_text <- "Keyword leading edge table."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Leading-edge table",
+    label = "e"
+  )
+
 }
 
 wordcloud_table_leading_edge_server <- function(id,
@@ -57,15 +67,10 @@ wordcloud_table_leading_edge_server <- function(id,
       return(tbl)
     })
 
-    wordcloud_leadingEdgeTable <- shiny::callModule(
-      tableModule,
-      id = "wordcloud_leadingEdgeTable",
+    wordcloud_leadingEdgeTable <- TableModuleServer(
+      "datasets",
       func = wordcloud_leadingEdgeTable.RENDER,
-      info.text = "Keyword leading edge table.",
-      title = tags$div(
-        HTML('<span class="module-label">(e)</span>Leading-edge table')
-      ),
-      height = c(270, 700)
+      selector = "none"
     )
 
     return(wordcloud_leadingEdgeTable)

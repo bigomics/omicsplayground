@@ -43,11 +43,19 @@ WordCloudUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          wordcloud_table_enrichment_ui(ns("wordcloud_enrichmentTable"))
+          wordcloud_table_enrichment_ui(
+            ns("wordcloud_enrichmentTable"),
+            height = c(270, 700),
+            width = c("100%", "90%")
+          )
         ),
         div(
           class = "col-md-6",
-          wordcloud_table_leading_edge_ui(ns("wordcloud_leadingEdgeTable"))
+          wordcloud_table_leading_edge_ui(
+            ns("wordcloud_leadingEdgeTable"),
+            height = c(270, 700),
+            width = c("100%", "90%")
+          )
         )
       ),
       tags$div(
