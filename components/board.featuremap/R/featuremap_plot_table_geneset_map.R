@@ -8,36 +8,48 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
 
   info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genesets that are clustered nearby have high covariance."
 
+  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
+
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
-      choices = c(0, 10, 20, 50, 100, 1000), selected = 20
+                       choices = c(0, 10, 20, 50, 100, 1000), selected = 20
     ),
     shiny::sliderInput(ns("gsmap_gamma"), "color gamma:",
-      min = 0.1, max = 1.2, value = 0.4, step = 0.1
+                       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
-      choices = c("sd.X", "sd.FC", "mean.FC"),
-      selected = "sd.X", inline = TRUE
+                        choices = c("sd.X", "sd.FC", "mean.FC"),
+                        selected = "sd.X", inline = TRUE
     )
   )
 
-  plotui <- PlotModuleUI(
-    ns("gset_map"),
-    title = "Geneset UMAP",
-    label = "a",
-    outputFunc = function(x, width, height) {
-      plotOutput(x,
-        brush = ns("gsetUMAP_brush"), width = width,
-        height = height
-      )
-    },
-    plotlib2 = "plotly",
-    info.text = info_text,
-    options = plot.opts,
-    height = c(600, 750), width = c("auto", 1200),
-    download.fmt = c("png", "pdf")
+  div(
+    PlotModuleUI(
+      ns("gset_map"),
+      title = "Geneset UMAP",
+      label = "a",
+      outputFunc = function(x, width, height) {
+        plotOutput(x,
+                   brush = ns("gsetUMAP_brush"), width = width,
+                   height = height
+        )
+      },
+      plotlib2 = "plotly",
+      info.text = info_text,
+      options = plot.opts,
+      height = c(600, 750), width = c("auto", 1200),
+      download.fmt = c("png", "pdf")
+    ),
+    TableModuleUI(
+      ns("datasets"),
+      info.text = info_text_table,
+      height = c(280, 750),
+      width = c("auto", "90%"),
+      title = "Geneset table",
+      label = "c"
+    )
   )
-  return(list(plotui, ns))
+
 }
 
 featuremap_plot_table_geneset_map_server <- function(id,
@@ -83,8 +95,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       par(mfrow = c(1, 1))
       p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 0.9, source = "", plotlib = "base"
+                    nlabel = nlabel, title = colorby,
+                    cex = 0.9, source = "", plotlib = "base"
       )
       p
     })
@@ -115,8 +127,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       par(mfrow = c(1, 1))
       p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 1.2, source = "", plotlib = "plotly"
+                    nlabel = nlabel, title = colorby,
+                    cex = 1.2, source = "", plotlib = "plotly"
       )
       p
     })
@@ -148,7 +160,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       if (!is.null(b) & length(b)) {
         sel <- which(pos[, 1] > b$xmin & pos[, 1] < b$xmax &
-          pos[, 2] > b$ymin & pos[, 2] < b$ymax)
+                       pos[, 2] > b$ymin & pos[, 2] < b$ymax)
         sel.gsets <- rownames(pos)[sel]
       }
 
@@ -180,32 +192,26 @@ featuremap_plot_table_geneset_map_server <- function(id,
       df <- data.frame(geneset = gs, F, check.names = FALSE)
 
       DT::datatable(df,
-        rownames = FALSE,
-        class = "compact cell-border stripe hover",
-        extensions = c("Scroller"),
-        selection = list(mode = "single", target = "row", selected = NULL),
-        fillContainer = TRUE,
-        options = list(
-          dom = "lfrtip",
-          scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "70vh",
-          scroller = TRUE,
-          deferRender = TRUE
-        ) ## end of options.list
+                    rownames = FALSE,
+                    class = "compact cell-border stripe hover",
+                    extensions = c("Scroller"),
+                    selection = list(mode = "single", target = "row", selected = NULL),
+                    fillContainer = TRUE,
+                    options = list(
+                      dom = "lfrtip",
+                      scrollX = TRUE, ## scrollY = TRUE,
+                      scrollY = "70vh",
+                      scroller = TRUE,
+                      deferRender = TRUE
+                    ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
-    shiny::callModule(
-      tableModule,
-      id = "gsetTable",
+    TableModuleServer(
+      "datasets",
       func = gsetTable.RENDER,
-      options = NULL,
-      title = tags$div(
-        HTML('<span class="module-label">(c)</span>Geneset table')
-      ),
-      info.text = "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot.",
-      height = c(280, 750), width = c("auto", 1400)
+      selector = "none"
     )
   })
 }
