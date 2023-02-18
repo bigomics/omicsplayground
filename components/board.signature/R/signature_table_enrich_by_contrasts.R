@@ -49,7 +49,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lrtip",
-          scrollX = TRUE, scrollY = tabH, scroller = TRUE,
+          scrollX = TRUE, scrollY = "20vh", scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list

@@ -94,7 +94,7 @@ expression_table_genetable_server <- function(id,
           # paging = TRUE,
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 300,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -115,9 +115,16 @@ expression_table_genetable_server <- function(id,
         )
     })
 
+    table.RENDER_modal <- shiny::reactive({
+      dt <- table.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     genetable <- TableModuleServer(
       "datasets",
       func = table.RENDER,
+      func2 = table.RENDER_modal,
       selector = "single"
     )
 

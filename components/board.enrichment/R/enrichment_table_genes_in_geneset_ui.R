@@ -54,7 +54,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
           #paging = TRUE,
           #pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 700,
+          scrollY = 190,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(

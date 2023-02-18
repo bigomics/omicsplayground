@@ -53,7 +53,7 @@ wordcloud_table_leading_edge_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = 200,
+          scrollX = TRUE, scrollY = 170,
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%

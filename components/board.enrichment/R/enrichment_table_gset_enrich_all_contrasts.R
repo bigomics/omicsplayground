@@ -49,7 +49,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
-          scrollY = tabH,
+          scrollY = 190,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

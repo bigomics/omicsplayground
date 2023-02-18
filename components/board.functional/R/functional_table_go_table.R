@@ -95,7 +95,7 @@ functional_table_go_table_server <- function(id,
                     options = list(
                       dom = "lfrtip",
                       scrollX = TRUE,
-                      scrollY = tabH, scroller = TRUE, deferRender = TRUE
+                      scrollY = "15vh", scroller = TRUE, deferRender = TRUE
                     ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
@@ -108,25 +108,6 @@ functional_table_go_table_server <- function(id,
                         backgroundPosition = "center"
         )
     }
-
-    # info_text <- strwrap("<strong>GO score table.</strong> The scoring of a GO
-    #                      term is performed by considering the cumulative score
-    #                      of all terms from that term to the root node. That
-    #                      means that GO terms that are supported by higher level
-    #                      terms levels are preferentially scored.")
-
-    # table_opts <- shiny::tagList()
-    #
-    # shiny::callModule(
-    #   tableModule,
-    #   id = "table",
-    #   label = "",
-    #   func = table_RENDER,
-    #   options = table_opts,
-    #   info.text = info_text,
-    #   title = "GO score table",
-    #   height = c(270, 700)
-    # )
 
     TableModuleServer(
       "datasets",

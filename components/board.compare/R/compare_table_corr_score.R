@@ -41,7 +41,7 @@ compare_table_corr_score_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "70vh",
+          scrollY = "15vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

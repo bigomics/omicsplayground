@@ -61,7 +61,7 @@ drugconnectivity_table_cmap_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "70vh", scroller = TRUE, deferRender = TRUE
+          scrollY = "15vh", scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

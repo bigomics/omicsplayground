@@ -80,7 +80,7 @@ functional_table_kegg_table_server <- function(id,
                     options = list(
                       dom = "lfrtip",
                       scrollX = TRUE,
-                      scrollY = tabH, scroller = TRUE, deferRender = TRUE
+                      scrollY = "15vh", scroller = TRUE, deferRender = TRUE
                     ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

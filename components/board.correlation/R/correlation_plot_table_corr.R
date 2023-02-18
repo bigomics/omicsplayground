@@ -147,7 +147,7 @@ correlation_plot_table_corr_server <- function(id,
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, ## scrollY = TRUE,
           ## scrollY = 170,
-          scrollY = "70vh",
+          scrollY = "25vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

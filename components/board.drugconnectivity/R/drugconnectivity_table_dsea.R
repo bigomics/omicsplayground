@@ -60,7 +60,7 @@ drugconnectivity_table_dsea_server <- function(id,
                     options = list(
                       dom = "lfrtip",
                       scroller = TRUE, scrollX = TRUE,
-                      scrollY = "70vh",
+                      scrollY = "25vh",
                       deferRender = TRUE
                     )
       ) %>%

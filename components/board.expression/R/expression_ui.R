@@ -64,13 +64,14 @@ ExpressionUI <- function(id) {
   fullH <- 800 ## full height of page
   rowH <- 340 ## full height of page
   imgH <- 340 ## height of images
+  modal_heigh <- "70vh"
 
   div(
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
     div(
       tagList(
         div(
-          style = "max-height:50vh;",
+          # style = "max-height:50vh;",
           shiny::tabsetPanel(
             id = ns("tabs1"),
             shiny::tabPanel(
@@ -81,7 +82,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_volcano_ui(ns("plots_volcano"),
                     label = "a",
-                    height = c(imgH, imgH),
+                    height = c(imgH, modal_heigh),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -90,7 +91,7 @@ ExpressionUI <- function(id) {
                   expression_plot_maplot_ui(
                     id = ns("plots_maplot"),
                     label = "b",
-                    height = c(imgH, imgH),
+                    height = c(imgH, modal_heigh),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -99,7 +100,7 @@ ExpressionUI <- function(id) {
                   expression_plot_barplot_ui(
                     id = ns("plots_barplot"),
                     label = "c",
-                    height = c(imgH, imgH),
+                    height = c(imgH, modal_heigh),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -108,13 +109,12 @@ ExpressionUI <- function(id) {
                   expression_plot_topfoldchange_ui(
                     id = ns("plots_topfoldchange"),
                     label = "d",
-                    height = c(imgH, imgH),
+                    height = c(imgH, modal_heigh),
                     width = c("auto", imgH)
                   ),
                 )
               ),
               tags$div(
-                class = "caption",
                 HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
                             significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
                             respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
@@ -126,12 +126,11 @@ ExpressionUI <- function(id) {
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
                 label = "a",
-                height = c(imgH, 420),
+                height = c(imgH, modal_heigh),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
                             (both positively and negatively) expressed genes for the selected contrast.")
               )
@@ -140,12 +139,11 @@ ExpressionUI <- function(id) {
               "Volcano (all)",
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
                 label = "a",
-                height = c(imgH, 500),
+                height = c(imgH, modal_heigh),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
                         plots of genes for all contrasts. Experimental contrasts with better statistical significance will
                         show volcano plots with 'higher' wings.")
@@ -156,12 +154,11 @@ ExpressionUI <- function(id) {
               expression_plot_volcanoMethods_ui(
                 id = ns("volcanoMethods"),
                 label = "a",
-                height = c(imgH, 450),
+                height = c(imgH, modal_heigh),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
                         of genes by multiple differential expression methods for the selected contrast.
                         Methods showing better statistical significance will show volcano plots with 'higher' wings.")
@@ -170,7 +167,7 @@ ExpressionUI <- function(id) {
           )
         ),
         div(
-          style = "max-height: 50vh",
+          # style = "max-height: 50vh",
           shiny::tabsetPanel(
             id = ns("tabs2"),
             shiny::tabPanel(
@@ -186,7 +183,7 @@ ExpressionUI <- function(id) {
                   expression_table_genetable_ui(
                     ns("genetable"),
                     width = c("100%", "90%"),
-                    height = c("300px", "600px")
+                    height = c("300px", modal_heigh)
                   )
                 ),
                 div(
@@ -194,7 +191,7 @@ ExpressionUI <- function(id) {
                   expression_table_gsettable_ui(
                     ns("gsettable"),
                     width = c("100%", "90%"),
-                    height = c("300px", "600px")
+                    height = c("300px", modal_heigh)
                   )
                 )
               )
@@ -207,7 +204,7 @@ ExpressionUI <- function(id) {
               expression_table_fctable_ui(
                 ns("fctable"),
                 width = c("100%", "90%"),
-                height = c("300px", "600px")
+                height = c("300px", modal_heigh)
               )
             ),
             shiny::tabPanel(
@@ -218,7 +215,7 @@ ExpressionUI <- function(id) {
               expression_table_FDRtable_ui(
                 ns("FDRtable"),
                 width = c("100%", "90%"),
-                height = c("300px", "600px")
+                height = c("300px", modal_heigh)
               )
             )
           )

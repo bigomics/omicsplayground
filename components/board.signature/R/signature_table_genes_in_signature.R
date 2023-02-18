@@ -43,7 +43,7 @@ signature_table_genes_in_signature_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lrftip",
-          scrollX = TRUE, scrollY = tabH, scroller = TRUE,
+          scrollX = TRUE, scrollY = "30vh", scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list

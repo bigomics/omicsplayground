@@ -166,7 +166,7 @@ TableModuleServer <- function(id,
       output$download <- download.csv
 
       output$datatable <- DT::renderDT({
-        # If the options `scrollX` or `autoWidth` or `selector` are set,
+        # If the options `scrollX` or `autoWidth`, `fillContainer` or `selector` are set,
         # the global defaults of the global.R
         # will be overwritten. This ensures those options
         # are kept so that the header scrolls properly, and clickable
@@ -181,6 +181,9 @@ TableModuleServer <- function(id,
         }
         if(!is.null(selector)){
           dt$x$selection$mode = selector
+        }
+        if(!is.null(dt$x$fillContainer)){
+          dt$x$fillContainer = FALSE
         }
         # Remove striping and borders from all tables
         dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
@@ -201,6 +204,9 @@ TableModuleServer <- function(id,
         if(!is.null(selector)){
           dt$x$selection$mode = selector
         }
+        if(!is.null(dt$x$fillContainer)){
+          dt$x$fillContainer = FALSE
+        }
         dt$x$container <- stringr::str_remove(dt$x$container, "stripe")
         dt$x$container <- stringr::str_remove(dt$x$container, "table-bordered")
         dt
@@ -208,7 +214,6 @@ TableModuleServer <- function(id,
       fillContainer = T)
 
       module <- list(
-        ##data = func,
         data = shiny::reactive(func()$x$data),
         rows_current = shiny::reactive(input$datatable_rows_current),
         rows_selected = shiny::reactive(input$datatable_rows_selected),

@@ -41,7 +41,7 @@ signature_table_overlap_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          scrollX = TRUE, scrollY = tabH, scroller = TRUE
+          scrollX = TRUE, scrollY = "25vh", scroller = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

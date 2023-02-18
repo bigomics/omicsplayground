@@ -75,7 +75,7 @@ enrichment_table_n_sig_gsets_server <- function(id,
           dom = "frtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = tabH,
+          scrollY = 190,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

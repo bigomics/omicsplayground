@@ -105,7 +105,7 @@ expression_table_fctable_server <- function(id,
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = tabV,
+          scrollY = "20vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -131,9 +131,16 @@ expression_table_fctable_server <- function(id,
       dt
     })
 
+    fctable.RENDER_modal <- shiny::reactive({
+      dt <- fctable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     TableModuleServer(
       "datasets",
       func = fctable.RENDER,
+      func2 = fctable.RENDER_modal,
       selector = "none"
     )
 

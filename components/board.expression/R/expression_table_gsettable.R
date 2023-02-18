@@ -59,7 +59,7 @@ expression_table_gsettable_server <- function(id,
           # paging = TRUE,
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 300,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -73,9 +73,16 @@ expression_table_gsettable_server <- function(id,
         DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
     })
 
+    gsettable.RENDER_modal <- shiny::reactive({
+      dt <- gsettable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     gsettable <- TableModuleServer(
       "datasets",
       func = gsettable.RENDER,
+      func2 = gsettable.RENDER_modal,
       selector = "single"
     )
 
