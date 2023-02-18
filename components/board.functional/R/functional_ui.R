@@ -78,7 +78,7 @@ FunctionalUI <- function(id) {
             label = "a"),
           functional_table_go_table_ui(
             ns("GO_table"),
-            height = c(270, 700),
+            height = c("20vh", "70vh"),
             width = c("100%", "90%")
           )
         ),

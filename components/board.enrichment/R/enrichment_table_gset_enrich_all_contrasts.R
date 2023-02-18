@@ -49,7 +49,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
-          scrollY = 190,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -67,9 +67,16 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         )
     })
 
+    fctable.RENDER_modal <- shiny::reactive({
+      dt <- fctable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     TableModuleServer(
       "datasets",
       func = fctable.RENDER,
+      func2 = fctable.RENDER_modal,
       selector = "none"
     )
 

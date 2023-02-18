@@ -109,9 +109,16 @@ functional_table_go_table_server <- function(id,
         )
     }
 
+    table_RENDER_modal <- shiny::reactive({
+      dt <- table_RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     TableModuleServer(
       "datasets",
       func = table_RENDER,
+      func2 = table_RENDER_modal,
       selector = "none"
     )
 

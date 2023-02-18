@@ -147,7 +147,7 @@ correlation_plot_table_corr_server <- function(id,
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, ## scrollY = TRUE,
           ## scrollY = 170,
-          scrollY = "25vh",
+          scrollY = "30vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -164,9 +164,16 @@ correlation_plot_table_corr_server <- function(id,
         )
     })
 
+    cor_table.RENDER_modal <- shiny::reactive({
+      dt <- cor_table.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     TableModuleServer(
       "datasets",
       func = cor_table.RENDER,
+      func2 = cor_table.RENDER_modal,
       selector = "none"
     )
   }) ## end of moduleServer

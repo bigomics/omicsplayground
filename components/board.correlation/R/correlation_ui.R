@@ -60,7 +60,7 @@ CorrelationUI <- function(id) {
           class = "col-md-6",
           correlation_plot_table_corr_ui(ns("cor_barplot"),
             label = "a",
-            height = c(0.45 * fullH, 700),
+            height = c("30vh", "70vh"),
             width = c("auto", 1200)
           ),
         ),

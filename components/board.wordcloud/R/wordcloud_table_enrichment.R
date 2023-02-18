@@ -39,7 +39,7 @@ wordcloud_table_enrichment_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = 170,
+          scrollX = TRUE, scrollY = "25vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -53,9 +53,16 @@ wordcloud_table_enrichment_server <- function(id,
       return(tbl)
     })
 
+    wordcloud_enrichmentTable.RENDER_modal <- shiny::reactive({
+      dt <- wordcloud_enrichmentTable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     wordcloud_enrichmentTable <- TableModuleServer(
       "datasets",
       func = wordcloud_enrichmentTable.RENDER,
+      func2 = wordcloud_enrichmentTable.RENDER_modal,
       selector = "single"
     )
 

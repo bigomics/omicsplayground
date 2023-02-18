@@ -53,7 +53,7 @@ wordcloud_table_leading_edge_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = 170,
+          scrollX = TRUE, scrollY = "25vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -67,9 +67,16 @@ wordcloud_table_leading_edge_server <- function(id,
       return(tbl)
     })
 
+    wordcloud_leadingEdgeTable.RENDER_modal <- shiny::reactive({
+      dt <- wordcloud_leadingEdgeTable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     wordcloud_leadingEdgeTable <- TableModuleServer(
       "datasets",
       func = wordcloud_leadingEdgeTable.RENDER,
+      func2 = wordcloud_leadingEdgeTable.RENDER_modal,
       selector = "none"
     )
 

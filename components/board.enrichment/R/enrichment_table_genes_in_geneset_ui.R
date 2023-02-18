@@ -54,7 +54,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
           #paging = TRUE,
           #pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 190,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -74,9 +74,16 @@ enrichment_table_genes_in_geneset_server <- function(id,
       tbl
     })
 
+    genetable.RENDER_modal <- shiny::reactive({
+      dt <- genetable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     genetable <- TableModuleServer(
       "datasets",
       func = genetable.RENDER,
+      func2 = genetable.RENDER_modal,
       selector = "single"
     )
 

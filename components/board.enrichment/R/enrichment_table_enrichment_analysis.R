@@ -81,7 +81,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
           paging = TRUE,
           pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "190px",
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -97,9 +97,16 @@ enrichment_table_enrichment_analysis_server <- function(id,
         )
     })
 
+    gseatable.RENDER_modal <- shiny::reactive({
+      dt <- gseatable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     gseatable <- TableModuleServer(
       "datasets",
       func = gseatable.RENDER,
+      func2 = gseatable.RENDER_modal,
       selector = "single"
     )
 
