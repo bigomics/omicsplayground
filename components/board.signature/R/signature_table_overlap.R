@@ -54,9 +54,16 @@ signature_table_overlap_server <- function(id,
         )
     })
 
+    overlapTable.RENDER_modal <- shiny::reactive({
+      dt <- overlapTable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     overlapTable <- TableModuleServer(
       "datasets",
       func = overlapTable.RENDER,
+      func2 = overlapTable.RENDER_modal,
       selector = "none"
     )
     return(overlapTable)

@@ -50,9 +50,16 @@ compare_table_corr_score_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
+    score_table.RENDER_modal <- shiny::reactive({
+      dt <- score_table.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     score_table <- TableModuleServer(
       "datasets",
       func = score_table.RENDER,
+      func2 = score_table.RENDER_modal,
       selector = "none"
     )
     return(score_table)

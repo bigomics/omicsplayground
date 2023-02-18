@@ -58,9 +58,16 @@ signature_table_genes_in_signature_server <- function(id,
         )
     })
 
+    enrichmentGeneTable.RENDER_modal <- shiny::reactive({
+      dt <- enrichmentGeneTable.RENDER()
+      dt$x$options$scrollY <- "55vh"
+      dt
+    })
+
     enrichmentGeneTable <- TableModuleServer(
       "datasets",
       func = enrichmentGeneTable.RENDER,
+      func2 = enrichmentGeneTable.RENDER_modal,
       selector = "single"
     )
     return(enrichmentGeneTable)
