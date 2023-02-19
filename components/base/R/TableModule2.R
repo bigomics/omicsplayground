@@ -111,7 +111,8 @@ TableModuleUI <- function(id,
          flex = c(NA,1,NA,0.001,NA),
          height = height.1,
          div( header, class="plotmodule-header"),
-         DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
+         DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
+           shinycssloaders::withSpinner(),
          div(
            class = "footer",
            shiny::HTML(caption)
