@@ -59,6 +59,7 @@ clustering_plot_phenoplot_server <- function(id,
       return(
         list(
           pheno = pheno,
+          Y = Y,
           clust_phenoplot_labelmode = input$clust_phenoplot_labelmode,
           pos = pos))
     })
@@ -67,6 +68,7 @@ clustering_plot_phenoplot_server <- function(id,
     plot.RENDER <- function(){
 
       pd <- plot_data()
+      Y = pd[["Y"]]
 
       pheno <- pd[["pheno"]]
       clust_phenoplot_labelmode <- pd[["clust_phenoplot_labelmode"]]
