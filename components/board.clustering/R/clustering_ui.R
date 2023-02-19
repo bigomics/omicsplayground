@@ -104,7 +104,7 @@ ClusteringUI <- function(id) {
                       height=c(0.45*fullH,600)),
                     br(),
                     tableWidget(ns("hm_parcoord_table")),
-                    tags$div( class="caption",
+                    tags$div(class="caption",
                         HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                             the expression levels of selected genes across all conditions.
                             On the x-axis the experimental conditions are plotted. The y-axis shows the expression level
@@ -123,7 +123,11 @@ ClusteringUI <- function(id) {
                 shiny::tabPanel("Annotate clusters",
                     uiOutput(ns("hm_annotateUI"))),
                 shiny::tabPanel("Phenotypes",
-                    plotWidget(ns("clust_phenoplot")),
+
+                    clustering_plot_phenoplot_ui(id = ns("clust_phenoplot"),
+                                                 label='',
+                                                 height = c(fullH-80,700)
+                                                 ),
                     tags$div( class="caption",
                             HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
                             superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be

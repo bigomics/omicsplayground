@@ -552,7 +552,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        watermark = FALSE)
 
     clustering_plot_clustpca_server("PCAplot",
-                                    pgx,
+                                    pgx = inputData(),
                                     r.samples = r.samples,
                                     hmpca.colvar = shiny::reactive(input$hmpca.colvar),
                                     hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
@@ -563,6 +563,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        hm_parcoord.matrix = hm_parcoord.matrix(),
                                        watermark=FALSE
                                         )
+
+    clustering_plot_phenoplot_server(id = "clust_phenoplot",
+                                     pgx = inputData(),
+                                     hm_getClusterPositions = hm_getClusterPositions,
+                                     watermark=FALSE
+    )
+
+
+
 
 
 
@@ -1292,6 +1301,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     # end Parallel coordinates refactoring ##########
 
+
+    # hm_parcoord_table refactored into plot module #############
+
     hm_parcoord_table.RENDER <- shiny::reactive({
 
         mat = hm_parcoord.selected()$mat
@@ -1328,7 +1340,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         height = c(270,700)
     )
 
-    ## Annotate clusters ############
+    # end hm_parcoord_table #############
+
+
+    # clustannot_plots clustannot_table refactoring into plot module #########
 
 
     clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
@@ -1686,93 +1701,97 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         )
     })
 
+    # end clustannot_plots clustannot_table refactoring into plot module #########
 
-    ## Phenotypes #################
+    # clust_phenoplot refactoring into plotmodule ##########
 
-    clust_phenoplot.RENDER <- shiny::reactive({
+    # clust_phenoplot.RENDER <- shiny::reactive({
+    #
+    #     ##pgx <- inputData()
+    #     shiny::req(pgx$Y)
+    #
+    #     ## get t-SNE positions
+    #     clust <- hm_getClusterPositions()
+    #     ##pos = pgx$tsne2d
+    #     pos = clust$pos
+    #
+    #     Y <- pgx$Y[rownames(pos),,drop=FALSE]
+    #     pheno = colnames(Y)
+    #
+    #     ## don't show these...
+    #     pheno <- grep("batch|sample|donor|repl|surv",pheno,
+    #                   invert=TRUE, ignore.case=TRUE,value=TRUE)
+    #
+    #     ## layout
+    #     par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+    #     if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
+    #     if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
+    #     i=1
+    #
+    #     cex1 <- 1.1*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
+    #     cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
+    #     cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
+    #
+    #     for(i in 1:min(20,length(pheno))) {
+    #
+    #         ## ------- set colors
+    #         colvar = factor(Y[,1])
+    #         colvar = factor(Y[,pheno[i]])
+    #         colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
+    #         colvar = factor(as.character(colvar))
+    #         klrpal = COLORS
+    #         klr1 = klrpal[colvar]
+    #         klr1 = paste0(gplots::col2hex(klr1),"99")
+    #         jj = which(is.na(klr1))
+    #         if(length(jj)) klr1[jj] <- "#AAAAAA22"
+    #         tt = tolower(pheno[i])
+    #
+    #         ## ------- start plot
+    #         base::plot( pos[,], pch=19, cex=cex1, col=klr1,
+    #              fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
+    #              xlab="tSNE1", ylab="tSNE2")
+    #         title( tt, cex.main=1.3, line=0.5, col="grey40")
+    #         if(input$clust_phenoplot_labelmode=="legend") {
+    #             legend("bottomright", legend=levels(colvar), fill=klrpal,
+    #                    cex=0.95, y.intersp=0.85, bg="white")
+    #         } else {
+    #             grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
+    #             grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
+    #             nvar <- length(setdiff(colvar,NA))
+    #             if(nvar==1) {
+    #                 grp.pos <- matrix(grp.pos,nrow=1)
+    #                 rownames(grp.pos) <- setdiff(colvar,NA)[1]
+    #             }
+    #             labels = rownames(grp.pos)
+    #             boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+    #             cex2 = 0.9*cex1**0.33
+    #             text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
+    #             text( grp.pos, labels=labels, font=2, cex=cex2)
+    #         }
+    #     }
+    # })
 
-        ##pgx <- inputData()
-        shiny::req(pgx$Y)
+    # clust_phenoplot.opts = shiny::tagList(
+    #     shiny::radioButtons(ns('clust_phenoplot_labelmode'),"Label",c("groups","legend"),inline=TRUE)
+    # )
 
-        ## get t-SNE positions
-        clust <- hm_getClusterPositions()
-        ##pos = pgx$tsne2d
-        pos = clust$pos
-
-        Y <- pgx$Y[rownames(pos),,drop=FALSE]
-        pheno = colnames(Y)
-
-        ## don't show these...
-        pheno <- grep("batch|sample|donor|repl|surv",pheno,
-                      invert=TRUE, ignore.case=TRUE,value=TRUE)
-
-        ## layout
-        par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
-        if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
-        if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-        i=1
-
-        cex1 <- 1.1*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
-        cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
-        cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
-
-        for(i in 1:min(20,length(pheno))) {
-
-            ## ------- set colors
-            colvar = factor(Y[,1])
-            colvar = factor(Y[,pheno[i]])
-            colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
-            colvar = factor(as.character(colvar))
-            klrpal = COLORS
-            klr1 = klrpal[colvar]
-            klr1 = paste0(gplots::col2hex(klr1),"99")
-            jj = which(is.na(klr1))
-            if(length(jj)) klr1[jj] <- "#AAAAAA22"
-            tt = tolower(pheno[i])
-
-            ## ------- start plot
-            base::plot( pos[,], pch=19, cex=cex1, col=klr1,
-                 fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
-                 xlab="tSNE1", ylab="tSNE2")
-            title( tt, cex.main=1.3, line=0.5, col="grey40")
-            if(input$clust_phenoplot_labelmode=="legend") {
-                legend("bottomright", legend=levels(colvar), fill=klrpal,
-                       cex=0.95, y.intersp=0.85, bg="white")
-            } else {
-                grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
-                grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
-                nvar <- length(setdiff(colvar,NA))
-                if(nvar==1) {
-                    grp.pos <- matrix(grp.pos,nrow=1)
-                    rownames(grp.pos) <- setdiff(colvar,NA)[1]
-                }
-                labels = rownames(grp.pos)
-                boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-                cex2 = 0.9*cex1**0.33
-                text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
-                text( grp.pos, labels=labels, font=2, cex=cex2)
-            }
-        }
-    })
-
-    clust_phenoplot.opts = shiny::tagList(
-        shiny::radioButtons(ns('clust_phenoplot_labelmode'),"Label",c("groups","legend"),inline=TRUE)
-    )
-
-    clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
+    # clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
 
     ## clust_phenoplot.module <- plotModule(
-    shiny::callModule(
-        plotModule,
-        "clust_phenoplot", ## ns=ns,
-        func  = clust_phenoplot.RENDER, ## plotlib="base",
-        func2 = clust_phenoplot.RENDER, ## plotlib="base",
-        options = clust_phenoplot.opts,
-        height = c(fullH-80,700), res = 85,
-        pdf.width = 6, pdf.height = 9,
-        info.text = clust_phenoplot_info,
-        add.watermark = WATERMARK
-    )
+
+    # shiny::callModule(
+    #     plotModule,
+    #     "clust_phenoplot", ## ns=ns,
+    #     func  = clust_phenoplot.RENDER, ## plotlib="base",
+    #     func2 = clust_phenoplot.RENDER, ## plotlib="base",
+    #     options = clust_phenoplot.opts,
+    #     height = c(fullH-80,700), res = 85,
+    #     pdf.width = 6, pdf.height = 9,
+    #     info.text = clust_phenoplot_info,
+    #     add.watermark = WATERMARK
+    # )
+
+    # end clust_phenoplot refactoring into plotmodule ##########
 
     ## Feature ranking ###########
 
