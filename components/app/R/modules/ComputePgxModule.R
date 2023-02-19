@@ -111,7 +111,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                             shiny::br(),
                             shiny::div(
                                 shiny::actionButton(ns("compute"),"Compute!",icon=icon("running"),
-                                                    class="run-button"),
+                                                    class="btn-outline-primary"),
                                 shiny::br(),br(),
                                 shiny::actionLink(ns("options"), "Computation options",
                                                   icon=icon("cog", lib="glyphicon")),

@@ -116,7 +116,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                         "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."),
                                     shiny::br(),
                                     ## tipifyL(
-                                    shiny::actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
+                                    shiny::actionButton(ns("addcontrast"),
+                                    "add comparison", 
+                                    icon=icon("plus"),
+                                    class = "btn-outline-primary"),
                                     ##"After creating the groups, press this button to add the comparison to the table."a),
                                     shiny::br()
                                 ),
@@ -136,8 +139,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         height = 24,
                         flex = c(NA,0.05,NA,NA,1),
                         withTooltip(
-                            shiny::actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
-                                         class="small-button"),
+                            shiny::actionButton(ns("autocontrast"),
+                            "add auto-contrasts", 
+                            icon=icon("plus"),
+                            class="small-button btn-outline-primary"),
                             "If you are feeling lucky, try this to automatically create contrasts.",
                             placement="top", options = list(container = "body")                            
                         ),
@@ -436,7 +441,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         width = "50px",
                         inline = TRUE,
                         icon = shiny::icon("trash-alt"),
-                        class = "btn-inline",
+                        class = "btn-inline btn-outline-danger-hover",
                         style='padding:2px; margin:2px; font-size:95%; color: #B22222;',
                         ##onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
                         onclick = paste0('Shiny.onInputChange(\"',ns("contrast_delete"),'\",this.id)')
