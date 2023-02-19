@@ -22,7 +22,8 @@ UploadModuleUI <- function(id) {
         shiny::sidebarLayout(
           shiny::sidebarPanel(
             width = 3,
-            shiny::fileInput(ns("upload_files"), "Choose files",
+            shiny::fileInput(ns("upload_files"),
+                             shiny::h4("Choose files"),
                              multiple = TRUE, accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("load_example"), "load example data"),
