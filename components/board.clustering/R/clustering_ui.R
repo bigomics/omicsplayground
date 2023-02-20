@@ -137,7 +137,13 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Feature ranking",
-                    plotWidget(ns("clust_featureRank")),
+
+                    clustering_plot_featurerank_ui(id = ns("clust_featureRank"),
+                                                   label='',
+                                                   height = c(fullH-80,700),
+                                                   width=c("auto",800)
+                    ),
+
                     tags$div( class="caption",
                             HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
                             The plot ranks the discriminative power of feature sets (or gene sets) as the
