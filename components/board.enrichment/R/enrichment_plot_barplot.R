@@ -23,6 +23,7 @@ enrichment_plot_barplot_ui <- function(id, height, width) {
     ns("plot"),
     title = "Enrichment barplot",
     label = "b",
+    plotlib = "plotly",
     info.text = info_text,
     options = options,
     height = height,
@@ -49,11 +50,17 @@ enrichment_plot_barplot_server <- function(id,
       gset <- rownames(ngs$gsetX)[1]
       gset <- gset_selected()
       if (is.null(gset) || length(gset) == 0) {
-        return(NULL)
+        return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
+                 plotly::config(
+                   displayModeBar = FALSE
+                 ))
       }
       gset <- gset[1]
       if (!gset %in% rownames(ngs$gsetX)) {
-        return(NULL)
+        return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
+                 plotly::config(
+                   displayModeBar = FALSE
+                 ))
       }
 
       comp0 <- colnames(ngs$model.parameters$contr.matrix)[1]
@@ -73,15 +80,14 @@ enrichment_plot_barplot_server <- function(id,
         ngs, gset,
         comp = comp0, logscale = TRUE, level = "geneset",
         collapse.others = collapse.others, grouped = grouped,
-        cex = 1.1, srt = srt, main = "", ylab = "enrichment (avg logFC)"
+        cex = 1.1, srt = srt, main = "", ylab = "enrichment (avg logFC)",
+        xlab = breakstring(gset, 42, 80)
       )
-      title(breakstring(gset, 42, 80), cex.main = 0.85)
-      p <- grDevices::recordPlot()
-      p
     })
 
     PlotModuleServer(
       "plot",
+      plotlib = "plotly",
       func = subplot_barplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),

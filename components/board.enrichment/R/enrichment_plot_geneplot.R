@@ -20,6 +20,7 @@ enrichment_plot_geneplot_ui <- function(id, height, width) {
     ns("plot"),
     title = "Expression geneplot",
     label = "c",
+    plotlib = "plotly",
     info.text = info_text,
     options = options,
     height = height,
@@ -51,7 +52,10 @@ enrichment_plot_geneplot_server <- function(id,
 
       sel <- gene_selected()
       if (is.null(sel) || is.na(sel) || length(sel) == 0) {
-        frame()
+        return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
+                 plotly::config(
+                   displayModeBar = FALSE
+                 ))
       } else {
         probe <- sel$probe
         gene <- sel$gene
@@ -67,16 +71,14 @@ enrichment_plot_geneplot_server <- function(id,
           ngs, probe,
           comp = comp0, logscale = TRUE, level = "gene",
           collapse.others = collapse.others, grouped = grouped,
-          srt = srt, main = ""
+          srt = srt, main = "", xlab = gene
         )
-        title(gene, cex.main = 0.9)
       }
-      p <- grDevices::recordPlot()
-      p
     })
 
     PlotModuleServer(
       "plot",
+      plotlib = "plotly",
       func = subplot_geneplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(78, 100),
