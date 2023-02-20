@@ -8,7 +8,7 @@ WelcomeBoardInputs <- function(id) {}
 WelcomeBoardUI <- function(id) {}
 
 
-WelcomeBoard <- function(id, auth, rvals)
+WelcomeBoard <- function(id, auth, r_global)
 {
   moduleServer(id, function(input, output, session)
   {
@@ -29,20 +29,15 @@ WelcomeBoard <- function(id, auth, rvals)
     })
 
     observeEvent(input$init_example_data, {
-      print('loaded new data')
       shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
       shinyjs::runjs("$('.sidebar-label').trigger('click');")
-      rvals$load_example_trigger <- TRUE
+      r_global$load_example_trigger <- TRUE
     })
 
   })
 }
 
 WelcomeBoardInputs <- function(id) {
-  ## ns <- shiny::NS(id)  ## namespace
-  ## bigdash::tabSettings(
-  ##   shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
-  ## )
   return(NULL)
 }
 
@@ -66,7 +61,7 @@ WelcomeBoardUI <- function(id) {
               h3("I am new..."),
               shiny::actionButton(
                 ns('init_example_data'),
-                label = "Try example dataset (new)",
+                label = "Try example dataset",
                 class = "btn btn-outline-info welcome-btn"
               )
           ),

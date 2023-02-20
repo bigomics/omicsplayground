@@ -113,7 +113,7 @@ app_server <- function(input, output, session) {
     ## *** EXPERIMENTAL *** global reactive value replacing env list
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
-    rvals <- reactiveValues(
+    r_global <- reactiveValues(
       load_example_trigger = FALSE
     )
 
@@ -128,7 +128,7 @@ app_server <- function(input, output, session) {
         enable_upload = opt$ENABLE_UPLOAD,
         enable_delete = opt$ENABLE_DELETE,
         enable_save = opt$ENABLE_SAVE,
-        rvals = rvals
+        r_global = r_global
     )
 
     ## Modules needed from the start
@@ -160,7 +160,7 @@ app_server <- function(input, output, session) {
     })
 
     ## Default boards
-    WelcomeBoard("welcome", auth=auth, rvals=rvals)
+    WelcomeBoard("welcome", auth=auth, r_global=r_global)
     env$user <- UserBoard("user", user=auth)
 
     ## Modules needed after dataset is loaded (deferred) --------------
