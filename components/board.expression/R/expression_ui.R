@@ -129,7 +129,6 @@ ExpressionUI <- function(id) {
               "Top genes",
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
-                label = "a",
                 height = c(imgH, 420),
                 width = c("auto", 1600)
               ),

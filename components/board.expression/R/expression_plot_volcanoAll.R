@@ -153,7 +153,7 @@ expression_plot_volcanoAll_server <- function(id,
           ## ggplot2::theme(legend.position='none')
           ## ggplot2::theme_bw(base_size=11)
 
-          if (!interactive()) shiny::incProgress(1 / length(comp))
+          if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }
       }) ## progress
 
