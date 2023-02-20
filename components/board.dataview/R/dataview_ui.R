@@ -196,7 +196,7 @@ DataViewUI <- function(id) {
       "Counts table",
       dataview_table_rawdata_ui(
         ns("rawdatatable"),
-        height = c("75vh", 700),
+        height = c("75vh", "75vh"),
         width = c("100%", "90%")
       ),
       tags$div(
