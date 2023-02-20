@@ -127,7 +127,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                                 style = "width: 95%;",
                                 shiny::checkboxGroupInput(
                                     ns('filter_methods'),
-                                    shiny::h4('Feature filtering:'),
+                                    shiny::HTML('<h4>Feature filtering:</h4><br/>'),
                                     choiceValues =
                                         c("only.hugo",
                                           "only.proteincoding",
@@ -156,7 +156,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                                 style = "width: 95%;",
                                 shiny::checkboxGroupInput(
                                     ns('gene_methods'),
-                                    shiny::h4('Gene tests:'),
+                                    shiny::HTML('<h4>Gene tests:</h4><br/>'),
                                     GENETEST.METHODS,
                                     selected = GENETEST.SELECTED
                                 )
@@ -165,7 +165,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                                 style = "width: 95%;",
                                 shiny::checkboxGroupInput(
                                     ns('gset_methods'),
-                                    shiny::h4('Enrichment methods:'),
+                                    shiny::HTML('<h4>Enrichment methods:</h4><br/>'),
                                     GENESET.METHODS,
                                     selected = GENESET.SELECTED
                                 ),
@@ -174,7 +174,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                                 style = "width: 95%;",
                                 shiny::checkboxGroupInput(
                                     ns('extra_methods'),
-                                    shiny::h4('Extra analysis:'),
+                                    shiny::HTML('<h4>Extra analysis:</h4><br/>'),
                                     choiceValues = EXTRA.METHODS,
                                     choiceNames = EXTRA.NAMES,
                                     selected = EXTRA.SELECTED
@@ -183,7 +183,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                             shiny::wellPanel(
                                 shiny::checkboxGroupInput(
                                     ns('dev_options'),
-                                    shiny::h4('Developer options:'),
+                                    shiny::HTML('<h4>Developer options:</h4><br/>'),
                                     choiceValues = DEV.METHODS,
                                     choiceNames = DEV.NAMES,
                                     selected = DEV.SELECTED
