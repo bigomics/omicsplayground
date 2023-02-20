@@ -121,7 +121,15 @@ ClusteringUI <- function(id) {
             shiny::tabsetPanel(
                 id = ns("tabs2"),
                 shiny::tabPanel("Annotate clusters",
-                    uiOutput(ns("hm_annotateUI"))),
+                    clustering_plot_clusterannot_ui(id = ns("plots_clustannot"),
+                                                    label='a',
+                                                    height = c(360,600),
+                                                    width = c("100%",1000)
+                                                    ),
+
+                    # uiOutput(ns("hm_annotateUI"))),
+                ),
+
                 shiny::tabPanel("Phenotypes",
 
                     clustering_plot_phenoplot_ui(id = ns("clust_phenoplot"),
@@ -154,6 +162,4 @@ ClusteringUI <- function(id) {
             )
         )
     )
-
-
-}
+    }
