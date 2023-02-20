@@ -676,6 +676,78 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       return(rho)
     })
 
+    hm_getClusterPositions <- shiny::reactive({
+
+      pgx <- pgx
+      ##shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
+
+      ## take full matrix
+      #flt <- getFilteredMatrix()
+      #zx <- flt$zx
+      sel.samples <- r.samples()
+
+      clustmethod="tsne";pdim=2
+      do3d <- ("3D" %in% input$hmpca_options)
+      pdim = c(2,3)[ 1 + 1*do3d]
+
+      pos = NULL
+      force.compute = FALSE
+      clustmethod = input$hm_clustmethod
+      clustmethod0 <- paste0(clustmethod,pdim,"d")
+
+      if(clustmethod=="default" && !force.compute) {
+        if(pdim==2 && !is.null(pgx$tsne2d) ) {
+          pos <- pgx$tsne2d[sel.samples,]
+        } else if(pdim==3 && !is.null(pgx$tsne3d) ) {
+          pos <- pgx$tsne3d[sel.samples,]
+        }
+      } else if( clustmethod0 %in% names(pgx$cluster$pos))  {
+        shiny::showNotification(paste("switching to ",clustmethod0," layout...\n"))
+        pos <- pgx$cluster$pos[[clustmethod0]]
+        if(pdim==2) pos <- pos[sel.samples,1:2]
+        if(pdim==3) pos <- pos[sel.samples,1:3]
+      } else  {
+        ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ## This should not be necessary anymore as we prefer to
+        ## precompute all clusterings.
+        shiny::showNotification(paste("computing ",clustmethod,"...\n"))
+
+        ntop = 1000
+        ## ntop = as.integer(input$hm_ntop2)
+        zx <- pgx$X
+        zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
+        if(nrow(zx) > ntop) {
+          ##zx = head(zx,ntop)  ## OK?
+          zx = zx[1:ntop,,drop=FALSE]  ## OK?
+        }
+        if("normalize" %in% input$hmpca_options) {
+          zx <- scale(t(scale(t(zx))))
+        }
+        perplexity = max(1,min((ncol(zx)-1)/3, 30))
+        perplexity
+        res <- pgx.clusterMatrix(
+          zx, dims = pdim, perplexity = perplexity,
+          ntop = 999999, prefix = "C",
+          find.clusters = FALSE, kclust = 1,
+          row.center = TRUE, row.scale = FALSE,
+          method = clustmethod)
+        if(pdim==2) pos <- res$pos2d
+        if(pdim==3) pos <- res$pos3d
+      }
+
+      pos <- pos[sel.samples,]
+      pos <- scale(pos) ## scale
+      ##colnames(pos) = paste0("dim",1:ncol(pos))
+      ##rownames(pos) = colnames(zx)
+
+      idx <- NULL
+      dbg("[hm_getClusterPositions] done")
+
+      clust = list(pos=pos, clust=idx)
+
+      return(clust)
+    })
+
 
 
     # plots ##########
@@ -685,7 +757,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        watermark = FALSE)
 
     clustering_plot_clustpca_server("PCAplot",
-                                    pgx = inputData(),
+                                    pgx = pgx,
                                     r.samples = r.samples,
                                     hmpca.colvar = shiny::reactive(input$hmpca.colvar),
                                     hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
@@ -698,13 +770,13 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                         )
 
     clustering_plot_phenoplot_server(id = "clust_phenoplot",
-                                     pgx = inputData(),
+                                     pgx = pgx,
                                      hm_getClusterPositions = hm_getClusterPositions,
                                      watermark=FALSE
     )
 
     clustering_plot_featurerank_server(id = "clust_featureRank",
-                                       pgx = inputData,
+                                       pgx = pgx,
                                        hm_level = input$hm_level,
                                        watermark=FALSE
                                        )

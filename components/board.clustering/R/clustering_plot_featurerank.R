@@ -50,7 +50,7 @@ clustering_plot_featurerank_server <- function(id,
 
     calcFeatureRanking <- shiny::reactive({
 
-      pgx <- pgx()
+      pgx <- pgx
       hm_level <- hm_level()
 
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)
