@@ -721,6 +721,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        xann_level = input$xann_level,
                                        watermark = FALSE)
 
+    clustering_table_hm_parcoord_server(id = "",
+                                        hm_parcoord.selected = hm_parcoord.selected,
+                                        watermark = FALSE)
+
     # start hm_splitmap refactoring ########
 
     # hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.")

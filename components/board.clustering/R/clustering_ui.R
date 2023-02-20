@@ -102,7 +102,13 @@ ClusteringUI <- function(id) {
                       width = c("100%",1000),
                       height=c(0.45*fullH,600)),
                     br(),
-                    tableWidget(ns("hm_parcoord_table")),
+
+                    clustering_table_hm_parcoord_ui(ns("hm_parcoord_table")),
+
+                    #FIXME
+                    #tableWidget(ns("hm_parcoord_table")), #FIXME
+                    #FIXME
+
                     tags$div(class="caption",
                         HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                             the expression levels of selected genes across all conditions.
