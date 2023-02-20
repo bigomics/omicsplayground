@@ -714,12 +714,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                         watermark=FALSE
                                         )
 
+    # tables ##########
 
-
-
-
-
-
+    clustering_table_clustannot_server(id = "tables_clustannot",
+                                       getClustAnnotCorrelation = getClustAnnotCorrelation,
+                                       xann_level = input$xann_level,
+                                       watermark = FALSE)
 
     # start hm_splitmap refactoring ########
 
@@ -1648,52 +1648,52 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     #     add.watermark = WATERMARK
     # )
 
-    clustannot_table.RENDER <- shiny::reactive({
-
-        rho = getClustAnnotCorrelation()
-        if(is.null(rho)) return(NULL)
-
-        ##rownames(rho) = shortstring(rownames(rho),50)
-        rho.name = shortstring(sub(".*:","",rownames(rho)),60)
-        ##rho = data.frame(cbind( name=rho.name, rho))
-        df = data.frame( feature=rho.name, round(as.matrix(rho),digits=3))
-        rownames(df) = rownames(rho)
-        if(input$xann_level=="geneset") {
-            df$feature <- wrapHyperLink(df$feature, rownames(df))
-        }
-
-        DT::datatable(
-                df, rownames=FALSE, escape = c(-1,-2),
-                extensions = c('Buttons','Scroller'),
-                selection=list(mode='single', target='row', selected=c(1)),
-                class = 'compact hover',
-                fillContainer = TRUE,
-                options=list(
-                    dom = 'lfrtip', buttons = c('copy','csv','pdf'),
-                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                    scrollX = TRUE, ##scrollY = TRUE,
-                    ##scrollY = 170,
-                    scrollY = '70vh',
-                    scroller=TRUE,
-                    deferRender=TRUE
-                )  ## end of options.list
-            ) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
-    })
-
-    clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
-
-    ##clustannot_table_module <- tableModule(
-    clustannot_table_module <- shiny::callModule(
-        tableModule,
-        id = "clustannot_table",
-        func = clustannot_table.RENDER,
-        ##options = clustannot_table_opts,
-        info.text = clustannot_table_info_text,
-        title="Annotation scores", label="b",
-        height = c(240,700), width=c('auto',1000),
-        ##caption = clustannot_caption
-    )
+    # clustannot_table.RENDER <- shiny::reactive({
+    #
+    #     rho = getClustAnnotCorrelation()
+    #     if(is.null(rho)) return(NULL)
+    #
+    #     ##rownames(rho) = shortstring(rownames(rho),50)
+    #     rho.name = shortstring(sub(".*:","",rownames(rho)),60)
+    #     ##rho = data.frame(cbind( name=rho.name, rho))
+    #     df = data.frame( feature=rho.name, round(as.matrix(rho),digits=3))
+    #     rownames(df) = rownames(rho)
+    #     if(input$xann_level=="geneset") {
+    #         df$feature <- wrapHyperLink(df$feature, rownames(df))
+    #     }
+    #
+    #     DT::datatable(
+    #             df, rownames=FALSE, escape = c(-1,-2),
+    #             extensions = c('Buttons','Scroller'),
+    #             selection=list(mode='single', target='row', selected=c(1)),
+    #             class = 'compact hover',
+    #             fillContainer = TRUE,
+    #             options=list(
+    #                 dom = 'lfrtip', buttons = c('copy','csv','pdf'),
+    #                 ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+    #                 scrollX = TRUE, ##scrollY = TRUE,
+    #                 ##scrollY = 170,
+    #                 scrollY = '70vh',
+    #                 scroller=TRUE,
+    #                 deferRender=TRUE
+    #             )  ## end of options.list
+    #         ) %>%
+    #         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
+    # })
+    #
+    # clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+    #
+    # ##clustannot_table_module <- tableModule(
+    # clustannot_table_module <- shiny::callModule(
+    #     tableModule,
+    #     id = "clustannot_table",
+    #     func = clustannot_table.RENDER,
+    #     ##options = clustannot_table_opts,
+    #     info.text = clustannot_table_info_text,
+    #     title="Annotation scores", label="b",
+    #     height = c(240,700), width=c('auto',1000),
+    #     ##caption = clustannot_caption
+    # )
 
     clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
 

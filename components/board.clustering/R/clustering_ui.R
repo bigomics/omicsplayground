@@ -70,7 +70,6 @@ ClusteringUI <- function(id) {
                                                    label = "a",
                                                    height = fullH-80,
                                                    width = '100%'),
-                    # plotWidget(ns("hm_splitmap")), #FIXME
 
                     tags$div( class="caption",
                         HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
@@ -126,10 +125,13 @@ ClusteringUI <- function(id) {
                                                     height = c(360,600),
                                                     width = c("100%",1000)
                                                     ),
-
+                    clustering_table_clustannot_ui(id = ns("tables_clustannot")),
                     # uiOutput(ns("hm_annotateUI"))),
+                    tags$div(class="caption",
+                             HTML("<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+                                  )
+                    )
                 ),
-
                 shiny::tabPanel("Phenotypes",
 
                     clustering_plot_phenoplot_ui(id = ns("clust_phenoplot"),
