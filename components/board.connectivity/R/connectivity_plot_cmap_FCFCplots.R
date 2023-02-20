@@ -158,6 +158,8 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
           df <- getConnectivityScores()
           cmap_FCFCenplot(fc, F, mfplots, ylab, df)
         }
+        p <- grDevices::recordPlot()
+        p
       })
 
       PlotModuleServer(
