@@ -106,24 +106,18 @@ dataview_table_contrasts_server <- function(id,
         )
     }
 
-    # info_text <- "<b>Contrast table.</b> Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
-
-
+    table.RENDER_modal <- shiny::reactive({
+      dt <- table.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
     TableModuleServer(
       "datasets",
       func = table.RENDER,
+      func2 = table.RENDER_modal,
       selector = "none"
     )
 
-    # contrastTable <- shiny::callModule(
-    #   tableModule, "tbl",
-    #   func = table.RENDER,
-    #   csvFunc = contrasts_data,
-    #   options = opts,
-    #   title = "Contrast table",
-    #   filename = "contrasts.csv",
-    #   info.text = info_text
-    # )
   }) ## end of moduleServer
 } ## end of server

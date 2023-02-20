@@ -64,7 +64,6 @@ ExpressionUI <- function(id) {
   fullH <- 800 ## full height of page
   rowH <- 340 ## full height of page
   imgH <- 340 ## height of images
-  modal_heigh <- "70vh"
 
   div(
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
@@ -82,7 +81,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_volcano_ui(ns("plots_volcano"),
                     label = "a",
-                    height = c(imgH, modal_heigh),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -91,7 +90,7 @@ ExpressionUI <- function(id) {
                   expression_plot_maplot_ui(
                     id = ns("plots_maplot"),
                     label = "b",
-                    height = c(imgH, modal_heigh),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -100,7 +99,7 @@ ExpressionUI <- function(id) {
                   expression_plot_barplot_ui(
                     id = ns("plots_barplot"),
                     label = "c",
-                    height = c(imgH, modal_heigh),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -109,7 +108,7 @@ ExpressionUI <- function(id) {
                   expression_plot_topfoldchange_ui(
                     id = ns("plots_topfoldchange"),
                     label = "d",
-                    height = c(imgH, modal_heigh),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 )
@@ -126,7 +125,7 @@ ExpressionUI <- function(id) {
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
                 label = "a",
-                height = c(imgH, modal_heigh),
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
@@ -139,7 +138,7 @@ ExpressionUI <- function(id) {
               "Volcano (all)",
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
                 label = "a",
-                height = c(imgH, modal_heigh),
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
@@ -154,7 +153,7 @@ ExpressionUI <- function(id) {
               expression_plot_volcanoMethods_ui(
                 id = ns("volcanoMethods"),
                 label = "a",
-                height = c(imgH, modal_heigh),
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
@@ -183,7 +182,7 @@ ExpressionUI <- function(id) {
                   expression_table_genetable_ui(
                     ns("genetable"),
                     width = c("100%", "90%"),
-                    height = c("300px", modal_heigh)
+                    height = c("300px", TABLE_HEIGHT_MODAL)
                   )
                 ),
                 div(
@@ -191,7 +190,7 @@ ExpressionUI <- function(id) {
                   expression_table_gsettable_ui(
                     ns("gsettable"),
                     width = c("100%", "90%"),
-                    height = c("300px", modal_heigh)
+                    height = c("300px", TABLE_HEIGHT_MODAL)
                   )
                 )
               )
@@ -204,7 +203,7 @@ ExpressionUI <- function(id) {
               expression_table_fctable_ui(
                 ns("fctable"),
                 width = c("100%", "90%"),
-                height = c("300px", modal_heigh)
+                height = c("300px", TABLE_HEIGHT_MODAL)
               )
             ),
             shiny::tabPanel(
@@ -215,7 +214,7 @@ ExpressionUI <- function(id) {
               expression_table_FDRtable_ui(
                 ns("FDRtable"),
                 width = c("100%", "90%"),
-                height = c("300px", modal_heigh)
+                height = c("300px", TABLE_HEIGHT_MODAL)
               )
             )
           )

@@ -72,7 +72,6 @@ SignatureUI <- function(id) {
 
   fullH <- 800 ## full height of page
   tabH <- "70vh"
-  modal_heigh <- "70vh"
 
   tabs <- div(
     class = "row",
@@ -118,7 +117,7 @@ SignatureUI <- function(id) {
           shiny::br(),
           signature_table_overlap_ui(
             ns("overlapTable"),
-            height = c(0.4 * fullH, modal_heigh),
+            height = c(0.4 * fullH, TABLE_HEIGHT_MODAL),
             width = c("auto", "90%")
           ),
           shiny::br(),
@@ -154,13 +153,13 @@ SignatureUI <- function(id) {
           "Enrichment table",
           signature_table_enrich_by_contrasts_ui(
             ns("enrichmentContrastTable"),
-            height = c(230, modal_heigh),
+            height = c(230, TABLE_HEIGHT_MODAL),
             width = c("auto", "90%")
           ),
           shiny::br(),
           signature_table_genes_in_signature_ui(
             ns("enrichmentGeneTable"),
-            height = c(360, modal_heigh),
+            height = c(360, TABLE_HEIGHT_MODAL),
             width = c("auto", "90%")
           ),
           shiny::br(),

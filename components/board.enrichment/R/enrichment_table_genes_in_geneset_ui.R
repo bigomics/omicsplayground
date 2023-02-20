@@ -76,7 +76,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
 
     genetable.RENDER_modal <- shiny::reactive({
       dt <- genetable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

@@ -78,7 +78,7 @@ drugconnectivity_table_dsea_server <- function(id,
 
     table.RENDER_modal <- shiny::reactive({
       dt <- table.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

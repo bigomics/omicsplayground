@@ -81,7 +81,6 @@ CompareUI <- function(id) {
 
   fullH <- 770
   tabH <- "70vh"
-  modal_heigh <- "70vh"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -143,7 +142,7 @@ CompareUI <- function(id) {
           compare_plot_expression_ui(ns("multibarplot")),
           compare_table_corr_score_ui(
             ns("score_table"),
-            height = c(235, modal_heigh),
+            height = c(235, TABLE_HEIGHT_MODAL),
             width = c("auto", "90%")
           )
         ),

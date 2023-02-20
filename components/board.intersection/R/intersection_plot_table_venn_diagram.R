@@ -51,7 +51,7 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
       ns("datasets"),
       info.text = info_text.table,
       options = venntable_opts,
-      height = c(260, 750),
+      height = c(260, TABLE_HEIGHT_MODAL),
       width = c("auto", 1200),
       title = "Leading-edge table",
       label = "e"
@@ -375,7 +375,7 @@ intersection_plot_venn_diagram_server <- function(id,
 
     venntable.RENDER2 <- shiny::reactive({
       dt <- venntable.RENDER()
-      dt$x$options$scrollY <- 500
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

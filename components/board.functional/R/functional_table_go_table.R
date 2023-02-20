@@ -111,7 +111,7 @@ functional_table_go_table_server <- function(id,
 
     table_RENDER_modal <- shiny::reactive({
       dt <- table_RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

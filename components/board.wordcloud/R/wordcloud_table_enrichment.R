@@ -55,7 +55,7 @@ wordcloud_table_enrichment_server <- function(id,
 
     wordcloud_enrichmentTable.RENDER_modal <- shiny::reactive({
       dt <- wordcloud_enrichmentTable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

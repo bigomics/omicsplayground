@@ -196,7 +196,7 @@ DataViewUI <- function(id) {
       "Counts table",
       dataview_table_rawdata_ui(
         ns("rawdatatable"),
-        height = c("75vh", "75vh"),
+        height = c("75vh", TABLE_HEIGHT_MODAL),
         width = c("100%", "90%")
       ),
       tags$div(
@@ -234,7 +234,7 @@ DataViewUI <- function(id) {
       ),
       dataview_table_samples_ui(
         ns("sampletable"),
-        height = c(280,750),
+        height = c(280,TABLE_HEIGHT_MODAL),
         width=c('auto','90%')
       ),
       tags$div(
@@ -258,7 +258,7 @@ DataViewUI <- function(id) {
       "Contrasts",
       dataview_table_contrasts_ui(
         ns("contrastTable"),
-        height = c(500,750),
+        height = c(500,TABLE_HEIGHT_MODAL),
         width=c('auto','90%')
       ),
       tags$div(

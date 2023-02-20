@@ -99,7 +99,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
     gseatable.RENDER_modal <- shiny::reactive({
       dt <- gseatable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

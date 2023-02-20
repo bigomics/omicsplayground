@@ -58,7 +58,7 @@ dataview_table_samples_server <- function(id,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = 600,
+          scroller = TRUE, scrollX = TRUE, scrollY = SCROLLY_MODAL,
           deferRender = TRUE
         )
       ) %>%

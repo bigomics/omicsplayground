@@ -146,7 +146,7 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_table_genes_ui(
               ns("geneTable"),
-              height = c(250, 650),
+              height = c(250, TABLE_HEIGHT_MODAL),
               width = c("auto", "90%")
             )
           ),
@@ -154,7 +154,7 @@ WgcnaUI <- function(id) {
             class = "col-md-8",
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
-              height = c(250, 650),
+              height = c(250, TABLE_HEIGHT_MODAL),
               width = c("auto", "90%")
             )
           )

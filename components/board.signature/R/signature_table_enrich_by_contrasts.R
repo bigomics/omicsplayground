@@ -65,7 +65,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
 
     enrichmentContrastTable.RENDER_render <- shiny::reactive({
       dt <- enrichmentContrastTable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

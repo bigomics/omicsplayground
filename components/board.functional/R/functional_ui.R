@@ -53,7 +53,7 @@ FunctionalUI <- function(id) {
           class = "col-md-6",
           functional_table_kegg_table_ui(
             ns("kegg_table"),
-            height = c(270, 700),
+            height = c(270, TABLE_HEIGHT_MODAL),
             width = c("100%", "90%")
           )
         )
@@ -78,7 +78,7 @@ FunctionalUI <- function(id) {
             label = "a"),
           functional_table_go_table_ui(
             ns("GO_table"),
-            height = c("20vh", "70vh"),
+            height = c("20vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "90%")
           )
         ),

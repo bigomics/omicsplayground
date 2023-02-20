@@ -27,7 +27,6 @@ DrugConnectivityInputs <- function(id) {
 
 DrugConnectivityUI <- function(id) {
   ns <- shiny::NS(id)
-  modal_heigh <- "70vh"
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
@@ -49,7 +48,7 @@ DrugConnectivityUI <- function(id) {
               br(),
               drugconnectivity_table_dsea_ui(
                 ns("dsea_table"),
-                height = c(360, modal_heigh),
+                height = c(360, TABLE_HEIGHT_MODAL),
                 width = c("100%", "90%")
               )
           ),
@@ -74,7 +73,7 @@ DrugConnectivityUI <- function(id) {
                 shiny::br(),
                 drugconnectivity_table_cmap_ui(
                   ns("cmap_table"),
-                  height = c(380, modal_heigh),
+                  height = c(380, TABLE_HEIGHT_MODAL),
                   width = c("100%", "90%")
                 )
               ),

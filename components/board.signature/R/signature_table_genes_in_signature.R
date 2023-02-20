@@ -60,7 +60,7 @@ signature_table_genes_in_signature_server <- function(id,
 
     enrichmentGeneTable.RENDER_modal <- shiny::reactive({
       dt <- enrichmentGeneTable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

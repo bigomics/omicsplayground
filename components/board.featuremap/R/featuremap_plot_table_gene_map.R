@@ -45,7 +45,7 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
     TableModuleUI(
       ns("datasets"),
       info.text = info_text_table,
-      height = c(280, 750),
+      height = c(280, TABLE_HEIGHT_MODAL),
       width = c("auto", "90%"),
       title = "Gene table",
       label = "c"
@@ -219,9 +219,16 @@ featuremap_plot_gene_map_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
+    geneTable.RENDER_modal <- shiny::reactive({
+      dt <- geneTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
     TableModuleServer(
       "datasets",
       func = geneTable.RENDER,
+      func2 = geneTable.RENDER_modal,
       selector = "none"
     )
   })

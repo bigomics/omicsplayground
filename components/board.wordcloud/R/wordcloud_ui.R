@@ -19,7 +19,6 @@ WordCloudUI <- function(id) {
   rowH <- 660 ## row height of panel
   tabH <- 200 ## row height of panel
   tabH <- "70vh" ## row height of panel
-  modal_heigh <- "70vh"
 
   ns <- shiny::NS(id) ## namespace
   shiny::tabsetPanel(
@@ -47,7 +46,7 @@ WordCloudUI <- function(id) {
           class = "col-md-6",
           wordcloud_table_enrichment_ui(
             ns("wordcloud_enrichmentTable"),
-            height = c("35vh", modal_heigh),
+            height = c("35vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "90%")
           )
         ),
@@ -55,7 +54,7 @@ WordCloudUI <- function(id) {
           class = "col-md-6",
           wordcloud_table_leading_edge_ui(
             ns("wordcloud_leadingEdgeTable"),
-            height = c("35vh", modal_heigh),
+            height = c("35vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "90%")
           )
         )

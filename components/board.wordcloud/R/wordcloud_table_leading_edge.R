@@ -69,7 +69,7 @@ wordcloud_table_leading_edge_server <- function(id,
 
     wordcloud_leadingEdgeTable.RENDER_modal <- shiny::reactive({
       dt <- wordcloud_leadingEdgeTable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

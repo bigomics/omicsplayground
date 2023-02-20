@@ -75,7 +75,7 @@ expression_table_gsettable_server <- function(id,
 
     gsettable.RENDER_modal <- shiny::reactive({
       dt <- gsettable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

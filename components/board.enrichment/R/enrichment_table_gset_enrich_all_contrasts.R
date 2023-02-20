@@ -69,7 +69,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
 
     fctable.RENDER_modal <- shiny::reactive({
       dt <- fctable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

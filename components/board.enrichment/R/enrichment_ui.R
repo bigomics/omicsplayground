@@ -61,7 +61,6 @@ EnrichmentUI <- function(id) {
   tabV <- "70vh" ## height of tables
   tabH <- 340 ## row height of panels
   tabH <- "80vh" ## height of tables
-  modal_heigh <- "70vh"
 
   tabs <- tagList(
     shiny::tabsetPanel(
@@ -202,14 +201,14 @@ EnrichmentUI <- function(id) {
             enrichment_table_enrichment_analysis_ui(
               ns("gseatable"),
               width = c("100%", "90%"),
-              height = c(285, modal_heigh)
+              height = c(285, TABLE_HEIGHT_MODAL)
             )
           ),
           div(
             class = "col-md-5",
             enrichment_table_genes_in_geneset_ui(
               ns("genetable"),
-              height = c(285, modal_heigh),
+              height = c(285, TABLE_HEIGHT_MODAL),
               width = c("100%", "90%")
             )
           )
@@ -224,7 +223,7 @@ EnrichmentUI <- function(id) {
         ),
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
-          height = c(295, modal_heigh),
+          height = c(295, TABLE_HEIGHT_MODAL),
           width = c("100%", "90%")
         )
       ),
@@ -237,7 +236,7 @@ EnrichmentUI <- function(id) {
         ),
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
-          height = c(295, modal_heigh),
+          height = c(295, TABLE_HEIGHT_MODAL),
           width = c("100%", "90%")
         )
       )

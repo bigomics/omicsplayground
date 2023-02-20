@@ -96,9 +96,16 @@ functional_table_kegg_table_server <- function(id,
         )
     }
 
+    table_RENDER_modal <- shiny::reactive({
+      dt <- table_RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
     my_table <- TableModuleServer(
       "datasets",
       func = table_RENDER,
+      func2 = table_RENDER_modal,
       selector = "none"
     )
 

@@ -201,14 +201,16 @@ dataview_table_rawdata_server <- function(id,
         )
     }
 
-    rawdataTable_modal.RENDER <- function() {
-      rawdataTable.RENDER() %>%
-        DT::formatStyle(0, target = "row", fontSize = "20px", lineHeight = "70%")
-    }
+    rawdataTable.RENDER_modal <- shiny::reactive({
+      dt <- rawdataTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
     TableModuleServer(
       "datasets",
       func = rawdataTable.RENDER,
+      func2 = rawdataTable.RENDER_modal,
       selector = "none"
     )
 

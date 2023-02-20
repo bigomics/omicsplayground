@@ -52,7 +52,7 @@ compare_table_corr_score_server <- function(id,
 
     score_table.RENDER_modal <- shiny::reactive({
       dt <- score_table.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

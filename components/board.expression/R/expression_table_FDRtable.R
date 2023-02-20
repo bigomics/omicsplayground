@@ -110,7 +110,7 @@ expression_table_FDRtable_server <- function(id,
 
     FDRtable.RENDER_modal <- shiny::reactive({
       dt <- FDRtable.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

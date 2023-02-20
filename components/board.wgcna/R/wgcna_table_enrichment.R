@@ -44,9 +44,16 @@ wgcna_table_enrichment_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
+    enrichTable.RENDER_modal <- shiny::reactive({
+      dt <- enrichTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
     enrichTable_module <- TableModuleServer(
       "datasets",
       func = enrichTable.RENDER,
+      func2 = enrichTable.RENDER_modal,
       selector = "none"
     )
 

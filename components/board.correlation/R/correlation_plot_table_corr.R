@@ -34,7 +34,7 @@ correlation_plot_table_corr_ui <- function(id,
     TableModuleUI(
       ns("datasets"),
       info.text = cor_table.info,
-      height = c(360, 700),
+      height = c(360, TABLE_HEIGHT_MODAL),
       width = c("auto", "90%"),
       title = "Correlation table",
       label = "b"
@@ -166,7 +166,7 @@ correlation_plot_table_corr_server <- function(id,
 
     cor_table.RENDER_modal <- shiny::reactive({
       dt <- cor_table.RENDER()
-      dt$x$options$scrollY <- "55vh"
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 

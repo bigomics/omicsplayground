@@ -55,9 +55,16 @@ wgcna_table_genes_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
+    geneTable.RENDER_modal <- shiny::reactive({
+      dt <- geneTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
     geneTable_module <- TableModuleServer(
       "datasets",
       func = geneTable.RENDER,
+      func2 = geneTable.RENDER_modal,
       selector = "none"
     )
 
