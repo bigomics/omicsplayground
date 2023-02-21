@@ -8,15 +8,15 @@ WelcomeBoardInputs <- function(id) {}
 WelcomeBoardUI <- function(id) {}
 
 
-WelcomeBoard <- function(id, auth)
+WelcomeBoard <- function(id, auth, r_global)
 {
-  moduleServer(id, function(input, output, session) 
+  moduleServer(id, function(input, output, session)
   {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
         name <- auth$name()
-        dbg("[HomeBoard] name = ",name)        
+        dbg("[HomeBoard] name = ",name)
         if(name %in% c("",NA,NULL)) {
           welcome <- "Welcome back..."
         } else {
@@ -28,22 +28,16 @@ WelcomeBoard <- function(id, auth)
         welcome
     })
 
-    observeEvent( input$load_data, {
-      ## shinyjs::click("")
+    observeEvent(input$init_example_data, {
+      shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+      shinyjs::runjs("$('.sidebar-label').trigger('click');")
+      r_global$load_example_trigger <- TRUE
     })
 
-    observeEvent( input$upload_new, {
-      ## shinyjs::click("")
-    })
-       
   })
 }
 
 WelcomeBoardInputs <- function(id) {
-  ## ns <- shiny::NS(id)  ## namespace
-  ## bigdash::tabSettings(
-  ##   shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
-  ## )
   return(NULL)
 }
 
@@ -52,14 +46,12 @@ WelcomeBoardUI <- function(id) {
 
   div(
       id = "welcome-page",
-      ##style = "text-align:center;background-color:#eaf7fd;",
-      ##style = "text-align:center;",      
-      br(),      
+      br(),
       br(),
       div(shiny::textOutput(ns("welcome")), id="welcome-text"),
       h2("What would you like to do today?"),
       br(),
-      br(),    
+      br(),
       br(),
       div(
           class = "row",
@@ -67,10 +59,10 @@ WelcomeBoardUI <- function(id) {
           div(
               class = "col-md-5",
               h3("I am new..."),
-              tags$a(
-                  id = "init-example-data",
-                  "Try example dataset",
-                  class = "btn btn-outline-info welcome-btn"
+              shiny::actionButton(
+                ns('init_example_data'),
+                label = "Try example dataset",
+                class = "btn btn-outline-info welcome-btn"
               )
           ),
           div(
@@ -88,15 +80,7 @@ WelcomeBoardUI <- function(id) {
               )
           )
       ),
-      ## br(),
-      ## div(
-      ##   id="welcome-subtext",
-      ##   HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>
-      ##       BigOmics is focused on one thing — helping life scientists see and understand their omics
-      ##       data. Our mission is to create smart tools and make advanced omics analysis accessible to
-      ##       everyone. Want to know more? Read our paper \"Omics Playground: a comprehensive self-
-      ##       service platform for visualization, analytics and exploration of Big Omics Data\".")),
       br()
-      
+
   )
 }

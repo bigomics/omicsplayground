@@ -18,8 +18,8 @@ const unloadSidebar = () => {
 			if(index == 0){
 				$(el).show();
 				return;
-			} 
-			
+			}
+
 			$(el).hide();
 		});
 }
@@ -53,23 +53,6 @@ $(function(){
 		$('.sidebar-label').trigger('click');
 	});
 
-	$('#init-example-data').on('click', (e) => {
-		$(".tab-sidebar:eq(1)").trigger('click');
-		$('.sidebar-label').trigger('click');
-		setTimeout(() => {
-			let first = $('tbody')
-				.find('tr')
-				.first()
-				.find('td:eq(1)')
-				.text();
-
-			if(first != 'example-data')
-				return;
-
-			$('#load-loadbutton').trigger('click');
-		}, 1000);
-	});
-
 	$('#init-upload-data').on('click', (e) => {
 		$(".tab-sidebar:eq(2)").trigger('click');
 		$('.sidebar-label').trigger('click');
@@ -86,7 +69,7 @@ Shiny.addCustomMessageHandler('manage-sub', (msg) => {
 Shiny.addCustomMessageHandler('get-permissions', (msg) => {
 	if(!db)
 		db = firebase.firestore();
-	
+
 	db
 		.collection('customers')
 		.doc(firebase.auth().currentUser.uid)
@@ -110,17 +93,17 @@ Shiny.addCustomMessageHandler('get-permissions', (msg) => {
 
 			try {
 				Shiny.setInputValue(
-					msg.ns + '-permissions', 
-					{ 
+					msg.ns + '-permissions',
+					{
 						success: true,
-						response: doc.data() 
+						response: doc.data()
 					},
 					{priority: 'event'}
 				);
 			} catch (error) {
 				Shiny.setInputValue(
-					msg.ns + '-permissions', 
-					{ 
+					msg.ns + '-permissions',
+					{
 						success: false,
 						response: error
 					},
@@ -129,8 +112,8 @@ Shiny.addCustomMessageHandler('get-permissions', (msg) => {
 			}
 		}, (error) => {
 			Shiny.setInputValue(
-				msg.ns + '-permissions', 
-				{ 
+				msg.ns + '-permissions',
+				{
 					success: false,
 					response: error
 				},
@@ -203,8 +186,8 @@ Shiny.addCustomMessageHandler('get-subs', (msg) => {
 
 		}, (error) => {
 			Shiny.setInputValue(
-				msg.ns + '-subs', 
-				{ 
+				msg.ns + '-subs',
+				{
 					success: false,
 					response: error
 				},
@@ -217,7 +200,7 @@ const logout = () => {
 	unloadSidebar();
 	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-	Shiny.setInputValue('userLogout', 1, {priority: 'event'});        
+	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
 };
 
 const quit = () => {
@@ -230,7 +213,7 @@ Shiny.addCustomMessageHandler('shinyproxy-logout', (msg) => {
 
 
 const show_plans = () => {
-  Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});    
+  Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});
 };
 
 async function upgrade_plan(){
@@ -248,7 +231,7 @@ async function upgrade_plan(){
 	docRef.onSnapshot((snap) => {
 		const { error, url } = snap.data();
 		if (error) {
-			// Show an error to your customer and 
+			// Show an error to your customer and
 			// inspect your Cloud Function logs in the Firebase console.
 			alert(`An error occured: ${error.message}`);
 		}
@@ -256,7 +239,7 @@ async function upgrade_plan(){
 			// We have a Stripe Checkout URL, let's redirect.
 			window.location.assign(url);
 		}
-	});	
+	});
 }
 
 Shiny.addCustomMessageHandler('email-feedback', function(msg) {
@@ -272,7 +255,7 @@ const priceChange = (name) => {
 		$('#yearlyCheck').prop('checked', false);
 	} else {
 		$('#monthlyCheck').prop('checked', false);
-	}		
+	}
 	if($('#yearlyCheck').prop('checked')){
 		$('#starter-pricing').text('CHF49 / month');
 		$('#premium-pricing').text('CHF490 / month');
@@ -303,7 +286,7 @@ fetch(`log?msg=${encodeURIComponent(msg)}`)
 }
 
 const sendLog2 = (msg) => {
-    	fetch(`log?msg=${encodeURIComponent(msg)}`)    
+    	fetch(`log?msg=${encodeURIComponent(msg)}`)
 	        .then(res => {
 		        console.info(res);
 			hideSub();
