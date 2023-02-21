@@ -4,9 +4,24 @@
 ##
 
 
-functional_table_go_table_ui <- function(id) {
+functional_table_go_table_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("table"))
+
+  info_text <- strwrap("<strong>GO score table.</strong> The scoring of a GO
+                         term is performed by considering the cumulative score
+                         of all terms from that term to the root node. That
+                         means that GO terms that are supported by higher level
+                         terms levels are preferentially scored.")
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "GO score table",
+    label = "b"
+  )
+
 }
 
 
@@ -80,7 +95,7 @@ functional_table_go_table_server <- function(id,
                     options = list(
                       dom = "lfrtip",
                       scrollX = TRUE,
-                      scrollY = tabH, scroller = TRUE, deferRender = TRUE
+                      scrollY = "15vh", scroller = TRUE, deferRender = TRUE
                     ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
@@ -94,23 +109,17 @@ functional_table_go_table_server <- function(id,
         )
     }
 
-    info_text <- strwrap("<strong>GO score table.</strong> The scoring of a GO
-                         term is performed by considering the cumulative score
-                         of all terms from that term to the root node. That
-                         means that GO terms that are supported by higher level
-                         terms levels are preferentially scored.")
+    table_RENDER_modal <- shiny::reactive({
+      dt <- table_RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    table_opts <- shiny::tagList()
-
-    shiny::callModule(
-      tableModule,
-      id = "table",
-      label = "",
+    TableModuleServer(
+      "datasets",
       func = table_RENDER,
-      options = table_opts,
-      info.text = info_text,
-      title = "GO score table",
-      height = c(270, 700)
+      func2 = table_RENDER_modal,
+      selector = "none"
     )
 
   })  ## end of moduleServer

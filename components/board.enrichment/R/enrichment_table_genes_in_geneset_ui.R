@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-enrichment_table_genes_in_geneset_ui <- function(id) {
+enrichment_table_genes_in_geneset_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("genetable"))
+  info_text <- "By clicking on a gene set in the table <code>I</code>, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the <code>Expression</code> barplot and its correlation to the gene set in the <code>Gene to gene set correlation</code> scatter plot under the <code>Plots</code> section."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Genes in gene set",
+    label = "II"
+  )
+
 }
 
 enrichment_table_genes_in_geneset_server <- function(id,
@@ -41,11 +51,11 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          paging = TRUE,
-          pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          #paging = TRUE,
+          #pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = FALSE,
-          scroller = FALSE,
+          scrollY = "20vh",
+          scroller = TRUE,
           deferRender = TRUE,
           search = list(
             regex = TRUE,
@@ -64,18 +74,17 @@ enrichment_table_genes_in_geneset_server <- function(id,
       tbl
     })
 
-    genetable_text <- "By clicking on a gene set in the table <code>I</code>, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the <code>Expression</code> barplot and its correlation to the gene set in the <code>Gene to gene set correlation</code> scatter plot under the <code>Plots</code> section."
+    genetable.RENDER_modal <- shiny::reactive({
+      dt <- genetable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    genetable <- shiny::callModule(
-      tableModule,
-      id = "genetable",
+    genetable <- TableModuleServer(
+      "datasets",
       func = genetable.RENDER,
-      info.text = genetable_text,
-      selector = "single",
-      title = tags$div(
-        HTML('<span class="module-label">(II)</span>Genes in gene set')
-      ),
-      height = c(285, 700), width = c("auto", 800)
+      func2 = genetable.RENDER_modal,
+      selector = "single"
     )
 
     return(genetable)

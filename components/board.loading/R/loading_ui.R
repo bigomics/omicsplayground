@@ -6,7 +6,7 @@
 downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
         aTag <- shiny::tags$a(id = outputId,
                        class = paste("btn btn-default shiny-download-link", class),
-                       href = "", target = "_blank", download = NA, 
+                       href = "", target = "_blank", download = NA,
                        shiny::icon("file-csv"), label, ...)
 }
 
@@ -28,22 +28,26 @@ LoadingUI <- function(id) {
         uiOutput(ns("navheader")),
         br(), br(),
 
-      ## table----------------            
+      ## table----------------
       div(
           class = "row",
           div(
               class = "col-md-7",
-              tableWidget(ns("pgxtable"))
+              loading_table_datasets_ui(
+                ns("pgxtable"),
+                height = c("65vh",700),
+                width = c('100%','50%')
+              )
           ),
-          div(
-              class = "col-md-5",
-              loading_tsne_ui(ns("tsne"), height=c("65vh","70vh"))
-          )
+            div(
+                class = "col-md-5",
+                loading_tsne_ui(ns("tsne"), height=c("65vh","70vh"))
+            )
       ),
       br(),
-          
+
       ## buttons----------------
-      div( 
+      div(
           id="load-action-buttons",
           shiny::actionButton(
               ns("deletebutton"), label="Delete dataset", icon=icon("trash"),
@@ -60,7 +64,7 @@ LoadingUI <- function(id) {
           shiny::actionButton(
             ns("loadbutton"), label="Load dataset", icon=icon("file-import"),
             class="btn btn-outline-primary"
-          )          
+          )
       )
     )
 }

@@ -4,9 +4,26 @@
 ##
 
 
-drugconnectivity_table_cmap_ui <- function(id) {
+drugconnectivity_table_cmap_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("cmap_table"))
+
+  info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
+                         correlating your signature with known drug profiles
+                         from the L1000 database. Because the L1000 has multiple
+                         perturbation experiment for a single drug, drugs are
+                         scored by running the GSEA algorithm on the
+                         contrast-drug profile correlation space. In this way,
+                         we obtain a single score for multiple profiles of a
+                         single drug.")
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Connectivity table",
+    label = "b"
+  )
 }
 
 
@@ -44,7 +61,7 @@ drugconnectivity_table_cmap_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "70vh", scroller = TRUE, deferRender = TRUE
+          scrollY = "15vh", scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
@@ -55,25 +72,17 @@ drugconnectivity_table_cmap_server <- function(id,
         )
     }
 
-    info_text <- strwrap("<b>Enrichment table.</b> Enrichment is calculated by
-                         correlating your signature with known drug profiles
-                         from the L1000 database. Because the L1000 has multiple
-                         perturbation experiment for a single drug, drugs are
-                         scored by running the GSEA algorithm on the
-                         contrast-drug profile correlation space. In this way,
-                         we obtain a single score for multiple profiles of a
-                         single drug.")
+    table.RENDER_modal <- shiny::reactive({
+      dt <- table.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    table.opts <- shiny::tagList()
-    cmap_table <- shiny::callModule(
-      tableModule,
-      id = "cmap_table",
-      label = "",
+    cmap_table <- TableModuleServer(
+      "datasets",
       func = table.RENDER,
-      options = table.opts,
-      info.text = info_text,
-      title = "Connectivity table",
-      height = c(380, 740)
+      func2 = table.RENDER_modal,
+      selector = "single"
     )
 
     return(cmap_table)

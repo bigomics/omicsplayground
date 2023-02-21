@@ -48,13 +48,6 @@ FeatureMapInputs <- function(id) {
 
 FeatureMapUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  # NOTE: Output from `featuremap_plot_gene_map_ui` is
-  # [[1]] The results from `PlotModuleUI` (what we want to draw on the UI)
-  # [[2]] The `ns()` function from that module
-  # We need that so we can place the Gene table on a different div()
-  ns2 <- featuremap_plot_gene_map_ui(ns("gene_map"))
-  # NOTE: Same as above
-  ns3 <- featuremap_plot_table_geneset_map_ui(ns("gsetUMAP"))
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
@@ -66,14 +59,13 @@ FeatureMapUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            ns2[[1]]
+            featuremap_plot_gene_map_ui(ns("gene_map"))
           ),
           div(
             class = "col-md-6",
             featuremap_plot_gene_sig_ui(ns("gene_sig"))
           )
-        ),
-        tableWidget(ns2[[2]]("geneTable"))
+        )
       ),
       shiny::tabPanel(
         "Geneset",
@@ -81,14 +73,13 @@ FeatureMapUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            ns3[[1]]
+            featuremap_plot_table_geneset_map_ui(ns("gsetUMAP"))
           ),
           div(
             class = "col-md-6",
             featuremap_plot_gset_sig_ui(ns("gsetSigPlots"))
           )
-        ),
-        tableWidget(ns3[[2]]("gsetTable"))
+        )
       )
     )
   )

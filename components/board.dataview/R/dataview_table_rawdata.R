@@ -4,12 +4,22 @@
 ##
 
 
-dataview_table_rawdata_ui <- function(id) {
+dataview_table_rawdata_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tagList(
-    ## br(),
-    tableWidget(ns("tbl"))
+
+  dropdown_search_gene <- "<code>Search gene</code>"
+  menu_grouped <- "<code>grouped</code>"
+  menu_options <- "<code>Options</code>"
+  info_text <- paste0("Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ", menu_grouped, " in the main <i>Options</i> to see the exact expression values per sample (or cell).", "The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ", dropdown_search_gene, " setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).")
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Gene expression table"
   )
+
 }
 
 dataview_table_rawdata_server <- function(id,
@@ -191,25 +201,18 @@ dataview_table_rawdata_server <- function(id,
         )
     }
 
-    rawdataTable_modal.RENDER <- function() {
-      rawdataTable.RENDER() %>%
-        DT::formatStyle(0, target = "row", fontSize = "20px", lineHeight = "70%")
-    }
+    rawdataTable.RENDER_modal <- shiny::reactive({
+      dt <- rawdataTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    dropdown_search_gene <- "<code>Search gene</code>"
-    menu_grouped <- "<code>grouped</code>"
-    menu_options <- "<code>Options</code>"
-    info_text <- paste0("Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ", menu_grouped, " in the main <i>Options</i> to see the exact expression values per sample (or cell).", "The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ", dropdown_search_gene, " setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).")
-
-    shiny::callModule(
-      tableModule, "tbl",
+    TableModuleServer(
+      "datasets",
       func = rawdataTable.RENDER,
-      csvFunc = table_data,
-      title = "Gene expression table",
-      filename = "counts.csv",
-      height = c("75vh", 700),
-      info.text = info_text,
-      caption2 = info_text
+      func2 = rawdataTable.RENDER_modal,
+      selector = "none"
     )
+
   }) ## end of moduleServer
 } ## end of server

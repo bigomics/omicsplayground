@@ -198,21 +198,47 @@ EnrichmentUI <- function(id) {
           class = "row",
           div(
             class = "col-md-7",
-            enrichment_table_enrichment_analysis_ui(ns("gseatable"))
+            enrichment_table_enrichment_analysis_ui(
+              ns("gseatable"),
+              width = c("100%", "90%"),
+              height = c(285, TABLE_HEIGHT_MODAL)
+            )
           ),
           div(
             class = "col-md-5",
-            enrichment_table_genes_in_geneset_ui(ns("genetable"))
+            enrichment_table_genes_in_geneset_ui(
+              ns("genetable"),
+              height = c(285, TABLE_HEIGHT_MODAL),
+              width = c("100%", "90%")
+            )
           )
         )
       ),
       shiny::tabPanel(
         "Foldchange (all)",
-        enrichment_table_gset_enrich_all_contrasts_ui(ns("fctable"))
+        div(
+          shiny::HTML("<b>Enrichment for all contrasts.</b> Table summarizing the enrichment
+                      for all gene sets across all contrasts. The column `fc.var` corresponds
+                      to the variance of the gene set across all contrasts.")
+        ),
+        enrichment_table_gset_enrich_all_contrasts_ui(
+          ns("fctable"),
+          height = c(295, TABLE_HEIGHT_MODAL),
+          width = c("100%", "90%")
+        )
       ),
       shiny::tabPanel(
         "FDR table",
-        enrichment_table_n_sig_gsets_ui(ns("FDRtable"))
+        div(
+          shiny::HTML("<b>FDR table.</b> Number of significant gene sets versus different
+                      FDR thresholds, for all contrasts and all methods. The blue color
+                      denote the number of downregulated genes, the red color for upregulated genes.")
+        ),
+        enrichment_table_n_sig_gsets_ui(
+          ns("FDRtable"),
+          height = c(295, TABLE_HEIGHT_MODAL),
+          width = c("100%", "90%")
+        )
       )
     )
   )

@@ -140,8 +140,11 @@ CompareUI <- function(id) {
         div(
           class = "col-md-6",
           compare_plot_expression_ui(ns("multibarplot")),
-          compare_table_corr_score_ui(ns("score_table"))
-          # tableWidget(ns("score_table"))
+          compare_table_corr_score_ui(
+            ns("score_table"),
+            height = c(235, TABLE_HEIGHT_MODAL),
+            width = c("auto", "90%")
+          )
         ),
         div(
           class = "col-md-6",

@@ -61,9 +61,7 @@ IntersectionUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          # plotWidget(ns("venndiagram"))#,
-          intersection_plot_venn_diagram_ui(ns("venndiagram")) # ,
-          # tableWidget(ns("venntable"))
+          intersection_plot_venn_diagram_ui(ns("venndiagram"))
         )
       ),
       tags$div(

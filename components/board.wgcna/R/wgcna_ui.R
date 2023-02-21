@@ -6,7 +6,6 @@
 WgcnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::actionLink(ns("info"), "Info", icon = icon("info-circle")),
     shiny::hr(), shiny::br(),
 
     ## data set parameters
@@ -49,8 +48,9 @@ WgcnaUI <- function(id) {
   rowH1 <- 250 ## row 1 height
   rowH2 <- 440 ## row 2 height
 
-  shiny::fillCol(
-    height = 750,
+  shiny::div(
+    # height = 750,
+    boardHeader(title = "WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
@@ -143,12 +143,20 @@ WgcnaUI <- function(id) {
         div(
           class = "row",
           div(
-            class = "col-md-3",
-            wgcna_table_genes_ui(ns("geneTable"))
+            class = "col-md-4",
+            wgcna_table_genes_ui(
+              ns("geneTable"),
+              height = c(250, TABLE_HEIGHT_MODAL),
+              width = c("auto", "90%")
+            )
           ),
           div(
-            class = "col-md-9",
-            wgcna_table_enrichment_ui(ns("enrichTable"))
+            class = "col-md-8",
+            wgcna_table_enrichment_ui(
+              ns("enrichTable"),
+              height = c(250, TABLE_HEIGHT_MODAL),
+              width = c("auto", "90%")
+            )
           )
         ),
         tags$div(

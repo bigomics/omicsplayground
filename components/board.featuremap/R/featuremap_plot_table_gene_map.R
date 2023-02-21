@@ -8,6 +8,8 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
 
   info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
 
+  info_text_table <- "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot."
+
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
@@ -22,23 +24,34 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
     )
   )
 
-  plotui <- PlotModuleUI(
-    ns("gene_map"),
-    title = "Gene Map",
-    label = "a",
-    outputFunc = function(x, width, height) {
-      plotOutput(x,
-        brush = ns("geneUMAP_brush"), width = width,
-        height = height
-      )
-    },
-    plotlib2 = "plotly",
-    info.text = info_text,
-    options = plot.opts,
-    height = c(600, 750), width = c("auto", 1200),
-    download.fmt = c("png", "pdf")
+  div(
+    PlotModuleUI(
+      ns("gene_map"),
+      title = "Gene Map",
+      label = "a",
+      outputFunc = function(x, width, height) {
+        plotOutput(x,
+                   brush = ns("geneUMAP_brush"), width = width,
+                   height = height
+        )
+      },
+      plotlib2 = "plotly",
+      info.text = info_text,
+      options = plot.opts,
+      height = c(600, 750),
+      width = c("auto", 1200),
+      download.fmt = c("png", "pdf")
+    ),
+    TableModuleUI(
+      ns("datasets"),
+      info.text = info_text_table,
+      height = c(280, TABLE_HEIGHT_MODAL),
+      width = c("auto", "90%"),
+      title = "Gene table",
+      label = "c"
+    )
   )
-  return(list(plotui, ns))
+
 }
 
 featuremap_plot_gene_map_server <- function(id,
@@ -206,16 +219,17 @@ featuremap_plot_gene_map_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
-    shiny::callModule(
-      tableModule,
-      id = "geneTable",
+    geneTable.RENDER_modal <- shiny::reactive({
+      dt <- geneTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
+    TableModuleServer(
+      "datasets",
       func = geneTable.RENDER,
-      options = NULL,
-      info.text = "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot.",
-      title = tags$div(
-        HTML('<span class="module-label">(c)</span>Gene table')
-      ),
-      height = c(280, 750), width = c("auto", 1400)
+      func2 = geneTable.RENDER_modal,
+      selector = "none"
     )
   })
 }

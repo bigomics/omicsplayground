@@ -7,10 +7,6 @@
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(
-      shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
-      "Show more information about this module."
-    ),
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
@@ -74,7 +70,7 @@ ExpressionUI <- function(id) {
     div(
       tagList(
         div(
-          style = "max-height:50vh;",
+          # style = "max-height:50vh;",
           shiny::tabsetPanel(
             id = ns("tabs1"),
             shiny::tabPanel(
@@ -85,7 +81,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-3",
                   expression_plot_volcano_ui(ns("plots_volcano"),
                     label = "a",
-                    height = c(imgH, imgH),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -94,7 +90,7 @@ ExpressionUI <- function(id) {
                   expression_plot_maplot_ui(
                     id = ns("plots_maplot"),
                     label = "b",
-                    height = c(imgH, imgH),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -103,7 +99,7 @@ ExpressionUI <- function(id) {
                   expression_plot_barplot_ui(
                     id = ns("plots_barplot"),
                     label = "c",
-                    height = c(imgH, imgH),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 ),
@@ -112,13 +108,12 @@ ExpressionUI <- function(id) {
                   expression_plot_topfoldchange_ui(
                     id = ns("plots_topfoldchange"),
                     label = "d",
-                    height = c(imgH, imgH),
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", imgH)
                   ),
                 )
               ),
               tags$div(
-                class = "caption",
                 HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
                             significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
                             respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
@@ -129,12 +124,12 @@ ExpressionUI <- function(id) {
               "Top genes",
               expression_plot_topgenes_ui(
                 id = ns("topgenes"),
-                height = c(imgH, 420),
+                label = "a",
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
                             (both positively and negatively) expressed genes for the selected contrast.")
               )
@@ -143,12 +138,11 @@ ExpressionUI <- function(id) {
               "Volcano (all)",
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
                 label = "a",
-                height = c(imgH, 500),
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
                         plots of genes for all contrasts. Experimental contrasts with better statistical significance will
                         show volcano plots with 'higher' wings.")
@@ -159,12 +153,11 @@ ExpressionUI <- function(id) {
               expression_plot_volcanoMethods_ui(
                 id = ns("volcanoMethods"),
                 label = "a",
-                height = c(imgH, 450),
+                height = c(imgH, TABLE_HEIGHT_MODAL),
                 width = c("auto", 1600)
               ),
               shiny::br(),
               tags$div(
-                class = "caption",
                 HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
                         of genes by multiple differential expression methods for the selected contrast.
                         Methods showing better statistical significance will show volcano plots with 'higher' wings.")
@@ -173,36 +166,56 @@ ExpressionUI <- function(id) {
           )
         ),
         div(
-          style = "max-height: 50vh",
+          # style = "max-height: 50vh",
           shiny::tabsetPanel(
             id = ns("tabs2"),
             shiny::tabPanel(
               "Table",
               tags$div(
-                class = "caption",
                 HTML("<b>Differential Expression Analysis.</b> Compare expression between
                         two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
               ),
-              shiny::br(),
               div(
                 class = "row",
                 div(
                   class = "col-md-8",
-                  expression_table_genetable_ui(id = ns("genetable"))
+                  expression_table_genetable_ui(
+                    ns("genetable"),
+                    width = c("100%", "90%"),
+                    height = c("300px", TABLE_HEIGHT_MODAL)
+                  )
                 ),
                 div(
                   class = "col-md-4",
-                  expression_table_gsettable_ui(id = ns("gsettable"))
+                  expression_table_gsettable_ui(
+                    ns("gsettable"),
+                    width = c("100%", "90%"),
+                    height = c("300px", TABLE_HEIGHT_MODAL)
+                  )
                 )
               )
             ),
             shiny::tabPanel(
               "Foldchange (all)",
-              expression_table_fctable_ui(ns("fctable"))
+              tags$div(
+                HTML("<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts.")
+              ),
+              expression_table_fctable_ui(
+                ns("fctable"),
+                width = c("100%", "90%"),
+                height = c("300px", TABLE_HEIGHT_MODAL)
+              )
             ),
             shiny::tabPanel(
               "FDR table",
-              expression_table_FDRtable_ui(ns("FDRtable"))
+              tags$div(
+                HTML("<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes.")
+              ),
+              expression_table_FDRtable_ui(
+                ns("FDRtable"),
+                width = c("100%", "90%"),
+                height = c("300px", TABLE_HEIGHT_MODAL)
+              )
             )
           )
         )

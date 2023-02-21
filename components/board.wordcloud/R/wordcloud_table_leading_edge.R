@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-wordcloud_table_leading_edge_ui <- function(id) {
+wordcloud_table_leading_edge_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("wordcloud_leadingEdgeTable"))
+  info_text <- "Keyword leading edge table."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Leading-edge table",
+    label = "e"
+  )
+
 }
 
 wordcloud_table_leading_edge_server <- function(id,
@@ -43,7 +53,7 @@ wordcloud_table_leading_edge_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = 200,
+          scrollX = TRUE, scrollY = "25vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -57,15 +67,17 @@ wordcloud_table_leading_edge_server <- function(id,
       return(tbl)
     })
 
-    wordcloud_leadingEdgeTable <- shiny::callModule(
-      tableModule,
-      id = "wordcloud_leadingEdgeTable",
+    wordcloud_leadingEdgeTable.RENDER_modal <- shiny::reactive({
+      dt <- wordcloud_leadingEdgeTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
+
+    wordcloud_leadingEdgeTable <- TableModuleServer(
+      "datasets",
       func = wordcloud_leadingEdgeTable.RENDER,
-      info.text = "Keyword leading edge table.",
-      title = tags$div(
-        HTML('<span class="module-label">(e)</span>Leading-edge table')
-      ),
-      height = c(270, 700)
+      func2 = wordcloud_leadingEdgeTable.RENDER_modal,
+      selector = "none"
     )
 
     return(wordcloud_leadingEdgeTable)

@@ -31,6 +31,11 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
     shiny::radioButtons(ns("include"), "Counting:", choices = c("both", "up/down"), inline = TRUE)
   )
 
+  info_text.table <- "Table of genes in selected intersection."
+  venntable_opts <- shiny::tagList(
+    shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
+  )
+
   div(
     PlotModuleUI(
       ns("vennplot"),
@@ -42,7 +47,15 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
       height = c(400, 700),
       width = c("100%", 900)
     ),
-    tableWidget(ns("venntable"))
+    TableModuleUI(
+      ns("datasets"),
+      info.text = info_text.table,
+      options = venntable_opts,
+      height = c(260, TABLE_HEIGHT_MODAL),
+      width = c("auto", 1200),
+      title = "Leading-edge table",
+      label = "e"
+    )
   )
 }
 
@@ -362,26 +375,15 @@ intersection_plot_venn_diagram_server <- function(id,
 
     venntable.RENDER2 <- shiny::reactive({
       dt <- venntable.RENDER()
-      dt$x$options$scrollY <- 500
+      dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 
-    venntable_opts <- shiny::tagList(
-      shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
-    )
-
-    shiny::callModule(
-      tableModule,
-      id = "venntable",
+    TableModuleServer(
+      "datasets",
       func = venntable.RENDER,
       func2 = venntable.RENDER2,
-      options = venntable_opts,
-      title = tags$div(
-        HTML('<span class="module-label">(c)</span>Intersection')
-      ),
-      info.text = "Table of genes in selected intersection.",
-      height = c(260, 750),
-      width = c("auto", 1200)
+      selector = "none"
     )
   })
 }

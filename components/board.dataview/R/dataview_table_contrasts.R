@@ -4,9 +4,31 @@
 ##
 
 
-dataview_table_contrasts_ui <- function(id) {
+dataview_table_contrasts_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("tbl"))
+
+  info_text = "<b>Contrast table.</b> Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+
+  opts <- shiny::tagList(
+    withTooltip(
+      shiny::radioButtons(
+        ns("ctbygroup"),
+        "Show by:",
+        choices = c("sample", "group")
+      ),
+      "Show contrasts by group or by samples.",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Contrast table",
+    options = opts
+  )
 }
 
 
@@ -48,7 +70,6 @@ dataview_table_contrasts_server <- function(id,
 
       dbg("[DataView:contrasts:table.RENDER] reacted!")
 
-      tabH <- 600 ## height of tables
       colnames(dt) <- sub("[_. ]vs[_. ]", "\nvs ", colnames(dt))
 
       DT::datatable(
@@ -65,7 +86,7 @@ dataview_table_contrasts_server <- function(id,
           dom = "lfrtip",
           scroller = TRUE,
           scrollX = TRUE,
-          scrollY = tabH,
+          scrollY = 350,
           deferRender = TRUE,
           autoWidth = TRUE
         )
@@ -85,28 +106,18 @@ dataview_table_contrasts_server <- function(id,
         )
     }
 
-    info_text <- "<b>Contrast table.</b> Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+    table.RENDER_modal <- shiny::reactive({
+      dt <- table.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    opts <- shiny::tagList(
-      withTooltip(
-        shiny::radioButtons(
-          ns("ctbygroup"),
-          "Show by:",
-          choices = c("sample", "group")
-        ),
-        "Show contrasts by group or by samples.",
-        placement = "right", options = list(container = "body")
-      )
-    )
-
-    contrastTable <- shiny::callModule(
-      tableModule, "tbl",
+    TableModuleServer(
+      "datasets",
       func = table.RENDER,
-      csvFunc = contrasts_data,
-      options = opts,
-      title = "Contrast table",
-      filename = "contrasts.csv",
-      info.text = info_text
+      func2 = table.RENDER_modal,
+      selector = "none"
     )
+
   }) ## end of moduleServer
 } ## end of server

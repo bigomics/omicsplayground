@@ -115,7 +115,11 @@ SignatureUI <- function(id) {
             height = 0.45 * fullH
           ),
           shiny::br(),
-          signature_table_overlap_ui(ns("overlapTable")),
+          signature_table_overlap_ui(
+            ns("overlapTable"),
+            height = c(0.4 * fullH, TABLE_HEIGHT_MODAL),
+            width = c("auto", "90%")
+          ),
           shiny::br(),
           tags$div(
             HTML("
@@ -147,9 +151,17 @@ SignatureUI <- function(id) {
         id = ns("tabs2"),
         shiny::tabPanel(
           "Enrichment table",
-          signature_table_enrich_by_contrasts_ui(ns("enrichmentContrastTable")),
+          signature_table_enrich_by_contrasts_ui(
+            ns("enrichmentContrastTable"),
+            height = c(230, TABLE_HEIGHT_MODAL),
+            width = c("auto", "90%")
+          ),
           shiny::br(),
-          signature_table_genes_in_signature_ui(ns("enrichmentGeneTable")),
+          signature_table_genes_in_signature_ui(
+            ns("enrichmentGeneTable"),
+            height = c(360, TABLE_HEIGHT_MODAL),
+            width = c("auto", "90%")
+          ),
           shiny::br(),
           tags$div(
             HTML("

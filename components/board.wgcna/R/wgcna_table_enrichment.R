@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-wgcna_table_enrichment_ui <- function(id) {
+wgcna_table_enrichment_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("enrichTable"))
+  info_text <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Module enrichment",
+    label = "e"
+  )
+
 }
 
 wgcna_table_enrichment_server <- function(id,
@@ -34,17 +44,17 @@ wgcna_table_enrichment_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
 
-    enrichTable_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
+    enrichTable.RENDER_modal <- shiny::reactive({
+      dt <- enrichTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    enrichTable_module <- shiny::callModule(
-      tableModule,
-      id = "enrichTable",
+    enrichTable_module <- TableModuleServer(
+      "datasets",
       func = enrichTable.RENDER,
-      info.text = enrichTable_info,
-      title = tags$div(
-        HTML('<span class="module-label">(e)</span>Module enrichment')
-      ),
-      height = c(250, 650)
+      func2 = enrichTable.RENDER_modal,
+      selector = "none"
     )
 
     return(enrichTable_module)
