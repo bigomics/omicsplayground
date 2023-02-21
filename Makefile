@@ -26,6 +26,10 @@ run.docker2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -p 4000:3838 -v /home/kwee/Playground/pgx:/omicsplayground/data -v /home/kwee/Playground/omicsplayground-dev/libx:/omicsplayground/libx bigomics/omicsplayground:$(TAG)
 
+run.docker3:
+	@echo running docker $(TAG) at port 4000
+	docker run --rm -p 4000:3838 -v /home/kwee/Playground/config/firebase.rds:/omicsplayground/shiny/firebase.rds -v /home/kwee/Playground/config/Renviron.site:/etc/R/Renviron.site -v /home/kwee/Playground/config/OPTIONS.fb:/omicsplayground/shiny/OPTIONS bigomics/omicsplayground:$(TAG)
+
 build.docker:
 	@echo building docker $(TAG) from branch $(BRANCH) 
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \

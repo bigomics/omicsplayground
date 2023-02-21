@@ -942,17 +942,18 @@ createUI <- function(tabs)
     }
         
     header = shiny::tagList(
-        shiny::tags$head(shiny::tags$script(src="temp.js")),
+        firebase::useFirebase(firestore = TRUE),
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
+        shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
         gtag,   ## Google Tags???
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
-        shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
+        shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         sever::useSever(),
         shinyalert::useShinyalert(),  # Set up shinyalert
-        firebase::useFirebase(firestore = TRUE),
         ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
+        shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
         shiny::div(class='label label-info current-user',id='authentication-user')        
         ##QuestionBoard_UI("qa")

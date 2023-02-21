@@ -1,7 +1,8 @@
 let db;
 let pricing;
 Shiny.addCustomMessageHandler('set-user', function(msg) {
-	$('#authentication-user').text(msg.user);
+        console.log("[temp.js] *** set-user : msg.user = " + msg.user);
+        $('#authentication-user').text(msg.user);
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
 		// $('#authentication-upgrade').hide();  // really?
@@ -274,4 +275,31 @@ Shiny.addCustomMessageHandler('referral-global-error', function(msg) {
 	setTimeout(() => {
 		$('#referral-global-error').html('');
 	}, 5000);
+});
+
+
+
+$(document).ready(function() {
+
+    /* Default installation */
+    
+    /* From https://stackoverflow.com/questions/74643167/track-user-clicking-on-a-tabpanel-in-r-shiny-application-with-matomo */
+    /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
+    $(".navbar-nav a").on("click", function(e) {
+	var tabId = $(e.target).data("value");
+	let user = $('#authentication-user')[0].innerText;
+	
+ 	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
+	if(user !== '') {
+	    var _hsq = window._hsq = window._hsq || [];
+	    var orginalTitle = document.title;
+	    document.title = orginalTitle + ' > ' + tabId ;
+	    _hsq.push(["identify", { email: user }]);  // set to current user	
+	    _hsq.push(['setPath', '#' + tabId]);	
+	    _hsq.push(['trackPageView']);
+	    document.title = orginalTitle;
+	}
+	
+    });
+    
 });
