@@ -40,7 +40,7 @@ connectivity_plot_cumFCplot_ui <- function(id,
   PlotModuleUI(ns("plot"),
                title = "Cumulative foldchange",
                label = label,
-               plotlib = "base",
+               plotlib = "plotly",
                info.text = info_text,
                options = plot_opts,
                height = c(300, 600), width = c("auto", 1300),
@@ -109,33 +109,20 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
         }
 
-        par(mfrow = c(1, 1), mar = c(7, 3.5, 0, 0), mgp = c(2.4, 1, 0))
-        maxfc <- max(abs(rowSums(F1, na.rm = TRUE)))
-        ylim <- c(-1 * (min(F1, na.rm = TRUE) < 0), 1.2) * maxfc
-
-        col1 <- grey.colors(ncol(F1), start = 0.15)
-        pgx.stackedBarplot(F1,
-                           cex.names = 0.85, col = col1,
-                           ## ylim=ylim,
-                           ylab = "cumulative logFC"
-        )
-        F1
+        pgx.stackedBarplot(x = data.frame(F1),
+                           ylab = "Cumulative logFC",
+                           showlegend = FALSE)
       })
 
       plot_RENDER2 <- shiny::reactive({
-        F1 <- plot_RENDER()
-        col1 <- grey.colors(ncol(F1), start = 0.15)
-        legend("topleft",
-               legend = rev(colnames(F1)),
-               fill = rev(col1), cex = 0.72, y.intersp = 0.85
-        )
+        plot_RENDER() %>% plotly::layout(showlegend = TRUE)
       })
 
       PlotModuleServer(
         "plot",
-        plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER2,
+        plotlib = "plotly",
         csvFunc = cumulativeFCtable,
         pdf.height = 6, pdf.width = 9,
         res = c(72, 90),

@@ -61,14 +61,14 @@ CorrelationUI <- function(id) {
           correlation_plot_table_corr_ui(ns("cor_barplot"),
             label = "a",
             height = c(0.45 * fullH, 700),
-            width = c("auto", 1200)
+            width = c("auto", 700)
           ),
         ),
         div(
           class = "col-md-6",
           correlation_plot_scattercorr_ui(ns("cor_scatter"),
-            height = c(fullH - 50, 760),
-            width = c("auto", 900)
+            height = c(fullH - 50, 600),
+            width = c("auto", 700)
           )
         )
       ),

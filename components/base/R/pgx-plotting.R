@@ -3388,37 +3388,26 @@ pgx.plotSampleClustering <- function(x, dim=2,
 
 }
 
-pgx.stackedBarplot <- function(x, hz=FALSE, srt=NULL, cex.text=0.9, ...)
-{
-    ##x <- x[order(rowMeans(x,na.rm=TRUE)),]
-    ##barplot( t(x), beside=FALSE, las=3)
-    x.pos <- pmax(x,0)
-    x.neg <- pmin(x,0)
-    y0 <- max(abs(rowSums(x,na.rm=TRUE)))
-    y0 <- max(rowSums(pmax(x,0),na.rm=TRUE),
-              rowSums(pmax(-x,0),na.rm=TRUE))
+pgx.stackedBarplot <- function(x,
+                               ylab = NULL,
+                               showlegend
+                               )
+  {
+  x_plot <- cbind(data.frame(groups = rownames(x)), x)
 
-    rownames(x.neg) <- NULL
-    p <- NULL
-    if(hz==TRUE) {
-        ##p <- barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0 )
-        ##barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE )
+  x_plot <- data.table::melt(x_plot, id.vars='groups',value.name = "Effect")
 
-        p <- barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0, ... )
-        barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE, ... )
+  x_plot$groups <- factor(x_plot$groups, levels = rownames(x))
 
-
-    } else {
-        p <- barplot( t(x.pos), beside=FALSE, las=3, ylim=c(-1.1,1.1)*y0, ... )
-        barplot( t(x.neg), beside=FALSE, las=3, add=TRUE, ... )
-
-        if(!is.null(srt)) {
-            text(p, par("usr")[3], labels=rownames(x), srt=srt, adj=1, xpd=TRUE, cex=cex.text)
-        }
-
-    }
-
+  plotly::plot_ly(x_plot, x = ~groups,
+                  y = ~Effect,
+                  type = 'bar',
+                  name = ~variable,
+                  color = ~variable) %>%
+    plotly::layout(showlegend = showlegend, barmode = 'stack', yaxis = list(title = ylab)) %>%
+    plotly_default1()
 }
+
 
 ## for plotly
 darkmode <- function(p, dim=2) {
