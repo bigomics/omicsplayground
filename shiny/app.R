@@ -24,7 +24,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## session control
 SERVER_NAME = paste(sample(LETTERS,5),collapse="")
 ACTIVE_SESSIONS = c()
-MAX_SESSIONS = 1
+MAX_SESSIONS = 2  ## NEED RETHINK! 1 doesnt work for email login!
 message("SERVER_NAME = ",SERVER_NAME)
 
 ## some libraries that we often need and load fast
