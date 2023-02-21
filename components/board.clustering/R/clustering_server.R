@@ -25,10 +25,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     # modules ########
 
       r.samples <- reactive({
-          ##colnames(getFilteredMatrix())
-          selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
-      })
+        ##colnames(getFilteredMatrix())
 
+        req(input$hm_samplefilter)
+        req(pgx$Y)
+        selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      })
 
     # observe functions ########
 
@@ -59,31 +61,30 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     ## update filter choices upon change of data set
     shiny::observe({
 
-        shiny::req(pgx$X)
+      levels = getLevels(pgx$Y)
 
-        levels = getLevels(pgx$Y)
-        shiny::updateSelectInput(session, "hm_samplefilter", choices=levels)
+      shiny::updateSelectInput(session, "hm_samplefilter", choices=levels)
 
-        if(DEV && !is.null(pgx$gset.meta$matrices) ) {
-            jj = which(!sapply(pgx$gset.meta$matrices,is.null))
-            mat.names = names(pgx$gset.meta$matrices)[jj]
-            shiny::updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
-                               selected="meta", inline=TRUE)
-        }
+      if(DEV && !is.null(pgx$gset.meta$matrices) ) {
+          jj = which(!sapply(pgx$gset.meta$matrices,is.null))
+          mat.names = names(pgx$gset.meta$matrices)[jj]
+          shiny::updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
+                             selected="meta", inline=TRUE)
+      }
 
-        shiny::updateRadioButtons(session, "hm_splitby", selected='none')
+      shiny::updateRadioButtons(session, "hm_splitby", selected='none')
 
-        ## update defaults??
-        ##if(ncol(pgx$X) > 80) shiny::updateNumericInput(session,"hm_cexCol", value=0)
+      ## update defaults??
+      ##if(ncol(pgx$X) > 80) shiny::updateNumericInput(session,"hm_cexCol", value=0)
 
-        ## update defaults??
-        n1 <- nrow(pgx$samples)-1
-        groupings <- colnames(pgx$samples)
-        ## groupings <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
-        groupings <- c("<ungrouped>",sort(groupings))
-        shiny::updateSelectInput(session,"hm_group", choices=groupings)
-        contrasts <- pgx.getContrasts(pgx)
-        shiny::updateSelectInput(session,"hm_contrast", choices=contrasts)
+      ## update defaults??
+      n1 <- nrow(pgx$samples)-1
+      groupings <- colnames(pgx$samples)
+      ## groupings <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
+      groupings <- c("<ungrouped>",sort(groupings))
+      shiny::updateSelectInput(session,"hm_group", choices=groupings)
+      contrasts <- pgx.getContrasts(pgx)
+      shiny::updateSelectInput(session,"hm_contrast", choices=contrasts)
 
     })
 
@@ -105,10 +106,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             shiny::updateSelectInput(session, "hm_splitvar", choices=cvar, selected=sel)
         }
     })
-
-    input_hm_samplefilter <- shiny::reactive({
-        input$hm_samplefilter
-    }) %>% shiny::debounce(3000)
 
     ## update choices upon change of level
     shiny::observe({
@@ -280,7 +277,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if(nrow(zx)==0) return(NULL)
 
         dim(zx)
-        kk <- selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
+        kk <- selectSamplesFromSelectedLevels(pgx$Y, reactive(input$hm_samplefilter() ))
         zx <- zx[,kk,drop=FALSE]
 
         if( input$hm_level=="gene" &&
@@ -777,7 +774,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     clustering_plot_featurerank_server(id = "clust_featureRank",
                                        pgx = pgx,
-                                       hm_level = input$hm_level,
+                                       hm_level = shiny::reactive(input$hm_level),
+                                       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
                                        watermark=FALSE
                                        )
 

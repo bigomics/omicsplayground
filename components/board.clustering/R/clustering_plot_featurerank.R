@@ -41,6 +41,7 @@ clustering_plot_featurerank_ui <- function(id,
 clustering_plot_featurerank_server <- function(id,
                                                pgx,
                                                hm_level,
+                                               hm_samplefilter,
                                                watermark=FALSE
                                                )
 {
@@ -51,7 +52,7 @@ clustering_plot_featurerank_server <- function(id,
     calcFeatureRanking <- shiny::reactive({
 
       pgx <- pgx
-      hm_level <- hm_level()
+      hm_level <- hm_level
 
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)
 
@@ -73,7 +74,7 @@ clustering_plot_featurerank_server <- function(id,
 
       ## ------------ Just to get current samples
       ##samples = colnames(X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, input_hm_samplefilter() )
+      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter)
       X = X[,samples]
       cvar <- pgx.getCategoricalPhenotypes(pgx$Y, max.ncat=999)
       cvar <- grep("sample|patient|years|days|months|gender",

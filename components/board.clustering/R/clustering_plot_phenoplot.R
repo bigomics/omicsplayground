@@ -40,7 +40,6 @@ clustering_plot_phenoplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- reactive({
-      browser()
 
       pgx <- pgx
       shiny::req(pgx$Y)
