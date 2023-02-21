@@ -31,10 +31,11 @@ run.docker3:
 	docker run --rm -p 4000:3838 -v /home/kwee/Playground/config/firebase.rds:/omicsplayground/shiny/firebase.rds -v /home/kwee/Playground/config/Renviron.site:/etc/R/Renviron.site -v /home/kwee/Playground/config/OPTIONS.fb:/omicsplayground/shiny/OPTIONS bigomics/omicsplayground:$(TAG)
 
 build.docker:
-	@echo building docker $(TAG) from branch $(BRANCH) 
+	@echo building docker from branch $(BRANCH) 
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:$(TAG) .
+	  	-t bigomics/omicsplayground:latest .
+
 build.base:
 	@echo building ubuntu BASE docker 
 	docker build --no-cache \
@@ -59,7 +60,7 @@ bash.docker:
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
 	git push && git push --tags
-	docker tag bigomics/omicsplayground:$(TAG) bigomics/omicsplayground:$(VERSION)
+	docker tag bigomics/omicsplayground:latest bigomics/omicsplayground:$(VERSION)
 
 push.docker: 
 	docker push bigomics/omicsplayground:$(VERSION)
