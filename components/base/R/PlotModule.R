@@ -135,11 +135,13 @@ PlotModuleUI <- function(id,
           choices = download.fmt
         ),
         shiny::conditionalPanel(
-          condition = "input.downloadOption == 'pdf'",
+          condition = "input.downloadOption == 'pdf' || input.downloadOption == 'png'",
           ns = ns,
-          pdf_size
+          shiny::div(
+            pdf_size,
+            shiny::br()
+          )
         ),
-        shiny::br(),
         div(
           shiny::downloadButton(
             outputId = ns("download"),
