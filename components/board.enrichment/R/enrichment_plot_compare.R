@@ -38,7 +38,9 @@ enrichment_plot_compare_server <- function(id,
       gset <- rownames(ngs$gsetX)[1]
       gset <- gset_selected()
       if (is.null(gset)) {
-        return(NULL)
+        frame()
+        text(0.5, 0.5, "Please select a geneset", col = "grey50")
+        return()
       }
       gset <- gset[1]
 

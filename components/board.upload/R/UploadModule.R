@@ -22,11 +22,12 @@ UploadModuleUI <- function(id) {
         shiny::sidebarLayout(
           shiny::sidebarPanel(
             width = 3,
-            shiny::fileInput(ns("upload_files"), "Choose files",
+            fileInput2(ns("upload_files"),
+                             shiny::h4("Choose files"),
                              multiple = TRUE, accept = c(".csv", ".pgx")
             ),
-            shinyWidgets::prettySwitch(ns("load_example"), "load example data"),
-            shinyWidgets::prettySwitch(ns("advanced_mode"), "batch correction (beta)")
+            shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
+            shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
           ),
           shiny::mainPanel(
             width = 9,

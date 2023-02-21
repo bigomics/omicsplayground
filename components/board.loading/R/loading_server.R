@@ -6,7 +6,6 @@
 LoadingBoard <- function(id,
                          pgx_dir,
                          pgx,
-                         ##authentication="none",
                          auth,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
@@ -14,21 +13,29 @@ LoadingBoard <- function(id,
                          enable_upload = TRUE,
                          enable_delete = TRUE,
                          enable_save = TRUE,
-                         enable_userdir = TRUE
-                         ##force_reload = reactive(0)
+                         enable_userdir = TRUE,
+                         r_global
                          )
 {
   moduleServer(id, function(input, output, session)
   {
     ns <- session$ns ## NAMESPACE
-    dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
     loadedDataset <- shiny::reactiveVal(0)  ## counts/trigger dataset upload
 
-    message("[LoadingBoard] in.shinyproxy = ",in.shinyproxy())
-    message("[LoadingBoard] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
-    message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[LoadingBoard] pgx_dir = ",pgx_dir)
+    ## info that's needed
+    r_local <- reactiveValues(
+      selected_row = NULL
+    )
+
+    observeEvent(pgxtable$rows_selected(), {
+      r_local$selected_row <- pgxtable$rows_selected()
+    })
+
+    observeEvent(r_global$load_example_trigger, {
+      r_local$selected_row <- 1
+      print(paste('selected row:', r_local$selected_row))
+    })
 
 
     ##================================================================================
@@ -52,15 +59,19 @@ LoadingBoard <- function(id,
             easyClose = TRUE, size="xl" ))
     })
 
-    module_infotext =paste0(
-        "This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.
-
-<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the 'Load dataset' button.
-
-<br><br><br>
-<center><iframe width='560' height='315' src='https://www.youtube.com/embed/elwT6ztt3Fo' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe><center>
-
-")
+    module_infotext <- paste0(
+      "This panel shows the available datasets within the platform. The table
+        reports a brief description as well as the total number of samples,
+        genes, gene sets (or pathways), corresponding phenotypes and the creation
+        date.<br><br><b>Selecting the dataset:</b> Users can select a dataset in
+        the table. The Dataset info shows the information of the dataset of
+        interest and users can load the data by clicking the 'Load dataset'
+        button.<br><br><br><center><iframe width='560' height='315'
+        src='https://www.youtube.com/embed/elwT6ztt3Fo'
+        title='YouTube video player' frameborder='0'
+        allow='accelerometer; autoplay; clipboard-write; encrypted-media;
+        gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
+    )
 
     ##-----------------------------------------------------------------------------
     ## User interface
@@ -103,9 +114,7 @@ LoadingBoard <- function(id,
             pdir <- paste0(pdir,"/",email)
             if(!is.null(email) && !is.na(email) && email!="") pdir <- paste0(pdir,'/')
             if(!dir.exists(pdir)) {
-                dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ",pdir)
                 dir.create(pdir)
-                dbg("[LoadingBoard:getPGXDIR] copy example pgx")
                 file.copy(file.path(pgx_dir,"example-data.pgx"),pdir)
             }
         }
@@ -115,7 +124,7 @@ LoadingBoard <- function(id,
     getPGXINFO <- shiny::reactive({
         req(auth)
         if(!auth$logged()) {
-            dbg("[LoadingBoard:getPGXINFO] user not logged in!")
+            warning("[LoadingBoard:getPGXINFO] user not logged in!")
             return(NULL)
         }
         info <- NULL
@@ -135,7 +144,8 @@ LoadingBoard <- function(id,
         ## get the filtered table of pgx datasets
         req(auth)
         if(!auth$logged()) {
-            dbg("[LoadingBoard:getFilteredPGXINFO] user not logged in! not showing table!")
+            warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
+                    not showing table!")
             return(NULL)
         }
         df <- getPGXINFO()
@@ -154,12 +164,10 @@ LoadingBoard <- function(id,
             if(notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
             df <- df[which(f1 & f2 & f3),,drop=FALSE]
             df$date <- as.Date(df$date, format='%Y-%m-%d')
-            ##df <- df[order(df$date,decreasing=FALSE),]
             df <- df[order(df$date,decreasing=TRUE),]
             rownames(df) <- nrow(df):1
         }
 
-        ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
         kk = unique(c("dataset","description","datatype","nsamples",
                       "ngenes","nsets","conditions","date","organism"))
         kk = intersect(kk,colnames(df))
@@ -169,7 +177,8 @@ LoadingBoard <- function(id,
 
     selectedPGX <- shiny::reactive({
         req(pgxtable)
-        sel <- pgxtable$rows_selected()
+        sel <- r_local$selected_row
+        #sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getFilteredPGXINFO()
         if(is.null(df) || nrow(df)==0) return(NULL)
@@ -181,7 +190,6 @@ LoadingBoard <- function(id,
     ##=============================================================================
     ##========================== OBSERVE/REACT ====================================
     ##=============================================================================
-    ##pgxfile="geiger2016-arginine"
 
     loadPGX <- function(pgxfile) {
 
@@ -193,7 +201,6 @@ LoadingBoard <- function(id,
 
         pgx.path <- pgxdir[file.exists(file.path(pgxdir,pgxfile))][1]
         pgxfile1 = file.path(pgx.path,pgxfile)
-        pgxfile1
 
         pgx <- NULL
         if(file.exists(pgxfile1)) {
@@ -201,14 +208,14 @@ LoadingBoard <- function(id,
               pgx <- local(get(load(pgxfile1,verbose=0)))  ## override any name
             })
         } else {
-            message("[LoadingBoard::loadPGX] ***ERROR*** file not found : ",pgxfile)
+            warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ",pgxfile)
             return(NULL)
         }
         if(!is.null(pgx)) {
             pgx$name <- pgxfile
             return(pgx)
         } else {
-            message("[LoadingBoard::loadPGX] ERROR loading pgx object")
+            warning("[LoadingBoard::loadPGX] ERROR loading pgx object")
             return(NULL)
         }
     }
@@ -220,11 +227,9 @@ LoadingBoard <- function(id,
         },
         content = function(file) {
             pgxfile <- selectedPGX()
-            cat("[LoadingBoard::loadPGX] pgxfile = ",pgxfile,"\n")
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
             pgx <- loadPGX(pgxfile)
             temp <- tempfile()
-            cat("[LoadingBoard::loadPGX] temp = ",temp)
             save(pgx, file=temp)
             file.copy(temp,file)
         }
@@ -237,7 +242,6 @@ LoadingBoard <- function(id,
         },
         content = function(file) {
             pgxfile <- selectedPGX()
-            cat("[LoadingBoard::downloadZIP] pgxfile = ",pgxfile,"\n")
             if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
             pgxname <- sub("[.]pgx$","",pgxfile)
             pgx <- loadPGX(pgxfile)
@@ -258,8 +262,6 @@ LoadingBoard <- function(id,
             zip::zip(zipfile,
                      files=paste0(pgxname,"/",c("counts.csv","samples.csv","contrasts.csv","normalized.csv")),
                      root=tmp)
-            ## zip::zip_list(zipfile)
-            cat("[LoadingBoard::downloadZIP] zipfile = ",zipfile)
             file.copy(zipfile,file)
             remove(pgx); gc();
         }
@@ -288,12 +290,10 @@ LoadingBoard <- function(id,
 
         not.anonymous <- !is.na(auth$name()) && auth$name()!=""
         allow.delete <- !not.anonymous
-        message("[LoadingBoard::@deletebutton] current user = ",auth$name()," \n")
-        message("[LoadingBoard::@deletebutton] allow.delete = ",allow.delete," \n")
 
         allow.delete = TRUE
         if(!allow.delete) {
-            message("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile,
+            warning("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile,
                     " not owned by ",auth$name()," \n")
             shinyalert::shinyalert(
                             title = "Error!",
@@ -316,15 +316,16 @@ LoadingBoard <- function(id,
     ##========================== LOAD DATA FROM LIST =================================
     ##================================================================================
 
+
     load_react <- reactive({
         btn <- input$loadbutton
+        btn2 <- r_global$load_example_trigger
         query <- parseQueryString(session$clientData$url_search)
         logged <- isolate(auth$logged()) ## avoid reloading when logout/login
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
 
     shiny::observeEvent( load_react(), {
-
         if(!load_react()) {
             return(NULL)
         }
@@ -348,8 +349,12 @@ LoadingBoard <- function(id,
 
         ## Observe button press (over-rides URL query)
         btn <- input$loadbutton
-        if(!is.null(btn) && btn!=0) {
+        if (!is.null(btn) && btn!=0) {
             pgxfile <- selectedPGX()
+        }
+        ## Observe "try example dataset" press
+        if (r_global$load_example_trigger) {
+          pgxfile <- selectedPGX()
         }
 
         ## check if file is there
@@ -365,25 +370,19 @@ LoadingBoard <- function(id,
         ##----------------- Loaded PGX object ---------------------------------
         ##---------------------------------------------------------------------
 
-        dbg("[LoadingBoard@load_react] loading pgxfile = ",pgxfile)
         loaded_pgx <- loadPGX(pgxfile)
-        dbg("[LoadingBoard@load_react] is.null(pgx) = ",is.null(loaded_pgx))
-
         if(is.null(loaded_pgx)) {
-            message("[LoadingBoard@load_react] ERROR loading PGX file ",pgxfile,"\n")
+            warning("[LoadingBoard@load_react] ERROR loading PGX file ",pgxfile,"\n")
             beepr::beep(10)
             shiny::removeModal()
             return(NULL)
         }
 
         ##----------------- update PGX object ---------------------------------
-        dbg("[LoadingBoard@load_react] initializing PGX object")
         loaded_pgx <- pgx.initialize(loaded_pgx)
-        dbg("[LoadingBoard@load_react] initialization done!")
-
 
         if(is.null(loaded_pgx)) {
-            cat("[LoadingBoard@load_react] ERROR in object initialization\n")
+            warning("[LoadingBoard@load_react] ERROR in object initialization\n")
             beepr::beep(10)
             shiny::showNotification("ERROR in object initialization!\n")
             shiny::removeModal()
@@ -408,14 +407,10 @@ LoadingBoard <- function(id,
         }
 
         ##----------------- remove modal on exit?? -------------------------
-        ##Sys.sleep(3)
-        ##shiny::removeModal()
         remove(loaded_pgx)
         gc()
 
     })
-    ##}, ignoreNULL=FALSE )
-    ##}, ignoreNULL=TRUE )
 
 
     ##================================================================================
@@ -425,7 +420,6 @@ LoadingBoard <- function(id,
     pgx_stats <- reactive({
         pgx <- getFilteredPGXINFO()
         shiny::req(pgx)
-        ##dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
         ndatasets <- nrow(pgx)
         nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
         paste(ndatasets,"Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
@@ -434,7 +428,6 @@ LoadingBoard <- function(id,
     output$navheader <- shiny::renderUI({
       fillRow(
         flex=c(NA,NA,1),
-        ##h2(input$nav),
         shiny::div(
           id="navheader-current-section",
           HTML("Load dataset &nbsp;"),
@@ -456,7 +449,6 @@ LoadingBoard <- function(id,
     ## reactive value for updating table
     touchtable <- shiny::reactiveVal(0)
 
-    ##split=" ";n=5
     andothers <- function(s, split=" ", n=8) {
         if(is.na(s)) return("")
         s <- sub("^[ ]*","",s)
@@ -466,18 +458,12 @@ LoadingBoard <- function(id,
         n2 <- setdiff(length(s1),n)
         paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
     }
-
-
+    
     pgxTable_data <- shiny::reactive({
-
-        dbg("[pgxTable.RENDER] reacted")
-
-        ##touchtable()  ## explicit reactive on this
         reload_pgxdir()
 
         df <- getFilteredPGXINFO()
         shiny::req(df)
-        dbg("[pgxTable.RENDER] dim(df)=",dim(df))
 
         df$dataset  <- gsub("[.]pgx$"," ",df$dataset)
         df$conditions  <- gsub("[,]"," ",df$conditions)
@@ -488,13 +474,12 @@ LoadingBoard <- function(id,
         df
     })
 
-        ##------------------------------------------------
+    ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------
     res <- list(
         loaded = loadedDataset,
         auth = auth
-        ##usermode = shiny::reactive({ USERMODE() })
     )
     return(res)
   })
