@@ -40,12 +40,12 @@ build.base:
 	@echo building ubuntu BASE docker 
 	docker build --no-cache \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground:base .
+	  	-t bigomics/omicsplayground-base:21.04 .
 build.base2:
 	@echo building ubuntu BASE docker 
 	docker build \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground:base .
+	  	-t bigomics/omicsplayground-base:21.04 .
 
 build.test:
 	@echo building test docker 
