@@ -20,8 +20,6 @@ loading_table_datasets_server <- function(id,
       df <- pgxTable_data()
       req(df)
 
-      ##df <- data.frame(nr=rownames(df), df)
-
       target1 <- grep("date",colnames(df))
       target2 <- grep("description",colnames(df))
       target3 <- grep("conditions",colnames(df))
@@ -38,7 +36,7 @@ loading_table_datasets_server <- function(id,
           dom = 'ft',
           pageLength = 9999,
           scrollX = FALSE,
-          scrollY = FALSE,
+          scrollY = "55vh",
           deferRender=TRUE,
           autoWidth = TRUE,
           columnDefs = list(
