@@ -72,57 +72,7 @@ compare_plot_cum_fc2_server <- function(id,
         type = "bar",
         plotRawValues = TRUE
       )
-
-      # fig2 <- pgx.barplot.PLOTLY(
-      #   data = data.frame(
-      #     x = factor(rownames(F2),levels =rownames(F2)),
-      #     y = as.numeric(F2)
-      #   ),
-      #   x = "x",
-      #   y = "y",
-      #   yaxistitle = "Cumulative foldchange",
-      #   xaxistitle = "Genes",
-      #   type = "bar",
-      #   plotRawValues = TRUE
-      # )
-
-      fig
-
-      # par(mfrow = c(1, 1), mar = c(4.5, 0, 1, 2), mgp = c(2.2, 0.8, 0))
-      # graphics::layout(matrix(c(1, 2, 3), nrow = 1, byrow = T), widths = c(0.5, 1, 1))
-      #
-      # frame()
-      # mtext(rownames(F),
-      #   cex = 0.80, side = 2, at = (1:nrow(F) - 0.5) / nrow(F),
-      #   las = 1, line = -12
-      # )
-      # col1 <- grey.colors(ncol(F1))
-      # if (ncol(F1) == 1) col1 <- "grey50"
-      # pgx.stackedBarplot(F1,
-      #   hz = TRUE, las = 1, col = col1,
-      #   cex.names = 0.01, cex.lab = 1.4, space = 0.25,
-      #   xlab = "cumulative foldchange", ylab = ""
-      # )
-      # legend("bottomright", colnames(F1),
-      #   fill = grey.colors(ncol(F1)),
-      #   cex = 0.9, y.intersp = 0.9, inset = c(-0.03, 0.02), xpd = TRUE
-      # )
-      # title("DATASET1", line = -0.35, cex.main = 1.2)
-      #
-      # col2 <- grey.colors(ncol(F2))
-      # if (ncol(F2) == 1) col2 <- "grey50"
-      # pgx.stackedBarplot(F2,
-      #   hz = TRUE, las = 1, col = col2,
-      #   cex.names = 0.01, cex.lab = 1.4, space = 0.25,
-      #   xlab = "cumulative foldchange", ylab = ""
-      # )
-      # legend("bottomright", colnames(F2),
-      #   fill = grey.colors(ncol(F2)),
-      #   cex = 0.9, y.intersp = 0.9, inset = c(-0.03, 0.02), xpd = TRUE
-      # )
-      # title("DATASET2", line = -0.35, cex.main = 1.2)
-      # p <- grDevices::recordPlot()
-      # p
+            fig
     })
 
     PlotModuleServer(

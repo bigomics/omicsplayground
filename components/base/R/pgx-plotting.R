@@ -7,22 +7,6 @@
 ## Plotting functions
 ########################################################################
 
-if(0) {
-
-    fc <- pgx.getMetaMatrix(ngs, level='geneset')$fc
-    x <- Matrix::head( fc[order(-rowMeans(fc**2)),], 60 )
-
-    par(mar=c(20,4,4,2), mfrow=c(1,1))
-    barplot( t(x), beside=FALSE, las=3)
-    ##par(mgp=c(2,1,0))
-    pgx.stackedBarplot(x, ylab="cumulative logFC", cex.names=0.001, srt=60, adj=1)
-
-    par(mar=c(4,0,4,2), mfrow=c(1,2)); frame()
-    pgx.stackedBarplot(Matrix::head(x,40), xlab="cumulative logFC", hz=TRUE, cex.names=0.8)
-
-    x=zx0;dim=2;method="pca"
-}
-
 heatmapWithAnnot <- function(F, anno.type=c('boxplot','barplot'),
                              bar.height=NULL, map.height=NULL,
                              row_fontsize=9, column_fontsize=9,
