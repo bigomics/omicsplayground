@@ -285,7 +285,8 @@ $(document).ready(function() {
     
     /* From https://stackoverflow.com/questions/74643167/track-user-clicking-on-a-tabpanel-in-r-shiny-application-with-matomo */
     /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
-    $(".navbar-nav a").on("click", function(e) {
+    $(".navbar-nav a").on("shown.bs.tab", function(e) {
+/*    $(".navbar-nav a").on("click", function(e) { */
 	var tabId = $(e.target).data("value");
 	let user = $('#authentication-user')[0].innerText;
 	
@@ -296,6 +297,10 @@ $(document).ready(function() {
 	    document.title = orginalTitle + ' > ' + tabId ;
 	    _hsq.push(["identify", { email: user }]);  // set to current user	
 	    _hsq.push(['setPath', '#' + tabId]);	
+
+            console.log("[temp.js] navbar-nav : user = " + user);
+	    console.log("[temp.js] navbar-nav : tabId = " + tabId);
+
 	    _hsq.push(['trackPageView']);
 	    document.title = orginalTitle;
 	}

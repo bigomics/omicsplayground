@@ -24,7 +24,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## session control
 SERVER_NAME = paste(sample(LETTERS,5),collapse="")
 ACTIVE_SESSIONS = c()
-MAX_SESSIONS = 5  ## NEED RETHINK! 1 doesnt work for email login!
+MAX_SESSIONS = 1  ## NEED RETHINK! E-mail firebase login problems!
 message("SERVER_NAME = ",SERVER_NAME)
 
 ## some libraries that we often need and load fast
@@ -279,31 +279,7 @@ server = function(input, output, session) {
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
     ##dbg("[SERVER] 0: names(session) = ",names(session))
-
-    ## max session control
-    ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
-    cat("ACTIVE_SESSIONS = \n  ", paste(ACTIVE_SESSIONS,collapse='\n   '), "\n")
-    if(length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
-        dbg("ERROR: Too many sessions. stopping session!!!\n")
-        srv <- paste0(isolate(session$clientData$url_hostname),":",SERVER_NAME)
-        sever_screen_503 <- shiny::tagList(
-            shiny::tags$h1(
-                "Sorry, the Playground is full!", style="color:white;font-family:lato;"
-            ),
-            shiny::p("Someone else is already using this account, or our servers are at capacity.
-                      Please try again later.", style="font-size:15px;"),            
-            shiny::br(),
-#            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
-#                width=350,height=200)),
-            shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
-            shiny::br(),shiny::br(),
-            sever::reload_button("Retry", class = "info")
-        )
-        sever::sever(sever_screen_503, bg_color = "#000000") ## lightblue=2780e3        
-        #Sys.sleep(10)
-        session$close()
-    }
-    
+  
     ## setup Sever screen
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
@@ -516,11 +492,42 @@ server = function(input, output, session) {
     shiny::observe({
         ## trigger on change of USER
         auth <- env[["load"]][["auth"]]
-        level <- auth$level()
-        message("[SERVER] user LEVEL = ",level)
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
-        
+
+        ##--------- control number of sessions --------------
+        if(!logged) {
+          ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, session$token)
+          cat("ACTIVE_SESSIONS = \n  ", paste(ACTIVE_SESSIONS,collapse='\n   '), "\n")          
+        }        
+        if(logged) {
+          ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
+          cat("ACTIVE_SESSIONS = \n  ", paste(ACTIVE_SESSIONS,collapse='\n   '), "\n")
+
+    if(length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
+      dbg("ERROR: Too many sessions. stopping session!!!\n")
+      srv <- paste0(isolate(session$clientData$url_hostname),":",SERVER_NAME)
+      sever_screen_503 <- shiny::tagList(
+        shiny::tags$h1(
+          "Sorry, the Playground is full!", style="color:white;font-family:lato;"
+        ),
+        shiny::p("Someone else is already using this account, or our servers are at capacity.
+                      Please try again later.", style="font-size:15px;"),            
+        shiny::br(),
+        #            shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
+        #                width=350,height=200)),
+        shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
+        shiny::br(),shiny::br(),
+        sever::reload_button("Retry", class = "info")
+      )
+      sever::sever(sever_screen_503, bg_color = "#000000") ## lightblue=2780e3        
+      #Sys.sleep(10)
+      session$close()
+    }
+          
+          
+        }
+
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
@@ -540,6 +547,7 @@ server = function(input, output, session) {
             )
         }
         
+
         ##--------- start timer --------------
         ##if(tolower(level)=="free" && TIMEOUT>0 && logged) {
         if(TIMEOUT>0 && logged) {        
