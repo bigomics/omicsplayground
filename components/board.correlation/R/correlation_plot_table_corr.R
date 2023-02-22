@@ -23,7 +23,7 @@ correlation_plot_table_corr_ui <- function(id,
     PlotModuleUI(ns("plot"),
       title = "Top correlated genes",
       label = label,
-      plotlib = "base",
+      plotlib = "plotly",
       info.text = info_text,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
@@ -69,40 +69,48 @@ correlation_plot_table_corr_server <- function(id,
     })
 
     cor_barplot.PLOTFUN <- function() {
-      df <- plot_data()
-      rho <- df[[1]]
-      prho <- df[[2]]
 
-      ylim0 <- c(-1, 1) * max(abs(rho)) * 1.05
+      pd <- plot_data()
 
-      par(mfrow = c(1, 1), mar = c(10, 4, 1, 0.5))
-      barplot(rho,
-        beside = FALSE, las = 3,
-        ylim = ylim0,
-        ylab = "correlation",
-        cex.names = 0.85
-      )
-      barplot(prho,
-        beside = FALSE, add = TRUE,
-        col = "grey40", names.arg = ""
-      )
-      legend("topright",
-        cex = 0.85, y.intersp = 0.85,
-        inset = c(0.035, 0),
-        c("correlation", "partial correlation"),
-        fill = c("grey70", "grey40")
-      )
+      pd_rho <- data.frame(genes = names(pd[[1]]), rho = pd[[1]])
+      pd_prho <- data.frame(genes = names(pd[[2]]), rho = pd[[2]])
+
+      pd_plot <- base::merge(pd_rho,pd_prho, by = "genes")
+
+      pd_plot <- pd_plot[complete.cases(pd_plot),]
+
+      rownames(pd_plot) <-pd_plot$genes
+
+      pd_plot$genes <- NULL
+
+      colnames(pd_plot) <- c("Correlation", "Partial correlation")
+
+      pd_plot <- pd_plot[order(pd_plot$Correlation,decreasing = TRUE),]
+
+      pgx.stackedBarplot(x = pd_plot,
+                         ylab = "Correlation",
+                         showlegend = TRUE)
+
+
+      # par(mfrow = c(1, 1), mar = c(10, 4, 1, 0.5))
+      # barplot(rho,
+      #   beside = FALSE, las = 3,
+      #   ylim = ylim0,
+      #   ylab = "correlation",
+      #   cex.names = 0.85
+      # )
+      # barplot(prho,
+      #   beside = FALSE, add = TRUE,
+      #   col = "grey40", names.arg = ""
+      # )
+      # legend("topright",
+      #   cex = 0.85, y.intersp = 0.85,
+      #   inset = c(0.035, 0),
+      #   c("correlation", "partial correlation"),
+      #   fill = c("grey70", "grey40")
+      # )
     }
 
-    PlotModuleServer(
-      "plot",
-      plotlib = "base",
-      func = cor_barplot.PLOTFUN,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(63, 100), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
-    )
 
     ### TABLE
 
@@ -169,5 +177,16 @@ correlation_plot_table_corr_server <- function(id,
       height = c(360, 700), width = c("auto", 1400)
       ## caption = dgca_caption
     )
+
+    PlotModuleServer(
+      "plot",
+      plotlib = "plotly",
+      func = cor_barplot.PLOTFUN,
+      csvFunc = plot_data, ##  *** downloadable data as CSV
+      res = c(63, 100), ## resolution of plots
+      pdf.width = 6, pdf.height = 6,
+      add.watermark = watermark
+    )
+
   }) ## end of moduleServer
 }
