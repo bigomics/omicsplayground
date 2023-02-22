@@ -13,10 +13,10 @@
 #'
 #' @export
 connectivity_plot_cumEnrichmentPlot_ui <- function(id,
-                                          label = "",
-                                          height,
-                                          width
-                                          ) {
+                                                   label = "",
+                                                   height,
+                                                   width
+                                                   ) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment

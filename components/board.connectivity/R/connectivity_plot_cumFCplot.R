@@ -15,8 +15,7 @@
 connectivity_plot_cumFCplot_ui <- function(id,
                                           label = "",
                                           height,
-                                          width
-                                          ) {
+                                          width) {
   ns <- shiny::NS(id)
   info_text <- strwrap("<b>Meta-foldchange.</b> The barplot visualizes the
                        cumulative foldchange between the top-10 most similar
