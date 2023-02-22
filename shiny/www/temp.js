@@ -286,7 +286,6 @@ $(document).ready(function() {
     /* From https://stackoverflow.com/questions/74643167/track-user-clicking-on-a-tabpanel-in-r-shiny-application-with-matomo */
     /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
     $(".navbar-nav a").on("shown.bs.tab", function(e) {
-/*    $(".navbar-nav a").on("click", function(e) { */
 	var tabId = $(e.target).data("value");
 	let user = $('#authentication-user')[0].innerText;
 	
