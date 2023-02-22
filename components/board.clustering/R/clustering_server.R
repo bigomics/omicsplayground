@@ -147,37 +147,37 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
     })
 
-    shiny::observe({
-
-      ##pgx <- inputData()
-      shiny::req(pgx$X,pgx$gsetX,pgx$families)
-
-      if(is.null(input$xann_level)) return(NULL)
-      ann.types=sel=NULL
-      if(input$xann_level!="phenotype") {
-        if(input$xann_level=="geneset") {
-          ann.types <- names(COLLECTIONS)
-          cc = sapply(COLLECTIONS,function(s) length(intersect(s,rownames(pgx$gsetX))))
-          ann.types <- ann.types[cc>=3]
-        }
-        if(input$xann_level=="gene") {
-          ann.types <- names(pgx$families)
-          cc = sapply(pgx$families,function(g) length(intersect(g,rownames(pgx$X))))
-          ann.types <- ann.types[cc>=3]
-        }
-        ann.types <- setdiff(ann.types,"<all>")  ## avoid slow...
-        ann.types <- grep("^<",ann.types,invert=TRUE,value=TRUE)  ## remove special groups
-        sel = ann.types[1]
-        if("H" %in% ann.types) sel = "H"
-        j <- grep("^transcription",ann.types,ignore.case=TRUE)
-        if(input$xann_level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
-        if(length(j)>0) sel = ann.types[j[1]]
-        ann.types <- sort(ann.types)
-      } else {
-        ann.types = sel = "<all>"
-      }
-      shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
-    })
+    # shiny::observe({
+    #
+    #   ##pgx <- inputData()
+    #   shiny::req(pgx$X,pgx$gsetX,pgx$families)
+    #
+    #   if(is.null(input$xann_level)) return(NULL)
+    #   ann.types=sel=NULL
+    #   if(input$xann_level!="phenotype") {
+    #     if(input$xann_level=="geneset") {
+    #       ann.types <- names(COLLECTIONS)
+    #       cc = sapply(COLLECTIONS,function(s) length(intersect(s,rownames(pgx$gsetX))))
+    #       ann.types <- ann.types[cc>=3]
+    #     }
+    #     if(input$xann_level=="gene") {
+    #       ann.types <- names(pgx$families)
+    #       cc = sapply(pgx$families,function(g) length(intersect(g,rownames(pgx$X))))
+    #       ann.types <- ann.types[cc>=3]
+    #     }
+    #     ann.types <- setdiff(ann.types,"<all>")  ## avoid slow...
+    #     ann.types <- grep("^<",ann.types,invert=TRUE,value=TRUE)  ## remove special groups
+    #     sel = ann.types[1]
+    #     if("H" %in% ann.types) sel = "H"
+    #     j <- grep("^transcription",ann.types,ignore.case=TRUE)
+    #     if(input$xann_level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
+    #     if(length(j)>0) sel = ann.types[j[1]]
+    #     ann.types <- sort(ann.types)
+    #   } else {
+    #     ann.types = sel = "<all>"
+    #   }
+    #   shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
+    # })
 
     # reactive functions ##############
 
@@ -581,11 +581,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       ann.level="geneset"
       ann.refset="Hallmark collection"
-      ann.level = input$xann_level
+      ann.level = clusterannot$xann_level()
       ##if(is.null(ann.level)) return(NULL)
-      ann.refset = input$xann_refset
+      ann.refset = clusterannot$xann_refset()
       ##if(is.null(ann.refset)) return(NULL)
-      shiny::req(input$xann_level, input$xann_refset)
+      shiny::req(clusterannot$xann_level(), clusterannot$xann_refset())
 
       ref = NULL
       ref = pgx$gsetX[,,drop=FALSE]
@@ -642,7 +642,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
       }
 
-      if(input$hm_level=="gene" && ann.level=="geneset" && input$xann_odds_weighting ) {
+      if(input$hm_level=="gene" && ann.level=="geneset" && clusterannot$xann_odds_weighting() ) {
         table(idx)
         grp <- tapply( toupper(rownames(zx)), idx, list)  ## toupper for mouse!!
         ##gmt <- GSETS[rownames(rho)]
@@ -779,7 +779,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        watermark=FALSE
                                        )
 
-    clustering_plot_clusterannot_server(id = "plots_clustannot",
+    clusterannot <- clustering_plot_clusterannot_server(id = "plots_clustannot",
+                                        pgx,
                                         getClustAnnotCorrelation = getClustAnnotCorrelation,
                                         watermark=FALSE
                                         )
@@ -788,7 +789,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     clustering_table_clustannot_server(id = "tables_clustannot",
                                        getClustAnnotCorrelation = getClustAnnotCorrelation,
-                                       xann_level = input$xann_level,
+                                       xann_level = clusterannot$xann_level,
                                        watermark = FALSE)
 
     clustering_table_hm_parcoord_server(id = "",
