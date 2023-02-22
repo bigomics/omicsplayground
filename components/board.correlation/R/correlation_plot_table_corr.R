@@ -89,7 +89,7 @@ correlation_plot_table_corr_server <- function(id,
 
       pgx.stackedBarplot(x = pd_plot,
                          ylab = "Correlation",
-                         showlegend = TRUE)
+                         showlegend = FALSE)
 
 
       # par(mfrow = c(1, 1), mar = c(10, 4, 1, 0.5))
