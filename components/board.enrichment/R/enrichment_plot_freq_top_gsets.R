@@ -51,43 +51,8 @@ enrichment_plot_freq_top_gsets_server <- function(id,
                                                   gseatable,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plotEnrichFreq <- function(ngs, rpt, ntop, ngenes, gset.weight, fcweight) {
-      fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
-      fx <- rpt[, fx.col]
-      names(fx) <- rownames(rpt)
 
-      top <- rownames(rpt)
-      top <- head(top, ntop)
-      if (!all(top %in% colnames(ngs$GMT))) {
-        return(NULL)
-      }
-
-      F <- 1 * (ngs$GMT[, top, drop = FALSE] > 0)
-      F <- as.matrix(F)
-      wt <- FALSE
-      if (gset.weight) {
-        F <- Matrix::t(Matrix::t(F) / Matrix::colSums(F, na.rm = TRUE))
-        wt <- TRUE
-      }
-      F <- Matrix::t(Matrix::t(F) * sign(fx[top]))
-      if (fcweight) {
-        F <- Matrix::t(Matrix::t(F) * abs(fx[top]))
-        wt <- TRUE
-      }
-      F <- head(F[order(-Matrix::rowSums(abs(F))), , drop = FALSE], ngenes)
-      F <- F[order(-Matrix::rowSums(F)), , drop = FALSE]
-
-      sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
-      if (length(sel.zero)) rownames(F)[sel.zero] <- ""
-
-      par(mfrow = c(1, 1), mar = c(6, 4, 2, 0.5), mgp = c(2.2, 0.8, 0))
-      col1 <- grey.colors(ncol(F), start = 0.15)
-      ylab <- ifelse(wt, "weighted frequency", "frequency")
-      barplot(t(F),
-        beside = FALSE, las = 3, cex.names = 0.90, col = col1,
-        ylab = ylab
-      )
-    }
+    req(inputData())
 
     plot_data <- shiny::reactive({
       ngs <- inputData()
@@ -130,28 +95,56 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       ntop <- dt[[3]]
       gset.weight <- dt[[4]]
       fcweight <- dt[[5]]
-      plotEnrichFreq(ngs, rpt, ntop = ntop, ngenes = 35, gset.weight, fcweight)
-      p <- grDevices::recordPlot()
-      p
+      ngenes = 35
+      fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
+      fx <- rpt[, fx.col]
+      names(fx) <- rownames(rpt)
+
+      top <- rownames(rpt)
+      top <- head(top, ntop)
+      if (!all(top %in% colnames(ngs$GMT))) {
+        return(NULL)
+      }
+
+      F <- 1 * (ngs$GMT[, top, drop = FALSE] > 0)
+      F <- as.matrix(F)
+      wt <- FALSE
+      if (gset.weight) {
+        F <- Matrix::t(Matrix::t(F) / Matrix::colSums(F, na.rm = TRUE))
+        wt <- TRUE
+      }
+      F <- Matrix::t(Matrix::t(F) * sign(fx[top]))
+      if (fcweight) {
+        F <- Matrix::t(Matrix::t(F) * abs(fx[top]))
+        wt <- TRUE
+      }
+      F <- head(F[order(-Matrix::rowSums(abs(F))), , drop = FALSE], ngenes)
+      F <- F[order(-Matrix::rowSums(F)), , drop = FALSE]
+
+      sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
+      if (length(sel.zero)) rownames(F)[sel.zero] <- ""
+
+      pgx.stackedBarplot(x = F,ylab = ifelse(wt, "weighted frequency", "frequency"), showlegend = FALSE)
     })
 
-    topEnrichedFreq.RENDER2 <- shiny::reactive({
-      dt <- plot_data()
-      ngs <- dt[[1]]
-      rpt <- dt[[2]]
-      ntop <- dt[[3]]
-      gset.weight <- dt[[4]]
-      fcweight <- dt[[5]]
-      plotEnrichFreq(ngs, rpt, ntop = ntop, ngenes = 60, gset.weight, fcweight)
-      p <- grDevices::recordPlot()
-      p
-    })
+    # topEnrichedFreq.RENDER2 <- shiny::reactive({
+    #   dt <- plot_data()
+    #   ngs <- dt[[1]]
+    #   rpt <- dt[[2]]
+    #   ntop <- dt[[3]]
+    #   gset.weight <- dt[[4]]
+    #   fcweight <- dt[[5]]
+    #   plotEnrichFreq(ngs, rpt, ntop = ntop, ngenes = 60, gset.weight, fcweight)
+    #   p <- grDevices::recordPlot()
+    #   p
+    # })
 
     PlotModuleServer(
       "plot",
       func = topEnrichedFreq.RENDER,
-      func2 = topEnrichedFreq.RENDER2,
-      pdf.width = 5, pdf.height = 5,
+      plotlib = "plotly",
+      pdf.width = 5,
+      pdf.height = 5,
       res = c(68, 100),
       csvFunc = plot_data,
       add.watermark = watermark
