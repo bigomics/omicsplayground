@@ -13,7 +13,9 @@
 #'
 #' @export
 connectivity_plot_cumEnrichmentPlot_ui <- function(id,
-                                          label = ""
+                                          label = "",
+                                          height,
+                                          width
                                           ) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
@@ -45,8 +47,8 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
                plotlib = "plotly",
                info.text = info_text,
                options = plot_opts,
-               height = c("auto", 720),
-               width = c("auto", 1000)
+               height = height,
+               width = width
   )
 }
 

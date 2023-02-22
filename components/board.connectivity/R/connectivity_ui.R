@@ -87,11 +87,18 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_cumFCplot_ui(ns("cumFCplot"),label = "a")
+            connectivity_plot_cumFCplot_ui(ns("cumFCplot"),
+                                           label = "a",
+                                           height = c("auto", 600),
+                                           width = c("auto", 900))
           ),
           div(
             class = "col-md-6",
-            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"),label = "b")
+            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"),
+                                                   label = "b",
+                                                   height = c("auto", 600),
+                                                   width = c("auto", 900)
+                                                   )
           )
         ),
         shiny::br(),
