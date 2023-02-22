@@ -22,11 +22,11 @@ clustering_plot_hm_splitmap_ui <- function(id,
   topmodes <- c("sd","pca","specific")
 
   hm_splitmap_opts = shiny::tagList(
-    withTooltip( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
-                                     choices=c("ComplexHeatmap","iHeatmap"),
-                                     selected="ComplexHeatmap", inline=TRUE, width='100%'),
-                 "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
-                 placement="right",options = list(container = "body")),
+    # withTooltip( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
+    #                                  choices=c("ComplexHeatmap","iHeatmap"),
+    #                                  selected="ComplexHeatmap", inline=TRUE, width='100%'),
+    #              "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
+    #              placement="right",options = list(container = "body")),
     withTooltip( shiny::radioButtons(
       ns("hm_splitby"), "Split samples by:", inline=TRUE,
       ## selected="phenotype",
@@ -79,9 +79,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
     ns("pltmod"),
     title = "Clustered Heatmap",
     label = label,
-    plotlib = "generic", #generic
-    outputFunc = plotly::plotlyOutput, #"uiOutput"
-    outputFunc2 = plotly::plotlyOutput, #"uiOutput",
+    # plotlib = "iheatmapr",
     info.text = info_text,
     options = hm_splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -101,7 +99,9 @@ clustering_plot_hm_splitmap_ui <- function(id,
 #'
 #' @export
 clustering_plot_hm_splitmap_server <- function(id,
+                                               pgx,
                                                getTopMatrix,
+                                               hm_level,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -109,8 +109,28 @@ clustering_plot_hm_splitmap_server <- function(id,
 
     ns <- session$ns
 
-    # reactive function listening for changes in input
-    topmodes <- c("sd","pca","specific")
+    shiny::observeEvent( input$hm_splitby, {
+      shiny::req(pgx$X, pgx$samples)
+
+      if(input$hm_splitby=='none') return()
+      if(input$hm_splitby=='gene') {
+        xgenes <- sort(rownames(pgx$X))
+        shiny::updateSelectizeInput(session, "hm_splitvar", choices=xgenes, server=TRUE)
+      }
+      if(input$hm_splitby=='phenotype') {
+        cvar <- sort(pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=999))
+        sel <- cvar[1]
+        cvar0 <- grep("^[.]",cvar,value=TRUE,invert=TRUE) ## no estimated vars
+        sel <- head(c(grep("type|family|class|stat",cvar0,ignore.case=TRUE,value=TRUE),
+                      cvar0,cvar),1)
+        shiny::updateSelectInput(session, "hm_splitvar", choices=cvar, selected=sel)
+      }
+    })
+
+    ## update filter choices upon change of data set
+    shiny::observe({
+      shiny::updateRadioButtons(session, "hm_splitby", selected='none')
+    })
 
     plot_data_hm1 <- shiny::reactive({
 
@@ -128,7 +148,8 @@ clustering_plot_hm_splitmap_server <- function(id,
       return(list(
         zx = zx,
         annot = annot,
-        zx.idx = zx.idx
+        zx.idx = zx.idx,
+        filt = filt
       ))
     })
 
@@ -138,6 +159,8 @@ clustering_plot_hm_splitmap_server <- function(id,
       zx = pd[["zx"]]
       annot = pd[["annot"]]
       zx.idx = pd[["zx.idx"]]
+      filt = pd[["filt"]]
+
 
 
       if(nrow(zx) <= 1) return(NULL)
@@ -165,20 +188,20 @@ clustering_plot_hm_splitmap_server <- function(id,
 
       show_legend=show_colnames=TRUE
       show_legend <- input$hm_legend
-      if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
+      if(hm_level()=="geneset" || !is.null(splitx)) show_legend = FALSE
 
       annot$group = NULL  ## no group in annotation??
       show_colnames <- (input$hm_cexCol != 0)
       ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...
 
-      if(input$hm_level=="gene") {
+      if(hm_level()=="gene") {
         ## strip any prefix
         rownames(zx) = sub(".*:","",rownames(zx))
       }
       rownames(zx) <- sub("HALLMARK:HALLMARK_","HALLMARK:",rownames(zx))
       rownames(zx) = gsub(GSET.PREFIX.REGEX,"",rownames(zx))
       rownames(zx) = substring(rownames(zx),1,50)  ## cut long names...
-      if(input$hm_level=="geneset")  rownames(zx) <- tolower(rownames(zx))
+      if(hm_level()=="geneset")  rownames(zx) <- tolower(rownames(zx))
 
       cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)
       cex1 <- as.numeric(input$hm_cexCol)*0.85
@@ -195,8 +218,8 @@ clustering_plot_hm_splitmap_server <- function(id,
       nrownames = 9999
       if(input$hm_cexRow==0) nrownames <- 0
 
-      shiny::showNotification('rendering heatmap...')
-      plt <- grid::grid.grabExpr(
+      shiny::showNotification('Rendering heatmap...')
+      # plt <- grid::grid.grabExpr(
         gx.splitmap(
           zx,
           split = splity, splitx = splitx,
@@ -211,9 +234,11 @@ clustering_plot_hm_splitmap_server <- function(id,
           key.offset = c(0.89,1.01),
           main=" ", nmax = -1, mar = c(8,16)
         )
-      )
-      plt
-
+        p <- grDevices::recordPlot()
+        p
+      # )
+      # browser()
+      # plt
     }
 
     hm2_splitmap.RENDER<- function() {
@@ -251,7 +276,7 @@ clustering_plot_hm_splitmap_server <- function(id,
       rowcex = as.numeric(input$hm_cexRow)
 
       tooltips = NULL
-      if(input$hm_level=="gene") {
+      if(hm_level()=="gene") {
         getInfo <- function(g) {
           aa = paste0("<b>",pgx$genes[g,"gene_name"],"</b>. ",
                       ## pgx$genes[g,"map"],". ",
@@ -265,7 +290,7 @@ clustering_plot_hm_splitmap_server <- function(id,
       }
       ##genetips = rownames(X)
 
-      shiny::showNotification('rendering iHeatmap...')
+      shiny::showNotification('Rendering iHeatmap...')
 
       plt <- pgx.splitHeatmapFromMatrix(
         X=X, annot=annotF, ytips=tooltips,
@@ -278,141 +303,23 @@ clustering_plot_hm_splitmap_server <- function(id,
     }
 
 
-    output$hm1_splitmap <- shiny::renderPlot({
-      plt <- hm1_splitmap.RENDER()
-      grid::grid.draw(plt, recording=FALSE)
-    }, res=90)
-
-    output$hm2_splitmap <- renderIheatmap({
-      hm2_splitmap.RENDER()
-    })
-
-    hm_splitmap.switchRENDER <- shiny::reactive({
-      ##req(input$hm_plottype)
-      p = NULL
-      if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
-        p = shiny::plotOutput(ns("hm1_splitmap"), height=fullH-80)  ## height defined here!!
-      } else {
-        p = iheatmaprOutput(ns("hm2_splitmap"), height=fullH-80) ## height defined here!!
-      }
-      return(p)
-    })
-
-    ##output$hm_splitmap_pdf <- shiny::downloadHandler(
-    hm_splitmap_downloadPDF <- shiny::downloadHandler(
-      filename = "plot.pdf",
-      content = function(file) {
-        ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
-        PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
-        dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting SWITCH to PDF...")
-        ##showNotification("exporting to PDF")
-        ##wd <- input$hm_pdfwidth
-        ##ht <- input$hm_pdfheight
-        ##wd <- input$pdf_width
-        ##ht <- input$pdf_height
-        wd <- input[["hm_splitmap-pdf_width"]]  ## ugly!!
-        ht <- input[["hm_splitmap-pdf_height"]] ## ugly!!
-
-        if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
-          pdf(PDFFILE, width=wd, height=ht)
-          grid::grid.draw(hm1_splitmap.RENDER())
-          ##print(hm1_splitmap.RENDER())
-          ##hm1_splitmap.RENDER()
-          dev.off()
-        } else {
-          save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,
-                        vwidth=wd*100, vheight=ht*100)
-        }
-        if(WATERMARK) {
-          dbg("[ClusteringBoard] adding watermark to PDF...\n")
-          addWatermark.PDF(PDFFILE) ## from pgx-modules.R
-        }
-        dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting done...")
-        file.copy(PDFFILE,file)
-      }
-    )
-
-    hm_splitmap_downloadPNG <- shiny::downloadHandler(
-      filename = "plot.png",
-      content = function(file) {
-        PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
-        dbg("[ClusteringBoard] hm_splitmap_downloadPDF:: exporting SWITCH to PNG...")
-        ##showNotification("exporting to PNG")
-        wd <- 100*as.integer(input[["hm_splitmap-pdf_width"]])
-        ht <- 100*as.integer(input[["hm_splitmap-pdf_height"]])
-        if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
-          png(PNGFILE, width=wd, height=ht, pointsize=24)
-          grid::grid.draw(hm1_splitmap.RENDER())
-          ##print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
-          ##hm1_splitmap.RENDER()  ## should be done inside render for base plot...
-          ##plot(sin)
-          dev.off()
-        } else {
-          save_iheatmap(hm2_splitmap.RENDER(), filename=PNGFILE,  vwidth=wd, vheight=ht)
-        }
-        dbg("[ClusteringBoard] hm_splitmap_downloadPNG: exporting done...")
-        file.copy(PNGFILE,file)
-      }
-    )
-
-    # hm_splitmap_downloadHTML <- shiny::downloadHandler(
-    #   filename = "plot.html",
-    #   content = function(file) {
-    #     ##HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
-    #     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")
-    #     dbg("renderIheatmap:: exporting SWITCH to HTML...")
-    #     shiny::withProgress({
-    #       ##write("<body>HTML export error</body>", file=HTMLFILE)
-    #       p <- hm2_splitmap.RENDER()
-    #       shiny::incProgress(0.5)
-    #       save_iheatmap(p, filename=HTMLFILE)
-    #     }, message="exporting to HTML", value=0 )
-    #     dbg("renderIheatmap:: ... exporting done")
-    #     file.copy(HTMLFILE,file)
-    #   }
-    # )
-
     PlotModuleServer(
       "pltmod",
-      plotlib = "generic",
-      func = hm_splitmap.switchRENDER,
-      renderFunc = shiny::renderUI,
-      renderFunc2 = shiny::renderUI,
-      func2 = hm_splitmap.switchRENDER,
+      # plotlib = "iheatmapr",
+      func = hm1_splitmap.RENDER,
       res = c(80, 95), ## resolution of plots
       pdf.width = 10, pdf.height = 8,
-      download.pdf = hm_splitmap_downloadPDF,
-      download.png = hm_splitmap_downloadPNG,
       add.watermark = watermark
-
     )
 
-
-    # ## call plotModule
-    # hm_splitmap_module <- shiny::callModule(
-    #   plotModule,
-    #   id = "hm_splitmap",
-    #   func = hm_splitmap.switchRENDER, ## ns=ns,
-    #   ## func2 = hm_splitmap.switchRENDER, ## ns=ns,
-    #   show.maximize = FALSE,
-    #   plotlib = "generic",
-    #   renderFunc = "renderUI",
-    #   outputFunc = "uiOutput",
-    #   download.fmt = c("pdf","png"),
-    #   options = hm_splitmap_opts,
-    #   height = fullH-80, ##???
-    #   width = '100%',
-    #   pdf.width = 10, pdf.height = 8,
-    #   title ="Clustered Heatmap",
-    #   info.text = hm_splitmap_text,
-    #   info.width = "350px",
-    #   ## caption = hm_splitmap_caption,
-    #   download.pdf = hm_splitmap_downloadPDF,
-    #   download.png = hm_splitmap_downloadPNG,
-    #   download.html = hm_splitmap_downloadHTML,
-    # #   add.watermark = WATERMARK
-    # )
-    #
+    return(list(
+      hm_ntop = shiny::reactive(input$hm_ntop),
+      hm_splitvar = shiny::reactive(input$hm_splitvar),
+      hm_splitby = shiny::reactive(input$hm_splitby),
+      hm_scale = shiny::reactive(input$hm_scale),
+      hm_topmode = shiny::reactive(input$hm_topmode),
+      hm_clustk = shiny::reactive(input$hm_clustk)
+    ))
 
 
   }) ## end of moduleServer
