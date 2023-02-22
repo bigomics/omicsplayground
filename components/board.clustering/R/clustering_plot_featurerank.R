@@ -52,7 +52,7 @@ clustering_plot_featurerank_server <- function(id,
     calcFeatureRanking <- shiny::reactive({
 
       pgx <- pgx
-      hm_level <- hm_level
+      hm_level <- hm_level()
 
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)
 
@@ -74,7 +74,7 @@ clustering_plot_featurerank_server <- function(id,
 
       ## ------------ Just to get current samples
       ##samples = colnames(X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter)
+      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X = X[,samples]
       cvar <- pgx.getCategoricalPhenotypes(pgx$Y, max.ncat=999)
       cvar <- grep("sample|patient|years|days|months|gender",
@@ -103,7 +103,7 @@ clustering_plot_featurerank_server <- function(id,
       }
 
       gene.level = TRUE
-      gene.level = (input$hm_level=="gene")
+      gene.level = (hm_level=="gene")
       i=1
       for(i in 1:ncol(Y)) {
 
@@ -181,7 +181,8 @@ clustering_plot_featurerank_server <- function(id,
       cc1 = grey.colors(ncol(S))
       legend("bottomright",legend=colnames(S), fill=cc1,
              cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
-
+      p <- grDevices::recordPlot()
+      p
     })
 
 

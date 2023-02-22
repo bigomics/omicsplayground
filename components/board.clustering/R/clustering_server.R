@@ -277,7 +277,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if(nrow(zx)==0) return(NULL)
 
         dim(zx)
-        kk <- selectSamplesFromSelectedLevels(pgx$Y, reactive(input$hm_samplefilter() ))
+        kk <- selectSamplesFromSelectedLevels(pgx$Y, reactive(input$hm_samplefilter ))
         zx <- zx[,kk,drop=FALSE]
 
         if( input$hm_level=="gene" &&
