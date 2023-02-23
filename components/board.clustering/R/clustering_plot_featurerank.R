@@ -178,19 +178,6 @@ clustering_plot_featurerank_server <- function(id,
                          xlab = "Discriminant score",
                          ylab = "Groups",
                          horiz = TRUE)
-
-
-      # par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,3,0)); frame()
-      #
-      #
-      # bpos = barplot( t(S), beside=FALSE, las=1,
-      #                 cex.names=0.9, horiz=TRUE,
-      #                 xlab="discriminant score" )
-      ##title("feature-set score", cex=1.3)
-      # legend("bottomright",legend=colnames(S), fill=cc1,
-      #        cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
-      # p <- grDevices::recordPlot()
-      # p
     })
 
 
