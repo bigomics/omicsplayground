@@ -23,15 +23,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 ')
 
     # modules ########
-
-      r.samples <- reactive({
-        ##colnames(getFilteredMatrix())
-
-        req(input$hm_samplefilter)
-        req(pgx$Y)
-        selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-      })
-
     # observe functions ########
 
     shiny::observe({
@@ -145,6 +136,25 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       } else {
         hm_parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
       }
+    })
+
+    hm_parcoord.ranges <- shiny::reactiveValues()
+
+    hm_parcoord.matrix <- shiny::reactive({
+
+      browser()
+
+        filt <- getTopMatrix()
+        shiny::req(filt)
+        zx <- filt$mat[,]
+        if(input$hm_pcscale) {
+            zx <- t(scale(t(zx)))
+        }
+        rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
+        nrange <- length(rr)
+        for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
+        zx <- round(zx, digits=3)
+        list(mat=zx, clust=filt$idx)
     })
 
     # shiny::observe({
@@ -673,13 +683,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     hm_getClusterPositions <- shiny::reactive({
 
+      browser()
+
       pgx <- pgx
       ##shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
       ## take full matrix
       #flt <- getFilteredMatrix()
       #zx <- flt$zx
-      sel.samples <- r.samples()
+      sel.samples <- selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
 
       clustmethod="tsne";pdim=2
       do3d <- ("3D" %in% input$hmpca_options)
@@ -755,9 +767,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     clustering_plot_clustpca_server("PCAplot",
                                     pgx = pgx,
-                                    r.samples = r.samples,
+                                    hm_getClusterPositions = hm_getClusterPositions,
                                     hmpca.colvar = shiny::reactive(input$hmpca.colvar),
                                     hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
+                                    hm_clustmethod = shiny::reactive(input$hm_clustmethod),
                                     watermark=FALSE,
                                     parent = ns)
 
