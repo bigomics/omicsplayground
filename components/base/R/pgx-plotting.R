@@ -3373,23 +3373,37 @@ pgx.plotSampleClustering <- function(x, dim=2,
 }
 
 pgx.stackedBarplot <- function(x,
+                               showlegend,
                                ylab = NULL,
-                               showlegend
-                               )
-  {
+                               xlab = NULL,
+                               horiz = FALSE
+                               ) {
+
   x_plot <- cbind(data.frame(groups = rownames(x)), x)
 
   x_plot <- data.table::melt(x_plot, id.vars='groups',value.name = "Effect")
 
-  x_plot$groups <- factor(x_plot$groups, levels = rownames(x))
+  if(horiz == FALSE){
+    x_plot$groups <- factor(x_plot$groups, levels = rownames(x))
+  }else{
+    c1 <- which(colnames(x_plot)=='variable')
+    c2 <- which(colnames(x_plot)=='Effect')
+    c3 <- which(colnames(x_plot)=='groups')
+    colnames(x_plot)[c1] <- "Effect"
+    colnames(x_plot)[c2] <- "groups"
+    colnames(x_plot)[c3] <- "variable"
+    }
 
   plotly::plot_ly(x_plot, x = ~groups,
                   y = ~Effect,
                   type = 'bar',
                   name = ~variable,
                   color = ~variable) %>%
-    plotly::layout(showlegend = showlegend, barmode = 'stack', yaxis = list(title = ylab)) %>%
+    plotly::layout(showlegend = showlegend, barmode = 'stack',
+                   yaxis = list(title = ylab),
+                   xaxis = list(title = xlab)) %>%
     plotly_default1()
+
 }
 
 
