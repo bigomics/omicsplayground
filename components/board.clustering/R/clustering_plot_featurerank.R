@@ -173,9 +173,7 @@ clustering_plot_featurerank_server <- function(id,
 
       cc1 = grey.colors(ncol(S))
 
-      browser()
-
-      pgx.stackedBarplot(x = S,
+      pgx.stackedBarplot(x = t(S),
                          showlegend = T,
                          xlab = "Discriminant score",
                          ylab = "Groups",
