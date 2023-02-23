@@ -31,10 +31,7 @@ clustering_plot_clustpca_ui <- function(id,
       "Normalize matrix before calculating distances."),
     withTooltip( shiny::checkboxGroupInput( ns('hmpca_options'),"Other:",
       choices=c('sample label','3D','normalize'), inline=TRUE),
-      "Normalize matrix before calculating distances."),
-    withTooltip( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
-      c("default","tsne","pca","umap"),inline=TRUE),
-      "Choose the layout method for clustering to visualise.",)
+      "Normalize matrix before calculating distances.")
   )
 
   PlotModuleUI(
@@ -53,9 +50,10 @@ clustering_plot_clustpca_ui <- function(id,
 
 clustering_plot_clustpca_server <- function(id,
                                             pgx,
-                                            r.samples = reactive(""),
                                             hmpca.colvar,
+                                            hm_getClusterPositions,
                                             hmpca.shapevar,
+                                            hm_clustmethod,
                                             watermark=FALSE,
                                             parent)
 {
@@ -65,17 +63,21 @@ clustering_plot_clustpca_server <- function(id,
     ## Plot ############
 
     plot_data <- shiny::reactive({
-        dbg("[plot_clustpca_server:plot_data] reacted!")
+
         clust <- hm_getClusterPositions()
         ##data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
+
+        browser()
+
         return(
           list(
             hmpca_options = input$hmpca_options,
             hmpca.colvar = hmpca.colvar(),
             hmpca.shapevar = hmpca.shapevar(),
             df = data.frame( x=clust$pos[,1], y=clust$pos[,2]),
-            pgx = pgx
-
+            pgx = pgx,
+            hm_clustmethod = hm_clustmethod(),
+            hmpca_legend = input$hmpca_legend
           )
         )
 
@@ -85,18 +87,14 @@ clustering_plot_clustpca_server <- function(id,
 
         ##pgx <- inputData()
         pd <- plot_data()
+
         hmpca_options <- pd[['hmpca_options']]
         hmpca.colvar <- pd[['hmpca.colvar']]
         hmpca.shapevar <- pd[['hmpca.shapevar']]
         pos <- pd[['df']]
         pgx <- pd[['pgx']]
-
-
-        dbg("[plot_clustpca_server:plot.RENDER] function called!")
-        dbg("[plot_clustpca_server:plot.RENDER] names(df) = ",names(df))
-
-        shiny::req(pgx$Y)
-        shiny::req(df)
+        hm_clustmethod <- pd[["hm_clustmethod"]]
+        hmpca_legend <- pd[["hmpca_legend"]]
 
         do3d = ("3D" %in% hmpca_options)
         ##clust <- hm_getClusterPositions()
@@ -199,11 +197,11 @@ clustering_plot_clustpca_server <- function(id,
             }
 
             ## add group/cluster annotation labels
-            req(input$hmpca_legend)
-            if(input$hmpca_legend == 'inside') {
+
+            if(hmpca_legend == 'inside') {
                 plt <- plt %>%
                     plotly::layout(legend = list(x=0.05, y=0.95))
-            } else if(input$hmpca_legend == 'bottom') {
+            } else if(hmpca_legend == 'bottom') {
                 plt <- plt %>%
                     plotly::layout(legend = list(orientation='h'))
             } else {
@@ -225,7 +223,7 @@ clustering_plot_clustpca_server <- function(id,
 
         }
         title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
-        if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
+        if(hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
         ## plt <- plt %>% plotly::layout(title=title) %>%
         ##     plotly::config(displayModeBar = FALSE)
         plt <- plt %>%
@@ -245,7 +243,6 @@ clustering_plot_clustpca_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ##plotlib2 = "plotly",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
