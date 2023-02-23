@@ -28,7 +28,7 @@ clustering_plot_featurerank_ui <- function(id,
   PlotModuleUI(
     ns("pltmod"),
     label = label,
-    plotlib = "base",
+    plotlib = "plotly",
     title = "Feature-set ranking",
     info.text = clust_featureRank_info,
     options = clust_featureRank.opts,
@@ -169,26 +169,36 @@ clustering_plot_featurerank_server <- function(id,
       ## top scoring
       S = tail( S[order(rowSums(S)),,drop=FALSE], 35)
 
-
-      par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,3,0)); frame()
-
       rownames(S) = substring(rownames(S),1,80)
 
-      bpos = barplot( t(S), beside=FALSE, las=1,
-                      cex.names=0.9, horiz=TRUE,
-                      xlab="discriminant score" )
-      ##title("feature-set score", cex=1.3)
       cc1 = grey.colors(ncol(S))
-      legend("bottomright",legend=colnames(S), fill=cc1,
-             cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
-      p <- grDevices::recordPlot()
-      p
+
+      browser()
+
+      pgx.stackedBarplot(x = S,
+                         showlegend = T,
+                         xlab = "Discriminant score",
+                         ylab = "Groups",
+                         horiz = TRUE)
+
+
+      # par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,3,0)); frame()
+      #
+      #
+      # bpos = barplot( t(S), beside=FALSE, las=1,
+      #                 cex.names=0.9, horiz=TRUE,
+      #                 xlab="discriminant score" )
+      ##title("feature-set score", cex=1.3)
+      # legend("bottomright",legend=colnames(S), fill=cc1,
+      #        cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
+      # p <- grDevices::recordPlot()
+      # p
     })
 
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
+      plotlib = "plotly",
       ##plotlib2 = "plotly",
       func = clust_featureRank.RENDER,
       # csvFunc = plot_data,   ##  *** downloadable data as CSV
