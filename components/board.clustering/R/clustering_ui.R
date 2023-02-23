@@ -11,6 +11,9 @@ ClusteringInputs <- function(id) {
 #        shiny::hr(), shiny::br(),
         withTooltip( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                 "Select a family of features.", placement="top"),
+        withTooltip( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
+                                          c("default","tsne","pca","umap"),inline=TRUE),
+                     "Choose the layout method for clustering to visualise.",),
         shiny::conditionalPanel(
             "input.hm_features == '<custom>'", ns=ns,
             withTooltip( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
