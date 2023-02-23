@@ -683,8 +683,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     hm_getClusterPositions <- shiny::reactive({
 
-      browser()
-
       pgx <- pgx
       ##shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 

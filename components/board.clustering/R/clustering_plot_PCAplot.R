@@ -67,8 +67,6 @@ clustering_plot_clustpca_server <- function(id,
         clust <- hm_getClusterPositions()
         ##data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
 
-        browser()
-
         return(
           list(
             hmpca_options = input$hmpca_options,
