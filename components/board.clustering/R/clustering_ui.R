@@ -100,7 +100,7 @@ ClusteringUI <- function(id) {
                 shiny::tabPanel("Parallel",
 
                     clustering_plot_hm_parcoord_ui(
-                      id ="hm_parcoord",
+                      id =ns("hm_parcoord"),
                       label= 'a',
                       width = c("100%",1000),
                       height=c(0.45*fullH,600)),

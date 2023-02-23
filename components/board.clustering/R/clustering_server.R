@@ -113,50 +113,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         shiny::updateSelectInput(session, "hm_features", choices=choices)
     })
 
-    shiny::observeEvent( plotly::event_data("plotly_restyle", source = "pcoords"), {
-      ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
-      ##
-      d <- plotly::event_data("plotly_restyle", source = "pcoords")
-      ## what is the relevant dimension (i.e. variable)?
-      dimension <- as.numeric(stringr::str_extract(names(d[[1]]), "[0-9]+"))
-      ## If the restyle isn't related to a dimension, exit early.
-      if (!length(dimension)) return()
-      if (is.na(dimension)) return()
-
-      pc <- hm_parcoord.matrix()
-      shiny::req(pc)
-      ## careful of the indexing in JS (0) versus R (1)!
-      dimension_name <- colnames(pc$mat)[[dimension + 1]]
-      ## a given dimension can have multiple selected ranges
-      ## these will come in as 3D arrays, but a list of vectors
-      ## is nicer to work with
-      info <- d[[1]][[1]]
-      if (length(dim(info)) == 3) {
-        hm_parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[,i,])
-      } else {
-        hm_parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
-      }
-    })
-
-    hm_parcoord.ranges <- shiny::reactiveValues()
-
-    hm_parcoord.matrix <- shiny::reactive({
-
-      browser()
-
-        filt <- getTopMatrix()
-        shiny::req(filt)
-        zx <- filt$mat[,]
-        if(input$hm_pcscale) {
-            zx <- t(scale(t(zx)))
-        }
-        rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
-        nrange <- length(rr)
-        for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
-        zx <- round(zx, digits=3)
-        list(mat=zx, clust=filt$idx)
-    })
-
     # shiny::observe({
     #
     #   ##pgx <- inputData()
@@ -558,22 +514,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       list(mat=mat[keep,,drop=FALSE], clust=clust[keep])
     })
 
-    hm_parcoord.ranges <- shiny::reactiveValues()
-
-    hm_parcoord.matrix <- shiny::reactive({
-
-      filt <- getTopMatrix()
-      shiny::req(filt)
-      zx <- filt$mat[,]
-      if(input$hm_pcscale) {
-        zx <- t(scale(t(zx)))
-      }
-      rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
-      nrange <- length(rr)
-      for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
-      zx <- round(zx, digits=3)
-      list(mat=zx, clust=filt$idx)
-    })
 
     getClustAnnotCorrelation <- shiny::reactive({
 
@@ -773,7 +713,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                     parent = ns)
 
     clustering_plot_hm_parcoord_server(id = "hm_parcoord",
-                                       hm_parcoord.matrix = hm_parcoord.matrix(),
+                                       hm_parcoord.matrix = hm_parcoord.matrix,
+                                       getTopMatrix = getTopMatrix,
                                        watermark=FALSE
                                         )
 

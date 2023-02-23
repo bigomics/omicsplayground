@@ -39,65 +39,109 @@ displays the expression levels of selected genes across all conditions in the an
 }
 
 clustering_plot_hm_parcoord_server <- function(id,
-                                               pgx,
                                                hm_parcoord.matrix,
-                                               watermark=FALSE
+                                               watermark=FALSE,
+                                               getTopMatrix
                                                )
 {
   moduleServer( id, function(input, output, session) {
+
     ns <- session$ns
 
-    hm_parcoord.RENDER <- shiny::reactive({
+    shiny::observeEvent( plotly::event_data("plotly_restyle", source = "pcoords"), {
+      ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
+      ##
+      d <- plotly::event_data("plotly_restyle", source = "pcoords")
+      ## what is the relevant dimension (i.e. variable)?
+      dimension <- as.numeric(stringr::str_extract(names(d[[1]]), "[0-9]+"))
+      ## If the restyle isn't related to a dimension, exit early.
+      if (!length(dimension)) return()
+      if (is.na(dimension)) return()
 
-        pc <- hm_parcoord.matrix()
-        shiny::req(pc)
-        zx <- pc$mat
-        ## build dimensions
-        dimensions <- list()
-        for(i in 1:ncol(zx)) {
-            dimensions[[i]] <-  list(
-                range = c(min(zx[,i]),max(zx[,i])),
-                ## constraintrange = c(100000,150000),
-                ## tickvals = c(0,0.5,1,2,3),
-                ## ticktext = c('A','AB','B','Y','Z'),
-                visible = TRUE,
-                label = colnames(zx)[i],
-                values = zx[,i]
-            )
-        }
-
-        clust.id <- as.integer(factor(pc$clust))
-        table(clust.id)
-
-        df <- data.frame(clust.id=clust.id, zx)
-        klrpal = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
-        ##klrpal = rep(c("red","blue","green","yellow","magenta","cyan","black","grey"),99)
-        klrpal = klrpal[1:max(clust.id)]
-        ##klrpal <- setNames(klrpal, sort(unique(clust.id)))
-        klrpal2 <- lapply(1:length(klrpal),function(i) c((i-1)/(length(klrpal)-1),klrpal[i]))
-
-        plt <-  plotly::plot_ly(df, source = "pcoords") %>%
-            plotly::add_trace(type = 'parcoords',
-                      line = list(color = ~clust.id,
-                                  ## colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))
-                                  ##colorscale = 'Jet',
-                                  colorscale = klrpal2,
-                                  cmin = min(clust.id), cmax = max(clust.id),
-                                  showscale = FALSE
-                                  ##reversescale = TRUE
-                                  ),
-                      dimensions = dimensions)
-        plt <- plt %>%
-            plotly::layout(margin = list(l=60, r=60, t=0, b=30)) %>%
-            ##config(displayModeBar = FALSE) %>%
-            ##config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
-            plotly::config(toImageButtonOptions = list(format='svg', width=900, height=350, scale=1.2)) %>%
-            plotly::config(displaylogo = FALSE) %>%
-            plotly::event_register("plotly_restyle")
-
-        plt
-
+      pc <- hm_parcoord.matrix()
+      shiny::req(pc)
+      ## careful of the indexing in JS (0) versus R (1)!
+      dimension_name <- colnames(pc$mat)[[dimension + 1]]
+      ## a given dimension can have multiple selected ranges
+      ## these will come in as 3D arrays, but a list of vectors
+      ## is nicer to work with
+      info <- d[[1]][[1]]
+      if (length(dim(info)) == 3) {
+        hm_parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[,i,])
+      } else {
+        hm_parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
+      }
     })
+
+
+    hm_parcoord.ranges <- shiny::reactiveValues()
+
+    hm_parcoord.matrix <- shiny::reactive({
+
+      filt <- getTopMatrix()
+      shiny::req(filt)
+      zx <- filt$mat[,]
+      if(input$hm_pcscale) {
+        zx <- t(scale(t(zx)))
+      }
+      rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
+      nrange <- length(rr)
+      for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
+      zx <- round(zx, digits=3)
+      list(mat=zx, clust=filt$idx)
+    })
+
+    hm_parcoord.RENDER <- function(){
+
+      pc <- hm_parcoord.matrix()
+      shiny::req(pc)
+      zx <- pc$mat
+      ## build dimensions
+      dimensions <- list()
+      for(i in 1:ncol(zx)) {
+          dimensions[[i]] <-  list(
+              range = c(min(zx[,i]),max(zx[,i])),
+              ## constraintrange = c(100000,150000),
+              ## tickvals = c(0,0.5,1,2,3),
+              ## ticktext = c('A','AB','B','Y','Z'),
+              visible = TRUE,
+              label = colnames(zx)[i],
+              values = zx[,i]
+          )
+      }
+
+      clust.id <- as.integer(factor(pc$clust))
+      table(clust.id)
+
+      df <- data.frame(clust.id=clust.id, zx)
+      klrpal = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
+      ##klrpal = rep(c("red","blue","green","yellow","magenta","cyan","black","grey"),99)
+      klrpal = klrpal[1:max(clust.id)]
+      ##klrpal <- setNames(klrpal, sort(unique(clust.id)))
+      klrpal2 <- lapply(1:length(klrpal),function(i) c((i-1)/(length(klrpal)-1),klrpal[i]))
+
+      plt <-  plotly::plot_ly(df, source = "pcoords") %>%
+          plotly::add_trace(type = 'parcoords',
+                    line = list(color = ~clust.id,
+                                ## colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))
+                                ##colorscale = 'Jet',
+                                colorscale = klrpal2,
+                                cmin = min(clust.id), cmax = max(clust.id),
+                                showscale = FALSE
+                                ##reversescale = TRUE
+                                ),
+                    dimensions = dimensions)
+      plt <- plt %>%
+          plotly::layout(margin = list(l=60, r=60, t=0, b=30)) %>%
+          ##config(displayModeBar = FALSE) %>%
+          ##config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
+          plotly::config(toImageButtonOptions = list(format='svg', width=900, height=350, scale=1.2)) %>%
+          plotly::config(displaylogo = FALSE) %>%
+          plotly::event_register("plotly_restyle")
+
+      plt
+
+    }
 
 
     PlotModuleServer(
