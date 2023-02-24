@@ -19,11 +19,21 @@ correlation_plot_table_corr_ui <- function(id,
   ns <- shiny::NS(id)
   info_text <- "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
 
+  plot_opts <- shiny::tagList(
+    withTooltip(shiny::selectInput(ns("order_opt"), "Order by:", choices = c("Correlation",
+                                                                             "Partial Correlation",
+                                                                             "Both"), multiple = FALSE),
+                "Sort order of groups based on correlation.",
+                placement = "top"
+    )
+  )
+
   div(
     PlotModuleUI(ns("plot"),
       title = "Top correlated genes",
       label = label,
       plotlib = "plotly",
+      options = plot_opts,
       info.text = info_text,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
@@ -63,8 +73,10 @@ correlation_plot_table_corr_server <- function(id,
       names(prho) <- rownames(df)
       prho <- prho[match(names(rho), names(prho))]
       names(prho) <- names(rho)
+
       return(list(
-        rho, prho
+        rho, prho,
+        order_opt = input$order_opt
       ))
     })
 
@@ -85,7 +97,21 @@ correlation_plot_table_corr_server <- function(id,
 
       colnames(pd_plot) <- c("Correlation", "Partial correlation")
 
-      pd_plot <- pd_plot[order(pd_plot$Correlation,decreasing = TRUE),]
+      if(input$order_opt == "Correlation"){
+
+        pd_plot <- pd_plot[order(pd_plot$Correlation,decreasing = TRUE),]
+
+      }else if(input$order_opt == "Partial Correlation"){
+
+        pd_plot <- pd_plot[order(pd_plot$`Partial correlation`,decreasing = TRUE),]
+
+      }else if(input$order_opt == "Both"){
+
+        total_sum_cor <- rowSums(pd_plot)
+
+        pd_plot <- pd_plot[order(total_sum_cor,decreasing = TRUE),]
+
+      }
 
       pgx.stackedBarplot(x = pd_plot,
                          ylab = "Correlation",
