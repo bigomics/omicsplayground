@@ -186,7 +186,7 @@ clustering_plot_featurerank_server <- function(id,
       plotlib = "plotly",
       ##plotlib2 = "plotly",
       func = clust_featureRank.RENDER,
-      # csvFunc = plot_data,   ##  *** downloadable data as CSV
+      csvFunc = calcFeatureRanking,   ##  *** downloadable data as CSV
       ##renderFunc = plotly::renderPlotly,
       ##renderFunc2 = plotly::renderPlotly,
       res = c(72,90),                ## resolution of plots

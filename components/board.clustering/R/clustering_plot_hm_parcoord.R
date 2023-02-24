@@ -149,10 +149,10 @@ clustering_plot_hm_parcoord_server <- function(id,
       plotlib = "plotly",
       ##plotlib2 = "plotly",
       func = hm_parcoord.RENDER,
-      ##renderFunc = plotly::renderPlotly,
-      ##renderFunc2 = plotly::renderPlotly,
       res = c(90,170),                ## resolution of plots
-      pdf.width = 8, pdf.height = 8,
+      pdf.width = 8,
+      pdf.height = 8,
+      hm_parcoord.matrix,
       add.watermark = watermark
     )
 

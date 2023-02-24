@@ -40,7 +40,7 @@ clustering_plot_clusterannot_ui <- function(id,
     title = "Functional annotation of clusters",
     info.text = clustannot_plots_text,
     options = clustannot_plots.opts,
-    download.fmt=c("png","pdf","csv"),
+    download.fmt=c("png","pdf"),
     width = width,
     height = height
   )
