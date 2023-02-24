@@ -20,9 +20,9 @@ correlation_plot_table_corr_ui <- function(id,
   info_text <- "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
 
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::selectInput(ns("order_opt"), "Order by:", choices = c("Correlation",
-                                                                             "Partial Correlation",
-                                                                             "Both"), multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("order_opt"), "Order by:", choices = c("Both",
+                                                                             "Correlation",
+                                                                             "Partial Correlation"), multiple = FALSE),
                 "Sort order of groups based on correlation.",
                 placement = "top"
     )
