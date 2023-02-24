@@ -79,7 +79,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
     ns("pltmod"),
     title = "Clustered Heatmap",
     label = label,
-    # plotlib = "iheatmapr",
+    plotlib = "iheatmapr",
     info.text = info_text,
     options = hm_splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -305,8 +305,8 @@ clustering_plot_hm_splitmap_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      # plotlib = "iheatmapr",
-      func = hm1_splitmap.RENDER,
+      plotlib = "iheatmapr",
+      func = hm2_splitmap.RENDER,
       res = c(80, 95), ## resolution of plots
       pdf.width = 10, pdf.height = 8,
       add.watermark = watermark
