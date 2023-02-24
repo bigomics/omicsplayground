@@ -156,22 +156,6 @@ clustering_plot_hm_parcoord_server <- function(id,
       add.watermark = watermark
     )
 
-    # shiny::callModule(
-    #     plotModule,
-    #     ## hm_parcoord_module <- plotModule(
-    #     "hm_parcoord",
-    #     func = hm_parcoord.RENDER, ## ns = ns,
-    #     plotlib = "plotly", ## renderFunc="renderPlotly",
-    #     ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!!
-    #     ## download.fmt = c("html"),
-    #     options = hm_parcoord_opts,
-    #     height = c(0.45*fullH,600), width = c("100%",1000),
-    #     pdf.width=10, pdf.height=6, info.width="350px",
-    #     title = "Parallel coordinates", label = "a",
-    #     info.text = hm_parcoord_text,
-    #     add.watermark = WATERMARK
-    #     ## caption = hm_parcoord_text,
-    # )
     })
 
 
