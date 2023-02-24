@@ -99,7 +99,21 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         shiny::req(sigdb)
         ct2 <- all.ct[1]
         sel.row <- connectivityScoreTable$rows_selected()
-        shiny::req(sel.row)
+        if(is.null(sel.row)){
+          return(
+            plotly::plotly_empty(type = "scatter", mode = "markers") %>%
+              plotly::config(
+                displayModeBar = FALSE
+              ) %>%
+              plotly::layout(
+                title = list(
+                  text = "Select dataset/contrast",
+                  yref = "paper",
+                  y = 0.5
+                )
+              )
+          )
+        }
         df <- getConnectivityScores()
         df <- df[abs(df$score) > 0, , drop = FALSE]
         ct2 <- rownames(df)[sel.row]
@@ -286,7 +300,6 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         "plot",
         plotlib = "plotly",
         func = plot_RENDER,
-        func2 = plot_RENDER,
         csvFunc = plot_data,
         pdf.width = 8, pdf.height = 8,
         res = 95,

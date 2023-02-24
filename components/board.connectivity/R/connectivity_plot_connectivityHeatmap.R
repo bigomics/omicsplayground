@@ -111,6 +111,8 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                     key.offset = c(0.90, 0.2),
                     cexRow = 0.9, cexCol = 0.75
         )
+        p <- grDevices::recordPlot()
+        p
       })
       PlotModuleServer(
         "plot",

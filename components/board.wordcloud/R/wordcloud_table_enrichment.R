@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-wordcloud_table_enrichment_ui <- function(id) {
+wordcloud_table_enrichment_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("wordcloud_enrichmentTable"))
+  info_text <- "<b>Keyword enrichment table.</b> This table shows the keyword enrichment statistics for the selected contrast. The enrichment is calculated using GSEA for occurance of the keywork in the ordered list of gene set descriptions."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Enrichment table",
+    label = "d"
+  )
+
 }
 
 wordcloud_table_enrichment_server <- function(id,
@@ -28,7 +38,7 @@ wordcloud_table_enrichment_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = 200,
+          scrollX = TRUE, scrollY = "25vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -42,19 +52,17 @@ wordcloud_table_enrichment_server <- function(id,
       return(tbl)
     })
 
-    wordcloud_enrichmentTable_info <-
-      "<b>Keyword enrichment table.</b> This table shows the keyword enrichment statistics for the selected contrast. The enrichment is calculated using GSEA for occurance of the keywork in the ordered list of gene set descriptions."
+    wordcloud_enrichmentTable.RENDER_modal <- shiny::reactive({
+      dt <- wordcloud_enrichmentTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    wordcloud_enrichmentTable <- shiny::callModule(
-      tableModule,
-      id = "wordcloud_enrichmentTable",
+    wordcloud_enrichmentTable <- TableModuleServer(
+      "datasets",
       func = wordcloud_enrichmentTable.RENDER,
-      info.text = wordcloud_enrichmentTable_info,
-      selector = "single",
-      title = tags$div(
-        HTML('<span class="module-label">(d)</span>Enrichment table')
-      ),
-      height = c(270, 700)
+      func2 = wordcloud_enrichmentTable.RENDER_modal,
+      selector = "single"
     )
 
     return(wordcloud_enrichmentTable)

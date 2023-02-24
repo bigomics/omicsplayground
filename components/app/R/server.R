@@ -10,7 +10,7 @@
 #'     DO NOT REMOVE.
 #' @export
 app_server <- function(input, output, session) {
-    
+
     message("\n=======================================================================")
     message("================================ SERVER =================================")
     message("=======================================================================\n")
@@ -18,7 +18,7 @@ app_server <- function(input, output, session) {
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
-    
+
     ## Logging of input/output events -------------------------------------
     log.path <- file.path(OPG,"logs")
     dbg("[SERVER] shinylog log path = ",log.path)
@@ -29,15 +29,15 @@ app_server <- function(input, output, session) {
     ##curl.resp <- try(RCurl::getURL("http://localhost:8000/__docs__/"))
     curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
     honcho.responding <- grepl("Swagger", curl.resp)
-    honcho.responding      
+    honcho.responding
     honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
     has.honcho <- (honcho.token!="" && honcho.responding)
     if(1 && has.honcho) {
-        dbg("[SERVER] Honcho is alive! ")    
-        sever::sever(sever_screen2(session$token), bg_color = "#004c7d") 
+        dbg("[SERVER] Honcho is alive! ")
+        sever::sever(sever_screen2(session$token), bg_color = "#004c7d")
     } else {
         ## No honcho, no email....
-        dbg("[SERVER] No Honcho? No party..")          
+        dbg("[SERVER] No Honcho? No party..")
         sever::sever(sever_screen0(), bg_color = "#004c7d") ## lightblue=2780e3
     }
 
@@ -45,14 +45,14 @@ app_server <- function(input, output, session) {
     server.start_time  <- Sys.time()
     session.start_time <- -1
     authentication <- opt$AUTHENTICATION
-    
+
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
                 "genes" = opt$MAX_GENES,
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     pgx_dir <- PGX.DIR
-    
+
     ## Parse and show URL query string
     if(0 && ALLOW_URL_QUERYSTRING) {
         observe({
@@ -64,18 +64,18 @@ app_server <- function(input, output, session) {
                 }
             } else {
                 dbg("[SERVER:parseQueryString] no queryString!")
-            }            
+            }
             if(!is.null(query[['csv']])) {
                 ## focus on this tab
                 updateTabsetPanel(session, "load-tabs", selected="Upload data")
                 updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
-                                    value = "CSV FILE DESCRIPTION")                
+                                    value = "CSV FILE DESCRIPTION")
             }
-            
+
         })
         dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
     }
-    
+
     ##-------------------------------------------------------------
     ## Authentication
     ##-------------------------------------------------------------
@@ -87,58 +87,62 @@ app_server <- function(input, output, session) {
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
         auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
-    } else if(authentication == "shinyproxy") {        
+    } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
-        ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
+        ##email <- Sys.getenv("SHINYPROXY_EMAIL")
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=TRUE,
                                   username=username, email=username)
-    } else if(authentication == "none2") {        
+    } else if(authentication == "none2") {
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=FALSE)
     } else {
         ##} else if(authentication == "none") {
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
                                   show_modal=TRUE)
-    } 
+    }
     dbg("[LoadingBoard] names.auth = ",names(auth))
-  
-  
+
+
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
 
     env <- list()  ## communication "environment"
-    
+
     ## *** EXPERIMENTAL *** global reactive value replacing env list
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
-    
-    ## Modules needed from the start        
+    r_global <- reactiveValues(
+      load_example_trigger = FALSE
+    )
+
+    ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
         pgx_dir = pgx_dir,
         pgx = PGX,
         limits = limits,
-        auth = auth,        
-        enable_userdir = opt$ENABLE_USERDIR,                                
+        auth = auth,
+        enable_userdir = opt$ENABLE_USERDIR,
         enable_upload = opt$ENABLE_UPLOAD,
-        enable_delete = opt$ENABLE_DELETE,                                 
-        enable_save = opt$ENABLE_SAVE
-    )   
+        enable_delete = opt$ENABLE_DELETE,
+        enable_save = opt$ENABLE_SAVE,
+        r_global = r_global
+    )
 
-    ## Modules needed from the start        
+    ## Modules needed from the start
     env$upload <- UploadBoard(
         id = "upload",
         pgx_dir = pgx_dir,
         pgx = PGX,
-        auth = auth,        
+        auth = auth,
         limits = limits,
-        enable_userdir = opt$ENABLE_USERDIR,                                
+        enable_userdir = opt$ENABLE_USERDIR,
         enable_upload = opt$ENABLE_UPLOAD,
         enable_save = opt$ENABLE_SAVE
-    )   
-  
+    )
+
     ## If user is logged off, we clear the data
     observeEvent( auth$logged(), {
         is.logged <- auth$logged()
@@ -154,20 +158,20 @@ app_server <- function(input, output, session) {
     data_loaded <- reactive({
         (env$load$loaded() || env$upload$loaded())
     })
-  
+
     ## Default boards
-    WelcomeBoard("welcome", auth=auth) 
-    UserBoard("user", user=auth) -> env$user  
-    
+    WelcomeBoard("welcome", auth=auth, r_global=r_global)
+    env$user <- UserBoard("user", user=auth)
+
     ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
-    observeEvent( data_loaded(), {        
+    observeEvent( data_loaded(), {
 
-        message("[SERVER:data.loaded] data_loaded = ",data_loaded())    
+        message("[SERVER:data.loaded] data_loaded = ",data_loaded())
         if(data_loaded()==0){
             return(NULL)
         }
-        
+
         if(modules_loaded) {
             Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
@@ -177,22 +181,22 @@ app_server <- function(input, output, session) {
 
         ## load other modules if not yet loaded
         message("[SERVER] --------- calling shiny modules ----------")
-        dbg("[SERVER] names(pgx) = ",names(PGX))        
+        dbg("[SERVER] names(pgx) = ",names(PGX))
 
         loadModule <- function(...) {
             id <- list(...)[[2]]
             if(ENABLED[id])  env[[id]] <<- shiny::callModule(...)
         }
-        
+
         ## TEMPORARY SOLUTION. All modules should use PGX eventually.
         inputData <- reactive({
             if(all(sapply(PGX,is.null))) return(NULL)
             PGX
         })
-        
+
         shiny::withProgress(message="Preparing your dashboards...", value=0, {
 
-            DataViewBoard("view", pgx=PGX)            
+            DataViewBoard("view", pgx=PGX)
             ClusteringBoard("clust", pgx=PGX)
             WordCloudBoard("word", pgx=PGX)
             shiny::incProgress(0.2)
@@ -213,7 +217,7 @@ app_server <- function(input, output, session) {
             SignatureBoard("sig", inputData = inputData,
                            selected_gxmethods = env$expr$selected_gxmethods)
             CorrelationBoard("cor", inputData = inputData)
-            shiny::incProgress(0.6)            
+            shiny::incProgress(0.6)
             BiomarkerBoard("bio", inputData = inputData)
             ConnectivityBoard("cmap", inputData = inputData)
             SingleCellBoard("scell", inputData = inputData)
@@ -221,19 +225,19 @@ app_server <- function(input, output, session) {
             TcgaBoard("tcga", inputData = inputData)
             WgcnaBoard("wgcna", inputData = inputData)
             CompareBoard("comp", inputData = inputData)
-            
+
         })
 
         message("[SERVER:data_loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
     })
-    
+
 
     ##--------------------------------------------------------------------------
     ## Current navigation
     ##--------------------------------------------------------------------------
-    
+
     output$current_user <- shiny::renderText({
         ## trigger on change of user
         user <- auth$email()
@@ -241,7 +245,7 @@ app_server <- function(input, output, session) {
         if(user %in% c("",NA,NULL)) user <- "User"
         user
     })
-    
+
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
@@ -256,13 +260,13 @@ app_server <- function(input, output, session) {
         dbg("[SERVER:output$current_section] section = ",section)
         section
     })
-    
+
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
 
     shiny::observeEvent({
-        auth$logged()        
+        auth$logged()
         env$user$enable_beta()
         PGX$name
     }, {
@@ -275,56 +279,56 @@ app_server <- function(input, output, session) {
         dbg("[SERVER] show.beta = ",show.beta)
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
         is.logged <- auth$logged()
-        
+
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
-            message("[SERVER] !!! no data. hiding menu.")          
+            message("[SERVER] !!! no data. hiding menu.")
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
-            updateTabsetPanel(session, "maintabs", selected = "Home")                        
+            updateTabsetPanel(session, "maintabs", selected = "Home")
             toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
             return(NULL)
         }
-        
+
         message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
-        
+
         ## Beta features
-        toggleTab("drug-tabs","Connectivity map (beta)",show.beta)                
+        toggleTab("drug-tabs","Connectivity map (beta)",show.beta)
         toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
         ##toggleTab("maintabs","Cluster features",show.beta)
         toggleTab("maintabs","WGCNA (beta)",show.beta)
-        toggleTab("maintabs","Compare datasets (beta)",show.beta)        
-        
+        toggleTab("maintabs","Compare datasets (beta)",show.beta)
+
         ## DEVELOPER only tabs (still too alpha)
         if(DEV) toggleTab("maintabs","DEV",DEV)
         toggleTab("cor-tabs","Functional",DEV)   ## too slow
-        toggleTab("cor-tabs","Differential",DEV)  
+        toggleTab("cor-tabs","Differential",DEV)
         toggleTab("view-tabs","Resource info",DEV)
         toggleTab("scell-tabs","iTALK",DEV)  ## DEV only
-        toggleTab("scell-tabs","CNV",DEV)  ## DEV only        
+        toggleTab("scell-tabs","CNV",DEV)  ## DEV only
         toggleTab("scell-tabs","Monocle",DEV) ## DEV only
         toggleTab("cor-tabs","Functional",DEV)
-        
+
         ## Dynamically show upon availability in pgx object
-        toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
+        toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)
         tabRequire(PGX, "connectivity", "maintabs", "Similar experiments")
         tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
         tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
         tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
-        toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))                    
+        toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
 
-        message("[SERVER] reconfiguring menu done.")        
+        message("[SERVER] reconfiguring menu done.")
 
     })
-    
+
     ##-------------------------------------------------------------
     ## Session TimerModule
     ##-------------------------------------------------------------
 
     reset_timer <- function() {}
     run_timer <- function(run=TRUE) {}
-  
+
     if( TIMEOUT > 0 ) {
 
         rv.timer <- reactiveValues(reset=0, run=FALSE)
@@ -340,8 +344,8 @@ app_server <- function(input, output, session) {
 
         message("[SERVER] Creating TimerModule...")
         message("[SERVER] TIMEOUT = ", TIMEOUT)
-        message("[SERVER] WARN_BEFORE = ", WARN_BEFORE)                  
-      
+        message("[SERVER] WARN_BEFORE = ", WARN_BEFORE)
+
         timer <- TimerModule(
             "timer",
             timeout = TIMEOUT,
@@ -349,12 +353,12 @@ app_server <- function(input, output, session) {
             max_warn = 1,
             poll = Inf,  ## not needed, just for timer output
             reset = reactive(rv.timer$reset),
-            run = reactive(rv.timer$run)            
+            run = reactive(rv.timer$run)
         )
-        
+
         observe({
             message("[SERVER] timer = ",timer$timer())
-            message("[SERVER] lapse_time = ",timer$lapse_time())        
+            message("[SERVER] lapse_time = ",timer$lapse_time())
         })
 
         observeEvent( timer$warn(), {
@@ -379,13 +383,13 @@ app_server <- function(input, output, session) {
         ## Choose type of referral modal upon timeout:
         mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
         ##mod.timeout <- SendReferralModule("sendreferral", r.user=auth$name, r.show=r.timeout)
-        
-        observeEvent( mod.timeout$success(), {        
+
+        observeEvent( mod.timeout$success(), {
           success <- mod.timeout$success()
-          message("[SERVER] success = ",success)          
+          message("[SERVER] success = ",success)
           if(success==0) {
             message("[SERVER] logout after no referral!!!")
-            shinyjs::runjs("logout()")    
+            shinyjs::runjs("logout()")
           }
           if(success > 1) {
             message("[SERVER] resetting timer after referral!!!")
@@ -393,8 +397,8 @@ app_server <- function(input, output, session) {
             msg = HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>")
             msg = HTML(paste0("<center><h4>Ditch the ",timeout.min,"-minute limit</h4>
 Upgrade today and experience advanced analysis features without the time limit.</center>"))
-            
-            
+
+
             showModal(modalDialog(
               msg,
 
@@ -410,17 +414,17 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
-        
+
         ##--------- start timer --------------
-        if(TIMEOUT>0 && logged) {        
+        if(TIMEOUT>0 && logged) {
           message("[SERVER] starting session timer!!!")
           reset_timer()
-          run_timer(TRUE)            
-          
+          run_timer(TRUE)
+
         } else {
-          message("[SERVER] no timer!!!")            
-          run_timer(FALSE)                        
-        }       
+          message("[SERVER] no timer!!!")
+          run_timer(FALSE)
+        }
       })
 
     } ## end of if TIMEOUT>0
@@ -429,25 +433,25 @@ Upgrade today and experience advanced analysis features without the time limit.<
     ##-------------------------------------------------------------
     ## Session logout functions
     ##-------------------------------------------------------------
-        
+
     shiny::observe({
 
         ## trigger on change of USER
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
-        
+
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
             ## we allow sticky sessions.
-            message("[SERVER] user not logged in? forcing logout() JS callback...")            
-            shinyjs::runjs("logout()")    
+            message("[SERVER] user not logged in? forcing logout() JS callback...")
+            shinyjs::runjs("logout()")
         }
-        
+
     })
 
     ## logout helper function
-    logout.JScallback = "logout()"    
+    logout.JScallback = "logout()"
     if(opt$AUTHENTICATION=="shinyproxy") {
         logout.JScallback = "function(x){logout();quit();window.location.assign('/logout');}"
     }
@@ -462,25 +466,25 @@ Upgrade today and experience advanced analysis features without the time limit.<
     ## This code listens to the JS quit signal
     observeEvent( input$quit, {
         dbg("[SERVER:quit] !!!reacted!!!")
-        dbg("[SERVER:quit] closing session... ")        
+        dbg("[SERVER:quit] closing session... ")
         session$close()
     })
-    
+
     ## This code will be run after the client has disconnected
     ## Note!!!: Strange behaviour, sudden session ending.
     session$onSessionEnded(function() {
         message("******** doing session cleanup ********")
         ## fill me...
         if(opt$AUTHENTICATION == "shinyproxy") {
-            session$sendCustomMessage("shinyproxy-logout", list())            
+            session$sendCustomMessage("shinyproxy-logout", list())
         }
-        
-    })    
+
+    })
 
     ##-------------------------------------------------------------
     ## report server times
-    ##-------------------------------------------------------------    
-    server.init_time <- round(Sys.time() - server.start_time, digits=4)    
+    ##-------------------------------------------------------------
+    server.init_time <- round(Sys.time() - server.start_time, digits=4)
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))

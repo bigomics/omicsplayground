@@ -11,10 +11,20 @@
 #' @param width
 #'
 #' @export
-expression_table_gsettable_ui <- function(id) {
+expression_table_gsettable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("gsettable"))
+  gsettable_text <- "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = gsettable_text,
+    width = width,
+    height = height,
+    title = "Gene sets with gene",
+    label = "II"
+  )
+
 }
 
 #' Server side table code: expression board
@@ -40,48 +50,42 @@ expression_table_gsettable_server <- function(id,
       df$geneset <- wrapHyperLink(df$geneset, rownames(df))
 
       DT::datatable(df,
-        ## class = 'compact cell-border stripe',
         class = "compact",
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         fillContainer = TRUE,
         options = list(
-          ## dom = 'lfrtip',
           dom = "frtip",
-          paging = TRUE,
-          pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          # paging = TRUE,
+          # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          ## scrollY = tabV,
-          scrollY = FALSE,
-          scroller = FALSE,
+          scrollY = "20vh",
+          scroller = TRUE,
           deferRender = TRUE,
           search = list(
             regex = TRUE,
             caseInsensitive = TRUE
-            ## search = 'GOBP:'
           )
         ), ## end of options.list
         selection = list(mode = "single", target = "row", selected = NULL)
       ) %>%
-        ## formatSignif(1:ncol(df),4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
-      # }, server=FALSE)
     })
 
-    gsettable_text <- "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
+    gsettable.RENDER_modal <- shiny::reactive({
+      dt <- gsettable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    gsettable <- shiny::callModule(
-      tableModule,
-      id = "gsettable",
+    gsettable <- TableModuleServer(
+      "datasets",
       func = gsettable.RENDER,
-      info.text = gsettable_text,
-      selector = "single",
-      title = tags$div(
-        HTML('<span class="module-label">(II)</span>Gene sets with gene')
-      ),
-      height = height, width = width
+      func2 = gsettable.RENDER_modal,
+      selector = "single"
     )
+
     return(gsettable)
   }) # end module server
 } # end server

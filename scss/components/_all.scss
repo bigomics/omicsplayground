@@ -83,8 +83,9 @@ html {
   }
 
   .well {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.2em;
+    background: transparent;
   }
 
   .code {
@@ -103,6 +104,11 @@ html {
 
   .modal-body .gene-info-output {
     height: auto;
+  }
+
+  .modal-title{
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .bg-cover-image {

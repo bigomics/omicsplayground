@@ -16,19 +16,17 @@ drugconnectivity_plot_cmap_enplot_ui <- function(id,
                                              label = "",
                                              height = c(305, 600)) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>Connectivity map.</strong> correlates your
+  info_text <- "<strong>Connectivity map.</strong> correlates your
                        signature with known drug profiles from the L1000
                        database, and shows similar and opposite profiles by
                        running the GSEA algorithm on the drug profile
-                       correlation space.")
-  plot_opts <- shiny::tagList()
+                       correlation space."
 
   PlotModuleUI(ns("plot"),
                title = "Enrichment Plot",
                label = label,
                plotlib = "plotly",
                info.text = info_text,
-               options = plot_opts,
                download.fmt = c("png", "pdf", "csv"),
                height = c(305, 600),
                width=c('auto', 1000),

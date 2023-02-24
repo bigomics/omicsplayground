@@ -8,95 +8,74 @@ WelcomeBoardInputs <- function(id) {}
 WelcomeBoardUI <- function(id) {}
 
 
-WelcomeBoard <- function(id, auth)
-{
-  moduleServer(id, function(input, output, session) 
-  {
+WelcomeBoard <- function(id, auth, r_global) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
-        name <- auth$name()
-        dbg("[HomeBoard] name = ",name)        
-        if(name %in% c("",NA,NULL)) {
-          welcome <- "Welcome back..."
-        } else {
-          first.name <- strsplit("ivo kwee",split="[@ .]")[[1]][1]
-          first.name <- paste0(toupper(substring(first.name,1,1)),
-                               substring(first.name,2,nchar(first.name)))
-          welcome <- paste0("Welcome back ",first.name,"...")
-        }
-        welcome
+      name <- auth$name()
+      if (name %in% c("", NA, NULL)) {
+        welcome <- "Welcome back..."
+      } else {
+        first.name <- strsplit("ivo kwee", split = "[@ .]")[[1]][1]
+        first.name <- paste0(
+          toupper(substring(first.name, 1, 1)),
+          substring(first.name, 2, nchar(first.name))
+        )
+        welcome <- paste0("Welcome back ", first.name, "...")
+      }
+      welcome
     })
 
-    observeEvent( input$load_data, {
-      ## shinyjs::click("")
+    observeEvent(input$init_example_data, {
+      r_global$load_example_trigger <- TRUE
     })
-
-    observeEvent( input$upload_new, {
-      ## shinyjs::click("")
-    })
-       
   })
 }
 
 WelcomeBoardInputs <- function(id) {
-  ## ns <- shiny::NS(id)  ## namespace
-  ## bigdash::tabSettings(
-  ##   shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube"))
-  ## )
   return(NULL)
 }
 
 WelcomeBoardUI <- function(id) {
-  ns <- shiny::NS(id)  ## namespace
+  ns <- shiny::NS(id) ## namespace
 
   div(
-      id = "welcome-page",
-      ##style = "text-align:center;background-color:#eaf7fd;",
-      ##style = "text-align:center;",      
-      br(),      
-      br(),
-      div(shiny::textOutput(ns("welcome")), id="welcome-text"),
-      h2("What would you like to do today?"),
-      br(),
-      br(),    
-      br(),
+    id = "welcome-page",
+    br(),
+    br(),
+    div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
+    h2("What would you like to do today?"),
+    br(),
+    br(),
+    br(),
+    div(
+      class = "row",
+      id = "welcome-buttons",
       div(
-          class = "row",
-          id = "welcome-buttons",
-          div(
-              class = "col-md-5",
-              h3("I am new..."),
-              tags$a(
-                  id = "init-example-data",
-                  "Try example dataset",
-                  class = "btn btn-outline-info welcome-btn"
-              )
-          ),
-          div(
-              class = "col-md-7",
-              h3("I'm an existing user..."),
-              tags$a(
-                  id = "init-upload-data",
-                  "Upload new data",
-                  class = "btn btn-outline-info welcome-btn"
-              ),
-              tags$button(
-                  id = "init-load-data",
-                  "Use my saved data",
-                  class = "btn btn-outline-primary welcome-btn"
-              )
-          )
+        class = "col-md-5",
+        h3("I am new..."),
+        shiny::actionButton(
+          ns("init_example_data"),
+          label = "Try example dataset",
+          class = "btn btn-outline-info welcome-btn"
+        )
       ),
-      ## br(),
-      ## div(
-      ##   id="welcome-subtext",
-      ##   HTML("<B>BigOmics Playground. Never Stop Discovering.</B><br>
-      ##       BigOmics is focused on one thing — helping life scientists see and understand their omics
-      ##       data. Our mission is to create smart tools and make advanced omics analysis accessible to
-      ##       everyone. Want to know more? Read our paper \"Omics Playground: a comprehensive self-
-      ##       service platform for visualization, analytics and exploration of Big Omics Data\".")),
-      br()
-      
+      div(
+        class = "col-md-7",
+        h3("I'm an existing user..."),
+        tags$a(
+          id = "init-upload-data",
+          "Upload new data",
+          class = "btn btn-outline-info welcome-btn"
+        ),
+        tags$button(
+          id = "init-load-data",
+          "Use my saved data",
+          class = "btn btn-outline-primary welcome-btn"
+        )
+      )
+    ),
+    br()
   )
 }

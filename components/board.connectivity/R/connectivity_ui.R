@@ -22,6 +22,10 @@ ConnectivityInputs <- function(id) {
       "Select reference signature database.",
       placement = "right", options = list(container = "body")
     ),
+    shiny::selectInput(ns("connectivityScoreTable_qsig"), "threshold (padj)",
+                       c(0.01, 0.05, 0.2, 1),
+                       selected = 1
+    ),
     shiny::br(),
     withTooltip(shiny::actionLink(ns("cmap_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
@@ -61,7 +65,11 @@ ConnectivityUI <- function(id) {
           ),
           div(
             class = "col-md-6",
-            tableWidget(ns("connectivityScoreTable"))
+            connectivity_table_similarity_scores_ui(
+              ns("connectivityScoreTable"),
+              height = c(260, TABLE_HEIGHT_MODAL),
+              width = c("auto", "90%")
+            )
           )
         ),
         connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot"),label = "c"),
@@ -144,7 +152,11 @@ ConnectivityUI <- function(id) {
           ),
           div(
             class = "col-md-6",
-            tableWidget(ns("connectivityScoreTable2"))
+            connectivity_table_similarity_scores2_ui(
+              ns("connectivityScoreTable2"),
+              height = c(660, TABLE_HEIGHT_MODAL),
+              width = c("auto", "90%")
+            )
           )
         ),
         tags$div(

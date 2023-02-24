@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-signature_table_overlap_ui <- function(id) {
+signature_table_overlap_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  info_text <- "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Overlap with other signatures",
+    label = "b"
+  )
+
 }
 
 signature_table_overlap_server <- function(id,
@@ -31,7 +41,7 @@ signature_table_overlap_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          scrollX = TRUE, scrollY = tabH, scroller = TRUE
+          scrollX = TRUE, scrollY = "25vh", scroller = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
@@ -44,17 +54,17 @@ signature_table_overlap_server <- function(id,
         )
     })
 
-    info.text <- "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
+    overlapTable.RENDER_modal <- shiny::reactive({
+      dt <- overlapTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    overlapTable <- shiny::callModule(
-      tableModule,
-      id = "table",
+    overlapTable <- TableModuleServer(
+      "datasets",
       func = overlapTable.RENDER,
-      title = tags$div(
-        HTML('<span class="module-label">(b)</span>Overlap with other signatures')
-      ),
-      info.text = info.text,
-      height = 0.4 * fullH
+      func2 = overlapTable.RENDER_modal,
+      selector = "none"
     )
     return(overlapTable)
   })

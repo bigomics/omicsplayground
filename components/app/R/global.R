@@ -28,7 +28,20 @@ options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
     # 1. The header scrolls with the X scroll bar
-options(DT.options = list(autoWidth = FALSE, scrollX = TRUE))
+    # 2. The Y scroller works properly and no blank rows are displayed
+options(DT.options = list(
+  autoWidth = FALSE,
+  scrollX = TRUE,
+  fillContainer = FALSE
+))
+# Set global modal height values for tables.
+  # - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
+  # this only defines the srollable part of the table, not the header height.
+  # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
+  # this will define how close the caption is to the table.
+SCROLLY_MODAL <<- "55vh"
+TABLE_HEIGHT_MODAL <<- "75vh"
+
 reticulate::use_miniconda('r-reticulate')
 
 get_opg_root <- function() {

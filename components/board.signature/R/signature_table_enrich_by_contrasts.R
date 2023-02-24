@@ -3,10 +3,20 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-signature_table_enrich_by_contrasts_ui <- function(id) {
+signature_table_enrich_by_contrasts_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("table"))
+  info_text <- "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Enrichment by contrasts",
+    label = "a"
+  )
+
 }
 
 signature_table_enrich_by_contrasts_server <- function(id,
@@ -39,7 +49,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lrtip",
-          scrollX = TRUE, scrollY = tabH, scroller = TRUE,
+          scrollX = TRUE, scrollY = "20vh", scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list
@@ -53,19 +63,19 @@ signature_table_enrich_by_contrasts_server <- function(id,
         )
     })
 
-    info.text1 <- "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
+    enrichmentContrastTable.RENDER_render <- shiny::reactive({
+      dt <- enrichmentContrastTable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    enrichmentContrastTable <- shiny::callModule(
-      tableModule,
-      id = "table",
+    enrichmentContrastTable <- TableModuleServer(
+      "datasets",
       func = enrichmentContrastTable.RENDER,
-      info.text = info.text1,
-      caption2 = info.text1,
-      title = tags$div(
-        HTML('<span class="module-label">(a)</span>Enrichment by contrasts')
-      ),
-      height = c(230, 700)
+      func2 = enrichmentContrastTable.RENDER_render,
+      selector = "single"
     )
+
     return(enrichmentContrastTable)
   })
 }

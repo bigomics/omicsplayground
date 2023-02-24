@@ -4,11 +4,21 @@
 ##
 
 
-dataview_table_samples_ui <- function(id) {
+dataview_table_samples_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-  tableWidget(ns("tbl"))
-}
 
+  info_text = "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables
+                 starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Sample information",
+    label = "c"
+  )
+}
 
 dataview_table_samples_server <- function(id,
                                           pgx,
@@ -48,27 +58,18 @@ dataview_table_samples_server <- function(id,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = 600,
+          scroller = TRUE, scrollX = TRUE, scrollY = SCROLLY_MODAL,
           deferRender = TRUE
         )
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "20px", lineHeight = "70%")
     }
 
-    info_text <- "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables
-                 starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
-
-    shiny::callModule(
-      tableModule, "tbl",
-      label = "",
+    TableModuleServer(
+      "datasets",
       func = table.RENDER,
       func2 = modal_table.RENDER,
-      title = "Sample information",
-      filename = "samples.csv",
-      info.text = info_text,
-      caption2 = info_text
-      ## height = c(280,750),
-      ## width=c('auto','100%')
+      selector = "none"
     )
   }) ## end of moduleServer
 } ## end of server

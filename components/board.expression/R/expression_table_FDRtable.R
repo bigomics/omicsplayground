@@ -11,10 +11,19 @@
 #' @param width
 #'
 #' @export
-expression_table_FDRtable_ui <- function(id) {
+expression_table_FDRtable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("FDRtable"))
+  FDRtable_text <- "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = FDRtable_text,
+    width = width,
+    height = height,
+    title = "Number of significant genes"
+  )
+
 }
 
 #' Server side table code: expression board
@@ -80,7 +89,7 @@ expression_table_FDRtable_server <- function(id,
           dom = "lfrtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = tabV,
+          scrollY = "20vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
@@ -99,18 +108,17 @@ expression_table_FDRtable_server <- function(id,
         )
     })
 
-    FDRtable_text <- "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
+    FDRtable.RENDER_modal <- shiny::reactive({
+      dt <- FDRtable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    FDRtable_caption <- "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
-
-    shiny::callModule(
-      tableModule,
-      id = "FDRtable",
+    TableModuleServer(
+      "datasets",
       func = FDRtable.RENDER,
-      info.text = FDRtable_text,
-      title = "Number of significant genes",
-      caption = FDRtable_caption,
-      height = height
+      func2 = FDRtable.RENDER_modal,
+      selector = "none"
     )
   }) # end module server
 } # end server

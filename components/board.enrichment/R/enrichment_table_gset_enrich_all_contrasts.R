@@ -3,10 +3,19 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-enrichment_table_gset_enrich_all_contrasts_ui <- function(id) {
+enrichment_table_gset_enrich_all_contrasts_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("fctable"))
+  info_text <- "The <strong>Enrichment (all)</strong> panel reports the gene set enrichment for all contrasts in the selected dataset."
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info_text,
+    width = width,
+    height = height,
+    title = "Gene set enrichment for all contrasts"
+  )
+
 }
 
 enrichment_table_gset_enrich_all_contrasts_server <- function(id,
@@ -40,7 +49,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
-          scrollY = tabH,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -58,19 +67,18 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         )
     })
 
-    gx_fctable_text <- "The <strong>Enrichment (all)</strong> panel reports the gene set enrichment for all contrasts in the selected dataset."
+    fctable.RENDER_modal <- shiny::reactive({
+      dt <- fctable.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    gx_fctable_caption <- "<b>Enrichment for all contrasts.</b> Table summarizing the enrichment for all gene sets across all contrasts. The column `fc.var` corresponds to the variance of the gene set across all contrasts."
-
-    shiny::callModule(
-      tableModule,
-      id = "fctable",
+    TableModuleServer(
+      "datasets",
       func = fctable.RENDER,
-      title = "Gene set enrichment for all contrasts",
-      info.text = gx_fctable_text,
-      caption = gx_fctable_caption,
-      height = c(295, 750),
-      width = c("100%", 1600)
+      func2 = fctable.RENDER_modal,
+      selector = "none"
     )
+
   })
 }

@@ -88,6 +88,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
     topEnrichedFreq.RENDER <- function(){
       dt <- plot_data()
+      shiny::req(dt)
       ngs <- dt[[1]]
       rpt <- dt[[2]]
       ntop <- dt[[3]]
