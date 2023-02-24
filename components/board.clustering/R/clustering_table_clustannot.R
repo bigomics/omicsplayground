@@ -11,10 +11,20 @@
 #' @param width
 #'
 #' @export
-clustering_table_clustannot_ui <- function(id) {
+clustering_table_clustannot_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  tableWidget(ns("tablemod"))
+  clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+
+  TableModuleUI(
+    ns("datasets"),
+    width = width,
+    height = height,
+    info.text = clustannot_table_info_text,
+    title = "Annotation scores",
+    label = "b"
+  )
+
 }
 
 #' Server side table code: expression board
@@ -56,7 +66,7 @@ clustering_table_clustannot_server <- function(id,
           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, ##scrollY = TRUE,
           ##scrollY = 170,
-          scrollY = '70vh',
+          scrollY = '23vh',
           scroller=TRUE,
           deferRender=TRUE
         )  ## end of options.list
@@ -64,17 +74,18 @@ clustering_table_clustannot_server <- function(id,
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     })
 
-    # clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+    clustannot_table.RENDER_modal <- shiny::reactive({
+      dt <- clustannot_table.RENDER()
+      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt
+    })
 
-    ##clustannot_table_module <- tableModule(
-    shiny::callModule(
-      tableModule,
-      id = "tablemod",
+    TableModuleServer(
+      "datasets",
       func = clustannot_table.RENDER,
-      ##options = clustannot_table_opts,
-      title="Annotation scores", label="b",
-      height = c(240,700), width=c('auto',1000),
-      ##caption = clustannot_caption
+      func2 = clustannot_table.RENDER_modal,
+      selector = "none"
     )
+
   }) # end module server
 } # end server

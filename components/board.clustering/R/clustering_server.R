@@ -422,28 +422,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         return(filt)
     })
 
-    hm_parcoord.selected <- shiny::reactive({
-
-      mat <- hm_parcoord.matrix()$mat
-      clust <- hm_parcoord.matrix()$clust
-      shiny::req(mat)
-      keep <- TRUE
-      for (i in names(hm_parcoord.ranges)) {
-        range_ <- hm_parcoord.ranges[[i]]
-        range_ <- range_[sapply(range_,length)>0]
-        if(length(range_)>0) {
-          keep_var <- FALSE
-          for (j in seq_along(range_)) {
-            rng <- range_[[j]]
-            keep_var <- keep_var | dplyr::between(mat[,i], min(rng), max(rng))
-          }
-          keep <- keep & keep_var
-        }
-      }
-      list(mat=mat[keep,,drop=FALSE], clust=clust[keep])
-    })
-
-
     getClustAnnotCorrelation <- shiny::reactive({
 
       ##pgx <- inputData()
@@ -641,11 +619,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                     watermark=FALSE,
                                     parent = ns)
 
-    clustering_plot_hm_parcoord_server(id = "hm_parcoord",
-                                       hm_parcoord.matrix = hm_parcoord.matrix,
-                                       getTopMatrix = getTopMatrix,
-                                       watermark=FALSE
-                                        )
+    clustering_plot_table_hm_parcoord_server(id = "hm_parcoord",
+                                             hm_parcoord.matrix = hm_parcoord.matrix,
+                                             getTopMatrix = getTopMatrix,
+                                             watermark=FALSE
+                                             )
 
     clustering_plot_phenoplot_server(id = "clust_phenoplot",
                                      pgx = pgx,
@@ -672,47 +650,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                                        getClustAnnotCorrelation = getClustAnnotCorrelation,
                                        xann_level = clusterannot$xann_level,
                                        watermark = FALSE)
-
-    clustering_table_hm_parcoord_server(id = "",
-                                        hm_parcoord.selected = hm_parcoord.selected,
-                                        watermark = FALSE)
-
-    hm_parcoord_table.RENDER <- shiny::reactive({
-
-        mat = hm_parcoord.selected()$mat
-        clust = hm_parcoord.selected()$clust
-        df <- data.frame(cluster=clust, mat, check.names=FALSE)
-        numeric.cols <- 2:ncol(df)
-        DT::datatable(
-                df, rownames=TRUE, ## escape = c(-1,-2),
-                extensions = c('Buttons','Scroller'),
-                selection=list(mode='single', target='row', selected=NULL),
-                class = 'compact hover',
-                fillContainer = TRUE,
-                options=list(
-                    dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
-                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                    scrollX = TRUE, ##scrollY = TRUE,
-                    ##scrollY = 170,
-                    scrollY = '70vh',
-                    scroller=TRUE, deferRender=TRUE
-                )  ## end of options.list
-            ) %>%
-            DT::formatSignif(numeric.cols,3) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
-    })
-
-    hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
-
-
-    hm_parcoord_table_module <- shiny::callModule(
-        tableModule, id = "hm_parcoord_table",
-        func = hm_parcoord_table.RENDER, ## ns=ns,
-        info.text = hm_parcoord_table_info,
-        title = "Selected genes", label="b",
-        height = c(270,700)
-    )
-
 
     clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
 

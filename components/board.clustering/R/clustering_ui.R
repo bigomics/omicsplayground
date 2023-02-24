@@ -87,31 +87,23 @@ ClusteringUI <- function(id) {
                       ns("PCAplot"),
                       label="",
                       height=c("70vh","70vh"),
-                      parent = ns)
-                    ##plotWidget(ns("hm_PCAplot")),
-                    ## tags$div( class="caption",
-                    ##     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
-                    ##     samples as a scatterplot in reduced dimension (2D or 3D).
-                    ##     Samples that are similar are clustered near to each other, while samples with different
-                    ##     expression are positioned farther away. Groups of samples with similar profiles
-                    ##     will appear as <i>clusters</i> in the plot.")
-                    ## )
+                      parent = ns),
+                      tags$div( class="caption",
+                          HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
+                          samples as a scatterplot in reduced dimension (2D or 3D).
+                          Samples that are similar are clustered near to each other, while samples with different
+                          expression are positioned farther away. Groups of samples with similar profiles
+                          will appear as <i>clusters</i> in the plot.")
+                      )
                 ),
                 shiny::tabPanel("Parallel",
 
-                    clustering_plot_hm_parcoord_ui(
+                                clustering_plot_table_hm_parcoord_ui(
                       id =ns("hm_parcoord"),
                       label= 'a',
                       width = c("100%",1000),
                       height=c(0.45*fullH,600)),
                     br(),
-
-                    clustering_table_hm_parcoord_ui(ns("hm_parcoord_table")),
-
-                    #FIXME
-                    #tableWidget(ns("hm_parcoord_table")), #FIXME
-                    #FIXME
-
                     tags$div(class="caption",
                         HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                             the expression levels of selected genes across all conditions.
@@ -134,8 +126,11 @@ ClusteringUI <- function(id) {
                                                     height = c(360,600),
                                                     width = c("100%",1000)
                                                     ),
-                    clustering_table_clustannot_ui(id = ns("tables_clustannot")),
-                    # uiOutput(ns("hm_annotateUI"))),
+                    clustering_table_clustannot_ui(
+                      ns("tables_clustannot"),
+                      height = c(330,TABLE_HEIGHT_MODAL),
+                      width=c('auto', '90%')
+                    ),
                     tags$div(class="caption",
                              HTML("<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
                                   )

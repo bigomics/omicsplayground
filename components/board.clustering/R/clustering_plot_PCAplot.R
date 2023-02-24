@@ -17,9 +17,6 @@ clustering_plot_clustpca_ui <- function(id,
   info_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other.
 <br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
 
-  caption = "<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
-
-
   plot_opts = shiny::tagList(
     withTooltip( shiny::selectInput(parent("hmpca.colvar"), "Color/label:", choices=NULL, width='100%'),
       "Set colors/labels according to a given phenotype."),
@@ -40,7 +37,6 @@ clustering_plot_clustpca_ui <- function(id,
     label = label,
     plotlib = "plotly",
     info.text = info_text,
-    caption = caption,
     options = plot_opts,
     download.fmt=c("png","pdf","csv"),
     width = c("auto","100%"),
