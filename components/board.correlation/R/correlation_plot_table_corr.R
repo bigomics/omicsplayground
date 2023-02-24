@@ -19,13 +19,27 @@ correlation_plot_table_corr_ui <- function(id,
   ns <- shiny::NS(id)
   info_text <- "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
 
+
+  plot_opts <- shiny::tagList(
+    withTooltip(shiny::selectInput(ns("order_opt"), "Order by:",
+                                   choices = c("Both",
+                                               "Correlation",
+                                               "Partial Correlation"),
+                                   multiple = FALSE,
+                                   selected = "Both"),
+                "Sort order of groups based on correlation.",
+                placement = "top"
+    )
+  )
+
   cor_table.info <- "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
 
   div(
     PlotModuleUI(ns("plot"),
       title = "Top correlated genes",
       label = label,
-      plotlib = "base",
+      plotlib = "plotly",
+      options = plot_opts,
       info.text = info_text,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
@@ -72,46 +86,50 @@ correlation_plot_table_corr_server <- function(id,
       names(prho) <- rownames(df)
       prho <- prho[match(names(rho), names(prho))]
       names(prho) <- names(rho)
+
       return(list(
-        rho, prho
+        rho, prho,
+        order_opt = input$order_opt
       ))
     })
 
     cor_barplot.PLOTFUN <- function() {
-      df <- plot_data()
-      rho <- df[[1]]
-      prho <- df[[2]]
 
-      ylim0 <- c(-1, 1) * max(abs(rho)) * 1.05
+      pd <- plot_data()
 
-      par(mfrow = c(1, 1), mar = c(10, 4, 1, 0.5))
-      barplot(rho,
-        beside = FALSE, las = 3,
-        ylim = ylim0,
-        ylab = "correlation",
-        cex.names = 0.85
-      )
-      barplot(prho,
-        beside = FALSE, add = TRUE,
-        col = "grey40", names.arg = ""
-      )
-      legend("topright",
-        cex = 0.85, y.intersp = 0.85,
-        inset = c(0.035, 0),
-        c("correlation", "partial correlation"),
-        fill = c("grey70", "grey40")
-      )
+      pd_rho <- data.frame(genes = names(pd[[1]]), rho = pd[[1]])
+      pd_prho <- data.frame(genes = names(pd[[2]]), rho = pd[[2]])
+
+      pd_plot <- base::merge(pd_rho,pd_prho, by = "genes")
+
+      pd_plot <- pd_plot[complete.cases(pd_plot),]
+
+      rownames(pd_plot) <-pd_plot$genes
+
+      pd_plot$genes <- NULL
+
+      colnames(pd_plot) <- c("Correlation", "Partial correlation")
+
+      if(input$order_opt == "Correlation"){
+
+        pd_plot <- pd_plot[order(pd_plot$Correlation,decreasing = TRUE),]
+
+      }else if(input$order_opt == "Partial Correlation"){
+
+        pd_plot <- pd_plot[order(pd_plot$`Partial correlation`,decreasing = TRUE),]
+
+      }else if(input$order_opt == "Both"){
+
+        total_sum_cor <- rowSums(pd_plot)
+
+        pd_plot <- pd_plot[order(total_sum_cor,decreasing = TRUE),]
+
+      }
+
+      pgx.stackedBarplot(x = pd_plot,
+                         ylab = "Correlation",
+                         showlegend = FALSE)
     }
-
-    PlotModuleServer(
-      "plot",
-      plotlib = "base",
-      func = cor_barplot.PLOTFUN,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(63, 100), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
-    )
 
     ### TABLE
 
@@ -176,5 +194,16 @@ correlation_plot_table_corr_server <- function(id,
       func2 = cor_table.RENDER_modal,
       selector = "none"
     )
+
+    PlotModuleServer(
+      "plot",
+      plotlib = "plotly",
+      func = cor_barplot.PLOTFUN,
+      csvFunc = plot_data, ##  *** downloadable data as CSV
+      res = c(63, 100), ## resolution of plots
+      pdf.width = 6, pdf.height = 6,
+      add.watermark = watermark
+    )
+
   }) ## end of moduleServer
 }

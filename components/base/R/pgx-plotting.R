@@ -7,22 +7,6 @@
 ## Plotting functions
 ########################################################################
 
-if(0) {
-
-    fc <- pgx.getMetaMatrix(ngs, level='geneset')$fc
-    x <- Matrix::head( fc[order(-rowMeans(fc**2)),], 60 )
-
-    par(mar=c(20,4,4,2), mfrow=c(1,1))
-    barplot( t(x), beside=FALSE, las=3)
-    ##par(mgp=c(2,1,0))
-    pgx.stackedBarplot(x, ylab="cumulative logFC", cex.names=0.001, srt=60, adj=1)
-
-    par(mar=c(4,0,4,2), mfrow=c(1,2)); frame()
-    pgx.stackedBarplot(Matrix::head(x,40), xlab="cumulative logFC", hz=TRUE, cex.names=0.8)
-
-    x=zx0;dim=2;method="pca"
-}
-
 heatmapWithAnnot <- function(F, anno.type=c('boxplot','barplot'),
                              bar.height=NULL, map.height=NULL,
                              row_fontsize=9, column_fontsize=9,
@@ -3388,37 +3372,40 @@ pgx.plotSampleClustering <- function(x, dim=2,
 
 }
 
-pgx.stackedBarplot <- function(x, hz=FALSE, srt=NULL, cex.text=0.9, ...)
-{
-    ##x <- x[order(rowMeans(x,na.rm=TRUE)),]
-    ##barplot( t(x), beside=FALSE, las=3)
-    x.pos <- pmax(x,0)
-    x.neg <- pmin(x,0)
-    y0 <- max(abs(rowSums(x,na.rm=TRUE)))
-    y0 <- max(rowSums(pmax(x,0),na.rm=TRUE),
-              rowSums(pmax(-x,0),na.rm=TRUE))
+pgx.stackedBarplot <- function(x,
+                               showlegend,
+                               ylab = NULL,
+                               xlab = NULL,
+                               horiz = FALSE
+                               ) {
 
-    rownames(x.neg) <- NULL
-    p <- NULL
-    if(hz==TRUE) {
-        ##p <- barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0 )
-        ##barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE )
+  x_plot <- cbind(data.frame(groups = rownames(x)), x)
 
-        p <- barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0, ... )
-        barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE, ... )
+  x_plot <- data.table::melt(x_plot, id.vars='groups',value.name = "Effect")
 
-
-    } else {
-        p <- barplot( t(x.pos), beside=FALSE, las=3, ylim=c(-1.1,1.1)*y0, ... )
-        barplot( t(x.neg), beside=FALSE, las=3, add=TRUE, ... )
-
-        if(!is.null(srt)) {
-            text(p, par("usr")[3], labels=rownames(x), srt=srt, adj=1, xpd=TRUE, cex=cex.text)
-        }
-
+  if(horiz == FALSE){
+    x_plot$groups <- factor(x_plot$groups, levels = rownames(x))
+  }else{
+    c1 <- which(colnames(x_plot)=='variable')
+    c2 <- which(colnames(x_plot)=='Effect')
+    c3 <- which(colnames(x_plot)=='groups')
+    colnames(x_plot)[c1] <- "Effect"
+    colnames(x_plot)[c2] <- "groups"
+    colnames(x_plot)[c3] <- "variable"
     }
 
+  plotly::plot_ly(x_plot, x = ~groups,
+                  y = ~Effect,
+                  type = 'bar',
+                  name = ~variable,
+                  color = ~variable) %>%
+    plotly::layout(showlegend = showlegend, barmode = 'stack',
+                   yaxis = list(title = ylab),
+                   xaxis = list(title = xlab)) %>%
+    plotly_default1()
+
 }
+
 
 ## for plotly
 darkmode <- function(p, dim=2) {

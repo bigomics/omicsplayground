@@ -11,6 +11,9 @@ ClusteringInputs <- function(id) {
 #        shiny::hr(), shiny::br(),
         withTooltip( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                 "Select a family of features.", placement="top"),
+        withTooltip( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
+                                          c("default","tsne","pca","umap"),inline=TRUE),
+                     "Choose the layout method for clustering to visualise.",),
         shiny::conditionalPanel(
             "input.hm_features == '<custom>'", ns=ns,
             withTooltip( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
@@ -55,6 +58,8 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 
+    fullH = 850  ## full height of page
+
     div(
         class = "row",
         ## h4("Cluster Samples"),
@@ -64,7 +69,11 @@ ClusteringUI <- function(id) {
             shiny::tabsetPanel(
                 id = ns("tabs1"),
                 shiny::tabPanel("Heatmap",
-                    plotWidget(ns("hm_splitmap")),
+                    clustering_plot_hm_splitmap_ui(id = ns("hm_splitmap"),
+                                                   label = "a",
+                                                   height = fullH-80,
+                                                   width = '100%'),
+
                     tags$div( class="caption",
                         HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
                         clustering. Red corresponds to overexpression, blue to underexpression of the gene.
@@ -74,10 +83,11 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("PCA/tSNE",
-                    plot_clustpca_ui(ns("PCAplot"),
-                                    label="",
-                                    height=c("70vh","70vh"),
-                                    parent = ns)
+                    clustering_plot_clustpca_ui(
+                      ns("PCAplot"),
+                      label="",
+                      height=c("70vh","70vh"),
+                      parent = ns)
                     ##plotWidget(ns("hm_PCAplot")),
                     ## tags$div( class="caption",
                     ##     HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
@@ -88,10 +98,21 @@ ClusteringUI <- function(id) {
                     ## )
                 ),
                 shiny::tabPanel("Parallel",
-                    plotWidget(ns("hm_parcoord")),
+
+                    clustering_plot_hm_parcoord_ui(
+                      id =ns("hm_parcoord"),
+                      label= 'a',
+                      width = c("100%",1000),
+                      height=c(0.45*fullH,600)),
                     br(),
-                    tableWidget(ns("hm_parcoord_table")),
-                    tags$div( class="caption",
+
+                    clustering_table_hm_parcoord_ui(ns("hm_parcoord_table")),
+
+                    #FIXME
+                    #tableWidget(ns("hm_parcoord_table")), #FIXME
+                    #FIXME
+
+                    tags$div(class="caption",
                         HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
                             the expression levels of selected genes across all conditions.
                             On the x-axis the experimental conditions are plotted. The y-axis shows the expression level
@@ -108,9 +129,24 @@ ClusteringUI <- function(id) {
             shiny::tabsetPanel(
                 id = ns("tabs2"),
                 shiny::tabPanel("Annotate clusters",
-                    uiOutput(ns("hm_annotateUI"))),
+                    clustering_plot_clusterannot_ui(id = ns("plots_clustannot"),
+                                                    label='a',
+                                                    height = c(360,600),
+                                                    width = c("100%",1000)
+                                                    ),
+                    clustering_table_clustannot_ui(id = ns("tables_clustannot")),
+                    # uiOutput(ns("hm_annotateUI"))),
+                    tags$div(class="caption",
+                             HTML("<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+                                  )
+                    )
+                ),
                 shiny::tabPanel("Phenotypes",
-                    plotWidget(ns("clust_phenoplot")),
+
+                    clustering_plot_phenoplot_ui(id = ns("clust_phenoplot"),
+                                                 label='',
+                                                 height = c(fullH-80,700)
+                                                 ),
                     tags$div( class="caption",
                             HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
                             superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be
@@ -120,7 +156,13 @@ ClusteringUI <- function(id) {
                     )
                 ),
                 shiny::tabPanel("Feature ranking",
-                    plotWidget(ns("clust_featureRank")),
+
+                    clustering_plot_featurerank_ui(id = ns("clust_featureRank"),
+                                                   label='',
+                                                   height = c(fullH-80,700),
+                                                   width=c("auto",800)
+                    ),
+
                     tags$div( class="caption",
                             HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
                             The plot ranks the discriminative power of feature sets (or gene sets) as the
@@ -131,6 +173,4 @@ ClusteringUI <- function(id) {
             )
         )
     )
-
-
-}
+    }

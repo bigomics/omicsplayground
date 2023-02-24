@@ -13,8 +13,10 @@
 #'
 #' @export
 connectivity_plot_cumEnrichmentPlot_ui <- function(id,
-                                          label = "",
-                                          rowH = 660) {
+                                                   label = "",
+                                                   height,
+                                                   width
+                                                   ) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment
@@ -42,10 +44,11 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
   PlotModuleUI(ns("plot"),
                title = "Cumulative enrichment",
                label = label,
-               plotlib = "base",
+               plotlib = "plotly",
                info.text = info_text,
                options = plot_opts,
-               height = c(300, 720), width = c("auto", 1000)
+               height = height,
+               width = width
   )
 }
 
@@ -134,57 +137,18 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
         xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
 
-        par(mfrow = c(1, 2), mar = c(4, 1, 0, 0.5), mgp = c(2.4, 1, 0))
-        frame()
-        col1 <- grey.colors(ncol(F), start = 0.15)
-        pgx.stackedBarplot(
-          F,
-          las = 1, cex.names = 0.8, col = col1, hz = TRUE,
-          xlab = "cumulative enrichment"
-        )
-
-        fname <- sub("\\].*", "]", colnames(F))
+        pgx.stackedBarplot(x = data.frame(F),
+                           ylab = "cumulative enrichment",showlegend = FALSE
+                           )
       })
 
       plot_RENDER2 <- shiny::reactive({
-        ##
-        F <- cumEnrichmentTable()
-        if (is.null(F)) {
-          frame()
-          return(NULL)
-        }
-
-        NSETS <- 40
-        if (input$cumgsea_order == "FC") {
-          F <- F[order(-abs(F[, 1])), ]
-          F <- head(F, NSETS)
-          F <- F[order(F[, 1]), , drop = FALSE]
-        } else {
-          F <- F[order(-rowMeans(F**2)), ]
-          F <- head(F, NSETS)
-          F <- F[order(rowMeans(F)), , drop = FALSE]
-        }
-
-        rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
-        rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
-        rownames(F) <- shortstring(rownames(F), 72)
-        maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
-        xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
-
-        par(mfrow = c(1, 2), mar = c(4.5, 1, 0.4, 1), mgp = c(2.4, 1, 0))
-        frame()
-        col1 <- grey.colors(ncol(F), start = 0.15)
-        pgx.stackedBarplot(
-          F,
-          las = 1, cex.names = 0.78, col = col1, hz = TRUE,
-          xlab = "cumulative enrichment"
-        )
-
-        fname <- sub("\\].*", "]", colnames(F))
+        plot_RENDER() %>% plotly::layout(showlegend = TRUE)
       })
+
       PlotModuleServer(
         "plot",
-        plotlib = "base",
+        plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = cumEnrichmentTable,

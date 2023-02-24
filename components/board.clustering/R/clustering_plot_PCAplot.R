@@ -7,11 +7,10 @@
 
 ## Annotate clusters ############
 
-plot_clustpca_ui <- function(id,
-                             label='',
-
-                             height=c(600,800),
-                             parent)
+clustering_plot_clustpca_ui <- function(id,
+                                        label='',
+                                        height=c(600,800),
+                                        parent)
 {
   ns <- shiny::NS(id)
 
@@ -32,10 +31,7 @@ plot_clustpca_ui <- function(id,
       "Normalize matrix before calculating distances."),
     withTooltip( shiny::checkboxGroupInput( ns('hmpca_options'),"Other:",
       choices=c('sample label','3D','normalize'), inline=TRUE),
-      "Normalize matrix before calculating distances."),
-    withTooltip( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
-      c("default","tsne","pca","umap"),inline=TRUE),
-      "Choose the layout method for clustering to visualise.",)
+      "Normalize matrix before calculating distances.")
   )
 
   PlotModuleUI(
@@ -52,106 +48,34 @@ plot_clustpca_ui <- function(id,
   )
 }
 
-plot_clustpca_server <- function(id,
-                                 pgx,
-                                 r.samples = reactive(""),
-                                 hmpca.colvar,
-                                 hmpca.shapevar,
-                                 watermark=FALSE,
-                                 parent)
+clustering_plot_clustpca_server <- function(id,
+                                            pgx,
+                                            hmpca.colvar,
+                                            hm_getClusterPositions,
+                                            hmpca.shapevar,
+                                            hm_clustmethod,
+                                            watermark=FALSE,
+                                            parent)
 {
   moduleServer( id, function(input, output, session) {
     ns <- session$ns
 
-    ## Functions ############
-
-    hm_getClusterPositions <- shiny::reactive({
-
-        dbg("[plot_clustpca_server:hm_getClusterPositions] reacted!")
-
-        ##pgx <- inputData()
-        ##shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
-
-        ## take full matrix
-        #flt <- getFilteredMatrix()
-        #zx <- flt$zx
-        sel.samples <- r.samples()
-
-        clustmethod="tsne";pdim=2
-        do3d <- ("3D" %in% input$hmpca_options)
-        pdim = c(2,3)[ 1 + 1*do3d]
-
-        pos = NULL
-        force.compute = FALSE
-        clustmethod = input$hm_clustmethod
-        clustmethod0 <- paste0(clustmethod,pdim,"d")
-
-        if(clustmethod=="default" && !force.compute) {
-            if(pdim==2 && !is.null(pgx$tsne2d) ) {
-                pos <- pgx$tsne2d[sel.samples,]
-            } else if(pdim==3 && !is.null(pgx$tsne3d) ) {
-                pos <- pgx$tsne3d[sel.samples,]
-            }
-        } else if( clustmethod0 %in% names(pgx$cluster$pos))  {
-            shiny::showNotification(paste("switching to ",clustmethod0," layout...\n"))
-            pos <- pgx$cluster$pos[[clustmethod0]]
-            if(pdim==2) pos <- pos[sel.samples,1:2]
-            if(pdim==3) pos <- pos[sel.samples,1:3]
-        } else  {
-            ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ## This should not be necessary anymore as we prefer to
-            ## precompute all clusterings.
-            shiny::showNotification(paste("computing ",clustmethod,"...\n"))
-
-            ntop = 1000
-            ## ntop = as.integer(input$hm_ntop2)
-            zx <- pgx$X
-            zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
-            if(nrow(zx) > ntop) {
-                ##zx = head(zx,ntop)  ## OK?
-                zx = zx[1:ntop,,drop=FALSE]  ## OK?
-            }
-            if("normalize" %in% input$hmpca_options) {
-                zx <- scale(t(scale(t(zx))))
-            }
-            perplexity = max(1,min((ncol(zx)-1)/3, 30))
-            perplexity
-            res <- pgx.clusterMatrix(
-                zx, dims = pdim, perplexity = perplexity,
-                ntop = 999999, prefix = "C",
-                find.clusters = FALSE, kclust = 1,
-                row.center = TRUE, row.scale = FALSE,
-                method = clustmethod)
-            if(pdim==2) pos <- res$pos2d
-            if(pdim==3) pos <- res$pos3d
-        }
-
-        pos <- pos[sel.samples,]
-        pos <- scale(pos) ## scale
-        ##colnames(pos) = paste0("dim",1:ncol(pos))
-        ##rownames(pos) = colnames(zx)
-
-        idx <- NULL
-        dbg("[hm_getClusterPositions] done")
-
-        clust = list(pos=pos, clust=idx)
-
-        return(clust)
-    })
-
     ## Plot ############
 
     plot_data <- shiny::reactive({
-        dbg("[plot_clustpca_server:plot_data] reacted!")
+
         clust <- hm_getClusterPositions()
         ##data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
+
         return(
           list(
             hmpca_options = input$hmpca_options,
             hmpca.colvar = hmpca.colvar(),
             hmpca.shapevar = hmpca.shapevar(),
-            df = data.frame( x=clust$pos[,1], y=clust$pos[,2])
-
+            df = data.frame( x=clust$pos[,1], y=clust$pos[,2]),
+            pgx = pgx,
+            hm_clustmethod = hm_clustmethod(),
+            hmpca_legend = input$hmpca_legend
           )
         )
 
@@ -161,17 +85,14 @@ plot_clustpca_server <- function(id,
 
         ##pgx <- inputData()
         pd <- plot_data()
+
         hmpca_options <- pd[['hmpca_options']]
         hmpca.colvar <- pd[['hmpca.colvar']]
         hmpca.shapevar <- pd[['hmpca.shapevar']]
         pos <- pd[['df']]
-
-
-        dbg("[plot_clustpca_server:plot.RENDER] function called!")
-        dbg("[plot_clustpca_server:plot.RENDER] names(df) = ",names(df))
-
-        shiny::req(pgx$Y)
-        shiny::req(df)
+        pgx <- pd[['pgx']]
+        hm_clustmethod <- pd[["hm_clustmethod"]]
+        hmpca_legend <- pd[["hmpca_legend"]]
 
         do3d = ("3D" %in% hmpca_options)
         ##clust <- hm_getClusterPositions()
@@ -274,11 +195,11 @@ plot_clustpca_server <- function(id,
             }
 
             ## add group/cluster annotation labels
-            req(input$hmpca_legend)
-            if(input$hmpca_legend == 'inside') {
+
+            if(hmpca_legend == 'inside') {
                 plt <- plt %>%
                     plotly::layout(legend = list(x=0.05, y=0.95))
-            } else if(input$hmpca_legend == 'bottom') {
+            } else if(hmpca_legend == 'bottom') {
                 plt <- plt %>%
                     plotly::layout(legend = list(orientation='h'))
             } else {
@@ -300,7 +221,7 @@ plot_clustpca_server <- function(id,
 
         }
         title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
-        if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
+        if(hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
         ## plt <- plt %>% plotly::layout(title=title) %>%
         ##     plotly::config(displayModeBar = FALSE)
         plt <- plt %>%
@@ -320,7 +241,6 @@ plot_clustpca_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ##plotlib2 = "plotly",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data,   ##  *** downloadable data as CSV

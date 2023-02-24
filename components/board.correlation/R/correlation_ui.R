@@ -67,8 +67,8 @@ CorrelationUI <- function(id) {
         div(
           class = "col-md-6",
           correlation_plot_scattercorr_ui(ns("cor_scatter"),
-            height = c(fullH - 50, 760),
-            width = c("auto", 900)
+            height = c(fullH - 50, 600),
+            width = c("auto", 700)
           )
         )
       ),

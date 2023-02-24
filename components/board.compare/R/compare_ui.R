@@ -123,11 +123,22 @@ CompareUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          compare_plot_cum_fc_ui(ns("cumfcplot"),
-            height = c(700, 750),
-            width = c("auto", 900)
+          compare_plot_cum_fc1_ui(ns("cumfcplot1"),
+            height = c(350, 375),
+            width = c("auto", 900),
+            label = "b"
+          ),
+          compare_plot_cum_fc2_ui(ns("cumfcplot2"),
+                                  height = c(350, 375),
+                                  width = c("auto", 900),
+                                  label = "c"
           )
         )
+      ),
+      tags$div(
+        class = "caption",
+        HTML("<b>Compare datasets</b>. Identification of similar features across datasets and contrasts.  <b>(a)</b> Correlation between selected contrasts.
+            <b>(b)</b> Cumulative fold change of genes on dataset 1.  <b>(c)</b> Cumulative fold change of genes on dataset 2.")
       )
     ),
     shiny::tabPanel(

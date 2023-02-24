@@ -1,0 +1,238 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
+clustering_plot_clusterannot_ui <- function(id,
+                                         label='',
+                                         height,
+                                         width
+                                         )
+{
+  ns <- shiny::NS(id)
+
+  clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
+
+  clustannot_plots.opts = shiny::tagList(
+    withTooltip( shiny::selectInput(ns("xann_level"), "Reference level:",
+                                    choices=c("gene","geneset","phenotype"),
+                                    selected="geneset", width='80%'),
+                 "Select the level of an anotation analysis.",
+                 placement="left", options = list(container = "body")),
+    shiny::conditionalPanel(
+      "input.xann_level == 'geneset'", ns=ns,
+      withTooltip( shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
+                   "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
+                   placement="left", options = list(container = "body"))
+    ),
+    withTooltip( shiny::selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
+                 "Specify a reference set to be used in the annotation.",
+                 placement="left",options = list(container = "body"))
+  )
+
+
+
+  PlotModuleUI(
+    ns("pltmod"),
+    label = label,
+    plotlib = "plotly",
+    title = "Functional annotation of clusters",
+    info.text = clustannot_plots_text,
+    options = clustannot_plots.opts,
+    download.fmt=c("png","pdf"),
+    width = width,
+    height = height
+  )
+}
+
+clustering_plot_clusterannot_server <- function(id,
+                                                pgx,
+                                                getClustAnnotCorrelation,
+                                                watermark=FALSE
+                                                )
+{
+  moduleServer( id, function(input, output, session) {
+
+    ns <- session$ns
+
+    shiny::observe({
+
+      ##pgx <- inputData()
+      shiny::req(pgx$X,pgx$gsetX,pgx$families)
+
+      if(is.null(input$xann_level)) return(NULL)
+      ann.types=sel=NULL
+      if(input$xann_level!="phenotype") {
+        if(input$xann_level=="geneset") {
+          ann.types <- names(COLLECTIONS)
+          cc = sapply(COLLECTIONS,function(s) length(intersect(s,rownames(pgx$gsetX))))
+          ann.types <- ann.types[cc>=3]
+        }
+        if(input$xann_level=="gene") {
+          ann.types <- names(pgx$families)
+          cc = sapply(pgx$families,function(g) length(intersect(g,rownames(pgx$X))))
+          ann.types <- ann.types[cc>=3]
+        }
+        ann.types <- setdiff(ann.types,"<all>")  ## avoid slow...
+        ann.types <- grep("^<",ann.types,invert=TRUE,value=TRUE)  ## remove special groups
+        sel = ann.types[1]
+        if("H" %in% ann.types) sel = "H"
+        j <- grep("^transcription",ann.types,ignore.case=TRUE)
+        if(input$xann_level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
+        if(length(j)>0) sel = ann.types[j[1]]
+        ann.types <- sort(ann.types)
+      } else {
+        ann.types = sel = "<all>"
+      }
+      shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
+    })
+
+    clustannot_plots.PLOTLY <- shiny::reactive({
+
+      rho = getClustAnnotCorrelation()
+      ##if(is.null(rho)) return(NULL)
+      shiny::req(rho)
+
+      ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+      NTERMS = 6
+      NTERMS = 12
+      slen=40
+      if(ncol(rho)>=5)  {
+        slen=20
+      }
+      if(ncol(rho)>6)  {
+        NTERMS=6
+      }
+      if(ncol(rho)<=2) {
+        NTERMS=22
+      }
+
+      klrpal <- omics_pal_d("muted_light")(ncol(rho))
+      #klrpal <- paste0(klrpal, "B3")
+
+      plot_list <- list()
+      i = 1
+      for(i in 1:min(9, ncol(rho))) {
+
+        x <- rev(head(sort(rho[,i], decreasing = TRUE), NTERMS))
+        names(x) <- sub(".*:", "", names(x))
+        names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
+
+        y <- names(x)
+        y <- factor(y, levels = y)
+        anntitle <- function(tt) {
+          list(
+            x = 0.5, y = 1.02,
+            xref = "paper", yref = "paper",
+            xanchor = "center", yanchor = "bottom",
+            text = tt, font = list(size = 13),
+            align = "center", showarrow = FALSE
+          )
+        }
+        ## NOTE: The same plotly code (originally) as in `plot_clustannot.R`
+        ##       -> Seems it uses the function from this file, not the other one
+        ## TODO: clean-up; we should stick to the general setup of individual
+        ##       scripts for the plotting functions, not inside the server scripts as agreed
+        plot_list[[i]] <-
+          plotly::plot_ly(
+            x = x,
+            y = y,
+            type = 'bar',
+            orientation = 'h',
+            hoverinfo = 'text',
+            hovertemplate = ~paste0(
+              ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
+              ##       needs to be fixed (or that information to be removed)
+              "Annotation: <b>%{y}</b><br>",
+              "Cluster: <b>", colnames(rho)[i], "</b><br>",
+              "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
+              "<extra></extra>"
+            ),
+            ## NOTE: I suggest to not use a categorical palette for the different clusters;
+            ##       the panels alone highlight the different groups and a single color would
+            ##       allow for a fair comparison (in terms of visual weight), solve all
+            ##       readability problems and would make the page much more calm
+            ## TODO: if you agree, set to single color instead
+            marker = list(color = klrpal[i])
+          ) %>%
+          ## labeling the y-axis inside bars
+          plotly::add_annotations(
+            x = .01,
+            y = y,
+            xref = 'paper',
+            yref = 'y',
+            xanchor = 'left',
+            text = shortstring(y, slen),
+            font = list(size = 10),
+            showarrow = FALSE,
+            align = 'right'
+          ) %>%
+          plotly::layout(
+            ## TODO: check x axis ranges! while in the lower row x is scaled from 0 to .9,
+            ##       in the upper it's ranging free (kinda; when you plot the axis,
+            ##       the axis range is the same but the tooltip and axis are out of sync)
+            xaxis = list(
+              range = c(0, .9),
+              font = list(family = "Lato"),
+              titlefont = list(size = 11),
+              tickfont = list(size = 10),
+              showgrid = FALSE,
+              title = "\ncorrelation (R)"
+            ),
+            yaxis = list(
+              title = FALSE,
+              showgrid = FALSE,
+              showline = FALSE,
+              showticklabels = FALSE,
+              showgrid = FALSE,
+              zeroline = FALSE
+            ),
+            showlegend = FALSE,
+            annotations = anntitle(colnames(rho)[i]),
+            bargap = .2,
+            margin = list(l = 5, r = 0, b = 25, t = 20)
+          ) %>%
+          plotly_default1()
+      }
+
+      if(length(plot_list) <= 4) {
+        nrows = ceiling(length(plot_list) / 2 )
+      } else {
+        nrows = ceiling(length(plot_list) / 3 )
+      }
+
+      plotly::subplot(
+        plot_list,
+        nrows = nrows,
+        shareX = TRUE,
+        margin = c(0, 0, .05, .05)
+      ) %>%
+        plotly::config(displayModeBar = FALSE)
+    })
+
+
+    PlotModuleServer(
+      "pltmod",
+      plotlib = "plotly",
+      ##plotlib2 = "plotly",
+      func = clustannot_plots.PLOTLY,
+      # csvFunc = plot_data,   ##  *** downloadable data as CSV
+      ##renderFunc = plotly::renderPlotly,
+      ##renderFunc2 = plotly::renderPlotly,
+      res = 80,                ## resolution of plots
+      pdf.width = 8, pdf.height = 5,
+      add.watermark = watermark
+    )
+
+    return(
+      list(
+        xann_level = shiny::reactive(input$xann_level),
+        xann_odds_weighting = shiny::reactive(input$xann_odds_weighting),
+        xann_refset = shiny::reactive(input$xann_refset)
+      )
+    )
+
+  })
+
+}
