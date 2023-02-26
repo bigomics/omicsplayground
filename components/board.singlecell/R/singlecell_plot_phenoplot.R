@@ -58,7 +58,6 @@ singlecell_plot_phenoplot_server <- function(id,
       ngs <- inputData()
       ## if(is.null(ngs)) return(NULL)
       shiny::req(ngs)
-      dbg("[SingleCellBoard:pheno.plotFUNC] called")
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)

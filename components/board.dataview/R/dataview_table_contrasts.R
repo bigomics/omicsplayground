@@ -39,12 +39,9 @@ dataview_table_contrasts_server <- function(id,
     ns <- session$ns
 
     contrasts_data <- shiny::reactive({
-      dbg("[DataView:contrasts:contrast_data] reacted")
 
       shiny::req(pgx$Y, pgx$model.parameters)
       shiny::req(r.samples(), !is.null(input$ctbygroup))
-
-      dbg("[DataView:contrasts:contrast_data] called!")
 
       ## dereference reactives
       samples <- r.samples()
@@ -67,8 +64,6 @@ dataview_table_contrasts_server <- function(id,
     table.RENDER <- function() {
       dt <- contrasts_data()
       req(dt)
-
-      dbg("[DataView:contrasts:table.RENDER] reacted!")
 
       colnames(dt) <- sub("[_. ]vs[_. ]", "\nvs ", colnames(dt))
 

@@ -9,7 +9,7 @@ if(0) {
   shiny::shinyApp(
     ui = shiny::fluidPage(
       shiny::actionButton("show","show"),
-      send_referral_ui("referral") 
+      send_referral_ui("referral")
     ),
     server = function(input, output) {
       send_referral_server(
@@ -36,15 +36,15 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
         success = 1,
         emails  = c()
     )
-    
+
     ## JS logout callback
     js.cb = "function(x){logout();}"
 
     ## -------------------- modal UI --------------------------
     email_modal <- eventReactive( r.show(), {
-      
+
       if(r.show()==0) return()
-      
+
       shiny::showModal(
         shiny::modalDialog(
           title = "Sorry, time's up mate! Your FREE session has expired.",
@@ -117,28 +117,18 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
       rv$success <- 0
       rv$emails <- c()
     })
-        
+
     output$modal <- shiny::renderUI({
       email_modal()
     }) ## end of output$modal
-    
-    ## react if send button if pressed ----------------------------    
+
+    ## react if send button if pressed ----------------------------
     shiny::observeEvent( input$sendRefs,
     {
-      
-      message("[observeEvent:input$sendRefs] reacted!")
 
-      message("[observeEvent:input$sendRefs] name1 = ",input$name1)
-      message("[observeEvent:input$sendRefs] name2 = ",input$name2)
-      message("[observeEvent:input$sendRefs] name3 = ",input$name3)            
-
-      message("[observeEvent:input$sendRefs] email1 = ",input$email1)
-      message("[observeEvent:input$sendRefs] email2 = ",input$email2)
-      message("[observeEvent:input$sendRefs] email3 = ",input$email3)            
-      
       ## check inputs
       input_errors <- FALSE
-      
+
       emails <- trimws(
         c(
           email1 = input$email1,
@@ -146,40 +136,40 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
           email3 = input$email3
         )
       )
-      
+
       ## check emails
       check_email <- function(e) {
         k <- match(e,names(emails))
         shinyFeedback::hideFeedback(e)
         if(emails[e] == "") {
           shinyFeedback::showFeedbackWarning(inputId = e ,"Missing email")
-          input_errors <<- TRUE        
+          input_errors <<- TRUE
         } else if(!grepl("@",emails[e])) {
           shinyFeedback::showFeedbackWarning(inputId = e ,"Invalid email")
-          input_errors <<- TRUE        
+          input_errors <<- TRUE
         } else if(duplicated(emails)[k]) {
           shinyFeedback::showFeedbackWarning(inputId = e ,"Duplicated email")
-          input_errors <<- TRUE        
+          input_errors <<- TRUE
         }
       }
-      
+
       check_email("email1")
       check_email("email2")
       check_email("email3")
-            
+
       # check names
       check_name <- function(e) {
         shinyFeedback::hideFeedback(e)
         if(input[[e]] == "") {
           shinyFeedback::showFeedbackWarning(inputId = e ,"Missing name")
-          input_errors <<- TRUE        
+          input_errors <<- TRUE
         }
       }
-      
+
       check_name("name1")
       check_name("name2")
       check_name("name3")
-      
+
       if(input_errors)
         return()
 
@@ -218,13 +208,13 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
           body = body,
           encode = "json"
         )
-        
+
         # check response
         content <- httr::content(response)
         all_good <- lapply(content, function(ref) {
           return(ref$success)
-        }) %>% 
-        unlist() %>% 
+        }) %>%
+        unlist() %>%
           all()
 
       } else {
@@ -238,10 +228,10 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
         all_good = TRUE
 
       }
-      
+
       if(!all_good) {
         session$sendCustomMessage(
-          "referral-global-error", 
+          "referral-global-error",
           list(
             message = "One or more of these email address was erroneous"
           )
@@ -263,5 +253,5 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
     )
 
   }) ## moduleServer
-  
+
 }

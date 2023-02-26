@@ -75,7 +75,6 @@ singlecell_plot_mappingplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       ngs <- inputData()
-      dbg("[SingleCellBoard:mapping.plotFUNC] called")
 
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {

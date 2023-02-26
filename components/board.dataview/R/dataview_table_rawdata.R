@@ -156,8 +156,6 @@ dataview_table_rawdata_server <- function(id,
       ## x = x[order(x$gene),,drop=FALSE]
       x <- x[order(-x$rho, -x$SD), , drop = FALSE]
 
-      dbg("[dataview_rawdata:table_data] table_data() done!")
-
       list(
         x = x,
         x95 = x95,

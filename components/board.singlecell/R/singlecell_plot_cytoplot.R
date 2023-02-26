@@ -86,8 +86,6 @@ singlecell_plot_cytoplot_server <- function(id,
         return(NULL)
       }
 
-      dbg("[SingleCellBoard::cyto.plotFUNC] called")
-
       kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
       gene1 <- cytovar1
       gene2 <- cytovar2

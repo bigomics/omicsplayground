@@ -196,7 +196,6 @@ WgcnaBoard <- function(id, inputData) {
 
         shiny::updateSelectInput(session, "selected_module", choices = names(me.genes), sel = "ME1")
 
-        message("[wgcna.compute] >>> done!")
         beepr::beep(2) ## short beep
         shiny::removeModal()
 
@@ -248,7 +247,6 @@ WgcnaBoard <- function(id, inputData) {
     ## ----------------------------------------
 
     sampleDendro.RENDER <- shiny::reactive({
-      message("[sampleDendro.RENDER] reacted")
 
       out <- wgcna.compute()
       datExpr <- out$datExpr
@@ -293,7 +291,6 @@ WgcnaBoard <- function(id, inputData) {
     ## ----------------------------------------
 
     eigenHeatmap.RENDER <- shiny::reactive({
-      message("[eigenHeatmap.RENDER] reacted")
 
       out <- wgcna.compute()
       net <- out$net

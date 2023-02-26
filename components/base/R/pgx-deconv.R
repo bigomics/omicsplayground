@@ -41,7 +41,7 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
         M <- as.matrix(M)
     }
 
-    ## Filter count matrix 
+    ## Filter count matrix
     X <- counts
     X <- X[(rowMeans(X >= min.count) > low.th),] ## OK???
 
@@ -53,7 +53,7 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
     M1 <- M[gg,]
     M1 <- M1[,Matrix::colSums(M1!=0)>0,drop=FALSE]
     if(scalex) X1 <- X1 / (1 + rowMeans(X1))
-    
+
     ## run deconvolution algorithm
     ##add.unknown=0;method="SingleR"
     out <- pgx.deconvolution(X1, ref=M1, methods=method,
@@ -63,7 +63,7 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
     rownames(P) <- colnames(X1)
     P[is.na(P)] <- 0
     dim(P)
-    
+
     ## Collapse to single cell.type
     if(collapse=="sum") {
         P <- tapply(1:ncol(P), colnames(P), function(i) rowSums(P[,i,drop=FALSE]))
@@ -73,16 +73,16 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
     } else {
         P <- tapply(1:ncol(P), colnames(P), function(i) apply(P[,i,drop=FALSE],1,max))
     }
-    P <- do.call(cbind,P)    
+    P <- do.call(cbind,P)
     dim(P)
-    
+
     ## Get maximum probability cell.type
     P <- P / (1e-6 + rowSums(P,na.rm=TRUE))
     pmax <- apply(P,1,max,na.rm=TRUE)
     sel.dodgy <- (pmax < min.prob) ## not reliable
     celltype <- colnames(P)[max.col(P)]
     if(any(sel.dodgy)) celltype[which(sel.dodgy)] <- NA
-    
+
     ## collapse small groups to 'other_cells'
     low.ct <- names(which(table(celltype) < low.th*length(celltype)))
     celltype[celltype %in% low.ct] <- "other_cells"
@@ -119,7 +119,7 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
     X <- counts
     X <- X[(rowMeans(X >= min.count) > low.th),] ## OK???
     dim(X)
-    
+
     ## Match matrices
     rownames(X) <- toupper(rownames(X))
     rownames(M) <- toupper(rownames(M))
@@ -127,7 +127,7 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
     X <- X[gg,]
     M <- M[gg,]
     dim(X)
-    
+
     ## 2nd stage
     table(celltype0)
     celltype <- rep(NA, ncol(X))
@@ -148,7 +148,7 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
             X1 <- X1 / (1e-3 + rowMeans(X1)) ## center feature means??
             M1 <- M1 / (1e-3 + rowMeans(M1)) ## center feature means??
             res1 <- pgx.deconvolution(
-                X1, ref=M1, methods="NNLM", normalize.mat = TRUE, 
+                X1, ref=M1, methods="NNLM", normalize.mat = TRUE,
                 add.unknown=FALSE )
             C1 <- res1$results[["NNLM"]]
             C1 <- C1 / rowSums(C1)
@@ -163,7 +163,7 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
             P1 <- cbind(P1, C1)
             colnames(P1)[ncol(P1)] <- ct
         }
-        celltype[jj] <- ct3        
+        celltype[jj] <- ct3
     }
 
     celltype <- colnames(P1)[max.col(P1)]
@@ -171,13 +171,13 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
     table(celltype)
     table(celltype0, celltype)
     dim(P1)
-    
+
     ## collapse small groups to 'other_cells'
     low.ct <- names(which(table(celltype) < low.th*length(celltype)))
     celltype[celltype %in% low.ct] <- "other_cells"
     names(celltype) <- colnames(counts)
 
-    res <- list(celltype=celltype, probs=P1)    
+    res <- list(celltype=celltype, probs=P1)
     res
 }
 
@@ -194,8 +194,8 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
         "NK cells" = c("Gnly","Nkg7","Gzma", "Klrb1c", "Klrk1", "Klra4"),
         "Dendritic cells" = c("Fcer1a","Cst3","Siglech","Fscn1","Ccl22"),
         "Macrophages" = c("C1qa","C1qb","C1qc","Lyz2"),
-        "Monocytes" = c("Ly6c2","Lyz","Cd14","Fcgr3a","Ms4a7"),    
-        "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")    
+        "Monocytes" = c("Ly6c2","Lyz","Cd14","Fcgr3a","Ms4a7"),
+        "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")
     )
     CANONICAL.MARKERS2 = list(
         ##"Bcells" = c("Ms4a1+","CD79a+","CD79b+","Fcmr+","Ebf1+"),
@@ -209,17 +209,17 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
         "Macrophages" = c("C1qa+","C1qb+","C1qc+"),
         "Monocytes" = c("Ly6c2+","Lyz2+","Ccr2+"),
         "Immune_cell" = c("Ptprc+")
-        ## "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")    
+        ## "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")
     )
     if(is.null(markers)) {
         markers <- CANONICAL.MARKERS2
     }
-    
+
     ##markers <- markers[order(names(markers))]
     marker.genes <- sort(unique(unlist(markers)))
     marker.genes <- gsub("[-+]$","",marker.genes)
     marker.genes
-    
+
     M <- matrix(0, nrow=length(marker.genes), ncol=length(markers))
     dimnames(M) <- list(marker.genes,names(markers))
     dim(M)
@@ -241,12 +241,12 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
     rownames(X) <- toupper(rownames(X))
     gg <- intersect(rownames(M),rownames(X))
     counts0 <- counts[match(gg,toupper(rownames(counts))),,drop=FALSE]
-    
+
     X1 <- 1*(X[gg,,drop=FALSE] >= min.count)
     M1 <- M[gg,,drop=FALSE]
     check.pos <-  t(pmax(M1,0)) %*% X1
     check.neg <-  t(pmin(M1,0)) %*% X1
-    check.pos <-  t(M1 == +1) %*% X1 / Matrix::colSums(M1 == 1)    
+    check.pos <-  t(M1 == +1) %*% X1 / Matrix::colSums(M1 == 1)
     check.neg <-  t(M1 == -1) %*% X1 / Matrix::colSums(M1 == -1)
     table(check.pos)
     table(check.neg)
@@ -261,10 +261,10 @@ pgx.simplifyCellTypes <- function(ct, low.th=0.01)
     ## Simplifies cell types names from LM22, DICE, ImmProt and
     ## ImmunoStates to standardized classification names.
     ##
-    
+
     ## LM22
     ct[grep("^B.cells",ct)] <- "B_cells"
-    ct[grep("^T.cells",ct)] <- "T_cells"    
+    ct[grep("^T.cells",ct)] <- "T_cells"
     ct[grep("^Macrophages",ct)] <- "Macrophages"
     ct[grep("^NK",ct)] <- "NK_cells"
     ct[grep("^Dendritic",ct)] <- "Dendritic_cells"
@@ -289,7 +289,7 @@ pgx.simplifyCellTypes <- function(ct, low.th=0.01)
 
     ## ImmunoStates
     ct[grep("B_cell",ct)] <- "B_cells"
-    ct[grep("T_cell",ct)] <- "T_cells"    
+    ct[grep("T_cell",ct)] <- "T_cells"
     ct[grep("macrophage",ct)] <- "Macrophages"
     ct[grep("natural.killer",ct)] <- "NK_cells"
     ct[grep("dendritic",ct)] <- "Dendritic_cells"
@@ -301,11 +301,11 @@ pgx.simplifyCellTypes <- function(ct, low.th=0.01)
 
     ## otherCells (from EPIC)
     ct[grep("otherCells",ct)] <- "other_cells"
-    
+
     ## collapse low frequency celltype to "other"
     low.ct <- names(which(table(ct) < low.th*length(ct)))
     ct[ct %in% low.ct] <- "other_cells"
-    
+
     ##ct <- sub("cells","_cells",ct,ignore.case=TRUE)
     ## ct <- tolower(ct)
     ct
@@ -322,7 +322,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
     ##----------------------------------------------------------------------
     ## Using NNLM
     ##----------------------------------------------------------------------
-    
+
     if(method==1) {
         ## contaminating profiles (e.g. stromal, normal cells)
         normalX <- cbind(const=1, X[,ref,drop=FALSE])  ## contamination (e.g. stromal, normal cells)
@@ -372,7 +372,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 ##counts=ngs$counts
 pgx.inferCellCyclePhase <- function(counts)
 {
-    
+
 
     ## List of cell cycle markers, from Tirosh et al, 2015
     ##
@@ -401,7 +401,7 @@ pgx.inferCellCyclePhase <- function(counts)
 ##counts=ngs$counts
 pgx.scoreCellCycle <- function(counts)
 {
-    
+
 
     ## List of cell cycle markers, from Tirosh et al, 2015
     ##
@@ -411,7 +411,7 @@ pgx.scoreCellCycle <- function(counts)
     g2m_genes <- cc.genes[44:97]
     length(s_genes)
     length(g2m_genes)
-    
+
     ## Create our Seurat object and complete the initalization steps
     rownames(counts) <- toupper(rownames(counts))  ## mouse...
     ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
@@ -465,7 +465,7 @@ pgx.inferGender <- function(X, gene_name=NULL) {
         sex <- rep(NA, ncol(X))
         sex <- ifelse( x.expr > mean.expr & y.expr < mean.expr, "F", sex)
         sex <- ifelse( y.expr > mean.expr & x.expr < mean.expr, "M", sex)
-        sex        
+        sex
         return(sex)
     }
     return(sex)
@@ -517,9 +517,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         cat("WARNING:: pgx.deconvolution: is X really counts? (not logarithmic)\n")
     }
 
-    dbg("[pgx.deconvolution] called")
 
-    
     ## clean up matrix, remove duplicate names
     mat <- as.matrix(X)
     rownames(mat) <- gsub(".*:","",rownames(mat)) ## strip prefix
@@ -532,11 +530,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     ref <- ref[order(-rowMeans(ref)),,drop=FALSE]
     ref <- as.matrix(ref[!duplicated(rownames(ref)),,drop=FALSE])
 
-    dbg("[pgx.deconvolution] 1:")
-    
     ## Add "unknown" class to reference matrix
     if(add.unknown) {
-        dbg("[pgx.deconvolution] adding unknown group")        
         gg <- intersect(rownames(ref),rownames(mat))
         x1 <- log(1+ref[gg,,drop=FALSE])
         y1 <- log(1+rowMeans(mat[gg,,drop=FALSE]))
@@ -544,42 +539,40 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
         ## compute residual matrix by substracting all possible linear
         ## combinations of reference.
-        
+
         x1 <- ref[gg,,drop=FALSE]
         y1 <- rowMeans(mat[gg,,drop=FALSE])
         cf <- NNLM::nnlm(x1,cbind(y1))$coefficients
         cf[is.na(cf)] <- 0
-        resid <- pmax(y1 - x1 %*% cf,0) ## residual vector           
+        resid <- pmax(y1 - x1 %*% cf,0) ## residual vector
         resx <- rep(0,nrow(ref))
         names(resx) <- rownames(ref)
         resx[gg] <- resid
         ref <- cbind(ref, "other_cells"=resx)
     }
-    
+
     ## normalize all matrices to CPM
     if(normalize.mat) {
         ref <- t(t(ref) / sqrt(1e-6 + Matrix::colSums(ref**2,na.rm=TRUE))) * 1e6
         mat <- t(t(mat) / sqrt(1e-6 + Matrix::colSums(mat**2,na.rm=TRUE))) * 1e6
     }
-    
+
     ## add small noise, some methods need it...
-    ref <- ref + 1e-2*matrix(rnorm(length(ref)),nrow(ref),ncol(ref))  
-    mat <- mat + 1e-2*matrix(rnorm(length(mat)),nrow(mat),ncol(mat)) 
+    ref <- ref + 1e-2*matrix(rnorm(length(ref)),nrow(ref),ncol(ref))
+    mat <- mat + 1e-2*matrix(rnorm(length(mat)),nrow(mat),ncol(mat))
     ref <- pmax(ref,0)
     mat <- pmax(mat,0)
 
-    dbg("[pgx.deconvolution] 2:")
-    
     gg <- intersect(rownames(ref),rownames(mat))
     Matrix::head(gg)
     if(length(gg) < 10) {
-        message("WARNING:: pgx.deconvolution: no enough marker genes")
+        warning("WARNING:: pgx.deconvolution: no enough marker genes")
         return(NULL)
     }
 
     ## conform??
     if(0) {
-        
+
         length(gg)
         ##ref <- ref[gg,]
         ##mat <- mat[gg,]
@@ -587,7 +580,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ref <- qx[,colnames(ref)]
         mat <- mat[,colnames(mat)]
     }
-    
+
     timings <- list()
     results <- list()
     methods
@@ -616,7 +609,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ## EPIC
         ##devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
         dbg("[pgx.deconvolution] calculating EPIC...")
-        
+
         out <- NULL
         gg = intersect(rownames(ref),rownames(mat))
         ref1 <- ref
@@ -648,7 +641,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ##BiocManager::install("DeconRNASeq")
         if("package:Seurat" %in% search()) detach("package:Seurat", unload=TRUE)
         dbg("[pgx.deconvolution] calculating DeconRNAseq...")
-        
+
         ## uses psych::pca() from pcaMethods
         require(pcaMethods)  ## uses pcaMethods::prep
         drs <- NULL
@@ -673,7 +666,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ## DCQ seems to work in logX, so we use log-transform
         ##install.packages("ComICS")
         dbg("[pgx.deconvolution] calculating DCQ...")
-        
+
         res.dcq=NULL
         stime <- system.time(
             res.dcq <- try(
@@ -697,7 +690,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ## !!!!!!!!!!!!!! WARNING:: needs more testing/validation !!!!!!!!!!!!!
         ##----- Constrained iterative non-negative least squares (Abbas et al. 2009) ----
         dbg("[pgx.deconvolution] calculating I-NNLS...")
-        
+
         GetFractions.Abbas <- function(XX, y, w=NA){
             ## XX is immune expression data
             ## y is cancer expression data
@@ -752,7 +745,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ## NNLM
         ##install.packages("NNLM")
         dbg("[pgx.deconvolution] calculating NNLM...")
-        
+
         x1 <- log2(1+ref[gg,,drop=FALSE])
         x2 <- log2(1+mat[gg,,drop=FALSE])
         x1 <- cbind(offset=1, x1)
@@ -776,7 +769,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
     ## Simple (rank) correlation
     if("cor" %in% methods) {
-        dbg("[pgx.deconvolution] calculating cor...")        
+        dbg("[pgx.deconvolution] calculating cor...")
         ##results[["cor"]] <- stats::cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
         r1 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r2 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
@@ -789,7 +782,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     }
 
     if("SingleR" %in% methods) {
-        dbg("[pgx.deconvolution] calculating SingleR...")                
+        dbg("[pgx.deconvolution] calculating SingleR...")
         stime <- system.time(
             sr1 <- SingleR(test=mat, ref=ref, labels=colnames(ref))
         )
@@ -802,8 +795,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     results <- results[which(!sapply(results,is.null))]
     results <- lapply(results, function(x) {x[is.na(x)]=0;x})
 
-    dbg("[pgx.deconvolution] calculating meta values...")                
-    
+    dbg("[pgx.deconvolution] calculating meta values...")
+
     ## meta
     if(length(results)>1) {
         jj <- colnames(ref)
@@ -819,6 +812,6 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     res2 <- list(results=results, timings=timings0)
 
     dbg("[pgx.deconvolution] done!")
-    
+
     return(res2)
 }

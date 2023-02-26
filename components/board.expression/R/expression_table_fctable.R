@@ -50,8 +50,6 @@ expression_table_fctable_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    message("expression_table_fctable_server called")
-
     fctable.RENDER <- shiny::reactive({
       ngs <- ngs()
       res <- res()

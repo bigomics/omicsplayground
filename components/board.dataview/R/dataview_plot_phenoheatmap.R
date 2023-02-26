@@ -33,8 +33,6 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
     plot_data <- shiny::reactive({
       shiny::req(pgx$samples, r.samples())
 
-      dbg("[dataview_plot_phenoheatmap_server:plot_data] called!")
-
       samples <- r.samples()
       do.clust <- input$clustsamples
 
@@ -50,9 +48,6 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res$annot)
-
-      dbg("[dataview_plot_phenoheatmap_server:plot.RENDER] called!")
-      dbg("[dataview_plot_phenoheatmap_server:plot.RENDER] dim(res$annot) = ", dim(res$annot))
 
       annot.ht <- ifelse(ncol(res$annot) > 10, 5, 6)
       annot.ht <- ifelse(ncol(res$annot) > 20, 4, annot.ht)

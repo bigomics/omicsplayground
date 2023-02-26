@@ -93,13 +93,6 @@ UploadModuleServer <- function(id,
     function(input, output, session) {
       ns <- session$ns
 
-      dbg("[UploadModuleServer] called!")
-      dbg("[UploadModuleServer] limits.samples = ", limits["samples"])
-      dbg("[UploadModuleServer] limits.comparisons = ", limits["comparisons"])
-      dbg("[UploadModuleServer] limits.genes   = ", limits["genes"])
-      dbg("[UploadModuleServer] limits.genesets = ", limits["genesets"])
-      dbg("[UploadModuleServer] limits.datasets = ", limits["datasets"])
-
       ## Some 'global' reactive variables used in this file
       uploaded <- shiny::reactiveValues()
 
@@ -248,7 +241,6 @@ UploadModuleServer <- function(id,
               matname <- NULL
               df <- NULL
               if (grepl("count", fn1, ignore.case = TRUE)) {
-                dbg("[upload_files] counts.csv : fn1 = ", fn1)
                 ## allows duplicated rownames
                 df0 <- read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
@@ -262,17 +254,12 @@ UploadModuleServer <- function(id,
                     closeOnClickOutside = FALSE,
                   )
                 }
-                dbg(
-                  "[upload_files] counts.csv : 1 : dim(df0) = ",
-                  paste(dim(df0), collapse = "x")
-                )
 
                 if (nrow(df0) > 1 && NCOL(df0) > 1) {
                   df <- as.matrix(df0)
                   matname <- "counts.csv"
                 }
               } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-                dbg("[upload_files] expression.csv : fn1 = ", fn1)
                 ## allows duplicated rownames
                 df0 <- read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
@@ -288,12 +275,10 @@ UploadModuleServer <- function(id,
                 }
                 if (nrow(df0) > 1 && NCOL(df0) > 1) {
                   df <- as.matrix(df0)
-                  message("[UploadModule::upload_files] converting expression to counts...")
                   df <- 2**df
                   matname <- "counts.csv"
                 }
               } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-                dbg("[upload_files] samples.csv : fn1 = ", fn1)
                 df0 <- read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
@@ -315,7 +300,6 @@ UploadModuleServer <- function(id,
                   matname <- "samples.csv"
                 }
               } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-                dbg("[upload_files] contrasts.csv : fn1 = ", fn1)
                 df0 <- read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
@@ -346,7 +330,6 @@ UploadModuleServer <- function(id,
 
         if ("counts.csv" %in% names(matlist)) {
           ## Convert to gene names (need for biological effects)
-          dbg("[upload_files] converting probe names to symbols")
           X0 <- matlist[["counts.csv"]]
           pp <- rownames(X0)
           rownames(X0) <- probe2symbol(pp)
@@ -370,13 +353,11 @@ UploadModuleServer <- function(id,
               matlist[[i]] <- type.convert(matlist[[i]])
             }
             m1 <- names(matlist)[i]
-            message("[upload_files] updating matrix ", m1)
             uploaded[[m1]] <- matlist[[i]]
           }
           uploaded[["last_uploaded"]] <- names(matlist)
         }
 
-        message("[upload_files] done!\n")
       })
 
 
@@ -571,15 +552,12 @@ UploadModuleServer <- function(id,
 
       corrected_counts <- shiny::reactive({
         counts <- NULL
-        dbg("[UploadModule::corrected_counts] reacted!\n")
         advanced_mode <- (length(input$advanced_mode) > 0 &&
           input$advanced_mode[1] == 1)
         if (advanced_mode) {
-          message("[UploadModule::corrected_counts] using CORRECTED counts\n")
           out <- correctedX()
           counts <- pmax(2**out$X - 1, 0)
         } else {
-          message("[UploadModule::corrected_counts] using UNCORRECTED counts\n")
           counts <- uploaded$counts.csv
         }
         counts
@@ -599,22 +577,18 @@ UploadModuleServer <- function(id,
         ## Monitor for changes in the contrast matrix and if
         ## so replace the uploaded reactive values.
         ##
-        dbg("[observe:modified_ct()] reacted...")
         modct <- modified_ct()
-        dbg("[observe:modified_ct()] dim(modct$contr) = ", dim(modct$contr))
         uploaded$contrasts.csv <- modct$contr
         uploaded$samples.csv <- modct$pheno
       })
 
       upload_ok <- shiny::reactive({
-        dbg("[UploadModule] upload_ok reactive")
         check <- checkTables()
         all(check[, "status"] == "OK")
         all(grepl("ERROR", check[, "status"]) == FALSE)
       })
 
       batch_vectors <- shiny::reactive({
-        dbg("batch_vectors reactive")
         correctedX()$B
       })
 
@@ -638,7 +612,6 @@ UploadModuleServer <- function(id,
       )
 
       uploaded_pgx <- shiny::reactive({
-        dbg("[uploaded_pgx] reacted!")
         if (!is.null(uploaded$pgx)) {
           pgx <- uploaded$pgx
           ## pgx <- pgx.initialize(pgx)
@@ -653,12 +626,10 @@ UploadModuleServer <- function(id,
       ## =====================================================================
 
       output$countStats <- shiny::renderPlot({
-        dbg("[countStats] renderPlot called")
         ## req(uploaded$counts.csv)
 
         check <- checkTables()
         status.ok <- check["counts.csv", "status"]
-        dbg("[countStats] status.ok = ", status.ok)
 
         if (status.ok != "OK") {
           frame()
@@ -687,7 +658,6 @@ UploadModuleServer <- function(id,
       })
 
       output$phenoStats <- shiny::renderPlot({
-        dbg("[phenoStats] renderPlot called \n")
         ## req(uploaded$samples.csv)
 
         check <- checkTables()
@@ -715,7 +685,6 @@ UploadModuleServer <- function(id,
         ii <- unlist(vt$col_name[c("numeric", "integer")])
         ii
         if (!is.null(ii) && length(ii)) {
-          cat("[UploadModule::phenoStats] discretizing variables:", ii, "\n")
           df[, ii] <- apply(df[, ii, drop = FALSE], 2, function(x) {
             if (any(is.infinite(x))) x[which(is.infinite(x))] <- NA
             cut(x, breaks = 10)
@@ -736,8 +705,6 @@ UploadModuleServer <- function(id,
               hjust = 1
             )
           )
-
-        dbg("[UploadModule::phenoStats] done!")
 
         p1
       })

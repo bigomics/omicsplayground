@@ -9,20 +9,20 @@ EXTRA.MODULES = c("meta.go","deconv","infer","drugs", ## "graph",
                   "connectivity","wordcloud")
 
 compute.extra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
-    pgx.computeExtra(ngs, extra=extra, lib.dir=lib.dir, sigdb=sigdb) 
+    pgx.computeExtra(ngs, extra=extra, lib.dir=lib.dir, sigdb=sigdb)
 }
 
 pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
-        
+
     timings <- c()
     libx.dir <- paste0(FILES,'x')  ## ../libx
     libx.dir
-    
+
     extra <- intersect(extra, EXTRA.MODULES)
     if(length(extra)==0) {
         return(ngs)
     }
-    
+
     ## detect if it is single or multi-omics
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
     single.omics
@@ -53,18 +53,18 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.20)
         })
         timings <- rbind(timings, c("meta.go", tt))
-        message("<<< done!")        
+        message("<<< done!")
     }
-    
+
     if("deconv" %in% extra) {
         message(">>> computing deconvolution")
         tt <- system.time({
             ngs <- compute.deconvolution(
                 ngs, lib.dir=lib.dir[1], rna.counts=rna.counts,
-                full=FALSE) 
+                full=FALSE)
         })
         timings <- rbind(timings, c("deconv", tt))
-        message("<<< done!")                
+        message("<<< done!")
     }
 
     if("infer" %in% extra) {
@@ -73,7 +73,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
         })
         timings <- rbind(timings, c("infer", tt))
-        message("<<< done!")                
+        message("<<< done!")
     }
 
     if("drugs" %in% extra) {
@@ -83,51 +83,51 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             cmap.dir <- file.path(lib.dir,"cmap")  ## look for default lib
         }
         if(!dir.exists(cmap.dir)) {
-            message("Warning:: missing CMAP files. Skipping drug connectivity analysis!")            
+            message("Warning:: missing CMAP files. Skipping drug connectivity analysis!")
         }
         dbg("[pgx.computeExtra] cmap.dir = ",cmap.dir)
-        
+
         if(dir.exists(cmap.dir)) {
-        
+
             message(">>> Computing drug activity enrichment...")
             tt <- system.time({
-                ngs <- compute.drugActivityEnrichment(ngs, cmap.dir) 
+                ngs <- compute.drugActivityEnrichment(ngs, cmap.dir)
             })
             timings <- rbind(timings, c("drugs", tt))
-            
-            message(">>> Computing drug sensitivity enrichment...")        
+
+            message(">>> Computing drug sensitivity enrichment...")
             tt <- system.time({
-                ngs <- compute.drugSensitivityEnrichment(ngs, cmap.dir) 
+                ngs <- compute.drugSensitivityEnrichment(ngs, cmap.dir)
             })
             timings <- rbind(timings, c("drugs-sx", tt))
-            
+
             ## message(">>> Computing gene perturbation enrichment...")
             ## tt <- system.time({
             ##     ngs <- compute.genePerturbationEnrichment(ngs, lib.dir=cmap.dir)
             ## })
             ##timings <- rbind(timings, c("drugs-gene", tt))
         }
-        message("<<< done!")                
+        message("<<< done!")
     }
-    
+
     if("graph" %in% extra) {
         message(">>> computing OmicsGraphs...")
         tt <- system.time({
-            ngs <- compute.omicsGraphs(ngs) 
+            ngs <- compute.omicsGraphs(ngs)
         })
         timings <- rbind(timings, c("graph", tt))
-        message("<<< done!")                
+        message("<<< done!")
     }
-    
+
     if("wordcloud" %in% extra) {
         message(">>> computing WordCloud statistics...")
         tt <- system.time({
-            res <- pgx.calculateWordCloud(ngs, progress=NULL, pg.unit=1)        
+            res <- pgx.calculateWordCloud(ngs, progress=NULL, pg.unit=1)
         })
         timings <- rbind(timings, c("wordcloud", tt))
         ngs$wordcloud <- res
         remove(res)
-        message("<<< done!")                
+        message("<<< done!")
     }
 
     if("connectivity" %in% extra) {
@@ -135,13 +135,13 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
 
         ## ngs$connectivity <- NULL  ## clean up
         if(is.null(sigdb)) {
-            ##sigdb <- dir(c(FILES,FILESX), pattern="sigdb-.*h5", full.names=TRUE)   
+            ##sigdb <- dir(c(FILES,FILESX), pattern="sigdb-.*h5", full.names=TRUE)
             lib.dir2 <- unique(c(lib.dir,libx.dir))  ### NEED BETTER SOLUTION!!!
             sig.dir <- c(SIGDB.DIR,lib.dir2)
             sigdb <- dir(sig.dir, pattern="^sigdb-.*h5$", full.names=TRUE)
             sigdb
         }
-        
+
         db <- sigdb[1]
         for(db in sigdb) {
             if(file.exists(db)) {
@@ -150,7 +150,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
                 message("computing connectivity scores for ",db)
                 ## in memory for many comparisons
                 meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-                inmemory <- ifelse(ncol(meta$fc)>50,TRUE,FALSE) 
+                inmemory <- ifelse(ncol(meta$fc)>50,TRUE,FALSE)
                 inmemory
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(
@@ -158,13 +158,13 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
                         remove.le=TRUE, inmemory=inmemory )
                 })
                 timings <- rbind(timings, c("connectivity", tt))
-                
+
                 db0 <- sub(".*/","",db)
                 ngs$connectivity[[db0]] <- scores
                 remove(scores)
             }
         }
-        names(ngs$connectivity)        
+        names(ngs$connectivity)
     }
 
     ##------------------------------------------------------
@@ -189,17 +189,17 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
         rownames(timings0) <- rn[1]
     }
     rownames(timings0) <- paste("[extra]",rownames(timings0))
-    
+
     ngs$timings <- rbind(ngs$timings, timings0)
     message("<<< done!")
-    
+
     return(ngs)
 }
 
 ## -------------- deconvolution analysis --------------------------------
 ##lib.dir=FILES;rna.counts=ngs$counts;full=FALSE
 compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALSE) {
-    
+
     ## list of reference matrices
     refmat <- list()
     readSIG <- function(f) read.csv(file.path(lib.dir,"sig",f), row.names=1, check.names=FALSE)
@@ -225,9 +225,9 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
                 "Immune cell (DICE)","Immune cell (ImmProt)",
                 "Tissue (GTEx)","Cell line (HPA)","Cancer type (CCLE)")
         refmat <- refmat[intersect(sel,names(refmat))]
-        methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")        
+        methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")
     }
-    
+
     ##counts <- ngs$counts
     counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
@@ -281,11 +281,11 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
 }
 
 compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
-    
+
     ## -------------- drug enrichment
     cmap.dir
     dir(cmap.dir, pattern='.*rds$')
-    ref.db <- dir(cmap.dir, pattern='^L1000-.*rds$')    
+    ref.db <- dir(cmap.dir, pattern='^L1000-.*rds$')
     ref.db
     if(length(ref.db)==0) {
         message("[compute.drugActivityEnrichment] Warning:: missing drug activity database")
@@ -300,7 +300,7 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
         f <- ref.db[i]
         message("[compute.drugActivityEnrichment] reading L1000 reference: ",f)
         X <- readRDS(file=file.path(cmap.dir,f))
-        ##X <- fread.csv(file=file.path(cmap.dir,L1000.FILE))    
+        ##X <- fread.csv(file=file.path(cmap.dir,L1000.FILE))
         xdrugs <- gsub("[_@].*$","",colnames(X))
         ndrugs <- length(table(xdrugs))
         ndrugs
@@ -308,7 +308,7 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
         message("number of drugs: ",ndrugs)
         dim(X)
         is.drug <- grepl("activity|drug|ChemPert",f,ignore.case=TRUE)
-        
+
         NPRUNE=-1
         NPRUNE=250
         fname <- names(ref.db)[i]
@@ -320,8 +320,8 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
             message("[compute.drugActivityEnrichment] WARNING:: pgx.computeDrugEnrichment failed!")
             next()
         }
-    
-        ## --------------- attach annotation 
+
+        ## --------------- attach annotation
         annot0 <- NULL
         if(is.drug) {
             annot0 <- read.csv(file.path(cmap.dir,"L1000_repurposing_drugs.txt"),
@@ -337,7 +337,7 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
             annot0 <- data.frame(drug=dd, moa=d1, target=d2)
             rownames(annot0) <- dd
         }
-        
+
         if(1) {
             annot0 <- annot0[match(rownames(out1[["GSEA"]]$X),rownames(annot0)),]
             rownames(annot0) <- rownames(out1[["GSEA"]]$X)
@@ -352,8 +352,8 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
         ngs$drugs[[db]][["annot"]] <- annot0[,c("drug","moa","target")]
         ngs$drugs[[db]][["clust"]] <- out1[["clust"]]
         ngs$drugs[[db]][["stats"]] <- out1[["stats"]]
-    }        
-    
+    }
+
     remove(X)
     remove(xdrugs)
     return(ngs)
@@ -380,19 +380,19 @@ compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
         xdrugs <- gsub("[@_].*$","",colnames(X))
         length(table(xdrugs))
         dim(X)
-        
+
         NPRUNE=-1
         NPRUNE=250
         out1 <- pgx.computeDrugEnrichment(
             ngs, X, xdrugs, methods=c("GSEA","cor"),
             nmin=10, nprune=NPRUNE, contrast=NULL )
-    
+
         if(!is.null(out1)) {
             ## attach annotation
             db <- sub("-.*","",ref)
             annot0 <- read.csv(file.path(cmap.dir,paste0(db,"-drugs.csv")))
             Matrix::head(annot0)
-            rownames(annot0) <- annot0$drug            
+            rownames(annot0) <- annot0$drug
             annot0 <- annot0[match(rownames(out1[["GSEA"]]$X),rownames(annot0)),]
             rownames(annot0) <- rownames(out1[["GSEA"]]$X)
             dim(annot0)
@@ -403,11 +403,11 @@ compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
             ngs$drugs[[s1]][["clust"]] <- out1[["clust"]]
             ngs$drugs[[s1]][["stats"]] <- out1[["stats"]]
         }
-        
+
     } ## end of for rr
-    
+
     names(ngs$drugs)
-    
+
     remove(X)
     remove(xdrugs)
     return(ngs)
@@ -424,7 +424,7 @@ compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
     ##X <- readRDS(file=file.path(lib.dir,L1000.FILE))
     X <- fread.csv(file=file.path(lib.dir,L1000.FILE))
 
-    ## -------------- drug enrichment    
+    ## -------------- drug enrichment
     xdrugs <- gsub("_.*$","",colnames(X))
     ndrugs <- length(table(xdrugs))
     ndrugs
@@ -451,7 +451,7 @@ compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
     annot0 <- data.frame(drug=dd, moa=d1, target=d2)
     rownames(annot0) <- dd
     Matrix::head(annot0)
-        
+
     dim(res[["GSEA"]]$X)
 
     ##ngs$drugs <- NULL

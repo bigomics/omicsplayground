@@ -19,12 +19,11 @@ QuestionModuleUI <- function(id) {
 QuestionModule <- function(input, output, session, lapse=5)
 {
     ns <- session$ns ## NAMESPACE
-    
+
     ##qa = QUESTIONS.ANSWERS[[1]]
     cur_question <- shiny::reactiveVal("")
-    
+
     showQuestion <- function(qa=NULL) {
-        dbg("[QuestionModule:showQuestion] reacted")
         if(is.null(qa)) qa <- sample(QUESTIONS.ANSWERS,1)[[1]]
         question <- qa[1]
         cur_question(qa[1])
@@ -64,9 +63,9 @@ QuestionModule <- function(input, output, session, lapse=5)
         dbg("[QuestionModule$:observeEvent] updating answer.csv file...")
         write.table( qa, file="answers.csv", sep=",", append=TRUE,
                     row.names=FALSE, col.names=FALSE)
-        shiny::removeModal()        
-    }) 
-    
-    
+        shiny::removeModal()
+    })
+
+
 }
 

@@ -31,7 +31,6 @@ loading_tsne_server <- function(id,
 
       pos <- NULL
       if (file.exists(tsne.file)) {
-        dbg("[loading_tsne_server] reading FC signature positions...")
         pos <- read.csv(tsne.file, row.names = 1)
         dim(pos)
         pos.files <- unique(gsub("^\\[|\\].*", "", rownames(pos)))
@@ -44,7 +43,6 @@ loading_tsne_server <- function(id,
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos)) {
-        dbg("[loading_tsne_server] calculating FC signature positions...")
         F <- data.table::fread(file.path(PGX.DIR, "datasets-allFC.csv"))
         F <- as.matrix(F[, -1], rownames = F[[1]])
         dim(F)

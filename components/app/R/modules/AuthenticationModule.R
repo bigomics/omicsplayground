@@ -12,14 +12,14 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
                                    username="", email="")
 {
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
-    ns <- session$ns    
+    ns <- session$ns
     USER <- shiny::reactiveValues(
         logged=FALSE,
         name="",
         email="",
         level="",
         limit=""
-    )    
+    )
 
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -32,7 +32,7 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
               ns=ns,
               with.email=FALSE,
               with.password=FALSE,
-              alt=h5("Ready to explore your data?",style="color:white;"),            
+              alt=h5("Ready to explore your data?",style="color:white;"),
               login.text="Sure I am!"
             )
             shiny::showModal(m)
@@ -42,29 +42,28 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
         USER$name   <- username
         USER$email  <- email
     }
-    
+
     output$showLogin <- shiny::renderUI({
-        resetUSER() 
+        resetUSER()
     })
 
     output$login_warning = shiny::renderText("")
 
-    shiny::observeEvent( input$login_btn, {           
+    shiny::observeEvent( input$login_btn, {
         shiny::removeModal()
         ##shiny::showModal(splashHelloModal(name=USER$name,ns=ns))
         USER$logged <- TRUE
-        ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()        
+        ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
     observeEvent( input$userLogout, {
-        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
-    
+
     rt <- list(
         name   = shiny::reactive(USER$name),
-        email  = shiny::reactive(USER$email),        
+        email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit  = shiny::reactive(USER$limit),
@@ -82,11 +81,11 @@ upgrade.dialog <- function(ns, current.plan) {
 
     btn_basic   <- "Go Basic!"
     btn_starter <- "Get Starter!"
-    btn_premium <- "Get Premium!"    
+    btn_premium <- "Get Premium!"
     if(current.plan=='free') btn_basic <- "Current Plan"
     if(current.plan=='starter') btn_starter <- "Current Plan"
-    if(current.plan=='premium') btn_premium <- "Current Plan"    
-    
+    if(current.plan=='premium') btn_premium <- "Current Plan"
+
     modalDialog(
         title = h3("Find the right OmicsPlayground plan for you"),
         size = "m",
@@ -96,12 +95,12 @@ upgrade.dialog <- function(ns, current.plan) {
           style = "padding-left:4rem;padding-right:4rem;text-align:center;",
           div(
             class = "col-md-4",
-            style = "background:#F2FAFF;",              
-            HTML("<h4><b>Basic</b></h4>"),            
+            style = "background:#F2FAFF;",
+            HTML("<h4><b>Basic</b></h4>"),
             p("Try for free"),
             h3("Free!"),
             tags$ul(
-              class = "list-unstyled",                     
+              class = "list-unstyled",
               tags$li("Host up to 3 datasets"),
               tags$li("45 minutes time limit"),
               tags$li("Up to 25 samples / dataset"),
@@ -112,13 +111,13 @@ upgrade.dialog <- function(ns, current.plan) {
           ),
           div(
             class = "col-md-4",
-            style = "background:#E8F8FF;",              
+            style = "background:#E8F8FF;",
             h4(HTML("<b>Starter</b>")),
             p("Great to start"),
             ##            h3("CHF49 / month", id = "starter-pricing"),
-            h3("Soon!"),            
+            h3("Soon!"),
             tags$ul(
-              class = "list-unstyled",                                          
+              class = "list-unstyled",
               tags$li("Host up to 10 datasets"),
               tags$li("3 hours time limit"),
               tags$li("Up to 100 samples / dataset"),
@@ -130,13 +129,13 @@ upgrade.dialog <- function(ns, current.plan) {
           ),
           div(
               class = "col-md-4",
-              style = "background:#E2F4FF;",                            
-              HTML("<h4><b>Premium</b></h4>"),            
+              style = "background:#E2F4FF;",
+              HTML("<h4><b>Premium</b></h4>"),
               p("For power users or small groups"),
               ##h3("CHF490 / month", id = "premium-pricing"),
               h3("Soon!"),
               tags$ul(
-                       class = "list-unstyled",                                          
+                       class = "list-unstyled",
                        tags$li("Host up to 100 datasets"),
                        tags$li("8 hours time limit"),
                        tags$li("Up to 2000 samples / dataset"),
@@ -148,7 +147,7 @@ upgrade.dialog <- function(ns, current.plan) {
           )
         ),  ## content div
         div(
-            style = "margin-top:3rem;text-align:center;",              
+            style = "margin-top:3rem;text-align:center;",
             HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
         ),
         footer = tagList(
@@ -161,7 +160,7 @@ upgrade.dialog <- function(ns, current.plan) {
                                   type = "radio",
                                   name = "yearly",
                                   onclick = "priceChange(name)",
-                                  checked = TRUE                                  
+                                  checked = TRUE
                               ),
                          "Billed yearly"
                      ),
@@ -198,32 +197,32 @@ FirebaseAuthenticationModule <- function(input, output, session)
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 
-    ns <- session$ns    
+    ns <- session$ns
     USER <- shiny::reactiveValues(
-        logged = FALSE, 
-        name = "", 
-        password = "", 
-        email = "", 
+        logged = FALSE,
+        name = "",
+        password = "",
+        email = "",
         level = "",
         limit = "",
         token = NULL,
         uid = NULL,
         stripe_id = NULL,
         href = NULL
-    )    
+    )
 
     firebase <- firebase::FirebaseSocial$
         #        new(persistence = "local", analytics = TRUE)
-        new(persistence = "local")        
-    
+        new(persistence = "local")
+
     firebase2 <- firebase::FirebaseEmailLink$
         #        new(persistence = "local", analytics = TRUE)
-        new(persistence = "local")        
-    
+        new(persistence = "local")
+
     observeEvent(input$launchGoogle, {
         firebase$launch_google()
     })
-    
+
     resetUSER <- function() {
 
         message("[FirebaseAuthenticationModule] resetting USER... ")
@@ -238,25 +237,25 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
         ## sign out
         firebase$sign_out()
-        
+
         m <- splashLoginModal(
             ns = ns,
             with.email = FALSE,
             with.username = FALSE,
             with.password = FALSE,
             with.register = FALSE,
-            with.firebase = TRUE,            
-            alt=h5("Ready to explore your data?",style="color:white;"),            
+            with.firebase = TRUE,
+            alt=h5("Ready to explore your data?",style="color:white;"),
             login.text = "Sure I am!"
         )
 
         ## login modal
         shiny::showModal(m)
     }
-    
+
     first_time = TRUE
     observeEvent(USER$logged, {
-        
+
         ## no need to show the modalif the user is logged this is due
         ## to persistence. But if it is the first time of the session
         ## we force reset/logout to delete sleeping logins.
@@ -265,21 +264,21 @@ FirebaseAuthenticationModule <- function(input, output, session)
             return()
         }
 
-        first_time <<- FALSE        
+        first_time <<- FALSE
         message("[FirebaseAuthenticationModule] USER not logged in!")
-        resetUSER() 
+        resetUSER()
 
     })
 
-    observeEvent( input$userLogout, {    
+    observeEvent( input$userLogout, {
         message("[FirebaseAuthenticationModule] userLogout triggered!")
-        resetUSER() 
+        resetUSER()
     })
 
     observeEvent( input$emailSubmit, {
         if(input$emailInput == ""){
             session$sendCustomMessage(
-                "email-feedback", 
+                "email-feedback",
                 list(
                     type = "error",
                     msg = "Missing email"
@@ -288,7 +287,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             return()
         }
         session$sendCustomMessage(
-            "email-feedback", 
+            "email-feedback",
             list(
                 type = "success",
                 msg = "Email sent, check your inbox."
@@ -298,24 +297,20 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
     observeEvent( firebase$get_signed_in(), {
-        
-        dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
 
         response <- firebase$get_signed_in()
-        
+
         if(!response$success) {
-            dbg("[FirebaseAuthenticationModule] sign in NOT succesful")                        
-            resetUSER() 
+            warning("[FirebaseAuthenticationModule] sign in NOT succesful")
+            resetUSER()
             return()
-        } 
+        }
 
         on.exit({
-            dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
-            removeModal()      
+            dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
+            removeModal()
         })
-        
-        dbg("[FirebaseAuthenticationModule] names(response) = ",names(response))        
-        dbg("[FirebaseAuthenticationModule] names(response$response) = ",names(response$response))
+
         for(i in 1:length(response$response)) {
             dbg("[FirebaseAuthenticationModule] ",names(response$response)[i],"=",response$response[[i]])
         }
@@ -324,18 +319,18 @@ FirebaseAuthenticationModule <- function(input, output, session)
         t0 <- response$response[['createdAt']]
         t1 <- response$response[['lastLoginAt']]
         if(is.null(t0)) t0 <- 0
-        if(is.null(t1)) t1 <- 0        
+        if(is.null(t1)) t1 <- 0
         t0 <- as.POSIXct(as.numeric(t0)/1000, origin="1970-01-01")
-        t1 <- as.POSIXct(as.numeric(t1)/1000, origin="1970-01-01")           
+        t1 <- as.POSIXct(as.numeric(t1)/1000, origin="1970-01-01")
         dbg("[FirebaseAuthenticationModule] createdAt=",t0)
         dbg("[FirebaseAuthenticationModule] lastLoginAt=",t1)
-        dbg("[FirebaseAuthenticationModule] TIMEOUT=",TIMEOUT)        
+        dbg("[FirebaseAuthenticationModule] TIMEOUT=",TIMEOUT)
 
         delta.secs <- as.numeric(Sys.time() - t1 , units='secs')
         delta.secs
         WAIT_TIME = 3600
         WAIT_TIME = TIMEOUT + 60*5
-        WAIT_TIME = 60*5        
+        WAIT_TIME = 60*5
 
         ## NEED RETHINK!!! Not working very well because lastLoginAt
         ## is often the current login time. We would actually need the
@@ -345,10 +340,10 @@ FirebaseAuthenticationModule <- function(input, output, session)
             wait.mins <- format((WAIT_TIME - delta.secs)/60, digits=0)
             msg <- paste("You need to wait",wait.mins,"minutes before you can login again.")
             msg <- paste(msg,"\nLast login:",t1)
-            shinyalert::shinyalert("Bummer...", msg, callbackR = resetUSER)            
+            shinyalert::shinyalert("Bummer...", msg, callbackR = resetUSER)
             return()
         }
-        
+
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
@@ -358,10 +353,10 @@ FirebaseAuthenticationModule <- function(input, output, session)
         if(!is.null(USER$email)) USER$email <- as.character(USER$email)
         if(is.null(USER$name))   USER$name  <- ""
         if(is.null(USER$email))  USER$email <- ""
-        
+
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
-        
+
         session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -369,7 +364,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$stripe_id <- input$stripeId$id
         USER$href      <- input$stripeId$href
     })
-    
+
     observeEvent(input$permissions, {
         perm <- input$permissions
 
@@ -378,7 +373,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             USER$level <- "premium"
 
         session$sendCustomMessage(
-            "set-user", 
+            "set-user",
             list(
                 user = USER$email,
                 level = USER$level,
@@ -386,17 +381,16 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
         )
     })
-    
-    observeEvent( input$firebaseUpgrade, {    
-        dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
+
+    observeEvent( input$firebaseUpgrade, {
         current.plan <- USER$level
         showModal(
             upgrade.dialog(ns, current.plan)
         )
     })
 
-    observeEvent(input$manage, {        
-        
+    observeEvent(input$manage, {
+
         response <- httr::POST(
             "https://api.stripe.com/v1/billing_portal/sessions",
             body = list(
@@ -410,15 +404,15 @@ FirebaseAuthenticationModule <- function(input, output, session)
             encode = "form"
         )
 
-        httr::warn_for_status(response)        
+        httr::warn_for_status(response)
         content <- httr::content(response)
         session$sendCustomMessage('manage-sub', content$url)
     })
 
-    
+
     rt <- list(
         name   = shiny::reactive(USER$name),
-        email  = shiny::reactive(USER$email),        
+        email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit  = shiny::reactive(USER$limit),
@@ -439,20 +433,20 @@ PasswordAuthenticationModule <- function(input, output, session,
 {
     message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
-    ns <- session$ns    
+    ns <- session$ns
     USER <- shiny::reactiveValues(
                        logged=FALSE,
                        ## username=NA,
-                       email=NA,                       
+                       email=NA,
                        password=NA,
                        level=NA,
-                       limit=NA)    
+                       limit=NA)
 
     resetUSER <- function() {
 
         USER$logged <- FALSE
         ## USER$username <- NA
-        USER$email <- NA        
+        USER$email <- NA
         USER$password <- NA
         USER$level <- ""
         USER$limit <- ""
@@ -465,7 +459,7 @@ PasswordAuthenticationModule <- function(input, output, session,
             login.text="Let me in!"
             )
         shiny::showModal(m)
-        
+
     }
 
     CREDENTIALS <- read.csv(credentials.file,colClasses="character")
@@ -485,25 +479,25 @@ PasswordAuthenticationModule <- function(input, output, session,
     output$login_warning = shiny::renderText("")
 
     shiny::observeEvent( input$login_btn, {
-        
+
         login.OK   = FALSE
         valid.date = FALSE
         valid.user = FALSE
-        
+
         login_email    <- input$login_email
         login_password <- input$login_password
 
         if( is.null(login_email) || is.null(login_password)) return(NULL)
-        if( login_email=="" || login_password=="") return(NULL)            
-        sel <- tail(which( CREDENTIALS$email == login_email),1)       
+        if( login_email=="" || login_password=="") return(NULL)
+        sel <- tail(which( CREDENTIALS$email == login_email),1)
         dbg("[AuthenticationModule:input$login_btn] CREDENTIALS$email = ",CREDENTIALS$email)
-        dbg("[AuthenticationModule:input$login_btn] sel = ",sel)        
-        
+        dbg("[AuthenticationModule:input$login_btn] sel = ",sel)
+
         valid.user <- isTRUE(CREDENTIALS$email[sel] == login_email) && length(sel)>0
         valid.pw   <- isTRUE(CREDENTIALS[sel,"password"] == input$login_password)
         valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
         login.OK = (valid.user && valid.pw && valid.date)
-        
+
         message("--------- password login ---------")
         ##message("input.username = ",input$login_username)
         message("input.email    = ",input$login_email)
@@ -516,11 +510,11 @@ PasswordAuthenticationModule <- function(input, output, session,
         message("valid.date     = ",valid.date)
         message("valid.pw       = ",valid.pw)
         message("----------------------------------")
-        
+
         if (login.OK) {
 
             message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
-            
+
             output$login_warning = shiny::renderText("")
             shiny::removeModal()
             ##USER$name   <- input$login_username
@@ -530,15 +524,15 @@ PasswordAuthenticationModule <- function(input, output, session,
             USER$email     <- cred$email
             USER$level     <- cred$level
             USER$limit     <- cred$limit
-            
+
             ## Here you can perform some user-specific functions, site
             ## news, or 2nd hello modal...
             ##shiny::showModal(splashHelloModal(USER$name,ns=ns))
             ##removeModal()
-            USER$logged <- TRUE            
+            USER$logged <- TRUE
             session$sendCustomMessage("set-user", list(user = USER$email))
 
-        } else {            
+        } else {
             message("[PasswordAuthenticationModule::login] REFUSED : invalid login! ")
             if(!valid.date) {
                 output$login_warning = shiny::renderText("Registration expired")
@@ -555,17 +549,16 @@ PasswordAuthenticationModule <- function(input, output, session,
     })
 
     observeEvent( input$userLogout, {
-        dbg("[NoAuthenticationModule] observe::input$userLogout() reacted")
         resetUSER()
     })
-    
+
     ## module reactive return value
     rt <- list(
         name   = shiny::reactive(""),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
-        limit  = shiny::reactive(USER$limit)        
+        limit  = shiny::reactive(USER$limit)
     )
     return(rt)
 }
@@ -579,7 +572,7 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 {
     if(is.null(ns)) ns <- function(e) return(e)
     message("[AuthenticationModule::splashHelloModel]")
-    
+
     all.hello = c("Hello","Salut","Hola","Pivet","Ni hao","Ciao","Hi","Hoi","Hej",
                   "Yassou","Selam","Hey","Hei","Grutzi","Bonjour",
                   "Namaste","Salam","Selamat","Shalom","Goeiedag","Yaxshimusiz")
@@ -605,7 +598,7 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
         shiny::div(id="splash-title",splash.title)
     )
     m <- splashScreen("", body, ns=ns, easyClose=TRUE, fade=TRUE,
-        buttons=FALSE, footer=FALSE)    
+        buttons=FALSE, footer=FALSE)
     if(duration>0) {
         cat("closing hello in",round(duration/1000,1),"seconds...\n")
         shinyjs::delay(duration, shiny::removeModal())
@@ -647,7 +640,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[23]] = c("Love Adventurous Life","Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
     titles[[24]] = c("Succes is Exploration","Find the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
-    titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")    
+    titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")
     title <- titles[[length(titles)]]
     title <- sample(titles,1)[[1]]
     title.len <- nchar(paste(title,collapse=' '))
@@ -662,7 +655,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     div.email <- div()
     div.username <- div()
     div.firebase <- div()
-    
+
     if(with.email) {
         div.email <- div(
             id="splash-email",
@@ -687,7 +680,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
             div(
                 class = "card-body",
                 h1(
-                    "Sign in", 
+                    "Sign in",
                     class = "card-title pb-2"
                 ),
                 div(
@@ -712,11 +705,11 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                     "or",
                     class = "text-center pb-4 pt-1",
                     style = "margin-top:-35px;background:white;width:50px;margin-left:auto;margin-right:auto;"
-                ),                
+                ),
                 div(
                     class = "social-button google-button",
                     actionLink(
-                        ns("launchGoogle"), 
+                        ns("launchGoogle"),
                         "Sign in with Google",
                         icon = icon("google")
                     )
@@ -724,7 +717,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                 ## div(
                 ##     class = "social-button apple-button",
                 ##     actionLink(
-                ##         ns("launchApple"), 
+                ##         ns("launchApple"),
                 ##         "Sign in with Apple",
                 ##         icon = icon("apple")
                 ##     )
@@ -732,7 +725,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                 div(
                     class = "social-button facebook-button",
                     actionLink(
-                        ns("launchFacebook"), 
+                        ns("launchFacebook"),
                         "Sign in with Facebook",
                         icon = icon("facebook")
                     )
@@ -750,15 +743,15 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         class = "pb-4",
         actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
     )
-    
+
     if(with.register) {
       div.button <- div(
-        id="splash-buttons",        
+        id="splash-buttons",
         actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
         actionButton(ns("register_btn"),"Register",class="btn-primary")
       )
     }
-    
+
     ##splash.panel=div();ns=function(x)x
     if(with.firebase) {
         splash.content <- div.firebase
@@ -775,10 +768,10 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     }
 
     splash.subtitle <- NULL
-    
+
     body <- div(
       id="splash-content",
-      splash.content      
+      splash.content
     )
 
     title <- div(
@@ -795,7 +788,7 @@ splashscreen.buttons <- function() {
     tagList(
         shiny::tags$a(
             shiny::img(
-                id="splash-logo2", 
+                id="splash-logo2",
                 src="static/bigomics-logo.png"
             ),
             href = "https://www.bigomics.ch",
@@ -828,7 +821,7 @@ splashscreen.buttons <- function() {
                     ),
                     tags$li(
                         shiny::tags$a(
-                            "Read documentation", 
+                            "Read documentation",
                             class = "dropdown-item",
                             href = "https://omicsplayground.readthedocs.io",
                             target = "_blank"
@@ -836,7 +829,7 @@ splashscreen.buttons <- function() {
                     ),
                     tags$li(
                         shiny::tags$a(
-                            "User forum", 
+                            "User forum",
                             class = "dropdown-item",
                             href = "https://groups.google.com/d/forum/omicsplayground",
                             target = "_blank"
@@ -861,7 +854,7 @@ splashscreen.buttons <- function() {
 
                     tags$li(
                         shiny::tags$a(
-                            "Get the source", 
+                            "Get the source",
                             class = "dropdown-item",
                             href = "https://github.com/bigomics/omicsplayground",
                             target = "_blank"
@@ -869,7 +862,7 @@ splashscreen.buttons <- function() {
                     ),
                     tags$li(
                         shiny::tags$a(
-                            "Docker image", 
+                            "Docker image",
                             class = "dropdown-item",
                             href = "https://hub.docker.com/r/bigomics/omicsplayground",
                             target = "_blank"
@@ -882,7 +875,7 @@ splashscreen.buttons <- function() {
                             href = "https://www.buymeacoffee.com/bigomics",
                             target = "_blank"
                         )
-                    )                    
+                    )
                 )
             )
         )
@@ -893,18 +886,18 @@ splashscreen.buttons <- function() {
 splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
                          buttons=TRUE, footer=TRUE)
 {
-    
+
   if(is.null(ns)) ns <- function(e) return(e)
   message("[AuthenticationModule::monsterFullScreen]")
-  
+
   div.buttons = shiny::modalButton("Dismiss")
   if(buttons) {
-    div.buttons <- splashscreen.buttons()      
+    div.buttons <- splashscreen.buttons()
   }
   if(!footer) {
     div.buttons <- NULL
   }
-  
+
   ## return modalDialog
   m <- modalDialog2(
     id = "splash-fullscreen",
@@ -916,7 +909,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
             class = "col-md-4 offset-md-2",
             title,
             br(),
-            br(),             
+            br(),
             shiny::img(src="static/mascotte-sc.png", class = "img-fluid", id = "splash-image"),
         ),
         shiny::div(
@@ -933,7 +926,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
     easyClose = easyClose,
     fade = fade
   ) ## end of modalDialog
-  
+
   return(m)
 }
 

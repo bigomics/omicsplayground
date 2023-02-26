@@ -162,11 +162,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
 
             sel.conditions <- shiny::reactive({
-                message("[MakeContrastServer] sel.conditions : reacted")
                 shiny::req(phenoRT(),countsRT())
                 df <- phenoRT()
-                message("[MakeContrastServer] sel.conditions : dim.df = ",
-                        paste(dim(df),collapse='x'))
 
                 if("<samples>" %in% input$param) {
                     df$"<samples>" <- rownames(df)
@@ -277,11 +274,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
             shiny::observeEvent( input$addcontrast, {
 
-                message("[MakeContrastServer:addcontrast] reacted")
-
                 cond <- sel.conditions()
-                message("[MakeContrastServer:addcontrast] len.cond = ",length(cond))
-                message("[MakeContrastServer:addcontrast] cond = ",paste(cond,collapse=' '))
                 if(length(cond)==0 || is.null(cond)) return(NULL)
 
                 group1 <- input$group1
@@ -290,8 +283,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 in.ref1 <- 1*(cond %in% group2)
                 in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
                 in.ref  <- in.ref1 | in.ref2
-
-                message("[MakeContrastServer:addcontrast] 1 : ")
 
                 ## ctx <- 1*(in.main) - 1*(in.ref)
                 ##ct.name <- paste0(input$group1name,"_vs_",input$group2name)
@@ -321,14 +312,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     return(NULL)
                 }
 
-                message("[MakeContrastServer:addcontrast] update reactive values : 1")
-
                 ## update reactive value
                 samples = colnames(countsRT())
-
-                message("[MakeContrastServer:addcontrast] 1 : samples = ",samples)
-                message("[MakeContrastServer:addcontrast] 1 : ct.name = ",ct.name)
-                message("[MakeContrastServer:addcontrast] 1 : len.ctx = ",length(ctx))
 
                 ctx1 <- matrix(ctx, ncol=1, dimnames=list(samples,ct.name))
                 if(is.null(rv$contr)) {
@@ -336,9 +321,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 } else {
                     rv$contr <- cbind(rv$contr, ctx1)
                 }
-
-                message("[MakeContrastServer:addcontrast] update reactive values : 2")
-                message("[MakeContrastServer:addcontrast] ct.name in pheno = ",ct.name %in% colnames(rv$pheno))
 
                 ##if(any(input$param %in% c('<gene>','<samples>'))) {
                 if(any(input$param %in% c('<gene>'))) {
@@ -351,8 +333,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         }
                     }
                 }
-
-                message("[MakeContrastServer:addcontrast] done!")
 
             })
 
@@ -389,13 +369,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
             output$contrastTable <- DT::renderDataTable({
 
-                message("[MakeContrastServer:contrastTable] called!")
-
                 ct <- rv$contr
-
-                message("[contrastTable] is.null(ct) = ",is.null(ct))
-                message("[contrastTable] dim.ct = ",dim(ct))
-                message("[contrastTable] dim.contrRT = ",dim(contrRT()))
 
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
@@ -407,8 +381,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         "control.group" = ""
                     )[0,]
                 } else {
-                    message("[contrastTable] ct.rownames= ",paste(rownames(ct),collapse=' '))
-                    message("[contrastTable] ct.colnames= ",paste(colnames(ct),collapse=' '))
 
                     paste.max <- function(x,n=6) {
                         ##x <- unlist(x)
@@ -481,7 +453,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
 
             pcaplot.RENDER <- shiny::reactive({
-                message("[MakeContrastServer] pcaplot.RENDER : reacted")
                 ##ngs <- inputData()
                 ##X <- ngs$X
                 pheno <- phenoRT()

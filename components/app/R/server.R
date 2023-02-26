@@ -147,7 +147,6 @@ app_server <- function(input, output, session) {
     observeEvent( auth$logged(), {
         is.logged <- auth$logged()
         length.pgx <- length(names(PGX))
-        dbg("[SERVER] *** clearing PGX ***")
         if(!is.logged && length.pgx>0) {
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
@@ -167,7 +166,6 @@ app_server <- function(input, output, session) {
     modules_loaded <- FALSE
     observeEvent( data_loaded(), {
 
-        message("[SERVER:data.loaded] data_loaded = ",data_loaded())
         if(data_loaded()==0){
             return(NULL)
         }
@@ -180,8 +178,6 @@ app_server <- function(input, output, session) {
         modules_loaded <<- TRUE
 
         ## load other modules if not yet loaded
-        message("[SERVER] --------- calling shiny modules ----------")
-        dbg("[SERVER] names(pgx) = ",names(PGX))
 
         loadModule <- function(...) {
             id <- list(...)[[2]]
@@ -228,7 +224,6 @@ app_server <- function(input, output, session) {
 
         })
 
-        message("[SERVER:data_loaded] --------- done! ----------")
         ## remove modal from LoadingBoard
         shiny::removeModal()
     })
@@ -241,7 +236,6 @@ app_server <- function(input, output, session) {
     output$current_user <- shiny::renderText({
         ## trigger on change of user
         user <- auth$email()
-        dbg("[SERVER:output$current_user] user = ",user)
         if(user %in% c("",NA,NULL)) user <- "User"
         user
     })
@@ -249,7 +243,6 @@ app_server <- function(input, output, session) {
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
-        dbg("[SERVER:output$current_dataset] dataset = ",name)
         if(length(name)==0) name = "BigOmics Playground"
         name
     })
@@ -257,7 +250,6 @@ app_server <- function(input, output, session) {
     output$current_section <- shiny::renderText({
         cdata <- session$clientData
         section <- sub("section-","",cdata[["url_hash"]])
-        dbg("[SERVER:output$current_section] section = ",section)
         section
     })
 
@@ -271,25 +263,22 @@ app_server <- function(input, output, session) {
         PGX$name
     }, {
 
-        message("[SERVER] !!! dataset changed. reconfiguring triggered!")
         ## trigger on change dataset
 
         ## show beta feauture
         show.beta <- env$user$enable_beta()
-        dbg("[SERVER] show.beta = ",show.beta)
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
         is.logged <- auth$logged()
 
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
-            message("[SERVER] !!! no data. hiding menu.")
+            warning("[SERVER] !!! no data. hiding menu.")
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")
             toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
             return(NULL)
         }
 
-        message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
 
@@ -317,8 +306,6 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
         tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
         toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
-
-        message("[SERVER] reconfiguring menu done.")
 
     })
 
@@ -458,14 +445,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
     ## This will be called upon user logout *after* the logout() JS call
     observeEvent( input$userLogout, {
-      message("[SERVER] >>>>>>>>> observe::input$userLogout reacted")
       reset_timer()
       run_timer(FALSE)
     })
 
     ## This code listens to the JS quit signal
     observeEvent( input$quit, {
-        dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")
         session$close()
     })

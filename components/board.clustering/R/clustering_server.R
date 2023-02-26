@@ -601,7 +601,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       ## rownames(pos) = colnames(zx)
 
       idx <- NULL
-      dbg("[hm_getClusterPositions] done")
 
       clust <- list(pos = pos, clust = idx)
 

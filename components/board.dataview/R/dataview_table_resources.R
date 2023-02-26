@@ -37,8 +37,6 @@ dataview_table_resources_server <- function(id, pgx) {
     datatable_timings.RENDER <- shiny::reactive({
       shiny::req(pgx$timings)
 
-      dbg("[datatable_timings.RENDER] reacted")
-
       ## if(is.null(pgx$timings)) return(NULL)
       D <- data.frame()
       if (!is.null(pgx$timings)) {

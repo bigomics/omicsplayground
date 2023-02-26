@@ -17,7 +17,6 @@ UploadBoard <- function(id,
                         enable_userdir = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-    dbg("[UploadBoard] >>> initializing UploadBoard...")
 
     loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
 
@@ -159,7 +158,6 @@ UploadBoard <- function(id,
 
         savedata_button <- NULL
         if (enable_save) {
-          dbg("[UploadBoard] observeEvent:savedata reacted")
           ## -------------- save PGX file/object ---------------
           pgxname <- sub("[.]pgx$", "", new_pgx$name)
           pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
@@ -890,15 +888,12 @@ UploadBoard <- function(id,
 
     corrected_counts <- shiny::reactive({
       counts <- NULL
-      dbg("[UploadModule::corrected_counts] reacted!\n")
       advanced_mode <- (length(input$advanced_mode) > 0 &&
         input$advanced_mode[1] == 1)
       if (advanced_mode) {
-        message("[UploadModule::corrected_counts] using CORRECTED counts\n")
         out <- correctedX()
         counts <- pmax(2**out$X - 1, 0)
       } else {
-        message("[UploadModule::corrected_counts] using UNCORRECTED counts\n")
         counts <- uploaded$counts.csv
       }
       counts
@@ -918,22 +913,18 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       ##
-      dbg("[observe:modified_ct()] reacted...")
       modct <- modified_ct()
-      dbg("[observe:modified_ct()] dim(modct$contr) = ", dim(modct$contr))
       uploaded$contrasts.csv <- modct$contr
       uploaded$samples.csv <- modct$pheno
     })
 
     upload_ok <- shiny::reactive({
-      dbg("[UploadModule] upload_ok reactive")
       check <- checkTables()
       all(check[, "status"] == "OK")
       all(grepl("ERROR", check[, "status"]) == FALSE)
     })
 
     batch_vectors <- shiny::reactive({
-      dbg("batch_vectors reactive")
       correctedX()$B
     })
 
@@ -957,7 +948,6 @@ UploadBoard <- function(id,
     )
 
     uploaded_pgx <- shiny::reactive({
-      dbg("[uploaded_pgx] reacted!")
       if (!is.null(uploaded$pgx)) {
         pgx <- uploaded$pgx
         ## pgx <- pgx.initialize(pgx)
@@ -972,7 +962,6 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     output$countStats <- shiny::renderPlot({
-      dbg("[countStats] renderPlot called")
 
       check <- checkTables()
       status.ok <- check["counts.csv", "status"]
@@ -1055,8 +1044,6 @@ UploadBoard <- function(id,
           )
         )
 
-      dbg("[UploadModule::phenoStats] done!")
-
       p1
     })
 
@@ -1066,13 +1053,6 @@ UploadBoard <- function(id,
       has.contrasts <- !is.null(ct) && NCOL(ct) > 0
       check <- checkTables()
       status.ok <- check["contrasts.csv", "status"]
-
-      dbg("[output$contrastStats] status.ok = ", status.ok)
-      dbg("[output$contrastStats] has.contrasts = ", has.contrasts)
-      dbg(
-        "[output$contrastStats] dim(uploaded$contrasts.csv) = ",
-        dim(uploaded$contrasts.csv)
-      )
 
       if (status.ok != "OK" || !has.contrasts) {
         frame()
@@ -1123,13 +1103,8 @@ UploadBoard <- function(id,
     })
 
     sel.conditions <- shiny::reactive({
-      message("[MakeContrastServer] sel.conditions : reacted")
       shiny::req(phenoRT(), corrected_counts())
       df <- phenoRT()
-      message(
-        "[MakeContrastServer] sel.conditions : dim.df = ",
-        paste(dim(df), collapse = "x")
-      )
 
       if ("<samples>" %in% input$param) {
         df$"<samples>" <- rownames(df)
@@ -1163,11 +1138,8 @@ UploadBoard <- function(id,
     })
 
     shiny::observeEvent(input$addcontrast, {
-      message("[MakeContrastServer:addcontrast] reacted")
 
       cond <- sel.conditions()
-      message("[MakeContrastServer:addcontrast] len.cond = ", length(cond))
-      message("[MakeContrastServer:addcontrast] cond = ", paste(cond, collapse = " "))
       if (length(cond) == 0 || is.null(cond)) {
         return(NULL)
       }
@@ -1240,7 +1212,6 @@ UploadBoard <- function(id,
         }
       }
 
-      message("[MakeContrastServer:addcontrast] done!")
     })
 
     output$createcomparison <- shiny::renderUI({
@@ -1251,7 +1222,6 @@ UploadBoard <- function(id,
       }
 
       items <- c("<others>", sort(unique(cond)))
-      message("[MakeContrastServer:createcomparison] items=", items)
 
       shiny::tagList(
         shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -1285,13 +1255,8 @@ UploadBoard <- function(id,
 
     output$contrastTable <- DT::renderDataTable(
       {
-        message("[MakeContrastServer:contrastTable] called!")
 
         ct <- rv$contr
-
-        message("[contrastTable] is.null(ct) = ", is.null(ct))
-        message("[contrastTable] dim.ct = ", dim(ct))
-        message("[contrastTable] dim.contrRT = ", dim(contrRT()))
 
         if (is.null(ct) || NCOL(ct) == 0) {
           df <- data.frame(
@@ -1303,8 +1268,6 @@ UploadBoard <- function(id,
             "control.group" = ""
           )[0, ]
         } else {
-          message("[contrastTable] ct.rownames= ", paste(rownames(ct), collapse = " "))
-          message("[contrastTable] ct.colnames= ", paste(colnames(ct), collapse = " "))
 
           paste.max <- function(x, n = 6) {
             ## x <- unlist(x)

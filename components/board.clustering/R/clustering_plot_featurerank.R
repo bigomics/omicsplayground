@@ -84,9 +84,6 @@ clustering_plot_featurerank_server <- function(id,
       Y <- Y[, kk, drop = FALSE]
       dim(Y)
 
-      dbg("[calcFeatureRanking] dim(X)=", dim(X))
-      dbg("[calcFeatureRanking] dim(Y)=", dim(Y))
-
       ## ------------ Note: this takes a while. Maybe better precompute off-line...
       sdx <- apply(X, 1, sd)
       names(sdx) <- rownames(X)

@@ -78,7 +78,6 @@ plot_clustpca_server <- function(id,
     ## Functions ############
 
     hm_getClusterPositions <- shiny::reactive({
-      dbg("[plot_clustpca_server:hm_getClusterPositions] reacted!")
 
       ## pgx <- inputData()
       ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
@@ -146,7 +145,6 @@ plot_clustpca_server <- function(id,
       ## rownames(pos) = colnames(zx)
 
       idx <- NULL
-      dbg("[hm_getClusterPositions] done")
 
       clust <- list(pos = pos, clust = idx)
 
@@ -156,7 +154,6 @@ plot_clustpca_server <- function(id,
     ## Plot ############
 
     plot_data <- shiny::reactive({
-      dbg("[plot_clustpca_server:plot_data] reacted!")
       clust <- hm_getClusterPositions()
       ## data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
       return(
@@ -177,9 +174,6 @@ plot_clustpca_server <- function(id,
       hmpca.shapevar <- pd[["hmpca.shapevar"]]
       pos <- pd[["df"]]
 
-
-      dbg("[plot_clustpca_server:plot.RENDER] function called!")
-      dbg("[plot_clustpca_server:plot.RENDER] names(df) = ", names(df))
 
       shiny::req(pgx$Y)
       shiny::req(df)

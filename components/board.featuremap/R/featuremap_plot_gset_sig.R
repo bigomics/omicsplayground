@@ -26,7 +26,6 @@ featuremap_plot_gset_sig_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     gsetSigPlots.plot_data <- shiny::reactive({
-      dbg("[FeatureMap::gsetSigPlots.plot_data] reacted")
       ngs <- inputData()
       shiny::req(ngs)
 

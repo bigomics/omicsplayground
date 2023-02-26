@@ -153,8 +153,6 @@ SingleCellBoard <- function(id, inputData) {
       ngs <- inputData()
       shiny::req(ngs)
 
-      dbg("[pfGetClusterPositions] called")
-
       ## zx <- filtered_matrix1()
       zx <- ngs$X
       kk <- colnames(zx)
@@ -221,7 +219,6 @@ SingleCellBoard <- function(id, inputData) {
         return(NULL)
       }
       shiny::req(input$refset2)
-      dbg("[SingleCellBoard:getDeconvResults2] called")
 
       refset <- "LM22"
       refset <- input$refset2
@@ -340,8 +337,6 @@ SingleCellBoard <- function(id, inputData) {
     #     ngs <- inputData()
     #     shiny::req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
 
-    #     dbg("[SingleCellBoard:cna.plotFUNC] reacted")
-
     #     if(input$cna_method=="inferCNV") {
     #         res <- getCNAfromExpression.inferCNV()
     #         par(mfrow=c(1,1))
@@ -391,7 +386,6 @@ SingleCellBoard <- function(id, inputData) {
     #     ##if(is.null(ngs)) return(NULL)
     #     shiny::req(ngs)
     #     ## levels for sample filter
-    #     dbg("[SingleCellBoard:cna:observe] reacted")
 
     #     annotvar <- c(colnames(ngs$Y),"<none>")
     #     shiny::updateSelectInput(session, "cna_annotvar", choices=annotvar)
@@ -407,8 +401,6 @@ SingleCellBoard <- function(id, inputData) {
     #         ## if(is.null(ngs)) return(NULL)
     #         shiny::req(ngs)
     #         shiny::req(input$italk_groups)
-
-    #         dbg("[SingleCellBoard:italk_getResults] reacted")
 
     #         db <- iTALK::database
     #         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
@@ -515,8 +507,6 @@ SingleCellBoard <- function(id, inputData) {
     #         shiny::req(ngs,res)
     #         ##if(is.null(res)) return(NULL)
 
-    #         dbg("[SingleCellBoard:italk_heatmap.RENDER] reacted")
-
     #         res_cat <- res$table
     #         ntop=50
     #         ntop = as.integer(input$italk_LRPlot_ntop)
@@ -609,8 +599,6 @@ SingleCellBoard <- function(id, inputData) {
     #     ngs <- inputData()
     #     shiny::req(ngs)
     #     ##if(is.null(ngs)) return(NULL)
-
-    #     dbg("[SingleCellBoard:monocle_getResults] reacted")
 
     #     ## Create a Progress object
     #     progress <- shiny::Progress$new()
@@ -722,13 +710,9 @@ SingleCellBoard <- function(id, inputData) {
 
     # monocle_plotTopMarkers.RENDER <- shiny::reactive({
 
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] reacted")
-
     #     cds <- monocle_getResults()
 
     #     shiny::req(cds,input$monocle_groupby)
-
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 1")
 
     #     ## Find marker genes expressed by each cluster
     #     pheno1 = "cluster"
@@ -736,8 +720,6 @@ SingleCellBoard <- function(id, inputData) {
     #     if(pheno1=="cluster") pheno1 <- ".cluster"
     #     pheno1
     #     marker_test_res = top_markers(cds, group_cells_by=pheno1, cores=4)
-
-    #     dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 2")
 
     #     NTOP = 1
     #     NTOP = 3
@@ -769,8 +751,6 @@ SingleCellBoard <- function(id, inputData) {
 
     # monocle_plotTrajectory.RENDER <- shiny::reactive({
 
-    #     dbg("monocle_plotTrajectory.RENDER: reacted")
-
 
     #     cds <- monocle_getResults()
     #     shiny::req(cds,input$monocle_groupby)
@@ -798,8 +778,6 @@ SingleCellBoard <- function(id, inputData) {
     # })
 
     # monocle_plotGene.RENDER <- shiny::reactive({
-
-    #     dbg("monocle_plotGene.RENDER: reacted")
 
     #     cds <- monocle_getResults()
     #     shiny::req(cds, input$monocle_plotgene)

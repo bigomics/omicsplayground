@@ -43,7 +43,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
         function(input, output, session) {
             ns <- session$ns
 
-            dbg("ComputePgxServer init")
 
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
@@ -226,20 +225,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
             shiny::observeEvent( metaRT(), {
 
-                dbg("[ComputePgxServer:@metaRT] parsing meta information...")
                 meta <- metaRT()
 
-                dbg("[ComputePgxServer:@metaRT] names.meta =",names(meta))
-
                 if(!is.null(meta[['name']])) {
-                    dbg("[ComputePgxServer:@metaRT] NS.upload_name = ",ns("upload_name"))
-                    dbg("[ComputePgxServer:@metaRT] meta.name => ",meta[['name']])
                     shiny::updateTextInput(session, "upload_name", value=meta[['name']])
                     ## shiny::updateTextInput(session, ns("upload_name"), value=meta[['name']])
                 }
                 if(!is.null(meta[['description']])) {
-                    dbg("[ComputePgxServer:@metaRT] NS.upload_description = ",ns("upload_description"))
-                    dbg("[ComputePgxServer:@metaRT] meta.description => '",meta[['description']],"'")
                     shiny::updateTextAreaInput(session, "upload_description", value=meta[['description']])
                     ##shiny::updateTextAreaInput(session, ns("upload_description"), value=meta[['description']])
                 }
@@ -253,8 +245,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             computedPGX  <- shiny::reactiveVal(NULL)
 
             shiny::observeEvent( input$compute, {
-
-                message("[ComputePgxServer::@compute] reacted!")
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
 
                 ##-----------------------------------------------------------
@@ -266,10 +256,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 }
 
                 pgxdir <- pgx.dirRT()
-                dbg("[ComputePgxServer::@compute] pgxdir  = ", pgxdir )
 
                 numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
-                dbg("[ComputePgxServer::@compute] numpgx  = ", numpgx )
 
                 if(numpgx >= max.datasets) {
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
@@ -523,8 +511,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 message("[ComputePgxServer:@compute] finished")
 
             })
-
-            dbg("ComputePgxServer done")
 
             return(computedPGX)  ## pointing to reactive
         } ## end-of-server

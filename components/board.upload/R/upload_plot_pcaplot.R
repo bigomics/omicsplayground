@@ -38,7 +38,6 @@ upload_plot_pcaplot_server <- function(id,
     })
 
     pcaplot.RENDER <- shiny::reactive({
-      message("[MakeContrastServer] pcaplot.RENDER : reacted")
       ## ngs <- inputData()
       ## X <- ngs$X
       pheno <- phenoRT()

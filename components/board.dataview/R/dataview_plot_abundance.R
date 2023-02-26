@@ -28,7 +28,6 @@ dataview_plot_abundance_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      dbg("[dataview_counts_histplot_server:plot_data] reacted!")
       res <- getCountsTable()
       shiny::req(res)
       res <- list(

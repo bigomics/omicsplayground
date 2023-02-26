@@ -25,7 +25,6 @@ wgcna_plot_gdendogram_server <- function(id,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneDendro.RENDER <- shiny::reactive({
-      message("[geneDendro.RENDER] reacted")
 
       out <- wgcna.compute()
       net <- out$net

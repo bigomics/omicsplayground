@@ -77,8 +77,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
       gene <- gene()
       pheno <- pheno()
 
-      dbg("[SingleCellBoard::crosstab.plotFUNC] called")
-
       scores <- ngs$deconv[[1]][[1]] ## just an example...
       if (crosstabvar == "<cell type>") {
         scores <- getDeconvResults2()
@@ -94,12 +92,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
         rownames(scores) <- rownames(ngs$Y)
         colnames(scores) <- sub("^x", "", colnames(scores))
       }
-
-      dim(scores)
-      message(
-        "[SingleCellBoard::crosstab.plotFUNC] 1 : dim(scores) = ",
-        paste(dim(scores), collapse = "x"), "\n"
-      )
 
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
@@ -130,7 +122,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]
 
       getProportionsTable <- function(pheno, is.gene = FALSE) {
-        dbg("[SingleCellBoard::getProportionsTable()] called")
         y <- NULL
         ## if("gene" %in% input$crosstaboptions) {
         if (is.gene) {

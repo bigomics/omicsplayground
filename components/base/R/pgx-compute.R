@@ -90,7 +90,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(is.group.contrast && nrow(contrasts)<nrow(samples)) {
         ## group
         message("[createPGX] converting group contrast to sample-wise contrasts...")
-        grp <- as.character(samples[,grp.idx])            
+        grp <- as.character(samples[,grp.idx])
         contrasts.new <- contrasts[grp,,drop=FALSE]
         rownames(contrasts.new) <- rownames(samples)
         contrasts <- contrasts.new
@@ -489,7 +489,6 @@ pgx.computePGX <- function(ngs,
     if(!"contrasts" %in% names(ngs)) {
         stop("[pgx.computePGX] FATAL:: no contrasts in object")
     }
-    message("[pgx.computePGX] called.")
 
     ## make proper contrast matrix
     contr.matrix <- ngs$contrasts
@@ -498,7 +497,6 @@ pgx.computePGX <- function(ngs,
     is.numcontrast <- is.numcontrast && (-1 %in% contr.values) && (1 %in% contr.values)
     is.numcontrast
     if(!is.numcontrast) {
-        message("[pgx.computePGX] converting label to numeric contrast...")
         contr.matrix <- makeContrastsFromLabelMatrix(contr.matrix)
         contr.matrix <- sign(contr.matrix) ## sign is fine
     }

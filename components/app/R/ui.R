@@ -481,9 +481,7 @@ app_ui <- function() {
         "DEV" = c("corsa","system","multi")
     )
 
-    dbg("[ui.R] creating UI... ")
     ui <- createUI(tabs)
-    dbg("[ui.R] UI done!")
 
     return(ui)
 }

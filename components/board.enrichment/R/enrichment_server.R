@@ -297,17 +297,13 @@ EnrichmentBoard <- function(id, inputData, selected_gxmethods) {
       if (!input$gs_showall && nrow(res) > 0) {
         lfc <- as.numeric(input$gs_lfc)
         fdr <- as.numeric(input$gs_fdr)
-        dbg("[EnrichmentBoard::getFilteredGeneSetTable] lfc = ", lfc)
-        dbg("[EnrichmentBoard::getFilteredGeneSetTable] fdr = ", fdr)
         is.sig <- (abs(res$logFC) >= lfc & res$meta.q <= fdr)
-        dbg("[EnrichmentBoard::getFilteredGeneSetTable] is.sig = ", table(is.sig))
         res <- res[is.sig, , drop = FALSE]
       }
 
       ## just show top 10
       if (input$gs_top10 && nrow(res) > 10 && length(input$gs_top10)) {
         fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(res), value = TRUE)[1]
-        dbg("[EnrichmentBoard::getFilteredGeneSetTable] fx.col = ", fx.col)
         fx <- as.numeric(res[, fx.col])
         names(fx) <- rownames(res)
         pp <- unique(c(

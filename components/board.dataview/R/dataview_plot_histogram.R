@@ -52,7 +52,6 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
 
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      dbg("[dataview_counts_histplot_server:plot_data] reacted!")
       res <- getCountsTable()
       shiny::req(res)
       hh <- gx.hist(gx = res$log2counts, n = 2000, plot = FALSE)

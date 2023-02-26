@@ -81,7 +81,6 @@ singlecell_plot_icpplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      dbg("[SingleCellBoard:getDeconvResults] called")
       ngs <- inputData()
       method <- "meta"
       refset <- "LM22"
@@ -111,7 +110,6 @@ singlecell_plot_icpplot_server <- function(id,
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      dbg("[SingleCellBoard:icp.plotFUNC] called")
       pos <- ngs$tsne2d
       pos <- clust.pos
       score <- ngs$deconv[[1]][["meta"]]

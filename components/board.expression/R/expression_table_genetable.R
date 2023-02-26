@@ -50,7 +50,6 @@ expression_table_genetable_server <- function(id,
                                               height,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    message("expression_table_genetable_server called")
 
     ns <- session$ns
 

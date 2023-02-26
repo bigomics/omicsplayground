@@ -440,7 +440,6 @@ PlotModuleServer <- function(
                                                      message("[plotModule] adding watermark to PNG...")
                                                      addWatermark.PNG(file)
                                                  }
-                                                 dbg("[downloadHandler.PNG] export to PNG done!")
                                              }, message="Exporting to PNG", value=0.8)
                                          } ## content
                                      ) ## PNG downloadHandler
@@ -514,7 +513,6 @@ PlotModuleServer <- function(
                                                      message("[plotModule] adding watermark to PDF...")
                                                      addWatermark.PDF(file)
                                                  }
-                                                 message("[plotModule] export to PDF done!")
                                              }, message="Exporting to PDF", value=0.8)
                                          } ## content
                                      ) ## PDF downloadHandler
