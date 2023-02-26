@@ -13,9 +13,9 @@
 #'
 #' @export
 compare_plot_cum_fc1_ui <- function(id,
-                                   height,
-                                   width,
-                                   label) {
+                                    height,
+                                    width,
+                                    label) {
   ns <- shiny::NS(id)
   info_text <- "Barplot showing the cumulative fold changes on dataset 1"
 
@@ -38,12 +38,12 @@ compare_plot_cum_fc1_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc1_server <- function(id,
-                                       inputData,
-                                       dataset2,
-                                       cum_fc,
-                                       input.contrast1,
-                                       input.contrast2,
-                                       watermark = FALSE) {
+                                        inputData,
+                                        dataset2,
+                                        cum_fc,
+                                        input.contrast1,
+                                        input.contrast2,
+                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -61,7 +61,7 @@ compare_plot_cum_fc1_server <- function(id,
 
       fig <- pgx.barplot.PLOTLY(
         data = data.frame(
-          x = factor(rownames(F1),levels =rownames(F1)),
+          x = factor(rownames(F1), levels = rownames(F1)),
           y = as.numeric(F1)
         ),
         x = "x",
@@ -74,7 +74,6 @@ compare_plot_cum_fc1_server <- function(id,
       )
 
       fig
-
     })
 
     PlotModuleServer(

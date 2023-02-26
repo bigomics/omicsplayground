@@ -19,7 +19,6 @@ dataview_table_rawdata_ui <- function(id, width, height) {
     height = height,
     title = "Gene expression table"
   )
-
 }
 
 dataview_table_rawdata_server <- function(id,
@@ -38,7 +37,7 @@ dataview_table_rawdata_server <- function(id,
       samples <- r.samples()
       groupby <- r.groupby()
 
-      parse_sample <- function(data){
+      parse_sample <- function(data) {
         if (samples[1] == "") samples <- colnames(data)
         samples <- intersect(colnames(data), samples)
         parsed_data <- data[, samples, drop = FALSE]
@@ -78,25 +77,24 @@ dataview_table_rawdata_server <- function(id,
         ## log2CPM
         xgenes <- pgx$genes[rownames(x), "gene_name"]
         k <- which(xgenes == gene)
-
       }
 
       if (data_type == "counts") {
-        #compute the geometric mean, exp(mean(log(x+1)))
-        logx <- log(x[rownames(x), ]+1)
+        # compute the geometric mean, exp(mean(log(x+1)))
+        logx <- log(x[rownames(x), ] + 1)
 
-        #correlation should be equal between counts and logCPM, use logCPM
-        rho <- cor(t(x_cpm[,colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
+        # correlation should be equal between counts and logCPM, use logCPM
+        rho <- cor(t(x_cpm[, colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
         rho <- round(rho[rownames(x_cpm)], digits = 3)
-        rho <- rho[match( rownames(x), names(rho))]
+        rho <- rho[match(rownames(x), names(rho))]
         names(rho) <- rownames(x)
 
-        #geometric std deviation
-        sdx <- round(exp(apply(logx[, samples], 1, sd)),digits = 3)
-        #geometric mean
-        avg <- round(exp(rowMeans(logx)),digits = 3)
+        # geometric std deviation
+        sdx <- round(exp(apply(logx[, samples], 1, sd)), digits = 3)
+        # geometric mean
+        avg <- round(exp(rowMeans(logx)), digits = 3)
       } else {
-        #compute the geometric mean, mean(x)
+        # compute the geometric mean, mean(x)
         logx <- x
         rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
         rho <- round(rho[rownames(logx)], digits = 3)
@@ -118,7 +116,7 @@ dataview_table_rawdata_server <- function(id,
         for (gr in allgroups) {
           if (data_type == "counts") {
             mx <- exp(rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE))
-          }else{
+          } else {
             mx <- rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE)
           }
 
@@ -213,6 +211,5 @@ dataview_table_rawdata_server <- function(id,
       func2 = rawdataTable.RENDER_modal,
       selector = "none"
     )
-
   }) ## end of moduleServer
 } ## end of server

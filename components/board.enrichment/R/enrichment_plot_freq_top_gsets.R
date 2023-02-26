@@ -52,7 +52,6 @@ enrichment_plot_freq_top_gsets_server <- function(id,
                                                   gseatable,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       ngs <- inputData()
       rpt <- getFilteredGeneSetTable()
@@ -86,7 +85,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       )
     })
 
-    topEnrichedFreq.RENDER <- function(){
+    topEnrichedFreq.RENDER <- function() {
       dt <- plot_data()
       shiny::req(dt)
       ngs <- dt[[1]]
@@ -94,7 +93,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       ntop <- dt[[3]]
       gset.weight <- dt[[4]]
       fcweight <- dt[[5]]
-      ngenes = 35
+      ngenes <- 35
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       fx <- rpt[, fx.col]
       names(fx) <- rownames(rpt)
@@ -123,9 +122,11 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
       if (length(sel.zero)) rownames(F)[sel.zero] <- ""
 
-      pgx.stackedBarplot(x = F,
-                         ylab = ifelse(wt, "weighted frequency", "frequency"),
-                         showlegend = FALSE)
+      pgx.stackedBarplot(
+        x = F,
+        ylab = ifelse(wt, "weighted frequency", "frequency"),
+        showlegend = FALSE
+      )
     }
 
     PlotModuleServer(

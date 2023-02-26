@@ -16,7 +16,6 @@ signature_table_enrich_by_contrasts_ui <- function(id, width, height) {
     title = "Enrichment by contrasts",
     label = "a"
   )
-
 }
 
 signature_table_enrich_by_contrasts_server <- function(id,

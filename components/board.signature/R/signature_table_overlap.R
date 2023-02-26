@@ -16,7 +16,6 @@ signature_table_overlap_ui <- function(id, width, height) {
     title = "Overlap with other signatures",
     label = "b"
   )
-
 }
 
 signature_table_overlap_server <- function(id,

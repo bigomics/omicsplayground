@@ -23,8 +23,8 @@ UploadModuleUI <- function(id) {
           shiny::sidebarPanel(
             width = 3,
             fileInput2(ns("upload_files"),
-                             shiny::h4("Choose files"),
-                             multiple = TRUE, accept = c(".csv", ".pgx")
+              shiny::h4("Choose files"),
+              multiple = TRUE, accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
@@ -48,13 +48,13 @@ UploadModuleUI <- function(id) {
       )
     ),
     ## NORMALIZE TAB (NOT USED RIGHT NOW) ##
-    #shiny::tabPanel(
+    # shiny::tabPanel(
     #  "Normalize",
     #  shiny::fillCol(
     #    height = height, ## width = 1200,
     #    NormalizeCountsUI(ns("normalize"))
     #  )
-    #),
+    # ),
     ## BATCH CORRECT TAB ##
     shiny::tabPanel(
       "BatchCorrect",
@@ -392,8 +392,8 @@ UploadModuleServer <- function(id,
           zipfile <- file.path(FILES, "exampledata.zip")
           readfromzip1 <- function(file) {
             read.csv(unz(zipfile, file),
-                     check.names = FALSE, stringsAsFactors = FALSE,
-                     row.names = 1
+              check.names = FALSE, stringsAsFactors = FALSE,
+              row.names = 1
             )
           }
           readfromzip2 <- function(file) {
@@ -545,7 +545,6 @@ UploadModuleServer <- function(id,
             dbg("[UploadModule:parseQueryString] 4:")
           }
         })
-
       }
 
 

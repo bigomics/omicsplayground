@@ -28,10 +28,8 @@ drugconnectivity_table_dsea_ui <- function(id, width, height) {
 
 
 drugconnectivity_table_dsea_server <- function(id,
-                                               getActiveDSEA)
-{
-  moduleServer(id, function(input, output, session)
-  {
+                                               getActiveDSEA) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
@@ -50,29 +48,35 @@ drugconnectivity_table_dsea_server <- function(id,
 
       colnames(res) <- sub("moa", "MOA", colnames(res))
       DT::datatable(res,
-                    rownames = FALSE,
-                    class = "compact cell-border stripe hover",
-                    extensions = c("Scroller"),
-                    selection = list(mode = "single",
-                                     target = "row",
-                                     selected = NULL),
-                    fillContainer = TRUE,
-                    options = list(
-                      dom = "lfrtip",
-                      scroller = TRUE, scrollX = TRUE,
-                      scrollY = "25vh",
-                      deferRender = TRUE
-                    )
+        rownames = FALSE,
+        class = "compact cell-border stripe hover",
+        extensions = c("Scroller"),
+        selection = list(
+          mode = "single",
+          target = "row",
+          selected = NULL
+        ),
+        fillContainer = TRUE,
+        options = list(
+          dom = "lfrtip",
+          scroller = TRUE, scrollX = TRUE,
+          scrollY = "25vh",
+          deferRender = TRUE
+        )
       ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px",
-                        lineHeight = "70%") %>%
+        DT::formatStyle(0,
+          target = "row", fontSize = "11px",
+          lineHeight = "70%"
+        ) %>%
         DT::formatStyle("NES",
-                        background = color_from_middle(res[, "NES"],
-                                                       "lightblue",
-                                                       "#f5aeae"),
-                        backgroundSize = "98% 88%",
-                        backgroundRepeat = "no-repeat",
-                        backgroundPosition = "center"
+          background = color_from_middle(
+            res[, "NES"],
+            "lightblue",
+            "#f5aeae"
+          ),
+          backgroundSize = "98% 88%",
+          backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
         )
     }
 
@@ -90,6 +94,5 @@ drugconnectivity_table_dsea_server <- function(id,
     )
 
     return(dsea_table)
-
-  })  ## end of moduleServer
+  }) ## end of moduleServer
 } ## end of server

@@ -226,6 +226,5 @@ DrugConnectivityBoard <- function(id, inputData) {
       "cmap_table",
       getActiveDSEA
     )
-
   })
 }

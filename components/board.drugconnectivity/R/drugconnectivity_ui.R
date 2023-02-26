@@ -8,18 +8,20 @@ DrugConnectivityInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(),
     withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
-                "Select the contrast corresponding to the comparison of interest.",
-                placement = "top"
+      "Select the contrast corresponding to the comparison of interest.",
+      placement = "top"
     ),
     withTooltip(shiny::selectInput(ns("dsea_method"), "Analysis type:", choices = ""),
-                "Select type of drug enrichment analysis: activity or sensitivity (if available).",
-                placement = "top"
+      "Select type of drug enrichment analysis: activity or sensitivity (if available).",
+      placement = "top"
     ),
     shiny::hr(),
     withTooltip(
-      shiny::checkboxInput(ns("dseatable_filter"),
-                           "only annotated drugs",
-                           FALSE),
+      shiny::checkboxInput(
+        ns("dseatable_filter"),
+        "only annotated drugs",
+        FALSE
+      ),
       "Show only annotated drugs."
     )
   )
@@ -36,25 +38,29 @@ DrugConnectivityUI <- function(id) {
         "Drug enrichment",
         div(
           class = "row",
-          div(class = "col-md-10",
-              div(class = "row",
-                  div(class = "col-md-6",
-                      drugconnectivity_plot_enplots_ui(ns("dsea_enplots"),label = "a")
-                  ),
-                  div(class = "col-md-6",
-                      drugconnectivity_plot_moa_ui(ns("dsea_moaplot"),label = "c")
-                  )
+          div(
+            class = "col-md-10",
+            div(
+              class = "row",
+              div(
+                class = "col-md-6",
+                drugconnectivity_plot_enplots_ui(ns("dsea_enplots"), label = "a")
               ),
-              br(),
-              drugconnectivity_table_dsea_ui(
-                ns("dsea_table"),
-                height = c(360, TABLE_HEIGHT_MODAL),
-                width = c("100%", "90%")
+              div(
+                class = "col-md-6",
+                drugconnectivity_plot_moa_ui(ns("dsea_moaplot"), label = "c")
               )
+            ),
+            br(),
+            drugconnectivity_table_dsea_ui(
+              ns("dsea_table"),
+              height = c(360, TABLE_HEIGHT_MODAL),
+              width = c("100%", "90%")
+            )
           ),
           div(
             class = "col-md-2",
-            drugconnectivity_plot_actmap_ui(ns("dsea_actmap"),label = "d")
+            drugconnectivity_plot_actmap_ui(ns("dsea_actmap"), label = "d")
           )
         )
       ),
@@ -69,7 +75,7 @@ DrugConnectivityUI <- function(id) {
               flex = c(1, 0.05, 1.5),
               shiny::fillCol(
                 flex = c(1.15, 0.05, 1),
-                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot"),label = "a"),
+                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot"), label = "a"),
                 shiny::br(),
                 drugconnectivity_table_cmap_ui(
                   ns("cmap_table"),
@@ -78,7 +84,7 @@ DrugConnectivityUI <- function(id) {
                 )
               ),
               shiny::br(),
-              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"),label = "c")
+              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"), label = "c")
             ),
             div(
               HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation

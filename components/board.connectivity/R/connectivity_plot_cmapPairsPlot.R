@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_cmapPairsPlot_ui <- function(id,
-                                          label = "",
-                                          fullH = 750) {
+                                               label = "",
+                                               fullH = 750) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "The <strong>Pairs</strong> panel provides pairwise scatterplots of
@@ -34,17 +34,17 @@ connectivity_plot_cmapPairsPlot_ui <- function(id,
       "Threshold for (log) foldchange to highlight in plot.",
       placement = "right",
       options = list(container = "body")
-      )
     )
+  )
   PlotModuleUI(ns("plot"),
-               title = "Scatterplot matrix (pairs)",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("html"),
-               height = c(fullH - 80, 700),
-               width = c("auto", 1000),
+    title = "Scatterplot matrix (pairs)",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("html"),
+    height = c(fullH - 80, 700),
+    width = c("auto", 1000),
   )
 }
 
@@ -57,15 +57,15 @@ connectivity_plot_cmapPairsPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cmapPairsPlot_server <- function(id,
-                                              inputData,
-                                              cmap_contrast,
-                                              cmap_sigdb,
-                                              getConnectivityContrasts,
-                                              getCurrentContrast,
-                                              connectivityScoreTable,
-                                              getConnectivityScores,
-                                              getConnectivityMatrix,
-                                              watermark = FALSE) {
+                                                   inputData,
+                                                   cmap_contrast,
+                                                   cmap_sigdb,
+                                                   getConnectivityContrasts,
+                                                   getCurrentContrast,
+                                                   connectivityScoreTable,
+                                                   getConnectivityScores,
+                                                   getConnectivityMatrix,
+                                                   watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
@@ -83,7 +83,7 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         cmap_contrast <- res$cmap_contrast
         cmap_sigdb <- res$cmap_sigdb
 
-        #pgx <- inputData()
+        # pgx <- inputData()
         shiny::req(pgx, cmap_contrast)
         sigdb <- cmap_sigdb
 
@@ -99,7 +99,7 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         shiny::req(sigdb)
         ct2 <- all.ct[1]
         sel.row <- connectivityScoreTable$rows_selected()
-        if(is.null(sel.row)){
+        if (is.null(sel.row)) {
           return(
             plotly::plotly_empty(type = "scatter", mode = "markers") %>%
               plotly::config(

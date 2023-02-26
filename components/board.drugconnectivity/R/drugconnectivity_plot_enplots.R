@@ -13,9 +13,9 @@
 #'
 #' @export
 drugconnectivity_plot_enplots_ui <- function(id,
-                                            label = "",
-                                            height = c(600, 800),
-                                            rowH = 660) {
+                                             label = "",
+                                             height = c(600, 800),
+                                             rowH = 660) {
   ns <- shiny::NS(id)
   info_text <- strwrap("<strong>Drug connectivity</strong> correlates your
                        signature with known drug profiles from the L1000
@@ -25,14 +25,14 @@ drugconnectivity_plot_enplots_ui <- function(id,
   plot_opts <- shiny::tagList()
 
   PlotModuleUI(ns("plot"),
-               title = "Drug connectivity",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("png", "pdf", "csv"),
-               height = c(0.54*rowH, 750),
-               width=c('auto', 1280),
+    title = "Drug connectivity",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("png", "pdf", "csv"),
+    height = c(0.54 * rowH, 750),
+    width = c("auto", 1280),
   )
 }
 
@@ -53,15 +53,15 @@ drugconnectivity_plot_enplots_server <- function(id,
                                                  watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
-
       plot_data <- shiny::reactive({
         pgx <- pgx()
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)
-        shiny::validate(shiny::need("drugs" %in% names(pgx),
-                                    "no 'drugs' in object."))
+        shiny::validate(shiny::need(
+          "drugs" %in% names(pgx),
+          "no 'drugs' in object."
+        ))
         if (is.null(pgx$drugs)) {
           return(NULL)
         }
@@ -137,8 +137,8 @@ drugconnectivity_plot_enplots_server <- function(id,
           if (i %% nc == 1) par(cex.axis = 0.98)
           suppressWarnings(
             gsea.enplot(rnk, gmtdx,
-                        main = dx1, cex.main = 1.2,
-                        xlab = xlab, ylab = ylab
+              main = dx1, cex.main = 1.2,
+              xlab = xlab, ylab = ylab
             )
           )
           nes <- round(dt$NES[i], 2)

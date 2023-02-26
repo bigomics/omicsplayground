@@ -16,7 +16,6 @@ compare_table_corr_score_ui <- function(id, width, height) {
     title = "Correlation score",
     label = "b"
   )
-
 }
 
 compare_table_corr_score_server <- function(id,

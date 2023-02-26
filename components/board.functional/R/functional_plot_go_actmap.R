@@ -25,20 +25,24 @@ functional_plot_go_actmap_ui <- function(id,
   )
 
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("go_normalize"),
-                                     "normalize activation matrix",
-                                     FALSE),
-                "Click to normalize the columns of the activation matrices.")
+    withTooltip(
+      shiny::checkboxInput(
+        ns("go_normalize"),
+        "normalize activation matrix",
+        FALSE
+      ),
+      "Click to normalize the columns of the activation matrices."
+    )
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Activation matrix",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(rowH, 750),
-               width = c("100%", 1400),
+    title = "Activation matrix",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(rowH, 750),
+    width = c("100%", 1400),
   )
 }
 
@@ -55,7 +59,6 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotGOactmap <- function(score, go, normalize, maxterm, maxfc) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
@@ -100,9 +103,9 @@ functional_plot_go_actmap_server <- function(id,
         par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
 
         corrplot::corrplot(score,
-                           is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
-                           tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
-                           mar = c(bmar, 0, 0, 0)
+          is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
+          tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+          mar = c(bmar, 0, 0, 0)
         )
       }
 

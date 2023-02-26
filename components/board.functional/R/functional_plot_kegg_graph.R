@@ -24,15 +24,15 @@ functional_plot_kegg_graph_ui <- function(id,
     the selected contrast profile and reported in the table below.")
 
   PlotModuleUI(ns("plot"),
-               title = "Kegg pathway map",
-               label = label,
-               plotlib = "image",
-               info.text = info_text,
-               info.width = "350px",
-               options = NULL,
-               download.fmt = "png",
-               height = c(0.53 * rowH, 700),
-               width = c("100%", 1280),
+    title = "Kegg pathway map",
+    label = label,
+    plotlib = "image",
+    info.text = info_text,
+    info.width = "350px",
+    options = NULL,
+    download.fmt = "png",
+    height = c(0.53 * rowH, 700),
+    width = c("100%", 1280),
   )
 }
 
@@ -97,7 +97,7 @@ functional_plot_kegg_graph_server <- function(id,
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
 
         ## get selected KEGG id
-        #df <- getFilteredKeggTable()
+        # df <- getFilteredKeggTable()
         if (is.null(df)) {
           return(NULL.IMG)
         }

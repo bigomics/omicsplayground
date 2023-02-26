@@ -52,7 +52,7 @@ drugconnectivity_plot_cmap_dsea_ui <- function(id,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
     height = c(750, 750),
-    width=c('auto', 900),
+    width = c("auto", 900),
   )
 }
 
@@ -81,7 +81,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                            lab.wt = TRUE, lab.gamma = 1, lab.cex = 1,
                            opacity = 0.15, softmax = 1,
                            title = NULL, plotlib = "base") {
-
         if (!"drugs" %in% names(pgx)) {
           frame()
           text(0.5, 0.5, "Error: PGX object does not have CMAP results", col = "red3")

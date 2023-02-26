@@ -250,38 +250,49 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     ##############
     ## KEGG TAB ##
     ##############
-    functional_plot_kegg_graph_server("kegg_graph",
-                                      inputData,
-                                      getFilteredKeggTable,
-                                      kegg_table,
-                                      reactive(input$fa_contrast))
+    functional_plot_kegg_graph_server(
+      "kegg_graph",
+      inputData,
+      getFilteredKeggTable,
+      kegg_table,
+      reactive(input$fa_contrast)
+    )
 
-    functional_plot_kegg_actmap_server("kegg_actmap",
-                                       inputData,
-                                       getKeggTable)
+    functional_plot_kegg_actmap_server(
+      "kegg_actmap",
+      inputData,
+      getKeggTable
+    )
 
-    kegg_table <- functional_table_kegg_table_server("kegg_table",
-                                                     inputData,
-                                                     getFilteredKeggTable,
-                                                     reactive(input$fa_contrast),
-                                                     tabH)
+    kegg_table <- functional_table_kegg_table_server(
+      "kegg_table",
+      inputData,
+      getFilteredKeggTable,
+      reactive(input$fa_contrast),
+      tabH
+    )
 
     ## ================================================================================
     ## GO Tab
     ## ================================================================================
 
-    functional_plot_go_network_server("GO_network",
-                                      inputData,
-                                      reactive(input$fa_contrast))
+    functional_plot_go_network_server(
+      "GO_network",
+      inputData,
+      reactive(input$fa_contrast)
+    )
 
-    functional_plot_go_actmap_server("GO_actmap",
-                                     inputData)
+    functional_plot_go_actmap_server(
+      "GO_actmap",
+      inputData
+    )
 
-    functional_table_go_table_server("GO_table",
-                                     inputData,
-                                     reactive(input$fa_contrast),
-                                     tabH,
-                                     selected_gsetmethods)
-
+    functional_table_go_table_server(
+      "GO_table",
+      inputData,
+      reactive(input$fa_contrast),
+      tabH,
+      selected_gsetmethods
+    )
   }) ## end-of-moduleServer
 }

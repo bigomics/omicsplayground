@@ -16,14 +16,12 @@ connectivity_table_similarity_scores_ui <- function(id, width, height) {
     title = "Similarity scores",
     label = "b"
   )
-
 }
 
 connectivity_table_similarity_scores_server <- function(id,
                                                         getConnectivityScores,
                                                         cmap_sigdb) {
   moduleServer(id, function(input, output, session) {
-
     connectivityScoreTable.RENDER <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
@@ -52,28 +50,28 @@ connectivity_table_similarity_scores_server <- function(id,
       numcols <- intersect(numcols, colnames(df))
 
       DT::datatable(df,
-                    rownames = FALSE,
-                    class = "compact cell-border stripe hover",
-                    extensions = c("Scroller"),
-                    selection = list(mode = "single", target = "row", selected = 1),
-                    fillContainer = TRUE,
-                    options = list(
-                      dom = "lfrtip",
-                      pageLength = 99999,
-                      scrollX = TRUE,
-                      scrollY = "25vh",
-                      scroller = TRUE, deferRender = TRUE
-                    ) ## end of options.list
+        rownames = FALSE,
+        class = "compact cell-border stripe hover",
+        extensions = c("Scroller"),
+        selection = list(mode = "single", target = "row", selected = 1),
+        fillContainer = TRUE,
+        options = list(
+          dom = "lfrtip",
+          pageLength = 99999,
+          scrollX = TRUE,
+          scrollY = "25vh",
+          scroller = TRUE, deferRender = TRUE
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numcols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-                        background = color_from_middle(
-                          df[, "score"], "lightblue", "#f5aeae"
-                        ),
-                        backgroundSize = "98% 88%",
-                        backgroundRepeat = "no-repeat",
-                        backgroundPosition = "center"
+          background = color_from_middle(
+            df[, "score"], "lightblue", "#f5aeae"
+          ),
+          backgroundSize = "98% 88%",
+          backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
         )
     })
 

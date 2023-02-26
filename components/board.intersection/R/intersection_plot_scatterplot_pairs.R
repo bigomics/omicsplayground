@@ -36,7 +36,6 @@ intersection_scatterplot_pairs_server <- function(id,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-
       res <- getActiveFoldChangeMatrix()
       fc0 <- res$fc.full
       fc1 <- res$fc

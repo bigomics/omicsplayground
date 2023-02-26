@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_enrichmentGraph_ui <- function(id,
-                                          label = "",
-                                          rowH = 660) {
+                                                 label = "",
+                                                 rowH = 660) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap(
@@ -31,7 +31,7 @@ connectivity_plot_enrichmentGraph_ui <- function(id,
     ),
     withTooltip(
       shiny::radioButtons(ns("enrichGraph_ntop"), "N-neighbours:", c(5, 10, 25, 100),
-                          selected = 10, inline = TRUE
+        selected = 10, inline = TRUE
       ),
       "Number of simlar experiments to consider."
     ),
@@ -41,19 +41,19 @@ connectivity_plot_enrichmentGraph_ui <- function(id,
     ),
     withTooltip(
       shiny::radioButtons(ns("enrichGraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
-                          selected = "cumFC", inline = TRUE
+        selected = "cumFC", inline = TRUE
       ),
       "Parameter for node size."
     )
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Enrichment graph",
-               label = label,
-               plotlib = "visnetwork",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(720, 720), width = c("auto", 1200)
+    title = "Enrichment graph",
+    label = label,
+    plotlib = "visnetwork",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(720, 720), width = c("auto", 1200)
   )
 }
 
@@ -74,7 +74,6 @@ connectivity_plot_enrichmentGraph_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       getEnrichmentGraph <- shiny::reactive({
         ## get enrichment scores
         F <- cumEnrichmentTable()
@@ -86,9 +85,9 @@ connectivity_plot_enrichmentGraph_server <- function(id,
           gsets <- gsets[sapply(gsets, length) >= 5]
           bg <- unique(unlist(gsets))
           ft <- gset.fisher(le.genes, gsets,
-                            fdr = 1.0,
-                            min.genes = 3, max.genes = 99999,
-                            background = bg
+            fdr = 1.0,
+            min.genes = 3, max.genes = 99999,
+            background = bg
           )
           ft <- ft[match(rownames(F), rownames(ft)), ]
           F <- F * log(1 + ft$odd.ratio)
@@ -199,7 +198,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         func2 = plot_RENDER,
         csvFunc = getEnrichmentGraph,
         pdf.height = 8, pdf.width = 8,
-        res = c(90,100),
+        res = c(90, 100),
         add.watermark = watermark
       )
     } ## end of moduleServer

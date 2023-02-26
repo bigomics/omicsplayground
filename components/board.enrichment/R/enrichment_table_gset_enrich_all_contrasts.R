@@ -15,7 +15,6 @@ enrichment_table_gset_enrich_all_contrasts_ui <- function(id, width, height) {
     height = height,
     title = "Gene set enrichment for all contrasts"
   )
-
 }
 
 enrichment_table_gset_enrich_all_contrasts_server <- function(id,
@@ -79,6 +78,5 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       func2 = fctable.RENDER_modal,
       selector = "none"
     )
-
   })
 }

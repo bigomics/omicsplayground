@@ -81,21 +81,24 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             height = imgH,
-            label = "a")
+            label = "a"
+          )
         ),
         div(
           class = "col-md-4",
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
             height = imgH,
-            label = "b")
+            label = "b"
+          )
         ),
         div(
           class = "col-md-4",
           dataview_plot_histogram_ui(
             ns("counts_histplot"),
             height = imgH,
-            label = "c")
+            label = "c"
+          )
         )
       ),
       div(
@@ -104,14 +107,15 @@ DataViewUI <- function(id) {
           class = "col-md-5",
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            height = imgH,label = "d"
+            height = imgH, label = "d"
           )
         ),
         div(
           class = "col-md-7",
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            height = imgH,label = "e")
+            height = imgH, label = "e"
+          )
         )
       ),
       tags$div(
@@ -142,7 +146,8 @@ DataViewUI <- function(id) {
               dataview_plot_expression_ui(
                 ns("expressionplot"),
                 height = imgH,
-                label = "a")
+                label = "a"
+              )
             ),
             div(
               class = "col-md-4",
@@ -150,7 +155,7 @@ DataViewUI <- function(id) {
                 ns("averagerankplot"),
                 height = imgH,
                 label = "b"
-                )
+              )
             ),
             div(
               class = "col-md-4",
@@ -158,7 +163,7 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 height = imgH,
                 label = "c"
-                )
+              )
             )
           ),
           div(
@@ -168,14 +173,16 @@ DataViewUI <- function(id) {
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 height = imgH,
-                label = "d")
+                label = "d"
+              )
             ),
             div(
               class = "col-md-6",
               dataview_plot_tissue_ui(
                 ns("tissueplot"),
                 height = imgH,
-                label = "e")
+                label = "e"
+              )
             )
           ),
           tags$div(
@@ -234,8 +241,8 @@ DataViewUI <- function(id) {
       ),
       dataview_table_samples_ui(
         ns("sampletable"),
-        height = c(280,TABLE_HEIGHT_MODAL),
-        width=c('auto','90%')
+        height = c(280, TABLE_HEIGHT_MODAL),
+        width = c("auto", "90%")
       ),
       tags$div(
         class = "caption",
@@ -252,14 +259,14 @@ DataViewUI <- function(id) {
     ),
 
 
-    #contrasts tab #####
+    # contrasts tab #####
 
     shiny::tabPanel(
       "Contrasts",
       dataview_table_contrasts_ui(
         ns("contrastTable"),
-        height = c(500,TABLE_HEIGHT_MODAL),
-        width=c('auto','90%')
+        height = c(500, TABLE_HEIGHT_MODAL),
+        width = c("auto", "90%")
       ),
       tags$div(
         class = "caption",

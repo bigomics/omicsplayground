@@ -13,8 +13,8 @@
 #'
 #' @export
 drugconnectivity_plot_cmap_enplot_ui <- function(id,
-                                             label = "",
-                                             height = c(305, 600)) {
+                                                 label = "",
+                                                 height = c(305, 600)) {
   ns <- shiny::NS(id)
   info_text <- "<strong>Connectivity map.</strong> correlates your
                        signature with known drug profiles from the L1000
@@ -23,13 +23,13 @@ drugconnectivity_plot_cmap_enplot_ui <- function(id,
                        correlation space."
 
   PlotModuleUI(ns("plot"),
-               title = "Enrichment Plot",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               download.fmt = c("png", "pdf", "csv"),
-               height = c(305, 600),
-               width=c('auto', 1000),
+    title = "Enrichment Plot",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    download.fmt = c("png", "pdf", "csv"),
+    height = c(305, 600),
+    width = c("auto", 1000),
   )
 }
 
@@ -42,13 +42,12 @@ drugconnectivity_plot_cmap_enplot_ui <- function(id,
 #' @return
 #' @export
 drugconnectivity_plot_cmap_enplot_server <- function(id,
-                                                      pgx,
-                                                      getActiveDSEA,
-                                                      cmap_table,
-                                                      watermark = FALSE) {
+                                                     pgx,
+                                                     getActiveDSEA,
+                                                     cmap_table,
+                                                     watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         pgx <- pgx()
         dsea <- getActiveDSEA()

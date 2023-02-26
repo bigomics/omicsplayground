@@ -53,9 +53,9 @@ enrichment_plot_geneplot_server <- function(id,
       sel <- gene_selected()
       if (is.null(sel) || is.na(sel) || length(sel) == 0) {
         return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
-                 plotly::config(
-                   displayModeBar = FALSE
-                 ))
+          plotly::config(
+            displayModeBar = FALSE
+          ))
       } else {
         probe <- sel$probe
         gene <- sel$gene

@@ -12,17 +12,16 @@
 #'
 #' @export
 expression_table_genetable_ui <- function(id, width, height) {
-
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
-                "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
-                placement = "top", options = list(container = "body")
+      "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
+      placement = "top", options = list(container = "body")
     ),
     withTooltip(shiny::checkboxInput(ns("gx_showqvalues"), "show indivivual q-values", FALSE),
-                "Show q-values of each indivivual statistical method in the table.",
-                placement = "top", options = list(container = "body")
+      "Show q-values of each indivivual statistical method in the table.",
+      placement = "top", options = list(container = "body")
     )
   )
 
@@ -38,7 +37,6 @@ expression_table_genetable_ui <- function(id, width, height) {
     title = "Differential expression analysis",
     label = "I"
   )
-
 }
 
 #' Server side table code: expression board

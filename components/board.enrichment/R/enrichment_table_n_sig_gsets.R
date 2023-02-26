@@ -15,7 +15,6 @@ enrichment_table_n_sig_gsets_ui <- function(id, width, height) {
     height = height,
     title = "Number of significant gene sets"
   )
-
 }
 
 enrichment_table_n_sig_gsets_server <- function(id,
@@ -105,6 +104,5 @@ enrichment_table_n_sig_gsets_server <- function(id,
       func2 = FDRtable.RENDER_modal,
       selector = "none"
     )
-
   })
 }

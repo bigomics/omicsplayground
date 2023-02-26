@@ -15,8 +15,7 @@
 connectivity_plot_cumEnrichmentPlot_ui <- function(id,
                                                    label = "",
                                                    height,
-                                                   width
-                                                   ) {
+                                                   width) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment
@@ -27,14 +26,14 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumgsea_absfc"), "Absolute foldchange", FALSE),
-                "Take the absolute foldchange for calculating the cumulative sum.",
-                placement = "right", options = list(container = "body")
+      "Take the absolute foldchange for calculating the cumulative sum.",
+      placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::radioButtons(ns("cumgsea_order"), "Order:",
-                          choiceValues = c("FC", "cumFC"),
-                          choiceNames = c("this FC", "cumFC"),
-                          selected = "cumFC", inline = TRUE
+        choiceValues = c("FC", "cumFC"),
+        choiceNames = c("this FC", "cumFC"),
+        selected = "cumFC", inline = TRUE
       ),
       "How to order the cumulative barplot.",
       placement = "right", options = list(container = "body")
@@ -42,13 +41,13 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Cumulative enrichment",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               options = plot_opts,
-               height = height,
-               width = width
+    title = "Cumulative enrichment",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    options = plot_opts,
+    height = height,
+    width = width
   )
 }
 
@@ -61,16 +60,15 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cumEnrichmentPlot_server <- function(id,
-                                              inputData,
-                                              cmap_sigdb,
-                                              getConnectivityScores,
-                                              connectivityScoreTable,
-                                              getEnrichmentMatrix,
-                                              getCurrentContrast,
-                                              watermark = FALSE) {
+                                                       inputData,
+                                                       cmap_sigdb,
+                                                       getConnectivityScores,
+                                                       connectivityScoreTable,
+                                                       getEnrichmentMatrix,
+                                                       getCurrentContrast,
+                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       cumEnrichmentTable <- shiny::reactive({
         cmap_sigdb <- cmap_sigdb()
         shiny::req(cmap_sigdb)
@@ -137,9 +135,10 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
         xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
 
-        pgx.stackedBarplot(x = data.frame(F),
-                           ylab = "cumulative enrichment",showlegend = FALSE
-                           )
+        pgx.stackedBarplot(
+          x = data.frame(F),
+          ylab = "cumulative enrichment", showlegend = FALSE
+        )
       })
 
       plot_RENDER2 <- shiny::reactive({

@@ -21,7 +21,6 @@ functional_table_go_table_ui <- function(id, width, height) {
     title = "GO score table",
     label = "b"
   )
-
 }
 
 
@@ -29,10 +28,8 @@ functional_table_go_table_server <- function(id,
                                              inputData,
                                              fa_contrast,
                                              tabH,
-                                             selected_gsetmethods)
-{
-  moduleServer(id, function(input, output, session)
-  {
+                                             selected_gsetmethods) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     matchGOid2gset <- function(id, gsets) {
@@ -87,25 +84,27 @@ functional_table_go_table_server <- function(id,
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,
-                    rownames = FALSE, escape = c(-1, -2),
-                    class = "compact cell-border stripe hover",
-                    extensions = c("Scroller"),
-                    selection = list(mode = "single", target = "row", selected = 1),
-                    fillContainer = TRUE,
-                    options = list(
-                      dom = "lfrtip",
-                      scrollX = TRUE,
-                      scrollY = "15vh", scroller = TRUE, deferRender = TRUE
-                    ) ## end of options.list
+        rownames = FALSE, escape = c(-1, -2),
+        class = "compact cell-border stripe hover",
+        extensions = c("Scroller"),
+        selection = list(mode = "single", target = "row", selected = 1),
+        fillContainer = TRUE,
+        options = list(
+          dom = "lfrtip",
+          scrollX = TRUE,
+          scrollY = "15vh", scroller = TRUE, deferRender = TRUE
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-                        background = color_from_middle(dt1[, "score"],
-                                                       "lightblue",
-                                                       "#f5aeae"),
-                                                       backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-                        backgroundPosition = "center"
+          background = color_from_middle(
+            dt1[, "score"],
+            "lightblue",
+            "#f5aeae"
+          ),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
         )
     }
 
@@ -121,6 +120,5 @@ functional_table_go_table_server <- function(id,
       func2 = table_RENDER_modal,
       selector = "none"
     )
-
-  })  ## end of moduleServer
+  }) ## end of moduleServer
 } ## end of server

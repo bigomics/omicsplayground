@@ -29,8 +29,8 @@ expression_plot_barplot_ui <- function(id,
       placement = "right", options = list(container = "body")
     ),
     withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
-                "Show the 'others' class (if any)",
-                placement = "right", options = list(container = "body")
+      "Show the 'others' class (if any)",
+      placement = "right", options = list(container = "body")
     )
   )
 
@@ -117,7 +117,7 @@ expression_plot_barplot_server <- function(id,
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
-        showothers = pd[['showothers']],
+        showothers = pd[["showothers"]],
         max.points = 200, ## slow!!
         names = TRUE,
         logscale = pd[["logscale"]],

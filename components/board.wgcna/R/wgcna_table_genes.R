@@ -16,7 +16,6 @@ wgcna_table_genes_ui <- function(id, height, width) {
     title = "Module genes",
     label = "d"
   )
-
 }
 
 wgcna_table_genes_server <- function(id,

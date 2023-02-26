@@ -16,7 +16,6 @@ wgcna_table_enrichment_ui <- function(id, width, height) {
     title = "Module enrichment",
     label = "e"
   )
-
 }
 
 wgcna_table_enrichment_server <- function(id,

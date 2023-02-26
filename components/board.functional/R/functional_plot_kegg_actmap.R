@@ -26,20 +26,24 @@ functional_plot_kegg_actmap_ui <- function(id,
                        (blue) in the contrast profile.")
 
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("kegg_normalize"),
-                                     "normalize activation matrix",
-                                     FALSE),
-                "Click to normalize the columns of the activation matrices.")
+    withTooltip(
+      shiny::checkboxInput(
+        ns("kegg_normalize"),
+        "normalize activation matrix",
+        FALSE
+      ),
+      "Click to normalize the columns of the activation matrices."
+    )
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Activation matrix",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(rowH, 750),
-               width = c("100%", 1400)
+    title = "Activation matrix",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(rowH, 750),
+    width = c("100%", 1400)
   )
 }
 
@@ -57,7 +61,6 @@ functional_plot_kegg_actmap_server <- function(id,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotKEGGactmap <- function(meta, df,
                                  normalize = 1, nterms = 40, nfc = 10) {
         fx <- sapply(meta, function(x) x$meta.fx)
@@ -99,8 +102,8 @@ functional_plot_kegg_actmap_server <- function(id,
         if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
         score2 <- sign(score2) * abs(score2 / max(abs(score2)))**3 ## fudging
         rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$", "",
-                                         rownames(score2),
-                                         ignore.case = TRUE
+          rownames(score2),
+          ignore.case = TRUE
         ))
         rownames(score2) <- substring(rownames(score2), 1, 40)
         colnames(score2) <- shortstring(colnames(score2), 30)
@@ -110,9 +113,9 @@ functional_plot_kegg_actmap_server <- function(id,
         par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
 
         corrplot::corrplot(score2,
-                           is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
-                           tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
-                           mar = c(bmar, 0, 0.5, 0)
+          is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
+          tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+          mar = c(bmar, 0, 0.5, 0)
         )
       }
 
@@ -136,8 +139,10 @@ functional_plot_kegg_actmap_server <- function(id,
           return(NULL)
         }
         meta <- pgx$gset.meta$meta
-        plotKEGGactmap(meta, df, normalize = input$kegg_normalize,
-                       nterms = 50, nfc = 25)
+        plotKEGGactmap(meta, df,
+          normalize = input$kegg_normalize,
+          nterms = 50, nfc = 25
+        )
       })
 
       plot_RENDER2 <- shiny::reactive({
@@ -149,8 +154,10 @@ functional_plot_kegg_actmap_server <- function(id,
           return(NULL)
         }
         meta <- pgx$gset.meta$meta
-        plotKEGGactmap(meta, df, normalize = input$kegg_normalize,
-                       nterms = 50, nfc = 100)
+        plotKEGGactmap(meta, df,
+          normalize = input$kegg_normalize,
+          nterms = 50, nfc = 100
+        )
       })
 
       PlotModuleServer(

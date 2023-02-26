@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_connectivityHeatmap_ui <- function(id,
-                                          label = "",
-                                          rowH = 660) {
+                                                     label = "",
+                                                     rowH = 660) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap.
@@ -22,26 +22,26 @@ connectivity_plot_connectivityHeatmap_ui <- function(id,
   )
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
-                "Take the absolute foldchange for calculating the cumulative sum.",
-                placement = "right", options = list(container = "body")
+      "Take the absolute foldchange for calculating the cumulative sum.",
+      placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::radioButtons(ns("cumFCplot_order"), "Order:",
-                          choiceValues = c("FC", "cumFC"),
-                          choiceNames = c("this FC", "cumFC"),
-                          selected = "cumFC", inline = TRUE
+        choiceValues = c("FC", "cumFC"),
+        choiceNames = c("this FC", "cumFC"),
+        selected = "cumFC", inline = TRUE
       ),
       "How to order the cumulative barplot.",
       placement = "right", options = list(container = "body")
     )
   )
   PlotModuleUI(ns("plot"),
-               title = "Connectivity Heatmap",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(480, 550), width = c("auto", 1400)
+    title = "Connectivity Heatmap",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(480, 550), width = c("auto", 1400)
   )
 }
 
@@ -60,7 +60,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       cumulativeFCtable <- shiny::reactive({
         F <- getTopProfiles()
         F[is.na(F)] <- 0
@@ -100,16 +99,16 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F1 <- head(F, 80)
         par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
         gx.splitmap(t(F1),
-                    split = 1,
-                    ## cluster_columns = FALSE,
-                    cluster_columns = TRUE,
-                    cluster_rows = TRUE,
-                    rowlab.maxlen = 80,
-                    ## zsym = TRUE,
-                    symm.scale = TRUE,
-                    mar = c(15, 0, 0, 60),
-                    key.offset = c(0.90, 0.2),
-                    cexRow = 0.9, cexCol = 0.75
+          split = 1,
+          ## cluster_columns = FALSE,
+          cluster_columns = TRUE,
+          cluster_rows = TRUE,
+          rowlab.maxlen = 80,
+          ## zsym = TRUE,
+          symm.scale = TRUE,
+          mar = c(15, 0, 0, 60),
+          key.offset = c(0.90, 0.2),
+          cexRow = 0.9, cexCol = 0.75
         )
         p <- grDevices::recordPlot()
         p

@@ -23,7 +23,6 @@ expression_table_FDRtable_ui <- function(id, width, height) {
     height = height,
     title = "Number of significant genes"
   )
-
 }
 
 #' Server side table code: expression board

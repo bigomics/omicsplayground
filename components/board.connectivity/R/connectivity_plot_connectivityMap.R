@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_connectivityMap_ui <- function(id,
-                                          label = "",
-                                          fullH = 750) {
+                                                 label = "",
+                                                 fullH = 750) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>The Connectivity Map</b> shows the similarity of the contrasts profiles
@@ -33,8 +33,8 @@ connectivity_plot_connectivityMap_ui <- function(id,
       placement = "right", options = list(container = "body")
     ),
     withTooltip(shiny::sliderInput(ns("cmap_scorethreshold"), "Score threshold:", 0, 1, 0, step = 0.01),
-                "Threshold the points by minimum score",
-                placement = "right", options = list(container = "body")
+      "Threshold the points by minimum score",
+      placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::radioButtons(
@@ -44,8 +44,8 @@ connectivity_plot_connectivityMap_ui <- function(id,
       placement = "right", options = list(container = "body")
     ),
     withTooltip(shiny::sliderInput(ns("cmap_scoregamma"), "Color gamma:", 0.1, 2, 0.5, step = 0.1),
-                "Gamma for color adjustments",
-                placement = "right", options = list(container = "body")
+      "Gamma for color adjustments",
+      placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::checkboxGroupInput(
@@ -63,13 +63,13 @@ connectivity_plot_connectivityMap_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Connectivity map",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("pdf", "png", "html"),
-               height = c(fullH - 100, 750), width = c("auto", 1000)
+    title = "Connectivity map",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("pdf", "png", "html"),
+    height = c(fullH - 100, 750), width = c("auto", 1000)
   )
 }
 
@@ -89,7 +89,6 @@ connectivity_plot_connectivityMap_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       getConnectivityPositions <- shiny::reactive({
         ngs <- inputData()
         cmap_sigdb <- cmap_sigdb()
@@ -246,8 +245,8 @@ connectivity_plot_connectivityMap_server <- function(id,
         ## make dataframe
         score <- rho <- NULL
         df <- data.frame(pos,
-                         dataset = dset, contrast = ct.name, name = res$pathway,
-                         score = res$score, rho = res$rho, check.names = FALSE
+          dataset = dset, contrast = ct.name, name = res$pathway,
+          score = res$score, rho = res$rho, check.names = FALSE
         )
         rownames(df) <- rownames(pos)
 
@@ -264,7 +263,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           "</br>Correlation:", round(df$rho, 3)
         )
         cex1 <- c(1.0, 0.8, 0.6, 0.4)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200) +
-                                        1 * (nrow(pos) > 500)]
+          1 * (nrow(pos) > 500)]
         this.data <- 1 * grepl("this_data", dset)
         shapevar <- 1 + 1 * this.data
         symbols <- c("circle", "x")

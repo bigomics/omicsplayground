@@ -16,7 +16,6 @@ wordcloud_table_enrichment_ui <- function(id, width, height) {
     title = "Enrichment table",
     label = "d"
   )
-
 }
 
 wordcloud_table_enrichment_server <- function(id,

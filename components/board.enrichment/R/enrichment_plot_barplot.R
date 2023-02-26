@@ -51,16 +51,16 @@ enrichment_plot_barplot_server <- function(id,
       gset <- gset_selected()
       if (is.null(gset) || length(gset) == 0) {
         return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
-                 plotly::config(
-                   displayModeBar = FALSE
-                 ))
+          plotly::config(
+            displayModeBar = FALSE
+          ))
       }
       gset <- gset[1]
       if (!gset %in% rownames(ngs$gsetX)) {
         return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
-                 plotly::config(
-                   displayModeBar = FALSE
-                 ))
+          plotly::config(
+            displayModeBar = FALSE
+          ))
       }
 
       comp0 <- colnames(ngs$model.parameters$contr.matrix)[1]

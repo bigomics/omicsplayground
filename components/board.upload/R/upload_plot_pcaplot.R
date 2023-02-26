@@ -6,11 +6,14 @@
 upload_plot_pcaplot_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
 
-  pcaplot.opts = shiny::tagList(
-    withTooltip( shiny::selectInput( ns("pcaplot.method"), "Method:",
-                                     choices = c("pca","tsne","umap"),
-                                     width = '100%'),"Choose clustering method.",
-                 placement="right", options = list(container = "body"))
+  pcaplot.opts <- shiny::tagList(
+    withTooltip(
+      shiny::selectInput(ns("pcaplot.method"), "Method:",
+        choices = c("pca", "tsne", "umap"),
+        width = "100%"
+      ), "Choose clustering method.",
+      placement = "right", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(
@@ -36,28 +39,34 @@ upload_plot_pcaplot_server <- function(id,
 
     pcaplot.RENDER <- shiny::reactive({
       message("[MakeContrastServer] pcaplot.RENDER : reacted")
-      ##ngs <- inputData()
-      ##X <- ngs$X
+      ## ngs <- inputData()
+      ## X <- ngs$X
       pheno <- phenoRT()
       counts <- countsRT()
-      if(is.null(pheno) || is.null(counts)) return(NULL)
-      if(NCOL(pheno)==0 || NCOL(counts)==0) return(NULL)
+      if (is.null(pheno) || is.null(counts)) {
+        return(NULL)
+      }
+      if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
+        return(NULL)
+      }
       shiny::req(pheno)
       shiny::req(counts)
 
       method <- input$pcaplot.method
       X <- log2(1 + counts)
-      clust <- pgx.clusterMatrix(X, dims=2, method=method)
+      clust <- pgx.clusterMatrix(X, dims = 2, method = method)
       names(clust)
 
       cond <- sel.conditions()
-      if(length(cond)==0 || is.null(cond)) return(NULL)
-      ##par(mar=c(4,1,1,1))
+      if (length(cond) == 0 || is.null(cond)) {
+        return(NULL)
+      }
+      ## par(mar=c(4,1,1,1))
       pgx.scatterPlotXY(
-        clust$pos2d, var=cond, plotlib="plotly",
-        legend = FALSE ##, labels=TRUE
+        clust$pos2d,
+        var = cond, plotlib = "plotly",
+        legend = FALSE ## , labels=TRUE
       )
-
     })
 
     PlotModuleServer(

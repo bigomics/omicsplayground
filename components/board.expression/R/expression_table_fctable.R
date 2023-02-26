@@ -18,8 +18,8 @@ expression_table_fctable_ui <- function(id, width, height) {
 
   fctable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
-                "Show q-values next to FC values.",
-                placement = "right", options = list(container = "body")
+      "Show q-values next to FC values.",
+      placement = "right", options = list(container = "body")
     )
   )
 
@@ -31,7 +31,6 @@ expression_table_fctable_ui <- function(id, width, height) {
     options = fctable_opts,
     title = "Gene fold changes for all contrasts"
   )
-
 }
 
 #' Server side table code: expression board
@@ -143,6 +142,5 @@ expression_table_fctable_server <- function(id,
       func2 = fctable.RENDER_modal,
       selector = "none"
     )
-
   }) # end module server
 } # end server

@@ -4,19 +4,16 @@
 ##
 
 
-SingleCellBoard <- function(id, inputData)
-{
-  moduleServer(id, function(input, output, session)
-  {
-
+SingleCellBoard <- function(id, inputData) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    fullH = 750  ## full height of panel
-    imgH  = 680  ## row height of panel
-    tabH  = 200  ## row height of panel
+    fullH <- 750 ## full height of panel
+    imgH <- 680 ## row height of panel
+    tabH <- 200 ## row height of panel
 
-    infotext =
-        "The <strong>Cell Profiling Board</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.
+    infotext <-
+      "The <strong>Cell Profiling Board</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.
 
 <br><br>The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.
 
@@ -27,209 +24,213 @@ SingleCellBoard <- function(id, inputData)
 <br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
 
-    ##================================================================================
-    ##======================= OBSERVE FUNCTIONS ======================================
-    ##================================================================================
+    ## ================================================================================
+    ## ======================= OBSERVE FUNCTIONS ======================================
+    ## ================================================================================
 
     shiny::observeEvent(input$infotext, {
-        shiny::showModal(shiny::modalDialog(
-            title = shiny::HTML("<strong>Single Cell Board</strong>"),
-            shiny::HTML(infotext),
-            easyClose = TRUE, size="l" ))
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Single Cell Board</strong>"),
+        shiny::HTML(infotext),
+        easyClose = TRUE, size = "l"
+      ))
     })
 
     ## update filter choices upon change of data set
     shiny::observe({
-        ngs <- inputData()
-        shiny::req(ngs)
-        ## levels for sample filter
-        levels <- getLevels(ngs$Y)
-        shiny::updateSelectInput(session, "samplefilter", choices=levels)
+      ngs <- inputData()
+      shiny::req(ngs)
+      ## levels for sample filter
+      levels <- getLevels(ngs$Y)
+      shiny::updateSelectInput(session, "samplefilter", choices = levels)
 
-        ## update cluster methods if available in object
-        if("cluster" %in% names(ngs)) {
-            clustmethods <- names(ngs$cluster$pos)
-            clustmethods <- c("default",clustmethods)
-            shiny::updateSelectInput(session, "clustmethod",
-                              choices=clustmethods )
-        }
-    })
-
-    shiny::observe({
-        ngs <- inputData()
-        shiny::req(ngs)
-        refsets = "LM22"
-        refsets <- sort(names(ngs$deconv))
-        refsel <- unique(c(grep("LM22",refsets,value=TRUE),refsets))[1]
-        shiny::updateSelectInput(session,"refset",choices=refsets, selected=refsel)
-        shiny::updateSelectInput(session,"refset2",choices=refsets, selected=refsel)
-
-        ## dcmethods <- names(ngs$deconv[[1]])
-        ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
-        ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
-
-        grpvars <- c("<ungrouped>",colnames(ngs$samples))
-        sel <- grpvars[1]
-        if(ncol(ngs$X) > 30) sel <- grpvars[2]
-        shiny::updateSelectInput(session, "group2", choices=grpvars, selected=sel)
-
-    })
-
-    shiny::observeEvent( input$refset, {
-        shiny::req(input$refset)
-        ngs <- inputData()
-        dcmethods <- names(ngs$deconv[[input$refset]])
-        dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
-    })
-
-    shiny::observeEvent( input$refset2, {
-        shiny::req(input$refset2)
-        ngs <- inputData()
-        dcmethods <- names(ngs$deconv[[input$refset2]])
-        dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
+      ## update cluster methods if available in object
+      if ("cluster" %in% names(ngs)) {
+        clustmethods <- names(ngs$cluster$pos)
+        clustmethods <- c("default", clustmethods)
+        shiny::updateSelectInput(session, "clustmethod",
+          choices = clustmethods
+        )
+      }
     })
 
     shiny::observe({
       ngs <- inputData()
-      ##if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
+      refsets <- "LM22"
+      refsets <- sort(names(ngs$deconv))
+      refsel <- unique(c(grep("LM22", refsets, value = TRUE), refsets))[1]
+      shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
+      shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
+
+      ## dcmethods <- names(ngs$deconv[[1]])
+      ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+      ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+      ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
+
+      grpvars <- c("<ungrouped>", colnames(ngs$samples))
+      sel <- grpvars[1]
+      if (ncol(ngs$X) > 30) sel <- grpvars[2]
+      shiny::updateSelectInput(session, "group2", choices = grpvars, selected = sel)
+    })
+
+    shiny::observeEvent(input$refset, {
+      shiny::req(input$refset)
+      ngs <- inputData()
+      dcmethods <- names(ngs$deconv[[input$refset]])
+      dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
+      shiny::updateSelectInput(session, "dcmethod", choices = dcmethods, selected = dcsel)
+    })
+
+    shiny::observeEvent(input$refset2, {
+      shiny::req(input$refset2)
+      ngs <- inputData()
+      dcmethods <- names(ngs$deconv[[input$refset2]])
+      dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
+      shiny::updateSelectInput(session, "dcmethod2", choices = dcmethods, selected = dcsel)
+    })
+
+    shiny::observe({
+      ngs <- inputData()
+      ## if(is.null(ngs)) return(NULL)
       shiny::req(ngs)
 
-      ##if(is.null(input$crosstaboptions)) return(NULL)
-      pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-      pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+      ## if(is.null(input$crosstaboptions)) return(NULL)
+      pheno0 <- grep("group|sample|donor|id|batch", colnames(ngs$samples), invert = TRUE, value = TRUE)
+      pheno0 <- grep("sample|donor|id|batch", colnames(ngs$samples), invert = TRUE, value = TRUE)
       kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-      nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
-      pheno0 = pheno0[which(nphenolevel>1)]
+      nphenolevel <- apply(ngs$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
+      pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(ngs$genes$gene_name))
-      pheno1 <- c("<cell type>",pheno0)
-      genes1 <- c("<none>",genes)
-      shiny::updateSelectInput(session, "crosstabvar", choices=pheno1)
-      shiny::updateSelectInput(session, "crosstabpheno", choices=pheno1)
-      shiny::updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
-
+      pheno1 <- c("<cell type>", pheno0)
+      genes1 <- c("<none>", genes)
+      shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
+      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1)
+      shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE)
     })
 
     shiny::observe({
       ngs <- inputData()
-      shiny::req(ngs,input$mrk_level)
+      shiny::req(ngs, input$mrk_level)
 
       choices <- names(ngs$families)
-      selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
-      if(input$mrk_level=="geneset") {
+      selected <- grep("^CD", choices, ignore.case = TRUE, value = TRUE)[1]
+      if (input$mrk_level == "geneset") {
         nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
-        choices <- names(COLLECTIONS)[nn>=5]
-        selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
+        choices <- names(COLLECTIONS)[nn >= 5]
+        selected <- grep("HALLMARK", names(COLLECTIONS), ignore.case = TRUE, value = TRUE)
       }
-      shiny::updateSelectInput(session, "features", choices=choices, selected=selected)
-      shiny::updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
-
+      shiny::updateSelectInput(session, "features", choices = choices, selected = selected)
+      shiny::updateSelectInput(session, "mrk_features", choices = choices, selected = selected)
     })
 
     shiny::observe({
       ngs <- inputData()
-      ##if(is.null(ngs)) return(NULL)
+      ## if(is.null(ngs)) return(NULL)
       shiny::req(ngs)
       ## just at new data load
       genes <- NULL
-      g1=g2=NULL
+      g1 <- g2 <- NULL
 
       F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
-      F <- F[order(-apply(F,1,sd)),]
+      F <- F[order(-apply(F, 1, sd)), ]
       genes <- rownames(F)
       g1 <- rownames(F)[1]
       g2 <- rownames(F)[2]
 
-      if(length(g1)==0) g1 <- genes[1]
-      if(length(g2)==0) g2 <- genes[2]
+      if (length(g1) == 0) g1 <- genes[1]
+      if (length(g2) == 0) g2 <- genes[2]
 
-      shiny::updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
-      shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
+      shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
+      shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
     })
 
 
 
     # REACTIVE FUNCTIONS #########
 
-    pfGetClusterPositions <- shiny::reactive({ #used by many plots
-        ngs <- inputData()
-        shiny::req(ngs)
+    pfGetClusterPositions <- shiny::reactive({ # used by many plots
+      ngs <- inputData()
+      shiny::req(ngs)
 
-        dbg("[pfGetClusterPositions] called")
+      dbg("[pfGetClusterPositions] called")
 
-        ##zx <- filtered_matrix1()
-        zx = ngs$X
-        kk = colnames(zx)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-        if(length(kk)==0) return(NULL)
-        zx <- zx[,kk,drop=FALSE]
-        zx = head(zx[order(-apply(zx,1,sd)),],1000)
-        zx = t(scale(t(zx)))  ## scale??
+      ## zx <- filtered_matrix1()
+      zx <- ngs$X
+      kk <- colnames(zx)
+      kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+      if (length(kk) == 0) {
+        return(NULL)
+      }
+      zx <- zx[, kk, drop = FALSE]
+      zx <- head(zx[order(-apply(zx, 1, sd)), ], 1000)
+      zx <- t(scale(t(zx))) ## scale??
 
-        pos = NULL
-        m = "tsne"
-        m <- input$clustmethod
-        has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
-        has.clust
-        if(!has.clust && m=="pca") {
+      pos <- NULL
+      m <- "tsne"
+      m <- input$clustmethod
+      has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
+      has.clust
+      if (!has.clust && m == "pca") {
+        pos <- irlba::irlba(zx, nv = 3)$v
+        rownames(pos) <- colnames(zx)
+      } else if (has.clust) {
+        pos <- ngs$cluster$pos[[m]][, 1:2]
+      } else {
+        pos <- ngs$tsne2d
+      }
+      dim(pos)
+      pos <- pos[colnames(zx), ]
+      pos <- scale(pos) ## scale
+      colnames(pos) <- paste0("dim", 1:ncol(pos))
+      rownames(pos) <- colnames(zx)
 
-            pos = irlba::irlba(zx,nv=3)$v
-            rownames(pos) <- colnames(zx)
-        } else if(has.clust) {
-            pos <- ngs$cluster$pos[[m]][,1:2]
-        } else {
-            pos <- ngs$tsne2d
-        }
-        dim(pos)
-        pos <- pos[colnames(zx),]
-        pos = scale(pos) ## scale
-        colnames(pos) = paste0("dim",1:ncol(pos))
-        rownames(pos) = colnames(zx)
 
+      # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
-        #code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
+      # dbg("[pfGetClusterPositions2] computing distances and clusters...")
+      # dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
+      #
+      # ##dist = as.dist(dist(pos))
+      # dist = 0.001+dist(pos)**2
+      #
+      # dbg("[pfGetClusterPositions2] creating graph")
+      #
+      # gr = igraph::graph_from_adjacency_matrix(
+      #   1.0/dist, diag=FALSE, mode="undirected")
+      #
+      # dbg("[pfGetClusterPositions2] cluster louvain")
+      #
+      # clust <- igraph::cluster_louvain(gr)$membership
+      #
+      # dbg("pfGetClusterPositions2:: done!")
+      # return( list(pos=pos, clust=clust) )
 
-        # dbg("[pfGetClusterPositions2] computing distances and clusters...")
-        # dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
-        #
-        # ##dist = as.dist(dist(pos))
-        # dist = 0.001+dist(pos)**2
-        #
-        # dbg("[pfGetClusterPositions2] creating graph")
-        #
-        # gr = igraph::graph_from_adjacency_matrix(
-        #   1.0/dist, diag=FALSE, mode="undirected")
-        #
-        # dbg("[pfGetClusterPositions2] cluster louvain")
-        #
-        # clust <- igraph::cluster_louvain(gr)$membership
-        #
-        # dbg("pfGetClusterPositions2:: done!")
-        # return( list(pos=pos, clust=clust) )
-
-        return(pos)
+      return(pos)
     })
 
     # Type mapping (heatmap) reactivity ##########
 
-    getDeconvResults2 <- shiny::reactive({ #used by many functions
+    getDeconvResults2 <- shiny::reactive({ # used by many functions
       ngs <- inputData()
       shiny::req(ngs)
 
-      method = "meta"
+      method <- "meta"
       method <- input$dcmethod2
-      if(is.null(method)) return(NULL)
+      if (is.null(method)) {
+        return(NULL)
+      }
       shiny::req(input$refset2)
       dbg("[SingleCellBoard:getDeconvResults2] called")
 
-      refset = "LM22"
+      refset <- "LM22"
       refset <- input$refset2
-      if(!("deconv" %in% names(ngs))) return(NULL)
+      if (!("deconv" %in% names(ngs))) {
+        return(NULL)
+      }
       results <- ngs$deconv[[refset]][[method]]
       ## threshold everything (because DCQ can be negative!!!)
-      results <- pmax(results,0)
+      results <- pmax(results, 0)
 
 
       return(results)
@@ -238,55 +239,65 @@ SingleCellBoard <- function(id, inputData)
 
     # plots -------------------------------------------------------------------
 
-    singlecell_plot_icpplot_server(id = "icpplot",
-                                   inputData = inputData,
-                                   pfGetClusterPositions = pfGetClusterPositions,
-                                   method = shiny::reactive(input$dcmethod),
-                                   refset = shiny::reactive(input$refset),
-                                   lyo = shiny::reactive(input$layout),
-                                   sortby = shiny::reactive(input$sortby)
-                                   )
+    singlecell_plot_icpplot_server(
+      id = "icpplot",
+      inputData = inputData,
+      pfGetClusterPositions = pfGetClusterPositions,
+      method = shiny::reactive(input$dcmethod),
+      refset = shiny::reactive(input$refset),
+      lyo = shiny::reactive(input$layout),
+      sortby = shiny::reactive(input$sortby)
+    )
 
-    singlecell_plot_phenoplot_server(id = "phenoplot",
-                                     inputData = inputData,
-                                     pfGetClusterPositions = pfGetClusterPositions
-                                     )
+    singlecell_plot_phenoplot_server(
+      id = "phenoplot",
+      inputData = inputData,
+      pfGetClusterPositions = pfGetClusterPositions
+    )
 
-    singlecell_plot_mappingplot_server(id = "mappingplot",
-                                       inputData = inputData,
-                                       getDeconvResults2 = getDeconvResults2,
-                                       pfGetClusterPositions = pfGetClusterPositions,
-                                       grpvar = shiny::reactive(input$group2),
-                                       refset = shiny::reactive(input$refset2),
-                                       group = shiny::reactive(input$group2),
-                                       view = shiny::reactive(input$view2))
+    singlecell_plot_mappingplot_server(
+      id = "mappingplot",
+      inputData = inputData,
+      getDeconvResults2 = getDeconvResults2,
+      pfGetClusterPositions = pfGetClusterPositions,
+      grpvar = shiny::reactive(input$group2),
+      refset = shiny::reactive(input$refset2),
+      group = shiny::reactive(input$group2),
+      view = shiny::reactive(input$view2)
+    )
 
-    singlecell_plot_crosstabPlot_server(id = "crosstabPlot",
-                                        inputData = inputData,
-                                        samplefilter = shiny::reactive(input$samplefilter),
-                                        crosstabvar = shiny::reactive(input$crosstabvar),
-                                        pheno = shiny::reactive(input$crosstabpheno),
-                                        gene = shiny::reactive(input$crosstabgene),
-                                        getDeconvResults2=getDeconvResults2,
-                                        watermark = FALSE)
+    singlecell_plot_crosstabPlot_server(
+      id = "crosstabPlot",
+      inputData = inputData,
+      samplefilter = shiny::reactive(input$samplefilter),
+      crosstabvar = shiny::reactive(input$crosstabvar),
+      pheno = shiny::reactive(input$crosstabpheno),
+      gene = shiny::reactive(input$crosstabgene),
+      getDeconvResults2 = getDeconvResults2,
+      watermark = FALSE
+    )
 
-    singlecell_plot_markersplot_server(id = "markersplot",
-                                       inputData = inputData,
-                                       pfGetClusterPositions = pfGetClusterPositions,
-                                       mrk_level = shiny::reactive(input$mrk_level),
-                                       mrk_features = shiny::reactive(input$mrk_features),
-                                       mrk_search = shiny::reactive(input$mrk_search),
-                                       mrk_sortby = shiny::reactive(input$mrk_sortby),
-                                       watermark = FALSE)
+    singlecell_plot_markersplot_server(
+      id = "markersplot",
+      inputData = inputData,
+      pfGetClusterPositions = pfGetClusterPositions,
+      mrk_level = shiny::reactive(input$mrk_level),
+      mrk_features = shiny::reactive(input$mrk_features),
+      mrk_search = shiny::reactive(input$mrk_search),
+      mrk_sortby = shiny::reactive(input$mrk_sortby),
+      watermark = FALSE
+    )
 
-    singlecell_plot_cytoplot_server(id = "cytoplot",
-                                    inputData = inputData,
-                                    pfGetClusterPositions = pfGetClusterPositions,
-                                    samplefilter = shiny::reactive(input$samplefilter),
-                                    cytovar1 = shiny::reactive(input$cytovar1),
-                                    cytovar2 = shiny::reactive(input$cytovar2),
-                                    selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
-                                    watermark = FALSE)
+    singlecell_plot_cytoplot_server(
+      id = "cytoplot",
+      inputData = inputData,
+      pfGetClusterPositions = pfGetClusterPositions,
+      samplefilter = shiny::reactive(input$samplefilter),
+      cytovar1 = shiny::reactive(input$cytovar1),
+      cytovar2 = shiny::reactive(input$cytovar2),
+      selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
+      watermark = FALSE
+    )
 
 
 
@@ -391,203 +402,203 @@ SingleCellBoard <- function(id, inputData)
 
     # iTALK ######
 
-#     italk_getResults <- shiny::reactive({
-#         ngs <- inputData()
-#         ## if(is.null(ngs)) return(NULL)
-#         shiny::req(ngs)
-#         shiny::req(input$italk_groups)
+    #     italk_getResults <- shiny::reactive({
+    #         ngs <- inputData()
+    #         ## if(is.null(ngs)) return(NULL)
+    #         shiny::req(ngs)
+    #         shiny::req(input$italk_groups)
 
-#         dbg("[SingleCellBoard:italk_getResults] reacted")
+    #         dbg("[SingleCellBoard:italk_getResults] reacted")
 
-#         db <- iTALK::database
-#         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
-#         length(db.genes)
-#         ##genes <- intersect(genes, rownames(ngs$X))
-#         xgenes <- toupper(ngs$genes[rownames(ngs$X),"gene_name"])
-#         db.genes <- intersect(db.genes, xgenes)
-#         length(db.genes)
+    #         db <- iTALK::database
+    #         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
+    #         length(db.genes)
+    #         ##genes <- intersect(genes, rownames(ngs$X))
+    #         xgenes <- toupper(ngs$genes[rownames(ngs$X),"gene_name"])
+    #         db.genes <- intersect(db.genes, xgenes)
+    #         length(db.genes)
 
-#         ## make groups
-#         ph <- "group"
-#         ph <- "cell.type"
-#         ph <- input$italk_groups
-#         ct <- as.character(ngs$samples[,ph])
-#         table(ct)
+    #         ## make groups
+    #         ph <- "group"
+    #         ph <- "cell.type"
+    #         ph <- input$italk_groups
+    #         ct <- as.character(ngs$samples[,ph])
+    #         table(ct)
 
-#         ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
-#         pp1 <- rownames(ngs$X)[match(db.genes, toupper(xgenes))]
-#         gx <- t(ngs$X[pp1,,drop=FALSE])
+    #         ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
+    #         pp1 <- rownames(ngs$X)[match(db.genes, toupper(xgenes))]
+    #         gx <- t(ngs$X[pp1,,drop=FALSE])
 
-#         colnames(gx) <- db.genes ## UPPERCASE
-#         gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
-#         dim(gx0)
+    #         colnames(gx) <- db.genes ## UPPERCASE
+    #         gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
+    #         dim(gx0)
 
-#         top_genes <- 50
-#         top_genes <- input$italk_netview_topgenes
+    #         top_genes <- 50
+    #         top_genes <- input$italk_netview_topgenes
 
-#         colnames(gx) <- toupper(colnames(gx))
-#         data1 <- data.frame(cell_type=ct, gx)
-#         dim(data1)
+    #         colnames(gx) <- toupper(colnames(gx))
+    #         data1 <- data.frame(cell_type=ct, gx)
+    #         dim(data1)
 
-#         ## find the ligand-receptor pairs from highly expressed genes
-#         cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
-#         ct.names = unique(as.character(data1$cell_type))
-#         cell_col <- cell_col[1:length(ct.names)]
-#         names(cell_col) <- ct.names
+    #         ## find the ligand-receptor pairs from highly expressed genes
+    #         cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
+    #         ct.names = unique(as.character(data1$cell_type))
+    #         cell_col <- cell_col[1:length(ct.names)]
+    #         names(cell_col) <- ct.names
 
-#         comm_type='cytokine'
-#         comm_type <- input$italk_category
+    #         comm_type='cytokine'
+    #         comm_type <- input$italk_category
 
-#         mode = "absolute"
-#         ##mode <- input$italk_mode
-#         if(mode=="absolute") {
-#             highly_exprs_genes <- iTALK::rawParse(data1, top_genes=50, stats='mean')
-#             res_cat <- iTALK::FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
-#             dim(res_cat)
-#             xx <- res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs
-#             res_cat <- res_cat[order(xx,decreasing=TRUE),]
-#         } else {
-#             ## contrast <- input$fa_contrast
-#             ## group <- ngs$model.parameters$exp.matrix[,contrast]
-#             ## data1$compare_groups <- group
-#             ## data1 <- data1[which(data1$compare_groups!=0),]
-#             ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
-#             ## deg_t  <- DEG(data %>% plotly::filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
-#             ## deg_nk <- DEG(data %>% plotly::filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
-#             ## ## find significant ligand-receptor pairs and do the plotting
-#             ## res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
-#             ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]
-#         }
+    #         mode = "absolute"
+    #         ##mode <- input$italk_mode
+    #         if(mode=="absolute") {
+    #             highly_exprs_genes <- iTALK::rawParse(data1, top_genes=50, stats='mean')
+    #             res_cat <- iTALK::FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
+    #             dim(res_cat)
+    #             xx <- res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs
+    #             res_cat <- res_cat[order(xx,decreasing=TRUE),]
+    #         } else {
+    #             ## contrast <- input$fa_contrast
+    #             ## group <- ngs$model.parameters$exp.matrix[,contrast]
+    #             ## data1$compare_groups <- group
+    #             ## data1 <- data1[which(data1$compare_groups!=0),]
+    #             ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
+    #             ## deg_t  <- DEG(data %>% plotly::filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
+    #             ## deg_nk <- DEG(data %>% plotly::filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
+    #             ## ## find significant ligand-receptor pairs and do the plotting
+    #             ## res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
+    #             ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]
+    #         }
 
-#         gx0.genes <- toupper(colnames(gx0))
-#         is.ligand = (gx0.genes %in% db[,"Ligand.ApprovedSymbol"])
-#         is.receptor = (gx0.genes %in% db[,"Receptor.ApprovedSymbol"])
-#         lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
-#         names(lr.type) <- colnames(gx0)
-#         table(lr.type)
-#         dim(gx0)
-#         res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
-#         return(res)
-#     })
+    #         gx0.genes <- toupper(colnames(gx0))
+    #         is.ligand = (gx0.genes %in% db[,"Ligand.ApprovedSymbol"])
+    #         is.receptor = (gx0.genes %in% db[,"Receptor.ApprovedSymbol"])
+    #         lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
+    #         names(lr.type) <- colnames(gx0)
+    #         table(lr.type)
+    #         dim(gx0)
+    #         res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
+    #         return(res)
+    #     })
 
-#     italk_netview.RENDER <- shiny::reactive({
-#         res <- italk_getResults()
-#         shiny::req(res)
-#         ##if(is.null(res)) return(NULL)
-#         res_cat <- res$table
-#         ## Communication graph
-#         iTALK::NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
-#     })
+    #     italk_netview.RENDER <- shiny::reactive({
+    #         res <- italk_getResults()
+    #         shiny::req(res)
+    #         ##if(is.null(res)) return(NULL)
+    #         res_cat <- res$table
+    #         ## Communication graph
+    #         iTALK::NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
+    #     })
 
-#     italk_LRPlot.RENDER <- shiny::reactive({
-#         ## Circos plot
-#         res <- italk_getResults()
-#         shiny::req(res)
-#         ##if(is.null(res)) return(NULL)
-#         res_cat <- res$table
-#         if(nrow(res_cat)<1) return(NULL)
+    #     italk_LRPlot.RENDER <- shiny::reactive({
+    #         ## Circos plot
+    #         res <- italk_getResults()
+    #         shiny::req(res)
+    #         ##if(is.null(res)) return(NULL)
+    #         res_cat <- res$table
+    #         if(nrow(res_cat)<1) return(NULL)
 
-#         ntop=25
-#         ntop = as.integer(input$italk_LRPlot_ntop)
-#         res_top <- head(res_cat,ntop)
-#         iTALK::LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
-#                       link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
-#                       link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
-#         comm_type <- shiny::isolate(input$italk_category)
-#         title((paste(comm_type,"genes     ")), line=0.5)
-#     })
+    #         ntop=25
+    #         ntop = as.integer(input$italk_LRPlot_ntop)
+    #         res_top <- head(res_cat,ntop)
+    #         iTALK::LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
+    #                       link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
+    #                       link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
+    #         comm_type <- shiny::isolate(input$italk_category)
+    #         title((paste(comm_type,"genes     ")), line=0.5)
+    #     })
 
-#     italk_heatmap.RENDER <- shiny::reactive({
-#         ## Expression heatmap
-#         ngs <- inputData()
-#         res <- italk_getResults()
-#         shiny::req(ngs,res)
-#         ##if(is.null(res)) return(NULL)
+    #     italk_heatmap.RENDER <- shiny::reactive({
+    #         ## Expression heatmap
+    #         ngs <- inputData()
+    #         res <- italk_getResults()
+    #         shiny::req(ngs,res)
+    #         ##if(is.null(res)) return(NULL)
 
-#         dbg("[SingleCellBoard:italk_heatmap.RENDER] reacted")
+    #         dbg("[SingleCellBoard:italk_heatmap.RENDER] reacted")
 
-#         res_cat <- res$table
-#         ntop=50
-#         ntop = as.integer(input$italk_LRPlot_ntop)
-#         res_top <- head(res_cat,ntop)
-#         genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
-#         if(length(genes_top)==0) return(NULL)
-#         gx0  <- t(res$exprs[,genes_top,drop=FALSE])
-#         rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
+    #         res_cat <- res$table
+    #         ntop=50
+    #         ntop = as.integer(input$italk_LRPlot_ntop)
+    #         res_top <- head(res_cat,ntop)
+    #         genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
+    #         if(length(genes_top)==0) return(NULL)
+    #         gx0  <- t(res$exprs[,genes_top,drop=FALSE])
+    #         rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
 
-#         par(oma=c(3,2,3,0))
-#         gx.heatmap(gx0, scale="none", mar=c(15,8),
-#                    cexRow=1, cexCol=1.3, col=BLUERED(64),
-#                    key=FALSE, keysize=0.6)
-#     })
+    #         par(oma=c(3,2,3,0))
+    #         gx.heatmap(gx0, scale="none", mar=c(15,8),
+    #                    cexRow=1, cexCol=1.3, col=BLUERED(64),
+    #                    key=FALSE, keysize=0.6)
+    #     })
 
 
 
-#     italk_LRPlot_info = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
-# a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
+    #     italk_LRPlot_info = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
+    # a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-#     shiny::callModule(
-#         plotModule,
-#         id = "italk_LRPlot",
-#         func = italk_LRPlot.RENDER,
-#         func2 = italk_LRPlot.RENDER,
-#         title = "Ligand-Receptor plot", label="a",
-#         info.text = italk_LRPlot_info,
-#         options = shiny::tagList(
-#             withTooltip( shiny::selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
-#                                 choices=c(10,15,25,50,75,100),selected=25),
-#                    "Select the maximum number of LR pairs to include in the LR plot.",
-#                    placement="top")
-#         ),
-#         pdf.width=6, pdf.height=8,
-#         height = imgH, res=80,
-#         add.watermark = WATERMARK
-#     )
+    #     shiny::callModule(
+    #         plotModule,
+    #         id = "italk_LRPlot",
+    #         func = italk_LRPlot.RENDER,
+    #         func2 = italk_LRPlot.RENDER,
+    #         title = "Ligand-Receptor plot", label="a",
+    #         info.text = italk_LRPlot_info,
+    #         options = shiny::tagList(
+    #             withTooltip( shiny::selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
+    #                                 choices=c(10,15,25,50,75,100),selected=25),
+    #                    "Select the maximum number of LR pairs to include in the LR plot.",
+    #                    placement="top")
+    #         ),
+    #         pdf.width=6, pdf.height=8,
+    #         height = imgH, res=80,
+    #         add.watermark = WATERMARK
+    #     )
 
-#     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
+    #     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-#     shiny::callModule(
-#         plotModule,
-#         id = "italk_heatmap",
-#         func = italk_heatmap.RENDER,
-#         func2 = italk_heatmap.RENDER,
-#         title = "Expression heatmap", label="b",
-#         info.text = italk_heatmap_info,
-#         options = shiny::tagList(),
-#         pdf.width=6, pdf.height=8,
-#         height = imgH, res=80,
-#         add.watermark = WATERMARK
-#     )
+    #     shiny::callModule(
+    #         plotModule,
+    #         id = "italk_heatmap",
+    #         func = italk_heatmap.RENDER,
+    #         func2 = italk_heatmap.RENDER,
+    #         title = "Expression heatmap", label="b",
+    #         info.text = italk_heatmap_info,
+    #         options = shiny::tagList(),
+    #         pdf.width=6, pdf.height=8,
+    #         height = imgH, res=80,
+    #         add.watermark = WATERMARK
+    #     )
 
-#     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
+    #     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-#     shiny::callModule(
-#         plotModule,
-#         id = "italk_netview",
-#         func = italk_netview.RENDER,
-#         func2 = italk_netview.RENDER,
-#         title = "NetView", label="c",
-#         info.text = italk_netview_info,
-#         options = shiny::tagList(
-#             withTooltip( shiny::selectInput(ns("italk_netview_topgenes"),"top genes",
-#                                 choices=c(10,25,50,75,100),selected=50),
-#                    "Select the number of topgenes to search for ligand-receptor pairs.",
-#                    placement="top" )
-#         ),
-#         pdf.width=6, pdf.height=8,
-#         height = imgH, res=80,
-#         add.watermark = WATERMARK
-#     )
+    #     shiny::callModule(
+    #         plotModule,
+    #         id = "italk_netview",
+    #         func = italk_netview.RENDER,
+    #         func2 = italk_netview.RENDER,
+    #         title = "NetView", label="c",
+    #         info.text = italk_netview_info,
+    #         options = shiny::tagList(
+    #             withTooltip( shiny::selectInput(ns("italk_netview_topgenes"),"top genes",
+    #                                 choices=c(10,25,50,75,100),selected=50),
+    #                    "Select the number of topgenes to search for ligand-receptor pairs.",
+    #                    placement="top" )
+    #         ),
+    #         pdf.width=6, pdf.height=8,
+    #         height = imgH, res=80,
+    #         add.watermark = WATERMARK
+    #     )
 
-#     shiny::observe({
-#         ngs <- inputData()
-#         shiny::req(ngs)
-#         ph <- sort(colnames(ngs$samples))
-#         sel = ph[1]
-#         ct <- grep("cell.fam|cell.type|type|cluster",ph,value=TRUE)
-#         if(length(ct)>0) sel <- ct[1]
-#         shiny::updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
-#     })
+    #     shiny::observe({
+    #         ngs <- inputData()
+    #         shiny::req(ngs)
+    #         ph <- sort(colnames(ngs$samples))
+    #         sel = ph[1]
+    #         ct <- grep("cell.fam|cell.type|type|cluster",ph,value=TRUE)
+    #         if(length(ct)>0) sel <- ct[1]
+    #         shiny::updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
+    #     })
 
     # Currently not used Stefan 22.03.22
 
@@ -858,6 +869,5 @@ SingleCellBoard <- function(id, inputData)
     # )
 
     return(NULL)
-
   })
 }

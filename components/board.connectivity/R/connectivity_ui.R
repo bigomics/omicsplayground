@@ -23,8 +23,8 @@ ConnectivityInputs <- function(id) {
       placement = "right", options = list(container = "body")
     ),
     shiny::selectInput(ns("connectivityScoreTable_qsig"), "threshold (padj)",
-                       c(0.01, 0.05, 0.2, 1),
-                       selected = 1
+      c(0.01, 0.05, 0.2, 1),
+      selected = 1
     ),
     shiny::br(),
     withTooltip(shiny::actionLink(ns("cmap_options"), "Options", icon = icon("cog", lib = "glyphicon")),
@@ -61,7 +61,7 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_cmap_FCFCplots_ui(ns("cmap_FCFCplots"),label = "a")
+            connectivity_plot_cmap_FCFCplots_ui(ns("cmap_FCFCplots"), label = "a")
           ),
           div(
             class = "col-md-6",
@@ -72,7 +72,7 @@ ConnectivityUI <- function(id) {
             )
           )
         ),
-        connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot"),label = "c"),
+        connectivity_plot_cmapPairsPlot_ui(ns("cmapPairsPlot"), label = "c"),
         tags$div(
           HTML(paste(
             "<b>(a)</b> <b>FC scatter plots.</b> Scatter plots of gene expression
@@ -96,16 +96,18 @@ ConnectivityUI <- function(id) {
           div(
             class = "col-md-6",
             connectivity_plot_cumFCplot_ui(ns("cumFCplot"),
-                                           label = "a",
-                                           height = c(300, 600),
-                                           width = c("auto", 1300))
+              label = "a",
+              height = c(300, 600),
+              width = c("auto", 1300)
+            )
           ),
           div(
             class = "col-md-6",
             connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"),
-                                                   label = "b",
-                                                   height = c(300, 600),
-                                                   width = c("auto", 1000))
+              label = "b",
+              height = c(300, 600),
+              width = c("auto", 1000)
+            )
           )
         ),
         shiny::br(),
@@ -128,7 +130,7 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"),label = "a")
+            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"), label = "a")
           ),
           div(
             class = "col-md-6",

@@ -24,7 +24,6 @@ expression_table_gsettable_ui <- function(id, width, height) {
     title = "Gene sets with gene",
     label = "II"
   )
-
 }
 
 #' Server side table code: expression board

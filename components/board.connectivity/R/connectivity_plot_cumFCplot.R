@@ -13,9 +13,9 @@
 #'
 #' @export
 connectivity_plot_cumFCplot_ui <- function(id,
-                                          label = "",
-                                          height,
-                                          width) {
+                                           label = "",
+                                           height,
+                                           width) {
   ns <- shiny::NS(id)
   info_text <- strwrap("<b>Meta-foldchange.</b> The barplot visualizes the
                        cumulative foldchange between the top-10 most similar
@@ -25,28 +25,28 @@ connectivity_plot_cumFCplot_ui <- function(id,
 
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
-                "Take the absolute foldchange for calculating the cumulative sum.",
-                placement = "right", options = list(container = "body")
+      "Take the absolute foldchange for calculating the cumulative sum.",
+      placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::radioButtons(ns("cumFCplot_order"), "Order:",
-                          choiceValues = c("FC", "cumFC"),
-                          choiceNames = c("this FC", "cumFC"),
-                          selected = "cumFC", inline = TRUE
+        choiceValues = c("FC", "cumFC"),
+        choiceNames = c("this FC", "cumFC"),
+        selected = "cumFC", inline = TRUE
       ),
       "How to order the cumulative barplot.",
       placement = "right", options = list(container = "body")
     )
   )
   PlotModuleUI(ns("plot"),
-               title = "Cumulative foldchange",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               options = plot_opts,
-               height = height,
-               width = width
-               )
+    title = "Cumulative foldchange",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    options = plot_opts,
+    height = height,
+    width = width
+  )
 }
 
 #' Importance plot Server function
@@ -64,7 +64,6 @@ connectivity_plot_cumFCplot_server <- function(id,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       cumulativeFCtable <- shiny::reactive({
         F <- getTopProfiles()
         F[is.na(F)] <- 0
@@ -94,7 +93,6 @@ connectivity_plot_cumFCplot_server <- function(id,
       })
 
       plot_RENDER <- shiny::reactive({
-
         F <- cumulativeFCtable()
         shiny::req(F)
 
@@ -111,9 +109,11 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
         }
 
-        pgx.stackedBarplot(x = data.frame(F1),
-                           ylab = "Cumulative logFC",
-                           showlegend = FALSE)
+        pgx.stackedBarplot(
+          x = data.frame(F1),
+          ylab = "Cumulative logFC",
+          showlegend = FALSE
+        )
       })
 
       plot_RENDER2 <- shiny::reactive({

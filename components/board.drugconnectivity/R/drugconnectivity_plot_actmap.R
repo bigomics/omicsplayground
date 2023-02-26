@@ -25,19 +25,23 @@ drugconnectivity_plot_actmap_ui <- function(id,
                        contrast profile.")
 
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("dsea_normalize"),
-                                     "normalize activation matrix", FALSE),
-                "Normalize columns of the activation matrix.")
+    withTooltip(
+      shiny::checkboxInput(
+        ns("dsea_normalize"),
+        "normalize activation matrix", FALSE
+      ),
+      "Normalize columns of the activation matrix."
+    )
   )
   PlotModuleUI(ns("plot"),
-               title = "Activation matrix",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("png", "pdf", "csv"),
-               height = c(fullH, 750),
-               width=c("100%", 1400)
+    title = "Activation matrix",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("png", "pdf", "csv"),
+    height = c(fullH, 750),
+    width = c("100%", 1400)
   )
 }
 
@@ -58,7 +62,6 @@ drugconnectivity_plot_actmap_server <- function(id,
                                                 watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc) {
         if (is.null(pgx$drugs)) {
           return(NULL)
@@ -113,10 +116,10 @@ drugconnectivity_plot_actmap_server <- function(id,
         par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1, 0, 0))
 
         corrplot::corrplot(score,
-                           is.corr = FALSE, cl.pos = "n",
-                           col = BLUERED(100),
-                           col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
-                           tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
+          is.corr = FALSE, cl.pos = "n",
+          col = BLUERED(100),
+          col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
+          tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
         )
       }
 
@@ -125,8 +128,10 @@ drugconnectivity_plot_actmap_server <- function(id,
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)
-        shiny::validate(shiny::need("drugs" %in% names(pgx),
-                                    "no 'drugs' in object."))
+        shiny::validate(shiny::need(
+          "drugs" %in% names(pgx),
+          "no 'drugs' in object."
+        ))
         if (is.null(pgx$drugs)) {
           return(NULL)
         }

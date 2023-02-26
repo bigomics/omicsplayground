@@ -31,8 +31,8 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       label = "a",
       outputFunc = function(x, width, height) {
         plotOutput(x,
-                   brush = ns("geneUMAP_brush"), width = width,
-                   height = height
+          brush = ns("geneUMAP_brush"), width = width,
+          height = height
         )
       },
       plotlib2 = "plotly",
@@ -51,7 +51,6 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       label = "c"
     )
   )
-
 }
 
 featuremap_plot_gene_map_server <- function(id,

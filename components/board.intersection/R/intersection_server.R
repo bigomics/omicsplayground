@@ -324,7 +324,6 @@ IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetme
       par(mar = c(2.7, 2.8, 0.7, 0.2), mgp = c(1.4, 0.5, 0), cex.axis = 0.9, cex.lab = 0.9)
       i <- 1
       for (i in 1:ncol(W)) {
-
         jj <- match(rownames(pos), rownames(W))
         fc <- W[jj, i]
         fc[is.na(fc)] <- 0
@@ -372,7 +371,6 @@ IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetme
           lab.pos <- plt$lab.pos
         }
       }
-
     })
 
     ctGeneUMAP_info <- "<b>CORSA module analysis.</b> Functional analysis of NMF modules."

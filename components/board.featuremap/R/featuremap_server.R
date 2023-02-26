@@ -60,7 +60,6 @@ FeatureMapBoard <- function(id, inputData) {
     ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, source = "", plotlib = "base") {
-
       if (!is.null(hilight)) {
         hilight <- intersect(hilight, rownames(pos))
         hilight <- intersect(hilight, names(var))
@@ -107,7 +106,6 @@ FeatureMapBoard <- function(id, inputData) {
     }
 
     plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress) {
-
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)

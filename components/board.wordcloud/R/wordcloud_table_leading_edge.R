@@ -16,7 +16,6 @@ wordcloud_table_leading_edge_ui <- function(id, width, height) {
     title = "Leading-edge table",
     label = "e"
   )
-
 }
 
 wordcloud_table_leading_edge_server <- function(id,

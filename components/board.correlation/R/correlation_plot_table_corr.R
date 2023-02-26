@@ -21,14 +21,18 @@ correlation_plot_table_corr_ui <- function(id,
 
 
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::selectInput(ns("order_opt"), "Order by:",
-                                   choices = c("Both",
-                                               "Correlation",
-                                               "Partial Correlation"),
-                                   multiple = FALSE,
-                                   selected = "Both"),
-                "Sort order of groups based on correlation.",
-                placement = "top"
+    withTooltip(
+      shiny::selectInput(ns("order_opt"), "Order by:",
+        choices = c(
+          "Both",
+          "Correlation",
+          "Partial Correlation"
+        ),
+        multiple = FALSE,
+        selected = "Both"
+      ),
+      "Sort order of groups based on correlation.",
+      placement = "top"
     )
   )
 
@@ -94,41 +98,36 @@ correlation_plot_table_corr_server <- function(id,
     })
 
     cor_barplot.PLOTFUN <- function() {
-
       pd <- plot_data()
 
       pd_rho <- data.frame(genes = names(pd[[1]]), rho = pd[[1]])
       pd_prho <- data.frame(genes = names(pd[[2]]), rho = pd[[2]])
 
-      pd_plot <- base::merge(pd_rho,pd_prho, by = "genes")
+      pd_plot <- base::merge(pd_rho, pd_prho, by = "genes")
 
-      pd_plot <- pd_plot[complete.cases(pd_plot),]
+      pd_plot <- pd_plot[complete.cases(pd_plot), ]
 
-      rownames(pd_plot) <-pd_plot$genes
+      rownames(pd_plot) <- pd_plot$genes
 
       pd_plot$genes <- NULL
 
       colnames(pd_plot) <- c("Correlation", "Partial correlation")
 
-      if(input$order_opt == "Correlation"){
-
-        pd_plot <- pd_plot[order(pd_plot$Correlation,decreasing = TRUE),]
-
-      }else if(input$order_opt == "Partial Correlation"){
-
-        pd_plot <- pd_plot[order(pd_plot$`Partial correlation`,decreasing = TRUE),]
-
-      }else if(input$order_opt == "Both"){
-
+      if (input$order_opt == "Correlation") {
+        pd_plot <- pd_plot[order(pd_plot$Correlation, decreasing = TRUE), ]
+      } else if (input$order_opt == "Partial Correlation") {
+        pd_plot <- pd_plot[order(pd_plot$`Partial correlation`, decreasing = TRUE), ]
+      } else if (input$order_opt == "Both") {
         total_sum_cor <- rowSums(pd_plot)
 
-        pd_plot <- pd_plot[order(total_sum_cor,decreasing = TRUE),]
-
+        pd_plot <- pd_plot[order(total_sum_cor, decreasing = TRUE), ]
       }
 
-      pgx.stackedBarplot(x = pd_plot,
-                         ylab = "Correlation",
-                         showlegend = FALSE)
+      pgx.stackedBarplot(
+        x = pd_plot,
+        ylab = "Correlation",
+        showlegend = FALSE
+      )
     }
 
     ### TABLE
@@ -204,6 +203,5 @@ correlation_plot_table_corr_server <- function(id,
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
-
   }) ## end of moduleServer
 }

@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_leadingEdgeGraph_ui <- function(id,
-                                          label = "",
-                                          rowH = 660) {
+                                                  label = "",
+                                                  rowH = 660) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap(
@@ -31,25 +31,26 @@ connectivity_plot_leadingEdgeGraph_ui <- function(id,
     ),
     withTooltip(
       shiny::radioButtons(ns("LEgraph_ntop"), "N-neighbours:", c(5, 10, 25, 100),
-                          selected = 10, inline = TRUE),
+        selected = 10, inline = TRUE
+      ),
       "Number of simlar experiments to consider."
     ),
     withTooltip(
       shiny::radioButtons(ns("LEgraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
-                          selected = "cumFC", inline = TRUE
+        selected = "cumFC", inline = TRUE
       ),
       "Parameter for node size."
     )
   )
 
   PlotModuleUI(ns("plot"),
-               title = "Leading-edge graph",
-               label = label,
-               plotlib = "visnetwork",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(720, 720),
-               width = c("auto", 1300)
+    title = "Leading-edge graph",
+    label = label,
+    plotlib = "visnetwork",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(720, 720),
+    width = c("auto", 1300)
   )
 }
 
@@ -69,7 +70,6 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       cumulativeFCtable <- shiny::reactive({
         F <- getTopProfiles()
         F[is.na(F)] <- 0

@@ -28,10 +28,8 @@ drugconnectivity_table_cmap_ui <- function(id, width, height) {
 
 
 drugconnectivity_table_cmap_server <- function(id,
-                                               getActiveDSEA)
-{
-  moduleServer(id, function(input, output, session)
-  {
+                                               getActiveDSEA) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
@@ -66,9 +64,9 @@ drugconnectivity_table_cmap_server <- function(id,
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("NES",
-                        background = color_from_middle(res[, "NES"], "lightblue", "#f5aeae"),
-                        backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-                        backgroundPosition = "center"
+          background = color_from_middle(res[, "NES"], "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
         )
     }
 
@@ -86,6 +84,5 @@ drugconnectivity_table_cmap_server <- function(id,
     )
 
     return(cmap_table)
-
-  })  ## end of moduleServer
+  }) ## end of moduleServer
 } ## end of server

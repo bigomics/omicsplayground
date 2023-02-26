@@ -30,14 +30,14 @@ drugconnectivity_plot_moa_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-               title = "Mechanism of action",
-               label = label,
-               plotlib = "plotly",
-               info.text = info_text,
-               options = plot_opts,
-               download.fmt = c("png", "pdf", "csv"),
-               height = c(0.54*rowH, 700),
-               width = c('auto', 1400),
+    title = "Mechanism of action",
+    label = label,
+    plotlib = "plotly",
+    info.text = info_text,
+    options = plot_opts,
+    download.fmt = c("png", "pdf", "csv"),
+    height = c(0.54 * rowH, 700),
+    width = c("auto", 1400),
   )
 }
 
@@ -56,7 +56,6 @@ drugconnectivity_plot_moa_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       getMOA <- shiny::reactive({
         moatype <- input$dsea_moatype
         if (moatype == "target gene") {
@@ -88,8 +87,8 @@ drugconnectivity_plot_moa_server <- function(id,
 
         pgx.barplot.PLOTLY(
           data = data.frame(
-            x=factor(names(moa.top),levels = names(moa.top)),
-            y=as.numeric(moa.top)
+            x = factor(names(moa.top), levels = names(moa.top)),
+            y = as.numeric(moa.top)
           ),
           x = "x",
           y = "y",
@@ -97,7 +96,7 @@ drugconnectivity_plot_moa_server <- function(id,
           xaxistitle = "Mechanism of action",
           plotRawValues = TRUE,
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
-          )
+        )
       })
 
       # plot.RENDER2 <- shiny::reactive({

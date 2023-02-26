@@ -16,7 +16,6 @@ enrichment_table_genes_in_geneset_ui <- function(id, width, height) {
     title = "Genes in gene set",
     label = "II"
   )
-
 }
 
 enrichment_table_genes_in_geneset_server <- function(id,
@@ -51,8 +50,8 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          #paging = TRUE,
-          #pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          # paging = TRUE,
+          # pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = "20vh",
           scroller = TRUE,

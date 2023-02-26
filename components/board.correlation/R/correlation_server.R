@@ -262,7 +262,6 @@ CorrelationBoard <- function(id, inputData) {
     })
 
     cum_corplot.RENDER <- shiny::reactive({
-
       res <- cum_corplot_data()
       if (is.null(res)) {
         return(NULL)
@@ -394,7 +393,6 @@ CorrelationBoard <- function(id, inputData) {
     }
 
     dgca_scatter.PLOTFUN <- shiny::reactive({
-
       shiny::req(input$cor_gene)
       res <- dgca.output()
 

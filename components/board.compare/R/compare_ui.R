@@ -129,9 +129,9 @@ CompareUI <- function(id) {
             label = "b"
           ),
           compare_plot_cum_fc2_ui(ns("cumfcplot2"),
-                                  height = c(350, 375),
-                                  width = c("auto", 900),
-                                  label = "c"
+            height = c(350, 375),
+            width = c("auto", 900),
+            label = "c"
           )
         )
       ),

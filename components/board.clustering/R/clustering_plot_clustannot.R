@@ -5,30 +5,34 @@
 
 
 clustering_plot_clusterannot_ui <- function(id,
-                                         label='',
-                                         height,
-                                         width
-                                         )
-{
+                                            label = "",
+                                            height,
+                                            width) {
   ns <- shiny::NS(id)
 
-  clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
+  clustannot_plots_text <- paste0("The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.")
 
-  clustannot_plots.opts = shiny::tagList(
-    withTooltip( shiny::selectInput(ns("xann_level"), "Reference level:",
-                                    choices=c("gene","geneset","phenotype"),
-                                    selected="geneset", width='80%'),
-                 "Select the level of an anotation analysis.",
-                 placement="left", options = list(container = "body")),
-    shiny::conditionalPanel(
-      "input.xann_level == 'geneset'", ns=ns,
-      withTooltip( shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
-                   "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
-                   placement="left", options = list(container = "body"))
+  clustannot_plots.opts <- shiny::tagList(
+    withTooltip(
+      shiny::selectInput(ns("xann_level"), "Reference level:",
+        choices = c("gene", "geneset", "phenotype"),
+        selected = "geneset", width = "80%"
+      ),
+      "Select the level of an anotation analysis.",
+      placement = "left", options = list(container = "body")
     ),
-    withTooltip( shiny::selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
-                 "Specify a reference set to be used in the annotation.",
-                 placement="left",options = list(container = "body"))
+    shiny::conditionalPanel(
+      "input.xann_level == 'geneset'",
+      ns = ns,
+      withTooltip(shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
+        "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
+        placement = "left", options = list(container = "body")
+      )
+    ),
+    withTooltip(shiny::selectInput(ns("xann_refset"), "Reference set:", choices = "", width = "80%"),
+      "Specify a reference set to be used in the annotation.",
+      placement = "left", options = list(container = "body")
+    )
   )
 
 
@@ -40,7 +44,7 @@ clustering_plot_clusterannot_ui <- function(id,
     title = "Functional annotation of clusters",
     info.text = clustannot_plots_text,
     options = clustannot_plots.opts,
-    download.fmt=c("png","pdf"),
+    download.fmt = c("png", "pdf"),
     width = width,
     height = height
   )
@@ -49,73 +53,69 @@ clustering_plot_clusterannot_ui <- function(id,
 clustering_plot_clusterannot_server <- function(id,
                                                 pgx,
                                                 getClustAnnotCorrelation,
-                                                watermark=FALSE
-                                                )
-{
-  moduleServer( id, function(input, output, session) {
-
+                                                watermark = FALSE) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     shiny::observe({
+      ## pgx <- inputData()
+      shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
-      ##pgx <- inputData()
-      shiny::req(pgx$X,pgx$gsetX,pgx$families)
-
-      if(is.null(input$xann_level)) return(NULL)
-      ann.types=sel=NULL
-      if(input$xann_level!="phenotype") {
-        if(input$xann_level=="geneset") {
+      if (is.null(input$xann_level)) {
+        return(NULL)
+      }
+      ann.types <- sel <- NULL
+      if (input$xann_level != "phenotype") {
+        if (input$xann_level == "geneset") {
           ann.types <- names(COLLECTIONS)
-          cc = sapply(COLLECTIONS,function(s) length(intersect(s,rownames(pgx$gsetX))))
-          ann.types <- ann.types[cc>=3]
+          cc <- sapply(COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
+          ann.types <- ann.types[cc >= 3]
         }
-        if(input$xann_level=="gene") {
+        if (input$xann_level == "gene") {
           ann.types <- names(pgx$families)
-          cc = sapply(pgx$families,function(g) length(intersect(g,rownames(pgx$X))))
-          ann.types <- ann.types[cc>=3]
+          cc <- sapply(pgx$families, function(g) length(intersect(g, rownames(pgx$X))))
+          ann.types <- ann.types[cc >= 3]
         }
-        ann.types <- setdiff(ann.types,"<all>")  ## avoid slow...
-        ann.types <- grep("^<",ann.types,invert=TRUE,value=TRUE)  ## remove special groups
-        sel = ann.types[1]
-        if("H" %in% ann.types) sel = "H"
-        j <- grep("^transcription",ann.types,ignore.case=TRUE)
-        if(input$xann_level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
-        if(length(j)>0) sel = ann.types[j[1]]
+        ann.types <- setdiff(ann.types, "<all>") ## avoid slow...
+        ann.types <- grep("^<", ann.types, invert = TRUE, value = TRUE) ## remove special groups
+        sel <- ann.types[1]
+        if ("H" %in% ann.types) sel <- "H"
+        j <- grep("^transcription", ann.types, ignore.case = TRUE)
+        if (input$xann_level == "geneset") j <- grep("hallmark", ann.types, ignore.case = TRUE)
+        if (length(j) > 0) sel <- ann.types[j[1]]
         ann.types <- sort(ann.types)
       } else {
-        ann.types = sel = "<all>"
+        ann.types <- sel <- "<all>"
       }
-      shiny::updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)
+      shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
     clustannot_plots.PLOTLY <- shiny::reactive({
-
-      rho = getClustAnnotCorrelation()
-      ##if(is.null(rho)) return(NULL)
+      rho <- getClustAnnotCorrelation()
+      ## if(is.null(rho)) return(NULL)
       shiny::req(rho)
 
-      ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
-      NTERMS = 6
-      NTERMS = 12
-      slen=40
-      if(ncol(rho)>=5)  {
-        slen=20
+      ## par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+      NTERMS <- 6
+      NTERMS <- 12
+      slen <- 40
+      if (ncol(rho) >= 5) {
+        slen <- 20
       }
-      if(ncol(rho)>6)  {
-        NTERMS=6
+      if (ncol(rho) > 6) {
+        NTERMS <- 6
       }
-      if(ncol(rho)<=2) {
-        NTERMS=22
+      if (ncol(rho) <= 2) {
+        NTERMS <- 22
       }
 
       klrpal <- omics_pal_d("muted_light")(ncol(rho))
-      #klrpal <- paste0(klrpal, "B3")
+      # klrpal <- paste0(klrpal, "B3")
 
       plot_list <- list()
-      i = 1
-      for(i in 1:min(9, ncol(rho))) {
-
-        x <- rev(head(sort(rho[,i], decreasing = TRUE), NTERMS))
+      i <- 1
+      for (i in 1:min(9, ncol(rho))) {
+        x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
         names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
 
@@ -138,10 +138,10 @@ clustering_plot_clusterannot_server <- function(id,
           plotly::plot_ly(
             x = x,
             y = y,
-            type = 'bar',
-            orientation = 'h',
-            hoverinfo = 'text',
-            hovertemplate = ~paste0(
+            type = "bar",
+            orientation = "h",
+            hoverinfo = "text",
+            hovertemplate = ~ paste0(
               ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
               ##       needs to be fixed (or that information to be removed)
               "Annotation: <b>%{y}</b><br>",
@@ -160,13 +160,13 @@ clustering_plot_clusterannot_server <- function(id,
           plotly::add_annotations(
             x = .01,
             y = y,
-            xref = 'paper',
-            yref = 'y',
-            xanchor = 'left',
+            xref = "paper",
+            yref = "y",
+            xanchor = "left",
             text = shortstring(y, slen),
             font = list(size = 10),
             showarrow = FALSE,
-            align = 'right'
+            align = "right"
           ) %>%
           plotly::layout(
             ## TODO: check x axis ranges! while in the lower row x is scaled from 0 to .9,
@@ -196,10 +196,10 @@ clustering_plot_clusterannot_server <- function(id,
           plotly_default1()
       }
 
-      if(length(plot_list) <= 4) {
-        nrows = ceiling(length(plot_list) / 2 )
+      if (length(plot_list) <= 4) {
+        nrows <- ceiling(length(plot_list) / 2)
       } else {
-        nrows = ceiling(length(plot_list) / 3 )
+        nrows <- ceiling(length(plot_list) / 3)
       }
 
       plotly::subplot(
@@ -215,12 +215,12 @@ clustering_plot_clusterannot_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ##plotlib2 = "plotly",
+      ## plotlib2 = "plotly",
       func = clustannot_plots.PLOTLY,
       # csvFunc = plot_data,   ##  *** downloadable data as CSV
-      ##renderFunc = plotly::renderPlotly,
-      ##renderFunc2 = plotly::renderPlotly,
-      res = 80,                ## resolution of plots
+      ## renderFunc = plotly::renderPlotly,
+      ## renderFunc2 = plotly::renderPlotly,
+      res = 80, ## resolution of plots
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark
     )
@@ -232,7 +232,5 @@ clustering_plot_clusterannot_server <- function(id,
         xann_refset = shiny::reactive(input$xann_refset)
       )
     )
-
   })
-
 }

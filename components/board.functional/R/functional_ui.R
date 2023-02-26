@@ -7,15 +7,19 @@ FunctionalInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("fa_contrast"), "Contrast:",
-                                   choices = NULL),
-                "Select the contrast corresponding to the comparison of interest.",
-                placement = "top"
+    withTooltip(
+      shiny::selectInput(ns("fa_contrast"), "Contrast:",
+        choices = NULL
+      ),
+      "Select the contrast corresponding to the comparison of interest.",
+      placement = "top"
     ),
-    withTooltip(shiny::actionLink(ns("fa_options"), "Options",
-                                  icon = icon("cog", lib = "glyphicon")),
-                "Show/hide advanced options",
-                placement = "top"
+    withTooltip(
+      shiny::actionLink(ns("fa_options"), "Options",
+        icon = icon("cog", lib = "glyphicon")
+      ),
+      "Show/hide advanced options",
+      placement = "top"
     ),
     shiny::br(),
     shiny::conditionalPanel(
@@ -23,9 +27,11 @@ FunctionalInputs <- function(id) {
       ns = ns,
       shiny::tagList(
         withTooltip(
-          shiny::checkboxInput(ns("fa_filtertable"),
-                               "filter signficant (tables)",
-                               FALSE),
+          shiny::checkboxInput(
+            ns("fa_filtertable"),
+            "filter signficant (tables)",
+            FALSE
+          ),
           "Click to filter the significant entries in the tables."
         )
       )
@@ -45,9 +51,12 @@ FunctionalUI <- function(id) {
         div(
           class = "col-md-6",
           functional_plot_kegg_graph_ui(ns("kegg_graph"),
-                                        label = "a"),
+            label = "a"
+          ),
           functional_plot_kegg_actmap_ui(
-            ns("kegg_actmap"),label = "c")
+            ns("kegg_actmap"),
+            label = "c"
+          )
         ),
         div(
           class = "col-md-6",
@@ -75,7 +84,8 @@ FunctionalUI <- function(id) {
           class = "col-md-6",
           functional_plot_go_network_ui(
             ns("GO_network"),
-            label = "a"),
+            label = "a"
+          ),
           functional_table_go_table_ui(
             ns("GO_table"),
             height = c("20vh", TABLE_HEIGHT_MODAL),
@@ -85,7 +95,8 @@ FunctionalUI <- function(id) {
         div(
           class = "col-md-6",
           functional_plot_go_actmap_ui(ns("GO_actmap"),
-                                       label = "c")
+            label = "c"
+          )
         )
       ),
       tags$div(

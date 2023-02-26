@@ -13,8 +13,8 @@
 #'
 #' @export
 connectivity_plot_cmap_FCFCplots_ui <- function(id,
-                                          label = "",
-                                          rowH = 660) {
+                                                label = "",
+                                                rowH = 660) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange
@@ -33,13 +33,13 @@ connectivity_plot_cmap_FCFCplots_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-               title = "FC scatter plots",
-               label = label,
-               plotlib = "base",
-               info.text = info_text,
-               options = plot_opts,
-               height = c(360, 600),
-               width = c("auto", 1280)
+    title = "FC scatter plots",
+    label = label,
+    plotlib = "base",
+    info.text = info_text,
+    options = plot_opts,
+    height = c(360, 600),
+    width = c("auto", 1280)
   )
 }
 
@@ -60,7 +60,6 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
                                                     watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       cmap_FCFCscatter <- function(fc, F, mfplots, ylab) {
         mfplots <- c(4, 5)
         ## get the foldchanges of selected comparison and neighbourhood
@@ -85,9 +84,9 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
           nna <- (is.na(fc) | is.na(F0[, ct1]))
           col <- c("grey15", "grey70")[1 + nna]
           base::plot(F[, ct1], fc,
-                     pch = 20, cex = 0.5,
-                     cex.lab = 0.9, cex.axis = 0.9,
-                     xlab = ct1x, ylab = "", col = col
+            pch = 20, cex = 0.5,
+            cex.lab = 0.9, cex.axis = 0.9,
+            xlab = ct1x, ylab = "", col = col
           )
           abline(v = 0, h = 0, lty = 2, lwd = 0.5)
           abline(lm(fc ~ F0[, ct1]), col = "red")
@@ -112,16 +111,16 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
           rnk <- fc
           pw <- colnames(F)[i]
           gsea.enplot(abs(rnk), gset.both,
-                      xlab = "",
-                      main = pw, cex.main = 0.8, len.main = 32
+            xlab = "",
+            main = pw, cex.main = 0.8, len.main = 32
           )
           R <- res[match(pw, res$pathway), , drop = FALSE]
           legend("topright",
-                 cex = 0.75, y.intersp = 0.85, bty = "n",
-                 c(
-                   paste("NES=", round(R$NES[1], 3)),
-                   paste("padj=", round(R$padj[1], 4))
-                 )
+            cex = 0.75, y.intersp = 0.85, bty = "n",
+            c(
+              paste("NES=", round(R$NES[1], 3)),
+              paste("padj=", round(R$padj[1], 4))
+            )
           )
         }
       }

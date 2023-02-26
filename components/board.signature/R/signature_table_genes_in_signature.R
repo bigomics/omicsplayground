@@ -16,7 +16,6 @@ signature_table_genes_in_signature_ui <- function(id, width, height) {
     title = "Genes in signature",
     label = "b"
   )
-
 }
 
 signature_table_genes_in_signature_server <- function(id,

@@ -13,13 +13,17 @@ BiomarkerInputs <- function(id) {
         "Show more information about this module."
       ),
       shiny::hr(), shiny::br(),
-      withTooltip(shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
-                                     choices = NULL),
+      withTooltip(
+        shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
+          choices = NULL
+        ),
         "Select the target variable for biomarker selection.",
         placement = "top"
       ),
-      withTooltip(shiny::selectInput(ns("pdx_filter"), "Feature filter:",
-                                     choices = NULL),
+      withTooltip(
+        shiny::selectInput(ns("pdx_filter"), "Feature filter:",
+          choices = NULL
+        ),
         "Select a filter for the features.",
         placement = "top"
       ),
@@ -40,8 +44,11 @@ BiomarkerInputs <- function(id) {
         )
       ),
       shiny::br(),
-      withTooltip(shiny::actionButton(ns("pdx_runbutton"), label = "Compute",
-                                      class = "run-button"),
+      withTooltip(
+        shiny::actionButton(ns("pdx_runbutton"),
+          label = "Compute",
+          class = "run-button"
+        ),
         "Click to start biomarker computation.",
         placement = "right"
       )
@@ -59,13 +66,13 @@ BiomarkerUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          biomarker_plot_importance_ui(ns("pdx_importance"),label = "a"),
-          biomarker_plot_heatmap_ui(ns("pdx_heatmap"),label = "b")
+          biomarker_plot_importance_ui(ns("pdx_importance"), label = "a"),
+          biomarker_plot_heatmap_ui(ns("pdx_heatmap"), label = "b")
         ),
         div(
           class = "col-md-6",
-          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"),label = "c"),
-          biomarker_plot_boxplots_ui(ns("pdx_boxplots"),label = "d")
+          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"), label = "c"),
+          biomarker_plot_boxplots_ui(ns("pdx_boxplots"), label = "d")
         )
       ),
       tags$div(

@@ -534,6 +534,5 @@ ConnectivityBoard <- function(id, inputData) {
       getConnectivityScores,
       getCurrentContrast
     )
-
   })
 } ## end-of-Board
