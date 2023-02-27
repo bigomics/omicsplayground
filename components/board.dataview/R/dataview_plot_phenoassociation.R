@@ -56,7 +56,7 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       plotlib2 = "base",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
-      ## csvFunc = plot_data,   ##  *** downloadable data as CSV
+      csvFunc = plot_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot,
       res = c(100, 170) * 0.85, ## resolution of plots
