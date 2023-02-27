@@ -1081,7 +1081,15 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
                                level="gene", grouped=FALSE, srt=NULL, cex=1,
                                collapse.others=TRUE, showothers=TRUE,
                                max.points = 200, group.names=NULL,
-                               main=NULL, xlab=NULL, ylab=NULL, names=TRUE)
+                               main=NULL, xlab=NULL, ylab=NULL, names=TRUE,
+                               annotations_x = NULL,
+                               annotations_y = NULL,
+                               annotations_text = NULL,
+                               annotations_xref = NULL,
+                               annotations_yref = NULL,
+                               annotations_xanchor = NULL,
+                               annotations_yanchor = NULL,
+                               annotations_showarrow = NULL)
 {
     if(0) {
         logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
@@ -1234,7 +1242,17 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
           ),
           x = "xgroup",
           y = "gx",
-          title = main
+          title = main,
+          yaxistitle = ylab,
+          xaxistitle = xlab,
+          annotations_x = annotations_x,
+          annotations_y = annotations_y,
+          annotations_text = annotations_text,
+          annotations_xref = annotations_xref,
+          annotations_yref = annotations_yref,
+          annotations_xanchor = annotations_xanchor,
+          annotations_yanchor = annotations_yanchor,
+          annotations_showarrow = annotations_showarrow
         )
 
         # gx.min = 0
@@ -1273,7 +1291,15 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
           fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
           title = main,
           yaxistitle = ylab,
-          xaxistitle = xlab
+          xaxistitle = xlab,
+          annotations_x = annotations_x,
+          annotations_y = annotations_y,
+          annotations_text = annotations_text,
+          annotations_xref = annotations_xref,
+          annotations_yref = annotations_yref,
+          annotations_xanchor = annotations_xanchor,
+          annotations_yanchor = annotations_yanchor,
+          annotations_showarrow = annotations_showarrow
           )
 
         return(fig)
@@ -4041,7 +4067,15 @@ pgx.barplot.PLOTLY <- function(
   yrange = NULL,
   font_family = "Lato",
   margin = list(l = 10, r = 10, b = 65, t = 30),
-  plotRawValues = FALSE #false will calculate mean +/- (sd) across groups
+  plotRawValues = FALSE, #false will calculate mean +/- (sd) across groups
+  annotations_x = NULL,
+  annotations_y = NULL,
+  annotations_text = NULL,
+  annotations_xref = NULL,
+  annotations_yref = NULL,
+  annotations_xanchor = NULL,
+  annotations_yanchor = NULL,
+  annotations_showarrow = NULL
 ){
 
   # calculate error bars
@@ -4087,7 +4121,17 @@ pgx.barplot.PLOTLY <- function(
       xaxis = list(title = xaxistitle),
       font = list(family = font_family),
       margin = margin,
-      bargap=bargap
+      bargap=bargap,
+      annotations = list(
+        x = annotations_x,
+        y = annotations_y,
+        text = annotations_text,
+        xref = annotations_xref,
+        yref = annotations_yref,
+        xanchor = annotations_xanchor,  # center of text
+        yanchor = annotations_yanchor,  # bottom of text
+        showarrow = annotations_showarrow
+      )
     ) %>%
     plotly_default1()
 
