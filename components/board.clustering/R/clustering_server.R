@@ -40,6 +40,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     ## update filter choices upon change of data set
     shiny::observe({
+      shiny::req(pgx$Y)
+      print('in getLevels function')
+      print(pgx$Y)
       levels <- getLevels(pgx$Y)
 
       shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
