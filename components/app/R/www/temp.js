@@ -198,7 +198,7 @@ Shiny.addCustomMessageHandler('get-subs', (msg) => {
 
 const logout = () => {
 	unloadSidebar();
-	$(".tab-sidebar:eq(1)").trigger('click');
+	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
 };
