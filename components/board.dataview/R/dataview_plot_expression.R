@@ -15,7 +15,7 @@ dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
-    download.fmt = c("png", "pdf", "csv", "obj"),
+    download.fmt = c("png", "pdf", "csv"),
     ## width = c("auto","100%"),
     height = height
   )
