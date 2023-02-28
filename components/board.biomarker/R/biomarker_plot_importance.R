@@ -49,8 +49,17 @@ biomarker_plot_importance_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        res <- calcVariableImportance()
-        shiny::req(res)
+        # Return NULL in case of error instead of
+        # placing a shiny::req ; that way we can handle
+        # the case on the plotting function and display a
+        # help message.
+        res <- tryCatch({
+          calcVariableImportance()
+        }, error = function(w){
+          NULL
+        })
+
+        if(is.null(res)){return(NULL)}
 
         res <- list(
           R = res$R
@@ -60,7 +69,12 @@ biomarker_plot_importance_server <- function(id,
 
       plot.RENDER <- shiny::reactive({
         res <- plot_data()
-        shiny::req(res)
+        
+        if(is.null(res) || length(res) == 0){
+          frame()
+          text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
+          return()
+        }
 
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
