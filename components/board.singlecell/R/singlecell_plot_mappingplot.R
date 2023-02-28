@@ -48,6 +48,7 @@ singlecell_plot_mappingplot_ui <- function(id,
     label = label,
     info.text = mapping_info,
     options = mapping.opts,
+    title = "Cell type mapping",
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
