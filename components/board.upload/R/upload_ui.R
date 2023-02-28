@@ -62,14 +62,7 @@ UploadUI <- function(id) {
         ),
         div(
           class = "col-md-9",
-          shiny::HTML(
-            "<h4>User file upload</h4><p>Please prepare the data files
-            in CSV format as listed below. It is important to name the files
-            exactly as shown. The file format must be comma-separated-values
-            (CSV) text. Be sure the dimensions, rownames and column names match
-            for all files. You can download a zip file with example files here:
-            EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>."
-          )
+          shiny::div(shiny::uiOutput(ns("upload_info")))
         )
       ),
       div(
