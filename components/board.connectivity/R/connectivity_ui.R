@@ -6,10 +6,6 @@
 ConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(
-      shiny::actionLink(ns("cmap_info"), "Info", icon = shiny::icon("info-circle")),
-      "Show more information about this module"
-    ),
     shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("cmap_contrast"), "Contrast:",
@@ -52,9 +48,8 @@ ConnectivityInputs <- function(id) {
 ConnectivityUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  tagList(
-    shiny::tabsetPanel(
-      id = ns("tabs1"),
+    tabs <- shiny::tabsetPanel(
+      id = ns("tabs1"), 
       shiny::tabPanel(
         "FC correlation",
         div(
@@ -169,5 +164,8 @@ ConnectivityUI <- function(id) {
         )
       )
     )
+  div(
+    boardHeader(title = "Similar experiments", info_link = ns("cmap_info")),
+    tabs
   )
 }
