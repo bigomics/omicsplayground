@@ -11,7 +11,7 @@ wgcna_plot_correlation_network_ui <- function(id, height, width) {
   PlotModuleUI(
     ns("plot"),
     title = "Correlation network",
-    label = "b",
+    label = "c",
     info.text = info_text,
     height = height,
     width = width,
