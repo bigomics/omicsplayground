@@ -33,8 +33,11 @@ LoadingBoard <- function(id,
     })
 
     observeEvent(r_global$load_example_trigger, {
+
+      data_names <- as.character(pgxtable$data()$dataset)
+
       # get the row which corresponds to "example-data"
-      example_row <- which(pgxtable$data()$dataset == "example-data")[1]
+      example_row <- which(data_names == "example-data")[1]
 
       # if not found, throw error modal that example-data doesnt exist
       if (is.na(example_row)) {
