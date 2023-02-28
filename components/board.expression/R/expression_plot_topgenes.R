@@ -39,6 +39,7 @@ expression_plot_topgenes_ui <- function(id,
   PlotModuleUI(ns("pltmod"),
     title = "Expression of top differentially expressed genes",
     label = label,
+    plotlib = "plotly",
     info.text = info_text,
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -127,15 +128,18 @@ expression_plot_topgenes_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      nc <- 8
-      mar1 <- 3.5
+      # nc <- 8
+      # mar1 <- 3.5
+      # browser()
+      # par(mfrow = c(2, nc), mar = c(mar1, 3.5, 1, 1), mgp = c(2, 0.8, 0), oma = c(0.1, 0.6, 0, 0.6))
+      # i <- 1
 
-      par(mfrow = c(2, nc), mar = c(mar1, 3.5, 1, 1), mgp = c(2, 0.8, 0), oma = c(0.1, 0.6, 0, 0.6))
-      i <- 1
-      for (i in 1:nrow(pd[["res"]])) {
-        ## if(i > length(top.up)) { frame() }
-        ## gene = sub(".*:","",top.up[i])
-        gene <- rownames(pd[["res"]])[i]
+      plots2show <- if(nrow(pd[["res"]]) > 8){
+        8
+      } else {nrow(pd[["res"]])}
+
+      plts <- lapply(1:plots2show, function(x){
+        gene <- rownames(pd[["res"]])[x]
         pgx.plotExpression(
           pd[["ngs"]],
           # pd[["gene"]],
@@ -150,10 +154,46 @@ expression_plot_topgenes_server <- function(id,
           xlab = "",
           srt = pd[["srt"]],
           names = pd[["show.names"]],
-          main = ""
+          main = "",
+          annotations_x = 0.5,
+          annotations_y = 1.05,
+          annotations_text = gene,
+          annotations_xref = "paper",
+          annotations_yref = "paper",
+          annotations_xanchor = "bottom",
+          annotations_yanchor = "top",
+          annotations_showarrow = F
         )
-        title(gene, cex.main = 1, line = -0.6)
-      }
+      })
+      nrows <- ceiling(length(plts) / 4)
+      plotly::subplot(plts,
+                      nrows = nrows,
+                      titleX = TRUE,
+                      titleY = TRUE,
+                      shareY = TRUE,
+                      shareX = TRUE
+                      ) %>% plotly::layout(showlegend = FALSE)
+      # for (i in 1:nrow(pd[["res"]])) {
+        ## if(i > length(top.up)) { frame() }
+        ## gene = sub(".*:","",top.up[i])
+        # gene <- rownames(pd[["res"]])[i]
+        # plt <- pgx.plotExpression(
+        #   pd[["ngs"]],
+        #   # pd[["gene"]],
+        #   gene,
+        #   pd[["comp"]],
+        #   pd[["grouped"]],
+        #   max.points = 200,
+        #   logscale = pd[["logscale"]],
+        #   collapse.others = TRUE,
+        #   showothers = pd[["showothers"]],
+        #   ylab = pd[["ylab"]],
+        #   xlab = "",
+        #   srt = pd[["srt"]],
+        #   names = pd[["show.names"]],
+        #   main = gene
+        # )
+      # }
     }
 
 
@@ -172,6 +212,7 @@ expression_plot_topgenes_server <- function(id,
     PlotModuleServer(
       "pltmod",
       func = plotly.RENDER,
+      plotlib = "plotly",
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 105), ## resolution of plots

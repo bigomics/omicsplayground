@@ -101,7 +101,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
     plotlib = "plotly",
     info.text = info_text,
     options = hm_splitmap_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
   )
@@ -330,7 +330,7 @@ clustering_plot_hm_splitmap_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = hm2_splitmap.RENDER,
-      # csvFunc =
+      csvFunc = plot_data_hm1,
       res = c(80, 95), ## resolution of plots
       pdf.width = 10, pdf.height = 8,
       add.watermark = watermark

@@ -8,10 +8,6 @@ BiomarkerInputs <- function(id) {
   bigdash::tabSettings(
     class = "p-1",
     shiny::tagList(
-      withTooltip(
-        shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
-        "Show more information about this module."
-      ),
       shiny::hr(), shiny::br(),
       withTooltip(
         shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
@@ -45,9 +41,9 @@ BiomarkerInputs <- function(id) {
       ),
       shiny::br(),
       withTooltip(
-        shiny::actionButton(ns("pdx_runbutton"),
+        shiny::actionButton(ns("pdx_runbutton"), 
           label = "Compute",
-          class = "run-button"
+          class = "btn-outline-primary"
         ),
         "Click to start biomarker computation.",
         placement = "right"
