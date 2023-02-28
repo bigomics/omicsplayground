@@ -85,10 +85,7 @@ CompareUI <- function(id) {
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Compare",
-      tags$div(
-        HTML("<h4>Compare Expression</h4>")
-      ),
+      "Compare expression",
       div(
         class = "row",
         div(
@@ -109,9 +106,6 @@ CompareUI <- function(id) {
     ),
     shiny::tabPanel(
       "Foldchange",
-      tags$div(
-        HTML("<h4>Compare Foldchange</h4>")
-      ),
       div(
         class = "row",
         div(
@@ -143,9 +137,6 @@ CompareUI <- function(id) {
     ),
     shiny::tabPanel(
       "Gene Correlation",
-      tags$div(
-        HTML("<h4>Compare Correlation</h4>")
-      ),
       div(
         class = "row",
         div(
