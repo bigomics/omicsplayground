@@ -21,7 +21,7 @@ clustering_plot_phenoplot_ui <- function(id,
     plotlib = "base",
     info.text = clust_phenoplot_info,
     options = clust_phenoplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf"),
     width = c("auto", "100%"),
     height = height
   )
@@ -128,7 +128,7 @@ clustering_plot_phenoplot_server <- function(id,
       plotlib = "base",
       ## plotlib2 = "plotly",
       func = plot.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      # csvFunc = plot_data, ##  *** downloadable data as CSV
       ## renderFunc = plotly::renderPlotly,
       ## renderFunc2 = plotly::renderPlotly,
       res = c(85), ## resolution of plots

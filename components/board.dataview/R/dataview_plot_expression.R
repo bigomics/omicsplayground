@@ -15,7 +15,7 @@ dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
-    download.fmt = c("png", "pdf", "csv", "obj"),
+    download.fmt = c("png", "pdf", "csv"),
     ## width = c("auto","100%"),
     height = height
   )
@@ -66,7 +66,7 @@ dataview_plot_expression_server <- function(id,
       }
 
       geneplot_type <- "barplot"
-      geneplot_type <- input$geneplot_type
+      # geneplot_type <- input$geneplot_type
 
       pd <- list(
         df = data.frame(
@@ -85,6 +85,7 @@ dataview_plot_expression_server <- function(id,
 
     plot.RENDER.SAVE <- function() {
       pd <- plot_data()
+
       shiny::req(pd)
 
       df <- pd[["df"]]
@@ -194,6 +195,7 @@ dataview_plot_expression_server <- function(id,
 
     plot.RENDER <- function() {
       pd <- plot_data()
+
       shiny::req(pd)
 
       df <- pd[["df"]]
