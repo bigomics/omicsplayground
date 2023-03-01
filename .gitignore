@@ -1,3 +1,7 @@
+.Rprofile
+libx/
+renv/
+
 # R data
 ######################
 .RData
@@ -38,3 +42,4 @@ test-firestore.R
 .httr-oauth
 bigomics-extra.js
 Renviron.site
+.Rproj.user
