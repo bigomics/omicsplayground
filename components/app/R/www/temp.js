@@ -29,12 +29,15 @@ const sidebarClose = () => {
 		$('.sidebar-label').trigger('click');
 }
 
+
+
 const sidebarOpen = () => {
 	if($('#sidebar-container').hasClass('sidebar-collapsed'))
 		$('.sidebar-label').trigger('click');
 }
 
 $(function(){
+	
 	setTimeout(() => {
 		$('.sidebar-label').trigger('click');
 		$('.sidebar-menu')
@@ -44,19 +47,20 @@ $(function(){
 		$('.tab-sidebar')
 			.first()
 			.css('display', 'none');
-
-	        // $('.settings-label').click()
+		// on mouseover this does not work anymore, substitute by lock button option
+		// $('.settings-label').click()
 	}, 250);
 
+
 	$('#init-load-data').on('click', (e) => {
-		$(".tab-sidebar:eq(1)").trigger('click');
+	 	$(".tab-sidebar:eq(1)").trigger('click');
 		$('.sidebar-label').trigger('click');
 	});
 
 	$('#init-upload-data').on('click', (e) => {
-		$(".tab-sidebar:eq(2)").trigger('click');
+	 	$(".tab-sidebar:eq(2)").trigger('click');
 		$('.sidebar-label').trigger('click');
-	});
+	 });
 
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
