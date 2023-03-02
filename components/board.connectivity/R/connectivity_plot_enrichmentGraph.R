@@ -78,6 +78,8 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         ## get enrichment scores
         F <- cumEnrichmentTable()
 
+        shiny::req(F)
+
         if (input$enrichGraph_oddweighting) {
           gr2 <- getLeadingEdgeGraph()
           le.genes <- igraph::V(gr2)$name
@@ -165,9 +167,15 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         )
         vcolor <- bluered.pal(65)[33 + round(32 * fc)]
         vcolor <- paste0(vcolor, "AA") ## add transparency
-
         ## defaults graph parameters
         vname <- sub("H:HALLMARK_|C2:KEGG_", "", igraph::V(gr)$name)
+        # Select the same names(pw.genes) as in `vname`, remove duplicates
+        pw.genes.selector <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)] %>% 
+          names() %>% 
+          duplicated() %>% 
+          `!`
+        pw.genes <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)][pw.genes.selector]
+        
         igraph::V(gr)$label <- vname
         igraph::V(gr)$title <- paste0("<b>", vname, "</b><br>", pw.genes)
         igraph::V(gr)$size <- vsize ## rather small
