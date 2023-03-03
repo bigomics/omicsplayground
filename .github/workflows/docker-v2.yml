@@ -38,5 +38,5 @@ jobs:
           no-cache: true
           build-args: |
             BRANCH=v2
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest-v2
   
