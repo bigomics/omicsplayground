@@ -279,50 +279,63 @@ mouse2human <- function(x) {
     homologene::mouse2human(x)
 }
 
+
 ##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
-{   
+{
     require(org.Hs.eg.db)
     require(org.Mm.eg.db)
+    require(org.Rn.eg.db)
 
     ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
     }
-    
+
     if(is.null(type)) {
-        
+
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
-            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
+            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),
             #"human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
             "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
             "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
             )
-        
+
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
-            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
+            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),
             #"mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
             "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
             "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
             "mouse.symbol"  = unlist(as.list(org.Mm.egSYMBOL))
         )
-        id.list <- c(hs.list, mm.list)
+
+        rn.list <- list(
+          "rat.ensembl" = unlist(as.list(org.Rn.egENSEMBL)),
+          "rat.ensemblTRANS" = unlist(as.list(org.Rn.egENSEMBLTRANS)),
+          #"rat.unigene" = unlist(as.list(org.Rn.egUNIGENE)),
+          "rat.refseq"  = unlist(as.list(org.Rn.egREFSEQ)),
+          "rat.accnum"  = unlist(as.list(org.Rn.egACCNUM)),
+          "rat.uniprot" = unlist(as.list(org.Rn.egUNIPROT)),
+          "rat.symbol"  = unlist(as.list(org.Rn.egSYMBOL))
+        )
+
+        id.list <- c(hs.list, mm.list, rn.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
         mx
         org=type=NULL
         max.mx <- max(mx,na.rm=TRUE)
         mx0 <- names(mx)[which.max(mx)]
         org  <- sub("[.].*","",mx0)
-        type <- sub(".*[.]","",mx0)        
+        type <- sub(".*[.]","",mx0)
         message("[probe2symbol] mapped ",format(100*max.mx,digits=2),"% of probes")
         if(max.mx < 0.5 && max.mx>0) {
             message("[probe2symbol] WARNING! low mapping ratio: r= ",max.mx)
-        }        
+        }
         if(max.mx==0) {
             message("[probe2symbol] WARNING! zero mapping ratio: r= ")
             type = NULL
@@ -365,6 +378,9 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         if(org=="mouse") {
             symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
         }
+        if(org=="rat") {
+          symbol0 <- AnnotationDbi::mapIds(org.Rn.eg.db, probes, 'SYMBOL', toupper(type))
+        }
     }
 
     ## Unrecognize probes
@@ -384,7 +400,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     names(symbol) <- NULL
     Matrix::head(symbol)
 
-    symbol    
+    symbol
 }
 
 
