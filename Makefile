@@ -1,4 +1,4 @@
-TAG=v2
+TAG=latest-v2
 
 VERSION=`head -n1 VERSION`
 
