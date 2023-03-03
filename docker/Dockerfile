@@ -41,12 +41,12 @@ RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/rando
 # Download fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-ARG BRANCH=master
-RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-    && unzip $BRANCH.zip \
+##ARG BRANCH=master
+RUN echo Downloading v2 branch
+RUN wget -nv https://github.com/bigomics/omicsplayground/archive/v2.zip \
+    && unzip v2.zip \
     && rm -fr /omicsplayground  \
-    && mv omicsplayground-$BRANCH omicsplayground \
+    && mv omicsplayground-2 omicsplayground \
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------

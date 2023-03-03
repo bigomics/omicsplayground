@@ -1,8 +1,4 @@
-BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
-TAG=latest
-ifeq ($(BRANCH),'develop')
-  TAG=develop
-endif
+TAG=v2
 
 VERSION=`head -n1 VERSION`
 
@@ -14,9 +10,6 @@ run.headless:
 
 clean:
 	rm `find -name '*~'`
-
-show.branch:
-	@echo $(BRANCH)
 
 run.docker:
 	@echo running docker $(TAG) at port 4000
@@ -31,19 +24,14 @@ run.docker3:
 	docker run --rm -p 4000:3838 -v /home/kwee/Playground/config/firebase.rds:/omicsplayground/shiny/firebase.rds -v /home/kwee/Playground/config/Renviron.site:/etc/R/Renviron.site -v /home/kwee/Playground/config/OPTIONS.fb:/omicsplayground/shiny/OPTIONS bigomics/omicsplayground:$(TAG)
 
 build.docker:
-	@echo building docker from branch $(BRANCH) 
-	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+	@echo building docker from branch v2
+	docker build --no-cache \
 		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:latest .
+	  	-t bigomics/omicsplayground:$(TAG) .
 
 build.base:
 	@echo building ubuntu BASE docker 
 	docker build --no-cache \
-		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:21.04 .
-build.base2:
-	@echo building ubuntu BASE docker 
-	docker build \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:21.04 .
 
