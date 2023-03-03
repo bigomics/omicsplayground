@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (develop)
+name: build Docker (latest)
 
 on:
   schedule:
@@ -37,6 +37,6 @@ jobs:
           push: true          
           no-cache: true
           build-args: |
-            BRANCH=develop
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:develop
+            BRANCH=latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest
           
