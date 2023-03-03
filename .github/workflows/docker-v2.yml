@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (testing)
+name: build Docker (v2)
 
 on:
   schedule:
@@ -37,6 +37,6 @@ jobs:
           push: true
           no-cache: true
           build-args: |
-            BRANCH=master
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:testing
+            BRANCH=v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:v2
   
