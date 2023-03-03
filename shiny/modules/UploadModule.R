@@ -355,7 +355,6 @@ UploadModuleServer <- function(id,
                             matname <- NULL
                             df <- NULL
                             if(grepl("count",fn1, ignore.case=TRUE)) {
-                                dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.as_matrix(fn2)
                                 if(TRUE && any(duplicated(rownames(df0)))) {
@@ -369,8 +368,6 @@ UploadModuleServer <- function(id,
                                     closeOnClickOutside = FALSE,
                                   )
                                 }
-                                dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
-                                    paste(dim(df0),collapse='x'))
                                 
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
                                   df <- as.matrix(df0)
@@ -400,10 +397,11 @@ UploadModuleServer <- function(id,
                                 }
                                 
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
-                                dbg("[upload_files] samples.csv : fn1 = ",fn1)
                                 df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
+                                  dbg("[upload_files] samples.csv : rownames.df0 = ",rownames(df0))
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
+                                  dup.rows <- paste(dup.rows, collapse=" ")
                                   msg <- paste("Your samples file has duplicated entries: ", 
                                                dup.rows, ". This is not allowed, please correct.")
                                   shinyWidgets::sendSweetAlert(
@@ -426,6 +424,7 @@ UploadModuleServer <- function(id,
                                 df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
+                                  dup.rows <- paste(dup.rows, collapse=" ")                                  
                                   msg <- paste("Your contrasts file has duplicated entries: ", 
                                                dup.rows, ". This is not allowed, please correct.")
                                   shinyWidgets::sendSweetAlert(

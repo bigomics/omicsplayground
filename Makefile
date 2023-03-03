@@ -7,10 +7,10 @@ endif
 VERSION=`head -n1 VERSION`
 
 run:
-	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3838)"
+	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3939)"
 
 run.headless:
-	R -e "shiny::runApp('shiny',launch.browser=FALSE,port=3838,host='0.0.0.0')"
+	R -e "shiny::runApp('shiny',launch.browser=FALSE,port=3939,host='0.0.0.0')"
 
 clean:
 	rm `find -name '*~'`
