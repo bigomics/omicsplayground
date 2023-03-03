@@ -11,8 +11,9 @@ options(shiny.maxRequestSize = 500*1024^2)  ## max 200Mb upload
 
 dbg <- function(... ) {
     ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
+    dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     msg = sapply( list(...),paste,collapse=" ")
-    message(paste0("DBG ",sub("\n$","",paste(msg,collapse=" "))))
+    message(paste0(dd,"  DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
 ##source(file.path(RDIR,"pgx-functions.R"), local=TRUE)

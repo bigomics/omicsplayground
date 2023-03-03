@@ -10,7 +10,7 @@
 # Start from lastest image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:latest
+FROM bigomics/omicsplayground:v2
 
 #------------------------------------------------------------
 # Update from local code
