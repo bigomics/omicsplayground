@@ -35,9 +35,9 @@ dbg <- function(...) {
 }
 
 dbg <- function(...) {
-	##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
-	msg = sapply( list(...),paste,collapse=" ")
-	message(paste0("DBG ",sub("\n$","",paste(msg,collapse=" "))))
+    dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+    msg = sapply( list(...),paste,collapse=" ")
+    message(paste0(dd,"  DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
 ## Parse access logs
