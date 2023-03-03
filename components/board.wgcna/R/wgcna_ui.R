@@ -12,7 +12,7 @@ WgcnaInputs <- function(id) {
     shiny::selectInput(ns("selected_module"), "select module", choices = NULL),
     shiny::actionButton(ns("compute"), "Compute!",
       icon = icon("running"),
-      class = "run-button"
+      class = "btn-outline-primary"
     ),
     shiny::br(),
     shiny::br(),

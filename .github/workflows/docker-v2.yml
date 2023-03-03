@@ -1,10 +1,10 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (develop)
+name: build Docker (v2)
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron:  '0 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
         name: Checkout 
         uses: actions/checkout@v3
         with:
-          ref: develop
+          ref: v2
       -
         name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -34,9 +34,9 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile
-          push: true          
+          push: true
           no-cache: true
           build-args: |
-            BRANCH=develop
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:develop
-          
+            BRANCH=v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest-v2
+  

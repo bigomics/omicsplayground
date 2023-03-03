@@ -24,22 +24,22 @@ pgx.phenoMatrix <- function(pgx, phenotype) {
 
 cex=1
 text_repel.NOTWORKING <- function( x, y, text, cex=1, force=1e-7, maxiter=20000)
-{    
+{
     if(0) {
         ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, label=rownames(mtcars))) +
             ggplot2::geom_point() +
             ggrepel::geom_text_repel()
-        
+
         x=mtcars[,"wt"]
         y=mtcars[,"mpg"]
         text=rownames(mtcars)
-        
+
         labx <- out[,3]
         laby <- out[,4]
         ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
             ggplot2::geom_point() +
             ggplot2::geom_text(x = labx, y = laby, label=rownames(mtcars))
-                      
+
 
     }
     ## x and y posiitons as a dataframe
@@ -86,8 +86,8 @@ util.findboxes <- function( df, xcol, ycol,
                            force = 1e-7, maxiter = 20000
                            )
 {
-    
-    
+
+
   # x and y posiitons as a dataframe
   posdf <- df[c(xcol, ycol)]
 
@@ -147,7 +147,7 @@ add_opacity <- function(hexcol,opacity) {
     ##toRGB(hexcol)
     col1 <- rep(NA,length(hexcol))
     ii <- which(!is.na(hexcol))
-    rgba <- strsplit(gsub("rgba\\(|\\)","",plotly::toRGB(hexcol[ii],opacity)),split=",")   
+    rgba <- strsplit(gsub("rgba\\(|\\)","",plotly::toRGB(hexcol[ii],opacity)),split=",")
     rgba <- apply(do.call(rbind, rgba),2,as.numeric)
     if(length(hexcol)==1) rgba <- matrix(rgba,nrow=1)
     col1[ii] <- rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
@@ -162,7 +162,7 @@ logCPM <- function(counts, total=1e6, prior=1) {
     if(is.null(total)) {
         ##total <- nrow(counts)
         ##total <- mean(colSums(counts1!=0)) ## avg. number of expr genes
-        total0 <- mean(Matrix::colSums(counts,na.rm=TRUE)) ## previous sum 
+        total0 <- mean(Matrix::colSums(counts,na.rm=TRUE)) ## previous sum
         total <- ifelse( total0 < 1e6, total0, 1e6 )
         message("[logCPM] setting column sums to = ",round(total,2))
     }
@@ -200,7 +200,7 @@ matGroupMeans <- function(X, group, FUN=rowMeans, dir=1) {
 
 knnMedianFilter <- function(x, pos, k=10)
 {
-    
+
     nb <- FNN::get.knn(pos[,], k=k)$nn.index
     fx <- factor(x)
     mx <- matrix(fx[as.vector(nb)],nrow=nrow(nb),ncol=ncol(nb))
@@ -211,14 +211,14 @@ knnMedianFilter <- function(x, pos, k=10)
 nmfImpute <- function(x,k=5) {
     ## Impute missing values with NMF
     ##
-    
+
     k = min(k, dim(x))
     nmf <- NNLM::nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
     xhat <-  with(nmf, W %*% H);
     x[is.na(x)] <- xhat[is.na(x)]
     if(sum(is.na(x))>0) {
-        nmf1 <- NNLM::nnmf(x, k=1, check.k=FALSE, rel.tol = 1e-2, verbose=0)    
-        xhat1 <-  with(nmf1, W %*% H);    
+        nmf1 <- NNLM::nnmf(x, k=1, check.k=FALSE, rel.tol = 1e-2, verbose=0)
+        xhat1 <-  with(nmf1, W %*% H);
         x[is.na(x)] <- xhat1[is.na(x)]
     }
     x
@@ -226,8 +226,8 @@ nmfImpute <- function(x,k=5) {
 
 knnImputeMissing <- function(x, pos, missing=NA, k=10)
 {
-    
-    k0 <- which(x==missing)    
+
+    k0 <- which(x==missing)
     k1 <- which(x!=missing)
     if(length(k0)==0) {
         return(x)
@@ -255,7 +255,7 @@ randomImputeMissing <- function(x) {
 }
 
 human2mouse.SLLOWWW <- function(x){
-    
+
     human = biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
     mouse = biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
     genesV2 = biomaRt::getLDS(attributes = c("hgnc_symbol"),
@@ -271,58 +271,70 @@ human2mouse.SLLOWWW <- function(x){
 }
 
 human2mouse <- function(x) {
-    
+
     homologene::human2mouse(x)
 }
 mouse2human <- function(x) {
-    
+
     homologene::mouse2human(x)
 }
 
 ##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
-{   
+{
     require(org.Hs.eg.db)
     require(org.Mm.eg.db)
+    require(org.Rn.eg.db)
 
     ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
     }
-    
+
     if(is.null(type)) {
-        
+
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
-            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
+            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),
             #"human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
             "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
             "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
             )
-        
+
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
-            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
+            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),
             #"mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
             "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
             "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
             "mouse.symbol"  = unlist(as.list(org.Mm.egSYMBOL))
         )
-        id.list <- c(hs.list, mm.list)
+
+        rn.list <- list(
+          "rat.ensembl" = unlist(as.list(org.Rn.egENSEMBL)),
+          "rat.ensemblTRANS" = unlist(as.list(org.Rn.egENSEMBLTRANS)),
+          #"rat.unigene" = unlist(as.list(org.Rn.egUNIGENE)),
+          "rat.refseq"  = unlist(as.list(org.Rn.egREFSEQ)),
+          "rat.accnum"  = unlist(as.list(org.Rn.egACCNUM)),
+          "rat.uniprot" = unlist(as.list(org.Rn.egUNIPROT)),
+          "rat.symbol"  = unlist(as.list(org.Rn.egSYMBOL))
+        )
+
+        id.list <- c(hs.list, mm.list, rn.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
         mx
         org=type=NULL
         max.mx <- max(mx,na.rm=TRUE)
         mx0 <- names(mx)[which.max(mx)]
         org  <- sub("[.].*","",mx0)
-        type <- sub(".*[.]","",mx0)        
+        type <- sub(".*[.]","",mx0)
         message("[probe2symbol] mapped ",format(100*max.mx,digits=2),"% of probes")
         if(max.mx < 0.5 && max.mx>0) {
             message("[probe2symbol] WARNING! low mapping ratio: r= ",max.mx)
-        }        
+        }
         if(max.mx==0) {
             message("[probe2symbol] WARNING! zero mapping ratio: r= ")
             type = NULL
@@ -365,6 +377,9 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         if(org=="mouse") {
             symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
         }
+        if(org=="rat") {
+          symbol0 <- AnnotationDbi::mapIds(org.Rn.eg.db, probes, 'SYMBOL', toupper(type))
+        }
     }
 
     ## Unrecognize probes
@@ -384,7 +399,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     names(symbol) <- NULL
     Matrix::head(symbol)
 
-    symbol    
+    symbol
 }
 
 
@@ -409,7 +424,7 @@ trimsame0 <- function(s, split=" ", summarize=FALSE, rev=FALSE) {
     sp <- whereSpaces(s[1])
     sp
     if(length(sp)==0) return(s)
-    
+
     is.same = TRUE
     i=1
     j=0
@@ -484,10 +499,10 @@ read.as_matrix.SAVE <- function(file)
 {
     ## read delimited table automatically determine separator. allow duplicated rownames.
     line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
-    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))    
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
     x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
     x <- NULL
-    sel <- which(! as.character(x0[,1]) %in% c(""," ","NA","na",NA))        
+    sel <- which(! as.character(x0[,1]) %in% c(""," ","NA","na",NA))
     if(length(sel)) {
         x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
         rownames(x) <- x0[sel,1]
@@ -503,7 +518,7 @@ read.as_matrix <- function(file)
                             blank.lines.skip=TRUE, stringsAsFactors=FALSE)
     x <- NULL
     sel <- which(!as.character(x0[[1]]) %in% c(""," ","NA","na",NA))
-    length(sel)    
+    length(sel)
     if(length(sel)) {
         x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
         rownames(x) <- x0[[1]][sel]
@@ -515,7 +530,7 @@ read.as_matrix <- function(file)
 fread.csv <- function(file, check.names=FALSE, row.names=1,
                       stringsAsFactors=FALSE, header=TRUE, asMatrix=TRUE)
 {
-    
+
     df <- data.table::fread(file=file, check.names=check.names, header=header)
     x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
                     check.names=check.names)
@@ -544,7 +559,7 @@ tagDuplicates <- function(s) {
 }
 
 wrapHyperLink <- function(s, gs) {
-    
+
     ## GEO/GSE accession
     gs = as.character(gs)
     s1 = s = as.character(s)
@@ -563,7 +578,7 @@ wrapHyperLink <- function(s, gs) {
         url = paste0("https://www.genome.jp/kegg-bin/show_pathway?map=",id,"&show_description=show")
         s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
     }
-    
+
     ## Reactome (afer doing KEGG???)
     jj <- grep("R-HSA-[0-9][0-9]",gs)
     if(length(jj)) {
@@ -587,7 +602,7 @@ wrapHyperLink <- function(s, gs) {
         url = paste0("http://software.broadinstitute.org/gsea/msigdb/cards/",gs1)
         s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
     }
-    
+
     ## GO reference
     jj <- grep("\\(GO_.*\\)$",gs)
     if(length(jj)) {
@@ -595,7 +610,7 @@ wrapHyperLink <- function(s, gs) {
         url = paste0("http://amigo.geneontology.org/amigo/term/GO:",id)
         s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
     }
-    
+
     return(s1)
 }
 
@@ -620,10 +635,10 @@ is.POSvsNEG <- function(pgx) {
     ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ## !!!!!!!!!!!! We should get rid of this... !!!!!!!!!!!!!
     ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
+
     cntrmat <- pgx$model.parameters$contr.matrix
     design <- pgx$model.parameters$design
-    ##ct0 <- cntrmat[,comp]        
+    ##ct0 <- cntrmat[,comp]
 
     ## rely only on contrasts with '_vs_'
     cntrmat <- cntrmat[,grep("_vs_",colnames(cntrmat)),drop=FALSE]
@@ -641,7 +656,7 @@ is.POSvsNEG <- function(pgx) {
         i=1
         for(i in 1:length(grp1)) {
             ##grp1x <- intersect(grp1[i],rownames(cntrmat))
-            ##grp2x <- intersect(grp2[i],rownames(cntrmat))        
+            ##grp2x <- intersect(grp2[i],rownames(cntrmat))
             ##grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
             ##grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
             j1 <- grep(grp1[i], rownames(cntrmat), fixed=TRUE)
@@ -684,8 +699,8 @@ is.POSvsNEG <- function(pgx) {
         is.PosvsNeg1 <- mean(is.pn,na.rm=TRUE)>0
     }
     is.PosvsNeg1
-    
-    ## look for keywords 
+
+    ## look for keywords
     grp1.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp1)))
     grp2.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp2)))
     grp1.neg2
@@ -695,7 +710,7 @@ is.POSvsNEG <- function(pgx) {
         is.PosvsNeg2 <- (grp2.neg2 > grp1.neg2)
     }
     is.PosvsNeg2
-    
+
     ok <- setdiff(c(is.PosvsNeg1,is.PosvsNeg2),NA)[1]  ## priority to first test??
     if(is.na(ok) || length(ok)==0) ok <- TRUE  ## DEFAULT if not known !!!!!
     ok
@@ -709,7 +724,7 @@ is.categorical <- function(x, max.ncat=null, min.ncat=2) {
     n.unique <- length(unique(setdiff(x,NA)))
     n.notna  <- length(x[!is.na(x)])
     n.unique
-    n.notna    
+    n.notna
     is.id    <- (n.unique > 0.8*n.notna)
     is.id
     is.factor2 <- (is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
@@ -743,8 +758,8 @@ pgx.getNumericalPhenotypes <-function(df)
 {
     is.bad = 0
     is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
-    is.bad2 <- grepl("year|month|day|^efs|^dfs|surv|follow",tolower(colnames(df)))    
-    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))    
+    is.bad2 <- grepl("year|month|day|^efs|^dfs|surv|follow",tolower(colnames(df)))
+    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))
     is.bad <- (is.bad1 | is.bad2 | is.bad3)
     table(is.bad)
     is.bad
@@ -752,7 +767,7 @@ pgx.getNumericalPhenotypes <-function(df)
     numratio <- apply(df,2,function(x)length(unique(x))) / nrow(df)
     numratio
     numpheno <- (apply(df,2,is.num) & !is.bad & numratio>0.5)
-    numpheno    
+    numpheno
     names(which(numpheno==TRUE))
 }
 
@@ -762,7 +777,7 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     ##
     ##
     ##df <- type.convert(df)
-    
+
     is.bad = 0
 
     ## ... exclude sample IDs
@@ -770,16 +785,16 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     is.bad1 <- grepl("^sample$|[_.]id$|patient|donor|individ",tolower(colnames(df)))
 
     ## ... exclude numerical dates/age/year
-    is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
+    is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))
     ## is.factor <- sapply(sapply(df, class), function(s) any(s %in% c("factor","character")))
     is.num  <- sapply(df,class) == "numeric"
     is.bad2 <- (is.bad2 & is.num)  ## no numeric
 
     ## ... exclude any sample ID coded in columns...
     is.bad3 <- apply(df,2,function(x) mean(grepl("^sample|patient|donor|individ",
-                                                 x[!is.na(x)],ignore.case=TRUE))>0.8)    
+                                                 x[!is.na(x)],ignore.case=TRUE))>0.8)
     ## is.bad <- (is.bad1 | is.bad2 | is.bad3)
-    is.bad <- (is.bad2 | is.bad3)    
+    is.bad <- (is.bad2 | is.bad3)
     is.bad
     table(is.bad)
 
@@ -840,8 +855,8 @@ ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
         ngs$omicsnet.reduced <- NULL
     }
     sort(sapply(ngs, object.size)) / 1e9
-    sum(sapply(ngs, object.size)) / 1e9        
-    
+    sum(sapply(ngs, object.size)) / 1e9
+
     cat(">>> saving PGX file to",file,"\n")
     file <- iconv(file, from = '', to = 'ASCII//TRANSLIT')
     save(ngs, file=file)
@@ -880,7 +895,7 @@ selectSamplesFromSelectedLevels <- function(Y, levels)
 ##fields=c("symbol","name","alias","map_location","summary")
 getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","summary"))
 {
-    
+
     ##res = biomaRt::getGene(eg, fields="all")[[1]]
     ##fields = c("symbol","name","alias","map_location","summary")
     info = lapply(fields, function(f) biomaRt::getGene(eg, fields=f)[[1]] )
@@ -898,7 +913,7 @@ getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","s
 
 ## much faster and off-line
 getHSGeneInfo <- function(eg, as.link=TRUE) {
-         
+
     env.list <- c("symbol" = org.Hs.eg.db::org.Hs.egSYMBOL,
                   "name" = org.Hs.eg.db::org.Hs.egGENENAME,
                   "map_location" = org.Hs.eg.db::org.Hs.egMAP,
@@ -911,7 +926,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
     names(info) <- names(env.list)
     gene.symbol <- toupper(mget(as.character(eg), envir=org.Hs.eg.db::org.Hs.egSYMBOL))[1]
     info[["symbol"]] <- gene.symbol
-    
+
     ## create link to GeneCards
     if(as.link) {
         genecards.link = "<a href='https://www.genecards.org/cgi-bin/carddisp.pl?gene=GENE' target='_blank'>GENE</a>"
@@ -1303,7 +1318,7 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
 
 ##s=symbol;org="hs"
 alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
-    
+
     require(org.Hs.eg.db)
     require(org.Mm.eg.db)
 
@@ -1313,7 +1328,7 @@ alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
         is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
         org <- ifelse(is.human,"hs","mm")
     }
-    org    
+    org
     ##eg <- sapply(lapply(s, get, env=org.Hs.eg.db::org.Hs.egALIAS2EG),"[",1)
     nna = which(!is.na(s) & s!="" & s!=" ")
     s1 <- trimws(s[nna])
@@ -1421,7 +1436,7 @@ color_from_middle <- function (data, color1,color2) {
 }
 
 tidy.dataframe <- function(Y) {
-    
+
     ##as_tibble(Y)
     Y <- Y[,which(colMeans(is.na(Y))<1),drop=FALSE]
     Y <- apply(Y,2,function(x) sub("^NA$",NA,x)) ## all characters
@@ -1553,7 +1568,7 @@ correctMarchSeptemberGenes <- function(gg) {
     mar.from <- c( paste0("0",1:9,"-Mar"), paste0(1:19,"-Mar"))
     mar.to <- c( paste0("MARCH",1:9), paste0("MARCH",1:19))
 
-    
+
     from <- c(sep.from, mar.from)
     to <- c(sep.to, mar.to)
     gg1 <- sub("[.-]Sep$|[.-]SEP$","-Sep",gg)
