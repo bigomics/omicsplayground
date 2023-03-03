@@ -1,5 +1,5 @@
 TAG=latest-v2
-
+BRANCH=v2
 VERSION=`head -n1 VERSION`
 
 run:
@@ -24,7 +24,7 @@ run.docker3:
 	docker run --rm -p 4000:3838 -v /home/kwee/Playground/config/firebase.rds:/omicsplayground/shiny/firebase.rds -v /home/kwee/Playground/config/Renviron.site:/etc/R/Renviron.site -v /home/kwee/Playground/config/OPTIONS.fb:/omicsplayground/shiny/OPTIONS bigomics/omicsplayground:$(TAG)
 
 build.docker:
-	@echo building docker from branch v2
+	@echo building docker from branch $(BRANCH)
 	docker build --no-cache \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(TAG) .
