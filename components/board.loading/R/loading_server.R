@@ -52,7 +52,10 @@ LoadingBoard <- function(id,
         return(NULL)
       } else {
         shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        shinyjs::runjs("$('.sidebar-label').trigger('click');")
+        shinyjs::runjs("$('.settings-lock').trigger('mouse');")
+        shinyjs::runjs("$('#settings-container').trigger('mouseover');") # initialize css
+        shinyjs::runjs("$('.settings-lock').trigger('click');") # lock settings tab
+
         r_local$selected_row <- example_row
         r_local$found_example_trigger <- TRUE
       }
