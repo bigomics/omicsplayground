@@ -22,14 +22,15 @@ LoadingBoard <- function(id,
 
     loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
 
-    ## info that's needed
-    r_local <- reactiveValues(
+    ## reactive variables used only within this module
+    rl <- reactiveValues(
       selected_row = NULL,
-      found_example_trigger = NULL
+      found_example_trigger = NULL,
+      pgxTable_data = NULL
     )
 
     observeEvent(pgxtable$rows_selected(), {
-      r_local$selected_row <- pgxtable$rows_selected()
+      rl$selected_row <- pgxtable$rows_selected()
     })
 
     observeEvent(r_global$load_example_trigger, {
@@ -53,8 +54,8 @@ LoadingBoard <- function(id,
       } else {
         shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
         shinyjs::runjs("$('.sidebar-label').trigger('click');")
-        r_local$selected_row <- example_row
-        r_local$found_example_trigger <- TRUE
+        rl$selected_row <- example_row
+        rl$found_example_trigger <- TRUE
       }
     })
 
@@ -66,7 +67,7 @@ LoadingBoard <- function(id,
 
     pgxtable <- loading_table_datasets_server(
       "pgxtable",
-      pgxTable_data = pgxTable_data
+      rl = rl
     )
 
     ## -----------------------------------------------------------------------------
@@ -204,7 +205,7 @@ LoadingBoard <- function(id,
 
     selectedPGX <- shiny::reactive({
       req(pgxtable)
-      sel <- r_local$selected_row
+      sel <- rl$selected_row
       if (is.null(sel) || length(sel) == 0) {
         return(NULL)
       }
@@ -360,7 +361,7 @@ LoadingBoard <- function(id,
 
     load_react <- reactive({
       btn <- input$loadbutton
-      btn2 <- r_local$found_example_trigger
+      btn2 <- rl$found_example_trigger
       query <- parseQueryString(session$clientData$url_search)
       logged <- isolate(auth$logged()) ## avoid reloading when logout/login
       (!is.null(btn) || !is.null(query[["pgx"]])) && logged
@@ -394,7 +395,7 @@ LoadingBoard <- function(id,
         pgxfile <- selectedPGX()
       }
       ## Observe "try example dataset" press
-      if (!is.null(r_local$found_example_trigger)) {
+      if (!is.null(rl$found_example_trigger)) {
         pgxfile <- selectedPGX()
       }
 
@@ -499,20 +500,20 @@ LoadingBoard <- function(id,
       paste(paste(head(s1, n), collapse = " "), "(+", n2, "others)")
     }
 
-    pgxTable_data <- shiny::reactive({
-      reload_pgxdir()
+    observeEvent(
+      c(getFilteredPGXINFO(), reload_pgxdir()), {
 
-      df <- getFilteredPGXINFO()
-      shiny::req(df)
+        df <- getFilteredPGXINFO()
+        df$dataset <- gsub("[.]pgx$", " ", df$dataset)
+        df$conditions <- gsub("[,]", " ", df$conditions)
+        df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+        df$description <- shortstring(as.character(df$description), 200)
+        df$nsets <- NULL
+        df$organism <- NULL
 
-      df$dataset <- gsub("[.]pgx$", " ", df$dataset)
-      df$conditions <- gsub("[,]", " ", df$conditions)
-      df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-      df$description <- shortstring(as.character(df$description), 200)
-      df$nsets <- NULL
-      df$organism <- NULL
-      df
-    })
+        rl$pgxTable_data <- df
+      }
+    )
 
     ## ------------------------------------------------
     ## Board return object

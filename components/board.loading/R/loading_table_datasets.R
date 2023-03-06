@@ -13,10 +13,10 @@ loading_table_datasets_ui <- function(id, height, width) {
 }
 
 loading_table_datasets_server <- function(id,
-                                          pgxTable_data) {
+                                          rl) {
   moduleServer(id, function(input, output, session) {
     pgxTable_DT <- function() {
-      df <- pgxTable_data()
+      df <- rl$pgxTable_data
       req(df)
 
       target1 <- grep("date", colnames(df))
@@ -28,6 +28,7 @@ loading_table_datasets_server <- function(id,
         df,
         class = "compact hover",
         rownames = TRUE,
+        editable = TRUE,
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
@@ -45,6 +46,25 @@ loading_table_datasets_server <- function(id,
         ) ## end of options.list
       )
     }
+
+    observeEvent(input$datasets_cell_edit, {
+      row  <- input$datasets_cell_edit$row
+      clmn <- input$datasets_cell_edit$col
+      val <- input$datasets_cell_edit$value
+      print(row)
+      print(clmn)
+      print(val)
+    })
+
+    # make changes
+    observeEvent(
+      input[['datasets-datatable_cell_edit']], {
+        row <- input[['datasets-datatable_cell_edit']]$row
+        col <- input[['datasets-datatable_cell_edit']]$col
+        val <- input[['datasets-datatable_cell_edit']]$value
+        rl$pgxTable_data[row, col] <- val
+      }
+    )
 
     pgxTable.RENDER <- function() {
       pgxTable_DT() %>%
