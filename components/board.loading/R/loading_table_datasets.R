@@ -47,15 +47,6 @@ loading_table_datasets_server <- function(id,
       )
     }
 
-    observeEvent(input$datasets_cell_edit, {
-      row  <- input$datasets_cell_edit$row
-      clmn <- input$datasets_cell_edit$col
-      val <- input$datasets_cell_edit$value
-      print(row)
-      print(clmn)
-      print(val)
-    })
-
     # make changes
     observeEvent(
       input[['datasets-datatable_cell_edit']], {
@@ -63,6 +54,7 @@ loading_table_datasets_server <- function(id,
         col <- input[['datasets-datatable_cell_edit']]$col
         val <- input[['datasets-datatable_cell_edit']]$value
         rl$pgxTable_data[row, col] <- val
+        rl$pgxTable_edited <- rl$pgxTable_edited + 1
       }
     )
 
