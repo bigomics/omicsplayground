@@ -512,6 +512,9 @@ LoadingBoard <- function(id,
       pdir <- getPGXDIR()
       fname <- file.path(pdir, 'datasets-info.csv')
       write.csv(rl$pgxTable_data, fname)
+
+      ## also rewrite description in actual pgx file
+
     }, ignoreInit = TRUE)
 
     ## ------------------------------------------------
