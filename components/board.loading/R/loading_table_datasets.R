@@ -15,8 +15,13 @@ loading_table_datasets_ui <- function(id, height, width) {
 loading_table_datasets_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
+
     pgxTable_DT <- function() {
       df <- rl$pgxTable_data
+
+      # need this, otherwise there is an error on user logout
+      if (length(df$dataset) == 0) df <- NULL
+
       req(df)
 
       target1 <- grep("date", colnames(df))
