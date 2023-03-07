@@ -34,10 +34,25 @@ dbg <- function(...) {
 	}
 }
 
+mem.proc <- function(digits=0) {
+  ### Method 2
+  ## Setup
+  file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
+  what <- vector("character", 52)
+  ## In your logging routine
+  vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
+  vsz <- vsz / (1024**2) ## MB
+  ##cat("Virtual size: ", vsz, " MB\n", sep = "")
+  paste(round(vsz,digits),"MB")
+}
+
 dbg <- function(...) {
-    dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-    msg = sapply( list(...),paste,collapse=" ")
-    message(paste0(dd,"  DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
+  dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  msg = "some message"
+  msg = sapply( list(...),paste,collapse=" ")
+  mm <- paste0("[",mem.proc(),"]")
+  dd <- paste(dd,mm)
+  message(paste0(dd," DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
 ## Parse access logs
