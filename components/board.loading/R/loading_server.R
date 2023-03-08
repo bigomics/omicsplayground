@@ -68,6 +68,7 @@ LoadingBoard <- function(id,
     loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
 
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
+    pgxtable_public <- loading_table_datasets_public_server("pgxtable_public", rl = rl)
 
     ## -----------------------------------------------------------------------------
     ## Description

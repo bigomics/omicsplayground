@@ -66,7 +66,7 @@ LoadingUI <- function(id) {
           ),
           shiny::tabPanel(
             'Public',
-            loading_table_datasets_ui(
+            loading_table_datasets_public_ui(
               ns("pgxtable_public"),
               height = c("65vh", 700),
               width = c("100%", "50%")

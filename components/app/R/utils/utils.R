@@ -11,7 +11,7 @@
 
 
 req2 <- function(x) {
-    if("reactivevalues" %in% class(x)) {        
+    if("reactivevalues" %in% class(x)) {
         if(length(names(x))==0) return(req(FALSE))
         return(req(all(!sapply(x,is.null))))
     }
@@ -50,8 +50,8 @@ dbg <- function(...) {
   dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   msg = "some message"
   msg = sapply( list(...),paste,collapse=" ")
-  mm <- paste0("[",mem.proc(),"]")
-  dd <- paste(dd,mm)
+  #mm <- paste0("[",mem.proc(),"]")
+  #dd <- paste(dd,mm)
   message(paste0(dd," DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
@@ -88,13 +88,13 @@ tipifyB <- function(...) {
 # TODO: this function isn't being used
 premium.feature <- function(...) {
 	message("[premium.feature] USER_MODE = ",USER_MODE)
-	message("[premium.feature] DEV = ",DEV)        
+	message("[premium.feature] DEV = ",DEV)
 	el <- list(...)
 	if(USER_MODE %in% c("pro","premium","dev")) return(el)
 	tipify(disabled(...),
 				 "This is a Premium feature. Upgrade to enable this feature."
-	)    
-	
+	)
+
 }
 
 # TODO: this function can be a variable
@@ -124,7 +124,7 @@ fileRequire <- function(file, tabname, subtab) {
 		message(paste("[MAIN] file ",file," not found. Hiding",subtab,"\n"))
 		hideTab(tabname, subtab)
 	} else {
-		message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))        
+		message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))
 		showTab(tabname, subtab)
 	}
 }
@@ -180,8 +180,8 @@ sever_screen <- function() {
                           ##        ),
                           shiny::br(),
                           shiny::tags$a(
-                                          onClick = "sendLog()", 
-                                          class = "btn btn-sm btn-warning", 
+                                          onClick = "sendLog()",
+                                          class = "btn btn-sm btn-warning",
                                           "Send error to developers"
                                       )
                       ),
@@ -194,7 +194,7 @@ sever_screen <- function() {
                shiny::div(
                           id="sever-reload-btn",
                           sever::reload_button("Relaunch", class = "info"),
-                          style="display:none;"             
+                          style="display:none;"
                       )
            )
 }
@@ -234,7 +234,7 @@ sever_screen2 <- function(session_id) {
       shiny::br(),
       shiny::tags$a(
         onClick = HTML(paste0("sendLog2('",session_id,"')")),
-        class = "btn btn-sm btn-warning", 
+        class = "btn btn-sm btn-warning",
         "Send error to developers"
       )
     ),
@@ -247,7 +247,7 @@ sever_screen2 <- function(session_id) {
     shiny::div(
       id="sever-reload-btn",
       sever::reload_button("Relaunch", class = "info"),
-      style="display:none;"             
+      style="display:none;"
     )
   )
 }
