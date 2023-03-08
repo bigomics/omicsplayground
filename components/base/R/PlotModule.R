@@ -127,6 +127,36 @@ PlotModuleUI <- function(id,
     )
   }
 
+  if (cards == FALSE) {
+    download_buttons <- div(
+      shiny::downloadButton(
+        outputId = ns("download"),
+        label = "Download",
+        class = "btn-outline-primary"
+      )
+    )
+  } else {
+    button_list <- lapply(seq_along(card_names), function(x) {
+      shiny::conditionalPanel(
+        condition = paste0(
+          "input.card_selector == '", card_names[x], "'"
+        ),
+        ns = ns,
+        div(
+          shiny::downloadButton(
+            outputId = ns(paste0(
+              "download", x
+            )),
+            label = "Download",
+            class = "btn-outline-primary"
+          )
+        )
+      )
+    })
+    download_buttons <- do.call(div, button_list)
+  }
+
+
   dload.button <- DropdowMenu(
     div(
       style = "width: 150px;",
@@ -143,16 +173,7 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
-      shiny::conditionalPanel(
-        condition = "input.card_selector == 'card1'",
-        ns = ns,
-        div(
-        shiny::downloadButton(
-          outputId = ns("download"),
-          label = "Download",
-        )
-      )
-      ),
+      download_buttons,
     ),
     size = "xs",
     icon = shiny::icon("download"),
@@ -216,7 +237,7 @@ PlotModuleUI <- function(id,
   } else {
     outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
       shinycssloaders::withSpinner()
-  }  
+  }
 
   popupfigUI <- function() {
     w <- width.2
@@ -241,7 +262,7 @@ PlotModuleUI <- function(id,
     }
     shiny::tagList(
       shiny::conditionalPanel(
-        #condition = "input.card_selector == 'card2'",
+        # condition = "input.card_selector == 'card2'",
         condition = "true",
         ns = ns,
         shiny::div(
@@ -289,7 +310,7 @@ PlotModuleUI <- function(id,
   } else {
     outputFunc(ns("renderfigure"), width = width.1, height = height.1) %>%
       shinycssloaders::withSpinner()
-  }  
+  }
 
   div(
     class = "plotmodule",
@@ -700,29 +721,59 @@ PlotModuleServer <- function(id,
       ## --------------------------------------------------------------------------------
       ## ------------------------ OUTPUT ------------------------------------------------
       ## --------------------------------------------------------------------------------
-      
-      ## AQUI FER QUE SI HI HA CARD = TRUE 
-      ## ES FACI EL DOWNLOAD[[X]] I AMB UN CONDITIONAL PANEL
-      ## ES FIQUI AL DROPDOWN DE DESCARREGAR EL QUE TOQUI SEGONS
-      ## LA CARD QUE ESTIGUI SELECCIONADA
 
-      observeEvent(input$downloadOption, {
-        if (input$downloadOption == "png") {
-          output$download <- download.png
-        }
-        if (input$downloadOption == "pdf") {
-          output$download <- download.pdf
-        }
-        if (input$downloadOption == "csv") {
-          output$download <- download.csv
-        }
-        if (input$downloadOption == "html") {
-          output$download <- download.html
-        }
-        if (input$downloadOption == "obj") {
-          output$download <- download.obj
-        }
-      })
+      if (is.null(card)) {
+        observeEvent(input$downloadOption, {
+          if (input$downloadOption == "png") {
+            output$download <- download.png
+          }
+          if (input$downloadOption == "pdf") {
+            output$download <- download.pdf
+          }
+          if (input$downloadOption == "csv") {
+            output$download <- download.csv
+          }
+          if (input$downloadOption == "html") {
+            output$download <- download.html
+          }
+          if (input$downloadOption == "obj") {
+            output$download <- download.obj
+          }
+        })
+      } else {
+        observeEvent(input$downloadOption, {
+          if (input$downloadOption == "png") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.png
+          }
+          if (input$downloadOption == "pdf") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.pdf
+          }
+          if (input$downloadOption == "csv") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.csv
+          }
+          if (input$downloadOption == "html") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.html
+          }
+          if (input$downloadOption == "obj") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.obj
+          }
+        })
+      }
 
       ## --------------------------------------------------------------------------------
       ## ---------------------------- UI ------------------------------------------------
