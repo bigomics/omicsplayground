@@ -27,7 +27,8 @@ LoadingBoard <- function(id,
       selected_row = NULL,
       found_example_trigger = NULL,
       pgxTable_data = NULL,
-      pgxTable_edited = 0
+      pgxTable_edited = 0,
+      pgxTable_edited_row = NULL
     )
 
     observeEvent(pgxtable$rows_selected(), {
@@ -508,12 +509,23 @@ LoadingBoard <- function(id,
     )
 
     # re-write datasets-info.csv when pgxTable_edited
+    # also edit the pgx files
     observeEvent(rl$pgxTable_edited, {
       pdir <- getPGXDIR()
       fname <- file.path(pdir, 'datasets-info.csv')
       write.csv(rl$pgxTable_data, fname)
 
       ## also rewrite description in actual pgx file
+      pgx_name <- rl$pgxTable_data[rl$pgxTable_edited_row, 'dataset']
+      pgx_file <- file.path(pdir, paste0(pgx_name, '.pgx'))
+
+      load(pgx_file)
+
+      col_edited <- colnames(rl$pgxTable_data)[rl$pgxTable_edited_col]
+      new_val <- rl$pgxTable_data[rl$pgxTable_edited_row, rl$pgxTable_edited_col]
+
+      ngs[[col_edited]] <- new_val
+      save(ngs, file = pgx_file)
 
     }, ignoreInit = TRUE)
 
