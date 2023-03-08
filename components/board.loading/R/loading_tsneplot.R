@@ -21,13 +21,15 @@ loading_tsne_ui <- function(id, label = "", height = c(350, 600)) {
   )
 }
 
-loading_tsne_server <- function(id,
+loading_tsne_server <- function(id, pgx.dirRT,
                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
-      ## source("../../app/R/global.R",chdir=TRUE)
-      tsne.file <- file.path(PGX.DIR, "datasets-tsne.csv")
-      pgx.files <- sub("[.]pgx$", "", dir(PGX.DIR, pattern = ".pgx$"))
+
+      pgx.dir <- pgx.dirRT()
+      tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
+      pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
 
       pos <- NULL
       if (file.exists(tsne.file)) {
