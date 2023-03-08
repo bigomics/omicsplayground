@@ -332,3 +332,9 @@ html {
   }
 
 }
+
+// to work with mouse listeners, we need to remove pointer events from tooltips
+.tooltip {
+  pointer-events: none;
+}
+
