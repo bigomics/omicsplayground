@@ -15,7 +15,6 @@ downloadButton2 <- function(outputId, label = "Download", class = NULL, ...) {
 LoadingInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ##    shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
     shiny::hr(), shiny::br(),
     shiny::checkboxGroupInput(ns("flt_datatype"), "datatype", choices = ""),
     shiny::checkboxGroupInput(ns("flt_organism"), "organism", choices = "")
@@ -29,7 +28,6 @@ LoadingUI <- function(id) {
     class = "p-1",
     uiOutput(ns("navheader")),
     br(), br(),
-
     ## table----------------
     div(
       class = "row",
@@ -47,7 +45,6 @@ LoadingUI <- function(id) {
       )
     ),
     br(),
-
     ## buttons----------------
     div(
       id = "load-action-buttons",
@@ -58,7 +55,7 @@ LoadingUI <- function(id) {
       ),
       shiny::downloadButton(
         ns("downloadpgx"),
-        label = "Download PGX", ## icon=icon("download"),
+        label = "Download PGX",
         class = "btn btn-outline-dark-hover"
       ),
       downloadButton2(

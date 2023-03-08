@@ -33,7 +33,10 @@ loading_table_datasets_server <- function(id,
         df,
         class = "compact hover",
         rownames = TRUE,
-        editable = TRUE,
+        editable = list(
+          target = 'cell',
+          disable = list(columns = c(1,3:ncol(df)))
+        ),
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
