@@ -25,15 +25,6 @@ envcat <- function(var) {
 	message(var," = ",Sys.getenv(var))
 }
 
-# TODO: this is a version that respects the DEBUG flag, but it's not being used
-dbg <- function(...) {
-	if(DEBUG) {
-		msg <- list(...)
-		msg <- paste(sapply(msg, function(s) paste(s,collapse=" ")),collapse=" ")
-		message(msg)
-	}
-}
-
 mem.proc <- function(digits=0) {
   ### Method 2
   ## Setup
@@ -46,14 +37,17 @@ mem.proc <- function(digits=0) {
   paste(round(vsz,digits),"MB")
 }
 
-dbg <- function(...) {
+info <- function(..., type="INFO") {
   dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   msg = "some message"
   msg = sapply( list(...),paste,collapse=" ")
   mm <- paste0("[",mem.proc(),"]")
   dd <- paste(dd,mm)
-  message(paste0(dd," DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
+  message(paste0(dd," ",type," --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
+
+dbg <- function(...) info(..., type="DBG")
+
 
 ## Parse access logs
 ACCESS.LOG <- NULL

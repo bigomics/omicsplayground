@@ -91,13 +91,13 @@ DataViewBoard <- function(id, pgx) {
         pgx$counts
       },
       {
+        shiny::req(input$data_type)
         if (input$data_type %in% c("counts", "CPM")) {
           pp <- rownames(pgx$counts)
         } else {
           ## log2CPM
           pp <- rownames(pgx$X)
         }
-
         ## gene filter.
         genes <- sort(pgx$genes[pp, ]$gene_name)
         fc2 <- rowMeans(pgx.getMetaFoldChangeMatrix(pgx)$fc**2)

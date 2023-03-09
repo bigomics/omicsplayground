@@ -220,7 +220,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         new(persistence = "local")
 
     observeEvent(input$launchGoogle, {
-        firebase$launch_google()
+        firebase$launch_google(flow = "popup")
     })
 
     resetUSER <- function() {
