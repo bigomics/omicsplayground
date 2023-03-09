@@ -54,8 +54,10 @@ LoadingBoard <- function(id,
         r_global$load_example_trigger <- NULL
         return(NULL)
       } else {
-        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        shinyjs::runjs("$('.sidebar-label').trigger('click');")
+
+        #trigger settings sidebar css
+        shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
+
         rl$selected_row <- example_row
         rl$found_example_trigger <- TRUE
       }
