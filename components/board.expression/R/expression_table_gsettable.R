@@ -42,6 +42,8 @@ expression_table_gsettable_server <- function(id,
 
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()
+      req(df)
+
       if (is.null(df)) {
         return(NULL)
       }
