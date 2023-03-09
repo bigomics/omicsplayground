@@ -192,7 +192,7 @@ app_server <- function(input, output, session) {
           
           if(ENABLED['wordcloud'])  {
             info("[server.R] calling WordCloudBoard module")
-            WordCloudBoard("cloud", pgx=PGX)
+            WordCloudBoard("wordcloud", pgx=PGX)
           }
           shiny::incProgress(0.2)
           
