@@ -18,4 +18,4 @@ HONCHO_URL      = http://localhost:8000
 PLOTLY_EDITOR = https://shiny-plotly-editor.cpsievert.me
 
 #BOARDS_ENABLED = welcome,load,upload,view,clustersamples,clusterfeatures,wgcna,diffexpr,corr,enrich,pathway,wordcloud,drug,isect,sig,bio,cmap,comp,tcga,cell
-BOARDS_ENABLED = load,dataview
+#BOARDS_ENABLED = load,dataview
