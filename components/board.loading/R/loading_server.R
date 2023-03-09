@@ -31,12 +31,42 @@ LoadingBoard <- function(id,
       pgxTable_edited_row = NULL,
 
       pgxTablePublic_data = NULL,
-      pgx_public_dir = NULL
+      pgx_public_dir = NULL,
+      selected_row_public = NULL,
+      reload_pgxdir_public = 0
     )
 
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
     })
+
+    observeEvent(pgxtable_public$rows_selected(), {
+      rl$selected_row_public <- pgxtable_public$rows_selected()
+    })
+
+    # import public dataset into user files
+    observeEvent(
+      input$importbutton, {
+        selected_row <- rl$selected_row_public
+        pgx_public_dir <- rl$pgx_public_dir
+        pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
+
+        pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
+
+        pgx_dir <- getPGXDIR()
+        new_pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
+        file.copy(from = pgx_file, to = new_pgx_file)
+        rl$reload_pgxdir_public <- rl$reload_pgxdir_public + 1
+        rl$reload_pgxdir <- rl$reload_pgxdir + 1
+        shinyalert::shinyalert(
+          "Dataset successfully imported",
+          paste(
+            'The public dataset', pgx_name, 'has now been successfully imported
+          to your data files. Feel free to load it as usual!'
+          )
+        )
+      }
+    )
 
     observeEvent(r_global$load_example_trigger, {
 
@@ -141,7 +171,7 @@ LoadingBoard <- function(id,
       pdir
     })
 
-    observeEvent(getPGXDIR(), {
+    observeEvent(c(getPGXDIR(), rl$reload_pgxdir_public), {
       pgx_dir <- getPGXDIR()
       pgx_public_dir <- stringr::str_replace_all(pgx_dir, c('data'='data_public'))
       rl$pgx_public_dir <- pgx_public_dir
@@ -383,12 +413,9 @@ LoadingBoard <- function(id,
 
       deletePGX <- function() {
         if (input$confirmdelete) {
-          cat(">>> deleting", pgxfile, "\n")
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
           rl$reload_pgxdir <- rl$reload_pgxdir + 1
-        } else {
-          cat(">>> deletion cancelled\n")
         }
       }
 
@@ -581,7 +608,7 @@ LoadingBoard <- function(id,
     )
 
     observeEvent(
-      getFilteredPGXINFO_PUBLIC(), {
+      c(getFilteredPGXINFO_PUBLIC(), rl$reload_pgxdir_public), {
         df <- getFilteredPGXINFO_PUBLIC()
         df$dataset <- gsub("[.]pgx$", " ", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
