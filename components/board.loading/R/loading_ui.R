@@ -75,8 +75,8 @@ LoadingUI <- function(id) {
               id = "load-action-buttons",
               shiny::actionButton(
                 ns("importbutton"),
-                label = "Import dataset", icon = icon("trash"),
-                class = "btn btn-outline-danger-hover"
+                label = "Import dataset", icon = icon("file-import"),
+                class = "btn btn-outline-primary"
               )
             )
           )

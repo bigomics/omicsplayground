@@ -17,7 +17,7 @@ loading_table_datasets_public_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- function() {
-      df <- rl$pgxTable_data
+      df <- rl$pgxTablePublic_data
 
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
@@ -33,10 +33,7 @@ loading_table_datasets_public_server <- function(id,
         df,
         class = "compact hover",
         rownames = TRUE,
-        editable = list(
-          target = 'cell',
-          disable = list(columns = c(1,3:ncol(df)))
-        ),
+        editable = FALSE,
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
@@ -54,19 +51,6 @@ loading_table_datasets_public_server <- function(id,
         ) ## end of options.list
       )
     }
-
-    # make changes to pgxtable
-    observeEvent(
-      input[['datasets-datatable_cell_edit']], {
-        row <- input[['datasets-datatable_cell_edit']]$row
-        col <- input[['datasets-datatable_cell_edit']]$col
-        val <- input[['datasets-datatable_cell_edit']]$value
-        rl$pgxTable_data[row, col] <- val
-        rl$pgxTable_edited <- rl$pgxTable_edited + 1
-        rl$pgxTable_edited_row <- row
-        rl$pgxTable_edited_col <- col
-      }
-    )
 
     pgxTable.RENDER <- function() {
       pgxTable_DT() %>%

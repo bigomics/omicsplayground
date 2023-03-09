@@ -28,7 +28,10 @@ LoadingBoard <- function(id,
       found_example_trigger = NULL,
       pgxTable_data = NULL,
       pgxTable_edited = 0,
-      pgxTable_edited_row = NULL
+      pgxTable_edited_row = NULL,
+
+      pgxTablePublic_data = NULL,
+      pgx_public_dir = NULL
     )
 
     observeEvent(pgxtable$rows_selected(), {
@@ -138,6 +141,12 @@ LoadingBoard <- function(id,
       pdir
     })
 
+    observeEvent(getPGXDIR(), {
+      pgx_dir <- getPGXDIR()
+      pgx_public_dir <- stringr::str_replace_all(pgx_dir, c('data'='data_public'))
+      rl$pgx_public_dir <- pgx_public_dir
+    }, ignoreNULL = TRUE)
+
     getPGXINFO <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
@@ -146,6 +155,27 @@ LoadingBoard <- function(id,
       }
       info <- NULL
       pdir <- getPGXDIR()
+      info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      if (is.null(info)) {
+        aa <- rep(NA, 9)
+        names(aa) <- c(
+          "dataset", "datatype", "description", "nsamples",
+          "ngenes", "nsets", "conditions", "organism", "date"
+        )
+        info <- data.frame(rbind(aa))[0, ]
+      }
+      info
+    })
+
+
+    getPGXINFO_PUBLIC <- shiny::reactive({
+      req(auth)
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getPGXINFO] user not logged in!")
+        return(NULL)
+      }
+      info <- NULL
+      pdir <- rl$pgx_public_dir
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -185,7 +215,47 @@ LoadingBoard <- function(id,
         df <- df[which(f1 & f2 & f3), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
-        rownames(df) <- nrow(df):1
+        if (nrow(df) > 0) rownames(df) <- nrow(df):1
+      }
+
+      kk <- unique(c(
+        "dataset", "description", "datatype", "nsamples",
+        "ngenes", "nsets", "conditions", "date", "organism"
+      ))
+      kk <- intersect(kk, colnames(df))
+      df <- df[, kk, drop = FALSE]
+      df
+    })
+
+
+    getFilteredPGXINFO_PUBLIC <- shiny::reactive({
+      ## get the filtered table of pgx datasets
+      req(auth)
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
+                    not showing table!")
+        return(NULL)
+      }
+      df <- getPGXINFO_PUBLIC()
+      if (is.null(df)) {
+        return(NULL)
+      }
+
+      pgxdir <- rl$pgx_public_dir
+      pgxfiles <- dir(pgxdir, pattern = ".pgx$")
+      sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
+      df <- df[sel, , drop = FALSE]
+
+      ## Apply filters
+      if (nrow(df) > 0) {
+        f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
+        notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
+        if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
+        if (notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
+        df <- df[which(f1 & f2 & f3), , drop = FALSE]
+        df$date <- as.Date(df$date, format = "%Y-%m-%d")
+        df <- df[order(df$date, decreasing = TRUE), ]
+        if (nrow(df) > 0) rownames(df) <- nrow(df):1
       }
 
       kk <- unique(c(
@@ -211,6 +281,7 @@ LoadingBoard <- function(id,
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
       pgxfile
     })
+
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -506,6 +577,19 @@ LoadingBoard <- function(id,
         df$organism <- NULL
 
         rl$pgxTable_data <- df
+      }
+    )
+
+    observeEvent(
+      getFilteredPGXINFO_PUBLIC(), {
+        df <- getFilteredPGXINFO_PUBLIC()
+        df$dataset <- gsub("[.]pgx$", " ", df$dataset)
+        df$conditions <- gsub("[,]", " ", df$conditions)
+        df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+        df$description <- shortstring(as.character(df$description), 200)
+        df$nsets <- NULL
+        df$organism <- NULL
+        rl$pgxTablePublic_data <- df
       }
     )
 
