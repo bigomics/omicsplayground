@@ -1,4 +1,4 @@
-loading_table_datasets_ui <- function(id, height, width) {
+loading_table_datasets_public_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
 
   info_text <- "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
@@ -12,7 +12,7 @@ loading_table_datasets_ui <- function(id, height, width) {
   )
 }
 
-loading_table_datasets_server <- function(id,
+loading_table_datasets_public_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
 
