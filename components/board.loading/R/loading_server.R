@@ -20,16 +20,19 @@ LoadingBoard <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
-
-    ## info that's needed
-    r_local <- reactiveValues(
+    ## reactive variables used only within this module
+    rl <- reactiveValues(
+      loadedDataset = 0,
+      reload_pgxdir = 0,
       selected_row = NULL,
-      found_example_trigger = NULL
+      found_example_trigger = NULL,
+      pgxTable_data = NULL,
+      pgxTable_edited = 0,
+      pgxTable_edited_row = NULL
     )
 
     observeEvent(pgxtable$rows_selected(), {
-      r_local$selected_row <- pgxtable$rows_selected()
+      rl$selected_row <- pgxtable$rows_selected()
     })
 
     observeEvent(r_global$load_example_trigger, {
@@ -52,8 +55,9 @@ LoadingBoard <- function(id,
         return(NULL)
       } else {
         shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        r_local$selected_row <- example_row
-        r_local$found_example_trigger <- TRUE
+        shinyjs::runjs("$('.sidebar-label').trigger('click');")
+        rl$selected_row <- example_row
+        rl$found_example_trigger <- TRUE
       }
     })
 
@@ -61,12 +65,9 @@ LoadingBoard <- function(id,
     ## ================================================================================
     ## Modules
     ## ================================================================================
-    loading_tsne_server("tsne", watermark = FALSE)
+    loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
 
-    pgxtable <- loading_table_datasets_server(
-      "pgxtable",
-      pgxTable_data = pgxTable_data
-    )
+    pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -98,17 +99,12 @@ LoadingBoard <- function(id,
     ## User interface
     ## -----------------------------------------------------------------------------
 
-    currentSection <- shiny::reactive({
-      cdata <- session$clientData
-      sub("section-", "", cdata[["url_hash"]])
-    })
-
     output$rowselected <- shiny::reactive({
       !is.null(selectedPGX()) && length(selectedPGX()) > 0
     })
     shiny::outputOptions(output, "rowselected", suspendWhenHidden = FALSE)
 
-    observe({
+    observeEvent(getPGXINFO(), {
       df <- getPGXINFO()
       datatypes <- sort(setdiff(df$datatype, c(NA, "")))
       organisms <- sort(setdiff(df$organism, c(NA, "")))
@@ -121,10 +117,9 @@ LoadingBoard <- function(id,
     ## -----------------------------------------------------------------------------
 
     ## reactive value for updating table
-    reload_pgxdir <- shiny::reactiveVal(0)
 
     getPGXDIR <- shiny::reactive({
-      reload_pgxdir() ## force reload
+      rl$reload_pgxdir ## force reload
 
       email <- auth$email()
       email <- gsub(".*\\/", "", email)
@@ -203,7 +198,7 @@ LoadingBoard <- function(id,
 
     selectedPGX <- shiny::reactive({
       req(pgxtable)
-      sel <- r_local$selected_row
+      sel <- rl$selected_row
       if (is.null(sel) || length(sel) == 0) {
         return(NULL)
       }
@@ -319,7 +314,7 @@ LoadingBoard <- function(id,
           cat(">>> deleting", pgxfile, "\n")
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
-          reload_pgxdir(reload_pgxdir() + 1)
+          rl$reload_pgxdir <- rl$reload_pgxdir + 1
         } else {
           cat(">>> deletion cancelled\n")
         }
@@ -359,7 +354,7 @@ LoadingBoard <- function(id,
 
     load_react <- reactive({
       btn <- input$loadbutton
-      btn2 <- r_local$found_example_trigger
+      btn2 <- rl$found_example_trigger
       query <- parseQueryString(session$clientData$url_search)
       logged <- isolate(auth$logged()) ## avoid reloading when logout/login
       (!is.null(btn) || !is.null(query[["pgx"]])) && logged
@@ -393,7 +388,7 @@ LoadingBoard <- function(id,
         pgxfile <- selectedPGX()
       }
       ## Observe "try example dataset" press
-      if (!is.null(r_local$found_example_trigger)) {
+      if (!is.null(rl$found_example_trigger)) {
         pgxfile <- selectedPGX()
       }
 
@@ -431,7 +426,7 @@ LoadingBoard <- function(id,
       loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
 
       ## ----------------- update input --------------------------------------
-      loadedDataset(loadedDataset() + 1) ## notify new data uploaded
+      rl$loadedDataset <- rl$loadedDataset + 1 ## notify new data uploaded
 
       ## ***NEW*** update PGX from session
       if (1) {
@@ -498,26 +493,47 @@ LoadingBoard <- function(id,
       paste(paste(head(s1, n), collapse = " "), "(+", n2, "others)")
     }
 
-    pgxTable_data <- shiny::reactive({
-      reload_pgxdir()
+    observeEvent(
+      c(getFilteredPGXINFO(), rl$reload_pgxdir), {
 
-      df <- getFilteredPGXINFO()
-      shiny::req(df)
+        df <- getFilteredPGXINFO()
+        df$dataset <- gsub("[.]pgx$", " ", df$dataset)
+        df$conditions <- gsub("[,]", " ", df$conditions)
+        df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+        df$description <- shortstring(as.character(df$description), 200)
+        df$nsets <- NULL
+        df$organism <- NULL
 
-      df$dataset <- gsub("[.]pgx$", " ", df$dataset)
-      df$conditions <- gsub("[,]", " ", df$conditions)
-      df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-      df$description <- shortstring(as.character(df$description), 200)
-      df$nsets <- NULL
-      df$organism <- NULL
-      df
-    })
+        rl$pgxTable_data <- df
+      }
+    )
+
+    # re-write datasets-info.csv when pgxTable_edited
+    # also edit the pgx files
+    observeEvent(rl$pgxTable_edited, {
+      pdir <- getPGXDIR()
+      fname <- file.path(pdir, 'datasets-info.csv')
+      write.csv(rl$pgxTable_data, fname)
+
+      ## also rewrite description in actual pgx file
+      pgx_name <- rl$pgxTable_data[rl$pgxTable_edited_row, 'dataset']
+      pgx_file <- file.path(pdir, paste0(pgx_name, '.pgx'))
+
+      load(pgx_file)
+
+      col_edited <- colnames(rl$pgxTable_data)[rl$pgxTable_edited_col]
+      new_val <- rl$pgxTable_data[rl$pgxTable_edited_row, rl$pgxTable_edited_col]
+
+      ngs[[col_edited]] <- new_val
+      save(ngs, file = pgx_file)
+
+    }, ignoreInit = TRUE)
 
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
     res <- list(
-      loaded = loadedDataset,
+      loaded = reactive(rl$loadedDataset),
       auth = auth
     )
     return(res)

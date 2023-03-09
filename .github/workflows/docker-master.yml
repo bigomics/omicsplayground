@@ -1,10 +1,10 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (testing)
+name: build Docker (latest)
 
 on:
   schedule:
-    - cron:  '0 3 * * *'
+    - cron:  '0 4 * * *'
   workflow_dispatch:
 
 jobs:
@@ -34,9 +34,9 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile
-          push: true
+          push: true          
           no-cache: true
           build-args: |
             BRANCH=master
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:testing
-  
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest
+          

@@ -13,7 +13,7 @@ if(0) {
     ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
     options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
     source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
-    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) 
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest"))
 }
 
 options(Ncpus=8L)
@@ -55,7 +55,7 @@ remove.pkg <- function(pkg) {
 remove.pkgs <- function(pkgs, force=FALSE) {
     pkgs <- sort(unique(pkgs))
     for(pkg in pkgs) {
-        cat("removing",pkg,"\n")        
+        cat("removing",pkg,"\n")
         remove.pkg(pkg)
     }
 }
@@ -63,11 +63,11 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 autoscan.pkgs <- function() {
 
     rfiles1 <- system("find ../components -name \\*.r", intern=TRUE)
-    rfiles2 <- system("find ../components -name \\*.R", intern=TRUE)  
+    rfiles2 <- system("find ../components -name \\*.R", intern=TRUE)
     rfiles <- paste(c(rfiles1,rfiles2),collapse=" ")
-  
+
     pkg1 <- system(paste("grep '::' ",rfiles), intern=TRUE)
-    pkg2 <- system(paste("grep 'require(' ",rfiles), intern=TRUE)  
+    pkg2 <- system(paste("grep 'require(' ",rfiles), intern=TRUE)
     pkg3 <- system(paste("grep 'library(' ",rfiles), intern=TRUE)
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
@@ -77,10 +77,10 @@ autoscan.pkgs <- function() {
     pkg <- trimws(pkg)
     pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
     pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
-    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
+    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))
     pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)  ## skip commented out
     pkg <- grep("^[a-z]",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
-    pkg <- grep("[a-z.]*",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out        
+    pkg <- grep("[a-z.]*",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
     pkg <- setdiff(pkg,c(""))
     pkg <- sort(unique(pkg))
     pkg
@@ -110,10 +110,10 @@ install.pkgs(base.pkg, force=TRUE)
 ## pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 ## pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 
-pkg.used <- autoscan.pkgs() 
+pkg.used <- autoscan.pkgs()
 
 pkg.needed <- c('umap', 'corrplot', 'wordcloud', 'wordcloud2', 'optparse', 'docopt',
-                'kableExtra', 'randomForest', 'rhdf5', 'qgraph', 'psych',
+                'kableExtra', 'randomForest', 'rhdf5', 'qgraph', 'psych',"forcats",
                 'ggVennDiagram', 'shinythemes', 'shinybusy', 'beepr',
                 'rworldmap', 'sever', 'WGCNA', 'DGCA', 'ggforce')
 
@@ -217,21 +217,21 @@ remove.pkgs(BIG.NOTUSED)
 
 
 if(0) {
-    
+
     pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
     pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
+    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
 
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
-    
+
     pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
     pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
-    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
+    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))
     pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)
 
     pkg <- unique(pkg)
-    
+
     lisc <- installed.packages(fields = "License")
     sel <- which(lisc[,"Package"] %in% pkg)
     ##pkg2 <- c(lisc[sel,"Package"], lisc[sel,"Imports"], lisc[sel,"LinkingTo"])
@@ -248,7 +248,7 @@ if(0) {
     fixstr <- function(s,n=30) {substring(paste0(s,paste(rep(" ",n),collapse='')),1,n) }
     lisc2 <- cbind(fixstr(lisc1[,1],36),fixstr(lisc1[,2],15),fixstr(lisc1[,3],30))
     apply(lisc2, 1, function(s) cat(" -",paste0(s),'\n'))
-        
+
     lisc1[grep("AGPL|GPL-3",lisc1[,"License"]),]
 
     ## Using binary packages from RStudio
@@ -263,7 +263,7 @@ if(0) {
     remove.packages("shiny")
     install.packages("shiny")
     packageVersion('shiny')
-    
+
     remove.packages("dplyr")
     install.packages("dplyr")
     packageVersion('dplyr')
@@ -274,5 +274,5 @@ if(0) {
 
     BiocManager::install("dplyr", dependencies=NA, ask=FALSE, update=FALSE, force=TRUE)
     install.pkg("dplyr")
-    
+
 }

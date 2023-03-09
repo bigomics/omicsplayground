@@ -212,12 +212,12 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       ## select phenotype variable
       head(ngs$samples)
-      pheno <- 1
-      pheno <- "cluster"
-      pheno <- "activated"
-      pheno <- "cell.type"
-      pheno <- "<cell type>"
-      pheno <- pheno
+      #pheno <- 1
+      #pheno <- "cluster"
+      #pheno <- "activated"
+      #pheno <- "cell.type"
+      #pheno <- "<cell type>"
+      #pheno <- pheno
       if (is.null(pheno)) {
         return(NULL)
       }
@@ -225,7 +225,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       ## pheno="cluster"
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
-      gene <- ngs$genes$gene_name[1]
+      #gene <- ngs$genes$gene_name[1]
       gene <- gene
       if (gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
