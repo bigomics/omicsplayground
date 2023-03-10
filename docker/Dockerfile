@@ -31,7 +31,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
 RUN R -e "remotes::install_github('bigomics/bigdash')"
 # RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
-# RUN R -e "BiocManager::install(c('edgeR','DESeq2'))"
+RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
@@ -58,4 +58,5 @@ RUN make sass
 # Expose port and set CMD
 #------------------------------------------------------------
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
+##CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
+CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
