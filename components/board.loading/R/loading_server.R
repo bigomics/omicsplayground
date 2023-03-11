@@ -31,33 +31,33 @@ LoadingBoard <- function(id,
       pgxTable_edited_row = NULL,
 
       pgxTablePublic_data = NULL,
-      selected_row_public = NULL,
-      reload_pgxdir_public = 0
+      selected_row_shared = NULL,
+      reload_pgxdir_shared = 0
     )
 
     ## static, not changing
-    pgx_public_dir = stringr::str_replace_all(pgx_dir, c('data'='data_public'))  
+    pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))  
 
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
     })
 
-    observeEvent(pgxtable_public$rows_selected(), {
-      rl$selected_row_public <- pgxtable_public$rows_selected()
+    observeEvent(pgxtable_shared$rows_selected(), {
+      rl$selected_row_shared <- pgxtable_shared$rows_selected()
     })
 
     # import public dataset into user files
     observeEvent(
       input$importbutton, {
-        selected_row <- rl$selected_row_public
+        selected_row <- rl$selected_row_shared
         pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
 
-        pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
+        pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
         pgx_dir <- getPGXDIR()
         new_pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
         file.copy(from = pgx_file, to = new_pgx_file)
-        rl$reload_pgxdir_public <- rl$reload_pgxdir_public + 1
+        rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         rl$reload_pgxdir <- rl$reload_pgxdir + 1
         shinyalert::shinyalert(
           "Dataset imported",
@@ -102,8 +102,8 @@ LoadingBoard <- function(id,
 
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
 
-    pgxtable_public <- loading_table_datasets_public_server(
-      "pgxtable_public", rl$pgxTablePublic_data)
+    pgxtable_shared <- loading_table_datasets_shared_server(
+      "pgxtable_shared", rl$pgxTablePublic_data)
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -196,14 +196,14 @@ LoadingBoard <- function(id,
     })
 
 
-    getPGXINFO_PUBLIC <- shiny::reactive({
+    getPGXINFO_SHARED <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
       info <- NULL
-      pdir <- pgx_public_dir      
+      pdir <- pgx_shared_dir      
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -256,7 +256,7 @@ LoadingBoard <- function(id,
     })
 
 
-    getFilteredPGXINFO_PUBLIC <- shiny::reactive({
+    getFilteredPGXINFO_SHARED <- shiny::reactive({
       ## get the filtered table of pgx datasets
       req(auth)
       if (!auth$logged()) {
@@ -264,12 +264,12 @@ LoadingBoard <- function(id,
                     not showing table!")
         return(NULL)
       }
-      df <- getPGXINFO_PUBLIC()
+      df <- getPGXINFO_SHARED()
       if (is.null(df)) {
         return(NULL)
       }
 
-      pgxfiles <- dir(pgx_public_dir, pattern = ".pgx$")
+      pgxfiles <- dir(pgx_shared_dir, pattern = ".pgx$")
       sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
       df <- df[sel, , drop = FALSE]
 
@@ -605,8 +605,8 @@ LoadingBoard <- function(id,
     )
 
     observeEvent(
-      c(getFilteredPGXINFO_PUBLIC(), rl$reload_pgxdir_public), {
-        df <- getFilteredPGXINFO_PUBLIC()
+      c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
+        df <- getFilteredPGXINFO_SHARED()
         df$dataset <- gsub("[.]pgx$", " ", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
         df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
