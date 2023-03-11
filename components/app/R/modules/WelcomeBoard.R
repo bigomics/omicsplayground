@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 WelcomeBoard <- function(id, auth) {}
@@ -14,10 +14,11 @@ WelcomeBoard <- function(id, auth, r_global) {
 
     output$welcome <- shiny::renderText({
       name <- auth$name()
+      dbg("[WelcomeBoard] name =",name)
       if (name %in% c("", NA, NULL)) {
         welcome <- "Welcome back..."
       } else {
-        first.name <- strsplit("ivo kwee", split = "[@ .]")[[1]][1]
+        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
         first.name <- paste0(
           toupper(substring(first.name, 1, 1)),
           substring(first.name, 2, nchar(first.name))
@@ -37,9 +38,19 @@ WelcomeBoardInputs <- function(id) {
   return(NULL)
 }
 
-WelcomeBoardUI <- function(id) {
+WelcomeBoardUI <- function(id, enable_upload=TRUE) {
   ns <- shiny::NS(id) ## namespace
 
+  ## if upload enabled show button, otherwise empty
+  upload_button <- "  "
+  if(enable_upload) {
+    upload_button <- tags$a(
+      id = "init-upload-data",
+      "Upload new data",
+      class = "btn btn-outline-info welcome-btn"
+    )
+  }
+  
   div(
     id = "welcome-page",
     br(),
@@ -64,11 +75,7 @@ WelcomeBoardUI <- function(id) {
       div(
         class = "col-md-7",
         h3("I'm an existing user..."),
-        tags$a(
-          id = "init-upload-data",
-          "Upload new data",
-          class = "btn btn-outline-info welcome-btn"
-        ),
+        upload_button,
         tags$button(
           id = "init-load-data",
           "Use my saved data",

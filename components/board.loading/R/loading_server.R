@@ -87,8 +87,10 @@ LoadingBoard <- function(id,
         r_global$load_example_trigger <- NULL
         return(NULL)
       } else {
-        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        shinyjs::runjs("$('.sidebar-label').trigger('click');")
+
+        #trigger settings sidebar css
+        shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
+
         rl$selected_row <- example_row
         rl$found_example_trigger <- TRUE
       }
@@ -508,8 +510,10 @@ LoadingBoard <- function(id,
         shiny::removeModal()
         return(NULL)
       }
+      dbg("[loading_server.R] pgx object loaded!")
 
       ## ----------------- update PGX object ---------------------------------
+      dbg("[loading_server.R] initializing pgx object")
       loaded_pgx <- pgx.initialize(loaded_pgx)
 
       if (is.null(loaded_pgx)) {
@@ -528,6 +532,7 @@ LoadingBoard <- function(id,
       if (1) {
         ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
         ## session environment.
+        dbg("[loading_server.R] copying pgx object to global environment")        
         for (i in 1:length(loaded_pgx)) {
           pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
         }

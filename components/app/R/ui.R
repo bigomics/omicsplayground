@@ -19,7 +19,7 @@ app_ui <- function() {
         gtag2 <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag2)
     }
 
-     createUI <- function(tabs)
+    createUI <- function()
     {
         message("\n======================================================")
         message("======================= UI ===========================")
@@ -68,109 +68,201 @@ app_ui <- function() {
             )
         }
 
+        
+        menu_tree = list(
+          ## "Home" = c("load"),
+          "Load" = c(
+            welcome = "Welcome",
+            load    = "Load dataset",
+            upload  = "Upload data"                        
+          ),          
+          "DataView" = c(
+            dataview = "DataView"
+          ),
+          "Clustering" = c(
+            clustersamples  = "Samples",
+            clusterfeatures = "Features",
+            wgcna = "WGCNA"),
+          "Expression" = c(
+            diffexpr = "Differential expression",
+            corr = "Correlation analysis"
+          ),
+          "Enrichment" = c(
+            enrich = "Geneset Enrichment",
+            pathway = "Pathway analysis",
+            wordcloud = "Word cloud",
+            drug = "Drug connectivity"
+          ),
+          "Signature" = c(
+            isect = "Compare signatures",
+            sig = "Test signatures",
+            bio = "Find biomarkers",
+            cmap = "Similar experiments",
+            comp = "Compare datasets (beta)",
+            tcga = "TCGA survival (beta)"
+          ),
+          "CellProfiling" = c(
+            cell = "Cell profiling"
+          )
+          ## "DEV" = c("corsa","system","multi")
+        )
+
+        ## filter disabled modules
+        ENABLED['welcome'] <- TRUE
+        ENABLED['load'] <- TRUE
+        #ENABLED['upload'] <- TRUE
+        dbg("[ui.R] sum.enabled = ",sum(ENABLED))
+        dbg("[ui.R] names.enabled = ",names(ENABLED))
+        menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+        
+        populateSidebar <- function(menu_tree) {
+
+          sidebar_item <- function(title, name) {
+            div(class='sidebar-item',  bigdash::sidebarItem( title, paste0(name,"-tab")))
+          }
+          sidebar_menu_item <- function(title, name) {
+            bigdash::sidebarMenuItem( title, paste0(name,"-tab"))
+          }
+          sidebar_menu_with_items <- function(tabs, title) {
+            ee <- list()
+            for(i in 1:length(tabs)) {
+              tab.name  <- names(tabs)[i]
+              tab.title <- tabs[i]              
+              ee[[i]] <- sidebar_menu_item(tab.title, tab.name)
+            }
+            bigdash::sidebarMenu(title, !!!ee)
+          }
+          
+          ## This creates the menu from a menu_tree
+          menu <- list()
+          i=3
+          for(i in 1:length(menu_tree)) {
+            tab.names <- names(menu_tree[[i]])
+            tab.titles <- menu_tree[[i]]
+            menu.id <- names(menu_tree)[i]
+            if(length(tab.names)==0) {
+              ## 
+            } else if(length(tab.names)==1) {              
+              menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
+            } else {
+              menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
+            }
+          }
+          ##lapply(menu,cat)
+          return(menu)
+        }
+        
+        info("[ui.R] creating sidebar menu")
+        mm <- populateSidebar(menu_tree)
+        mm <- lapply(mm, as.character)
+        mm <- HTML(unlist(mm))
+        sidebar <- bigdash::sidebar("Menu", mm)
+        
+        sidebar.save = bigdash::sidebar(
+            "Menu",
+             bigdash::sidebarMenu(
+                 "Load",
+                 bigdash::sidebarMenuItem(
+                   "Welcome",
+                   "welcome-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                   "Load dataset",
+                   "load-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                   "Upload data",
+                   "upload-tab"
+                 )
+             ),
+             div(class="sidebar-item",
+                 bigdash::sidebarItem(
+                 "DataView",
+                 "dataview-tab"
+             )),
+             bigdash::sidebarMenu(
+                 "Clustering",
+                 bigdash::sidebarMenuItem(
+                     "Samples",
+                     "clustersamples-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Features",
+                     "clusterfeatures-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "WGCNA (beta)",
+                     "wgcna-tab"
+                 )
+             ),
+             bigdash::sidebarMenu(
+                 "Expression",
+                 bigdash::sidebarMenuItem(
+                     "Differential expression",
+                     "diffexpr-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Correlation analysis",
+                     "corr-tab"
+                 )
+             ),
+             bigdash::sidebarMenu(
+                 "Enrichment",
+                 bigdash::sidebarMenuItem(
+                     "Geneset enrichment",
+                     "enrich-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Pathway analysis",
+                     "pathway-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Word cloud",
+                     "wordcloud-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Drug connectivity",
+                     "drug-tab"
+                 )
+             ),
+             bigdash::sidebarMenu(
+                 "Signature",
+                 bigdash::sidebarMenuItem(
+                     "Compare signatures",
+                     "isect-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Test signatures",
+                     "sig-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Find biomarkers",
+                     "bio-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Similar experiments",
+                     "cmap-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "Compare datasets (beta)",
+                     "comp-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "TCGA survival (beta)",
+                     "tcga-tab"
+                 )
+             ),
+             div(class="sidebar-item",
+                 bigdash::sidebarItem(
+                     "Cell profiling",
+                     "cell-tab"
+                 )
+             )
+        )
+        
         bigdash::bigPage(
             header,
-            sidebar = bigdash::sidebar(
-                "Home",
-                bigdash::sidebarMenu(
-                    "Load",
-                    bigdash::sidebarMenuItem(
-                      "Welcome",
-                      "welcome-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                      "Load dataset",
-                      "load-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                      "Upload data",
-                      "upload-tab"
-                    )
-                ),
-                div(class="sidebar-item",
-                    bigdash::sidebarItem(
-                    "DataView",
-                    "dataview-tab"
-                )),
-                bigdash::sidebarMenu(
-                    "Clustering",
-                    bigdash::sidebarMenuItem(
-                        "Samples",
-                        "clustersamples-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Features",
-                        "clusterfeatures-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "WGCNA (beta)",
-                        "wgcna-tab"
-                    )
-                ),
-                bigdash::sidebarMenu(
-                    "Expression",
-                    bigdash::sidebarMenuItem(
-                        "Differential expression",
-                        "diffexpr-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Correlation analysis",
-                        "corr-tab"
-                    )
-                ),
-                bigdash::sidebarMenu(
-                    "Enrichment",
-                    bigdash::sidebarMenuItem(
-                        "Geneset enrichment",
-                        "enrich-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Pathway analysis",
-                        "pathway-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Word cloud",
-                        "cloud-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Drug connectivity",
-                        "drug-tab"
-                    )
-                ),
-                bigdash::sidebarMenu(
-                    "Signature",
-                    bigdash::sidebarMenuItem(
-                        "Compare signatures",
-                        "isect-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Test signatures",
-                        "sig-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Find biomarkers",
-                        "bio-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Similar experiments",
-                        "cmap-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "Compare datasets (beta)",
-                        "comp-tab"
-                    ),
-                    bigdash::sidebarMenuItem(
-                        "TCGA survival (beta)",
-                        "tcga-tab"
-                    )
-                ),
-                div(class="sidebar-item",
-                    bigdash::sidebarItem(
-                        "Cell profiling",
-                        "cell-tab"
-                    )
-                )
-            ),
+            sidebar = sidebar,
             navbar = bigdash::navbar(
                 tags$img(
                     src = "assets/img/bigomics.png",
@@ -295,7 +387,7 @@ app_ui <- function() {
                     to understand biological functions including GO, KEGG, and drug connectivity mapping."
                 ),
                 bigdash::sidebarTabHelp(
-                    "cloud-tab",
+                    "wordcloud-tab",
                     "Wordcloud",
                     "WordCloud analysis or 'keyword enrichment' analysis computes the
                     enrichment of keywords for the contrasts. The set of words frequently appearing in the top ranked
@@ -359,7 +451,7 @@ app_ui <- function() {
                 bigdash::bigTabItem(
                     "welcome-tab",
                     WelcomeBoardInputs("welcome"),
-                    WelcomeBoardUI("welcome")
+                    WelcomeBoardUI("welcome", ENABLED['upload'])
                 ),
                 bigdash::bigTabItem(
                     "load-tab",
@@ -373,18 +465,18 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "dataview-tab",
-                    DataViewInputs("view"),
-                    DataViewUI("view")
+                    DataViewInputs("dataview"),
+                    DataViewUI("dataview")
                 ),
                 bigdash::bigTabItem(
                     "clustersamples-tab",
-                    ClusteringInputs("clust"),
-                    ClusteringUI("clust")
+                    ClusteringInputs("clustersamples"),
+                    ClusteringUI("clustersamples")
                 ),
                 bigdash::bigTabItem(
                     "clusterfeatures-tab",
-                    FeatureMapInputs("ftmap"),
-                    FeatureMapUI("ftmap")
+                    FeatureMapInputs("clusterfeatures"),
+                    FeatureMapUI("clusterfeatures")
                 ),
                 bigdash::bigTabItem(
                     "wgcna-tab",
@@ -393,13 +485,13 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "diffexpr-tab",
-                    ExpressionInputs("expr"),
-                    ExpressionUI("expr")
+                    ExpressionInputs("diffexpr"),
+                    ExpressionUI("diffexpr")
                 ),
                 bigdash::bigTabItem(
                     "corr-tab",
-                    CorrelationInputs("cor"),
-                    CorrelationUI("cor")
+                    CorrelationInputs("corr"),
+                    CorrelationUI("corr")
                 ),
                 bigdash::bigTabItem(
                     "enrich-tab",
@@ -408,13 +500,13 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "pathway-tab",
-                    FunctionalInputs("func"),
-                    FunctionalUI("func")
+                    FunctionalInputs("pathway"),
+                    FunctionalUI("pathway")
                 ),
                 bigdash::bigTabItem(
-                    "cloud-tab",
-                    WordCloudInputs("word"),
-                    WordCloudUI("word")
+                    "wordcloud-tab",
+                    WordCloudInputs("wordcloud"),
+                    WordCloudUI("wordcloud")
                 ),
                 bigdash::bigTabItem(
                     "drug-tab",
@@ -453,8 +545,8 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "cell-tab",
-                    SingleCellInputs("scell"),
-                    SingleCellUI("scell")
+                    SingleCellInputs("cell"),
+                    SingleCellUI("cell")
                 ),
                 bigdash::bigTabItem(
                     "userSettings",
@@ -470,18 +562,7 @@ app_ui <- function() {
         )
     }
 
-    tabs = list(
-        "Home" = c("load"),
-        "DataView" = "view",
-        "Clustering" = c("clust","ftmap","wgcna"),
-        "Expression" = c("expr","cor"),
-        "Enrichment" = c("enrich","func","word","drug"),
-        "Signature" = c("isect","sig","bio","cmap","comp","tcga"),
-        "CellProfiling" = "scell",
-        "DEV" = c("corsa","system","multi")
-    )
-
-    ui <- createUI(tabs)
+    ui <- createUI()
 
     return(ui)
 }
