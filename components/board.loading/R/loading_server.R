@@ -28,12 +28,45 @@ LoadingBoard <- function(id,
       found_example_trigger = NULL,
       pgxTable_data = NULL,
       pgxTable_edited = 0,
-      pgxTable_edited_row = NULL
+      pgxTable_edited_row = NULL,
+
+      pgxTablePublic_data = NULL,
+      selected_row_shared = NULL,
+      reload_pgxdir_shared = 0
     )
+
+    ## static, not changing
+    pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))  
 
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
     })
+
+    observeEvent(pgxtable_shared$rows_selected(), {
+      rl$selected_row_shared <- pgxtable_shared$rows_selected()
+    })
+
+    # import public dataset into user files
+    observeEvent(
+      input$importbutton, {
+        selected_row <- rl$selected_row_shared
+        pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
+
+        pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
+
+        pgx_dir <- getPGXDIR()
+        new_pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
+        file.copy(from = pgx_file, to = new_pgx_file)
+        rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
+        rl$reload_pgxdir <- rl$reload_pgxdir + 1
+        shinyalert::shinyalert(
+          "Dataset imported",
+          paste('The public dataset', pgx_name, 'has now been successfully imported',
+            'to your data files. Feel free to load it as usual!'
+          )
+        )
+      }
+    )
 
     observeEvent(r_global$load_example_trigger, {
 
@@ -70,6 +103,9 @@ LoadingBoard <- function(id,
     loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
 
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
+
+    pgxtable_shared <- loading_table_datasets_shared_server(
+      "pgxtable_shared", rl$pgxTablePublic_data)
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -118,8 +154,8 @@ LoadingBoard <- function(id,
     ## READ initial PGX file info
     ## -----------------------------------------------------------------------------
 
-    ## reactive value for updating table
-
+    ## Get the pgx folder. If user folders are enabled, the user email
+    ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
       rl$reload_pgxdir ## force reload
 
@@ -127,10 +163,12 @@ LoadingBoard <- function(id,
       email <- gsub(".*\\/", "", email)
       pdir <- pgx_dir ## from module input
 
-      ## USERDIR=FALSE
+      ## Append email to the pgx path. 
       if (enable_userdir) {
         pdir <- paste0(pdir, "/", email)
         if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
+
+        #If dir not exists, create and copy example pgx file
         if (!dir.exists(pdir)) {
           dir.create(pdir)
           file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
@@ -147,6 +185,27 @@ LoadingBoard <- function(id,
       }
       info <- NULL
       pdir <- getPGXDIR()
+      info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      if (is.null(info)) {
+        aa <- rep(NA, 9)
+        names(aa) <- c(
+          "dataset", "datatype", "description", "nsamples",
+          "ngenes", "nsets", "conditions", "organism", "date"
+        )
+        info <- data.frame(rbind(aa))[0, ]
+      }
+      info
+    })
+
+
+    getPGXINFO_SHARED <- shiny::reactive({
+      req(auth)
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getPGXINFO] user not logged in!")
+        return(NULL)
+      }
+      info <- NULL
+      pdir <- pgx_shared_dir      
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -186,7 +245,46 @@ LoadingBoard <- function(id,
         df <- df[which(f1 & f2 & f3), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
-        rownames(df) <- nrow(df):1
+        if (nrow(df) > 0) rownames(df) <- nrow(df):1
+      }
+
+      kk <- unique(c(
+        "dataset", "description", "datatype", "nsamples",
+        "ngenes", "nsets", "conditions", "date", "organism"
+      ))
+      kk <- intersect(kk, colnames(df))
+      df <- df[, kk, drop = FALSE]
+      df
+    })
+
+
+    getFilteredPGXINFO_SHARED <- shiny::reactive({
+      ## get the filtered table of pgx datasets
+      req(auth)
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
+                    not showing table!")
+        return(NULL)
+      }
+      df <- getPGXINFO_SHARED()
+      if (is.null(df)) {
+        return(NULL)
+      }
+
+      pgxfiles <- dir(pgx_shared_dir, pattern = ".pgx$")
+      sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
+      df <- df[sel, , drop = FALSE]
+
+      ## Apply filters
+      if (nrow(df) > 0) {
+        f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
+        notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
+        if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
+        if (notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
+        df <- df[which(f1 & f2 & f3), , drop = FALSE]
+        df$date <- as.Date(df$date, format = "%Y-%m-%d")
+        df <- df[order(df$date, decreasing = TRUE), ]
+        if (nrow(df) > 0) rownames(df) <- nrow(df):1
       }
 
       kk <- unique(c(
@@ -212,6 +310,7 @@ LoadingBoard <- function(id,
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
       pgxfile
     })
+
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -313,12 +412,9 @@ LoadingBoard <- function(id,
 
       deletePGX <- function() {
         if (input$confirmdelete) {
-          cat(">>> deleting", pgxfile, "\n")
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
           rl$reload_pgxdir <- rl$reload_pgxdir + 1
-        } else {
-          cat(">>> deletion cancelled\n")
         }
       }
 
@@ -510,6 +606,19 @@ LoadingBoard <- function(id,
         df$organism <- NULL
 
         rl$pgxTable_data <- df
+      }
+    )
+
+    observeEvent(
+      c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
+        df <- getFilteredPGXINFO_SHARED()
+        df$dataset <- gsub("[.]pgx$", " ", df$dataset)
+        df$conditions <- gsub("[,]", " ", df$conditions)
+        df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+        df$description <- shortstring(as.character(df$description), 200)
+        df$nsets <- NULL
+        df$organism <- NULL
+        rl$pgxTablePublic_data <- df
       }
     )
 

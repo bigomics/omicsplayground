@@ -27,46 +27,64 @@ LoadingUI <- function(id) {
   div(
     class = "p-1",
     uiOutput(ns("navheader")),
-    br(), br(),
-    ## table----------------
     div(
       class = "row",
       div(
         class = "col-md-7",
-        loading_table_datasets_ui(
-          ns("pgxtable"),
-          height = c("65vh", 700),
-          width = c("100%", "50%")
+        shiny::tabsetPanel(
+          id = ns('tabs'),
+          shiny::tabPanel(
+            'User',
+            loading_table_datasets_ui(
+              ns("pgxtable"),
+              height = c("65vh", 700),
+              width = c("100%", "50%")
+            ),
+            div(
+              id = "load-action-buttons",
+              shiny::actionButton(
+                ns("deletebutton"),
+                label = "Delete dataset", icon = icon("trash"),
+                class = "btn btn-outline-danger-hover"
+              ),
+              shiny::downloadButton(
+                ns("downloadpgx"),
+                label = "Download PGX",
+                class = "btn btn-outline-dark-hover"
+              ),
+              downloadButton2(
+                ns("downloadzip"),
+                label = "Download ZIP", icon = icon("file-archive"),
+                class = "btn btn-outline-dark-hover"
+              ),
+              shiny::actionButton(
+                ns("loadbutton"),
+                label = "Load dataset", icon = icon("file-import"),
+                class = "btn btn-outline-primary"
+              )
+            )
+          ),
+          shiny::tabPanel(
+            'Shared',
+            loading_table_datasets_shared_ui(
+              ns("pgxtable_shared"),
+              height = c("65vh", 700),
+              width = c("100%", "50%")
+            ),
+            div(
+              id = "load-action-buttons",
+              shiny::actionButton(
+                ns("importbutton"),
+                label = "Import dataset", icon = icon("file-import"),
+                class = "btn btn-outline-primary"
+              )
+            )
+          )
         )
       ),
       div(
         class = "col-md-5",
         loading_tsne_ui(ns("tsne"), height = c("65vh", "70vh"))
-      )
-    ),
-    br(),
-    ## buttons----------------
-    div(
-      id = "load-action-buttons",
-      shiny::actionButton(
-        ns("deletebutton"),
-        label = "Delete dataset", icon = icon("trash"),
-        class = "btn btn-outline-danger-hover"
-      ),
-      shiny::downloadButton(
-        ns("downloadpgx"),
-        label = "Download PGX",
-        class = "btn btn-outline-dark-hover"
-      ),
-      downloadButton2(
-        ns("downloadzip"),
-        label = "Download ZIP", icon = icon("file-archive"),
-        class = "btn btn-outline-dark-hover"
-      ),
-      shiny::actionButton(
-        ns("loadbutton"),
-        label = "Load dataset", icon = icon("file-import"),
-        class = "btn btn-outline-primary"
       )
     )
   )

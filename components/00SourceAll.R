@@ -200,6 +200,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.intersection/R/intersection_server.R',encoding='UTF-8')
   source('board.intersection/R/intersection_ui.R',encoding='UTF-8')
   source('board.loading/R/loading_server.R',encoding='UTF-8')
+  source('board.loading/R/loading_table_datasets_shared.R',encoding='UTF-8')
   source('board.loading/R/loading_table_datasets.R',encoding='UTF-8')
   source('board.loading/R/loading_tsneplot.R',encoding='UTF-8')
   source('board.loading/R/loading_ui.R',encoding='UTF-8')
