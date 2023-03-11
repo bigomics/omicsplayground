@@ -59,10 +59,9 @@ LoadingBoard <- function(id,
         rl$reload_pgxdir_public <- rl$reload_pgxdir_public + 1
         rl$reload_pgxdir <- rl$reload_pgxdir + 1
         shinyalert::shinyalert(
-          "Dataset successfully imported",
-          paste(
-            'The public dataset', pgx_name, 'has now been successfully imported
-          to your data files. Feel free to load it as usual!'
+          "Dataset imported",
+          paste('The public dataset', pgx_name, 'has now been successfully imported',
+            'to your data files. Feel free to load it as usual!'
           )
         )
       }
@@ -150,8 +149,8 @@ LoadingBoard <- function(id,
     ## READ initial PGX file info
     ## -----------------------------------------------------------------------------
 
-    ## reactive value for updating table
-
+    ## Get the pgx folder. If user folders are enabled, the user email
+    ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
       rl$reload_pgxdir ## force reload
 
@@ -159,10 +158,12 @@ LoadingBoard <- function(id,
       email <- gsub(".*\\/", "", email)
       pdir <- pgx_dir ## from module input
 
-      ## USERDIR=FALSE
+      ## Append email to the pgx path. 
       if (enable_userdir) {
         pdir <- paste0(pdir, "/", email)
         if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
+
+        #If dir not exists, create and copy example pgx file
         if (!dir.exists(pdir)) {
           dir.create(pdir)
           file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
@@ -172,7 +173,7 @@ LoadingBoard <- function(id,
     })
 
     observeEvent(c(getPGXDIR(), rl$reload_pgxdir_public), {
-      pgx_dir <- getPGXDIR()
+      ##pgx_dir <- getPGXDIR()
       pgx_public_dir <- stringr::str_replace_all(pgx_dir, c('data'='data_public'))
       rl$pgx_public_dir <- pgx_public_dir
     }, ignoreNULL = TRUE)

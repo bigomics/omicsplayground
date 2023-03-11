@@ -13,7 +13,7 @@ loading_table_datasets_public_ui <- function(id, height, width) {
 }
 
 loading_table_datasets_public_server <- function(id,
-                                          rl) {
+                                                 rl) {
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- function() {
@@ -23,7 +23,7 @@ loading_table_datasets_public_server <- function(id,
       if (length(df$dataset) == 0) df <- NULL
 
       req(df)
-
+      
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))
