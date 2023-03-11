@@ -39,7 +39,6 @@ html {
 //        min-width: 12rem;
     }
 
-
     #sidebar-help-title {
         padding-top: 10rem;
     }
@@ -54,9 +53,10 @@ html {
     }
 
     .sidebar-menu {
-	padding-left: 1rem;
+	padding: .7rem 0rem .7rem 1rem;
 	font-size: 18px;
 	font-weight: bold;
+	line-height: 1.4rem;
 	color: #333 !important;
     }
 
@@ -67,13 +67,18 @@ html {
     }
 
     .sidebar-menu-item {
-	font-size: 17px;
+	font-size: 16px;
+	line-height: 1.1rem;
 	font-weight: 400;
 	color: #333 !important;	
-    	padding-left: 0.5rem;  // less indent
-	margin: -8px 0 0 0; // less on top
+	padding: 0 0.4rem 0 0.4rem;
     }
-
+    
+/*    .sidebar-menu-item:has(> a[data-target='welcome-tab']) {
+	margin-top: -1rem;
+    }
+*/
+    
     .sidebar-label {
 	font-size: 18px;
     }
@@ -84,8 +89,12 @@ html {
     }
 
     .active-sidebar {
-	background-color: #E8E8E8;
+	background-color: #EFEFEF;
     }
 
+    .tab-sidebar {
+	line-height: 1.1rem;
+	padding: 0.65rem 0rem 0.65rem 0.7rem;	
+    }
     
 }

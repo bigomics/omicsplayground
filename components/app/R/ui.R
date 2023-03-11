@@ -156,30 +156,41 @@ app_ui <- function() {
         mm <- populateSidebar(menu_tree)
         mm <- lapply(mm, as.character)
         mm <- HTML(unlist(mm))
-        sidebar <- bigdash::sidebar("Menu", mm)
+        sidebar.save <- bigdash::sidebar("Menu", mm)
         
-        sidebar.save = bigdash::sidebar(
-            "Menu",
-             bigdash::sidebarMenu(
-                 "Load",
-                 bigdash::sidebarMenuItem(
-                   "Welcome",
-                   "welcome-tab"
-                 ),
-                 bigdash::sidebarMenuItem(
-                   "Load dataset",
-                   "load-tab"
-                 ),
-                 bigdash::sidebarMenuItem(
-                   "Upload data",
-                   "upload-tab"
-                 )
-             ),
+        sidebar = bigdash::sidebar(
+          "Menu",
+          bigdash::sidebarMenu(
+            "Load",
+            bigdash::sidebarMenuItem(
+              "Welcome",
+              "welcome-tab"
+            ),
+            withTooltip(div(
+              bigdash::sidebarMenuItem(
+                "Load dataset",
+                "load-tab"
+              )),
+              "This panel shows the available datasets within the platform. These data sets
+              have been pre-computed and are ready to be used. Select a
+              dataset in the table and load the data set by clicking the 'load' button.",
+              placement = "top"             
+            ),
+            bigdash::sidebarMenuItem(
+              "Upload data",
+              "upload-tab"
+            )
+          ),
+          withTooltip(
              div(class="sidebar-item",
-                 bigdash::sidebarItem(
+               bigdash::sidebarItem(
                  "DataView",
                  "dataview-tab"
-             )),
+               )),
+             "Information and descriptive statistics to quickly lookup a gene,
+                check your experiment QC, view the raw data, sample or contrast tables.",
+             placement = "top"
+           ),
              bigdash::sidebarMenu(
                  "Clustering",
                  bigdash::sidebarMenuItem(
