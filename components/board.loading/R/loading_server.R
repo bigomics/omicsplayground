@@ -31,10 +31,12 @@ LoadingBoard <- function(id,
       pgxTable_edited_row = NULL,
 
       pgxTablePublic_data = NULL,
-      pgx_public_dir = NULL,
       selected_row_public = NULL,
       reload_pgxdir_public = 0
     )
+
+    ## static, not changing
+    pgx_public_dir = stringr::str_replace_all(pgx_dir, c('data'='data_public'))  
 
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
@@ -48,7 +50,6 @@ LoadingBoard <- function(id,
     observeEvent(
       input$importbutton, {
         selected_row <- rl$selected_row_public
-        pgx_public_dir <- rl$pgx_public_dir
         pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
 
         pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
@@ -174,12 +175,6 @@ LoadingBoard <- function(id,
       pdir
     })
 
-    observeEvent(c(getPGXDIR(), rl$reload_pgxdir_public), {
-      ##pgx_dir <- getPGXDIR()
-      pgx_public_dir <- stringr::str_replace_all(pgx_dir, c('data'='data_public'))
-      rl$pgx_public_dir <- pgx_public_dir
-    }, ignoreNULL = TRUE)
-
     getPGXINFO <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
@@ -208,7 +203,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       info <- NULL
-      pdir <- rl$pgx_public_dir
+      pdir <- pgx_public_dir      
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -274,8 +269,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-      pgxdir <- rl$pgx_public_dir
-      pgxfiles <- dir(pgxdir, pattern = ".pgx$")
+      pgxfiles <- dir(pgx_public_dir, pattern = ".pgx$")
       sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
       df <- df[sel, , drop = FALSE]
 
