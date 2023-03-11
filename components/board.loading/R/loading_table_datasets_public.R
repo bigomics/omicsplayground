@@ -13,11 +13,11 @@ loading_table_datasets_public_ui <- function(id, height, width) {
 }
 
 loading_table_datasets_public_server <- function(id,
-                                                 rl) {
+                                                 rt_pgxTablePublic_data) {
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- function() {
-      df <- rl$pgxTablePublic_data
+      df <- rt_pgxTablePublic_data
 
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
