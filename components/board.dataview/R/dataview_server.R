@@ -111,10 +111,10 @@ DataViewBoard <- function(id, pgx) {
           )
         }
         shiny::updateSelectizeInput(session, "search_gene",
-          choices = genes1, selected = selgene,
-          ## options = list(maxOptions = 9999999),
-          options = list(maxOptions = 1001),
-          server = TRUE
+                                    choices = genes1, selected = selgene,
+                                    ## options = list(maxOptions = 9999999),
+                                    options = list(maxOptions = 1001),
+                                    server = TRUE
         )
       }
     )
@@ -276,9 +276,9 @@ DataViewBoard <- function(id, pgx) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    getCountStatistics <- shiny::reactive({
+    getCountStatistics <- reactiveVal()
+    observeEvent(c(input$data_groupby, input$data_samplefilter), {
       shiny::req(pgx$X, pgx$Y, pgx$samples)
-
       shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
       subtt <- NULL
 
@@ -388,10 +388,8 @@ DataViewBoard <- function(id, pgx) {
         prop.counts = prop.counts,
         gset.genes = gset.genes
       )
-
-      res
-    })
-
+      getCountStatistics(res)
+    }, ignoreNULL = TRUE)
 
     ## ================================================================================
     ## ================================= END ====================================

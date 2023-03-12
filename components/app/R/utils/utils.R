@@ -25,6 +25,7 @@ envcat <- function(var) {
 	message(var," = ",Sys.getenv(var))
 }
 
+# THIS DOESNT WORK ON NON-LINUX
 mem.proc <- function(digits=0) {
   ### Method 2
   ## Setup
@@ -41,8 +42,9 @@ info <- function(..., type="INFO") {
   dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   msg = "some message"
   msg = sapply( list(...),paste,collapse=" ")
-  mm <- paste0("[",mem.proc(),"]")
-  dd <- paste(dd,mm)
+  # THIS DOESNT WORK ON NON-LINUX
+  #mm <- paste0("[",mem.proc(),"]")
+  #dd <- paste(dd,mm)
   message(paste0(dd," ",type," --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
