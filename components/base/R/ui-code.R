@@ -103,7 +103,7 @@ jsCode <- function(id){
   )
 }
 
-DropdowMenu <- function (..., size = "default", status = "default", icon = NULL, margin = "10px")
+DropdownMenu <- function (..., size = "default", status = "default", icon = NULL, margin = "10px")
 {
   id <- bigdash:::make_id()
   tags$div(tags$a(class = paste0(

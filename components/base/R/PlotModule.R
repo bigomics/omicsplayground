@@ -99,7 +99,7 @@ PlotModuleUI <- function(id,
     options.button <- ""
 
     if(!just.info && !is.null(options) && length(options)>0) {
-        options.button <- DropdowMenu(
+        options.button <- DropdownMenu(
           options,
           size = "xs",
           icon = shiny::icon("bars"),
@@ -126,7 +126,7 @@ PlotModuleUI <- function(id,
         )
     }
 
-    dload.button <- DropdowMenu(
+    dload.button <- DropdownMenu(
       div(
         style = "width: 150px;",
         shiny::selectInput(
@@ -172,7 +172,7 @@ PlotModuleUI <- function(id,
         flex = c(NA,1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
         label,
-        DropdowMenu(
+        DropdownMenu(
             shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
             shiny::br(),
             size = "xs",
