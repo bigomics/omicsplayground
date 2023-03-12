@@ -25,31 +25,30 @@ envcat <- function(var) {
 	message(var," = ",Sys.getenv(var))
 }
 
-# THIS DOESNT WORK ON NON-LINUX
 mem.proc <- function(digits=0) {
-  ### Method 2
-  ## Setup
-  file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
-  what <- vector("character", 52)
-  ## In your logging routine
-  vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
-  vsz <- vsz / (1024**2) ## MB
-  ##cat("Virtual size: ", vsz, " MB\n", sep = "")
-  paste(round(vsz,digits),"MB")
+  mem <- "[? MB]" 
+  if(Sys.info()["sysname"] %in% c("Linux")) {
+    file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
+    what <- vector("character", 52)
+    ## In your logging routine
+    vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
+    vsz <- vsz / (1024**2) ## MB
+    ##cat("Virtual size: ", vsz, " MB\n", sep = "")
+    mem <- paste(round(vsz,digits),"MB")
+  }
+  mem 
 }
 
 info <- function(..., type="INFO") {
   dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   msg = "some message"
   msg = sapply( list(...),paste,collapse=" ")
-  # THIS DOESNT WORK ON NON-LINUX
-  #mm <- paste0("[",mem.proc(),"]")
-  #dd <- paste(dd,mm)
+  mm <- paste0("[",mem.proc(),"]")
+  dd <- paste(dd,mm)
   message(paste0(dd," ",type," --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
 dbg <- function(...) info(..., type="DBG")
-
 
 ## Parse access logs
 ACCESS.LOG <- NULL
