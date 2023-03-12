@@ -56,7 +56,7 @@ install.pkgs <- function(pkgs, force=FALSE) {
 }
 remove.pkg <- function(pkg) {
     if(pkg %in% rownames(installed.packages())) try(remove.packages(pkg))
-    LOCAL.PKGS <- setdiff(LOCAL.PKGS, pkg)
+    INSTALLED.PKGS <- setdiff(INSTALLED.PKGS, pkg)
 }
 remove.pkgs <- function(pkgs, force=FALSE) {
     pkgs <- sort(unique(pkgs))
@@ -130,7 +130,7 @@ pkg.extra <- c(
   'wordcloud2', 'optparse', 'docopt',
   'kableExtra', 'shinythemes', 'rworldmap',
   "HiddenMarkov","coin","rjags","argparse",
-  "RcppParallel",
+  "RcppParallel", "KEGGgraph", 
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene'
 )
