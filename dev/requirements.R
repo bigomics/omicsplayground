@@ -132,7 +132,8 @@ pkg.extra <- c(
   "HiddenMarkov","coin","rjags","argparse",
   "RcppParallel", "KEGGgraph", 
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
-  'TxDb.Mmusculus.UCSC.mm10.knownGene'
+  'TxDb.Mmusculus.UCSC.mm10.knownGene',
+  'listviewer'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
