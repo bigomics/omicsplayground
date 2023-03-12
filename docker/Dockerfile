@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:base-ub2204
+FROM bigomics/omicsplayground-base:ub2204
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------

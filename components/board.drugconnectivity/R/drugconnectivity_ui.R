@@ -65,7 +65,7 @@ DrugConnectivityUI <- function(id) {
         )
       ),
       shiny::tabPanel(
-        "Connectivity map - Development",
+        "Connectivity map (beta)",
         shiny::div(
           shiny::fillCol(
             flex = c(NA, 0.035, 1),
