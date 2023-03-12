@@ -156,9 +156,9 @@ app_ui <- function() {
         mm <- populateSidebar(menu_tree)
         mm <- lapply(mm, as.character)
         mm <- HTML(unlist(mm))
-        sidebar.save <- bigdash::sidebar("Menu", mm)
+        sidebar <- bigdash::sidebar("Menu", mm)
         
-        sidebar = bigdash::sidebar(
+        sidebar.save = bigdash::sidebar(
           "Menu",
           bigdash::sidebarMenu(
             "Load",
@@ -172,8 +172,8 @@ app_ui <- function() {
                 "load-tab"
               )),
               "This panel shows the available datasets within the platform. These data sets
-              have been pre-computed and are ready to be used. Select a
-              dataset in the table and load the data set by clicking the 'load' button.",
+              have been pre-computed and are ready to be used. Select a dataset in the table
+              and load the data set by clicking the 'load' button.",
               placement = "top"             
             ),
             bigdash::sidebarMenuItem(
@@ -188,7 +188,7 @@ app_ui <- function() {
                  "dataview-tab"
                )),
              "Information and descriptive statistics to quickly lookup a gene,
-                check your experiment QC, view the raw data, sample or contrast tables.",
+              check your experiment QC, view the raw data, sample or contrast tables.",
              placement = "top"
            ),
              bigdash::sidebarMenu(
