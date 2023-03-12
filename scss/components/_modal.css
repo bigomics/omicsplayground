@@ -13,12 +13,18 @@ html {
     }
 
     .modal-dialog.modal-lg {
-	width: 1400px;
+	width: 600px;
+    }
+
+    .img-fluid{
+      display: block;
+      margin-right: auto;
+      margin-left: auto;
     }
 
     .modal-dialog.modal-sm {
-	width: 400px;
-	top: 100px;
+      width: 400px;
+      top: 100px;
     }
 
     .modal-content {
@@ -42,7 +48,7 @@ html {
     .popup-plot .modal-footer {
 	display: none;
     }
-    
+
 
 
 }
