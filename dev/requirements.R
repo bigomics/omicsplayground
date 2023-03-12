@@ -159,7 +159,6 @@ length(INSTALLED.PKGS)
 ##install.pkg("grid", force=TRUE)
 install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
                "diptest", "fpc"))
-
 ## install webshot and phantomjs (do we need it?)
 #install.pkg("webshot")
 #webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
@@ -170,6 +169,7 @@ devtools::install_version("mnormt", repos="http://cran.us.r-project.org") ## for
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))
 install.packages("https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz")
+install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB (overwriting any other version)
@@ -178,8 +178,9 @@ install.github("GfellerLab/EPIC")
 ##install.github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 install.github('linxihui/NNLM')
 install.github("Coolgenome/iTALK")
-install.github("JohnCoene/waiter")
 install.github('wt2015-github/FastGGM', force=TRUE)
+install.github("JohnCoene/waiter")
+install.github('JohnCoene/firebase@omics', force=TRUE)
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)

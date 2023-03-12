@@ -30,8 +30,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 
 RUN R -e "remotes::install_github('bigomics/bigdash')"
-# RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
-RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
+# RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
@@ -51,7 +50,8 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.disable; fi
+RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
+RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 #------------------------------------------------------------
