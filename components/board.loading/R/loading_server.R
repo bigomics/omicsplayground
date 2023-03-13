@@ -36,7 +36,7 @@ LoadingBoard <- function(id,
     )
 
     ## static, not changing
-    pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))  
+    pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))
 
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
@@ -90,6 +90,10 @@ LoadingBoard <- function(id,
 
         #trigger settings sidebar css
         shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
+
+        # leave the welcome page
+        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+        shinyjs::runjs("$('.sidebar-label').trigger('click');")
 
         rl$selected_row <- example_row
         rl$found_example_trigger <- TRUE
@@ -163,7 +167,7 @@ LoadingBoard <- function(id,
       email <- gsub(".*\\/", "", email)
       pdir <- pgx_dir ## from module input
 
-      ## Append email to the pgx path. 
+      ## Append email to the pgx path.
       if (enable_userdir) {
         pdir <- paste0(pdir, "/", email)
         if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
@@ -205,7 +209,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       info <- NULL
-      pdir <- pgx_shared_dir      
+      pdir <- pgx_shared_dir
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -532,7 +536,7 @@ LoadingBoard <- function(id,
       if (1) {
         ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
         ## session environment.
-        dbg("[loading_server.R] copying pgx object to global environment")        
+        dbg("[loading_server.R] copying pgx object to global environment")
         for (i in 1:length(loaded_pgx)) {
           pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
         }
