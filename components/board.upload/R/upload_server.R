@@ -207,7 +207,7 @@ UploadBoard <- function(id,
           )
         )
 
-        #shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
 
       })
     }
