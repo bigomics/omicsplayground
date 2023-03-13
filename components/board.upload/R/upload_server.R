@@ -14,7 +14,8 @@ UploadBoard <- function(id,
                         ),
                         enable_upload = TRUE,
                         enable_save = TRUE,
-                        enable_userdir = TRUE) {
+                        enable_userdir = TRUE,
+                        r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -208,7 +209,9 @@ UploadBoard <- function(id,
         )
 
         shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-
+        
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        r_global$loadedDataset <- r_global$loadedDataset+1
       })
     }
 

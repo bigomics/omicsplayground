@@ -22,17 +22,14 @@ LoadingBoard <- function(id,
 
     ## reactive variables used only within this module
     rl <- reactiveValues(
-      loadedDataset = 0,
-      reload_pgxdir = 0,
+      reload_pgxdir_shared = 0,
       selected_row = NULL,
       found_example_trigger = NULL,
       pgxTable_data = NULL,
       pgxTable_edited = 0,
       pgxTable_edited_row = NULL,
-
       pgxTablePublic_data = NULL,
-      selected_row_shared = NULL,
-      reload_pgxdir_shared = 0
+      selected_row_shared = NULL
     )
 
     ## static, not changing
@@ -58,7 +55,7 @@ LoadingBoard <- function(id,
         new_pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
         file.copy(from = pgx_file, to = new_pgx_file)
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
-        rl$reload_pgxdir <- rl$reload_pgxdir + 1
+        r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         shinyalert::shinyalert(
           "Dataset imported",
           paste('The public dataset', pgx_name, 'has now been successfully imported',
@@ -161,7 +158,7 @@ LoadingBoard <- function(id,
     ## Get the pgx folder. If user folders are enabled, the user email
     ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
-      rl$reload_pgxdir ## force reload
+      r_global$reload_pgxdir ## force reload
 
       email <- auth$email()
       email <- gsub(".*\\/", "", email)
@@ -418,7 +415,7 @@ LoadingBoard <- function(id,
         if (input$confirmdelete) {
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
-          rl$reload_pgxdir <- rl$reload_pgxdir + 1
+          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
       }
 
@@ -530,7 +527,7 @@ LoadingBoard <- function(id,
       loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
 
       ## ----------------- update input --------------------------------------
-      rl$loadedDataset <- rl$loadedDataset + 1 ## notify new data uploaded
+      r_global$loadedDataset <- r_global$loadedDataset + 1 ## notify new data uploaded
 
       ## ***NEW*** update PGX from session
       if (1) {
@@ -651,7 +648,7 @@ LoadingBoard <- function(id,
     ## Board return object
     ## ------------------------------------------------
     res <- list(
-      loaded = reactive(rl$loadedDataset),
+      loaded = reactive(r_global$loadedDataset),
       auth = auth
     )
     return(res)
