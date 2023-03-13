@@ -52,6 +52,7 @@ PlotModuleUI <- function(id,
                        pdf.height = 6
                        )
 {
+    require(magrittr)
     ns <- shiny::NS(id)
 
     if(is.null(plotlib2)) plotlib2 <- plotlib
