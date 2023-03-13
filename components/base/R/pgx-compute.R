@@ -429,7 +429,6 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
 
     is.mouse <- (cap.fraction > 0.9)
     org = ifelse(is.mouse, "mouse", "human")
-    org
     message("[createPGX] detected organism: ",org,"")
   
     do.filter <- (only.hugo | only.known | only.proteincoding )

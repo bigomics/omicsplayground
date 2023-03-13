@@ -355,3 +355,9 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	$('#sidebar-help-container').hide();
 	}, 1000);
 });
+
+
+Shiny.addCustomMessageHandler('select-bigtab', (msg) => {
+    ##console.log('msg.value' + msg.value)
+    $(`.tab-trigger[data-target=${msg.value}]`).trigger('click');
+});
