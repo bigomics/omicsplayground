@@ -109,7 +109,9 @@ app_server <- function(input, output, session) {
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
     r_global <- reactiveValues(
-        load_example_trigger = FALSE
+        load_example_trigger = FALSE,
+        reload_pgxdir = 0,
+        loadedDataset = 0
     )
 
     ## Modules needed from the start
@@ -135,7 +137,8 @@ app_server <- function(input, output, session) {
         limits = limits,
         enable_userdir = opt$ENABLE_USERDIR,
         enable_upload = opt$ENABLE_UPLOAD,
-        enable_save = opt$ENABLE_SAVE
+        enable_save = opt$ENABLE_SAVE,
+        r_global = r_global
     )
 
     ## If user is logged off, we clear the data
