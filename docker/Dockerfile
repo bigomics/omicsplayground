@@ -26,14 +26,6 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
 #------------------------------------------------------------
-# Install any extra (forgotten...) R packages since base
-#------------------------------------------------------------
-
-RUN R -e "remotes::install_github('bigomics/bigdash')"
-# RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
-# RUN pip3 install umap-learn
-
-#------------------------------------------------------------
 # Download fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
@@ -45,6 +37,14 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
     && mv omicsplayground-$BRANCH omicsplayground \
     && chmod -R ugo+rwX /omicsplayground \
     && rm $BRANCH.zip   
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) R packages since base
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+RUN R -e "remotes::install_github('bigomics/bigdash')"
+# RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
+# RUN pip3 install umap-learn
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image

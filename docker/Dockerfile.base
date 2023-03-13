@@ -50,13 +50,15 @@ WORKDIR /omicsplayground
 #COPY build /omicsplayground/build
 COPY dev /omicsplayground/dev
 COPY components /omicsplayground/components
+COPY extdata/packages /omicsplayground/extdata/packages
 RUN R -e "source('dev/requirements.R')"
 
 ## add any missing packages manually------------------------
 FROM r-base1 AS r-base2
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
-#RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
+RUN R -e "BiocManager::install('KEGGgraph')"
+RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
 
 #------------------------------------------------------------
 # Clean up when done.
