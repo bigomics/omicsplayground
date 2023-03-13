@@ -20,13 +20,6 @@ UploadBoard <- function(id,
 
     loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
 
-    message("[UploadBoard] in.shinyproxy = ", in.shinyproxy())
-    message("[UploadBoard] SHINYPROXY_USERNAME = ", Sys.getenv("SHINYPROXY_USERNAME"))
-    message("[UploadBoard] SHINYPROXY_USERGROUPS = ", Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[UploadBoard] pgx_dir = ", pgx_dir)
-
-    dbg("[UploadBoard] getwd = ", getwd())
-
     phenoRT <- shiny::reactive(uploaded$samples.csv)
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
 
