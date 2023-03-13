@@ -279,7 +279,9 @@ app_server <- function(input, output, session) {
 
         ## remove modal from LoadingBoard
         shiny::removeModal()
-        
+
+        #show hidden tabs
+        session$sendCustomMessage( "show-tabs", list())
     })
 
 

@@ -199,6 +199,9 @@ UploadBoard <- function(id,
             )
           )
         )
+
+        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+
       })
     }
 
@@ -292,7 +295,12 @@ UploadBoard <- function(id,
         ## dimensions from the given PGX/NGS object. Really?
         ##
         i <- grep("[.]pgx$", input$upload_files$name)
-        load(input$upload_files$datapath[i]) ## load NGS/PGX
+        
+        # load(input$upload_files$datapath[i], ngs <- new.env(), verbose = TRUE) ## load NGS/PGX
+
+        ngs <- local(get(load(input$upload_files$datapath[i], verbose = 0))) ## override any name
+
+  
         ## matlist[["counts.csv"]] <- ngs$counts
         ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
         ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
