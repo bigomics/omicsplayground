@@ -40,7 +40,7 @@ expression_table_fctable_ui <- function(id, width, height) {
 #'
 #' @export
 expression_table_fctable_server <- function(id,
-                                            pgx, # inputData()
+                                            pgx,
                                             res, # filteredDiffExprTable
                                             metaFC,
                                             metaQ,

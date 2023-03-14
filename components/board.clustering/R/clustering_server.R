@@ -427,7 +427,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     getClustAnnotCorrelation <- shiny::reactive({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
       filt <- getTopMatrix()

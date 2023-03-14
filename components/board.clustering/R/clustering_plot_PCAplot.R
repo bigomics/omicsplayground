@@ -84,7 +84,6 @@ clustering_plot_clustpca_server <- function(id,
     })
 
     plot.RENDER <- function() {
-      ## pgx <- inputData()
       pd <- plot_data()
 
       hmpca_options <- pd[["hmpca_options"]]

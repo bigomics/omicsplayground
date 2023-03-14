@@ -20,7 +20,6 @@ pgx.getMetaMatrix <- function(pgx, methods="meta", level="gene")
     fc0 = NULL
     qv0 = NULL
     if(level=="gene") {
-        ##pgx <- inputData()
         all.methods = colnames(unclass(pgx$gx.meta$meta[[1]]$fc))
         all.methods
         if(is.null(methods)) methods <- all.methods
@@ -41,9 +40,8 @@ pgx.getMetaMatrix <- function(pgx, methods="meta", level="gene")
         }
     }
     if(level=="geneset") {
-        ##pgx <- inputData()
         all.methods = colnames(unclass(pgx$gset.meta$meta[[1]]$fc))
-        if(is.null(methods)) methods <- all.methods        
+        if(is.null(methods)) methods <- all.methods
         if(any(methods %in% all.methods)) {
             fc0 = sapply(pgx$gset.meta$meta, function(x)
                 rowMeans(unclass(x$fc)[,methods,drop=FALSE],na.rm=TRUE))
@@ -78,7 +76,7 @@ pgx.getTopGeneSets <- function(pgx, n=10, ng=100, dir=0, sym=FALSE, filt=NULL) {
     ## Gets top marker genes for all comparisons
     ##
     ##
-    F <- pgx.getMarkerGenes(pgx, n=ng, dir=dir, sym=sym)    
+    F <- pgx.getMarkerGenes(pgx, n=ng, dir=dir, sym=sym)
     G <- sapply(pgx$gset.meta$meta,function(m) m$meta.fx)
     rownames(G) <- rownames(pgx$gset.meta$meta[[1]])
     if(!is.null(filt)) {

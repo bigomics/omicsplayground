@@ -58,7 +58,6 @@ clustering_plot_clusterannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
       if (is.null(input$xann_level)) {

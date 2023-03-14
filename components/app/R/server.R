@@ -175,12 +175,6 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        ## TEMPORARY SOLUTION. All modules should use PGX eventually.
-        inputData <- reactive({
-            if(all(sapply(PGX,is.null))) return(NULL)
-            PGX
-        })
-
         shiny::withProgress(message="Preparing your dashboards...", value=0, {
 
           if(ENABLED['dataview'])  {
