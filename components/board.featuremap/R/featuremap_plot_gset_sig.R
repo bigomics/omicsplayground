@@ -19,29 +19,28 @@ featuremap_plot_gset_sig_ui <- function(id, label = "", height = c(600, 800)) {
 }
 
 featuremap_plot_gset_sig_server <- function(id,
-                                            inputData,
+                                            pgx,
                                             getGsetUMAP,
                                             sigvar,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     gsetSigPlots.plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       pos <- getGsetUMAP()
       hilight <- NULL
 
       pheno <- "tissue"
       pheno <- sigvar()
-      if (pheno %in% colnames(ngs$samples)) {
-        X <- ngs$gsetX - rowMeans(ngs$gsetX)
-        y <- ngs$samples[, pheno]
+      if (pheno %in% colnames(pgx$samples)) {
+        X <- pgx$gsetX - rowMeans(pgx$gsetX)
+        y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
       } else {
-        F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+        F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       }
       if (nrow(F) == 0) {
         return(NULL)
