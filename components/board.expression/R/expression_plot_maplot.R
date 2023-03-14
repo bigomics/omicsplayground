@@ -41,7 +41,7 @@ expression_plot_maplot_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param inputData
+#' @param pgx
 #' @param gx_fdr
 #' @param gx_contrast
 #' @param gx_lfc
@@ -55,7 +55,7 @@ expression_plot_maplot_ui <- function(id,
 #'
 #' @export
 expression_plot_maplot_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           gx_fdr,
                                           gx_contrast,
                                           gx_lfc,
@@ -75,9 +75,7 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
@@ -89,7 +87,7 @@ expression_plot_maplot_server <- function(id,
       fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
 
       ## filter genes by gene family or gene set
-      fam.genes <- unique(unlist(ngs$families[10]))
+      fam.genes <- unique(unlist(pgx$families[10]))
       fam.genes <- res$gene_name
       if (gx_features() != "<all>") {
         gset <- getGSETS(gx_features())
@@ -147,7 +145,7 @@ expression_plot_maplot_server <- function(id,
       }
 
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
-      x <- rowMeans(ngs$X[rownames(res), ], na.rm = TRUE)
+      x <- rowMeans(pgx$X[rownames(res), ], na.rm = TRUE)
 
       impt <- function(g) {
         j <- match(g, fc.genes)

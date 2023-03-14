@@ -42,7 +42,7 @@ expression_plot_volcanoMethods_ui <- function(id,
 #' @return
 #' @export
 expression_plot_volcanoMethods_server <- function(id,
-                                                  inputData,
+                                                  pgx,
                                                   comp, # input$gx_contrast
                                                   features, # input$gx_features
                                                   fdr, # input$gx_fdr
@@ -57,13 +57,12 @@ expression_plot_volcanoMethods_server <- function(id,
       if (is.null(comp)) {
         return(NULL)
       }
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
       if (is.null(features)) {
         return(NULL)
       }
 
-      comp <- names(ngs$gx.meta$meta)[1]
+      comp <- names(pgx$gx.meta$meta)[1]
       fdr <- as.numeric(fdr()) # fdr <- 1
       lfc <- as.numeric(lfc()) # lfc <- 1
       genes <- NULL
@@ -73,7 +72,7 @@ expression_plot_volcanoMethods_server <- function(id,
 
       return(
         list(
-          ngs = ngs,
+          pgx = pgx,
           fdr = fdr,
           lfc = lfc,
           comp = comp,
@@ -87,7 +86,7 @@ expression_plot_volcanoMethods_server <- function(id,
       shiny::req(pd)
 
       ## meta tables
-      mx <- pd[["ngs"]]$gx.meta$meta[[pd[["comp"]]]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[pd[["comp"]]]]
       fc <- unclass(mx$fc)
       ## pv = unclass(mx$p)
       qv <- unclass(mx$q)
@@ -95,11 +94,11 @@ expression_plot_volcanoMethods_server <- function(id,
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
       xlim <- c(-1.1, 1.1) * max(abs(fc))
       xlim <- 1.3 * c(-1, 1) * quantile(abs(fc), probs = 0.999)
-      fc.genes <- pd[["ngs"]]$genes[rownames(mx), "gene_name"]
+      fc.genes <- pd[["pgx"]]$genes[rownames(mx), "gene_name"]
       nplots <- min(24, ncol(qv))
 
-      ## methods = names(ngs$gx.meta$output)
-      methods <- colnames(pd[["ngs"]]$gx.meta$meta[[1]]$fc)
+      ## methods = names(pgx$gx.meta$output)
+      methods <- colnames(pd[["pgx"]]$gx.meta$meta[[1]]$fc)
       nc <- 6
       par(mfrow = c(2, 6), mar = c(4, 4, 2, 2) * 0, oma = c(1, 1, 0, 0) * 2)
       if (nplots > 12) {
