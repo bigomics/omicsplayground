@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-BiomarkerBoard <- function(id, inputData) {
+BiomarkerBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -57,7 +57,6 @@ BiomarkerBoard <- function(id, inputData) {
     }) %>% shiny::debounce(1000)
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
       ct <- colnames(pgx$Y)
       ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
@@ -66,7 +65,6 @@ BiomarkerBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
 
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
@@ -88,7 +86,6 @@ BiomarkerBoard <- function(id, inputData) {
       ##
       ## This code also features a progress indicator.
       ##
-      pgx <- inputData()
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -312,7 +309,7 @@ BiomarkerBoard <- function(id, inputData) {
     biomarker_plot_heatmap_server(
       "pdx_heatmap",
       calcVariableImportance,
-      inputData,
+      pgx,
       reactive(input$pdx_predicted),
       watermark = WATERMARK
     )

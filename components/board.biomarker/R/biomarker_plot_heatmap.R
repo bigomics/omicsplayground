@@ -42,13 +42,12 @@ biomarker_plot_heatmap_ui <- function(id,
 #' @export
 biomarker_plot_heatmap_server <- function(id,
                                           calcVariableImportance,
-                                          inputData,
+                                          pgx,
                                           pdx_predicted,
                                           watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        pgx <- inputData()
         shiny::req(pgx)
 
         res <- calcVariableImportance()

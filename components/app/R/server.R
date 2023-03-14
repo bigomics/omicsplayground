@@ -248,7 +248,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['bio']) {
             info("[server.R] calling BiomarkerBoard module")
-            BiomarkerBoard("bio", inputData = inputData)
+            BiomarkerBoard("bio", pgx = PGX)
           }
 
           if(ENABLED['cmap'])  {
