@@ -30,7 +30,7 @@ enrichment_plot_geneplot_ui <- function(id, height, width) {
 }
 
 enrichment_plot_geneplot_server <- function(id,
-                                            inputData,
+                                            pgx,
                                             gs_contrast,
                                             gene_selected,
                                             subplot.MAR,
@@ -40,13 +40,12 @@ enrichment_plot_geneplot_server <- function(id,
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
-      comp0 <- colnames(ngs$model.parameters$contr.matrix)[1]
+      comp0 <- colnames(pgx$model.parameters$contr.matrix)[1]
       comp0 <- gs_contrast()
 
-      has.design <- !is.null(ngs$model.parameters$design)
+      has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
       ## collapse.others=TRUE
 
@@ -62,13 +61,13 @@ enrichment_plot_geneplot_server <- function(id,
         if (length(probe) > 1) {
           probe <- grep("\\[gx|\\[mrna", probe, value = TRUE)
         }
-        ngrp <- length(unique(ngs$samples$group))
+        ngrp <- length(unique(pgx$samples$group))
         grouped <- TRUE
         grouped <- !input$gs_ungroup2
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
-        if (!grouped && ncol(ngs$X) > 15) srt <- 60
+        if (!grouped && ncol(pgx$X) > 15) srt <- 60
         pgx.plotExpression(
-          ngs, probe,
+          pgx, probe,
           comp = comp0, logscale = TRUE, level = "gene",
           collapse.others = collapse.others, grouped = grouped,
           srt = srt, main = "", xlab = gene

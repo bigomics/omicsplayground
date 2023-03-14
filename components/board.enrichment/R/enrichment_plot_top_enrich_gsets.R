@@ -20,20 +20,20 @@ enrichment_plot_top_enrich_gsets_ui <- function(id, height, width) {
 }
 
 enrichment_plot_top_enrich_gsets_server <- function(id,
-                                                    inputData,
+                                                    pgx,
                                                     getFilteredGeneSetTable,
                                                     gs_contrast,
                                                     gseatable,
                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plotTopEnriched <- function(ngs, rpt, comp, ntop, rowcol) {
-      if (is.null(ngs)) {
+    plotTopEnriched <- function(pgx, rpt, comp, ntop, rowcol) {
+      if (is.null(pgx)) {
         return(NULL)
       }
 
-      gx.meta <- ngs$gx.meta$meta[[comp]]
+      gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
-      names(rnk0) <- ngs$genes[rownames(gx.meta), "gene_name"]
+      names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) ## scaling/centering should be done in calculation...
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       qv.col <- grep("meta.q|q$", colnames(rpt))[1]
@@ -58,7 +58,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         if (i > length(top) || is.na(gs)) {
           frame()
         } else {
-          genes <- names(which(ngs$GMT[, gs] != 0))
+          genes <- names(which(pgx$GMT[, gs] != 0))
           genes <- toupper(genes)
           names(rnk0) <- toupper(names(rnk0))
           ylab <- ""
@@ -83,8 +83,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
 
     topEnriched.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
       rpt <- getFilteredGeneSetTable()
       shiny::req(rpt, gs_contrast())
       if (is.null(rpt)) {
@@ -93,7 +92,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
 
       comp <- 1
       comp <- gs_contrast()
-      if (!(comp %in% names(ngs$gx.meta$meta))) {
+      if (!(comp %in% names(pgx$gx.meta$meta))) {
         return(NULL)
       }
 
@@ -117,9 +116,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         itop <- head(jj, 15)
       }
       if (length(itop) == 1) {
-        plotTopEnriched(ngs, rpt[itop, , drop = FALSE], comp = comp, ntop = 1, rowcol = c(1, 1))
+        plotTopEnriched(pgx, rpt[itop, , drop = FALSE], comp = comp, ntop = 1, rowcol = c(1, 1))
       } else {
-        plotTopEnriched(ngs, rpt[itop, , drop = FALSE], comp = comp, ntop = 15, rowcol = c(3, 5))
+        plotTopEnriched(pgx, rpt[itop, , drop = FALSE], comp = comp, ntop = 15, rowcol = c(3, 5))
       }
       p <- grDevices::recordPlot()
       p
