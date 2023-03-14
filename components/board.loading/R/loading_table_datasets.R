@@ -16,7 +16,7 @@ loading_table_datasets_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
 
-    pgxTable_DT <- function() {
+    pgxTable_DT <- reactive({
       df <- rl$pgxTable_data
 
       # need this, otherwise there is an error on user logout
@@ -53,7 +53,7 @@ loading_table_datasets_server <- function(id,
           )
         ) ## end of options.list
       )
-    }
+    })
 
     # make changes to pgxtable
     observeEvent(

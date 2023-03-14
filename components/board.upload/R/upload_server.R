@@ -19,8 +19,6 @@ UploadBoard <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
-
     phenoRT <- shiny::reactive(uploaded$samples.csv)
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
 
@@ -148,8 +146,6 @@ UploadBoard <- function(id,
           pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
         }
 
-        DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected = NULL)
-
         savedata_button <- NULL
         if (enable_save) {
           ## -------------- save PGX file/object ---------------
@@ -188,7 +184,6 @@ UploadBoard <- function(id,
         } else {
           msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
         }
-        loadedDataset(loadedDataset() + 1) ## notify new data uploaded
 
         showModal(
           modalDialog(
@@ -202,7 +197,7 @@ UploadBoard <- function(id,
         )
 
         shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        
+
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         r_global$loadedDataset <- r_global$loadedDataset+1
       })
@@ -298,12 +293,12 @@ UploadBoard <- function(id,
         ## dimensions from the given PGX/NGS object. Really?
         ##
         i <- grep("[.]pgx$", input$upload_files$name)
-        
+
         # load(input$upload_files$datapath[i], ngs <- new.env(), verbose = TRUE) ## load NGS/PGX
 
         ngs <- local(get(load(input$upload_files$datapath[i], verbose = 0))) ## override any name
 
-  
+
         ## matlist[["counts.csv"]] <- ngs$counts
         ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
         ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
@@ -1391,7 +1386,7 @@ UploadBoard <- function(id,
     ## Board return object
     ## ------------------------------------------------
     res <- list(
-      loaded = loadedDataset
+      loaded = reactive(r_global$loadedDataset)
     )
     return(res)
   })

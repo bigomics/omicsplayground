@@ -450,7 +450,6 @@ LoadingBoard <- function(id,
     ## ========================== LOAD DATA FROM LIST =================================
     ## ================================================================================
 
-
     load_react <- reactive({
       btn <- input$loadbutton
       btn2 <- rl$found_example_trigger
@@ -593,7 +592,7 @@ LoadingBoard <- function(id,
     }
 
     observeEvent(
-      c(getFilteredPGXINFO(), rl$reload_pgxdir), {
+      c(getFilteredPGXINFO(), r_global$reload_pgxdir), {
 
         df <- getFilteredPGXINFO()
         df$dataset <- gsub("[.]pgx$", " ", df$dataset)
