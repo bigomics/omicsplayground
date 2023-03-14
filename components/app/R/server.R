@@ -284,8 +284,8 @@ app_server <- function(input, output, session) {
         shiny::removeModal()
 
         #show hidden tabs
-        bigdash.showTabs()  # see ui-bigdashplus.R
-        ##session$sendCustomMessage("show-tabs", list())
+        ##bigdash.showTabs(session)  # see ui-bigdashplus.R
+        session$sendCustomMessage("show-tabs", list())
 
     })
 

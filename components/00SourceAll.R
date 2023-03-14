@@ -67,6 +67,7 @@ if(!file.exists('00SourceAll.R')) {
   source('base/R/pgx-ui.R',encoding='UTF-8')
   source('base/R/pgx-vizpanels.R',encoding='UTF-8')
   source('base/R/pgx-wordcloud.R',encoding='UTF-8')
+  source('base/R/ui-bigdashplus.R',encoding='UTF-8')
   source('base/R/ui-boardHeader.R',encoding='UTF-8')
   source('base/R/ui-code.R',encoding='UTF-8')
   source('base/R/ui-modalUI.R',encoding='UTF-8')
