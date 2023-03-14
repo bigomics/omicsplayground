@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
+FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750
@@ -47,9 +47,8 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      shiny::req(ngs)
-      ct <- colnames(ngs$model.parameters$contr.matrix)
+      shiny::req(pgx)
+      ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- sort(ct)
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
@@ -58,19 +57,18 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     ## KEGG pathways
     ## =========================================================================
     getKeggTable <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs, input$fa_contrast)
+      shiny::req(pgx, input$fa_contrast)
 
       ## ----- get comparison
       comparison <- input$fa_contrast
-      if (!(comparison %in% names(ngs$gset.meta$meta))) {
+      if (!(comparison %in% names(pgx$gset.meta$meta))) {
         return(NULL)
       }
 
       ## ----- get KEGG id
       xml.dir <- file.path(FILES, "kegg-xml")
       kegg.available <- gsub("hsa|.xml", "", dir(xml.dir, pattern = "*.xml"))
-      kegg.ids <- getKeggID(rownames(ngs$gsetX))
+      kegg.ids <- getKeggID(rownames(pgx$gsetX))
       ## sometimes no KEGG in genesets...
       if (length(kegg.ids) == 0) {
         shinyWidgets::sendSweetAlert(
@@ -86,10 +84,10 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
       jj <- which(!is.na(kegg.ids) &
         !duplicated(kegg.ids) &
         kegg.ids %in% kegg.available)
-      kegg.gsets <- rownames(ngs$gsetX)[jj]
+      kegg.gsets <- rownames(pgx$gsetX)[jj]
       kegg.ids <- kegg.ids[jj]
 
-      meta <- ngs$gset.meta$meta[[comparison]]
+      meta <- pgx$gset.meta$meta[[comparison]]
       meta <- meta[kegg.gsets, ]
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
@@ -252,7 +250,7 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
     ##############
     functional_plot_kegg_graph_server(
       "kegg_graph",
-      inputData,
+      pgx,
       getFilteredKeggTable,
       kegg_table,
       reactive(input$fa_contrast)
@@ -260,13 +258,13 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
 
     functional_plot_kegg_actmap_server(
       "kegg_actmap",
-      inputData,
+      pgx,
       getKeggTable
     )
 
     kegg_table <- functional_table_kegg_table_server(
       "kegg_table",
-      inputData,
+      pgx,
       getFilteredKeggTable,
       reactive(input$fa_contrast),
       tabH
@@ -278,18 +276,18 @@ FunctionalBoard <- function(id, inputData, selected_gsetmethods) {
 
     functional_plot_go_network_server(
       "GO_network",
-      inputData,
+      pgx,
       reactive(input$fa_contrast)
     )
 
     functional_plot_go_actmap_server(
       "GO_actmap",
-      inputData
+      pgx
     )
 
     functional_table_go_table_server(
       "GO_table",
-      inputData,
+      pgx,
       reactive(input$fa_contrast),
       tabH,
       selected_gsetmethods

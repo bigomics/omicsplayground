@@ -45,7 +45,7 @@ functional_plot_kegg_graph_ui <- function(id,
 #' @return
 #' @export
 functional_plot_kegg_graph_server <- function(id,
-                                              inputData,
+                                              pgx,
                                               getFilteredKeggTable,
                                               kegg_table,
                                               fa_contrast,
@@ -54,7 +54,7 @@ functional_plot_kegg_graph_server <- function(id,
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = inputData(),
+          pgx = pgx,
           df = getFilteredKeggTable(),
           kegg_table = kegg_table,
           fa_contrast = fa_contrast()

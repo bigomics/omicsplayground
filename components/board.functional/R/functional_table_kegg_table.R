@@ -31,7 +31,7 @@ functional_table_kegg_table_ui <- function(id, width, height) {
 
 
 functional_table_kegg_table_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                getFilteredKeggTable,
                                                fa_contrast,
                                                tabH) {
@@ -40,7 +40,7 @@ functional_table_kegg_table_server <- function(id,
 
     table_data <- shiny::reactive({
       res <- list(
-        pgx = inputData(),
+        pgx = pgx,
         df = getFilteredKeggTable(),
         fa_contrast = fa_contrast
       )

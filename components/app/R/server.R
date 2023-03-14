@@ -216,7 +216,7 @@ app_server <- function(input, output, session) {
           }
           if(ENABLED['pathway']) {
             info("[server.R] calling FunctionalBoard module")
-            FunctionalBoard("pathway", inputData = inputData,
+            FunctionalBoard("pathway", pgx = PGX,
               selected_gsetmethods = env$enrich$selected_gsetmethods)
           }
 
