@@ -63,7 +63,7 @@ singlecell_plot_mappingplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_mappingplot_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                pfGetClusterPositions,
                                                getDeconvResults2,
                                                grpvar, # input$group2
@@ -75,16 +75,15 @@ singlecell_plot_mappingplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
 
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      pos <- ngs$tsne2d
+      pos <- pgx$tsne2d
       pos <- clust.pos
 
-      score <- ngs$deconv[["LM22"]][["meta"]]
+      score <- pgx$deconv[["LM22"]][["meta"]]
       score <- getDeconvResults2()
       if (is.null(score) || length(score) == 0) {
         return(NULL)
@@ -120,7 +119,7 @@ singlecell_plot_mappingplot_server <- function(id,
         grpvar = grpvar,
         score = score,
         refset = refset,
-        ngs = ngs,
+        pgx = pgx,
         pos = pos,
         view = view
       ))
@@ -129,8 +128,8 @@ singlecell_plot_mappingplot_server <- function(id,
     plot.render <- function() {
       pd <- plot_data()
 
-      if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples)) {
-        grp <- pd[["ngs"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
+      if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
+        grp <- pd[["pgx"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
         pd[["pos"]] <- apply(pd[["pos"]], 2, function(x) tapply(x, grp, median))
         pd[["score"]] <- apply(pd[["score"]], 2, function(x) tapply(x, grp, mean))
         ii <- hclust(dist(pd[["score"]]))$order
@@ -164,10 +163,10 @@ singlecell_plot_mappingplot_server <- function(id,
         if (!is.null(usermode) && usermode >= "PRO") {
           kk <- head(colnames(pd[["score"]])[order(-colMeans(pd[["score"]]**2))], 18)
           kk <- intersect(colnames(pd[["score"]]), kk)
-          all.scores <- pd[["ngs"]]$deconv[["LM22"]]
-          all.scores <- pd[["ngs"]]$deconv[[pd[["refset"]]]]
-          if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples)) {
-            grp <- pd[["ngs"]]$samples[rownames(all.scores[[1]]), pd[["grpvar"]]]
+          all.scores <- pd[["pgx"]]$deconv[["LM22"]]
+          all.scores <- pd[["pgx"]]$deconv[[pd[["refset"]]]]
+          if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
+            grp <- pd[["pgx"]]$samples[rownames(all.scores[[1]]), pd[["grpvar"]]]
             for (i in 1:length(all.scores)) {
               all.scores[[i]] <- apply(
                 all.scores[[i]], 2,

@@ -53,7 +53,7 @@ singlecell_plot_cytoplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_cytoplot_server <- function(id,
-                                            inputData,
+                                            pgx,
                                             pfGetClusterPositions,
                                             samplefilter, # input$samplefilter
                                             cytovar1,
@@ -66,9 +66,8 @@ singlecell_plot_cytoplot_server <- function(id,
     cyto.plotFUNC <- shiny::reactive({
       ## if(!input$tsne.all) return(NULL)
 
-      ngs <- inputData()
-      ## if(is.null(ngs)) return(NULL)
-      shiny::req(ngs)
+      ## if(is.null(pgx)) return(NULL)
+      shiny::req(pgx)
 
       cytovar1 <- cytovar1()
       cytovar2 <- cytovar2()
@@ -87,12 +86,12 @@ singlecell_plot_cytoplot_server <- function(id,
         return(NULL)
       }
 
-      kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter)
+      kk <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
       gene1 <- cytovar1
       gene2 <- cytovar2
       ## if(gene1 == gene2) return(NULL)
       par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
-      pgx.cytoPlot(ngs, gene1, gene2,
+      pgx.cytoPlot(pgx, gene1, gene2,
         samples = kk, cex = 0.8,
         col = "grey60", cex.names = 1, lab.unit = "(log2CPM)"
       )

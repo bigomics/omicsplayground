@@ -258,7 +258,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['cell']) {
             info("[server.R] calling SingleCellBoard module")
-            SingleCellBoard("cell", inputData = inputData)
+            SingleCellBoard("cell", pgx = PGX)
           }
 
           shiny::incProgress(0.8)

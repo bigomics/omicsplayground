@@ -69,7 +69,7 @@ singlecell_plot_markersplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_markersplot_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                pfGetClusterPositions,
                                                mrk_level,
                                                mrk_features,
@@ -82,8 +82,7 @@ singlecell_plot_markersplot_server <- function(id,
     markers.plotFUNC <- shiny::reactive({
       ## if(!input$tsne.all) return(NULL)
 
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       mrk_level <- mrk_level()
       mrk_features <- mrk_features()
@@ -94,10 +93,10 @@ singlecell_plot_markersplot_server <- function(id,
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      ## pos <- ngs$tsne2d
+      ## pos <- pgx$tsne2d
       pos <- clust.pos
 
-      ## markers <- ngs$families[["CD family"]]
+      ## markers <- pgx$families[["CD family"]]
       if (is.null(mrk_features)) {
         return(NULL)
       }
@@ -107,25 +106,25 @@ singlecell_plot_markersplot_server <- function(id,
 
       term <- ""
       if (mrk_level == "gene") {
-        markers <- ngs$families[["Transcription factors (ChEA)"]]
+        markers <- pgx$families[["Transcription factors (ChEA)"]]
         if (mrk_search != "") {
           term <- mrk_search
-          jj <- grep(term, ngs$genes$gene_name, ignore.case = TRUE)
-          markers <- ngs$genes$gene_name[jj]
+          jj <- grep(term, pgx$genes$gene_name, ignore.case = TRUE)
+          markers <- pgx$genes$gene_name[jj]
           term <- paste("filter:", term)
-        } else if (mrk_features %in% names(ngs$families)) {
-          markers <- ngs$families[[mrk_features]]
+        } else if (mrk_features %in% names(pgx$families)) {
+          markers <- pgx$families[[mrk_features]]
           term <- mrk_features
         } else {
-          markers <- ngs$genes$gene_name
+          markers <- pgx$genes$gene_name
         }
-        ## markers <- intersect(markers, rownames(ngs$X))
-        markers <- intersect(toupper(markers), toupper(ngs$genes$gene_name))
-        jj <- match(markers, toupper(ngs$genes$gene_name))
-        pmarkers <- intersect(rownames(ngs$genes)[jj], rownames(ngs$X))
-        gx <- ngs$X[pmarkers, rownames(pos), drop = FALSE]
+        ## markers <- intersect(markers, rownames(pgx$X))
+        markers <- intersect(toupper(markers), toupper(pgx$genes$gene_name))
+        jj <- match(markers, toupper(pgx$genes$gene_name))
+        pmarkers <- intersect(rownames(pgx$genes)[jj], rownames(pgx$X))
+        gx <- pgx$X[pmarkers, rownames(pos), drop = FALSE]
       } else if (mrk_level == "geneset") {
-        ## markers <- ngs$families[["Immune checkpoint (custom)"]]
+        ## markers <- pgx$families[["Immune checkpoint (custom)"]]
         markers <- COLLECTIONS[[1]]
         if (is.null(mrk_features)) {
           return(NULL)
@@ -133,29 +132,29 @@ singlecell_plot_markersplot_server <- function(id,
         ft <- mrk_features
         if (mrk_search == "" && ft %in% names(COLLECTIONS)) {
           markers <- COLLECTIONS[[mrk_features]]
-          markers <- intersect(markers, rownames(ngs$gsetX))
+          markers <- intersect(markers, rownames(pgx$gsetX))
           term <- mrk_features
         } else if (mrk_search != "") {
           term <- mrk_search
-          jj <- grep(term, rownames(ngs$gsetX), ignore.case = TRUE)
-          markers <- rownames(ngs$gsetX)[jj]
+          jj <- grep(term, rownames(pgx$gsetX), ignore.case = TRUE)
+          markers <- rownames(pgx$gsetX)[jj]
           term <- paste("filter:", term)
         } else {
-          markers <- rownames(ngs$gsetX)
+          markers <- rownames(pgx$gsetX)
         }
-        gx <- ngs$gsetX[markers, rownames(pos), drop = FALSE]
+        gx <- pgx$gsetX[markers, rownames(pos), drop = FALSE]
       } else {
         cat("fatal error")
         return(NULL)
       }
 
-      if (!"group" %in% names(ngs$model.parameters)) {
+      if (!"group" %in% names(pgx$model.parameters)) {
         stop("[markers.plotFUNC] FATAL: no group in model.parameters")
       }
 
       ## prioritize gene with large variance (groupwise)
-      ## grp <- as.character(ngs$samples[rownames(pos),"group"])
-      grp <- ngs$model.parameters$group[rownames(pos)]
+      ## grp <- as.character(pgx$samples[rownames(pos),"group"])
+      grp <- pgx$model.parameters$group[rownames(pos)]
       zx <- t(apply(gx, 1, function(x) tapply(x, grp, mean)))
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
       gx <- gx - min(gx, na.rm = TRUE) + 0.01 ## subtract background??
