@@ -60,7 +60,7 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cumEnrichmentPlot_server <- function(id,
-                                                       inputData,
+                                                       pgx,
                                                        cmap_sigdb,
                                                        getConnectivityScores,
                                                        connectivityScoreTable,

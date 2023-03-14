@@ -82,7 +82,7 @@ connectivity_plot_connectivityMap_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_connectivityMap_server <- function(id,
-                                                     inputData,
+                                                     pgx,
                                                      cmap_sigdb,
                                                      getConnectivityScores,
                                                      getEnrichmentMatrix,
@@ -90,9 +90,8 @@ connectivity_plot_connectivityMap_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       getConnectivityPositions <- shiny::reactive({
-        ngs <- inputData()
         cmap_sigdb <- cmap_sigdb()
-        shiny::req(ngs)
+        shiny::req(pgx)
 
         ## get the foldchanges of selected comparison and neighbourhood
         dims <- 2
@@ -195,7 +194,6 @@ connectivity_plot_connectivityMap_server <- function(id,
       })
 
       plot_RENDER <- shiny::reactive({
-        pgx <- inputData()
         cmap_sigdb <- cmap_sigdb()
         shiny::req(pgx)
 

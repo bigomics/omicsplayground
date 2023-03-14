@@ -57,7 +57,7 @@ connectivity_plot_cmapPairsPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cmapPairsPlot_server <- function(id,
-                                                   inputData,
+                                                   pgx,
                                                    cmap_contrast,
                                                    cmap_sigdb,
                                                    getConnectivityContrasts,
@@ -70,7 +70,7 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = inputData(),
+          pgx = pgx,
           cmap_contrast = cmap_contrast(),
           cmap_sigdb = cmap_sigdb()
         )
@@ -83,7 +83,6 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         cmap_contrast <- res$cmap_contrast
         cmap_sigdb <- res$cmap_sigdb
 
-        # pgx <- inputData()
         shiny::req(pgx, cmap_contrast)
         sigdb <- cmap_sigdb
 

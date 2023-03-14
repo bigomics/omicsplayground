@@ -4,7 +4,7 @@
 ##
 
 
-ConnectivityBoard <- function(id, inputData) {
+ConnectivityBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -37,11 +37,10 @@ ConnectivityBoard <- function(id, inputData) {
 
     ## update choices upon change of data set
     shiny::observe({
-      ngs <- inputData()
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
-      comparisons <- colnames(ngs$model.parameters$contr.matrix)
+      comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "cmap_contrast",
         choices = comparisons,
@@ -50,7 +49,7 @@ ConnectivityBoard <- function(id, inputData) {
 
       sigdb <- c("A", "B", "C")
       sigdb0 <- dir(SIGDB.DIR, pattern = "sigdb-.*h5")
-      sigdb <- names(ngs$connectivity) ## only precomputed inside PGX object??
+      sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
       sigdb <- sort(intersect(sigdb, sigdb0))
       sel <- sigdb[1]
       shiny::updateSelectInput(session, "cmap_sigdb", choices = sigdb, selected = sel)
@@ -67,8 +66,7 @@ ConnectivityBoard <- function(id, inputData) {
 
     ## update choices upon change of chosen contrast
     shiny::observeEvent(input$cmap_contrast, {
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       ## reset CMap threshold zero/max
       res <- getConnectivityScores() ## result gets cached
@@ -78,13 +76,12 @@ ConnectivityBoard <- function(id, inputData) {
     })
 
     getCurrentContrast <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs, input$cmap_contrast)
+      shiny::req(pgx, input$cmap_contrast)
       ct <- input$cmap_contrast
-      fc <- ngs$gx.meta$meta[[ct]]$meta.fx
-      names(fc) <- rownames(ngs$gx.meta$meta[[ct]])
-      gs <- ngs$gset.meta$meta[[ct]]$meta.fx
-      names(gs) <- rownames(ngs$gset.meta$meta[[ct]])
+      fc <- pgx$gx.meta$meta[[ct]]$meta.fx
+      names(fc) <- rownames(pgx$gx.meta$meta[[ct]])
+      gs <- pgx$gset.meta$meta[[ct]]$meta.fx
+      names(gs) <- rownames(pgx$gset.meta$meta[[ct]])
       names(fc) <- toupper(names(fc)) ## de-MOUSE
       list(name = ct, fc = fc, gs = gs)
     })
@@ -273,17 +270,16 @@ ConnectivityBoard <- function(id, inputData) {
 
     getConnectivityScores <- shiny::reactive({
       # browser()
-      ngs <- inputData()
-      shiny::req(ngs, input$cmap_contrast)
-      shiny::validate(shiny::need("connectivity" %in% names(ngs), "no 'connectivity' in object."))
+      shiny::req(pgx, input$cmap_contrast)
+      shiny::validate(shiny::need("connectivity" %in% names(pgx), "no 'connectivity' in object."))
 
       ntop <- 1000
       sigdb <- input$cmap_sigdb
       shiny::req(sigdb)
 
       all.scores <- NULL
-      if (sigdb %in% names(ngs$connectivity)) {
-        all.scores <- ngs$connectivity[[sigdb]]
+      if (sigdb %in% names(pgx$connectivity)) {
+        all.scores <- pgx$connectivity[[sigdb]]
       } else {
         warning("[getConnectivityScores] ERROR : could not get scores")
         return(NULL)
@@ -419,7 +415,7 @@ ConnectivityBoard <- function(id, inputData) {
 
     connectivity_plot_cmap_FCFCplots_server(
       "cmap_FCFCplots",
-      inputData,
+      pgx,
       reactive(input$cmap_contrast),
       getCurrentContrast,
       getTopProfiles,
@@ -451,7 +447,7 @@ ConnectivityBoard <- function(id, inputData) {
 
     connectivity_plot_cumEnrichmentPlot_server(
       "cumEnrichmentPlot",
-      inputData,
+      pgx,
       reactive(input$cmap_sigdb),
       getConnectivityScores,
       connectivityScoreTable,
@@ -466,7 +462,7 @@ ConnectivityBoard <- function(id, inputData) {
     ## =============================================================================
     connectivity_plot_connectivityMap_server(
       "connectivityMap",
-      inputData,
+      pgx,
       reactive(input$cmap_sigdb),
       getConnectivityScores,
       getEnrichmentMatrix
@@ -514,7 +510,7 @@ ConnectivityBoard <- function(id, inputData) {
 
     connectivity_plot_cmapPairsPlot_server(
       "cmapPairsPlot",
-      inputData,
+      pgx,
       reactive(input$cmap_contrast),
       reactive(input$cmap_sigdb),
       getConnectivityContrasts,

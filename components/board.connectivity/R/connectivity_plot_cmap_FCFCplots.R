@@ -52,7 +52,7 @@ connectivity_plot_cmap_FCFCplots_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cmap_FCFCplots_server <- function(id,
-                                                    inputData,
+                                                    pgx,
                                                     cmap_contrast,
                                                     getCurrentContrast,
                                                     getTopProfiles,
@@ -127,7 +127,7 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
 
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = inputData(),
+          pgx = pgx,
           cmap_contrast = cmap_contrast()
         )
         return(res)
