@@ -264,17 +264,17 @@ app_server <- function(input, output, session) {
           shiny::incProgress(0.8)
           if(ENABLED['tcga']) {
             info("[server.R] calling TcgaBoard module")
-            TcgaBoard("tcga", inputData = inputData)
+            TcgaBoard("tcga", pgx = PGX)
           }
 
           if(ENABLED['wgcna']) {
             info("[server.R] calling WgcnaBoard module")
-            WgcnaBoard("wgcna", inputData = inputData)
+            WgcnaBoard("wgcna", pgx = PGX)
           }
 
           if(ENABLED['comp']) {
             info("[server.R] calling CompareBoard module")
-            CompareBoard("comp", inputData = inputData)
+            CompareBoard("comp", pgx = PGX)
           }
 
           info("[server.R] calling modules done!")

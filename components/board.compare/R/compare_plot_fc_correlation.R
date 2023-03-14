@@ -38,7 +38,7 @@ compare_plot_fc_correlation_ui <- function(id,
 #' @return
 #' @export
 compare_plot_fc_correlation_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                dataset2,
                                                hilightgenes,
                                                input.contrast1,
@@ -48,23 +48,23 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ngs1 <- inputData()
-      ngs2 <- dataset2()
-      ct1 <- head(names(ngs1$gx.meta$meta), 2)
-      ct2 <- head(names(ngs2$gx.meta$meta), 2)
+      pgx1 <- pgx
+      pgx2 <- dataset2()
+      ct1 <- head(names(pgx1$gx.meta$meta), 2)
+      ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
+      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
-      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(ngs1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(ngs2)$fc[, ct2, drop = FALSE]
+      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
+      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
       g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
       g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]

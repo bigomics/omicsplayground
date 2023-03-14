@@ -4,7 +4,7 @@
 ##
 
 
-WgcnaBoard <- function(id, inputData) {
+WgcnaBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -40,16 +40,14 @@ WgcnaBoard <- function(id, inputData) {
     wgcna.compute <- shiny::eventReactive(
       {
         input$compute
-        ngs <- inputData()
         1
       },
       {
-        ngs <- inputData()
         require(WGCNA)
 
-        if ("wgcna" %in% names(ngs)) {
+        if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          return(ngs$wgcna)
+          return(pgx$wgcna)
         }
 
         pgx.showSmallModal("Calculating WGCNA...<br>please wait")
@@ -76,7 +74,7 @@ WgcnaBoard <- function(id, inputData) {
           dim(X)
         }
 
-        X <- as.matrix(ngs$X)
+        X <- as.matrix(pgx$X)
         dim(X)
         X <- X[order(-apply(X, 1, sd, na.rm = TRUE)), ]
         X <- X[!duplicated(rownames(X)), ]
@@ -110,7 +108,7 @@ WgcnaBoard <- function(id, inputData) {
         table(net$colors)
 
         ## clean up traits matrix
-        datTraits <- ngs$samples
+        datTraits <- pgx$samples
         ## no dates please...
         isdate <- apply(datTraits, 2, is.Date)
         datTraits <- datTraits[, !isdate, drop = FALSE]
@@ -152,8 +150,8 @@ WgcnaBoard <- function(id, inputData) {
           ## pos <- pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
           ## pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
           names(clust)
-          if ("cluster.genes" %in% names(ngs)) {
-            clust[["umap2d"]] <- ngs$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
+          if ("cluster.genes" %in% names(pgx)) {
+            clust[["umap2d"]] <- pgx$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
           }
           progress$inc(0.2)
         }
@@ -165,7 +163,7 @@ WgcnaBoard <- function(id, inputData) {
           gmt <- getGSETS(grep("HALLMARK|GOBP|^C[1-9]", names(iGSETS), value = TRUE))
           gse <- NULL
           ## bg <- unlist(me.genes)
-          bg <- toupper(rownames(ngs$X))
+          bg <- toupper(rownames(pgx$X))
           i <- 1
           for (i in 1:length(me.genes)) {
             gg <- toupper(me.genes[[i]])

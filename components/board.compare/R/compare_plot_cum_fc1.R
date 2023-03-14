@@ -38,7 +38,7 @@ compare_plot_cum_fc1_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc1_server <- function(id,
-                                        inputData,
+                                        pgx,
                                         dataset2,
                                         cum_fc,
                                         input.contrast1,

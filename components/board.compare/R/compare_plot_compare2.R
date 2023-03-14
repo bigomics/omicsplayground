@@ -38,7 +38,7 @@ compare_plot_compare2_ui <- function(id,
 #' @return
 #' @export
 compare_plot_compare2_server <- function(id,
-                                         inputData,
+                                         pgx,
                                          input.contrast2,
                                          hilightgenes,
                                          createPlot,
@@ -53,11 +53,11 @@ compare_plot_compare2_server <- function(id,
     })
 
     scatter2.RENDER <- shiny::reactive({
-      ngs1 <- inputData()
-      ngs2 <- plot_data()
+      pgx1 <- pgx
+      pgx2 <- plot_data()
       ct2 <- input.contrast2()
       shiny::req(ct2)
-      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
       type <- plottype()
@@ -66,7 +66,7 @@ compare_plot_compare2_server <- function(id,
       ntop <- 9999
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      createPlot(ngs2, ngs1, ngs2, ct2, type, cex.lab, higenes, ntop)
+      createPlot(pgx2, pgx1, pgx2, ct2, type, cex.lab, higenes, ntop)
     })
 
     PlotModuleServer(
