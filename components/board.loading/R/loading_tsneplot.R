@@ -3,7 +3,10 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-loading_tsne_ui <- function(id, label = "", height = c(350, 600)) {
+loading_tsne_ui <- function(id, 
+                            label = "",
+                            height,
+                            width) {
   ns <- shiny::NS(id)
 
   info_text <- paste0("<b>Similarity clustering</b> of fold-change signatures colored by data sets using t-SNE. Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.")
@@ -14,7 +17,7 @@ loading_tsne_ui <- function(id, label = "", height = c(350, 600)) {
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height,
     label = label,
     title = "Dataset explorer"
