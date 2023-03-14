@@ -24,7 +24,8 @@ enrichment_table_genes_in_geneset_server <- function(id,
     genetable.RENDER <- shiny::reactive({
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
-        shiny::validate(shiny::need(nrow(rpt) > 0, "warning. no genes."))
+        shiny::validate(shiny::need(nrow(rpt) > 0,
+        "Please select a geneset from the table on the left to view genes."))
         return(NULL)
       }
 
