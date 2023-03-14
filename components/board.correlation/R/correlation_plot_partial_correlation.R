@@ -41,7 +41,7 @@ correlation_plot_partial_correlation_ui <- function(id,
 #' @return
 #' @export
 correlation_plot_partial_correlation_server <- function(id,
-                                                        inputData,
+                                                        pgx,
                                                         cor_gene,
                                                         getFullGeneCorr,
                                                         getGeneCorr,
@@ -49,11 +49,10 @@ correlation_plot_partial_correlation_server <- function(id,
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
     cor_umap.DATA <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
       shiny::req(cor_gene)
 
-      if (!"cluster.genes" %in% names(ngs)) {
+      if (!"cluster.genes" %in% names(pgx)) {
         par(mfrow = c(1, 1))
         frame()
         text(0.5, 0.6, "Error: gene cluster position in PGX object", col = "red3")
@@ -66,7 +65,7 @@ correlation_plot_partial_correlation_server <- function(id,
       if (is.null(R1)) {
         return(NULL)
       }
-      pos <- ngs$cluster.genes$pos[["umap2d"]]
+      pos <- pgx$cluster.genes$pos[["umap2d"]]
       if (input$umap_param == "cov") {
         rho0 <- R0[, "cov"]
         rho1 <- R1[, "cov"]
@@ -98,7 +97,7 @@ correlation_plot_partial_correlation_server <- function(id,
       cexlab <- ifelse(length(higenes) == 1, 2.2, 1.3)
 
       p <- pgx.plotGeneUMAP(
-        inputData(),
+        pgx,
         pos = pos, ## contrast=ct,
         value = rho0, title = "",
         cex = 0.9, cex.lab = cexlab,

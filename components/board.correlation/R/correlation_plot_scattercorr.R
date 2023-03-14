@@ -47,7 +47,7 @@ correlation_plot_scattercorr_ui <- function(id,
 #' @export
 correlation_plot_scattercorr_server <- function(id,
                                                 getFilteredExpression,
-                                                inputData,
+                                                pgx,
                                                 getPartialCorrelationMatrix,
                                                 getGeneCorr,
                                                 cor_gene,
@@ -55,18 +55,16 @@ correlation_plot_scattercorr_server <- function(id,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     shiny::observe({
-      ngs <- inputData()
-      px <- colnames(ngs$Y)
+      px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
       shiny::updateSelectInput(session, "cor_group", choices = px, selected = s1)
     })
 
     cor_scatter.DATA <- shiny::reactive({
-      ngs <- inputData()
       shiny::req(cor_gene)
 
       X <- getFilteredExpression()
-      this.gene <- rownames(ngs$X)[1]
+      this.gene <- rownames(pgx$X)[1]
       this.gene <- cor_gene
 
       NTOP <- 25
@@ -83,7 +81,6 @@ correlation_plot_scattercorr_server <- function(id,
       dt <- cor_scatter.DATA()
       rho <- dt[[1]]
       this.gene <- dt[[2]]
-      ngs <- inputData()
       if (length(rho) == 0) {
         return(NULL)
       }
@@ -91,11 +88,11 @@ correlation_plot_scattercorr_server <- function(id,
       colorby <- input$cor_group
       shiny::req(colorby)
 
-      ph <- factor(ngs$samples[, colorby])
+      ph <- factor(pgx$samples[, colorby])
       klrpal <- rep(COL, 99)
       klr <- klrpal[as.integer(ph)]
 
-      ndim <- ncol(ngs$X)
+      ndim <- ncol(pgx$X)
 
       cex_levels <- c(1.2, 0.8, 0.5, 0.2)
       dim_cuts <- c(0, 40, 100, 200, Inf)
@@ -119,13 +116,13 @@ correlation_plot_scattercorr_server <- function(id,
       for (i in 1:min(25, length(rho))) {
         gene2 <- names(rho)[i]
         if (swapaxis) {
-          x <- ngs$X[gene2, ]
-          y <- ngs$X[this.gene, ]
+          x <- pgx$X[gene2, ]
+          y <- pgx$X[this.gene, ]
           xlab <- gene2
           ylab <- this.gene
         } else {
-          y <- ngs$X[gene2, ]
-          x <- ngs$X[this.gene, ]
+          y <- pgx$X[gene2, ]
+          x <- pgx$X[this.gene, ]
           ylab <- gene2
           xlab <- this.gene
         }

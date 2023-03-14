@@ -242,7 +242,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['corr']) {
             info("[server.R] calling CorrelationBoard module")
-            CorrelationBoard("corr", inputData = inputData)
+            CorrelationBoard("corr", pgx = PGX)
           }
           shiny::incProgress(0.6)
 
