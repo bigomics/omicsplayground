@@ -78,6 +78,7 @@ expression_plot_barplot_server <- function(id,
       showothers <- input$barplot_showothers
       sel <- sel()
       res <- res()
+      shiny::req(sel())
 
       psel <- rownames(res)[sel]
       gene <- pgx$genes[1, "gene_name"]

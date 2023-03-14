@@ -71,7 +71,6 @@ expression_plot_volcano_server <- function(id,
     plot_data <- shiny::reactive({
       # calculate required inputs for plotting
 
-
       comp1 <- comp1()
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
@@ -81,6 +80,8 @@ expression_plot_volcano_server <- function(id,
       df1 <- df1()
       sel2 <- sel2()
       df2 <- df2()
+
+      req(sel1())
 
       fam.genes <- res$gene_name
 
@@ -159,7 +160,7 @@ expression_plot_volcano_server <- function(id,
     })
 
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- reactive({
       pd <- plot_data()
       shiny::req(pd)
 
@@ -181,9 +182,9 @@ expression_plot_volcano_server <- function(id,
         showlegend = FALSE
       ) %>% plotly::layout(margin = list(b = 65))
       plt
-    }
+    })
 
-    modal_plotly.RENDER <- function() {
+    modal_plotly.RENDER <- reactive({
       fig <- plotly.RENDER() %>%
         plotly::layout(
           font = list(size = 18),
@@ -193,7 +194,7 @@ expression_plot_volcano_server <- function(id,
         )
       fig <- plotly::style(fig, marker.size = 20)
       fig
-    }
+    })
 
     PlotModuleServer(
       "pltmod",

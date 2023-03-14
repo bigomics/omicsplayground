@@ -58,6 +58,7 @@ expression_plot_topfoldchange_server <- function(id,
       comp <- comp() # input$gx_contrast
       sel <- sel()
       res <- res()
+      shiny::req(sel())
 
       psel <- rownames(res)[sel]
       gene <- pgx$genes[psel, "gene_name"]
