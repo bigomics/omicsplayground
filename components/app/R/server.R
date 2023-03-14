@@ -211,7 +211,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['enrich']) {
             info("[server.R] calling EnrichmentBoard module")
-            EnrichmentBoard("enrich", inputData = inputData,
+            EnrichmentBoard("enrich", pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods ) -> env$enrich
           }
           if(ENABLED['pathway']) {

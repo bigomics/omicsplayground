@@ -20,19 +20,19 @@ enrichment_plot_scatter_ui <- function(id, height, width) {
 }
 
 enrichment_plot_scatter_server <- function(id,
-                                           inputData,
+                                           pgx,
                                            gene_selected,
                                            gs_contrast,
                                            subplot.MAR,
                                            gset_selected,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    getcolors <- function(ngs, comp0) {
+    getcolors <- function(pgx, comp0) {
       ## get colors (what a mess...)
-      contr.matrix <- ngs$model.parameters$contr.matrix
+      contr.matrix <- pgx$model.parameters$contr.matrix
 
-      exp.matrix <- ngs$model.parameters$exp.matrix
-      xgroup <- as.character(ngs$Y$group)
+      exp.matrix <- pgx$model.parameters$exp.matrix
+      xgroup <- as.character(pgx$Y$group)
 
       grp.name <- strsplit(comp0, split = "[._ ]vs[._ ]")[[1]]
       grp.name <- c(grp.name, "other")
@@ -40,7 +40,7 @@ enrichment_plot_scatter_server <- function(id,
       xgroup <- grp.name[1 * (xsign > 0) + 2 * (xsign < 0) + 1 * (xsign == 0)]
       table(xgroup)
 
-      names(xgroup) <- rownames(ngs$Y)
+      names(xgroup) <- rownames(pgx$Y)
       table(xgroup)
       samples <- names(which(exp.matrix[, comp0] != 0))
 
@@ -54,7 +54,7 @@ enrichment_plot_scatter_server <- function(id,
       xgroup2 <- as.character(xgroup)
       xgroup2[which(!(xgroup %in% xgroup1))] <- "other"
       sample.klr <- grp.klr[xgroup2]
-      names(sample.klr) <- rownames(ngs$samples)
+      names(sample.klr) <- rownames(pgx$samples)
       table(sample.klr)
       list(samples = sample.klr, group = grp.klr)
     }
@@ -62,12 +62,10 @@ enrichment_plot_scatter_server <- function(id,
     subplot_scatter.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
-
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
 
-      gene <- rownames(ngs$X)[1]
+      gene <- rownames(pgx$X)[1]
       sel <- gene_selected()
       gset <- gset_selected()
       if (is.null(sel)) {
@@ -82,8 +80,8 @@ enrichment_plot_scatter_server <- function(id,
       } else {
         gene <- sel$gene
         gset <- gset[1]
-        gx <- ngs$X[sel$probe, ]
-        sx <- ngs$gsetX[gset, ]
+        gx <- pgx$X[sel$probe, ]
+        sx <- pgx$gsetX[gset, ]
         if (length(gx) == 0 || length(sx) == 0 ||
           length(gx) != length(sx)) {
           frame()
@@ -92,7 +90,7 @@ enrichment_plot_scatter_server <- function(id,
         ## get colors
         comp0 <- "Th17_mut_2h_VS_Th17_wt_2h_BLA"
         comp0 <- gs_contrast()
-        klrs <- getcolors(ngs, comp0)
+        klrs <- getcolors(pgx, comp0)
         klr <- klrs$samples[names(sx)]
         klr <- paste0(gplots::col2hex(klr), "99")
 
