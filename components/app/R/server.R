@@ -182,102 +182,102 @@ app_server <- function(input, output, session) {
         })
 
         shiny::withProgress(message="Preparing your dashboards...", value=0, {
-          
+
           if(ENABLED['dataview'])  {
             info("[server.R] calling module dataview")
             DataViewBoard("dataview", pgx=PGX)
           }
-          
+
           if(ENABLED['clustersamples']) {
             info("[server.R] calling module clustersamples")
             ClusteringBoard("clustersamples", pgx=PGX)
           }
-          
+
           if(ENABLED['wordcloud'])  {
             info("[server.R] calling WordCloudBoard module")
             WordCloudBoard("wordcloud", pgx=PGX)
           }
           shiny::incProgress(0.2)
-          
+
           if(ENABLED['diffexpr'])   {
             info("[server.R] calling ExpressionBoard module")
-            ExpressionBoard("diffexpr", inputData=inputData) -> env$diffexpr
+            ExpressionBoard("diffexpr", pgx=PGX) -> env$diffexpr
           }
 
           if(ENABLED['clusterfeatures']) {
             info("[server.R] calling FeatureMapBoard module")
             FeatureMapBoard("clusterfeatures", inputData=inputData)
           }
-          
+
           if(ENABLED['enrich']) {
-            info("[server.R] calling EnrichmentBoard module")            
+            info("[server.R] calling EnrichmentBoard module")
             EnrichmentBoard("enrich", inputData = inputData,
               selected_gxmethods = env$diffexpr$selected_gxmethods ) -> env$enrich
           }
           if(ENABLED['pathway']) {
-            info("[server.R] calling FunctionalBoard module")                        
+            info("[server.R] calling FunctionalBoard module")
             FunctionalBoard("pathway", inputData = inputData,
               selected_gsetmethods = env$enrich$selected_gsetmethods)
           }
-          
+
           shiny::incProgress(0.4)
 
           if(ENABLED['drug']) {
-            info("[server.R] calling DrugConnectivityBoard module")                                    
+            info("[server.R] calling DrugConnectivityBoard module")
             DrugConnectivityBoard("drug", inputData = inputData)
           }
-          
+
           if(ENABLED['isect']) {
-            info("[server.R] calling IntersectionBoard module")                                                
+            info("[server.R] calling IntersectionBoard module")
             IntersectionBoard("isect", inputData = inputData,
               selected_gxmethods = env$diffexpr$selected_gxmethods,
               selected_gsetmethods = env$enrich$selected_gsetmethods)
           }
-          
+
           if(ENABLED['sig']) {
-            info("[server.R] calling SignatureBoard module")                                                            
+            info("[server.R] calling SignatureBoard module")
             SignatureBoard("sig", inputData = inputData,
               selected_gxmethods = env$diffexpr$selected_gxmethods)
           }
-          
+
           if(ENABLED['corr']) {
             info("[server.R] calling CorrelationBoard module")
             CorrelationBoard("corr", inputData = inputData)
           }
           shiny::incProgress(0.6)
-          
+
           if(ENABLED['bio']) {
-            info("[server.R] calling BiomarkerBoard module")            
+            info("[server.R] calling BiomarkerBoard module")
             BiomarkerBoard("bio", inputData = inputData)
           }
-          
+
           if(ENABLED['cmap'])  {
-            info("[server.R] calling ConnectivityBoard module")            
+            info("[server.R] calling ConnectivityBoard module")
             ConnectivityBoard("cmap", inputData = inputData)
           }
-           
+
           if(ENABLED['cell']) {
-            info("[server.R] calling SingleCellBoard module")                        
+            info("[server.R] calling SingleCellBoard module")
             SingleCellBoard("cell", inputData = inputData)
           }
-          
+
           shiny::incProgress(0.8)
           if(ENABLED['tcga']) {
-            info("[server.R] calling TcgaBoard module")                        
+            info("[server.R] calling TcgaBoard module")
             TcgaBoard("tcga", inputData = inputData)
           }
 
           if(ENABLED['wgcna']) {
-            info("[server.R] calling WgcnaBoard module")                                    
+            info("[server.R] calling WgcnaBoard module")
             WgcnaBoard("wgcna", inputData = inputData)
           }
 
           if(ENABLED['comp']) {
-            info("[server.R] calling CompareBoard module")                                    
+            info("[server.R] calling CompareBoard module")
             CompareBoard("comp", inputData = inputData)
           }
 
-          info("[server.R] calling modules done!")                                    
+          info("[server.R] calling modules done!")
         })
 
         ## remove modal from LoadingBoard
@@ -329,7 +329,7 @@ app_server <- function(input, output, session) {
 
         ## trigger on change dataset
         dbg("[server.R] trigger on change dataset")
-      
+
         ## show beta feauture
         show.beta <- env$user$enable_beta()
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
@@ -494,7 +494,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         info("[server.R] change in user log status : logged = ",logged)
-        
+
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
