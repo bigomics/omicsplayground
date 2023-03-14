@@ -201,7 +201,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['diffexpr'])   {
             info("[server.R] calling ExpressionBoard module")
-            env$diffexpr <- ExpressionBoard("diffexpr", pgx=PGX)
+            ExpressionBoard("diffexpr", pgx=PGX) -> env$diffexpr
           }
 
           if(ENABLED['clusterfeatures']) {
