@@ -54,7 +54,6 @@ drugconnectivity_plot_enplots_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        pgx <- pgx()
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)

@@ -224,7 +224,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['drug']) {
             info("[server.R] calling DrugConnectivityBoard module")
-            DrugConnectivityBoard("drug", inputData = inputData)
+            DrugConnectivityBoard("drug", pgx = PGX)
           }
 
           if(ENABLED['isect']) {

@@ -210,7 +210,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
 
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = pgx(),
+          pgx = pgx,
           dsea = getActiveDSEA(),
           cmap_table = cmap_table,
           moa.class = getMOA.class(),
