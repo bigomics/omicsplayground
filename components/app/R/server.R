@@ -27,7 +27,7 @@ app_server <- function(input, output, session) {
     honcho.responding
     honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
     has.honcho <- (honcho.token!="" && honcho.responding)
-  if(1 && has.honcho) {
+    if(1 && has.honcho) {
         info("[server.R] Honcho is alive! ")
         sever::sever(sever_screen2(session$token), bg_color = "#004c7d")
     } else {
@@ -284,8 +284,8 @@ app_server <- function(input, output, session) {
         shiny::removeModal()
 
         #show hidden tabs
-        bigdash.showTabs()  # see ui-bigdashplus.R
-        ##session$sendCustomMessage("show-tabs", list())
+        bigdash.showTabsGoToDataView(session)  # see ui-bigdashplus.R
+        ##bigdash.hideTab(session, "upload-tab")
 
     })
 
@@ -317,6 +317,9 @@ app_server <- function(input, output, session) {
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
+
+    ## toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)
+    ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
 
     shiny::observeEvent({
         auth$logged()
@@ -365,7 +368,6 @@ app_server <- function(input, output, session) {
 
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
-        toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)
         tabRequire(PGX, "connectivity", "maintabs", "Similar experiments")
         tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
         tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")

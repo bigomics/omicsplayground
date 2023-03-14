@@ -188,7 +188,7 @@ BOARDS <- c("welcome","load","upload","dataview","clustersamples","clusterfeatur
   "wgcna", "tcga","comp","user")
 if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
 ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
-ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
+ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
@@ -197,7 +197,6 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 ## Main tab titles
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","DEV")
-
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------

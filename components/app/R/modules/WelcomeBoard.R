@@ -31,6 +31,17 @@ WelcomeBoard <- function(id, auth, r_global) {
     observeEvent(input$init_example_data, {
       r_global$load_example_trigger <- TRUE
     })
+
+    observeEvent(input$init_upload_data, {
+      bigdash.openSidebar()
+      bigdash.selectTab( session, "upload-tab" )
+    })
+
+    observeEvent(input$init_load_data, {
+      bigdash.openSidebar()
+      bigdash.selectTab( session, "load-tab" )
+    })
+
   })
 }
 
@@ -44,9 +55,9 @@ WelcomeBoardUI <- function(id, enable_upload=TRUE) {
   ## if upload enabled show button, otherwise empty
   upload_button <- "  "
   if(enable_upload) {
-    upload_button <- tags$a(
-      id = "init-upload-data",
-      "Upload new data",
+    upload_button <- shiny::actionButton(
+      ns("init_upload_data"),
+      label = "Upload new data",
       class = "btn btn-outline-info welcome-btn"
     )
   }
@@ -76,9 +87,9 @@ WelcomeBoardUI <- function(id, enable_upload=TRUE) {
         class = "col-md-7",
         h3("I'm an existing user..."),
         upload_button,
-        tags$button(
-          id = "init-load-data",
-          "Use my saved data",
+        shiny::actionButton(
+          ns("init_load_data"),
+          label = "Use my saved data",
           class = "btn btn-outline-primary welcome-btn"
         )
       )
