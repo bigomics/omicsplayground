@@ -104,8 +104,9 @@ autoscan.pkgs <- function() {
 ## Install basic shiny packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard","shinydashboard",
-             "shinydashboardPlus",'R.utils','shinythemes')
+base.pkg = c("shiny","flexdashboard","shinydashboard", "shinyBS","systemfonts","shinyjs",
+             "shinydashboardPlus",'R.utils','shinythemes',"shinybusy","shinycssloaders",
+             "shinyWidgets")
 install.pkgs(base.pkg, force=FALSE)
 
 ##---------------------------------------------------------------------
@@ -124,10 +125,10 @@ pkg.used <- unique(renv.out$Package)
 ## check if they are actually used or needed.
 pkg.extra <- c(
   "BioBase","SingleCellExperiment","preprocessCore",
-  "liger","monocle3","bsutils","reshape",
+  "liger","monocle3","bsutils","reshape","waiter","sever",
   "RSpectra","SmartSVA","SILGGM","flashClust",
-  "TCGAbiolinks","TCGAutils","GEOmetadb",
-  'wordcloud2', 'optparse', 'docopt',
+  "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne",
+  'wordcloud2', 'optparse', 'docopt',"DT","plotly",
   'kableExtra', 'shinythemes', 'rworldmap',
   "HiddenMarkov","coin","rjags","argparse",
   "RcppParallel", "KEGGgraph", 
