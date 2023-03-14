@@ -229,7 +229,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['isect']) {
             info("[server.R] calling IntersectionBoard module")
-            IntersectionBoard("isect", inputData = inputData,
+            IntersectionBoard("isect", pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods,
               selected_gsetmethods = env$enrich$selected_gsetmethods)
           }

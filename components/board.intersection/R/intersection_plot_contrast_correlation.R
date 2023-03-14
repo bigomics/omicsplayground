@@ -42,13 +42,12 @@ contrast_correlation_ui <- function(id, label = "", height = c(600, 800)) {
 
 contrast_correlation_server <- function(id,
                                         getFoldChangeMatrix,
-                                        inputData,
+                                        pgx,
                                         input_comparisons,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       res <- getFoldChangeMatrix()
       if (is.null(res)) {
@@ -125,11 +124,10 @@ contrast_correlation_server <- function(id,
 
 # ctcorrplot.PLOT <- shiny::reactive({
 #
-#     ngs <- inputData()
-#     shiny::req(ngs)
+#     shiny::req(pgx)
 #     shiny::req(input$comparisons)
 #
-#     ## res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+#     ## res <- pgx.getMetaFoldChangeMatrix(pgx, what="meta")
 #     res <- getFoldChangeMatrix()
 #
 #     if(is.null(res)) return(NULL)
