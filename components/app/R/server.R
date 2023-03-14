@@ -206,7 +206,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['clusterfeatures']) {
             info("[server.R] calling FeatureMapBoard module")
-            FeatureMapBoard("clusterfeatures", inputData=inputData)
+            FeatureMapBoard("clusterfeatures", pgx=PGX)
           }
 
           if(ENABLED['enrich']) {

@@ -19,28 +19,27 @@ featuremap_plot_gene_sig_ui <- function(id, label = "", height = c(600, 800)) {
 }
 
 featuremap_plot_gene_sig_server <- function(id,
-                                            inputData,
+                                            pgx,
                                             getGeneUMAP,
                                             sigvar,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneSigPlots.plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       pos <- getGeneUMAP()
 
       pheno <- "tissue"
       pheno <- sigvar()
-      if (pheno %in% colnames(ngs$samples)) {
-        X <- ngs$X - rowMeans(ngs$X)
-        y <- ngs$samples[, pheno]
+      if (pheno %in% colnames(pgx$samples)) {
+        X <- pgx$X - rowMeans(pgx$X)
+        y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
       } else {
-        F <- pgx.getMetaMatrix(ngs, level = "gene")$fc
+        F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
       }
       if (nrow(F) == 0) {
         return(NULL)
