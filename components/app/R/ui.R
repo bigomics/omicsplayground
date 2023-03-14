@@ -108,8 +108,8 @@ app_ui <- function() {
         )
 
         ## filter disabled modules
-        ENABLED['welcome'] <- TRUE
-        ENABLED['load'] <- TRUE
+        ENABLED['welcome'] <<- TRUE
+        ENABLED['load'] <<- TRUE
         #ENABLED['upload'] <- TRUE
         dbg("[ui.R] sum.enabled = ",sum(ENABLED))
         dbg("[ui.R] names.enabled = ",names(ENABLED))

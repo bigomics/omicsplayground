@@ -144,10 +144,10 @@ toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
         do.show <- do.show && has.file
     }
     if(do.show) {
-        shiny::showTab(inputId, target)
+      shiny::showTab(inputId, target)
     }
     if(!do.show) {
-        shiny::hideTab(inputId, target)
+      shiny::hideTab(inputId, target)
     }
 }
 

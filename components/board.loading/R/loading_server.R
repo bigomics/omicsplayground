@@ -465,8 +465,7 @@ LoadingBoard <- function(id,
       }
 
       on.exit({
-        ## bigdash.showTabs(session)  ## in ui-bigdashplus.R
-        session$sendCustomMessage("show-tabs", list())        
+        bigdash.showTabsGoToDataView(session)  ## in ui-bigdashplus.R
       })
 
       pgxfile <- NULL
