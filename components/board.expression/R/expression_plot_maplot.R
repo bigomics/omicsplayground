@@ -75,7 +75,7 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      shiny::req(pgx)
+      shiny::req(pgx, sel1())
 
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())

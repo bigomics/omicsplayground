@@ -80,9 +80,9 @@ ExpressionBoard <- function(id, pgx) {
     genetable_rows_selected <- reactiveVal()
 
     observe({
+      req(genetable$rows_selected())
       genetable_rows_selected(genetable$rows_selected())
     })
-
 
     # reactives ########
 
@@ -94,9 +94,6 @@ ExpressionBoard <- function(id, pgx) {
       test <- intersect(test, gx.methods0)
       test
     })
-
-
-
 
 
     # functions #########
@@ -194,18 +191,17 @@ ExpressionBoard <- function(id, pgx) {
     }
 
     fullDiffExprTable <- shiny::reactive({
+      print('REACTIVE1 RUNNING')
       ## return the full DE table
       if (is.null(pgx)) {
         return(NULL)
       }
-      comp <- 1
-      tests <- "trend.limma"
-      fdr <- 1
-      lfc <- 0
       comp <- input$gx_contrast
       tests <- input$gx_statmethod
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
+
+      req(input$gx_contrast, input$gx_statmethod, input$gx_fdr, input$gx_lfc)
 
       if (is.null(comp)) {
         return(NULL)
