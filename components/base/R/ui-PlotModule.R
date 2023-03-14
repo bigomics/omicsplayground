@@ -225,6 +225,10 @@ PlotModuleUI <- function(id,
         )
     }
 
+    popupfigUI_editor <- function(){
+      htmlOutput(ns("editor_frame"))
+    }
+
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
@@ -252,6 +256,14 @@ PlotModuleUI <- function(id,
                                 title,
                                 size="fullscreen",
                                 popupfigUI()
+                            )
+                          ),
+               shiny::div(class="popup-plot",
+                          modalUI(
+                                ns("plotPopup_editor"),
+                                "Editor",
+                                size="fullscreen",
+                                popupfigUI_editor()
                             )
                           ),
                shiny::tagList(
@@ -305,8 +317,7 @@ PlotModuleServer <- function(
               transform = 'scale(0.035)'
             ),
             click = htmlwidgets::JS(paste0(
-              "function(gd) {
-                Shiny.setInputValue('", ns("plotly.edit"), "', Math.random());}"
+              "function(gd){$('#", ns("plotPopup_editor"), "').modal('show')}"
             )
             )
           )
@@ -324,27 +335,23 @@ PlotModuleServer <- function(
             )
           }
 
-          observeEvent(input$plotly.edit, {
-            withProgress(message = 'Sending plot...', value = 0.2, {
-              plot <- func()
-              incProgress(0.5)
-              json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
-              res <- session$registerDataObj(
-                "plotly_graph", json$x$data,
-                function(data, req) {
-                  httpResponse(
-                    status = 200,
-                    content_type = 'application/json',
-                    content = data,
-                    headers = list("Access-Control-Allow-Origin" = PLOTLY_EDITOR)
-                  )
-                }
-              )
-              incProgress(0.8)
-              url <- getEditorUrl(session, res)
-              utils::browseURL(url)
-              })
-            })
+          output$editor_frame <- renderUI({
+            plot <- func()
+            json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+            res <- session$registerDataObj(
+              "plotly_graph", json$x$data,
+              function(data, req) {
+                httpResponse(
+                  status = 200,
+                  content_type = 'application/json',
+                  content = data,
+                  headers = list("Access-Control-Allow-Origin" = PLOTLY_EDITOR)
+                )
+              }
+            )
+            url <- getEditorUrl(session, res)
+            tags$iframe(src=url, style = "height: 85vh; width: 100%;")
+          })
 
           ##--------------------------------------------------------------------------------
           ##------------------------ FIGURE ------------------------------------------------
