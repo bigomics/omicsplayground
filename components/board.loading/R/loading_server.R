@@ -85,12 +85,15 @@ LoadingBoard <- function(id,
         return(NULL)
       } else {
 
-        #trigger settings sidebar css
+        # close the right sidebar
+        shinyjs::runjs("$('#settings-container').trigger('click');")
         shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
 
-        # leave the welcome page
-        shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-        shinyjs::runjs("$('.sidebar-label').trigger('click');")
+        # open the left sidebar
+        bigdash.openSidebar()
+
+        # go to dataview
+        bigdash.selectTab(session, selected = 'dataview-tab')
 
         rl$selected_row <- example_row
         rl$found_example_trigger <- TRUE
