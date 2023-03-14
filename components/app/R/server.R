@@ -236,7 +236,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['sig']) {
             info("[server.R] calling SignatureBoard module")
-            SignatureBoard("sig", inputData = inputData,
+            SignatureBoard("sig", pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods)
           }
 
