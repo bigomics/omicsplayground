@@ -87,7 +87,10 @@ LoadingUI <- function(id) {
         loading_tsne_ui(ns("tsne"),
         height = c("65vh", "70vh"),
         width = c("auto",  "100%")
-        )
+        ) %>%
+          tagAppendAttributes(
+            style = 'padding-top: 61.5px;'
+          )
       )
     )
   )
