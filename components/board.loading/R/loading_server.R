@@ -97,21 +97,40 @@ LoadingBoard <- function(id,
       input$sharebutton, {
         selected_row <- rl$selected_row
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
+
+        alert_val <- shinyalert::shinyalert(
+          inputId = 'share_confirm',
+          title = "Are you sure?",
+          paste('The dataset', pgx_name, 'will be moved',
+                'to the shared folder. Other users will be able import and explore
+                this dataset.'
+          ),
+          showCancelButton = TRUE,
+          showConfirmButton = TRUE
+        )
+      }
+    )
+
+    observeEvent(input$share_confirm, {
+      # if confirmed, then share the data
+      if (input$share_confirm) {
+        selected_row <- rl$selected_row
+        pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
         pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
         file.copy(from = pgx_file, to = new_pgx_file)
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+
         shinyalert::shinyalert(
-          "Dataset shared",
+          title = "Dataset successfully shared!",
           paste('The dataset', pgx_name, 'has now been successfully copied',
                 'to the shared folder. Other users can now import and explore
-                this dataset!'
-          )
+                this dataset.')
         )
       }
-    )
+    })
 
     observeEvent(r_global$load_example_trigger, {
 
