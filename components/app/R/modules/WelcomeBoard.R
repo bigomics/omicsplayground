@@ -38,6 +38,10 @@ WelcomeBoard <- function(id, auth, r_global) {
     })
 
     observeEvent(input$init_load_data, {
+      # close the right sidebar
+      shinyjs::runjs("$('#settings-container').trigger('click');")
+      shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
+
       bigdash.openSidebar()
       bigdash.selectTab( session, "load-tab" )
     })
@@ -61,7 +65,7 @@ WelcomeBoardUI <- function(id, enable_upload=TRUE) {
       class = "btn btn-outline-info welcome-btn"
     )
   }
-  
+
   div(
     id = "welcome-page",
     br(),
