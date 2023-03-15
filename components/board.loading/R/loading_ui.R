@@ -44,7 +44,7 @@ LoadingUI <- function(id) {
               id = "load-action-buttons",
               shiny::actionButton(
                 ns("deletebutton"),
-                label = "Delete dataset", icon = icon("trash"),
+                label = "Delete Dataset", icon = icon("trash"),
                 class = "btn btn-outline-danger"
               ),
               shiny::downloadButton(
@@ -58,8 +58,13 @@ LoadingUI <- function(id) {
                 class = "btn btn-outline-dark"
               ),
               shiny::actionButton(
+                ns("sharebutton"),
+                label = "Share Dataset", icon = icon("share-nodes"),
+                class = "btn btn-outline-info"
+              ),
+              shiny::actionButton(
                 ns("loadbutton"),
-                label = "Load dataset", icon = icon("file-import"),
+                label = "Load Dataset", icon = icon("file-import"),
                 class = "btn btn-outline-primary"
               )
             )

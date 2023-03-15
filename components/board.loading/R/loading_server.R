@@ -28,7 +28,7 @@ LoadingBoard <- function(id,
       pgxTable_data = NULL,
       pgxTable_edited = 0,
       pgxTable_edited_row = NULL,
-      pgxTablePublic_data = NULL,
+      pgxTableShared_data = NULL,
       selected_row_shared = NULL
     )
 
@@ -44,11 +44,13 @@ LoadingBoard <- function(id,
     observeEvent(rl$selected_row, {
       if (is.null(rl$selected_row)) {
         shinyjs::disable(id = 'loadbutton')
+        shinyjs::disable(id = 'sharebutton')
         shinyjs::disable(id = 'downloadpgx')
         shinyjs::disable(id = 'downloadzip')
         shinyjs::disable(id = 'deletebutton')
       } else {
         shinyjs::enable(id = 'loadbutton')
+        shinyjs::enable(id = 'sharebutton')
         shinyjs::enable(id = 'downloadpgx')
         shinyjs::enable(id = 'downloadzip')
         shinyjs::enable(id = 'deletebutton')
@@ -68,11 +70,11 @@ LoadingBoard <- function(id,
       }
     }, ignoreNULL = FALSE)
 
-    # import public dataset into user files
+    # import shared dataset into user folder
     observeEvent(
       input$importbutton, {
         selected_row <- rl$selected_row_shared
-        pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
+        pgx_name <- rl$pgxTableShare_data[selected_row, 'dataset']
 
         pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
@@ -83,8 +85,29 @@ LoadingBoard <- function(id,
         r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         shinyalert::shinyalert(
           "Dataset imported",
-          paste('The public dataset', pgx_name, 'has now been successfully imported',
+          paste('The shared dataset', pgx_name, 'has now been successfully imported',
             'to your data files. Feel free to load it as usual!'
+          )
+        )
+      }
+    )
+
+    # put user dataset into shared folder
+    observeEvent(
+      input$sharebutton, {
+        selected_row <- rl$selected_row
+        pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
+        pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
+        new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
+
+        file.copy(from = pgx_file, to = new_pgx_file)
+        rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
+        r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+        shinyalert::shinyalert(
+          "Dataset shared",
+          paste('The dataset', pgx_name, 'has now been successfully copied',
+                'to the shared folder. Other users can now import and explore
+                this dataset!'
           )
         )
       }
@@ -134,7 +157,7 @@ LoadingBoard <- function(id,
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
 
     pgxtable_shared <- loading_table_datasets_shared_server(
-      "pgxtable_shared", rl$pgxTablePublic_data)
+      "pgxtable_shared", rl = rl)
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -206,6 +229,13 @@ LoadingBoard <- function(id,
       pdir
     })
 
+    getPGXDIR_SHARED <- shiny::reactive({
+      rl$reload_pgxdir_shared ## force reload
+      pdir <- stringr::str_replace_all(pgx_dir, c('data'='data_shared'))
+      pdir
+    })
+
+
     getPGXINFO <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
@@ -234,7 +264,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       info <- NULL
-      pdir <- pgx_shared_dir
+      pdir <- getPGXDIR_SHARED()
       info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
@@ -643,7 +673,7 @@ LoadingBoard <- function(id,
         df$description <- shortstring(as.character(df$description), 200)
         df$nsets <- NULL
         df$organism <- NULL
-        rl$pgxTablePublic_data <- df
+        rl$pgxTableShared_data <- df
       }
     )
 

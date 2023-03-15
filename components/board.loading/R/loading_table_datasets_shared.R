@@ -13,17 +13,17 @@ loading_table_datasets_shared_ui <- function(id, height, width) {
 }
 
 loading_table_datasets_shared_server <- function(id,
-                                                 rt_pgxTablePublic_data) {
+                                                 rl) {
   moduleServer(id, function(input, output, session) {
 
-    pgxTable_DT <- function() {
-      df <- rt_pgxTablePublic_data
+    pgxTable_DT <- reactive({
+      df <- rl$pgxTableShared_data
 
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
 
       req(df)
-      
+
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))
@@ -50,7 +50,7 @@ loading_table_datasets_shared_server <- function(id,
           )
         ) ## end of options.list
       )
-    }
+    })
 
     pgxTable.RENDER <- function() {
       pgxTable_DT() %>%
