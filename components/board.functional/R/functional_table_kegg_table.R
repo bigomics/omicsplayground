@@ -121,7 +121,7 @@ functional_table_kegg_table_server <- function(id,
       "datasets",
       func = table_RENDER,
       func2 = table_RENDER_modal,
-      selector = "none"
+      selector = "single"
     )
 
     return(my_table)
