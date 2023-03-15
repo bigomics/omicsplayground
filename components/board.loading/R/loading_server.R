@@ -35,9 +35,25 @@ LoadingBoard <- function(id,
     ## static, not changing
     pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))
 
+    # this allows for deselection (selected_row -> NULL)
     observeEvent(pgxtable$rows_selected(), {
       rl$selected_row <- pgxtable$rows_selected()
-    })
+    }, ignoreNULL = FALSE)
+
+    # disable buttons when no row is selected; enable when one is selected
+    observeEvent(rl$selected_row, {
+      if (is.null(rl$selected_row)) {
+        shinyjs::disable(id = 'loadbutton')
+        shinyjs::disable(id = 'downloadpgx')
+        shinyjs::disable(id = 'downloadzip')
+        shinyjs::disable(id = 'deletebutton')
+      } else {
+        shinyjs::enable(id = 'loadbutton')
+        shinyjs::enable(id = 'downloadpgx')
+        shinyjs::enable(id = 'downloadzip')
+        shinyjs::enable(id = 'deletebutton')
+      }
+    }, ignoreNULL = FALSE)
 
     observeEvent(pgxtable_shared$rows_selected(), {
       rl$selected_row_shared <- pgxtable_shared$rows_selected()
