@@ -57,7 +57,16 @@ LoadingBoard <- function(id,
 
     observeEvent(pgxtable_shared$rows_selected(), {
       rl$selected_row_shared <- pgxtable_shared$rows_selected()
-    })
+    }, ignoreNULL = FALSE)
+
+    # disable buttons when no row is selected; enable when one is selected
+    observeEvent(rl$selected_row_shared, {
+      if (is.null(rl$selected_row_shared)) {
+        shinyjs::disable(id = 'importbutton')
+      } else {
+        shinyjs::enable(id = 'importbutton')
+      }
+    }, ignoreNULL = FALSE)
 
     # import public dataset into user files
     observeEvent(
