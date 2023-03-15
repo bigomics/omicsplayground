@@ -45,17 +45,17 @@ LoadingUI <- function(id) {
               shiny::actionButton(
                 ns("deletebutton"),
                 label = "Delete dataset", icon = icon("trash"),
-                class = "btn btn-outline-danger-hover"
+                class = "btn btn-outline-danger"
               ),
               shiny::downloadButton(
                 ns("downloadpgx"),
                 label = "Download PGX",
-                class = "btn btn-outline-dark-hover"
+                class = "btn btn-outline-dark"
               ),
               downloadButton2(
                 ns("downloadzip"),
                 label = "Download ZIP", icon = icon("file-archive"),
-                class = "btn btn-outline-dark-hover"
+                class = "btn btn-outline-dark"
               ),
               shiny::actionButton(
                 ns("loadbutton"),
