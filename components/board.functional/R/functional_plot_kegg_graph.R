@@ -125,23 +125,21 @@ functional_plot_kegg_graph_server <- function(id,
           pathway.name <- df[sel.row, "pathway"]
           pw.genes <- unlist(getGSETS(as.character(pathway.name)))
         }
-
         
-
+        
         ## We temporarily switch the working directory to always readable
         ## TMP folder
         curwd <- getwd()
         tmpdir <- tempdir()
         setwd(tmpdir)
 
-        browser()
         pv.out <- pathview::pathview(
           gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
           gene.annotpkg = "org.Hs.eg.db", species = "hsa",
           out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
           low = list(gene = "dodgerblue2", cpd = "purple"),
           high = list(gene = "firebrick2", cpd = "yellow"),
-          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
+          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE,
         )
         Sys.sleep(0.2) ## wait for graph
 
