@@ -64,7 +64,7 @@ BiomarkerUI <- function(id) {
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
     tagList(
       div(
-        class = "row row-cols-1 row-cols-md-2 row-cols-xxl-2",
+        class = "row row-cols-1 row-cols-md-2 row-cols-xxxl-4",
         div(
           class = "col",
           biomarker_plot_importance_ui(ns("pdx_importance"), height = imgH1, label = "a")

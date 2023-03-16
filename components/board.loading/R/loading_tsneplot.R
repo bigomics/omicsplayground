@@ -101,7 +101,15 @@ loading_tsne_server <- function(id, pgx.dirRT,
         x = ~x,
         y = ~y,
         text = ~ paste("Dataset:", dataset, "<br>Comparison:", comparison),
-        color = ~dataset
+        color = ~dataset,
+        ## colors = omics_pal_c(palette = "brand_blue")(100),
+        marker = list(
+          size = 10,
+          line = list(
+            color = omics_colors("super_dark_grey"),
+            width = 1.2
+          )
+        )
       )
 
       fig <- fig %>%
