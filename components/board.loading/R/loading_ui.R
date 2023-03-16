@@ -30,7 +30,7 @@ LoadingUI <- function(id) {
     div(
       class = "row",
       div(
-        class = "col-md-7",
+        class = "col-md-8",
         shiny::tabsetPanel(
           id = ns('tabs'),
           shiny::tabPanel(
@@ -42,26 +42,26 @@ LoadingUI <- function(id) {
             ),
             div(
               id = "load-action-buttons",
-              shiny::actionButton(
-                ns("deletebutton"),
-                label = "Delete Dataset", icon = icon("trash"),
-                class = "btn btn-outline-danger"
-              ),
-              shiny::downloadButton(
-                ns("downloadpgx"),
-                label = "Download PGX",
-                class = "btn btn-outline-dark"
-              ),
-              downloadButton2(
-                ns("downloadzip"),
-                label = "Download ZIP", icon = icon("file-archive"),
-                class = "btn btn-outline-dark"
-              ),
-              shiny::actionButton(
-                ns("sharebutton"),
-                label = "Share Dataset", icon = icon("share-nodes"),
-                class = "btn btn-outline-info"
-              ),
+              #shiny::actionButton(
+              #  ns("deletebutton"),
+              #  label = "Delete Dataset", icon = icon("trash"),
+              #  class = "btn btn-outline-danger"
+              #),
+              #shiny::downloadButton(
+              #  ns("downloadpgx"),
+              #  label = "Download PGX",
+              #  class = "btn btn-outline-dark"
+              #),
+              #downloadButton2(
+              #  ns("downloadzip"),
+              #  label = "Download ZIP", icon = icon("file-archive"),
+              #  class = "btn btn-outline-dark"
+              #),
+              #shiny::actionButton(
+              #  ns("sharebutton"),
+              #  label = "Share Dataset", icon = icon("share-nodes"),
+              #  class = "btn btn-outline-info"
+              #),
               shiny::actionButton(
                 ns("loadbutton"),
                 label = "Load Dataset", icon = icon("file-import"),
@@ -88,9 +88,9 @@ LoadingUI <- function(id) {
         )
       ),
       div(
-        class = "col-md-5",
+        class = "col-md-4",
         loading_tsne_ui(ns("tsne"),
-        height = c("65vh", "70vh"),
+        height = c("55vh", "60vh"),
         width = c("auto",  "100%")
         ) %>%
           tagAppendAttributes(

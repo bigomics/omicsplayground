@@ -12,9 +12,13 @@ loading_table_datasets_ui <- function(id, height, width) {
   )
 }
 
+
+
 loading_table_datasets_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
 
     pgxTable_DT <- reactive({
       df <- rl$pgxTable_data
@@ -29,10 +33,56 @@ loading_table_datasets_server <- function(id,
       target3 <- grep("conditions", colnames(df))
       target4 <- grep("dataset", colnames(df))
 
+      # create action menu for each row
+      menus <- c()
+      for (i in 1:nrow(df)) {
+        new_menu <- actionMenu(
+          div(
+            style = "width: 175px;",
+            div(
+              shiny::actionButton(
+                ns("deletebutton"),
+                label = "Delete Dataset", icon = icon("trash"),
+                class = "btn btn-outline-danger",
+                width = '100%',
+                style = 'border: none;'
+              ),
+              shiny::downloadButton(
+                ns("downloadpgx"),
+                label = "Download PGX",
+                class = "btn btn-outline-dark",
+                style = "width: 100%; border: none;"
+              ),
+              downloadButton2(
+                ns("downloadzip"),
+                label = "Download ZIP", icon = icon("file-archive"),
+                class = "btn btn-outline-dark",
+                style = "width: 100%; border: none;"
+              ),
+              shiny::actionButton(
+                ns("sharebutton"),
+                label = "Share Dataset", icon = icon("share-nodes"),
+                class = "btn btn-outline-info",
+                width = '100%',
+                style = 'border: none;'
+              ),
+            )
+          ),
+          size = "sm",
+          icon = shiny::icon("ellipsis-vertical"),
+          status = "dark"
+        )
+        menus <- c(menus, as.character(new_menu))
+      }
+
+      df$actions <- menus
+      colnames(df)[ncol(df)] <- ' '
+
       DT::datatable(
         df,
         class = "compact hover",
         rownames = TRUE,
+        escape = FALSE,
         editable = list(
           target = 'cell',
           disable = list(columns = c(1,3:ncol(df)))
@@ -49,7 +99,8 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            list(width = "30vw", targets = target2)
+            list(width = "30vw", targets = target2),
+            list(sortable = FALSE, targets = ncol(df))
           )
         ) ## end of options.list
       )
