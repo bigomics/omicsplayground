@@ -82,7 +82,7 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA"),
+            wgcna = "WGCNA (beta)"),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis"
@@ -97,7 +97,7 @@ app_ui <- function() {
             isect = "Compare signatures",
             sig = "Test signatures",
             bio = "Find biomarkers",
-            cmap = "Similar experiments",
+            cmap = "Similar experiments (beta)",
             comp = "Compare datasets (beta)",
             tcga = "TCGA survival (beta)"
           ),
@@ -251,7 +251,7 @@ app_ui <- function() {
                      "bio-tab"
                  ),
                  bigdash::sidebarMenuItem(
-                     "Similar experiments",
+                     "Similar experiments (beta)",
                      "cmap-tab"
                  ),
                  bigdash::sidebarMenuItem(
