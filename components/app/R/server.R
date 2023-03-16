@@ -279,7 +279,6 @@ app_server <- function(input, output, session) {
 
         #show hidden tabs
         bigdash.showTabsGoToDataView(session)  # see ui-bigdashplus.R
-        ##bigdash.hideTab(session, "upload-tab")
 
     })
 
@@ -343,15 +342,14 @@ app_server <- function(input, output, session) {
 
         ## Beta features
         info("[server.R] disabling beta features")
-        toggleTab("drug-tabs","Connectivity map (beta)",show.beta)
-        toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
-        ##toggleTab("maintabs","Cluster features",show.beta)
-        toggleTab("maintabs","WGCNA (beta)",show.beta)
-        toggleTab("maintabs","Compare datasets (beta)",show.beta)
-
+        has.libx <- dir.exists(file.path(OPG,"libx"))
+        bigdash.toggleTab(session, "wgcna-tab", show.beta)
+        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
+        bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
+        bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+        
         ## DEVELOPER only tabs (still too alpha)
         info("[server.R] disabling alpha features")
-        if(DEV) toggleTab("maintabs","DEV",DEV)
         toggleTab("corr-tabs","Functional",DEV)   ## too slow
         toggleTab("corr-tabs","Differential",DEV)
         toggleTab("dataview-tabs","Resource info",DEV)
@@ -362,11 +360,11 @@ app_server <- function(input, output, session) {
 
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
-        tabRequire(PGX, "connectivity", "maintabs", "Similar experiments")
-        tabRequire(PGX, "drugs", "maintabs", "Drug connectivity")
-        tabRequire(PGX, "wordcloud", "maintabs", "Word cloud")
-        tabRequire(PGX, "deconv", "maintabs", "CellProfiling")
-        toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
+        tabRequire(PGX, session, "cmap-tab", "connectivity")
+        tabRequire(PGX, session, "drugs-tab", "drugs")
+        tabRequire(PGX, session, "wordcloud-tab", "wordcloud")
+        tabRequire(PGX, session, "cell-tab", "deconv")
+        ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
 
         info("[server.R] trigger on change dataset done!")
     })

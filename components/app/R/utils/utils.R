@@ -103,12 +103,15 @@ in.shinyproxy <- function() {
 	all(vals!="")
 }
 
-tabRequire <- function(pgx, slot, tabname, subtab) {
-	if(!slot %in% names(pgx)) {
-		cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
-		hideTab(tabname, subtab)
+tabRequire <- function(pgx, session, tabname, slot) {
+        has.slot <- (slot %in% names(pgx))
+        if(!has.slot) {
+          cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
+          ##hideTab(tabname, subtab)
+          bigdash.hideTab(session, tabname)
 	} else {
-		showTab(tabname, subtab)
+          ##showTab(tabname, subtab)
+          bigdash.showTab(session, tabname)          
 	}
 }
 
@@ -137,7 +140,7 @@ tabView <- function(title, tab.inputs, tab.ui, id=title) {
              ))
 }
 
-toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
+toggleTab <- function(inputId, target, do.show, req.file=NULL, session=session ) {
     if(!is.null(req.file)) {
         file1 <- search_path(c(FILES,FILESX),req.file)
         has.file <- !is.null(file1[1])
@@ -145,8 +148,7 @@ toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
     }
     if(do.show) {
       shiny::showTab(inputId, target)
-    }
-    if(!do.show) {
+    } else {
       shiny::hideTab(inputId, target)
     }
 }
