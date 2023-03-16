@@ -359,9 +359,11 @@ LoadingBoard <- function(id,
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
+        dbg("[loading_server.R] loading pgx file = ",pgxfile1)
         shiny::withProgress(message = "Loading data...", value = 0.33, {
           pgx <- local(get(load(pgxfile1, verbose = 0))) ## override any name
         })
+        dbg("[loading_server.R] loading finished")
       } else {
         warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
         return(NULL)
