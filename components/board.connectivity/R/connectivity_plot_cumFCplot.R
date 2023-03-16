@@ -97,7 +97,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         shiny::req(F)
 
         MAXF <- 10
-        NGENES <- 64
+        NGENES <- 50
 
         F <- F[, 1:min(MAXF, ncol(F)), drop = FALSE]
         if (input$cumFCplot_order == "FC") {
@@ -110,8 +110,8 @@ connectivity_plot_cumFCplot_server <- function(id,
         }
 
         pgx.stackedBarplot(
-          x = data.frame(F1),
-          ylab = "Cumulative logFC",
+          x = data.frame(F1, check.names=FALSE),
+          ylab = "cumulative logFC", xlab="",
           showlegend = FALSE
         )
       })

@@ -18,4 +18,20 @@ html {
         margin-left: auto;
         margin-right: auto;
     }
+
+    .tablemodule {
+	padding: 5px 15px 50px 15px; 
+    }
+    
+    .tablemodule-header {
+	margin: 0px 0px 10px 0px;	
+	height: 24px;
+	border-bottom: 1px solid #ccc;
+    }
+
+    .tablemodule-title {
+	padding: 0px 0px 0px 0px;	
+	font-size: 16px;
+    }
+
 }

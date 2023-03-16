@@ -52,7 +52,7 @@ TableModuleUI <- function(id,
   )
 
   if(!is.null(label) && label!="") label <- paste0("&nbsp;(",label,")")
-  label <- shiny::div(class = "plotmodule-title", shiny::HTML(label))
+  label <- shiny::div(class = "tablemodule-title", shiny::HTML(label))
 
   zoom.button <- NULL
   if(show.maximize) {
@@ -65,7 +65,7 @@ TableModuleUI <- function(id,
 
   header <- shiny::fillRow(
     flex = c(NA,1,NA,NA,NA,NA),
-    shiny::div(class='plotmodule-title', title=title, title),
+    shiny::div(class='tablemodule-title', title=title, title),
     label,
     DropdownMenu(
       shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
@@ -105,12 +105,11 @@ TableModuleUI <- function(id,
   modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
 
   # Div construction
-
-  div( class="plotmodule",
+  div( class="tablemodule",
        shiny::fillCol(
          flex = c(NA,1,NA,0.001,NA),
          height = height.1,
-         div( header, class="plotmodule-header"),
+         div( header, class="tablemodule-header"),
          DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
            shinycssloaders::withSpinner(),
          div(
@@ -151,7 +150,7 @@ TableModuleServer <- function(id,
       if(is.null(func2)) func2 <- func
 
       # Downloader
-      download.csv <- shiny::downloadHandler(
+      output$download <- shiny::downloadHandler(
         filename = filename,
         content = function(file) {
           if(!is.null(csvFunc)) {
@@ -159,19 +158,16 @@ TableModuleServer <- function(id,
           } else {
             dt <- func()$x$data
           }
-          ##write.csv(dt, file=CSVFILE, row.names=FALSE)
-          ##file.copy(CSVFILE, file, overwrite=TRUE)
           write.csv(dt, file=file, row.names=FALSE)
         }
       )
-      output$download <- download.csv
 
       output$datatable <- DT::renderDT({
-        # If the options `scrollX` or `autoWidth`, `fillContainer` or `selector` are set,
-        # the global defaults of the global.R
-        # will be overwritten. This ensures those options
-        # are kept so that the header scrolls properly, and clickable
-        # properties for tables.
+        # If the options `scrollX` or `autoWidth`, `fillContainer` or
+        # `selector` are set, the global defaults of the global.R will
+        # be overwritten. This ensures those options are kept so that
+        # the header scrolls properly, and clickable properties for
+        # tables.
         dt <- func()
         active_options <- names(dt$x$options)
         if("scrollX" %in% active_options){
@@ -191,7 +187,7 @@ TableModuleServer <- function(id,
         dt$x$container <- stringr::str_remove(dt$x$container, "table-bordered")
         dt
       },
-      fillContainer = T)
+      fillContainer = TRUE)
 
       output$datatable2 <- DT::renderDT({
         dt <- func2()
@@ -212,7 +208,7 @@ TableModuleServer <- function(id,
         dt$x$container <- stringr::str_remove(dt$x$container, "table-bordered")
         dt
       },
-      fillContainer = T)
+      fillContainer = TRUE)
 
       module <- list(
         data = shiny::reactive(func()$x$data),

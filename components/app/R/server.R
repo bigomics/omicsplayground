@@ -345,9 +345,17 @@ app_server <- function(input, output, session) {
         has.libx <- dir.exists(file.path(OPG,"libx"))
         bigdash.toggleTab(session, "wgcna-tab", show.beta)
         bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
-        bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
+        ##bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         
+        ## Dynamically show upon availability in pgx object
+        info("[server.R] disabling extra features")
+        tabRequire(PGX, session, "cmap-tab", "connectivity")
+        tabRequire(PGX, session, "drugs-tab", "drugs")
+        tabRequire(PGX, session, "wordcloud-tab", "wordcloud")
+        tabRequire(PGX, session, "cell-tab", "deconv")
+        ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
+
         ## DEVELOPER only tabs (still too alpha)
         info("[server.R] disabling alpha features")
         toggleTab("corr-tabs","Functional",DEV)   ## too slow
@@ -357,14 +365,6 @@ app_server <- function(input, output, session) {
         toggleTab("cell-tabs","CNV",DEV)  ## DEV only
         toggleTab("cell-tabs","Monocle",DEV) ## DEV only
         toggleTab("corr-tabs","Functional",DEV)
-
-        ## Dynamically show upon availability in pgx object
-        info("[server.R] disabling extra features")
-        tabRequire(PGX, session, "cmap-tab", "connectivity")
-        tabRequire(PGX, session, "drugs-tab", "drugs")
-        tabRequire(PGX, session, "wordcloud-tab", "wordcloud")
-        tabRequire(PGX, session, "cell-tab", "deconv")
-        ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
 
         info("[server.R] trigger on change dataset done!")
     })

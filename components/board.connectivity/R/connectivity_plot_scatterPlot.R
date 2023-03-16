@@ -12,21 +12,21 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_cmapPairsPlot_ui <- function(id,
+connectivity_plot_scatterPlot_ui <- function(id,
                                                label = "",
                                                fullH = 750) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
-    "The <strong>Pairs</strong> panel provides pairwise scatterplots of
-    differential expression profiles for the selected contrasts. The main
+    "The <strong>FC-FC scatter plot</strong> provides a pairwise scatterplot of
+    logFC fold-change profiles for the selected contrasts. The main
     purpose of this panel is to identify similarity or dissimilarity between
-    selected contrasts. The pairs plot is interactive and shows information of
+    selected contrasts. The scatter plot is interactive and shows information of
     each gene with a mouse hover-over."
   )
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::selectInput(
-        ns("cmap_logFC"),
+        ns("logFC"),
         "logFC threshold:",
         c(0, 0.5, 1, 2, 3, 4),
         selected = 1
@@ -37,7 +37,7 @@ connectivity_plot_cmapPairsPlot_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-    title = "Scatterplot matrix (pairs)",
+    title = "FC-FC scatterplot",
     label = label,
     plotlib = "plotly",
     info.text = info_text,
@@ -56,23 +56,23 @@ connectivity_plot_cmapPairsPlot_ui <- function(id,
 #'
 #' @return
 #' @export
-connectivity_plot_cmapPairsPlot_server <- function(id,
-                                                   pgx,
-                                                   cmap_contrast,
-                                                   cmap_sigdb,
-                                                   getConnectivityContrasts,
-                                                   getCurrentContrast,
-                                                   connectivityScoreTable,
-                                                   getConnectivityScores,
-                                                   getConnectivityMatrix,
-                                                   watermark = FALSE) {
+connectivity_plot_scatterPlot_server <- function(id,
+                                               pgx,
+                                               r_contrast,
+                                               r_sigdb,
+                                               getConnectivityContrasts,
+                                               getCurrentContrast,
+                                               connectivityScoreTable,
+                                               getConnectivityScores,
+                                               getConnectivityMatrix,
+                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
         res <- list(
           pgx = pgx,
-          cmap_contrast = cmap_contrast(),
-          cmap_sigdb = cmap_sigdb()
+          contrast = r_contrast(),
+          sigdb = r_sigdb()
         )
         return(res)
       })
@@ -80,11 +80,11 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
       plot_RENDER <- shiny::reactive({
         res <- plot_data()
         pgx <- res$pgx
-        cmap_contrast <- res$cmap_contrast
-        cmap_sigdb <- res$cmap_sigdb
-
-        shiny::req(pgx, cmap_contrast)
-        sigdb <- cmap_sigdb
+        contrast <- res$contrast
+        sigdb <- res$sigdb
+        
+        shiny::req(pgx, contrast)
+        shiny::req(sigdb)
 
         all.ct <- getConnectivityContrasts(sigdb)
         ct1 <- all.ct[1]
@@ -94,8 +94,6 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         fc1 <- getCurrentContrast()$fc
         ct1 <- getCurrentContrast()$name
 
-        sigdb <- cmap_sigdb
-        shiny::req(sigdb)
         ct2 <- all.ct[1]
         sel.row <- connectivityScoreTable$rows_selected()
         if (is.null(sel.row)) {
@@ -117,7 +115,7 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
         df <- df[abs(df$score) > 0, , drop = FALSE]
         ct2 <- rownames(df)[sel.row]
         fc2 <- getConnectivityMatrix(sigdb, select = ct2)[, 1]
-
+                
         ## match with selection filter
         gg <- unique(c(names(fc1), names(fc2))) ## union or intersection??
         fc1 <- fc1[match(gg, names(fc1))]
@@ -130,9 +128,10 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
 
         ## Number of selected genes
         sel.genes <- grep("^CD", rownames(df), value = TRUE)
-        logfc <- as.numeric(input$cmap_logFC)
+        logfc <- as.numeric(input$logFC)
+        shiny::req(logfc)
         sel.genes <- rownames(df)[rowSums(abs(df) > logfc) >= 1] ## minimum FC
-
+        
         not.sel <- setdiff(rownames(df), sel.genes)
         if (length(not.sel) > 0) {
           nr <- 1000
@@ -183,109 +182,58 @@ connectivity_plot_cmapPairsPlot_server <- function(id,
           ticklen = 4
         )
 
-        if (ncol(df) >= 3) {
-          dimensions <- lapply(colnames(df), function(a) list(label = a, values = df[, a]))
-
-          ## compute correlations
-          rho <- cor(df, use = "pairwise")
-          rho.text <- paste("r=", as.vector(round(rho, digits = 3)))
-          n <- ncol(df)
-
-          ## annotation positions (approximated by eye...)
-          xann <- 1.02 * (as.vector(mapply(rep, seq(0, 0.98, 1 / n), n)) + 0.05 * 1 / n)
-          yann <- 1.08 * (as.vector(rep(seq(1, 0.02, -1 / n), n)) - 0.15 * 1 / n - 0.04)
-
-          p <- plotly::plot_ly(df, source = "cmapSPLOM", key = rownames(df)) %>%
-            plotly::add_trace(
-              type = "splom",
-              dimensions = dimensions,
-              text = tt,
-              hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
-              marker = list(
-                color = df.color,
-                size = 5,
-                line = list(
-                  width = 0.3,
-                  color = "rgb(0,0,0)"
-                )
-              )
-            ) %>%
-            plotly::add_annotations(
-              x = xann,
-              y = yann,
-              text = rho.text,
-              font = list(size = 11),
-              xanchor = "left",
-              align = "left",
-              showarrow = FALSE,
-              xref = "paper",
-              yref = "paper",
-              borderpad = 3,
-              bordercolor = "black",
-              borderwidth = 0.6
-            ) %>%
-            plotly::layout(
-              hovermode = "closest",
-              dragmode = "select",
-              xaxis = c(domain = NULL, axis),
-              yaxis = c(domain = NULL, axis),
-              xaxis2 = axis, xaxis3 = axis, xaxis4 = axis, xaxis5 = axis, xaxis6 = axis, xaxis7 = axis,
-              yaxis2 = axis, yaxis3 = axis, yaxis4 = axis, yaxis5 = axis, yaxis6 = axis, yaxis7 = axis
-            )
-        } else {
-          rho <- cor(df[, 1], df[, 2], use = "pairwise")
-          annot.rho <- list(
-            text = paste("r=", round(rho, 4)),
-            font = list(size = 14),
-            align = "left",
-            showarrow = FALSE,
-            xref = "paper",
-            yref = "paper",
-            x = 0.03,
-            y = 0.97,
-            borderpad = 8,
-            bordercolor = "black",
-            borderwidth = 0.6
-          )
-
-          p <- plotly::plot_ly(
-            data = df[, 1:2], x = df[, 1], y = df[, 2],
-            type = "scattergl", mode = "markers",
-            source = "cmapSPLOM", key = rownames(df),
-            text = tt,
-            hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
-            marker = list(
-              color = df.color,
-              size = 8,
-              line = list(
-                width = 0.3,
-                color = "rgb(0,0,0)"
-              )
+        p <- plotly::plot_ly(
+          data = df[, 1:2], x = df[, 1], y = df[, 2],
+          type = "scattergl", mode = "markers",
+          source = "cmapSPLOM", key = rownames(df),
+          text = tt,
+          hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
+          marker = list(
+            color = df.color,
+            size = 7,
+            line = list(
+              width = 0.3,
+              color = "rgb(0,0,0)"
             )
           )
-          if (length(sel1) > 0) {
-            p <- p %>%
-              plotly::add_annotations(
-                x = df[sel1, 1],
-                y = df[sel1, 2],
-                text = as.character(label.text),
-                xanchor = "center",
-                yanchor = "top",
-                font = list(size = 14),
-                xref = "x", yref = "y",
-                showarrow = FALSE,
-                ax = 20, ay = -40
-              )
-          }
-
+        )
+        if (length(sel1) > 0) {
           p <- p %>%
-            plotly::layout(
-              annotations = annot.rho,
-              hovermode = "closest",
-              xaxis = c(title = paste(colnames(df)[1], "   (logFC)"), axis),
-              yaxis = c(title = paste(colnames(df)[2], "   (logFC)"), axis)
+            plotly::add_annotations(
+              x = df[sel1, 1],
+              y = df[sel1, 2],
+              text = as.character(label.text),
+              xanchor = "center",
+              yanchor = "top",
+              font = list(size = 14),
+              xref = "x", yref = "y",
+              showarrow = FALSE,
+              ax = 20, ay = -40
             )
         }
+
+        rho <- cor(df[, 1], df[, 2], use = "pairwise")
+        annot.rho <- list(
+          text = paste("r=", round(rho, 4)),
+          font = list(size = 14),
+          align = "left",
+          showarrow = FALSE,
+          xref = "paper",
+          yref = "paper",
+          x = 0.03,
+          y = 0.97,
+          borderpad = 8,
+          bordercolor = "black",
+          borderwidth = 0.6
+        )
+
+        p <- p %>%
+          plotly::layout(
+            annotations = annot.rho,
+            hovermode = "closest",
+            xaxis = c(title = paste(colnames(df)[1], "   (logFC)"), axis),
+            yaxis = c(title = paste(colnames(df)[2], "   (logFC)"), axis)
+          )
 
         p <- p %>%
           plotly::config(toImageButtonOptions = list(format = "svg", height = 800, width = 800, scale = 1.1)) %>%

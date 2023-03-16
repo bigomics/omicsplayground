@@ -12,7 +12,9 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_cmap_FCFCplots_ui <- function(id,
+connectivity_plot_FCFCplots_ui <- function(id,
+                                                height,
+                                                width, 
                                                 label = "",
                                                 rowH = 660) {
   ns <- shiny::NS(id)
@@ -32,14 +34,15 @@ connectivity_plot_cmap_FCFCplots_ui <- function(id,
     )
   )
 
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(
+    ns("plot"),
     title = "FC scatter plots",
     label = label,
     plotlib = "base",
     info.text = info_text,
     options = plot_opts,
-    height = c(360, 600),
-    width = c("auto", 1280)
+    height = height,
+    width = width
   )
 }
 
@@ -51,17 +54,17 @@ connectivity_plot_cmap_FCFCplots_ui <- function(id,
 #'
 #' @return
 #' @export
-connectivity_plot_cmap_FCFCplots_server <- function(id,
+connectivity_plot_FCFCplots_server <- function(id,
                                                     pgx,
-                                                    cmap_contrast,
+                                                    contrast,
                                                     getCurrentContrast,
                                                     getTopProfiles,
                                                     getConnectivityScores,
                                                     watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      cmap_FCFCscatter <- function(fc, F, mfplots, ylab) {
-        mfplots <- c(4, 5)
+
+      FCFCscatter <- function(fc, F, mfplots, ylab) {
         ## get the foldchanges of selected comparison and neighbourhood
         F0 <- F
         F[is.na(F)] <- 0 ## really??
@@ -69,6 +72,7 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
         gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
         fc <- fc[gg]
 
+        ##mfplots <- c(2, 5)        
         nplots <- mfplots[1] * mfplots[2]
         F <- F[gg, 1:min(nplots, ncol(F)), drop = FALSE]
         F0 <- F0[gg, colnames(F), drop = FALSE]
@@ -96,7 +100,7 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
         }
       }
 
-      cmap_FCFCenplot <- function(fc, F, mfplots, ylab, res) {
+      FCFCenplot <- function(fc, F, mfplots, ylab, res) {
         mfplots <- c(4, 5)
         names(fc) <- toupper(names(fc))
         nplots <- mfplots[1] * mfplots[2]
@@ -128,7 +132,7 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
       plot_data <- shiny::reactive({
         res <- list(
           pgx = pgx,
-          cmap_contrast = cmap_contrast()
+          contrast = contrast()
         )
         return(res)
       })
@@ -136,9 +140,8 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
       plot_RENDER <- shiny::reactive({
         res <- plot_data()
         pgx <- res$pgx
-        cmap_contrast <- res$cmap_contrast
-
-        shiny::req(pgx, cmap_contrast)
+        contrast <- res$contrast
+        shiny::req(pgx, contrast)
 
         res1 <- getCurrentContrast()
         fc <- res1$fc
@@ -151,11 +154,11 @@ connectivity_plot_cmap_FCFCplots_server <- function(id,
 
         if (input$fcfc_plottype == "scatter") {
           mfplots <- c(2, 5)
-          cmap_FCFCscatter(fc, F, mfplots, ylab = ct)
+          FCFCscatter(fc, F, mfplots, ylab = ct)
         } else {
           mfplots <- c(3, 4)
           df <- getConnectivityScores()
-          cmap_FCFCenplot(fc, F, mfplots, ylab, df)
+          FCFCenplot(fc, F, mfplots, ylab, df)
         }
         p <- grDevices::recordPlot()
         p

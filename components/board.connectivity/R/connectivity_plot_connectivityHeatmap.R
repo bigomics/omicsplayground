@@ -41,7 +41,8 @@ connectivity_plot_connectivityHeatmap_ui <- function(id,
     plotlib = "base",
     info.text = info_text,
     options = plot_opts,
-    height = c(480, 550), width = c("auto", 1400)
+    height = c(420, 650),
+    width = c("auto", 1400)
   )
 }
 
@@ -64,9 +65,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F <- getTopProfiles()
         F[is.na(F)] <- 0
 
-        ## maximum 10??
-        MAXF <- 20
-
         ## multiply with sign of rho
         df <- getConnectivityScores()
         rho1 <- df$rho[match(colnames(F), df$pathway)]
@@ -88,15 +86,12 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F
       })
 
-      plot_RENDER <- shiny::reactive({
-        ##
-        F <- cumulativeFCtable()
-        shiny::req(F)
-        F <- F[, 1:min(NCOL(F), 25), drop = FALSE]
+      plotFCheatmap <- function(F, maxfc, maxgenes=60) {
+        F <- F[, 1:min(NCOL(F), maxfc), drop = FALSE]
         if (input$cumFCplot_order == "FC") {
           F <- F[order(-abs(F[, 1])), ]
         }
-        F1 <- head(F, 80)
+        F1 <- head(F, maxgenes)
         par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
         gx.splitmap(t(F1),
           split = 1,
@@ -106,18 +101,38 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           rowlab.maxlen = 80,
           ## zsym = TRUE,
           symm.scale = TRUE,
-          mar = c(15, 0, 0, 60),
+          mar = c(15, 0, 0, 110),
           key.offset = c(0.90, 0.2),
           cexRow = 0.9, cexCol = 0.75
         )
+      }
+
+      plot_RENDER <- shiny::reactive({
+        ##
+        F <- cumulativeFCtable()
+        shiny::req(F)
+        ## maximum rows
+        plotFCheatmap(F, maxfc=20, maxgenes=60)
         p <- grDevices::recordPlot()
         p
       })
+
+      plot_RENDER2 <- shiny::reactive({
+        ##
+        F <- cumulativeFCtable()
+        shiny::req(F)
+        ## maximum rows
+        plotFCheatmap(F, maxfc=40, maxgenes=60)
+        p <- grDevices::recordPlot()
+        p
+      })
+
+      
       PlotModuleServer(
         "plot",
         plotlib = "base",
         func = plot_RENDER,
-        func2 = plot_RENDER,
+        func2 = plot_RENDER2,
         csvFunc = cumulativeFCtable,
         pdf.width = 14, pdf.height = 5.5,
         res = c(90, 90),

@@ -97,7 +97,7 @@ app_ui <- function() {
             isect = "Compare signatures",
             sig = "Test signatures",
             bio = "Find biomarkers",
-            cmap = "Similar experiments (beta)",
+            cmap = "Similar experiments",
             comp = "Compare datasets (beta)",
             tcga = "TCGA survival (beta)"
           ),
@@ -251,7 +251,7 @@ app_ui <- function() {
                      "bio-tab"
                  ),
                  bigdash::sidebarMenuItem(
-                     "Similar experiments (beta)",
+                     "Similar experiments",
                      "cmap-tab"
                  ),
                  bigdash::sidebarMenuItem(
