@@ -297,7 +297,8 @@ app_server <- function(input, output, session) {
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
-        if(length(name)==0) name = "BigOmics Playground"
+        version <- scan(file.path(OPG,"VERSION"), character())[1]
+        if(length(name)==0) name = paste("BigOmics Playground",version)
         name
     })
 
