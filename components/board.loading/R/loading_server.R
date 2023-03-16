@@ -130,6 +130,7 @@ LoadingBoard <- function(id,
     ## Modules
     ## ================================================================================
     loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
+    loading_tsne_server("tsne_shared", pgx.dir = reactive(pgx_shared_dir), watermark = FALSE)
 
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
 
