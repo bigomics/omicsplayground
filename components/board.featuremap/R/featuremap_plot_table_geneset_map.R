@@ -28,12 +28,13 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
-      outputFunc = function(x, width, height) {
-        plotOutput(x,
-          brush = ns("gsetUMAP_brush"), width = width,
-          height = height
-        )
-      },
+      # outputFunc = function(x, width, height) {
+      #   plotOutput(x,
+      #     brush = ns("gsetUMAP_brush"), width = width,
+      #     height = height
+      #   )
+      # },
+      plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
@@ -131,9 +132,9 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     PlotModuleServer(
       "gset_map",
-      plotlib = "base",
+      plotlib = "plotly",
       plotlib2 = "plotly",
-      func = gsetUMAP.RENDER,
+      func = gsetUMAP.RENDER2,
       func2 = gsetUMAP.RENDER2,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
