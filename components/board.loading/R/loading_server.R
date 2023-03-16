@@ -44,16 +44,8 @@ LoadingBoard <- function(id,
     observeEvent(rl$selected_row, {
       if (is.null(rl$selected_row)) {
         shinyjs::disable(id = 'loadbutton')
-        shinyjs::disable(id = 'sharebutton')
-        shinyjs::disable(id = 'downloadpgx')
-        shinyjs::disable(id = 'downloadzip')
-        shinyjs::disable(id = 'deletebutton')
       } else {
         shinyjs::enable(id = 'loadbutton')
-        shinyjs::enable(id = 'sharebutton')
-        shinyjs::enable(id = 'downloadpgx')
-        shinyjs::enable(id = 'downloadzip')
-        shinyjs::enable(id = 'deletebutton')
       }
     }, ignoreNULL = FALSE)
 
@@ -74,7 +66,7 @@ LoadingBoard <- function(id,
     observeEvent(
       input$importbutton, {
         selected_row <- rl$selected_row_shared
-        pgx_name <- rl$pgxTableShare_data[selected_row, 'dataset']
+        pgx_name <- rl$pgxTableShared_data[selected_row, 'dataset']
 
         pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
@@ -94,8 +86,8 @@ LoadingBoard <- function(id,
 
     # put user dataset into shared folder
     observeEvent(
-      input$sharebutton, {
-        selected_row <- rl$selected_row
+      rl$share_pgx, {
+        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
 
         alert_val <- shinyalert::shinyalert(
@@ -424,16 +416,22 @@ LoadingBoard <- function(id,
       }
     }
 
-    output$downloadpgx <- shiny::downloadHandler(
+    # DOWNLOAD PGX FILE #
+    observeEvent(rl$download_pgx, { shinyjs::click(id = 'download_pgx_btn') })
+    output$download_pgx_btn <- shiny::downloadHandler(
       ## filename = "userdata.pgx",
       filename = function() {
-        selectedPGX()
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx, '_row_')[[1]][2])
+        df <- getFilteredPGXINFO()
+        pgxfile <- as.character(df$dataset[sel])
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+        pgxfile
       },
       content = function(file) {
-        pgxfile <- selectedPGX()
-        if (is.null(pgxfile) || pgxfile == "" || length(pgxfile) == 0) {
-          return(NULL)
-        }
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx, '_row_')[[1]][2])
+        df <- getFilteredPGXINFO()
+        pgxfile <- as.character(df$dataset[sel])
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
         pgx <- loadPGX(pgxfile)
         temp <- tempfile()
         save(pgx, file = temp)
@@ -441,17 +439,28 @@ LoadingBoard <- function(id,
       }
     )
 
-    output$downloadzip <- shiny::downloadHandler(
+
+    # DOWNLOAD DATA AS ZIP FILE #
+    observeEvent(rl$download_zip, { shinyjs::click(id = 'download_zip_btn') })
+    output$download_zip_btn <- shiny::downloadHandler(
       ## filename = "userdata.zip",
       filename = function() {
-        sub("pgx$", "zip", selectedPGX())
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
+        df <- getFilteredPGXINFO()
+        pgxfile <- as.character(df$dataset[sel])
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+        pgxfile <- sub("pgx$", "zip", pgxfile)
+        print(pgxfile)
+        pgxfile
       },
       content = function(file) {
-        pgxfile <- selectedPGX()
-        if (is.null(pgxfile) || pgxfile == "" || length(pgxfile) == 0) {
-          return(NULL)
-        }
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
+        print(paste('zip:',sel))
+        df <- getFilteredPGXINFO()
+        pgxfile <- as.character(df$dataset[sel])
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
         pgxname <- sub("[.]pgx$", "", pgxfile)
+        print(pgxname)
         pgx <- loadPGX(pgxfile)
         dir.create(tmp <- tempfile())
         tmp2 <- file.path(tmp, pgxname)
@@ -477,15 +486,15 @@ LoadingBoard <- function(id,
       }
     )
 
-    shiny::observeEvent(input$deletebutton, {
-      pgxfile <- selectedPGX()
-      if (is.null(pgxfile) || pgxfile == "" || length(pgxfile) == 0) {
-        return(NULL)
-      }
+    shiny::observeEvent(rl$delete_pgx, {
+      row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
+
+      df <- getFilteredPGXINFO()
+      pgxfile <- as.character(df$dataset[row_idx])
+      pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
 
       pgx.path <- getPGXDIR()
       pgxfile1 <- file.path(pgx.path, pgxfile)
-      pgxfile1
       sel <- NULL
 
       deletePGX <- function() {
