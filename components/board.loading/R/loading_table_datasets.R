@@ -8,7 +8,7 @@ loading_table_datasets_ui <- function(id, height, width) {
     info.text = info_text,
     width = width,
     height = height,
-    title = "Data files"
+    title = "My data sets"
   )
 }
 
