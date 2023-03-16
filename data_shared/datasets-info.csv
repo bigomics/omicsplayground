@@ -1,5 +1,3 @@
 "","dataset","datatype","description","organism","nsamples","ngenes","nsets","conditions","date"
-"1","public-data1","LC/MS proteomics","a public dataset 1","human","18","6987","6829","condition time activated","2021-09-30"
-"2","public-data2","LC/MS proteomics","a public dataset 2","human","18","6987","6829","condition time activated","2021-09-30"
-"3","public-data3","LC/MS proteomics","a public dataset 1","human","18","6987","6829","condition time activated","2021-09-30"
-"4","GSE157905-lenvatinib-bc","RNA-seq","GSE157905. RNA Sequencing of HCC cells after lenvatinib, gefitinib, and combination treatment (Jin et al., Nature 2021). Batchcorrected: combat+nnm+sva","human","16","10000","7240","nr cell.line treatment","2021-07-25"
+"1","GSE157905-lenvatinib-bc","RNA-seq","GSE157905. RNA Sequencing of HCC cells after lenvatinib, gefitinib, and combination treatment (Jin et al., Nature 2021). Batchcorrected: combat+nnm+sva","human","16","10000","7240","nr cell.line treatment","2021-07-25"
+"2","example-data","LC/MS proteomics","Proteome profiles of activated  vs resting human naive T cells at different times (Geiger et al., Cell 2016).","human","18","6987","6829","condition time activated","2021-09-30"

@@ -12,9 +12,13 @@ loading_table_datasets_ui <- function(id, height, width) {
   )
 }
 
+
+
 loading_table_datasets_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
 
     pgxTable_DT <- reactive({
       df <- rl$pgxTable_data
@@ -29,10 +33,66 @@ loading_table_datasets_server <- function(id,
       target3 <- grep("conditions", colnames(df))
       target4 <- grep("dataset", colnames(df))
 
+      # create action menu for each row
+      menus <- c()
+      for (i in 1:nrow(df)) {
+        new_menu <- actionMenu(
+          div(
+            style = "width: 140px;",
+            div(
+              shiny::actionButton(
+                ns(paste0("download_pgx_row_",i)),
+                label = "Download PGX",
+                icon = NULL,
+                class = "btn btn-outline-dark",
+                style = "width: 100%; border: none;",
+                onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id)')
+              ),
+              shiny::actionButton(
+                ns(paste0("download_zip_row_", i)),
+                label = "Download ZIP",
+                icon = NULL,
+                class = "btn btn-outline-dark",
+                style = "width: 100%; border: none;",
+                onclick=paste0('Shiny.onInputChange(\"',ns("download_zip"),'\",this.id)')
+              ),
+              shiny::actionButton(
+                ns(paste0("share_dataset_row_", i)),
+                label = "Share Dataset",
+                class = "btn btn-outline-info",
+                width = '100%',
+                style = 'border: none;',
+                onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id)')
+              ),
+              shiny::actionButton(
+                ns(paste0("delete_dataset_row_",i)),
+                label = "Delete Dataset",
+                class = "btn btn-outline-danger",
+                width = '100%',
+                style = 'border: none;',
+                onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id)')
+              )
+            )
+          ),
+          size = "sm",
+          icon = shiny::icon("ellipsis-vertical"),
+          status = "dark"
+        )
+        menus <- c(menus, as.character(new_menu))
+      }
+      observeEvent(input$download_pgx, { rl$download_pgx <- input$download_pgx })
+      observeEvent(input$download_zip, { rl$download_zip <- input$download_zip })
+      observeEvent(input$share_pgx, { rl$share_pgx <- input$share_pgx })
+      observeEvent(input$delete_pgx, { rl$delete_pgx <- input$delete_pgx })
+
+      df$actions <- menus
+      colnames(df)[ncol(df)] <- ' '
+
       DT::datatable(
         df,
         class = "compact hover",
         rownames = TRUE,
+        escape = FALSE,
         editable = list(
           target = 'cell',
           disable = list(columns = c(1,3:ncol(df)))
@@ -49,7 +109,8 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            list(width = "30vw", targets = target2)
+            list(width = "30vw", targets = target2),
+            list(sortable = FALSE, targets = ncol(df))
           )
         ) ## end of options.list
       )

@@ -42,24 +42,23 @@ LoadingUI <- function(id) {
             ),
             div(
               id = "load-action-buttons",
-              shiny::actionButton(
-                ns("deletebutton"),
-                label = "Delete dataset", icon = icon("trash"),
-                class = "btn btn-outline-danger"
+              # this button is needed to trigger download but should be hidden
+              shiny::downloadLink(
+                ns("download_pgx_btn"),
+                label = "",
+                icon = NULL,
+                width = '0%'
               ),
-              shiny::downloadButton(
-                ns("downloadpgx"),
-                label = "Download PGX",
-                class = "btn btn-outline-dark"
-              ),
-              downloadButton2(
-                ns("downloadzip"),
-                label = "Download ZIP", icon = icon("file-archive"),
-                class = "btn btn-outline-dark"
+              # this button is needed to trigger download but should be hidden
+              shiny::downloadLink(
+                ns("download_zip_btn"),
+                label = "",
+                icon = NULL,
+                width = '0%'
               ),
               shiny::actionButton(
                 ns("loadbutton"),
-                label = "Load dataset", icon = icon("file-import"),
+                label = "Load Dataset", icon = icon("file-import"),
                 class = "btn btn-outline-primary"
               )
             )
