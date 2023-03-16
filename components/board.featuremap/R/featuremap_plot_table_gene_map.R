@@ -29,12 +29,13 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       ns("gene_map"),
       title = "Gene Map",
       label = "a",
-      outputFunc = function(x, width, height) {
-        plotOutput(x,
-          brush = ns("geneUMAP_brush"), width = width,
-          height = height
-        )
-      },
+      # outputFunc = function(x, width, height) {
+      #   plotOutput(x,
+      #     brush = ns("geneUMAP_brush"), width = width,
+      #     height = height
+      #   )
+      # },
+      plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
@@ -137,9 +138,9 @@ featuremap_plot_gene_map_server <- function(id,
 
     PlotModuleServer(
       "gene_map",
-      plotlib = "base",
+      plotlib = "plotly",
       plotlib2 = "plotly",
-      func = geneUMAP.RENDER,
+      func = geneUMAP.RENDER2,
       func2 = geneUMAP.RENDER2,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
