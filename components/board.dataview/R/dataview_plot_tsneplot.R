@@ -172,7 +172,8 @@ dataview_plot_tsne_server <- function(id,
 
       df <- data[[1]]
       gene <- data[[2]]
-      symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up", "star-diamond", "square-cross", "diamond-wide")
+      symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
+        "star-diamond", "square-cross", "diamond-wide")
 
       if (!is.null(df$group)) {
         fig <-

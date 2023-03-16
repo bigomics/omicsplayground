@@ -8,7 +8,7 @@ loading_table_datasets_shared_ui <- function(id, height, width) {
     info.text = info_text,
     width = width,
     height = height,
-    title = "Data files"
+    title = "Shared data sets"
   )
 }
 

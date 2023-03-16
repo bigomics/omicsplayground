@@ -82,7 +82,7 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA"),
+            wgcna = "WGCNA (beta)"),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis"
@@ -97,7 +97,7 @@ app_ui <- function() {
             isect = "Compare signatures",
             sig = "Test signatures",
             bio = "Find biomarkers",
-            cmap = "Similar experiments",
+            cmap = "Similar experiments (beta)",
             comp = "Compare datasets (beta)",
             tcga = "TCGA survival (beta)"
           ),
@@ -251,7 +251,7 @@ app_ui <- function() {
                      "bio-tab"
                  ),
                  bigdash::sidebarMenuItem(
-                     "Similar experiments",
+                     "Similar experiments (beta)",
                      "cmap-tab"
                  ),
                  bigdash::sidebarMenuItem(
@@ -271,8 +271,17 @@ app_ui <- function() {
              )
         )
         
+        big_theme2 = bigdash::big_theme()
+        ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
+                ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
+        big_theme2 <- bslib::bs_add_variables(big_theme2, 
+          "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
+          .where = "declarations"
+        )
+        
         bigdash::bigPage(
             header,
+            theme = big_theme2,
             sidebar = sidebar,
             navbar = bigdash::navbar(
                 tags$img(

@@ -27,14 +27,14 @@ LoadingUI <- function(id) {
   div(
     class = "p-1",
     uiOutput(ns("navheader")),
-    div(
-      class = "row",
-      div(
-        class = "col-md-8",
-        shiny::tabsetPanel(
-          id = ns('tabs'),
-          shiny::tabPanel(
-            'User',
+    shiny::tabsetPanel(
+      id = ns('tabs'),
+      shiny::tabPanel(
+        'User',
+        div(
+          class = "row",
+          div(
+            class = "col-md-7",
             loading_table_datasets_ui(
               ns("pgxtable"),
               height = c("65vh", 700),
@@ -63,8 +63,25 @@ LoadingUI <- function(id) {
               )
             )
           ),
-          shiny::tabPanel(
-            'Shared',
+          div(
+            class = "col-md-5",
+            loading_tsne_ui(ns("tsne"),
+              height = c("65vh", "70vh"),
+              width = c("auto",  "100%")
+            ) %>%
+              tagAppendAttributes(
+                ##style = 'padding-top: 61.5px;'
+              )
+          )
+        )
+      ),
+         
+      shiny::tabPanel(
+        'Shared',
+        div(
+          class = "row",
+          div(
+            class = "col-md-7",
             loading_table_datasets_shared_ui(
               ns("pgxtable_shared"),
               height = c("65vh", 700),
@@ -78,18 +95,18 @@ LoadingUI <- function(id) {
                 class = "btn btn-outline-primary"
               )
             )
-          )
+          ),
+          div(
+            class = "col-md-5",
+            loading_tsne_ui(ns("tsne_shared"),
+              height = c("65vh", "70vh"),
+              width = c("auto",  "100%")
+            ) %>%
+              tagAppendAttributes(
+                ## style = 'padding-top: 61.5px;'
+              )
+          )          
         )
-      ),
-      div(
-        class = "col-md-4",
-        loading_tsne_ui(ns("tsne"),
-        height = c("55vh", "60vh"),
-        width = c("auto",  "100%")
-        ) %>%
-          tagAppendAttributes(
-            style = 'padding-top: 61.5px;'
-          )
       )
     )
   )

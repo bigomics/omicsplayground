@@ -48,7 +48,8 @@ loading_tsne_server <- function(id, pgx.dirRT,
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos)) {
-        F <- data.table::fread(file.path(PGX.DIR, "datasets-allFC.csv"))
+        dbg("[loading_tsneplot.R] recalculating tSNE positions...")
+        F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
         F <- as.matrix(F[, -1], rownames = F[[1]])
         dim(F)
         ## F[is.na(F)] <- 0
@@ -93,15 +94,24 @@ loading_tsne_server <- function(id, pgx.dirRT,
     plot.RENDER <- function() {
       df <- plot_data()
       shiny::req(df)
-
+      
       dataset.pos <- df[[2]]
-
+      marker_size <- ifelse( nrow(df[[1]]) > 50, 5, 10)
+      
       fig <- plotly::plot_ly(
         data = df[[1]],
         x = ~x,
         y = ~y,
         text = ~ paste("Dataset:", dataset, "<br>Comparison:", comparison),
-        color = ~dataset
+        color = ~dataset,
+        ## colors = omics_pal_c(palette = "brand_blue")(100),
+        marker = list(
+          size = marker_size,
+          line = list(
+            color = omics_colors("super_dark_grey"),
+            width = 1.2
+          )
+        )
       )
 
       fig <- fig %>%
@@ -129,6 +139,9 @@ loading_tsne_server <- function(id, pgx.dirRT,
     }
 
     modal_plot.RENDER <- function() {
+      df <- plot_data()
+      shiny::req(df)
+      marker_size <- ifelse( nrow(df[[1]]) > 50, 6, 12)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,
@@ -136,7 +149,7 @@ loading_tsne_server <- function(id, pgx.dirRT,
             size = 16
           )
         )
-      p <- plotly::style(p, marker.size = 11)
+      p <- plotly::style(p, marker.size = marker_size)
       p
     }
 

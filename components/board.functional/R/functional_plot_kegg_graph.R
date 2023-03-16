@@ -53,11 +53,16 @@ functional_plot_kegg_graph_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
+
+        ## folder with predownloaded XML files
+        xml.dir <- file.path(FILES, "kegg-xml")
+        xml.dir <- normalizePath(xml.dir) ## absolute path
         res <- list(
           pgx = pgx,
           df = getFilteredKeggTable(),
           kegg_table = kegg_table,
-          fa_contrast = fa_contrast()
+          fa_contrast = fa_contrast(),
+          xml.dir = xml.dir
         )
         return(res)
       })
@@ -68,6 +73,7 @@ functional_plot_kegg_graph_server <- function(id,
         df <- res$df
         fa_contrast <- res$fa_contrast
         kegg_table <- res$kegg_table
+        xml.dir <- res$xml.dir
 
         ###############
 
@@ -119,23 +125,21 @@ functional_plot_kegg_graph_server <- function(id,
           pathway.name <- df[sel.row, "pathway"]
           pw.genes <- unlist(getGSETS(as.character(pathway.name)))
         }
-
-        ## folder with predownloaded XML files
-        xml.dir <- file.path(FILES, "kegg-xml")
-        xml.dir <- normalizePath(xml.dir) ## absolute path
-
+        
+        
         ## We temporarily switch the working directory to always readable
         ## TMP folder
         curwd <- getwd()
         tmpdir <- tempdir()
         setwd(tmpdir)
+
         pv.out <- pathview::pathview(
           gene.data = fc, pathway.id = pathway.id, gene.idtype = "SYMBOL",
           gene.annotpkg = "org.Hs.eg.db", species = "hsa",
           out.suffix = "pathview", limit = list(gene = 2, cpd = 1),
           low = list(gene = "dodgerblue2", cpd = "purple"),
           high = list(gene = "firebrick2", cpd = "yellow"),
-          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE
+          kegg.dir = xml.dir, kegg.native = TRUE, same.layer = FALSE,
         )
         Sys.sleep(0.2) ## wait for graph
 

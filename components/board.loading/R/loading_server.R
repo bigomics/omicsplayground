@@ -164,6 +164,7 @@ LoadingBoard <- function(id,
     ## Modules
     ## ================================================================================
     loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
+    loading_tsne_server("tsne_shared", pgx.dir = reactive(pgx_shared_dir), watermark = FALSE)
 
     pgxtable <- loading_table_datasets_server("pgxtable", rl = rl)
 
@@ -400,9 +401,11 @@ LoadingBoard <- function(id,
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
+        dbg("[loading_server.R] loading pgx file = ",pgxfile1)
         shiny::withProgress(message = "Loading data...", value = 0.33, {
           pgx <- local(get(load(pgxfile1, verbose = 0))) ## override any name
         })
+        dbg("[loading_server.R] loading finished")
       } else {
         warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
         return(NULL)
