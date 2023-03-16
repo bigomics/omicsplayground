@@ -92,10 +92,10 @@ LoadingBoard <- function(id,
 
         alert_val <- shinyalert::shinyalert(
           inputId = 'share_confirm',
-          title = "Are you sure?",
+          title = "Share this dataset?",
           paste('The dataset', pgx_name, 'will be moved',
                 'to the shared folder. Other users will be able import and explore
-                this dataset.'
+                this dataset. Are you sure?'
           ),
           showCancelButton = TRUE,
           showConfirmButton = TRUE

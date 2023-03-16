@@ -38,37 +38,37 @@ loading_table_datasets_server <- function(id,
       for (i in 1:nrow(df)) {
         new_menu <- actionMenu(
           div(
-            style = "width: 140px;",
+            style = "width: 160px;",
             div(
               shiny::actionButton(
                 ns(paste0("download_pgx_row_",i)),
                 label = "Download PGX",
-                icon = NULL,
+                icon = shiny::icon('download'),
                 class = "btn btn-outline-dark",
-                style = "width: 100%; border: none;",
+                style = "border: none;",
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id)')
               ),
               shiny::actionButton(
                 ns(paste0("download_zip_row_", i)),
                 label = "Download ZIP",
-                icon = NULL,
+                icon = shiny::icon("file-archive"),
                 class = "btn btn-outline-dark",
-                style = "width: 100%; border: none;",
+                style = "border: none;",
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_zip"),'\",this.id)')
               ),
               shiny::actionButton(
                 ns(paste0("share_dataset_row_", i)),
                 label = "Share Dataset",
+                icon = shiny::icon('share-nodes'),
                 class = "btn btn-outline-info",
-                width = '100%',
                 style = 'border: none;',
                 onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id)')
               ),
               shiny::actionButton(
                 ns(paste0("delete_dataset_row_",i)),
                 label = "Delete Dataset",
+                icon = shiny::icon("trash"),
                 class = "btn btn-outline-danger",
-                width = '100%',
                 style = 'border: none;',
                 onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id)')
               )
