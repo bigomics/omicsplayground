@@ -48,7 +48,7 @@ loading_table_datasets_server <- function(id,
                 style = "width: 100%; border: none;",
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id)')
               ),
-              shiny::downloadButton(
+              shiny::actionButton(
                 ns(paste0("download_zip_row_", i)),
                 label = "Download ZIP",
                 icon = NULL,

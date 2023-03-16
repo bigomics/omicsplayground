@@ -448,19 +448,17 @@ LoadingBoard <- function(id,
         sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
-        pgxfile <- sub("pgx$", "zip", pgxfile)
-        print(pgxfile)
-        pgxfile
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
+        newfile <- sub("pgx$", "zip", pgxfile)
+        newfile
       },
       content = function(file) {
         sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
-        print(paste('zip:',sel))
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
         pgxname <- sub("[.]pgx$", "", pgxfile)
-        print(pgxname)
+
         pgx <- loadPGX(pgxfile)
         dir.create(tmp <- tempfile())
         tmp2 <- file.path(tmp, pgxname)
@@ -477,8 +475,8 @@ LoadingBoard <- function(id,
 
         zipfile <- tempfile(fileext = ".zip")
         zip::zip(zipfile,
-          files = paste0(pgxname, "/", c("counts.csv", "samples.csv", "contrasts.csv", "normalized.csv")),
-          root = tmp
+                 files = paste0(pgxname, "/", c("counts.csv", "samples.csv", "contrasts.csv", "normalized.csv")),
+                 root = tmp
         )
         file.copy(zipfile, file)
         remove(pgx)
