@@ -95,7 +95,7 @@ loading_tsne_server <- function(id, pgx.dirRT,
       df <- plot_data()
       shiny::req(df)
       
-      dataset.pos <- df[[2]]
+      dataset_pos <- df[[2]]
       marker_size <- ifelse( nrow(df[[1]]) > 50, 5, 10)
       
       fig <- plotly::plot_ly(
@@ -109,16 +109,27 @@ loading_tsne_server <- function(id, pgx.dirRT,
           size = marker_size,
           line = list(
             color = omics_colors("super_dark_grey"),
-            width = 1.2
+            width = 1.0
           )
         )
       )
 
+      dy <- diff(range(dataset_pos[,"y"]))
+      dbg("[loading_tsneplot.R] range.y=",dy)
+      
       fig <- fig %>%
         plotly::add_annotations(
-          x = dataset.pos[, "x"],
-          y = dataset.pos[, "y"],
-          text = rownames(dataset.pos),
+          x = dataset_pos[,"x"],
+          y = dataset_pos[,"y"],
+          text = rownames(dataset_pos),
+          xref = "x",
+          yref = "y",          
+          ## textposition = 'top',
+          xanchor = "middle",
+          yanchor = "bottom",
+          yshift = 0.02*dy,
+#          ax = 0,
+#          ay = -0.05 * dy,
           showarrow = FALSE
         )
 

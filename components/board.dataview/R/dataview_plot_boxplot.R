@@ -69,6 +69,10 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
       shiny::req(res)
 
       df <- res$counts[, ]
+      if(nrow(df)>1000) {
+        sel <- sample(nrow(df),1000)
+        df <- df[sel,]
+      }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
 

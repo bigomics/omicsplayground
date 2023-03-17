@@ -166,7 +166,7 @@ DataViewUI <- function(id) {
 #          div(
 #            class = "row",
             div(
-              class = "col-lg-9 col-xxl-6 col-xxxl-3",
+              class = "col-lg-9 col-xxl-7 col-xxxl-5",
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 height = imgH,
@@ -174,7 +174,7 @@ DataViewUI <- function(id) {
               )
             ),
             div(
-              class = "col-lg-9 col-xxl-6 col-xxxl-3",
+              class = "col-lg-9 col-xxl-5 col-xxxl-3",
               dataview_plot_tissue_ui(
                 ns("tissueplot"),
                 height = imgH,
