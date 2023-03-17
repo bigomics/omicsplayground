@@ -326,7 +326,7 @@ PlotModuleServer <- function(
             cd <- session$clientData
             sprintf(
               "%s/?plotURL=%s//%s:%s%s%s",
-              PLOTLY_EDITOR,
+              "editor/index.html",
               cd$url_protocol,
               cd$url_hostname,
               cd$url_port,
@@ -344,8 +344,7 @@ PlotModuleServer <- function(
                 httpResponse(
                   status = 200,
                   content_type = 'application/json',
-                  content = data,
-                  headers = list("Access-Control-Allow-Origin" = PLOTLY_EDITOR)
+                  content = data
                 )
               }
             )
@@ -388,7 +387,7 @@ PlotModuleServer <- function(
             download.png <- shiny::downloadHandler(
               filename = "plot.png",
               content = function(file) {
-                
+
                 pdf.width  <- input$pdf_width
                 pdf.height <- input$pdf_height
                 resx <- 4  ## upresolution
@@ -439,7 +438,7 @@ PlotModuleServer <- function(
                     mtext("Error. PNG not available.",line=-8)
                     dev.off()
                   }
-                  
+
                   ## finally copy to final exported file
                   dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
                   file.copy(PNGFILE, file, overwrite=TRUE)
@@ -511,11 +510,11 @@ PlotModuleServer <- function(
                       mtext("Error. PDF not available.",line=-8)
                       dev.off()
                     }
-                    
+
                     ## finally copy to final exported file
                     dbg("[downloadHandler.PDF] copy PDFFILE",PDFFILE,"to download file",file )
                     file.copy(PDFFILE, file, overwrite=TRUE)
-                    
+
                     ## ImageMagick or pdftk
                     if(TRUE && add.watermark) {
                       message("[plotModule] adding watermark to PDF...")
