@@ -93,7 +93,7 @@ drugconnectivity_plot_moa_server <- function(id,
           x = "x",
           y = "y",
           yaxistitle = "Enrichment score (NES)",
-          xaxistitle = "Mechanism of action",
+          xaxistitle = "",
           plotRawValues = TRUE,
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
         )
