@@ -45,7 +45,7 @@ docker: FORCE
 
 docker.base: FORCE
 	@echo building docker BASE
-	docker build --no-cache \
+	docker build  \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204 .
 

@@ -58,6 +58,7 @@ FROM r-base1 AS r-base2
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
 RUN R -e "BiocManager::install('KEGGgraph')"
+RUN R -e "install.packages(c('RSpectra'))"
 RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
 
 #------------------------------------------------------------
