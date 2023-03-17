@@ -114,6 +114,7 @@ ExpressionUI <- function(id) {
                 )
               ),
               tags$div(
+                class = "caption",
                 HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
                             significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
                             respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
@@ -130,8 +131,10 @@ ExpressionUI <- function(id) {
               ),
               shiny::br(),
               tags$div(
-                HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially
-                            (both positively and negatively) expressed genes for the selected contrast.")
+                class = "caption",
+                HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top
+                      most differentially (both positively and negatively) expressed genes for
+                      the selected contrast.")
               )
             ),
             shiny::tabPanel(
@@ -143,6 +146,7 @@ ExpressionUI <- function(id) {
               ),
               shiny::br(),
               tags$div(
+                class = "caption",
                 HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
                         plots of genes for all contrasts. Experimental contrasts with better statistical significance will
                         show volcano plots with 'higher' wings.")
@@ -158,6 +162,7 @@ ExpressionUI <- function(id) {
               ),
               shiny::br(),
               tags$div(
+                class = "caption",                
                 HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
                         of genes by multiple differential expression methods for the selected contrast.
                         Methods showing better statistical significance will show volcano plots with 'higher' wings.")
@@ -165,6 +170,8 @@ ExpressionUI <- function(id) {
             )
           )
         ),
+        shiny::br(),
+##        shiny::br(),
         div(
           # style = "max-height: 50vh",
           shiny::tabsetPanel(
@@ -172,6 +179,7 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Table",
               tags$div(
+                class = "caption",                
                 HTML("<b>Differential Expression Analysis.</b> Compare expression between
                         two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
               ),
@@ -198,7 +206,9 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "Foldchange (all)",
               tags$div(
-                HTML("<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts.")
+                class = "caption",                
+                HTML("<b>Differential expression (fold-change) across all contrasts.</b> The
+                column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts.")
               ),
               expression_table_fctable_ui(
                 ns("fctable"),
@@ -209,6 +219,7 @@ ExpressionUI <- function(id) {
             shiny::tabPanel(
               "FDR table",
               tags$div(
+                class = "caption",                
                 HTML("<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes.")
               ),
               expression_table_FDRtable_ui(
