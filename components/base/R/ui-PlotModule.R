@@ -385,145 +385,145 @@ PlotModuleServer <- function(
           ##download.png = download.html = NULL
 
           if(do.png && is.null(download.png)) {
-              download.png <- shiny::downloadHandler(
-                                         filename = "plot.png",
-                                         content = function(file) {
+            download.png <- shiny::downloadHandler(
+              filename = "plot.png",
+              content = function(file) {
+                
+                pdf.width  <- input$pdf_width
+                pdf.height <- input$pdf_height
+                resx <- 4  ## upresolution
 
-                                             pdf.width  <- input$pdf_width
-                                             pdf.height <- input$pdf_height
-                                             resx <- 4  ## upresolution
-
-                                             shiny::withProgress({
-                                                 ## unlink(PNGFILE) ## do not remove!
-                                                 if(plotlib=="plotly") {
-                                                     p <- func()
-                                                     p$width = pdf.width * 80
-                                                     p$height = pdf.height * 80
-                                                     plotlyExport(p, PNGFILE, width=p$width, height=p$height)
-                                                 } else if(plotlib=="iheatmapr") {
-                                                     p <- func()
-                                                     iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
-                                                 } else if(plotlib=="visnetwork") {
-                                                     p <- func()
-                                                     dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
-                                                     visNetwork::visSave(p, HTMLFILE)
-                                                     dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ",PNGFILE)
-                                                     webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
-                                                 } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-                                                     p <- func()
-                                                     htmlwidgets::saveWidget(p, HTMLFILE)
-                                                     webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
-                                                 } else if(plotlib %in% c("ggplot","ggplot2")) {
-                                                     ggsave(PNGFILE, plot = func(), dpi=300)
-                                                 } else if(plotlib=="grid") {
-                                                     p <- func()
-                                                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
-                                                         pointsize=1.2*pdf.pointsize, res=72*resx)
-                                                     grid::grid.draw(p)
-                                                     dev.off()
-                                                 } else if(plotlib=="image") {
-                                                     p <- func()
-                                                     dbg("[downloadHandler.PNG] copy image ",p$src,"to PNGFILE",PNGFILE)
-                                                     file.copy(p$src, PNGFILE, overwrite=TRUE)
-                                                 } else if(plotlib=="generic") {
-                                                     ## generic function should produce PNG inside plot func()
-                                                     ##
-                                                 } else if(plotlib=="base") {
-                                                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
-                                                         pointsize=1.2*pdf.pointsize, res=72*resx)
-                                                     func()
-                                                     dev.off()  ## important!!
-                                                 } else { ## end base
-                                                     png(PNGFILE, pointsize=pdf.pointsize)
-                                                     plot.new()
-                                                     mtext("Error. PNG not available.",line=-8)
-                                                     dev.off()
-                                                 }
-
-                                                 ## finally copy to final exported file
-                                                 dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
-                                                 file.copy(PNGFILE, file, overwrite=TRUE)
-                                                 ## ImageMagick or pdftk
-                                                 if(TRUE && add.watermark) {
-                                                     message("[plotModule] adding watermark to PNG...")
-                                                     addWatermark.PNG(file)
-                                                 }
-                                             }, message="Exporting to PNG", value=0.8)
-                                         } ## content
-                                     ) ## PNG downloadHandler
+                shiny::withProgress({
+                  ## unlink(PNGFILE) ## do not remove!
+                  if(plotlib=="plotly") {
+                    p <- func()
+                    p$width = pdf.width * 80
+                    p$height = pdf.height * 80
+                    plotlyExport(p, PNGFILE, width=p$width, height=p$height)
+                  } else if(plotlib=="iheatmapr") {
+                    p <- func()
+                    iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
+                  } else if(plotlib=="visnetwork") {
+                    p <- func()
+                    dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
+                    visNetwork::visSave(p, HTMLFILE)
+                    dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ",PNGFILE)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
+                  } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
+                    p <- func()
+                    htmlwidgets::saveWidget(p, HTMLFILE)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
+                  } else if(plotlib %in% c("ggplot","ggplot2")) {
+                    ggsave(PNGFILE, plot = func(), dpi=300)
+                  } else if(plotlib=="grid") {
+                    p <- func()
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
+                      pointsize=1.2*pdf.pointsize, res=72*resx)
+                    grid::grid.draw(p)
+                    dev.off()
+                  } else if(plotlib=="image") {
+                    p <- func()
+                    dbg("[downloadHandler.PNG] copy image ",p$src,"to PNGFILE",PNGFILE)
+                    file.copy(p$src, PNGFILE, overwrite=TRUE)
+                  } else if(plotlib=="generic") {
+                    ## generic function should produce PNG inside plot func()
+                    ##
+                  } else if(plotlib=="base") {
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
+                      pointsize=1.2*pdf.pointsize, res=72*resx)
+                    func()
+                    dev.off()  ## important!!
+                  } else { ## end base
+                    png(PNGFILE, pointsize=pdf.pointsize)
+                    plot.new()
+                    mtext("Error. PNG not available.",line=-8)
+                    dev.off()
+                  }
+                  
+                  ## finally copy to final exported file
+                  dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
+                  file.copy(PNGFILE, file, overwrite=TRUE)
+                  ## ImageMagick or pdftk
+                  if(TRUE && add.watermark) {
+                    message("[plotModule] adding watermark to PNG...")
+                    addWatermark.PNG(file)
+                  }
+                }, message="Exporting to PNG", value=0.8)
+              } ## content
+            ) ## PNG downloadHandler
           } ## end if do.png
 
           if(do.pdf && is.null(download.pdf) ) {
               download.pdf <- shiny::downloadHandler(
-                                         filename = "plot.pdf",
-                                         content = function(file) {
-                                             pdf.width  <- input$pdf_width
-                                             pdf.height <- input$pdf_height
-                                             shiny::withProgress({
-                                                 ## unlink(PDFFILE) ## do not remove!
-                                                 if(plotlib=="plotly") {
-                                                     p <- func()
-                                                     p$width = pdf.width * 80
-                                                     p$height = pdf.height * 80
-                                                     ##err <- try(plotly::export(p, PDFFILE))  ## deprecated
-                                                     ##err <- try(plotly::orca(p, PDFFILE))
-                                                     ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
-                                                     plotlyExport(p, PDFFILE, width=p$width, height=p$height)
-                                                 } else if(plotlib=="iheatmapr") {
-                                                     p <- func()
-                                                     iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
-                                                 } else if(plotlib=="visnetwork") {
-                                                     p <- func()
-                                                     dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=",HTMLFILE)
-                                                     visNetwork::visSave(p, HTMLFILE)
-                                                     dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=",PDFFILE)
-                                                     webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
-                                                 } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-                                                     p <- func()
-                                                     htmlwidgets::saveWidget(p, HTMLFILE)
-                                                     webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
-                                                 } else if(plotlib %in% c("ggplot","ggplot2")) {
-                                                     p <- func()
-                                                     pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
-                                                     print(p)
-                                                     dev.off()
-                                                 } else if(plotlib %in% c("grid")) {
-                                                     p <- func()
-                                                     pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
-                                                     grid::grid.draw(p)
-                                                     dev.off()
-                                                 } else if(plotlib=="image") {
-                                                     p <- func()
-                                                     ## p$src  ## PNG image file
-                                                     ## generic function should produce PDF inside plot func()
-                                                     ##
-                                                 } else if(plotlib=="generic") {
-                                                     ## generic function should produce PDF inside plot func()
-                                                     ##
-                                                 } else if(plotlib=="base") {
-                                                     pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
-                                                         pointsize=pdf.pointsize)
-                                                     func()
-                                                     dev.off()  ## important!!
-                                                 } else { ## end base
-                                                     pdf(PDFFILE, pointsize=pdf.pointsize)
-                                                     plot.new()
-                                                     mtext("Error. PDF not available.",line=-8)
-                                                     dev.off()
-                                                 }
-
-                                                 ## finally copy to final exported file
-                                                 dbg("[downloadHandler.PDF] copy PDFFILE",PDFFILE,"to download file",file )
-                                                 file.copy(PDFFILE, file, overwrite=TRUE)
-
-                                                 ## ImageMagick or pdftk
-                                                 if(TRUE && add.watermark) {
-                                                     message("[plotModule] adding watermark to PDF...")
-                                                     addWatermark.PDF(file)
-                                                 }
-                                             }, message="Exporting to PDF", value=0.8)
+                filename = "plot.pdf",
+                content = function(file) {
+                  pdf.width  <- input$pdf_width
+                  pdf.height <- input$pdf_height
+                  shiny::withProgress({
+                    ## unlink(PDFFILE) ## do not remove!
+                    if(plotlib=="plotly") {
+                      p <- func()
+                      p$width = pdf.width * 80
+                      p$height = pdf.height * 80
+                      ##err <- try(plotly::export(p, PDFFILE))  ## deprecated
+                      ##err <- try(plotly::orca(p, PDFFILE))
+                      ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
+                      plotlyExport(p, PDFFILE, width=p$width, height=p$height)
+                    } else if(plotlib=="iheatmapr") {
+                      p <- func()
+                      iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
+                    } else if(plotlib=="visnetwork") {
+                      p <- func()
+                      dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=",HTMLFILE)
+                      visNetwork::visSave(p, HTMLFILE)
+                      dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=",PDFFILE)
+                      webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
+                    } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
+                      p <- func()
+                      htmlwidgets::saveWidget(p, HTMLFILE)
+                      webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
+                    } else if(plotlib %in% c("ggplot","ggplot2")) {
+                      p <- func()
+                      pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                      print(p)
+                      dev.off()
+                    } else if(plotlib %in% c("grid")) {
+                      p <- func()
+                      pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                      grid::grid.draw(p)
+                      dev.off()
+                    } else if(plotlib=="image") {
+                      p <- func()
+                      ## p$src  ## PNG image file
+                      ## generic function should produce PDF inside plot func()
+                      ##
+                    } else if(plotlib=="generic") {
+                      ## generic function should produce PDF inside plot func()
+                      ##
+                    } else if(plotlib=="base") {
+                      pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
+                        pointsize=pdf.pointsize)
+                      func()
+                      dev.off()  ## important!!
+                    } else { ## end base
+                      pdf(PDFFILE, pointsize=pdf.pointsize)
+                      plot.new()
+                      mtext("Error. PDF not available.",line=-8)
+                      dev.off()
+                    }
+                    
+                    ## finally copy to final exported file
+                    dbg("[downloadHandler.PDF] copy PDFFILE",PDFFILE,"to download file",file )
+                    file.copy(PDFFILE, file, overwrite=TRUE)
+                    
+                    ## ImageMagick or pdftk
+                    if(TRUE && add.watermark) {
+                      message("[plotModule] adding watermark to PDF...")
+                      addWatermark.PDF(file)
+                    }
+                  }, message="Exporting to PDF", value=0.8)
                                          } ## content
-                                     ) ## PDF downloadHandler
+              ) ## PDF downloadHandler
           } ## end if do.pdf
 
           saveHTML <- function() {
@@ -558,42 +558,42 @@ PlotModuleServer <- function(
           }
 
           if(do.html && is.null(download.html) )  {
-              download.html <- shiny::downloadHandler(
-                                          filename = "plot.html",
-                                          content = function(file) {
-                                              shiny::withProgress({
-                                                  ## unlink(HTMLFILE) ## do not remove!
-                                                  if(plotlib == "plotly") {
-                                                      p <- func()
-                                                      htmlwidgets::saveWidget(p, HTMLFILE)
-                                                  } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
-                                                      p <- func()
-                                                      htmlwidgets::saveWidget(p, HTMLFILE)
-                                                  } else if(plotlib == "iheatmapr") {
-                                                      p <- func()
-                                                      iheatmapr::save_iheatmap(p, HTMLFILE)
-                                                  } else if(plotlib == "visnetwork") {
-                                                      p <- func()
-                                                      visNetwork::visSave(p, HTMLFILE)
-                                                  } else if(plotlib %in% c("ggplot","ggplot2")) {
-                                                      p <- func()
-                                                      ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                                                      htmlwidgets::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
-                                                  } else if(plotlib=="generic") {
-                                                      ## generic function should produce PDF inside plot func()
-                                                      ##
-                                                  } else if(plotlib=="image") {
-                                                      write("<body>image cannot be exported to HTML</body>",HTMLFILE)
-                                                  } else if(plotlib=="base") {
-                                                      write("<body>R base plots cannot be exported to HTML</body>",HTMLFILE)
-                                                  } else { ## end base
-                                                      write("<body>HTML export error</body>",file=HTMLFILE)
-                                                  }
-                                                  ## finally copy to fina lexport file
-                                                  file.copy(HTMLFILE, file, overwrite=TRUE)
-                                              }, message="Exporting to HTML", value=0.8)
-                                          } ## end of content
-                                      ) ## end of HTML downloadHandler
+            download.html <- shiny::downloadHandler(
+              filename = "plot.html",
+              content = function(file) {
+                shiny::withProgress({
+                  ## unlink(HTMLFILE) ## do not remove!
+                  if(plotlib == "plotly") {
+                    p <- func()
+                    htmlwidgets::saveWidget(p, HTMLFILE)
+                  } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
+                    p <- func()
+                    htmlwidgets::saveWidget(p, HTMLFILE)
+                  } else if(plotlib == "iheatmapr") {
+                    p <- func()
+                    iheatmapr::save_iheatmap(p, HTMLFILE)
+                  } else if(plotlib == "visnetwork") {
+                    p <- func()
+                    visNetwork::visSave(p, HTMLFILE)
+                  } else if(plotlib %in% c("ggplot","ggplot2")) {
+                    p <- func()
+                    ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
+                    htmlwidgets::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
+                  } else if(plotlib=="generic") {
+                    ## generic function should produce PDF inside plot func()
+                    ##
+                  } else if(plotlib=="image") {
+                    write("<body>image cannot be exported to HTML</body>",HTMLFILE)
+                  } else if(plotlib=="base") {
+                    write("<body>R base plots cannot be exported to HTML</body>",HTMLFILE)
+                  } else { ## end base
+                    write("<body>HTML export error</body>",file=HTMLFILE)
+                  }
+                  ## finally copy to fina lexport file
+                  file.copy(HTMLFILE, file, overwrite=TRUE)
+                }, message="Exporting to HTML", value=0.8)
+              } ## end of content
+            ) ## end of HTML downloadHandler
           } ## end of do HTML
 
           if(do.obj)  {
