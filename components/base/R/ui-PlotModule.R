@@ -745,6 +745,8 @@ PlotModuleServer <- function(
                 # By default remove plotly logo from all plots
                 plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
+                plot <- plot %>%
+                  plotly_default1()
                 # If there is already custom buttons, append the edit one
                 # (issue #2210 plotly/plotly.R)
                 if(inherits(plot$x$config$modeBarButtons, "list")){
