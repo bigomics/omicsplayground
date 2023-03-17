@@ -4,7 +4,7 @@
 ##
 
 
-functional_table_kegg_table_ui <- function(id, width, height) {
+functional_table_kegg_table_ui <- function(id, label, width, height) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap("<strong>Enrichment table.</strong> The table is
@@ -25,7 +25,7 @@ functional_table_kegg_table_ui <- function(id, width, height) {
     width = width,
     height = height,
     title = "Enrichment table",
-    label = "b"
+    label = label
   )
 }
 
