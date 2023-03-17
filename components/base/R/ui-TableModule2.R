@@ -158,7 +158,8 @@ TableModuleServer <- function(id,
           } else {
             dt <- func()$x$data
           }
-          write.csv(dt, file=file, row.names=FALSE)
+          dt2 <- format(dt, digits=4)  ## round
+          write.csv(dt2, file=file, row.names=FALSE)
         }
       )
 
