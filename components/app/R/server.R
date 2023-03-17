@@ -121,25 +121,26 @@ app_server <- function(input, output, session) {
         pgx = PGX,
         limits = limits,
         auth = auth,
-        enable_userdir = opt$ENABLE_USERDIR,
-        enable_upload = opt$ENABLE_UPLOAD,
-        enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE,
+        enable_userdir = opt$ENABLE_USERDIR,        
         r_global = r_global
     )
 
     ## Modules needed from the start
-    env$upload <- UploadBoard(
-        id = "upload",
-        pgx_dir = pgx_dir,
-        pgx = PGX,
-        auth = auth,
-        limits = limits,
-        enable_userdir = opt$ENABLE_USERDIR,
-        enable_upload = opt$ENABLE_UPLOAD,
-        enable_save = opt$ENABLE_SAVE,
-        r_global = r_global
-    )
+    if(opt$ENABLE_UPLOAD) {
+       env$upload <- UploadBoard(
+         id = "upload",
+         pgx_dir = pgx_dir,
+         pgx = PGX,
+         auth = auth,
+         limits = limits,
+         enable_userdir = opt$ENABLE_USERDIR,
+         enable_save = opt$ENABLE_SAVE,
+         r_global = r_global
+       )
+    } else {
+
+
+    }
 
     ## If user is logged off, we clear the data
     observeEvent( auth$logged(), {
@@ -153,11 +154,16 @@ app_server <- function(input, output, session) {
     })
 
     is_data_loaded <- reactive({
-        (env$load$loaded() || env$upload$loaded())
+        has_data <- env$load$loaded() 
+        if(opt$ENABLE_UPLOAD) has_data <- (has_data|| env$upload$loaded())
+        has_data
     })
 
     ## Default boards
-    WelcomeBoard("welcome", auth=auth, r_global=r_global)
+    WelcomeBoard("welcome",
+      auth = auth,
+      enable_upload = opt$ENABLE_UPLOAD,
+      r_global = r_global)
     env$user <- UserBoard("user", user=auth)
 
     ## Modules needed after dataset is loaded (deferred) --------------
@@ -313,7 +319,7 @@ app_server <- function(input, output, session) {
     ##--------------------------------------------------------------------------
 
     ## toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)
-    ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+    bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
 
     shiny::observeEvent({
         auth$logged()
@@ -334,7 +340,8 @@ app_server <- function(input, output, session) {
             warning("[server.R] !!! no data. hiding menu.")
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")
-            toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
+            ##toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
+            bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
             return(NULL)
         }
 

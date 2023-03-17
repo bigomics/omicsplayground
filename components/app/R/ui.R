@@ -471,7 +471,7 @@ app_ui <- function() {
                 bigdash::bigTabItem(
                     "welcome-tab",
                     WelcomeBoardInputs("welcome"),
-                    WelcomeBoardUI("welcome", ENABLED['upload'])
+                    WelcomeBoardUI("welcome")
                 ),
                 bigdash::bigTabItem(
                     "load-tab",

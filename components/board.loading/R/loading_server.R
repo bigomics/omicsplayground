@@ -12,9 +12,6 @@ LoadingBoard <- function(id,
                            "genes" = 20000, "genesets" = 10000,
                            "datasets" = 10
                          ),
-                         enable_upload = TRUE,
-                         enable_delete = TRUE,
-                         enable_save = TRUE,
                          enable_userdir = TRUE,
                          r_global) {
   moduleServer(id, function(input, output, session) {
@@ -133,13 +130,15 @@ LoadingBoard <- function(id,
 
       # if not found, throw error modal that example-data doesnt exist
       if (is.na(example_row)) {
-        shiny::showModal(modalDialog(
-          title = "No example data found",
-          size = "l",
-          'Sorry, it appears that the example dataset cannot be found. You may
-          have deleted it in a previous session. You can still load a copy of the
-          example dataset by clicking the "Upload New Data" button.'
-        ))
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "No example data found",          
+          text ='Sorry, the example dataset cannot be found. You may have deleted
+            it in a previous session.',
+          type = "warning",
+          btn_labels = "OK",
+          closeOnClickOutside = FALSE
+        )
         r_global$load_example_trigger <- NULL
         return(NULL)
       } else {
@@ -414,7 +413,7 @@ LoadingBoard <- function(id,
         pgx$name <- pgxfile
         return(pgx)
       } else {
-        warning("[LoadingBoard::loadPGX] ERROR loading pgx object")
+        warning("[LoadingBoard::loadPGX] ***ERROR*** loading pgx object")
         return(NULL)
       }
     }
@@ -612,14 +611,11 @@ LoadingBoard <- function(id,
       ## ----------------- update input --------------------------------------
       r_global$loadedDataset <- r_global$loadedDataset + 1 ## notify new data uploaded
 
-      ## ***NEW*** update PGX from session
-      if (1) {
-        ## *** EXPERIMENTAL ***. Copying to pgx list to reactiveValues in
-        ## session environment.
-        dbg("[loading_server.R] copying pgx object to global environment")
-        for (i in 1:length(loaded_pgx)) {
-          pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
-        }
+      ## Copying to pgx list to reactiveValues in
+      ## session environment.
+      dbg("[loading_server.R] copying pgx object to global environment")
+      for (i in 1:length(loaded_pgx)) {
+        pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
       }
 
       ## ----------------- remove modal on exit?? -------------------------

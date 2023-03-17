@@ -8,7 +8,6 @@ if(!file.exists('00SourceAll.R')) {
   source('app/R/modules/AuthenticationModule.R',encoding='UTF-8')
   source('app/R/modules/BatchCorrectModule.R',encoding='UTF-8')
   source('app/R/modules/ComputePgxModule.R',encoding='UTF-8')
-  source('app/R/modules/examplePlotModule.R',encoding='UTF-8')
   source('app/R/modules/InfoModals.R',encoding='UTF-8')
   source('app/R/modules/MakeContrastModule.R',encoding='UTF-8')
   source('app/R/modules/NormalizeCountsModule.R',encoding='UTF-8')

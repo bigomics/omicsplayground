@@ -8,7 +8,7 @@ WelcomeBoardInputs <- function(id) {}
 WelcomeBoardUI <- function(id) {}
 
 
-WelcomeBoard <- function(id, auth, r_global) {
+WelcomeBoard <- function(id, auth, enable_upload, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -33,8 +33,19 @@ WelcomeBoard <- function(id, auth, r_global) {
     })
 
     observeEvent(input$init_upload_data, {
-      bigdash.openSidebar()
-      bigdash.selectTab( session, "upload-tab" )
+      if(enable_upload) {
+        bigdash.openSidebar()
+        bigdash.selectTab( session, "upload-tab" )
+      } else {
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "Upload disabled",          
+          text ='Sorry, upload of new data is disabled for this account.',
+          type = "warning",
+          btn_labels = "OK",
+          closeOnClickOutside = FALSE
+        )
+      }
     })
 
     observeEvent(input$init_load_data, {
@@ -53,19 +64,8 @@ WelcomeBoardInputs <- function(id) {
   return(NULL)
 }
 
-WelcomeBoardUI <- function(id, enable_upload=TRUE) {
+WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-
-  ## if upload enabled show button, otherwise empty
-  upload_button <- "  "
-  if(enable_upload) {
-    upload_button <- shiny::actionButton(
-      ns("init_upload_data"),
-      label = "Upload new data",
-      class = "btn btn-outline-info welcome-btn"
-    )
-  }
-
   div(
     id = "welcome-page",
     br(),
@@ -90,7 +90,11 @@ WelcomeBoardUI <- function(id, enable_upload=TRUE) {
       div(
         class = "col-md-7",
         h3("I'm an existing user..."),
-        upload_button,
+        shiny::actionButton(
+          ns("init_upload_data"),
+          label = "Upload new data",
+          class = "btn btn-outline-info welcome-btn"
+        ),
         shiny::actionButton(
           ns("init_load_data"),
           label = "Use my saved data",

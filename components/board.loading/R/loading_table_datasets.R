@@ -12,8 +12,6 @@ loading_table_datasets_ui <- function(id, height, width) {
   )
 }
 
-
-
 loading_table_datasets_server <- function(id,
                                           rl) {
   moduleServer(id, function(input, output, session) {
