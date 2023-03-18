@@ -43,8 +43,8 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
-        shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
-        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog{width:600px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:600px}")),
         shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}"))
         ##shinyalert::useShinyalert()
     )    
