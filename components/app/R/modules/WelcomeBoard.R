@@ -89,7 +89,7 @@ WelcomeBoardUI <- function(id) {
       ),
       div(
         class = "col-md-7",
-        h3("I'm an existing user..."),
+        h3("I want to analyze my own data:"),
         shiny::actionButton(
           ns("init_upload_data"),
           label = "Upload new data",
