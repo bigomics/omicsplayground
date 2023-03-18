@@ -1,6 +1,13 @@
 html {
 
     /* ---------- modal dialogs ------------- */
+
+    .modal-title{
+     /*	margin-right: auto; */
+	margin-left: auto;
+	font-size: 2.2em;	
+    }
+    
     .modal-content .well {
 	font-size: 1.3em;
 	line-height: 1.2em;
@@ -43,10 +50,6 @@ html {
 
     .bg-cover-image {
 	background-color: #fff;
-    }
-
-    .popup-plot .modal-footer {
-	display: none;
     }
 
     .swal2-popup {

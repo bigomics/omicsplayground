@@ -230,7 +230,7 @@ PlotModuleUI <- function(id,
     }
 
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
-    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
+    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 150px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
 
@@ -254,7 +254,7 @@ PlotModuleUI <- function(id,
                           modalUI(
                                 ns("plotPopup"),
                                 title,
-                                size="fullscreen",
+                                size = "fullscreen",
                                 popupfigUI()
                             )
                           ),
@@ -262,7 +262,7 @@ PlotModuleUI <- function(id,
                           modalUI(
                                 ns("plotPopup_editor"),
                                 "Editor",
-                                size="fullscreen",
+                                size = "fullscreen",
                                 popupfigUI_editor()
                             )
                           ),

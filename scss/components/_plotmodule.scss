@@ -19,6 +19,10 @@ html {
         margin-right: auto;
     }
 
+    .popup-plot .modal-footer {
+	display: none;
+    }
+
     .tablemodule {
 	padding: 5px 15px 50px 15px; 
     }
