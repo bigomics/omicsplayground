@@ -277,7 +277,7 @@ app_server <- function(input, output, session) {
             CompareBoard("comp", pgx = PGX)
           }
 
-          info("[server.R] calling modules done!")
+          info("[server.R] calling modules dweone!")
         })
 
         ## remove modal from LoadingBoard
@@ -286,7 +286,17 @@ app_server <- function(input, output, session) {
         #show hidden tabs
         bigdash.showTabsGoToDataView(session)  # see ui-bigdashplus.R
 
+        shinyjs::onclick("logo-bigomics",{
+          shinyjs::runjs("console.info('logo-bigomics clicked')")
+          WelcomeBoard("welcome",
+            auth = auth,
+            enable_upload = opt$ENABLE_UPLOAD,
+            r_global = r_global)
+        })
+
     })
+
+
 
 
     ##--------------------------------------------------------------------------
