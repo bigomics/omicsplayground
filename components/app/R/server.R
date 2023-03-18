@@ -288,10 +288,7 @@ app_server <- function(input, output, session) {
 
         shinyjs::onclick("logo-bigomics",{
           shinyjs::runjs("console.info('logo-bigomics clicked')")
-          WelcomeBoard("welcome",
-            auth = auth,
-            enable_upload = opt$ENABLE_UPLOAD,
-            r_global = r_global)
+          bigdash.selectTab(session, selected = 'welcome-tab')
         })
 
     })
