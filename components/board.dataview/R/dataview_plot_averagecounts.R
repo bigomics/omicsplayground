@@ -73,11 +73,13 @@ dataview_plot_averagecounts_server <- function(id,
         x = c(leftx, rightx), y = c(topy, bottomy),
         legend = rev(rownames(res$avg.counts)),
         fill = rev(klr), cex = 0.9, y.intersp = 0.75, bty = "n"
-      )
+      ) %>%
+        plotly_default()         
     }
 
     modal_plot.RENDER <- function() {
-      plot.RENDER()
+      plot.RENDER() %>%
+        plotly_modal_default() 
     }
 
     PlotModuleServer(

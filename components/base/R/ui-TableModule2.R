@@ -68,7 +68,7 @@ TableModuleUI <- function(id,
     shiny::div(class='tablemodule-title', title=title, title),
     label,
     DropdownMenu(
-      shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
+      shiny::div(class='tablemodule-info', shiny::HTML(info.text)),
       shiny::br(),
       size = "xs",
       icon = shiny::icon("info"),

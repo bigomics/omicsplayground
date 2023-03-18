@@ -98,7 +98,7 @@ drugconnectivity_plot_moa_server <- function(id,
       }
 
       plot.RENDER <- shiny::reactive({
-        plotTopBarplot(18)         
+        plotTopBarplot(16)         
       })
 
       plot.RENDER2 <- shiny::reactive({

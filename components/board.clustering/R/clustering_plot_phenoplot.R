@@ -9,7 +9,9 @@ clustering_plot_phenoplot_ui <- function(id,
                                          height) {
   ns <- shiny::NS(id)
 
-  clust_phenoplot_info <- tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
+  clust_phenoplot_info <- tagsub("<strong>Phenotype distribution.</strong> This figure visualizes
+  the distribution of the available phenotype data. You can choose to put the group labels in the
+  figure or as separate legend in the {Label} setting, in the plot {{settings}}")
 
   clust_phenoplot.opts <- shiny::tagList(
     shiny::radioButtons(ns("clust_phenoplot_labelmode"), "Label", c("groups", "legend"), inline = TRUE)
@@ -17,6 +19,7 @@ clustering_plot_phenoplot_ui <- function(id,
 
   PlotModuleUI(
     ns("pltmod"),
+    title = "Phenotype distribution",
     label = label,
     plotlib = "base",
     info.text = clust_phenoplot_info,
@@ -120,6 +123,7 @@ clustering_plot_phenoplot_server <- function(id,
           text(grp.pos, labels = labels, font = 2, cex = cex2)
         }
       }
+
     }
 
 

@@ -35,8 +35,6 @@ clustering_plot_clusterannot_ui <- function(id,
     )
   )
 
-
-
   PlotModuleUI(
     ns("pltmod"),
     label = label,
@@ -89,7 +87,8 @@ clustering_plot_clusterannot_server <- function(id,
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
-    clustannot_plots.PLOTLY <- shiny::reactive({
+    ##    clustannot_plots.PLOTLY <- shiny::reactive({
+    createAnnotBarPlots <- function(fontsize=10) {
       rho <- getClustAnnotCorrelation()
       ## if(is.null(rho)) return(NULL)
       shiny::req(rho)
@@ -122,10 +121,10 @@ clustering_plot_clusterannot_server <- function(id,
         y <- factor(y, levels = y)
         anntitle <- function(tt) {
           list(
-            x = 0.5, y = 1.02,
+            x = 0.5, y = 1.0,
             xref = "paper", yref = "paper",
             xanchor = "center", yanchor = "bottom",
-            text = tt, font = list(size = 13),
+            text = tt, font = list(size = fontsize*1.33),
             align = "center", showarrow = FALSE
           )
         }
@@ -163,7 +162,7 @@ clustering_plot_clusterannot_server <- function(id,
             yref = "y",
             xanchor = "left",
             text = shortstring(y, slen),
-            font = list(size = 10),
+            font = list(size = fontsize),
             showarrow = FALSE,
             align = "right"
           ) %>%
@@ -174,8 +173,8 @@ clustering_plot_clusterannot_server <- function(id,
             xaxis = list(
               range = c(0, .9),
               font = list(family = "Lato"),
-              titlefont = list(size = 11),
-              tickfont = list(size = 10),
+              titlefont = list(size = fontsize*1.2),
+              tickfont = list(size = fontsize),
               showgrid = FALSE,
               title = "\ncorrelation (R)"
             ),
@@ -190,7 +189,7 @@ clustering_plot_clusterannot_server <- function(id,
             showlegend = FALSE,
             annotations = anntitle(colnames(rho)[i]),
             bargap = .2,
-            margin = list(l = 5, r = 0, b = 25, t = 20)
+            margin = list(l = 5, r = 0, b = 15, t = 22)
           ) %>%
           plotly_default1()
       }
@@ -208,17 +207,22 @@ clustering_plot_clusterannot_server <- function(id,
         margin = c(0, 0, .05, .05)
       ) %>%
         plotly::config(displayModeBar = FALSE)
-    })
+    }
 
+    clustannot_plots.PLOTLY <- function() {
+        createAnnotBarPlots(fontsize=10)
+    }
 
+    clustannot_plots.PLOTLY_modal <- function() {
+        createAnnotBarPlots(fontsize=15)
+    }
+    
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "plotly",
       func = clustannot_plots.PLOTLY,
+      func2 = clustannot_plots.PLOTLY_modal,
       # csvFunc = plot_data,   ##  *** downloadable data as CSV
-      ## renderFunc = plotly::renderPlotly,
-      ## renderFunc2 = plotly::renderPlotly,
       res = 80, ## resolution of plots
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark

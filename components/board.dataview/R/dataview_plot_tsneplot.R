@@ -249,13 +249,10 @@ dataview_plot_tsne_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
+        plotly_modal_default() %>%
+        plotly::style(
+          marker.size = 20
         )
-      fig <- plotly::style(fig, marker.size = 20)
       fig
     }
 

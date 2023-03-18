@@ -82,7 +82,7 @@ ExpressionUI <- function(id) {
                   expression_plot_volcano_ui(ns("plots_volcano"),
                     label = "a",
                     height = c(imgH, TABLE_HEIGHT_MODAL),
-                    width = c("auto", imgH)
+                    width = c("auto", "100%")
                   ),
                 ),
                 div(
@@ -91,7 +91,7 @@ ExpressionUI <- function(id) {
                     id = ns("plots_maplot"),
                     label = "b",
                     height = c(imgH, TABLE_HEIGHT_MODAL),
-                    width = c("auto", imgH)
+                    width = c("auto", "100%")
                   ),
                 ),
                 div(
@@ -100,7 +100,7 @@ ExpressionUI <- function(id) {
                     id = ns("plots_barplot"),
                     label = "c",
                     height = c(imgH, TABLE_HEIGHT_MODAL),
-                    width = c("auto", imgH)
+                    width = c("auto", "100%")
                   ),
                 ),
                 div(
@@ -109,16 +109,13 @@ ExpressionUI <- function(id) {
                     id = ns("plots_topfoldchange"),
                     label = "d",
                     height = c(imgH, TABLE_HEIGHT_MODAL),
-                    width = c("auto", imgH)
+                    width = c("auto", "100%")
                   ),
                 )
               ),
               tags$div(
                 class = "caption",
-                HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
-                            significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
-                            respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
-                            for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts.")
+                HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts.")
               )
             ),
             shiny::tabPanel(
@@ -142,7 +139,7 @@ ExpressionUI <- function(id) {
               expression_plot_volcanoAll_ui(ns("volcanoAll"),
                 label = "a",
                 height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", 1600)
+                width = c("auto", "100%")
               ),
               shiny::br(),
               tags$div(
@@ -158,7 +155,7 @@ ExpressionUI <- function(id) {
                 id = ns("volcanoMethods"),
                 label = "a",
                 height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", 1600)
+                width = c("auto", "100%")
               ),
               shiny::br(),
               tags$div(
@@ -171,7 +168,7 @@ ExpressionUI <- function(id) {
           )
         ),
         shiny::br(),
-##        shiny::br(),
+        ##        shiny::br(),
         div(
           # style = "max-height: 50vh",
           shiny::tabsetPanel(
@@ -180,8 +177,7 @@ ExpressionUI <- function(id) {
               "Table",
               tags$div(
                 class = "caption",                
-                HTML("<b>Differential Expression Analysis.</b> Compare expression between
-                        two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
+                HTML("<b>Differential Expression Analysis.</b> Compare expression between two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
               ),
               div(
                 class = "row",

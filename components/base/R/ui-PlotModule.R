@@ -48,8 +48,8 @@ PlotModuleUI <- function(id,
                        show.maximize = TRUE,
                        height = c(400,800),
                        width = c("auto","100%"),
-                       pdf.width = 6,
-                       pdf.height = 6
+                       pdf.width = 8,
+                       pdf.height = 8
                        )
 {
     require(magrittr)
@@ -174,8 +174,7 @@ PlotModuleUI <- function(id,
         shiny::div(class='plotmodule-title', title=title, title),
         label,
         DropdownMenu(
-            shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
-            shiny::br(),
+            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
             size = "xs",
             icon = shiny::icon("info"),
             status = "default"
@@ -253,7 +252,7 @@ PlotModuleUI <- function(id,
                shiny::div(class="popup-plot",
                           modalUI(
                                 ns("plotPopup"),
-                                title,
+                                div(class="popup-plot-title", title),
                                 size = "fullscreen",
                                 popupfigUI()
                             )

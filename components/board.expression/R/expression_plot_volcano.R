@@ -67,6 +67,7 @@ expression_plot_volcano_server <- function(id,
                                            df2,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       # calculate required inputs for plotting
@@ -160,7 +161,8 @@ expression_plot_volcano_server <- function(id,
     })
 
 
-    plotly.RENDER <- reactive({
+    ##    plotly.RENDER <- reactive({
+    plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -182,9 +184,10 @@ expression_plot_volcano_server <- function(id,
         showlegend = FALSE
       ) %>% plotly::layout(margin = list(b = 65))
       plt
-    })
+    }
 
-    modal_plotly.RENDER <- reactive({
+    ##modal_plotly.RENDER <- reactive({
+    modal_plotly.RENDER <- function() {    
       fig <- plotly.RENDER() %>%
         plotly::layout(
           font = list(size = 18),
@@ -194,7 +197,7 @@ expression_plot_volcano_server <- function(id,
         )
       fig <- plotly::style(fig, marker.size = 20)
       fig
-    })
+    }
 
     PlotModuleServer(
       "pltmod",

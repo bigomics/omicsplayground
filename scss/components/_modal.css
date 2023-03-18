@@ -3,9 +3,9 @@ html {
     /* ---------- modal dialogs ------------- */
 
     .modal-title{
-     /*	margin-right: auto; */
+	margin-right: auto; 
 	margin-left: auto;
-	font-size: 2.2em;	
+	font-size: 1.2em;	
     }
     
     .modal-content .well {

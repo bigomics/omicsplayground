@@ -106,13 +106,14 @@ dataview_plot_totalcounts_server <- function(id,
           font = list(family = "Lato"),
           margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
-        plotly_default1()
+        plotly_default()
 
       fig
     }
 
     modal_plotly.RENDER <- function() {
-      plotly.RENDER()
+      plotly.RENDER() %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(

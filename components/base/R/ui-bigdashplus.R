@@ -90,7 +90,7 @@ jsCode <- function(id){
   )
 }
 
-DropdownMenu <- function (..., size = "default", status = "default", icon = NULL, margin = "10px")
+DropdownMenu <- function (..., size = "default", status = "default", icon = NULL, width = "250px", margin = "10px")
 {
   id <- bigdash:::make_id()
   tags$div(tags$a(class = paste0(
@@ -105,9 +105,10 @@ DropdownMenu <- function (..., size = "default", status = "default", icon = NULL
              lapply(list(...), function(x){
                htmltools::tags$li(
                  x,
-                 style = paste0("margin-left: ",
-                                htmltools::validateCssUnit(margin), "; margin-right: ",
-                                htmltools::validateCssUnit(margin), ";")
+                 style = paste0(
+                   "width: ", htmltools::validateCssUnit(width),
+                   "; margin-left: ", htmltools::validateCssUnit(margin),                   
+                   "; margin-right: ", htmltools::validateCssUnit(margin), ";")
                )
              })
            }, error = function(w){})

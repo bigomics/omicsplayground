@@ -3406,7 +3406,6 @@ pgx.stackedBarplot <- function(x,
                                ) {
 
   x_plot <- cbind(data.frame(groups = rownames(x)), x)
-
   x_plot <- data.table::melt(x_plot, id.vars='groups',value.name = "Effect")
 
   if(horiz == FALSE){
@@ -3420,14 +3419,17 @@ pgx.stackedBarplot <- function(x,
     colnames(x_plot)[c3] <- "variable"
     }
 
-  plotly::plot_ly(x_plot, x = ~groups,
-                  y = ~Effect,
-                  type = 'bar',
-                  name = ~variable,
-                  color = ~variable) %>%
-    plotly::layout(showlegend = showlegend, barmode = 'stack',
-                   yaxis = list(title = ylab),
-                   xaxis = list(title = xlab)) %>%
+  plotly::plot_ly(
+      x_plot, x = ~groups,
+      y = ~Effect,
+      type = 'bar',
+      name = ~variable,
+      color = ~variable) %>%
+    plotly::layout(
+      showlegend = showlegend,
+      barmode = 'stack',
+      yaxis = list(title = ylab),
+      xaxis = list(title = xlab)) %>%
     plotly_default1()
 
 }

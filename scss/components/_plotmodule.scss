@@ -14,12 +14,25 @@ html {
 	font-size: 16px;
     }
 
+    .plotmodule-info {
+	padding: 5px;	
+	font-size: 15px;
+	line-height: 1.2em;
+    }
+
     .popup-plot > div {
         margin-left: auto;
         margin-right: auto;
     }
 
-    .popup-plot .modal-footer {
+    .popup-plot-title{
+	width: 100%;
+	margin-left: 100%;
+	margin-right: auto;
+	font-size: 2.2em;	
+    }
+    
+    .popup-plot > .modal-footer {
 	display: none;
     }
 
@@ -38,4 +51,10 @@ html {
 	font-size: 16px;
     }
 
+    .tablemodule-info {
+	padding: 5px;	
+	font-size: 15px;
+	line-height: 1.2em;
+    }
+    
 }
