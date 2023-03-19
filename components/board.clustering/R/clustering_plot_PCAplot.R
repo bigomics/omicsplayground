@@ -72,11 +72,10 @@ clustering_plot_clustpca_server <- function(id,
 
       return(
         list(
+          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
           hmpca_options = input$hmpca_options,
           hmpca.colvar = hmpca.colvar(),
           hmpca.shapevar = hmpca.shapevar(),
-          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
-          pgx = pgx,
           hm_clustmethod = hm_clustmethod(),
           hmpca_legend = input$hmpca_legend
         )
@@ -90,7 +89,6 @@ clustering_plot_clustpca_server <- function(id,
       hmpca.colvar <- pd[["hmpca.colvar"]]
       hmpca.shapevar <- pd[["hmpca.shapevar"]]
       pos <- pd[["df"]]
-      pgx <- pd[["pgx"]]
       hm_clustmethod <- pd[["hm_clustmethod"]]
       hmpca_legend <- pd[["hmpca_legend"]]
 
@@ -245,7 +243,8 @@ clustering_plot_clustpca_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {
-      plot.RENDER()
+      plot.RENDER() %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(
@@ -254,8 +253,6 @@ clustering_plot_clustpca_server <- function(id,
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      ## renderFunc = plotly::renderPlotly,
-      ## renderFunc2 = plotly::renderPlotly,
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 8,
       add.watermark = watermark

@@ -87,11 +87,15 @@ clustering_plot_clusterannot_server <- function(id,
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
+    plot_data <- function() {
+      getClustAnnotCorrelation()
+    }
+    
     ##    clustannot_plots.PLOTLY <- shiny::reactive({
     createAnnotBarPlots <- function(fontsize=10) {
-      rho <- getClustAnnotCorrelation()
-      ## if(is.null(rho)) return(NULL)
-      shiny::req(rho)
+
+      rho <- plot_data()
+      if(is.null(rho)) return(NULL)
 
       ## par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
       NTERMS <- 6
@@ -222,7 +226,7 @@ clustering_plot_clusterannot_server <- function(id,
       plotlib = "plotly",
       func = clustannot_plots.PLOTLY,
       func2 = clustannot_plots.PLOTLY_modal,
-      # csvFunc = plot_data,   ##  *** downloadable data as CSV
+      csvFunc = plot_data,   ##  *** downloadable data as CSV
       res = 80, ## resolution of plots
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark

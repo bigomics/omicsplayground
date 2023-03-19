@@ -69,6 +69,7 @@ if(!file.exists('00SourceAll.R')) {
   source('base/R/ui-boardHeader.R',encoding='UTF-8')
   source('base/R/ui-code.R',encoding='UTF-8')
   source('base/R/ui-colors.R',encoding='UTF-8')
+  source('base/R/ui-DropDownMenu.R',encoding='UTF-8')
   source('base/R/ui-modalUI.R',encoding='UTF-8')
   source('base/R/ui-PlotModule.R',encoding='UTF-8')
   source('base/R/ui-TableModule.R',encoding='UTF-8')
