@@ -501,7 +501,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
       shiny::showModal(
         shiny::modalDialog(
           div(
-            h2("Omics Playground"),
+            h2("BigOmics Playground"),
             h5(VERSION),
             h5("Advanced omics analysis for everyone"),br(),br(),
             p("Created with love and proudly presented to you by BigOmics Analytics from Ticino,

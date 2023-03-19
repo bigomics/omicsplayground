@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 TableModuleUI <- function(id,
                           height = c(400,800),
                           width = c("auto","100%"),
