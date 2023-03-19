@@ -27,7 +27,7 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
   div(
     PlotModuleUI(
       ns("gene_map"),
-      title = "Gene Map",
+      title = "Gene UMAP",
       label = "a",
       # outputFunc = function(x, width, height) {
       #   plotOutput(x,

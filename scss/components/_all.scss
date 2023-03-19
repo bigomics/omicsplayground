@@ -101,11 +101,7 @@ html {
     overflow: auto;
     height: 680px;
   }
-
-  .modal-body .gene-info-output {
-    height: auto;
-  }
-
+  
   .bg-cover-image {
     background-color: #dde6f0;
     background-color: #fff;
@@ -141,18 +137,18 @@ html {
     line-height: 1.3em;
   }
 
-  .caption, .caption2 {
+  .caption {
     font-size: 13px;
     font-weight: 400;
     line-height: 1.2em;
-//    position: relative;
-    padding: 0rem 0.3rem 2rem 0.3rem;
-//    bottom: 0px;
+    padding: 0rem 0.3rem 0.3rem 0.6rem;
   }
 
   .caption2 {
-    padding: 2.5rem 0 2rem 0;
-    font-size: 1.4rem;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.1em;
+    padding: 2rem 0rem 0rem 0rem;
   }
 
   .current-user {
@@ -216,12 +212,6 @@ html {
   .radioGroupButtons {
     margin-top: -3px;
     margin-bottom: -3px;
-  }
-
-  .modal-footer .btn {
-    margin-left: 5px;
-    margin-bottom: 0;
-    font-size: 14px;
   }
 
   .btn-xl {

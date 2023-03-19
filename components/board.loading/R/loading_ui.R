@@ -38,7 +38,7 @@ LoadingUI <- function(id) {
             loading_table_datasets_ui(
               ns("pgxtable"),
               height = c("65vh", 700),
-              width = c("100%", "50%")
+              width = c("100%", "100%")
             ),
             div(
               id = "load-action-buttons",
@@ -82,7 +82,7 @@ LoadingUI <- function(id) {
             loading_table_datasets_shared_ui(
               ns("pgxtable_shared"),
               height = c("65vh", 700),
-              width = c("100%", "50%")
+              width = c("100%", "100%")
             ),
             div(
               id = "load-action-buttons",

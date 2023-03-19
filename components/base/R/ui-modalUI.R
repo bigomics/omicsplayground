@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+##
+
 
 modalTrigger <- function(
   id,
@@ -57,7 +62,7 @@ modalUI <- function(
         class = "modal-content",
         tags$div(
           class = "modal-header",
-          tags$h5(
+          tags$div(
             class = "modal-title",
             title
           ),
@@ -77,7 +82,6 @@ modalUI <- function(
     )
   )
 }
-
 
 modalDialog2 <- function (..., header = NULL, footer = modalButton("Dismiss"),
     size = c("m", "s", "l", "xl","fullscreen"), easyClose = FALSE, fade = TRUE)

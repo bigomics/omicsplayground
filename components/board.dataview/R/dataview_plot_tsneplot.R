@@ -238,7 +238,7 @@ dataview_plot_tsne_server <- function(id,
           width = .001,
           ticklen = 6
         ) %>%
-        plotly_default1() ## %>% toWebGL()
+        plotly_default() ## %>% toWebGL()
     }
 
     plotly.RENDER <- function() {
@@ -249,13 +249,10 @@ dataview_plot_tsne_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
+        plotly_modal_default() %>%
+        plotly::style(
+          marker.size = 20
         )
-      fig <- plotly::style(fig, marker.size = 20)
       fig
     }
 

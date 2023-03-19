@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 #' Function to generate color palettes
 #'
 #' @param hex Hex code for main color as string

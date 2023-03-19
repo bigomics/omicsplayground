@@ -5,9 +5,11 @@ html {
         margin: auto;
     }
 
-    .modal-title {
+    .modal-title{
+	margin-right: auto;
 	margin-left: auto;
-	font-size: 2.2em;	
+	margin-top: -5px;
+	font-size: 1.2em;
     }
     
     .modal-content .well {
@@ -32,6 +34,12 @@ html {
         width: 300px;
         justify-content: center;
         align-items: center;
+    }
+    
+    .modal-footer .btn {
+	margin-left: 5px;
+	margin-bottom: 0;
+	font-size: 14px;
     }
 
 
@@ -63,4 +71,8 @@ html {
 	font-size: 1rem !important; 
     }
 
+    .modal-body .gene-info-output {
+	height: auto;
+    }
+    
 }

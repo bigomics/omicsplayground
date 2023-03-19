@@ -116,15 +116,15 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
           margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         ) %>%
-        plotly_default1()
+        plotly_default()
       fig
     }
 
     modal_plotly.RENDER <- function() {
       plotly.RENDER() %>%
+        plotly_modal_default() %>%        
         plotly::layout(
-          showlegend = TRUE,
-          font = list(size = 18)
+          showlegend = TRUE
         )
     }
 

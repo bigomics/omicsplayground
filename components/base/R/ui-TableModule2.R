@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 TableModuleUI <- function(id,
                           height = c(400,800),
                           width = c("auto","100%"),
@@ -68,8 +74,8 @@ TableModuleUI <- function(id,
     shiny::div(class='tablemodule-title', title=title, title),
     label,
     DropdownMenu(
-      shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
-      shiny::br(),
+      shiny::div(class='tablemodule-info', shiny::HTML(info.text)),
+      width = "250px",      
       size = "xs",
       icon = shiny::icon("info"),
       status = "default"
@@ -82,18 +88,16 @@ TableModuleUI <- function(id,
   # Modal stuff
 
   popupdatatableUI <- function() {
-    w <- width.2
-    h <- height.2
     if(any(class(caption2)=="reactive")) {
       caption2 <- caption2()
     }
     if(any(class(caption2)=="character")) {
       caption2 <- shiny::HTML(caption2)
-      caption2 <- shiny::div(caption2, class="caption2")
+      caption2 <- shiny::div(caption2, class="caption2 popup-table-caption")
     }
     shiny::tagList(
       shiny::div(
-        class = "popup-plot",
+        class = "popup-table",
         DT::DTOutput(ns("datatable2"), width=width.2, height=height.2)
       ),
       caption2
@@ -116,11 +120,12 @@ TableModuleUI <- function(id,
            class = "footer",
            shiny::HTML(caption)
          ),
-         shiny::div(class="popup-plot",
+         shiny::div(class="popup-modal",
                     modalUI(
-                      ns("datatablePopup"),
-                      title,
-                      size="fullscreen",
+                      id = ns("datatablePopup"),
+                      title = div(class="popup-table-title", title),
+                      size = "fullscreen",
+                      footer = NULL,
                       popupdatatableUI()
                     )
          ),

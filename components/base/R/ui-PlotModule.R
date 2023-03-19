@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 
@@ -48,8 +48,8 @@ PlotModuleUI <- function(id,
                        show.maximize = TRUE,
                        height = c(400,800),
                        width = c("auto","100%"),
-                       pdf.width = 6,
-                       pdf.height = 6
+                       pdf.width = 8,
+                       pdf.height = 8
                        )
 {
     require(magrittr)
@@ -174,8 +174,8 @@ PlotModuleUI <- function(id,
         shiny::div(class='plotmodule-title', title=title, title),
         label,
         DropdownMenu(
-            shiny::tags$p(shiny::HTML(info.text), style = "font-size: smaller;"),
-            shiny::br(),
+            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
+            width = "250px",
             size = "xs",
             icon = shiny::icon("info"),
             status = "default"
@@ -208,7 +208,7 @@ PlotModuleUI <- function(id,
         }
         if(any(class(caption2)=="character")) {
             caption2 <- shiny::HTML(caption2)
-            caption2 <- shiny::div(caption2, class="caption2")
+            caption2 <- shiny::div(caption2, class="caption2 popup-plot-caption")
         }
         shiny::tagList(
           shiny::div(
@@ -250,19 +250,21 @@ PlotModuleUI <- function(id,
                outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>%
                  shinycssloaders::withSpinner(),
                caption,
-               shiny::div(class="popup-plot",
+               shiny::div(class="popup-modal",
                           modalUI(
-                                ns("plotPopup"),
-                                title,
+                                id = ns("plotPopup"),
+                                title = title,
                                 size = "fullscreen",
+                                footer = NULL,
                                 popupfigUI()
                             )
                           ),
-               shiny::div(class="popup-plot",
+               shiny::div(class="popup-modal",
                           modalUI(
-                                ns("plotPopup_editor"),
-                                "Editor",
+                                id = ns("plotPopup_editor"),
+                                title = "Editor",
                                 size = "fullscreen",
+                                footer = NULL,
                                 popupfigUI_editor()
                             )
                           ),
@@ -616,16 +618,15 @@ PlotModuleServer <- function(
           ##if(do.csv && is.null(download.csv) )  {
           if(do.csv)  {
               download.csv <- shiny::downloadHandler(
-                                         filename = "data.csv",
-                                         content = function(file) {
-                                             shiny::withProgress({
-                                                 data <- csvFunc()
-                                                 if(is.list(data)) data <- data[[1]]
-                                                 ##file.copy(CSVFILE, file, overwrite=TRUE)
-                                                 write.csv(data, file=file)
-                                             }, message="Exporting to CSV", value=0.8)
-                                         } ## end of content
-                                     ) ## end of HTML downloadHandler
+                filename = "data.csv",
+                content = function(file) {
+                  shiny::withProgress({
+                    data <- csvFunc()
+                    if(is.list(data)) data <- data[[1]]
+                    write.csv(data, file=file)
+                  }, message="Exporting to CSV", value=0.8)
+                } ## end of content
+              ) ## end of HTML downloadHandler
           } ## end of do HTML
 
           ##--------------------------------------------------------------------------------
@@ -746,7 +747,7 @@ PlotModuleServer <- function(
                 plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
                 plot <- plot %>%
-                  plotly_default1()
+                  plotly_default()
                 # If there is already custom buttons, append the edit one
                 # (issue #2210 plotly/plotly.R)
                 if(inherits(plot$x$config$modeBarButtons, "list")){
