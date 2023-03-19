@@ -516,7 +516,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
             style="font-size: 0.8em; line-height: 0.9em; text-align:center;"
           ),
           size = "m",
-          easyClose = FALSE,
+          easyClose = TRUE,
           fade = FALSE
         ))
 
