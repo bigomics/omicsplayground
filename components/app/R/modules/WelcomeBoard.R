@@ -80,7 +80,7 @@ WelcomeBoardUI <- function(id) {
       id = "welcome-buttons",
       div(
         class = "col-md-5",
-        h3("I want to try an example dataset!"),
+        h3("I am new..."),
         shiny::actionButton(
           ns("init_example_data"),
           label = "Load example dataset",
@@ -89,7 +89,7 @@ WelcomeBoardUI <- function(id) {
       ),
       div(
         class = "col-md-7",
-        h3("I want to analyze my own data:"),
+        h3("I'm an existing user..."),
         shiny::actionButton(
           ns("init_upload_data"),
           label = "Upload new data",
