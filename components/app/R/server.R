@@ -503,16 +503,17 @@ Upgrade today and experience advanced analysis features without the time limit.<
           div(
             h2("Omics Playground"),
             h5(VERSION),
-            h5("Omics analysis for everyone"),br(),br(),
-            p("Created with love and proudly presented to you by BigOmics Analytics in Ticino, the sunny side of Switzerland."),
+            h5("Advanced omics analysis accessible to everyone"),br(),br(),
+            p("Created with love and proudly presented to you by BigOmics Analytics from Ticino,
+               the sunny side of Switzerland."),
             p(tags$a(href="https://www.bigomics.ch", "www.bigomics.ch")),
-            style = "text-align:center;"
+            style = "text-align:center; line-height: 1em;"
           ),
           footer = div(
             "Copyright © 2000-2023 BigOmics Analytics, Inc.",
             br(), br(),
             paste("Credits:",authors),
-            style="font-size: 0.8em; line-height; 1em; text-align:center;"
+            style="font-size: 0.8em; line-height: 0.9em; text-align:center;"
           ),
           size = "m",
           easyClose = FALSE,
