@@ -177,7 +177,7 @@ expression_plot_volcanoAll_server <- function(id,
       # func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
     )
   }) ## end of moduleServer

@@ -195,7 +195,7 @@ clustering_plot_clusterannot_server <- function(id,
             bargap = .2,
             margin = list(l = 5, r = 0, b = 15, t = 22)
           ) %>%
-          plotly_default1()
+          plotly_default()
       }
 
       if (length(plot_list) <= 4) {

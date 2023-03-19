@@ -201,7 +201,7 @@ DataViewUI <- function(id) {
       dataview_table_rawdata_ui(
         ns("rawdatatable"),
         height = c("75vh", TABLE_HEIGHT_MODAL),
-        width = c("100%", "90%")
+        width = c("100%", "100%")
       ),
       tags$div(
         class = "caption",
@@ -239,7 +239,7 @@ DataViewUI <- function(id) {
       dataview_table_samples_ui(
         ns("sampletable"),
         height = c(280, TABLE_HEIGHT_MODAL),
-        width = c("auto", "90%")
+        width = c("auto", "100%")
       ),
       tags$div(
         class = "caption",
@@ -257,13 +257,12 @@ DataViewUI <- function(id) {
 
 
     # contrasts tab #####
-
     shiny::tabPanel(
       "Contrasts",
       dataview_table_contrasts_ui(
         ns("contrastTable"),
         height = c(500, TABLE_HEIGHT_MODAL),
-        width = c("auto", "90%")
+        width = c("auto", "100%")
       ),
       tags$div(
         class = "caption",

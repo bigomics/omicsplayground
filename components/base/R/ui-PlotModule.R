@@ -175,6 +175,7 @@ PlotModuleUI <- function(id,
         label,
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
+            width = "250px",
             size = "xs",
             icon = shiny::icon("info"),
             status = "default"
@@ -746,7 +747,7 @@ PlotModuleServer <- function(
                 plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
                 plot <- plot %>%
-                  plotly_default1()
+                  plotly_default()
                 # If there is already custom buttons, append the edit one
                 # (issue #2210 plotly/plotly.R)
                 if(inherits(plot$x$config$modeBarButtons, "list")){

@@ -208,7 +208,7 @@ expression_plot_maplot_server <- function(id,
             font = list(size = 18)
           )
         )
-      fig <- plotly::style(fig, marker.size = 20)
+      fig <- plotly::style(fig, marker.size = 10)
       fig
     }
 

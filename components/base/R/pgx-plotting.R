@@ -3430,7 +3430,7 @@ pgx.stackedBarplot <- function(x,
       barmode = 'stack',
       yaxis = list(title = ylab),
       xaxis = list(title = xlab)) %>%
-    plotly_default1()
+    plotly_default()
 
 }
 
@@ -4046,7 +4046,7 @@ pgx.boxplot.PLOTLY <- function(
       font = list(family = font_family),
       margin = margin
     ) %>%
-    plotly_default1()
+    plotly_default()
 
 }
 
@@ -4138,6 +4138,6 @@ pgx.barplot.PLOTLY <- function(
         showarrow = annotations_showarrow
       )
     ) %>%
-    plotly_default1()
+    plotly_default()
 
 }
