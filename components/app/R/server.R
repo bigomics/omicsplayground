@@ -15,6 +15,8 @@ app_server <- function(input, output, session) {
     message("================================ SERVER =================================")
     message("=======================================================================\n")
 
+    VERSION <- scan(file.path(OPG,"VERSION"), character())[1]
+
     dbg("[server.R] 0: getwd = ",getwd())
     dbg("[server.R] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[server.R] 0: SESSION = ",session$token)
@@ -303,8 +305,7 @@ app_server <- function(input, output, session) {
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
-        version <- scan(file.path(OPG,"VERSION"), character())[1]
-        if(length(name)==0) name = paste("BigOmics Playground",version)
+        if(length(name)==0) name = paste("BigOmics Playground",VERSION)
         name
     })
 
@@ -484,6 +485,41 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
     } ## end of if TIMEOUT>0
 
+
+    ##-------------------------------------------------------------
+    ## About
+    ##-------------------------------------------------------------
+
+    observeEvent( input$navbar_about, {
+
+      authors = c("Ivo Kwee","Murat Akhmedov","John Coene",
+        "Stefan Reifenberg", "Marco Sciani", "Cédric Scherer",
+        "Mauro Miguel Masiero", "Nick Cullen", "Layal Abo Khayal",
+        "Carson Sievert", "Matt Leech")
+      authors <- paste(sort(authors),collapse=", ")
+
+      shiny::showModal(
+        shiny::modalDialog(
+          div(
+            h2("Omics Playground"),
+            h5(VERSION),
+            h5("Omics analysis for everyone"),br(),br(),
+            p("Created with love and proudly presented to you by BigOmics Analytics in Ticino, the sunny side of Switzerland."),
+            p(tags$a(href="https://www.bigomics.ch", "www.bigomics.ch")),
+            style = "text-align:center;"
+          ),
+          footer = div(
+            "Copyright © 2000-2023 BigOmics Analytics, Inc.",
+            br(), br(),
+            paste("Credits:",authors),
+            style="font-size: 0.8em; line-height; 1em; text-align:center;"
+          ),
+          size = "m",
+          easyClose = FALSE,
+          fade = FALSE
+        ))
+
+    })
 
     ##-------------------------------------------------------------
     ## Session logout functions

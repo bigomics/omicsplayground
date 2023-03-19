@@ -306,6 +306,9 @@ app_ui <- function() {
                         "www.bigomics.ch",
                         link = "http://bigomics.ch",
                         target = "_blank"
+                    ),
+                    tags$li(
+                      actionLink("navbar_about", "About")
                     )
                 ),
                 bigdash::navbarDropdown(
@@ -328,7 +331,6 @@ app_ui <- function() {
                 ),
                 bigdash::navbarDropdown(
                     ##"User",
-                    ##shiny::div(class='label label-info current-user',id='authentication-user'),
                     shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
                         "Settings",

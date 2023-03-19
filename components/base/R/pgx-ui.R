@@ -143,7 +143,10 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
         title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
         shiny::img(src = toon$img2, class = "img-fluid"),
         footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
-            size="l", easyClose=FALSE, fade=TRUE))
+        size="l",
+        easyClose=FALSE,
+        fade=TRUE
+    ))
 
 }
 
