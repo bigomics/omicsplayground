@@ -1,6 +1,9 @@
 html {
 
-    /* ---------- modal dialogs ------------- */
+    #shiny-modal {
+        display: flex !important;
+        margin: auto;
+    }
 
     .modal-title{
 	margin-right: auto;
@@ -16,12 +19,21 @@ html {
     }
 
     .modal-dialog {
-	top: 0px;
-	box-shadow: 10px 10px 30px #999;
-    }
+        box-shadow: 10px 10px 30px #999;
+        display: flex !important;
+        margin: auto;
+        }
 
     .modal-dialog.modal-lg {
-	width: 600px;
+        width: 600px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-dialog.modal-sm {
+        width: 300px;
+        justify-content: center;
+        align-items: center;
     }
     
     .modal-footer .btn {
@@ -30,15 +42,11 @@ html {
 	font-size: 14px;
     }
 
+
     .img-fluid{
       display: block;
       margin-right: auto;
       margin-left: auto;
-    }
-
-    .modal-dialog.modal-sm {
-      width: 400px;
-      top: 100px;
     }
 
     .modal-content {

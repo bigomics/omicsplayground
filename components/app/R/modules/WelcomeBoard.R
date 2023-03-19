@@ -29,7 +29,7 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
     })
 
     observeEvent(input$init_example_data, {
-      r_global$load_example_trigger <- TRUE
+      r_global$load_example_trigger <- r_global$load_example_trigger +1
     })
 
     observeEvent(input$init_upload_data, {
@@ -80,16 +80,16 @@ WelcomeBoardUI <- function(id) {
       id = "welcome-buttons",
       div(
         class = "col-md-5",
-        h3("I am new..."),
+        h3("I want to try an example dataset!"),
         shiny::actionButton(
           ns("init_example_data"),
-          label = "Try example dataset",
+          label = "Load example dataset",
           class = "btn btn-outline-info welcome-btn"
         )
       ),
       div(
         class = "col-md-7",
-        h3("I'm an existing user..."),
+        h3("I want to analyze my own data:"),
         shiny::actionButton(
           ns("init_upload_data"),
           label = "Upload new data",

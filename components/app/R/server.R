@@ -111,7 +111,7 @@ app_server <- function(input, output, session) {
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
     r_global <- reactiveValues(
-        load_example_trigger = FALSE,
+        load_example_trigger = 0,
         reload_pgxdir = 0,
         loadedDataset = 0
     )
@@ -279,7 +279,7 @@ app_server <- function(input, output, session) {
             CompareBoard("comp", pgx = PGX)
           }
 
-          info("[server.R] calling modules done!")
+          info("[server.R] calling modules dweone!")
         })
 
         ## remove modal from LoadingBoard
@@ -288,7 +288,14 @@ app_server <- function(input, output, session) {
         #show hidden tabs
         bigdash.showTabsGoToDataView(session)  # see ui-bigdashplus.R
 
+        shinyjs::onclick("logo-bigomics",{
+          shinyjs::runjs("console.info('logo-bigomics clicked')")
+          bigdash.selectTab(session, selected = 'welcome-tab')
+        })
+
     })
+
+
 
 
     ##--------------------------------------------------------------------------

@@ -285,6 +285,7 @@ app_ui <- function() {
             sidebar = sidebar,
             navbar = bigdash::navbar(
                 tags$img(
+                    id = "logo-bigomics",
                     src = "assets/img/bigomics.png",
                     width = "110",
                 ),
