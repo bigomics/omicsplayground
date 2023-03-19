@@ -109,7 +109,7 @@ app_server <- function(input, output, session) {
     ## above create session global reactiveValue from list
     PGX <- reactiveValues()
     r_global <- reactiveValues(
-        load_example_trigger = FALSE,
+        load_example_trigger = 0,
         reload_pgxdir = 0,
         loadedDataset = 0
     )

@@ -21,7 +21,7 @@ LoadingBoard <- function(id,
     rl <- reactiveValues(
       reload_pgxdir_shared = 0,
       selected_row = NULL,
-      found_example_trigger = NULL,
+      found_example_trigger = 0,
       pgxTable_data = NULL,
       pgxTable_edited = 0,
       pgxTable_edited_row = NULL,
@@ -139,7 +139,7 @@ LoadingBoard <- function(id,
           btn_labels = "OK",
           closeOnClickOutside = FALSE
         )
-        r_global$load_example_trigger <- NULL
+        #r_global$load_example_trigger <- NULL
         return(NULL)
       } else {
 
@@ -154,7 +154,7 @@ LoadingBoard <- function(id,
         bigdash.selectTab(session, selected = 'dataview-tab')
 
         rl$selected_row <- example_row
-        rl$found_example_trigger <- TRUE
+        rl$found_example_trigger <- rl$found_example_trigger+1
       }
     })
 

@@ -29,7 +29,7 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
     })
 
     observeEvent(input$init_example_data, {
-      r_global$load_example_trigger <- TRUE
+      r_global$load_example_trigger <- r_global$load_example_trigger +1
     })
 
     observeEvent(input$init_upload_data, {
