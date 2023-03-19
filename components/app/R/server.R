@@ -493,9 +493,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
     observeEvent( input$navbar_about, {
 
       authors = c("Ivo Kwee","Murat Akhmedov","John Coene",
-        "Stefan Reifenberg", "Marco Sciani", "Cédric Scherer",
+        "Stefan Reifenberg", "Marco Sciaini", "Cédric Scherer",
         "Mauro Miguel Masiero", "Nick Cullen", "Layal Abo Khayal",
-        "Carson Sievert", "Matt Leech")
+        "Xavier Escribà Montagut", "Carson Sievert", "Matt Leech")
       authors <- paste(sort(authors),collapse=", ")
 
       shiny::showModal(
