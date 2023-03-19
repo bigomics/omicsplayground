@@ -20,22 +20,21 @@ html {
 	line-height: 1.2em;
     }
 
-    .popup-plot > div {
+    .popup-modal > div {
         margin-left: auto;
         margin-right: auto;
     }
 
-    .popup-plot-title{
-	width: 100%;
-	margin-left: 100%;
-	margin-right: auto;
-	font-size: 2.2em;	
+    .popup-modal .modal-title{
+	font-size: 2.5em;
+	margin-right: 0;
     }
     
-    .popup-plot > .modal-footer {
+    .popup-modal .modal-footer {
 	display: none;
     }
 
+    /* -------------------------- TableModule ---------------------- */
     .tablemodule {
 	padding: 5px 15px 50px 15px; 
     }
@@ -56,5 +55,23 @@ html {
 	font-size: 15px;
 	line-height: 1.2em;
     }
+
+    .popup-table {
+	width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .popup-table > div {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .popup-table-caption {
+	width: 90%;	
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
     
 }

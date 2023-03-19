@@ -133,8 +133,8 @@ dataview_plot_genetypes_server <- function(id,
       fig <- plotly.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE,
-          )
+          showlegend = TRUE
+        )
       ## fig <- plotly::style(fig, marker.size = 14)
       fig
     }

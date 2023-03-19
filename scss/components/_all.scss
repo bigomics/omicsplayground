@@ -101,11 +101,7 @@ html {
     overflow: auto;
     height: 680px;
   }
-
-  .modal-body .gene-info-output {
-    height: auto;
-  }
-
+  
   .bg-cover-image {
     background-color: #dde6f0;
     background-color: #fff;
@@ -216,12 +212,6 @@ html {
   .radioGroupButtons {
     margin-top: -3px;
     margin-bottom: -3px;
-  }
-
-  .modal-footer .btn {
-    margin-left: 5px;
-    margin-bottom: 0;
-    font-size: 14px;
   }
 
   .btn-xl {

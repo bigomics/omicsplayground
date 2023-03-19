@@ -139,15 +139,18 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     
     toon <- randomCartoon()
     shiny::showModal(shiny::modalDialog(
-        ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
-        title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
+        #title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
+        ##title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
+        title = div( h2(toon$slogan), h4("with Omics Playground"), style="text-align:center;"),
+        #title = div(h2(toon$slogan), style="text-align:center;width:100%;"),
         shiny::img(src = toon$img2, class = "img-fluid"),
-        footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
-        size="l",
-        easyClose=FALSE,
-        fade=TRUE
+        ##footer = div(msg, style="text-align:center;"),
+        footer = fillRow( flex=c(1,NA,1), " ", msg, " "),
+        size = "l",
+        easyClose = FALSE,
+        fade = TRUE
     ))
-
+    ## Sys.sleep(600)  # for debugging
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")

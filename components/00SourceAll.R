@@ -124,7 +124,6 @@ if(!file.exists('00SourceAll.R')) {
   source('board.correlation/R/correlation_ui.R',encoding='UTF-8')
   source('board.dataview/R/dataview_module_geneinfo.R',encoding='UTF-8')
   source('board.dataview/R/dataview_plot_abundance.R',encoding='UTF-8')
-  source('board.dataview/R/dataview_plot_averagecounts.R',encoding='UTF-8')
   source('board.dataview/R/dataview_plot_averagerank.R',encoding='UTF-8')
   source('board.dataview/R/dataview_plot_boxplot.R',encoding='UTF-8')
   source('board.dataview/R/dataview_plot_correlation.R',encoding='UTF-8')

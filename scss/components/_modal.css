@@ -3,9 +3,10 @@ html {
     /* ---------- modal dialogs ------------- */
 
     .modal-title{
-	margin-right: auto; 
+	margin-right: auto;
 	margin-left: auto;
-	font-size: 1.2em;	
+	margin-top: -5px;
+	font-size: 1.2em;
     }
     
     .modal-content .well {
@@ -21,6 +22,12 @@ html {
 
     .modal-dialog.modal-lg {
 	width: 600px;
+    }
+    
+    .modal-footer .btn {
+	margin-left: 5px;
+	margin-bottom: 0;
+	font-size: 14px;
     }
 
     .img-fluid{
@@ -56,4 +63,8 @@ html {
 	font-size: 1rem !important; 
     }
 
+    .modal-body .gene-info-output {
+	height: auto;
+    }
+    
 }

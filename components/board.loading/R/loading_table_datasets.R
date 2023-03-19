@@ -1,7 +1,7 @@
 loading_table_datasets_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
 
-  info_text <- "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
+  info_text <- "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date."
 
   TableModuleUI(
     ns("datasets"),
@@ -134,7 +134,7 @@ loading_table_datasets_server <- function(id,
 
     pgxTable_modal.RENDER <- function() {
       pgxTable_DT() %>%
-        DT::formatStyle(0, target = "row", fontSize = "16px", lineHeight = "95%")
+        DT::formatStyle(0, target = "row", fontSize = "20px", lineHeight = "95%")
     }
 
     TableModuleServer(

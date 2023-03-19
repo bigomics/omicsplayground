@@ -298,24 +298,19 @@ dataview_plot_expression_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plot.RENDER() %>%
+      fig <- plotly.RENDER() %>%
         plotly_modal_default()
-      fig <- plotly::style(fig, marker.size = 14)
+      ## fig <- plotly::style(fig, marker.size = 14)
       fig
     }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      plotlib2 = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       download.fmt = c("png", "pdf", "csv", "obj"),
-      renderFunc = plotly::renderPlotly,
-      renderFunc2 = plotly::renderPlotly,
-      ## renderFunc = shiny::renderPlot,
-      ## renderFunc2 = shiny::renderPlot,
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

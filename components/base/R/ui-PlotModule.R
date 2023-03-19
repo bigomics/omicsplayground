@@ -207,7 +207,7 @@ PlotModuleUI <- function(id,
         }
         if(any(class(caption2)=="character")) {
             caption2 <- shiny::HTML(caption2)
-            caption2 <- shiny::div(caption2, class="caption2")
+            caption2 <- shiny::div(caption2, class="caption2 popup-plot-caption")
         }
         shiny::tagList(
           shiny::div(
@@ -249,19 +249,21 @@ PlotModuleUI <- function(id,
                outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>%
                  shinycssloaders::withSpinner(),
                caption,
-               shiny::div(class="popup-plot",
+               shiny::div(class="popup-modal",
                           modalUI(
-                                ns("plotPopup"),
-                                div(class="popup-plot-title", title),
+                                id = ns("plotPopup"),
+                                title = title,
                                 size = "fullscreen",
+                                footer = NULL,
                                 popupfigUI()
                             )
                           ),
-               shiny::div(class="popup-plot",
+               shiny::div(class="popup-modal",
                           modalUI(
-                                ns("plotPopup_editor"),
-                                "Editor",
+                                id = ns("plotPopup_editor"),
+                                title = "Editor",
                                 size = "fullscreen",
+                                footer = NULL,
                                 popupfigUI_editor()
                             )
                           ),
@@ -615,16 +617,15 @@ PlotModuleServer <- function(
           ##if(do.csv && is.null(download.csv) )  {
           if(do.csv)  {
               download.csv <- shiny::downloadHandler(
-                                         filename = "data.csv",
-                                         content = function(file) {
-                                             shiny::withProgress({
-                                                 data <- csvFunc()
-                                                 if(is.list(data)) data <- data[[1]]
-                                                 ##file.copy(CSVFILE, file, overwrite=TRUE)
-                                                 write.csv(data, file=file)
-                                             }, message="Exporting to CSV", value=0.8)
-                                         } ## end of content
-                                     ) ## end of HTML downloadHandler
+                filename = "data.csv",
+                content = function(file) {
+                  shiny::withProgress({
+                    data <- csvFunc()
+                    if(is.list(data)) data <- data[[1]]
+                    write.csv(data, file=file)
+                  }, message="Exporting to CSV", value=0.8)
+                } ## end of content
+              ) ## end of HTML downloadHandler
           } ## end of do HTML
 
           ##--------------------------------------------------------------------------------
