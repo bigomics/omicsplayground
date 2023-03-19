@@ -195,7 +195,6 @@ DataViewUI <- function(id) {
     ),
 
     # counts table tab #####
-
     shiny::tabPanel(
       "Counts table",
       dataview_table_rawdata_ui(
