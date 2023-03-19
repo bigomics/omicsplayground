@@ -1,4 +1,10 @@
 html {
+
+    #shiny-modal {
+        display: flex !important;
+        margin: auto;
+    }
+
     .modal-title {
 	margin-left: auto;
 	font-size: 2.2em;	
@@ -11,8 +17,23 @@ html {
     }
 
     .modal-dialog {
-	box-shadow: 10px 10px 30px #999;
+        box-shadow: 10px 10px 30px #999;
+        display: flex !important;
+        margin: auto;
+        }
+
+    .modal-dialog.modal-lg {
+        width: 600px;
+        justify-content: center;
+        align-items: center;
     }
+
+    .modal-dialog.modal-sm {
+        width: 300px;
+        justify-content: center;
+        align-items: center;
+    }
+
 
     .img-fluid{
       display: block;
