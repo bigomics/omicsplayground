@@ -74,6 +74,7 @@ DataViewUI <- function(id) {
 
     shiny::tabPanel(
       "Sample QC",
+      shinyjqui::jqui_sortable(
       div(
         class = "row",
         div(
@@ -114,7 +115,7 @@ DataViewUI <- function(id) {
             height = imgH, label = "e"
           )
         )
-      ),
+      )),
       tags$div(
         class = "caption",
         HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
