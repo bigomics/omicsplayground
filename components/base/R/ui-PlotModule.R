@@ -277,7 +277,8 @@ PlotModuleUI <- function(id,
                                 shiny::tags$head(shiny::tags$style(modalcontent.style)),
                                 shiny::tags$head(shiny::tags$style(modalfooter.none))
                             )
-              )
+              ),
+              bslib::card_footer(shiny::HTML(info.text))
 
 
 
