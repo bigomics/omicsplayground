@@ -173,13 +173,6 @@ PlotModuleUI <- function(id,
         flex = c(NA,1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
         label,
-        DropdownMenu(
-            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
-            width = "250px",
-            size = "xs",
-            icon = shiny::icon("info"),
-            status = "default"
-        ),
         options.button,
         shiny::div(class='download-button', title='download', dload.button),
         shiny::div(class='zoom-button', title='zoom', zoom.button)
