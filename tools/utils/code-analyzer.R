@@ -107,7 +107,9 @@ server = function(input, output, session) {
   filtered_df <- reactiveVal(df)
 
   observeEvent( input$show_all, {
-    filtered_df( df )
+    df1 <- df
+    df1 <- df1[order(df1$function.name),]    
+    filtered_df( df1 )
   })
 
   observeEvent( input$show_notused, {
