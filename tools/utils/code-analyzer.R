@@ -24,7 +24,7 @@ for(f in rfiles) {
 colnames(func.defined) <- c("function.name","file")
 
 ## create regexpression for all functions
-all.func <- func.defined[,"function"]
+all.func <- func.defined[,"function.name"]
 func.rexp <- paste0("[\\^ =-\\(]",all.func,"[\\(@,]")  ## NEED RETHINK
 names(func.rexp) <- all.func
 
