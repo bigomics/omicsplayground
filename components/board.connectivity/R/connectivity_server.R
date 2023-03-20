@@ -6,10 +6,11 @@
 
 ConnectivityBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
     tabH <- "70vh"
-
+    
     infotext <- strwrap(
       "The <strong>Experiment connectivity</strong> module enables users to
       compare their data to other datasets. For the selected contrast, this
@@ -21,7 +22,6 @@ ConnectivityBoard <- function(id, pgx) {
       frameborder='0' allow='accelerometer; autoplay; encrypted-media;
       gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
     )
-
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -37,9 +37,7 @@ ConnectivityBoard <- function(id, pgx) {
 
     ## update choices upon change of data set
     shiny::observe({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx, pgx$connectivity)
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "contrast",
@@ -66,7 +64,7 @@ ConnectivityBoard <- function(id, pgx) {
 
     ## update choices upon change of chosen contrast
     shiny::observeEvent(input$contrast, {
-      shiny::req(pgx)
+      shiny::req(pgx, pgx$connectivity)
 
       ## reset CMap threshold zero/max
       res <- getConnectivityScores() ## result gets cached
@@ -76,7 +74,7 @@ ConnectivityBoard <- function(id, pgx) {
     })
 
     getCurrentContrast <- shiny::reactive({
-      shiny::req(pgx, input$contrast)
+      shiny::req(pgx, pgx$connectivity, input$contrast)
       ct <- input$contrast
       fc <- pgx$gx.meta$meta[[ct]]$meta.fx
       names(fc) <- rownames(pgx$gx.meta$meta[[ct]])
@@ -91,7 +89,7 @@ ConnectivityBoard <- function(id, pgx) {
     ## ================================================================================
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
-      shiny::req(sigdb)
+      shiny::req(sigdb, pgx, pgx$connectivity)
       if (!grepl(".h5$", sigdb)) {
         return(NULL)
       }
@@ -270,7 +268,7 @@ ConnectivityBoard <- function(id, pgx) {
 
     getConnectivityScores <- shiny::reactive({
       # browser()
-      shiny::req(pgx, input$contrast)
+      shiny::req(pgx, pgx$connectivity, input$contrast)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no 'connectivity' in object."))
 
       ntop <- 1000
