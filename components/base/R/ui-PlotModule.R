@@ -241,47 +241,42 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")
     }
-    # div( class="plotmodule",
-    #     # shiny::fillCol(
-    #     #        flex = c(NA,1,NA,0.001,NA),
-        
-        bslib::card(
-          full_screen = TRUE,
-          bslib::card_body_fill(
-                    class = "plotmodule",
-                    div( header, class="plotmodule-header"),
-                    outputFunc(ns("renderfigure")) %>%
-                      shinycssloaders::withSpinner(),
-                    caption,
-                    shiny::div(class="popup-modal",
-                                modalUI(
-                                      id = ns("plotPopup"),
-                                      title = title,
-                                      size = "fullscreen",
-                                      footer = NULL,
-                                      popupfigUI()
-                                  )
-                                ),
-                    shiny::div(class="popup-modal",
-                                modalUI(
-                                      id = ns("plotPopup_editor"),
-                                      title = "Editor",
-                                      size = "fullscreen",
-                                      footer = NULL,
-                                      popupfigUI_editor()
-                                  )
-                                ),
-                    shiny::tagList(
-                                shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                                shiny::tags$head(shiny::tags$style(modalbody.style)),
-                                shiny::tags$head(shiny::tags$style(modalcontent.style)),
-                                shiny::tags$head(shiny::tags$style(modalfooter.none))
-                            )
-              )
 
-
-
-        )
+    div(
+      class = "plotmodule",
+      bslib::card(
+        bslib::card_body_fill(
+                  div( header, class="plotmodule-header"),
+                  outputFunc(ns("renderfigure")) %>%
+                    shinycssloaders::withSpinner(),
+                  caption,
+                  shiny::div(class="popup-modal",
+                              modalUI(
+                                    id = ns("plotPopup"),
+                                    title = title,
+                                    size = "fullscreen",
+                                    footer = NULL,
+                                    popupfigUI()
+                                )
+                              ),
+                  shiny::div(class="popup-modal",
+                              modalUI(
+                                    id = ns("plotPopup_editor"),
+                                    title = "Editor",
+                                    size = "fullscreen",
+                                    footer = NULL,
+                                    popupfigUI_editor()
+                                )
+                              ),
+                  shiny::tagList(
+                              shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                              shiny::tags$head(shiny::tags$style(modalbody.style)),
+                              shiny::tags$head(shiny::tags$style(modalcontent.style)),
+                              shiny::tags$head(shiny::tags$style(modalfooter.none))
+                          )
+            )
+      )
+    )
 
 }
 
@@ -313,7 +308,7 @@ PlotModuleServer <- function(
       id,
       function(input, output, session) {
 
-        
+
 
           ns <- session$ns
 
