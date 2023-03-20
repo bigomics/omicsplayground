@@ -240,7 +240,7 @@ PlotModuleUI <- function(id,
         bslib::card_body_fill(
                   div( header, class="plotmodule-header"),
                   outputFunc(ns("renderfigure")) %>%
-                    shinycssloaders::withSpinner(),
+                        shinycssloaders::withSpinner(),
                   caption,
                   shiny::div(class="popup-modal",
                               modalUI(
@@ -267,7 +267,9 @@ PlotModuleUI <- function(id,
                               shiny::tags$head(shiny::tags$style(modalfooter.none))
                           )
             ),
-             bslib::card_footer(shiny::HTML(info.text))
+        bslib::card_footer(
+              div(class="caption", shiny::HTML(info.text) )
+        )
       )
     )
 
