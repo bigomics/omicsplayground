@@ -51,6 +51,8 @@ ExpressionBoard <- function(id, pgx) {
       shiny::req(pgx)
 
       contr <- colnames(pgx$model.parameters$contr.matrix)
+
+      browser()
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
       fam <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
