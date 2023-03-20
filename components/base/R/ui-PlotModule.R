@@ -173,6 +173,13 @@ PlotModuleUI <- function(id,
         flex = c(NA,1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
         label,
+        DropdownMenu(
+            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
+            width = "250px",
+            size = "xs",
+            icon = shiny::icon("info"),
+            status = "default"
+        ),
         options.button,
         shiny::div(class='download-button', title='download', dload.button),
         shiny::div(class='zoom-button', title='zoom', zoom.button)
@@ -234,41 +241,40 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")
     }
-    div(
-      #class = "plotmodule",
-      bslib::card(
-        bslib::card_body_fill(
-                  div( header, class="plotmodule-header"),
-                  outputFunc(ns("renderfigure")) %>%
-                    shinycssloaders::withSpinner(),
-                  caption,
-                  shiny::div(class="popup-modal",
-                              modalUI(
-                                    id = ns("plotPopup"),
-                                    title = title,
-                                    size = "fullscreen",
-                                    footer = NULL,
-                                    popupfigUI()
-                                )
-                              ),
-                  shiny::div(class="popup-modal",
-                              modalUI(
-                                    id = ns("plotPopup_editor"),
-                                    title = "Editor",
-                                    size = "fullscreen",
-                                    footer = NULL,
-                                    popupfigUI_editor()
-                                )
-                              ),
-                  shiny::tagList(
-                              shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                              shiny::tags$head(shiny::tags$style(modalbody.style)),
-                              shiny::tags$head(shiny::tags$style(modalcontent.style)),
-                              shiny::tags$head(shiny::tags$style(modalfooter.none))
-                          )
-            ),
-             bslib::card_footer(shiny::HTML(info.text))
-      )
+
+    div( class="plotmodule",
+        shiny::fillCol(
+               flex = c(NA,1,NA,0.001,NA),
+               height = height.1,
+               div( header, class="plotmodule-header"),
+               outputFunc(ns("renderfigure"), width=width.1, height=height.1) %>%
+                 shinycssloaders::withSpinner(),
+               caption,
+               shiny::div(class="popup-modal",
+                          modalUI(
+                                id = ns("plotPopup"),
+                                title = title,
+                                size = "fullscreen",
+                                footer = NULL,
+                                popupfigUI()
+                            )
+                          ),
+               shiny::div(class="popup-modal",
+                          modalUI(
+                                id = ns("plotPopup_editor"),
+                                title = "Editor",
+                                size = "fullscreen",
+                                footer = NULL,
+                                popupfigUI_editor()
+                            )
+                          ),
+               shiny::tagList(
+                          shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                          shiny::tags$head(shiny::tags$style(modalbody.style)),
+                          shiny::tags$head(shiny::tags$style(modalcontent.style)),
+                          shiny::tags$head(shiny::tags$style(modalfooter.none))
+                      )
+              )
     )
 
 }
@@ -300,8 +306,6 @@ PlotModuleServer <- function(
     moduleServer(
       id,
       function(input, output, session) {
-
-
 
           ns <- session$ns
 
@@ -652,8 +656,8 @@ PlotModuleServer <- function(
 
           if(is.null(func2)) func2 <- func
           if(is.null(plotlib2)) plotlib2 <- plotlib
-          if(length(height)==1) height <- "auto"
-          if(length(width)==1)  width  <- "auto"
+          if(length(height)==1) height <- c(height,700)
+          if(length(width)==1)  width  <- c(width,1200)
           if(length(res)==1)    res    <- c(res, 1.3*res)
 
           res.1 <- res[1]
