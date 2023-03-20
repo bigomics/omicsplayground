@@ -242,7 +242,7 @@ PlotModuleUI <- function(id,
         caption <- shiny::div(caption, class="caption")
     }
     div(
-      class = "plotmodule",
+      #class = "plotmodule",
       bslib::card(
         bslib::card_body_fill(
                   div( header, class="plotmodule-header"),
