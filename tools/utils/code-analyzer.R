@@ -8,7 +8,7 @@ setwd("~/Playground/omicsplayground")
 rfiles <- dir("components", recursive=TRUE, patter=".*[.][rR]$",full.names=TRUE)
 
 ## scan all function declarations
-func.declared <- c()
+func.defined <- c()
 f <- rfiles[1]
 for(f in rfiles) {
   src <- readLines(f)
@@ -18,13 +18,13 @@ for(f in rfiles) {
   these.func  <- gsub(".*[ ]|#","",these.func)
   if(length(these.func)) {
     ff <- cbind(these.func, f)
-    func.declared <- rbind( func.declared, ff)
+    func.defined <- rbind( func.defined, ff)
   }
 }
-colnames(func.declared) <- c("function.name","file")
+colnames(func.defined) <- c("function.name","file")
 
 ## create regexpression for all functions
-all.func <- func.declared[,"function"]
+all.func <- func.defined[,"function"]
 func.rexp <- paste0("[\\^ =-\\(]",all.func,"[\\(@,]")  ## NEED RETHINK
 names(func.rexp) <- all.func
 
@@ -52,20 +52,20 @@ for(f in rfiles) {
 }
 colnames(func.used) <- c("file","function.name","nfreq")
 
-head(func.declared,20)
+head(func.defined,20)
 head(func.used,20)
 
-## detect multiple declared functions
-ndeclared <- table(func.declared[,"function.name"])
-multiple.declared <- names(which(ndeclared > 1))
-ww <- tapply( func.declared[,"file"], func.declared[,"function.name"],
+## detect multiple defined functions
+ndefined <- table(func.defined[,"function.name"])
+multiple.defined <- names(which(ndefined > 1))
+ww <- tapply( func.defined[,"file"], func.defined[,"function.name"],
   function(w) paste(gsub(".*/","",sort(unique(w))),collapse=', '))
-df1 <- data.frame( 'function.name'=names(ndeclared), n.declared=as.integer(ndeclared), where.declared=ww)
+df1 <- data.frame( 'function.name'=names(ndefined), n.defined=as.integer(ndefined), where.defined=ww)
 head(df1)
-head(df1[which(df1$n.declared>1),],20)
+head(df1[which(df1$n.defined>1),],20)
 
 ## detect not used functions
-head(func.declared,20)
+head(func.defined,20)
 head(func.used,20)
 
 nused <- table(func.used[,"function.name"])
@@ -80,7 +80,7 @@ df2$function.name <- NULL
 df <- cbind(df1, df2)
 rownames(df) <- NULL
 
-df <- df[,c("function.name","n.declared","n.used","where.declared","where.used")]
+df <- df[,c("function.name","n.defined","n.used","where.defined","where.used")]
 
 ## write.csv(df, file="code-analyzer-output.csv")
 
@@ -96,7 +96,7 @@ ui = fluidPage(
   h2("Code analytics: function declaration and calls"),
   div( class="row",
     actionButton("show_all","all"),
-    actionButton("show_multi","multiple-declared"),
+    actionButton("show_multi","multiple-defined"),
     actionButton("show_notused","not used")
   ),
   DT::DTOutput("dt")
@@ -112,13 +112,13 @@ server = function(input, output, session) {
 
   observeEvent( input$show_notused, {
     df1 <- df[ df$n.used==0,] 
-    df1 <- df1[order(-df1$n.declared),]    
+    df1 <- df1[order(-df1$n.defined),]    
     filtered_df( df1)
   })
     
   observeEvent( input$show_multi, {
-    df1 <- df[ df$n.declared > 1,] 
-    df1 <- df1[order(-df1$n.declared),]    
+    df1 <- df[ df$n.defined > 1,] 
+    df1 <- df1[order(-df1$n.defined),]    
     filtered_df(df1)
   })
 
@@ -135,7 +135,7 @@ server = function(input, output, session) {
         pageLength = 80)
     ) %>%
       formatStyle(
-        'n.declared',
+        'n.defined',
         backgroundColor = styleInterval(1, c('white', 'yellow'))
       ) %>%
       formatStyle(
