@@ -650,12 +650,7 @@ LoadingBoard <- function(id,
         ),
         shiny::div(HTML(pgx_stats()), id = "navheader-dataset-stats"),
         shiny::br(),
-        shinyWidgets::materialSwitch(
-          inputId = "Id077",
-          label = "Primary",
-          value = TRUE,
-          status = "primary"
-          )
+        selector_default(ns("hide_caption"))
       )
     })
 
