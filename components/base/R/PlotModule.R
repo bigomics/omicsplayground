@@ -89,8 +89,17 @@ PlotModuleUI <- function(id,
   }
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
-  if (is.null(outputFunc)) outputFunc <- getOutputFunc(plotlib)
-  if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
+  if (cards) {
+    if(length(plotlib) != length(card_names)){
+      plotlib <- rep(plotlib[1], length(card_names))
+    }
+    if (is.null(outputFunc)) outputFunc <- lapply(plotlib, getOutputFunc)
+    if (is.null(outputFunc2)) outputFunc2 <- lapply(plotlib2, getOutputFunc)
+  } else {
+    if (is.null(outputFunc)) outputFunc <- getOutputFunc(plotlib)
+    if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
+  }
+
 
   ## --------------------------------------------------------------------------------
   ## ------------------------ BUTTONS -----------------------------------------------
@@ -215,27 +224,26 @@ PlotModuleUI <- function(id,
   ## ------------------------------------------------------------------------
 
   # Build cards or single plot
-
-  tabs_modal <- lapply(1:length(card_names), function(x) {
-    bslib::nav(
-      card_names[x],
-      id = card_names[x],
-      bslib::card_body_fill(
-        outputFunc(ns(paste0("renderpopup", x)),
-          width = width.1, height = height.1
-        ) %>%
-          shinycssloaders::withSpinner()
+  if (cards) {
+    tabs_modal <- lapply(1:length(card_names), function(x) {
+      bslib::nav(
+        card_names[x],
+        id = card_names[x],
+        bslib::card_body_fill(
+          outputFunc[[x]](ns(paste0("renderpopup", x)),
+                          width = width.1, height = height.1
+          ) %>%
+            shinycssloaders::withSpinner()
+        )
       )
-    )
-  })
-  tabs_modal <- c(tabs_modal, id = "card_selector_modal")
-  plot_cards_modal <- if (cards) {
-    do.call(
+    })
+    tabs_modal <- c(tabs_modal, id = "card_selector_modal")
+    plot_cards_modal <- do.call(
       bslib::navs_tab_card,
       tabs_modal
     )
   } else {
-    outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
+    plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
       shinycssloaders::withSpinner()
   }
 
@@ -288,27 +296,25 @@ PlotModuleUI <- function(id,
   }
 
   # Build cards or single plot
-
-  tabs <- lapply(1:length(card_names), function(x) {
-    bslib::nav(
-      card_names[x],
-      # inputId = card_names[x],
-      bslib::card_body_fill(
-        outputFunc(ns(paste0("renderfigure", x)),
-          width = width.1, height = height.1
-        ) %>%
-          shinycssloaders::withSpinner()
+  if (cards) {
+    tabs <- lapply(1:length(card_names), function(x) {
+      bslib::nav(
+        card_names[x],
+        bslib::card_body_fill(
+          outputFunc[[x]](ns(paste0("renderfigure", x)),
+                          width = width.1, height = height.1
+          ) %>%
+            shinycssloaders::withSpinner()
+        )
       )
-    )
-  })
-  tabs <- c(tabs, id = ns("card_selector"))
-  plot_cards <- if (cards) {
-    do.call(
+    })
+    tabs <- c(tabs, id = ns("card_selector"))
+    plot_cards <- do.call(
       bslib::navs_tab_card,
       tabs
     )
   } else {
-    outputFunc(ns("renderfigure"), width = width.1, height = height.1) %>%
+    plot_cards <- outputFunc(ns("renderfigure"), width = width.1, height = height.1) %>%
       shinycssloaders::withSpinner()
   }
 
