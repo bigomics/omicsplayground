@@ -25,7 +25,8 @@ enrichment_plot_compare_server <- function(id,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    compare.RENDER <- shiny::reactive({
+
+    render_compare <- function() {
       shiny::req(pgx, gs_contrast())
 
       comp <- 1
@@ -101,13 +102,23 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+#      p <- grDevices::recordPlot()
+#      p
+    }
 
+    compare.RENDER <- function() {
+      render_compare()
+    }
+    
+    compare.RENDER2 <- function() {
+      render_compare()
+    }
+
+    
     PlotModuleServer(
       "plot",
       func = compare.RENDER,
+      func2 = compare.RENDER,      
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
       add.watermark = watermark

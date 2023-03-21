@@ -192,6 +192,9 @@ PlotModuleUI <- function(id,
     popupfigUI <- function() {
         w <- width.2
         h <- height.2
+
+        ## NOTE: this was in the server before and we could ask the
+        ## image size. How to do this in the UI part?
         if(FALSE && plotlib2=="image") {
             ## retains aspect ratio
             ##

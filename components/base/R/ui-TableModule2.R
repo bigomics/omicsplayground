@@ -130,9 +130,9 @@ TableModuleUI <- function(id,
                     )
          ),
          shiny::tagList(
-#           shiny::tags$head(shiny::tags$style(modaldialog.style)),
-           shiny::tags$head(shiny::tags$style(modalbody.style)),
-           shiny::tags$head(shiny::tags$style(modalcontent.style)),
+#           shiny::tags$head(shiny::tags$style(modaldialog.style)), ## remove?
+#           shiny::tags$head(shiny::tags$style(modalbody.style)),   ## remove?
+#           shiny::tags$head(shiny::tags$style(modalcontent.style)),  ## remove?
            shiny::tags$head(shiny::tags$style(modalfooter.none))
          )
        )
