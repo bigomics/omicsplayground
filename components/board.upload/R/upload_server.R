@@ -129,20 +129,20 @@ UploadBoard <- function(id,
       height = 720,
       limits = limits
     )
-    
+
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
       new_pgx <- uploaded_pgx()
-      
+
       dbg("[observe::uploaded_pgx] initializing PGX object")
       new_pgx <- pgx.initialize(new_pgx)
-      
+
       ## update Session PGX
       dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
       for (i in 1:length(new_pgx)) {
         pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
       }
-      
+
       savedata_button <- NULL
       if (enable_save) {
         ## -------------- save PGX file/object ---------------
@@ -150,37 +150,37 @@ UploadBoard <- function(id,
         pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
         pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
         pgxname
-        
+
         pgxdir <- getPGXDIR()
         fn <- file.path(pgxdir, pgxname)
         fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-        
+
         ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ## Note: Currently we use 'ngs' as object name but want to go
         ## towards 'pgx' as standard name. Actually saving as RDS
         ## should be better.
         ngs <- new_pgx
         save(ngs, file = fn)
-        
+
         remove(ngs)
         remove(new_pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
         pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
         ## reload_pgxdir(reload_pgxdir()+1)
       }
-      
+
       ## shiny::removeModal()
       msg1 <- "<b>Ready!</b>"
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
-      
+
       if (enable_save) {
         msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library.
                 You can now start exploring your data."
       } else {
         msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
       }
-      
+
       showModal(
         modalDialog(
           HTML(msg1),
@@ -194,7 +194,7 @@ UploadBoard <- function(id,
 
       ## where does this go???
       shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-      
+
       r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       r_global$loadedDataset <- r_global$loadedDataset+1
     })
@@ -244,19 +244,6 @@ UploadBoard <- function(id,
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
-
-    ## ========================================================================
-    ## ================================= UI ===================================
-    ## ========================================================================
-
-    # leaving this for now because not sure about the "suspendWhenHidden" thing (-NC)
-    output$contrasts_UI <- shiny::renderUI({
-      shiny::fillCol(
-        height = height, ## width = 1200,
-        MakeContrastUI(ns("makecontrast"))
-      )
-    })
-    shiny::outputOptions(output, "contrasts_UI", suspendWhenHidden = FALSE) ## important!!!
 
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
@@ -894,7 +881,6 @@ UploadBoard <- function(id,
       counts
     })
 
-    ## mkContrast <- shiny::reactive({
     modified_ct <- MakeContrastServerRT(
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
@@ -1097,149 +1083,6 @@ UploadBoard <- function(id,
       p1
     })
 
-    sel.conditions <- shiny::reactive({
-      shiny::req(phenoRT(), corrected_counts())
-      df <- phenoRT()
-
-      if ("<samples>" %in% input$param) {
-        df$"<samples>" <- rownames(df)
-      }
-      if ("<gene>" %in% input$param) {
-        gene <- input$gene
-        if (gene %in% rownames(corrected_counts())) {
-          gx <- log2(1 + corrected_counts()[gene, ])
-          ## df$"<gene>" <- c("low","high")[1 + 1*(gx >= mean(gx,na.rm=TRUE))]
-          df$"<gene>" <- gx
-        } else {
-          return(NULL)
-        }
-      }
-
-      df <- type.convert(df)
-      ii <- which(sapply(type.convert(df), class) %in% c("numeric", "integer"))
-      ii
-      if (length(ii)) {
-        for (i in ii) {
-          x <- df[, i]
-          df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
-        }
-      }
-
-      pp <- intersect(input$param, colnames(df))
-      ss <- colnames(corrected_counts())
-      cond <- apply(df[ss, pp, drop = FALSE], 1, paste, collapse = "_")
-      cond <- gsub("^_|_$", "", cond)
-      cond
-    })
-
-    shiny::observeEvent(input$addcontrast, {
-
-      cond <- sel.conditions()
-      if (length(cond) == 0 || is.null(cond)) {
-        return(NULL)
-      }
-
-      group1 <- input$group1
-      group2 <- input$group2
-      in.main <- 1 * (cond %in% group1)
-      in.ref1 <- 1 * (cond %in% group2)
-      in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
-      in.ref <- in.ref1 | in.ref2
-
-      message("[MakeContrastServer:addcontrast] 1 : ")
-
-      ## ctx <- 1*(in.main) - 1*(in.ref)
-      ## ct.name <- paste0(input$group1name,"_vs_",input$group2name)
-      ct.name <- input$newname
-      gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
-      gr2 <- gsub(".*_vs_|@.*", "", ct.name)
-      ctx <- c(NA, gr1, gr2)[1 + 1 * in.main + 2 * in.ref]
-
-      if (sum(in.main) == 0 || sum(in.ref) == 0) {
-        shinyalert::shinyalert("ERROR", "Both groups must have samples")
-        return(NULL)
-      }
-      if (ct.name %in% c(NA, "", " ")) {
-        shinyalert::shinyalert("ERROR", "You must give a contrast name")
-        return(NULL)
-      }
-      if (1 && gr1 == gr2) {
-        shinyalert::shinyalert("ERROR", "Invalid contrast name")
-        return(NULL)
-      }
-      if (!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
-        shinyalert::shinyalert("ERROR", "Contrast name already exists.")
-        return(NULL)
-      }
-      if (!grepl("_vs_", ct.name)) {
-        shinyalert::shinyalert("ERROR", "Contrast must include _vs_ in name")
-        return(NULL)
-      }
-
-      message("[MakeContrastServer:addcontrast] update reactive values : 1")
-
-      ## update reactive value
-      samples <- colnames(corrected_counts())
-
-      message("[MakeContrastServer:addcontrast] 1 : samples = ", samples)
-      message("[MakeContrastServer:addcontrast] 1 : ct.name = ", ct.name)
-      message("[MakeContrastServer:addcontrast] 1 : len.ctx = ", length(ctx))
-
-      ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
-      if (is.null(rv$contr)) {
-        rv$contr <- ctx1
-      } else {
-        rv$contr <- cbind(rv$contr, ctx1)
-      }
-
-      message("[MakeContrastServer:addcontrast] update reactive values : 2")
-      message("[MakeContrastServer:addcontrast] ct.name in pheno = ", ct.name %in% colnames(rv$pheno))
-
-      ## if(any(input$param %in% c('<gene>','<samples>'))) {
-      if (any(input$param %in% c("<gene>"))) {
-        if (is.null(rv$pheno) || NCOL(rv$pheno) == 0) {
-          rv$pheno <- ctx1
-        } else {
-          message("[MakeContrastServer:addcontrast] add to cond : dim(ctx1) = ", dim(ctx1))
-          if (!ct.name %in% colnames(rv$pheno)) {
-            rv$pheno <- cbind(rv$pheno, ctx1)
-          }
-        }
-      }
-
-    })
-
-    output$createcomparison <- shiny::renderUI({
-      shiny::req(input$param)
-      cond <- sel.conditions()
-      if (length(cond) == 0 || is.null(cond)) {
-        return(NULL)
-      }
-
-      items <- c("<others>", sort(unique(cond)))
-
-      shiny::tagList(
-        shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
-        sortable::bucket_list(
-          ## header = shiny::h4("Create comparison:"),
-          header = NULL,
-          sortable::add_rank_list(
-            text = "Conditions:",
-            labels = items
-          ),
-          sortable::add_rank_list(
-            input_id = ns("group1"),
-            text = "Main group:"
-          ),
-          sortable::add_rank_list(
-            input_id = ns("group2"),
-            text = "Control group:"
-          ),
-          group_name = "cmpbucket"
-        )
-      )
-    })
-
     buttonInput <- function(FUN, len, id, ...) {
       inputs <- character(len)
       for (i in seq_len(len)) {
@@ -1247,109 +1090,6 @@ UploadBoard <- function(id,
       }
       inputs
     }
-
-    output$contrastTable <- DT::renderDataTable(
-      {
-
-        ct <- rv$contr
-
-        if (is.null(ct) || NCOL(ct) == 0) {
-          df <- data.frame(
-            delete = 0,
-            comparison = "",
-            n1 = 0,
-            n0 = 0,
-            "main.group" = "",
-            "control.group" = ""
-          )[0, ]
-        } else {
-
-          paste.max <- function(x, n = 6) {
-            ## x <- unlist(x)
-            if (length(x) > n) {
-              x <- c(x[1:n], paste("+", length(x) - n, "others"))
-            }
-            paste(x, collapse = " ")
-          }
-
-          ct1 <- makeContrastsFromLabelMatrix(ct)
-          ct1[is.na(ct1)] <- 0
-
-          if (NCOL(ct) == 1) {
-            ss1 <- names(which(ct1[, 1] > 0))
-            ss2 <- names(which(ct1[, 1] < 0))
-            ss1 <- paste.max(ss1, 6)
-            ss2 <- paste.max(ss2, 6)
-          } else {
-            ss0 <- rownames(ct)
-            ss1 <- apply(ct1, 2, function(x) paste.max(ss0[which(x > 0)]))
-            ss2 <- apply(ct1, 2, function(x) paste.max(ss0[which(x < 0)]))
-          }
-
-          deleteButtons <- buttonInput(
-            FUN = actionButton,
-            len = ncol(ct),
-            ## id = 'contrast_delete_',
-            id = paste0("contrast_delete_", sample(99999, 1), "_"), ## hack to allow double click
-            label = "",
-            ## size = "mini",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("trash-alt"),
-            class = "btn-inline btn-outline-danger-hover",
-            style = "padding:2px; margin:2px; font-size:95%; color: #B22222;",
-            ## onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
-            onclick = paste0('Shiny.onInputChange(\"', ns("contrast_delete"), '\",this.id)')
-          )
-
-          df <- data.frame(
-            delete = deleteButtons,
-            comparison = colnames(ct1),
-            n1 = colSums(ct1 > 0),
-            n0 = colSums(ct1 < 0),
-            "main.group" = ss1,
-            "control.group" = ss2
-          )
-        }
-        rownames(df) <- NULL
-
-        DT::datatable(
-          df,
-          rownames = FALSE,
-          escape = c(-1),
-          selection = "none",
-          class = "compact cell-border",
-          options = list(
-            dom = "t",
-            pageLength = 999,
-            ## autoWidth = TRUE, ## scrollX=TRUE,
-            columnDefs = list(
-              list(width = "20px", targets = c(0, 2, 3)),
-              list(width = "150px", targets = c(1)),
-              list(width = "400px", targets = c(4, 5))
-            )
-          )
-        ) %>%
-          DT::formatStyle(0, target = "row", fontSize = "12px", lineHeight = "99%")
-      },
-      server = FALSE
-    )
-
-    shiny::observeEvent(input$contrast_delete, {
-      ## Observe if a contrast is to be deleted
-      ##
-      id <- as.numeric(gsub(".*_", "", input$contrast_delete))
-      message("[contrast_delete] clicked on delete contrast", id)
-      if (length(id) == 0) {
-        return(NULL)
-      }
-      ## updateActionButton(session, paste0("contrast_delete_",id),label="XXX")
-      if (!is.null(rv$contr) && NCOL(rv$contr) <= 1) {
-        rv$contr <- rv$contr[, 0, drop = FALSE]
-      } else {
-        rv$contr <- rv$contr[, -id, drop = FALSE]
-      }
-    })
 
     output$checkTablesOutput <- DT::renderDataTable({
       ## Render the upload status table
