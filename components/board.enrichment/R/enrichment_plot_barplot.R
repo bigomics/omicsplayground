@@ -39,12 +39,12 @@ enrichment_plot_barplot_server <- function(id,
                                            subplot.MAR,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    subplot_barplot.RENDER <- shiny::reactive({
+
+    render_subplot_barplot <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
       shiny::req(pgx)
-
 
       gset <- rownames(pgx$gsetX)[1]
       gset <- gset_selected()
@@ -82,12 +82,21 @@ enrichment_plot_barplot_server <- function(id,
         cex = 1.1, srt = srt, main = "", ylab = "enrichment (avg logFC)",
         xlab = breakstring(gset, 42, 80)
       )
-    })
+    }
 
+    subplot_barplot.RENDER <- function() {
+      render_subplot_barplot() %>% plotly_default()
+    }
+
+    subplot_barplot.RENDER2 <- function() {
+      render_subplot_barplot() %>% plotly_modal_default()
+    }
+    
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
       func = subplot_barplot.RENDER,
+      func2 = subplot_barplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
       add.watermark = watermark

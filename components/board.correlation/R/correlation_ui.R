@@ -61,14 +61,14 @@ CorrelationUI <- function(id) {
           correlation_plot_table_corr_ui(ns("cor_barplot"),
             label = "a",
             height = c("30vh", "70vh"),
-            width = c("auto", 1200)
+            width = c("auto", "100%")
           ),
         ),
         div(
           class = "col-md-6",
           correlation_plot_scattercorr_ui(ns("cor_scatter"),
-            height = c(fullH - 50, 600),
-            width = c("auto", 700)
+            height = c(fullH - 50, 700),
+            width = c("auto", "100%")
           )
         )
       ),
@@ -90,7 +90,7 @@ CorrelationUI <- function(id) {
         ),
         div(
           class = "col-md-6",
-          correlation_plot_partial_correlation_ui(ns("cor_umap"))
+          correlation_plot_correlation_UMAP_ui(ns("cor_umap"))
         )
       ),
       div(

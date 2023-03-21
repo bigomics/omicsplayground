@@ -57,7 +57,7 @@ PlotModuleUI <- function(id,
 
     if(is.null(plotlib2)) plotlib2 <- plotlib
     if(length(height)==1) height <- c(height,800)
-    if(length(width)==1)  width  <- c(width,1200)
+    if(length(width)==1)  width  <- c(width,"100%")
 
 
     ifnotchar.int <- function(s) suppressWarnings(
@@ -210,7 +210,9 @@ PlotModuleUI <- function(id,
             caption2 <- shiny::HTML(caption2)
             caption2 <- shiny::div(caption2, class="caption2 popup-plot-caption")
         }
-        shiny::tagList(
+        ##        shiny::tagList(
+        shiny::div(
+          class = "popup-plot-body",
           shiny::div(
             class = "popup-plot",
             tryCatch({
@@ -226,9 +228,10 @@ PlotModuleUI <- function(id,
     }
 
     popupfigUI_editor <- function(){
-      htmlOutput(ns("editor_frame"))
+        htmlOutput(ns("editor_frame"))
     }
 
+    ## inline styles
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 150px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
@@ -269,7 +272,7 @@ PlotModuleUI <- function(id,
                             )
                           ),
                shiny::tagList(
-                          shiny::tags$head(shiny::tags$style(modaldialog.style)),
+#                          shiny::tags$head(shiny::tags$style(modaldialog.style)),
                           shiny::tags$head(shiny::tags$style(modalbody.style)),
                           shiny::tags$head(shiny::tags$style(modalcontent.style)),
                           shiny::tags$head(shiny::tags$style(modalfooter.none))

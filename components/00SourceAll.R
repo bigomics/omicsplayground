@@ -117,7 +117,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.connectivity/R/connectivity_table_similarity_scores.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_ui.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_cor_graph.R',encoding='UTF-8')
-  source('board.correlation/R/correlation_plot_partial_correlation.R',encoding='UTF-8')
+  source('board.correlation/R/correlation_plot_correlation_UMAP.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_scattercorr.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_table_corr.R',encoding='UTF-8')
   source('board.correlation/R/correlation_server.R',encoding='UTF-8')

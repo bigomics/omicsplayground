@@ -36,7 +36,9 @@ enrichment_plot_geneplot_server <- function(id,
                                             subplot.MAR,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    subplot_geneplot.RENDER <- shiny::reactive({
+
+    ##subplot_geneplot.RENDER <- shiny::reactive({
+    render_subplot_geneplot <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
@@ -73,12 +75,23 @@ enrichment_plot_geneplot_server <- function(id,
           srt = srt, main = "", xlab = gene
         )
       }
-    })
+    }#)
 
+    subplot_geneplot.RENDER1 <- function() {
+      render_subplot_geneplot() %>%
+        plotly_default()
+    }
+    
+    subplot_geneplot.RENDER2 <- function() {
+      render_subplot_geneplot() %>%
+        plotly_modal_default()
+    }
+    
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
-      func = subplot_geneplot.RENDER,
+      func = subplot_geneplot.RENDER1,
+      func2 = subplot_geneplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(78, 100),
       add.watermark = watermark

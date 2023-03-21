@@ -39,8 +39,8 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 750),
-      width = c("auto", 1200),
+      height = c(600, 700),
+      width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
     ),
     TableModuleUI(
