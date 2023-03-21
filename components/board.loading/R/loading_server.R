@@ -649,7 +649,7 @@ LoadingBoard <- function(id,
           )
         ),
         shiny::div(HTML(pgx_stats()), id = "navheader-dataset-stats"),
-        div(selector_default(ns("hide_caption"), label = "Show captions"))
+        shiny::div(selector_default(ns("hide_caption"), label = "Show captions"))
       )
     })
 
