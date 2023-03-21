@@ -1,0 +1,49 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
+
+#------------------------------------------------------------
+# Start from lastest image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:latest
+
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) Ubuntu libs
+#------------------------------------------------------------
+ENV DEBIAN_FRONTEND noninteractive
+
+#RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+#RUN apt update && apt install -y locales
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) R packages since base
+#------------------------------------------------------------
+
+#RUN R -e "remotes::install_github('bigomics/bigdash')"
+# RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
+RUN R -e "BiocManager::install('KEGGgraph')"
+RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
+#RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
+# RUN pip3 install umap-learn
+
+#------------------------------------------------------------
+# Update from local code
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+RUN rm -rf components/* scss/* bin/*
+COPY components/ components/
+COPY scss/ scss/
+COPY bin/ bin/
+
+WORKDIR /omicsplayground
+EXPOSE 3838
+#CMD ["R", "-e", "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)"]
+CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
+
+

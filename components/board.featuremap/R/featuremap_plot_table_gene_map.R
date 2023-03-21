@@ -27,19 +27,20 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
   div(
     PlotModuleUI(
       ns("gene_map"),
-      title = "Gene Map",
+      title = "Gene UMAP",
       label = "a",
-      outputFunc = function(x, width, height) {
-        plotOutput(x,
-          brush = ns("geneUMAP_brush"), width = width,
-          height = height
-        )
-      },
+      # outputFunc = function(x, width, height) {
+      #   plotOutput(x,
+      #     brush = ns("geneUMAP_brush"), width = width,
+      #     height = height
+      #   )
+      # },
+      plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 750),
-      width = c("auto", 1200),
+      height = c(600, 700),
+      width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
     ),
     TableModuleUI(
@@ -54,7 +55,7 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
 }
 
 featuremap_plot_gene_map_server <- function(id,
-                                            inputData,
+                                            pgx,
                                             getGeneUMAP,
                                             plotUMAP,
                                             sigvar,
@@ -62,23 +63,21 @@ featuremap_plot_gene_map_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     selGenes <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
       sel <- filter_genes()
       selgenes <- FAMILIES[[sel]]
       selgenes
     })
 
     geneUMAP.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       pos <- getGeneUMAP()
       hilight <- NULL
       colgamma <- as.numeric(input$umap_gamma)
 
       ## select on table filter
-      F <- pgx.getMetaMatrix(ngs)$fc
+      F <- pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
       colorby <- input$umap_colorby
       if (colorby == "sd.FC") {
@@ -87,7 +86,7 @@ featuremap_plot_gene_map_server <- function(id,
         fc <- rowMeans(F)
       } else {
         ## sdX
-        cX <- ngs$X - rowMeans(ngs$X, na.rm = TRUE)
+        cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
@@ -105,16 +104,15 @@ featuremap_plot_gene_map_server <- function(id,
     })
 
     geneUMAP.RENDER2 <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
-      ## pos <- ngs$cluster.genes$pos[['umap2d']]
+      ## pos <- pgx$cluster.genes$pos[['umap2d']]
       pos <- getGeneUMAP()
       hilight <- NULL
       colgamma <- as.numeric(input$umap_gamma)
 
       ## select on table filter
-      F <- pgx.getMetaMatrix(ngs)$fc
+      F <- pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
       colorby <- input$umap_colorby
       if (colorby == "var.FC") {
@@ -122,7 +120,7 @@ featuremap_plot_gene_map_server <- function(id,
       } else if (colorby == "mean.FC") {
         fc <- rowMeans(F)
       } else {
-        cX <- ngs$X - rowMeans(ngs$X, na.rm = TRUE)
+        cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
@@ -140,9 +138,9 @@ featuremap_plot_gene_map_server <- function(id,
 
     PlotModuleServer(
       "gene_map",
-      plotlib = "base",
+      plotlib = "plotly",
       plotlib2 = "plotly",
-      func = geneUMAP.RENDER,
+      func = geneUMAP.RENDER2,
       func2 = geneUMAP.RENDER2,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
@@ -151,9 +149,9 @@ featuremap_plot_gene_map_server <- function(id,
     # Table
 
     geneTable.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-      if (is.null(ngs$drugs)) {
+
+      shiny::req(pgx)
+      if (is.null(pgx$drugs)) {
         return(NULL)
       }
 
@@ -173,15 +171,15 @@ featuremap_plot_gene_map_server <- function(id,
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
-      if (pheno %in% colnames(ngs$samples)) {
-        X <- ngs$X - rowMeans(ngs$X)
-        y <- ngs$samples[, pheno]
+      if (pheno %in% colnames(pgx$samples)) {
+        X <- pgx$X - rowMeans(pgx$X)
+        y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
-        F <- pgx.getMetaMatrix(ngs, level = "gene")$fc
+        F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
         is.fc <- TRUE
       }
 
@@ -191,7 +189,7 @@ featuremap_plot_gene_map_server <- function(id,
       }
       F <- F[order(-rowMeans(F**2)), ]
 
-      tt <- shortstring(ngs$genes[rownames(F), "gene_title"], 60)
+      tt <- shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"

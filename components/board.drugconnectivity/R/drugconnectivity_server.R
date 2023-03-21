@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-DrugConnectivityBoard <- function(id, inputData) {
+DrugConnectivityBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -24,7 +24,6 @@ DrugConnectivityBoard <- function(id, inputData) {
         allowfullscreen></iframe></center>")
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "dsea_method", choices = ct)
@@ -43,7 +42,6 @@ DrugConnectivityBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
       ct <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "dsea_contrast", choices = sort(ct))
@@ -55,7 +53,6 @@ DrugConnectivityBoard <- function(id, inputData) {
 
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-      pgx <- inputData()
       shiny::req(pgx, input$dsea_contrast, input$dsea_method)
 
       contr <- input$dsea_contrast
@@ -164,7 +161,7 @@ DrugConnectivityBoard <- function(id, inputData) {
     ## --------- DSEA enplot plotting module
     drugconnectivity_plot_enplots_server(
       "dsea_enplots",
-      inputData,
+      pgx,
       reactive(input$dsea_contrast),
       reactive(input$dsea_method),
       dsea_table,
@@ -184,7 +181,7 @@ DrugConnectivityBoard <- function(id, inputData) {
     ## -------- Activation map plotting module
     drugconnectivity_plot_actmap_server(
       "dsea_actmap",
-      inputData,
+      pgx,
       reactive(input$dsea_contrast),
       reactive(input$dsea_method),
       dsea_table,
@@ -204,7 +201,7 @@ DrugConnectivityBoard <- function(id, inputData) {
 
     drugconnectivity_plot_cmap_enplot_server(
       "cmap_enplot",
-      inputData,
+      pgx,
       getActiveDSEA,
       cmap_table,
       watermark = WATERMARK
@@ -212,7 +209,7 @@ DrugConnectivityBoard <- function(id, inputData) {
 
     drugconnectivity_plot_cmap_dsea_server(
       "cmap_dsea",
-      pgx = inputData,
+      pgx = pgx,
       getActiveDSEA = getActiveDSEA,
       cmap_table = cmap_table,
       getMOA.class = getMOA.class,

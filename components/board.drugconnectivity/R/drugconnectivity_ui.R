@@ -39,7 +39,7 @@ DrugConnectivityUI <- function(id) {
         div(
           class = "row",
           div(
-            class = "col-md-10",
+            class = "col-md-9",
             div(
               class = "row",
               div(
@@ -59,13 +59,13 @@ DrugConnectivityUI <- function(id) {
             )
           ),
           div(
-            class = "col-md-2",
+            class = "col-md-3",
             drugconnectivity_plot_actmap_ui(ns("dsea_actmap"), label = "d")
           )
         )
       ),
       shiny::tabPanel(
-        "Connectivity map - Development",
+        "Connectivity map (beta)",
         shiny::div(
           shiny::fillCol(
             flex = c(NA, 0.035, 1),
@@ -87,6 +87,7 @@ DrugConnectivityUI <- function(id) {
               drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"), label = "c")
             ),
             div(
+              class = "caption",
               HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
                          profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical
                          results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b>

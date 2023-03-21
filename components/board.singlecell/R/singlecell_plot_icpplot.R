@@ -71,7 +71,7 @@ singlecell_plot_icpplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_icpplot_server <- function(id,
-                                           inputData,
+                                           pgx,
                                            pfGetClusterPositions,
                                            method, # input$dcmethod
                                            refset, # input$refset
@@ -82,7 +82,6 @@ singlecell_plot_icpplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
       method <- "meta"
       refset <- "LM22"
       method <- method() # input$dcmethod
@@ -93,10 +92,10 @@ singlecell_plot_icpplot_server <- function(id,
       lyo <- lyo()
       sortby <- sortby()
 
-      if (!("deconv" %in% names(ngs))) {
+      if (!("deconv" %in% names(pgx))) {
         return(NULL)
       }
-      results <- ngs$deconv[[refset]][[method]]
+      results <- pgx$deconv[[refset]][[method]]
       ## threshold everything (because DCQ can be negative!!!)
       results <- pmax(results, 0)
 
@@ -106,14 +105,14 @@ singlecell_plot_icpplot_server <- function(id,
 
       clust.pos <- pfGetClusterPositions()
 
-      # alertDataLoaded(session,ngs)
+      # alertDataLoaded(session,pgx)
 
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      pos <- ngs$tsne2d
+      pos <- pgx$tsne2d
       pos <- clust.pos
-      score <- ngs$deconv[[1]][["meta"]]
+      score <- pgx$deconv[[1]][["meta"]]
       score <- results
       if (is.null(score) || length(score) == 0) {
         return(NULL)

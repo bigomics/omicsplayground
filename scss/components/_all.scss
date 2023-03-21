@@ -101,16 +101,7 @@ html {
     overflow: auto;
     height: 680px;
   }
-
-  .modal-body .gene-info-output {
-    height: auto;
-  }
-
-  .modal-title{
-    margin-right: auto;
-    margin-left: auto;
-  }
-
+  
   .bg-cover-image {
     background-color: #dde6f0;
     background-color: #fff;
@@ -146,18 +137,18 @@ html {
     line-height: 1.3em;
   }
 
-  .caption, .caption2 {
-    font-size: 12px;
+  .caption {
+    font-size: 13px;
     font-weight: 400;
     line-height: 1.2em;
-//    position: relative;
-    padding: 0rem 0.3rem 2rem 0.3rem;
-//    bottom: 0px;
+    padding: 0rem 0.3rem 0.3rem 0.6rem;
   }
 
   .caption2 {
-    padding: 2.5rem 0 2rem 0;
-    font-size: 1.5rem;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.1em;
+    padding: 2rem 0rem 0rem 0rem;
   }
 
   .current-user {
@@ -223,12 +214,6 @@ html {
     margin-bottom: -3px;
   }
 
-  .modal-footer .btn {
-    margin-left: 5px;
-    margin-bottom: 0;
-    font-size: 14px;
-  }
-
   .btn-xl {
       padding: .3rem 1.5rem;
       margin: 20px;
@@ -280,7 +265,7 @@ html {
   }
 
   div#navheader-dataset-stats {
-    margin: 16px 0px 0px 40px;
+    margin: 22px 0px 0px 40px;
     font-size: 24px;
     color: #3181DE;
   }
@@ -332,3 +317,9 @@ html {
   }
 
 }
+
+// to work with mouse listeners, we need to remove pointer events from tooltips
+.tooltip {
+  pointer-events: none;
+}
+

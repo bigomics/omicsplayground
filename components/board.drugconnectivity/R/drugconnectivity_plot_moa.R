@@ -56,6 +56,7 @@ drugconnectivity_plot_moa_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
       getMOA <- shiny::reactive({
         moatype <- input$dsea_moatype
         if (moatype == "target gene") {
@@ -65,22 +66,19 @@ drugconnectivity_plot_moa_server <- function(id,
         } else {
           res <- NULL
         }
-
         res
       })
 
       plot_data <- shiny::reactive({
         res <- getMOA()
         shiny::req(res)
-
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plotTopBarplot <- function(ntop) {
         res <- plot_data()
         shiny::req(res)
-
-        ntop <- 16
+        ## ntop <- 16
         jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
@@ -93,12 +91,23 @@ drugconnectivity_plot_moa_server <- function(id,
           x = "x",
           y = "y",
           yaxistitle = "Enrichment score (NES)",
-          xaxistitle = "Mechanism of action",
+          xaxistitle = "",
           plotRawValues = TRUE,
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
         )
+      }
+
+      plot.RENDER <- shiny::reactive({
+        plotTopBarplot(16)         
       })
 
+      plot.RENDER2 <- shiny::reactive({
+        plotTopBarplot(28) %>%
+          plotly::layout(
+            font = list( size = 18 )
+          )
+      })
+      
       # plot.RENDER2 <- shiny::reactive({
       #   res <- plot_data()
       #   shiny::req(res)
@@ -119,9 +128,10 @@ drugconnectivity_plot_moa_server <- function(id,
         "plot",
         plotlib = "plotly",
         func = plot.RENDER,
+        func2 = plot.RENDER2,
         csvFunc = plot_data,
         res = c(70, 110),
-        pdf.width = 6, pdf.height = 6,
+        pdf.width = 9, pdf.height = 6,
         add.watermark = watermark
       )
     } ## end of moduleServer

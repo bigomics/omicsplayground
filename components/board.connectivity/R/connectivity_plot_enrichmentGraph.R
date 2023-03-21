@@ -53,7 +53,7 @@ connectivity_plot_enrichmentGraph_ui <- function(id,
     plotlib = "visnetwork",
     info.text = info_text,
     options = plot_opts,
-    height = c(720, 720), width = c("auto", 1200)
+    height = c(680, 720), width = c("auto", 1200)
   )
 }
 

@@ -56,7 +56,7 @@ functional_plot_kegg_actmap_ui <- function(id,
 #' @return
 #' @export
 functional_plot_kegg_actmap_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                getKeggTable,
                                                watermark = FALSE) {
   moduleServer(
@@ -120,7 +120,6 @@ functional_plot_kegg_actmap_server <- function(id,
       }
 
       plot_data <- shiny::reactive({
-        pgx <- inputData()
         df <- getKeggTable()
 
         res <- list(

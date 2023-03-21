@@ -28,16 +28,18 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
-      outputFunc = function(x, width, height) {
-        plotOutput(x,
-          brush = ns("gsetUMAP_brush"), width = width,
-          height = height
-        )
-      },
+      # outputFunc = function(x, width, height) {
+      #   plotOutput(x,
+      #     brush = ns("gsetUMAP_brush"), width = width,
+      #     height = height
+      #   )
+      # },
+      plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 750), width = c("auto", 1200),
+      height = c(600, 700),
+      width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
     ),
     TableModuleUI(
@@ -52,7 +54,7 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
 }
 
 featuremap_plot_table_geneset_map_server <- function(id,
-                                                     inputData,
+                                                     pgx,
                                                      getGsetUMAP,
                                                      plotUMAP,
                                                      filter_gsets,
@@ -60,22 +62,20 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     selGsets <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
       db <- filter_gsets()
-      gsets <- rownames(ngs$gsetX)
+      gsets <- rownames(pgx$gsetX)
       gsets <- grep(paste0("^", db, ":"), gsets, value = TRUE)
       gsets
     })
 
     gsetUMAP.RENDER <- shiny::reactive({
-      ngs <- inputData()
 
       pos <- getGsetUMAP()
       hilight <- NULL
       colgamma <- as.numeric(input$gsmap_gamma)
 
-      F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+      F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
       colorby <- input$gsmap_colorby
       if (colorby == "sd.FC") {
@@ -83,7 +83,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       } else if (colorby == "mean.FC") {
         fc <- rowMeans(F)
       } else {
-        cX <- ngs$gsetX - rowMeans(ngs$gsetX, na.rm = TRUE)
+        cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
@@ -101,13 +101,12 @@ featuremap_plot_table_geneset_map_server <- function(id,
     })
 
     gsetUMAP.RENDER2 <- shiny::reactive({
-      ngs <- inputData()
 
       pos <- getGsetUMAP()
       hilight <- NULL
       colgamma <- as.numeric(input$gsmap_gamma)
 
-      F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+      F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
       colorby <- input$gsmap_colorby
       if (colorby == "var.FC") {
@@ -115,7 +114,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       } else if (colorby == "mean.FC") {
         fc <- rowMeans(F)
       } else {
-        cX <- ngs$gsetX - rowMeans(ngs$gsetX, na.rm = TRUE)
+        cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
@@ -134,9 +133,9 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     PlotModuleServer(
       "gset_map",
-      plotlib = "base",
+      plotlib = "plotly",
       plotlib2 = "plotly",
-      func = gsetUMAP.RENDER,
+      func = gsetUMAP.RENDER2,
       func2 = gsetUMAP.RENDER2,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
@@ -145,9 +144,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
     # Table
 
     gsetTable.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
-      if (is.null(ngs$drugs)) {
+      shiny::req(pgx)
+      if (is.null(pgx$drugs)) {
         return(NULL)
       }
 
@@ -166,15 +164,15 @@ featuremap_plot_table_geneset_map_server <- function(id,
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
-      if (pheno %in% colnames(ngs$samples)) {
-        X <- ngs$gsetX - rowMeans(ngs$gsetX)
-        y <- ngs$samples[, pheno]
+      if (pheno %in% colnames(pgx$samples)) {
+        X <- pgx$gsetX - rowMeans(pgx$gsetX)
+        y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
-        F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+        F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
         is.fc <- TRUE
       }
 

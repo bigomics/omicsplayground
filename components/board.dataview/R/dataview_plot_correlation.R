@@ -121,7 +121,6 @@ dataview_plot_correlation_server <- function(id,
       df <- pd[[1]]
       df$genes <- factor(df$genes, levels = df$genes)
 
-
       ## NOTE: a second y axis seems useful (even cooler would be a positive on the left and a negative on the right)
       ## NOTE: because of the plotly bheavior, we need to increas the margfin manually (otherwise labels get cut off); also it is not possible to adjust the alignment of axis labels (how annoying...)
       ## TODO: decide if dual axis should be kept; ask Carson for potential workaround to align labels to the right
@@ -161,15 +160,12 @@ dataview_plot_correlation_server <- function(id,
           bargap = .4,
           margin = list(l = 10, r = 30, b = 10, t = 10)
         ) %>%
-        plotly_default1()
+        plotly_default()
     }
 
     modal_plotly.RENDER <- function() {
       plotly.RENDER() %>%
-        plotly::layout(
-          ## showlegend = TRUE,
-          font = list(size = 16)
-        )
+        plotly_modal_default()
     }
 
     PlotModuleServer(

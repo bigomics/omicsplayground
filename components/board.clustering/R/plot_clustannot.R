@@ -69,7 +69,6 @@ clustannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
       if (is.null(input$xann_level)) {
@@ -103,7 +102,6 @@ clustannot_server <- function(id,
 
     ## This is used both for plot and table
     get_annot_correlation <- shiny::reactive({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
       ## filt <- getTopMatrix()

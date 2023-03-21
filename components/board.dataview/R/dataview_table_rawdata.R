@@ -183,7 +183,8 @@ dataview_table_rawdata_server <- function(id,
           pageLength = 100,
           lengthMenu = c(25, 40, 100, 250, 1000),
           ## scroller = FALSE, scrollY = FALSE,
-          scroller = TRUE, scrollY = "65vh",
+          scroller = TRUE,
+          scrollY = "58vh",
           deferRender = TRUE
         ) ## end of options.list
       ) %>%

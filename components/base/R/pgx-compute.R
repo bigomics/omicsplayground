@@ -423,14 +423,14 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     ## Filter genes?
     ##-------------------------------------------------------------------
-    cap.fraction <- mean(grepl("^[A-Z][a-z]*",rownames(ngs$counts)),na.rm=TRUE)
+    cap.fraction <- mean(grepl("^[A-Z][a-z]+",rownames(ngs$counts)),na.rm=TRUE)
     dbg("[createPGX: filter genes] rownames.ngs.counts = ",head(rownames(ngs$counts)))
     dbg("[createPGX: filter genes] cap.frac = ",cap.fraction)
-    is.mouse <- (cap.fraction > 0.9)
 
+    is.mouse <- (cap.fraction > 0.9)
     org = ifelse(is.mouse, "mouse", "human")
-    org
     message("[createPGX] detected organism: ",org,"")
+  
     do.filter <- (only.hugo | only.known | only.proteincoding )
     if(do.filter && org == "mouse") {
         message("[createPGX] filtering genes...")

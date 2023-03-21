@@ -60,6 +60,7 @@ WordCloudUI <- function(id) {
         )
       ),
       tags$div(
+        class = "caption",
         HTML("<b>(a)</b> <b>Word enrichment</b>  plots for the top most significant contrasts. Black vertical bars indicate
                     the position of gene sets, in the ranked enrichment scores, that contains the *keyword*.
                     The green curve corresponds to 'running statistics' of the keyword enrichment score.

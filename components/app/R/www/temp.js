@@ -29,12 +29,16 @@ const sidebarClose = () => {
 		$('.sidebar-label').trigger('click');
 }
 
+
+
 const sidebarOpen = () => {
 	if($('#sidebar-container').hasClass('sidebar-collapsed'))
 		$('.sidebar-label').trigger('click');
 }
 
 $(function(){
+
+        // init sequence: close sidebar, goto Welcome page and hide it's tab item
 	setTimeout(() => {
 		$('.sidebar-label').trigger('click');
 		$('.sidebar-menu')
@@ -44,20 +48,24 @@ $(function(){
 		$('.tab-sidebar')
 			.first()
 			.css('display', 'none');
-
-	        // $('.settings-label').click()
+		// on mouseover this does not work anymore, substitute by lock button option
+	        //$('.settings-label').click()
 	}, 250);
 
+/*
+// now handled by WelcomeBoard using traditional Shiny
+
 	$('#init-load-data').on('click', (e) => {
-		$(".tab-sidebar:eq(1)").trigger('click');
+	 	$(".tab-sidebar:eq(1)").trigger('click');
 		$('.sidebar-label').trigger('click');
 	});
 
 	$('#init-upload-data').on('click', (e) => {
-		$(".tab-sidebar:eq(2)").trigger('click');
+	 	$(".tab-sidebar:eq(2)").trigger('click');
 		$('.sidebar-label').trigger('click');
-	});
-
+	 });
+*/
+    
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 })
@@ -205,7 +213,7 @@ const logout = () => {
 
 const logoutInApp = () => {
 	unloadSidebar();
-	$(".tab-sidebar:eq(1)").trigger('click');
+	$(".tab-sidebar:eq(1)").trigger('click');  // show welcome page
 	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
@@ -348,6 +356,26 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 		return;
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
-
+	$('#sidebar-help-container').hide();
 	}, 1000);
+});
+
+Shiny.addCustomMessageHandler('bigdash-select-tab', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).trigger('click');
+});
+
+Shiny.addCustomMessageHandler('bigdash-hide-menuitem', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).hide();
+});
+
+Shiny.addCustomMessageHandler('bigdash-show-menuitem', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).show();    
+});
+
+Shiny.addCustomMessageHandler('bigdash-hide-tab', (msg) => {
+    $(`.big-tab[data-name=${msg.value}]`).hide();
+});
+
+Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
+    $(`.big-tab[data-name=${msg.value}]`).show();
 });

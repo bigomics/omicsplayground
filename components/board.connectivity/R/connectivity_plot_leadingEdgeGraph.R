@@ -14,7 +14,7 @@
 #' @export
 connectivity_plot_leadingEdgeGraph_ui <- function(id,
                                                   label = "",
-                                                  rowH = 660) {
+                                                  rowH = 600) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap(
@@ -49,7 +49,7 @@ connectivity_plot_leadingEdgeGraph_ui <- function(id,
     plotlib = "visnetwork",
     info.text = info_text,
     options = plot_opts,
-    height = c(720, 720),
+    height = c(680, 720),
     width = c("auto", 1300)
   )
 }

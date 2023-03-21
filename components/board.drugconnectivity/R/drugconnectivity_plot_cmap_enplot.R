@@ -49,7 +49,6 @@ drugconnectivity_plot_cmap_enplot_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        pgx <- pgx()
         dsea <- getActiveDSEA()
 
         res <- list(

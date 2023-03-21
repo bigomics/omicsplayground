@@ -220,7 +220,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         new(persistence = "local")
 
     observeEvent(input$launchGoogle, {
-        firebase$launch_google()
+        firebase$launch_google(flow = "popup")
     })
 
     resetUSER <- function() {
@@ -628,7 +628,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[11]] = c("Zoom-zoom-insight!","Get faster insight from your data")
     titles[[12]] = c("Click-click-eureka!","Owe yourself that <i>eureka!</i> moment")
     titles[[13]] = c("I Love Omics Data!","Unleash your inner nerd with BigOmics Playground")
-    titles[[14]] = c("More Omics Data","Is all I want for Christmas")
+    titles[[14]] = c("More Omics Data","Is all I want for my birthday")
     titles[[15]] = c("Keep Exploring","Never stop discovering with BigOmics Playground")
     titles[[16]] = c("Real Bioinformaticians","Do it with BigOmics Playground")
     titles[[17]] = c("Real Biologists","Do it with BigOmics Playground")

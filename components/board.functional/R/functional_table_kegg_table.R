@@ -4,7 +4,7 @@
 ##
 
 
-functional_table_kegg_table_ui <- function(id, width, height) {
+functional_table_kegg_table_ui <- function(id, label, width, height) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap("<strong>Enrichment table.</strong> The table is
@@ -25,13 +25,13 @@ functional_table_kegg_table_ui <- function(id, width, height) {
     width = width,
     height = height,
     title = "Enrichment table",
-    label = "b"
+    label = label
   )
 }
 
 
 functional_table_kegg_table_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                getFilteredKeggTable,
                                                fa_contrast,
                                                tabH) {
@@ -40,7 +40,7 @@ functional_table_kegg_table_server <- function(id,
 
     table_data <- shiny::reactive({
       res <- list(
-        pgx = inputData(),
+        pgx = pgx,
         df = getFilteredKeggTable(),
         fa_contrast = fa_contrast
       )
@@ -121,7 +121,7 @@ functional_table_kegg_table_server <- function(id,
       "datasets",
       func = table_RENDER,
       func2 = table_RENDER_modal,
-      selector = "none"
+      selector = "single"
     )
 
     return(my_table)

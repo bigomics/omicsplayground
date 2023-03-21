@@ -54,31 +54,37 @@ BiomarkerInputs <- function(id) {
 
 BiomarkerUI <- function(id) {
   ns <- shiny::NS(id)
-
+  imgH1 <- c("30vh", "70vh") ## heights for small and fullscreen image
+  imgH2 <- c("50vh", "70vh") 
+  
+  imgH1 <- c("280px", "70vh") ## heights for small and fullscreen image
+  imgH2 <- c("400px", "70vh") 
+  
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
     tagList(
       div(
-        class = "row",
+        class = "row row-cols-1 row-cols-md-2 row-cols-xxxl-4",
         div(
-          class = "col-md-6",
-          biomarker_plot_importance_ui(ns("pdx_importance"), label = "a"),
-          biomarker_plot_heatmap_ui(ns("pdx_heatmap"), label = "b")
+          class = "col",
+          biomarker_plot_importance_ui(ns("pdx_importance"), height = imgH1, label = "a")
         ),
         div(
-          class = "col-md-6",
-          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"), label = "c"),
-          biomarker_plot_boxplots_ui(ns("pdx_boxplots"), label = "d")
+          class = "col",
+          biomarker_plot_boxplots_ui(ns("pdx_boxplots"), height = imgH1, label = "b")
+        ),
+        div(
+          class = "col",
+          biomarker_plot_heatmap_ui(ns("pdx_heatmap"), height = imgH2, label = "c")
+        ),
+        div(
+          class = "col",
+          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"), height = imgH2, label = "d")
         )
       ),
       tags$div(
-        HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain
-            phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications.
-            <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms,
-            including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according
-            to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features.
-            <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features.
-            <b>(d)</b> Boxplots show the expression of biomarker genes across the groups.")
+        class = "caption",        
+        HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> Boxplots show the expression of biomarker genes across the groups. <b>(c)</b> The heatmap shows the expression distribution for the top most important features. <b>(d)</b> The decision tree shows (one) tree solution for classification based on the top most important features. ")
       )
     )
   )

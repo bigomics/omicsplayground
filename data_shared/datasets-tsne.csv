@@ -1,0 +1,10 @@
+"","x","y"
+"[example-data] act_vs_notact",-70.6408,33.0884
+"[example-data] act12h_vs_notact",-61.2106,36.359
+"[example-data] act24h_vs_notact",-65.0473,26.6999
+"[example-data] act48h_vs_notact",-71.4513,39.8721
+"[example-data] act72h_vs_notact",-75.7596,32.9419
+"[example-data] act96h_vs_notact",-78.3236,25.7687
+"[GSE157905-lenvatinib-bc] treatment:Combi_vs_CT",137.6644,-65.74
+"[GSE157905-lenvatinib-bc] treatment:Gefitinib_vs_CT",141.2923,-61.5844
+"[GSE157905-lenvatinib-bc] treatment:Lenvatinib_vs_CT",143.4765,-67.4056

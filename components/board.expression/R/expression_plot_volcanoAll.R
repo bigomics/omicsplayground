@@ -41,7 +41,7 @@ expression_plot_volcanoAll_ui <- function(id,
 #' @return
 #' @export
 expression_plot_volcanoAll_server <- function(id,
-                                              inputData,
+                                              pgx,
                                               getAllContrasts,
                                               features,
                                               fdr,
@@ -50,18 +50,17 @@ expression_plot_volcanoAll_server <- function(id,
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
-      ngs <- inputData()
       features <- features()
 
 
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
       ct <- getAllContrasts()
       F <- ct$F
       Q <- ct$Q
 
-      ## comp = names(ngs$gx.meta$meta)
+      ## comp = names(pgx$gx.meta$meta)
       comp <- names(F)
       if (length(comp) == 0) {
         return(NULL)
@@ -75,7 +74,7 @@ expression_plot_volcanoAll_server <- function(id,
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
 
-      sel.genes <- rownames(ngs$X)
+      sel.genes <- rownames(pgx$X)
       if (features != "<all>") {
         gset <- getGSETS(features)
         sel.genes <- unique(unlist(gset))
@@ -178,7 +177,7 @@ expression_plot_volcanoAll_server <- function(id,
       # func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
     )
   }) ## end of moduleServer

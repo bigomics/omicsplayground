@@ -34,7 +34,7 @@ signature_plot_volcano_ui <- function(id, height, width) {
 #' @return
 #' @export
 signature_plot_volcano_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           sigCalculateGSEA,
                                           enrichmentContrastTable,
                                           selected_gxmethods,
@@ -43,9 +43,8 @@ signature_plot_volcano_server <- function(id,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     volcanoPlots.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      alertDataLoaded(session, ngs)
-      if (is.null(ngs)) {
+      alertDataLoaded(session, pgx)
+      if (is.null(pgx)) {
         return(NULL)
       }
 
@@ -61,11 +60,11 @@ signature_plot_volcano_server <- function(id,
       }
       shiny::req(ii)
 
-      ct <- colnames(ngs$model.parameters$contr.matrix)
+      ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- rownames(gsea$output)[ii]
 
       mm <- selected_gxmethods()
-      meta <- pgx.getMetaMatrix(ngs, methods = mm)
+      meta <- pgx.getMetaMatrix(pgx, methods = mm)
       F <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
       score <- abs(F) * -log(qv)

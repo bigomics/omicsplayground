@@ -25,7 +25,7 @@ functional_table_go_table_ui <- function(id, width, height) {
 
 
 functional_table_go_table_server <- function(id,
-                                             inputData,
+                                             pgx,
                                              fa_contrast,
                                              tabH,
                                              selected_gsetmethods) {
@@ -39,7 +39,7 @@ functional_table_go_table_server <- function(id,
 
     table_data <- shiny::reactive({
       res <- list(
-        pgx = inputData(),
+        pgx = pgx,
         fa_contrast = fa_contrast()
       )
       return(res)

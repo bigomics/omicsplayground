@@ -88,11 +88,11 @@ message(">>>>> LOADING INITIAL LIBS")
 library(shiny)
 library(shinyBS)
 library(grid)
-library(ggplot2)
-library(concaveman)
+#library(ggplot2)
+#library(concaveman)
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
-source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
-source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
+#source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
+#source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -183,15 +183,12 @@ message("*********** READ MODULES/BOARDS ****************")
 message("************************************************")
 
 
-BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-            "word","drug","sig","scell","cor","bio","cmap","ftmap",
-            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
+BOARDS <- c("welcome","load","upload","dataview","clustersamples","clusterfeatures",
+  "diffexpr","enrich","isect","pathway","wordcloud","drug","sig","cell","corr","bio","cmap",
+  "wgcna", "tcga","comp","user")
 if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
-if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
-
-ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
-DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
-ENABLED  <- ENABLED & !DISABLED
+ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
+ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
@@ -200,7 +197,6 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 ## Main tab titles
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","DEV")
-
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
@@ -281,6 +277,6 @@ message("\n\n")
 ## Calculate init time
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[INIT] main init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[global.R] global init time = ",main.init_time," ",attr(main.init_time,"units"))
 
 shiny::addResourcePath("static", "www")
