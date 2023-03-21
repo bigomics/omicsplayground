@@ -12,6 +12,9 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
     
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = miniUI::miniPage(
+        shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}")),        
         ##shinyalert::useShinyalert(),
         miniUI::gadgetTitleBar(title),
         miniUI::miniContentPanel(moduleUI(id))
@@ -40,8 +43,11 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
+        shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}"))
         ##shinyalert::useShinyalert()
-    )
+    )    
     server = function(input, output, session)
     {
         return_obj <- moduleSERVER(id, ...)
@@ -133,18 +139,12 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     
     toon <- randomCartoon()
     shiny::showModal(shiny::modalDialog(
-        #title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
-        ##title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
-        title = div( h2(toon$slogan), h4("with Omics Playground"), style="text-align:center;"),
-        #title = div(h2(toon$slogan), style="text-align:center;width:100%;"),
+        ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
+        title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
         shiny::img(src = toon$img2, class = "img-fluid"),
-        ##footer = div(msg, style="text-align:center;"),
-        footer = fillRow( flex=c(1,NA,1), " ", msg, " "),
-        size = "l",
-        easyClose = FALSE,
-        fade = TRUE
-    ))
-    ## Sys.sleep(600)  # for debugging
+        footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
+            size="l", easyClose=FALSE, fade=TRUE))
+
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")

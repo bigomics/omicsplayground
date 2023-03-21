@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx) {
+CompareBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
@@ -30,8 +30,9 @@ CompareBoard <- function(id, pgx) {
     })
 
     shiny::observe({
+      ngs <- inputData()
 
-      comparisons1 <- names(pgx$gx.meta$meta)
+      comparisons1 <- names(ngs$gx.meta$meta)
       sel1 <- comparisons1[1]
       shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
 
@@ -56,24 +57,24 @@ CompareBoard <- function(id, pgx) {
     ## ================================================================================
 
     cum_fc <- shiny::reactive({
-      pgx1 <- pgx
-      pgx2 <- dataset2()
+      ngs1 <- inputData()
+      ngs2 <- dataset2()
 
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
+      ct1 <- head(names(ngs1$gx.meta$meta), 2)
+      ct2 <- head(names(ngs2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
+      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
         return(NULL)
       }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      F1 <- pgx.getMetaMatrix(ngs1)$fc[, ct1, drop = FALSE]
+      F2 <- pgx.getMetaMatrix(ngs2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
       g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
@@ -89,39 +90,39 @@ CompareBoard <- function(id, pgx) {
     dataset2 <- shiny::reactive({
       shiny::req(input$dataset2)
       if (input$dataset2 == "<this>") {
-        pgx <- pgx
+        ngs <- inputData()
       } else {
         load(file.path(OPG, "data", input$dataset2))
       }
-      comparisons2 <- names(pgx$gx.meta$meta)
+      comparisons2 <- names(ngs$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
       shiny::updateSelectInput(session, "contrast2", choices = comparisons2, selected = sel2)
-      pgx
+      ngs
     })
 
     getOmicsScoreTable <- shiny::reactive({
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      shiny::req(pgx1)
-      shiny::req(pgx2)
+      ngs1 <- inputData()
+      ngs2 <- dataset2()
+      shiny::req(ngs1)
+      shiny::req(ngs2)
 
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
+      ct1 <- head(names(ngs1$gx.meta$meta), 2)
+      ct2 <- head(names(ngs2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
+      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
         return(NULL)
       }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      F1 <- pgx.getMetaMatrix(ngs1)$fc[, ct1, drop = FALSE]
+      F2 <- pgx.getMetaMatrix(ngs2)$fc[, ct2, drop = FALSE]
 
-      gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
+      gg <- intersect(rownames(ngs1$X), rownames(ngs2$X))
       F1 <- F1[match(gg, rownames(F1)), , drop = FALSE]
       F2 <- F2[match(gg, rownames(F2)), , drop = FALSE]
       rownames(F1) <- gg
@@ -130,10 +131,10 @@ CompareBoard <- function(id, pgx) {
       colnames(F2) <- paste0("2:", colnames(F2))
       rho <- 1
 
-      kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
+      kk <- intersect(colnames(ngs1$X), colnames(ngs2$X))
       if (length(kk) >= 10) {
-        X1 <- scale(t(pgx1$X[gg, kk]))
-        X2 <- scale(t(pgx2$X[gg, kk]))
+        X1 <- scale(t(ngs1$X[gg, kk]))
+        X2 <- scale(t(ngs2$X[gg, kk]))
         rho <- colSums(X1 * X2) / (nrow(X1) - 1)
       }
 
@@ -141,7 +142,7 @@ CompareBoard <- function(id, pgx) {
       fc2 <- sqrt(rowMeans(F2**2))
       score <- rho * fc1 * fc2
 
-      title <- pgx1$genes[gg, "gene_title"]
+      title <- ngs1$genes[gg, "gene_title"]
       title <- substring(title, 1, 60)
 
       df <- data.frame(title, score, rho, F1, F2, check.names = FALSE)
@@ -168,27 +169,27 @@ CompareBoard <- function(id, pgx) {
     ## ============================================================================
 
 
-    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop) {
+    createPlot <- function(ngs, ngs1, ngs2, ct, type, cex.lab, higenes, ntop) {
       p <- NULL
-      genes1 <- rownames(pgx$X)
+      genes1 <- rownames(ngs$X)
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
 
       # if(type %in% c('UMAP1','UMAP2')) {
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
-          pos <- pgx1$cluster.genes$pos[["umap2d"]]
+          pos <- ngs1$cluster.genes$pos[["umap2d"]]
         } else if (type == "UMAP2") {
-          pos <- pgx2$cluster.genes$pos[["umap2d"]]
+          pos <- ngs2$cluster.genes$pos[["umap2d"]]
         }
         dim(pos)
-        gg <- intersect(toupper(rownames(pgx$X)), toupper(rownames(pos)))
+        gg <- intersect(toupper(rownames(ngs$X)), toupper(rownames(pos)))
         jj <- match(gg, toupper(rownames(pos)))
         pos <- pos[jj, ]
-        ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
-        rownames(pos) <- rownames(pgx$X)[ii]
+        ii <- match(toupper(rownames(pos)), toupper(rownames(ngs$X)))
+        rownames(pos) <- rownames(ngs$X)[ii]
 
         p <- pgx.plotGeneUMAP(
-          pgx,
+          ngs,
           contrast = ct, pos = pos,
           cex = 0.9, cex.lab = cex.lab,
           hilight = higenes1, ntop = ntop,
@@ -196,22 +197,22 @@ CompareBoard <- function(id, pgx) {
           plotlib = "base"
         )
       } else if (type == "heatmap") {
-        gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
+        gg <- intersect(toupper(higenes), toupper(rownames(ngs$X)))
         if (length(gg) > 1) {
-          jj <- match(gg, toupper(rownames(pgx$X)))
-          X1 <- pgx$X[jj, , drop = FALSE]
-          Y1 <- pgx$samples
+          jj <- match(gg, toupper(rownames(ngs$X)))
+          X1 <- ngs$X[jj, , drop = FALSE]
+          Y1 <- ngs$samples
           gx.splitmap(X1,
             nmax = 40, col.annot = Y1,
             softmax = TRUE, show_legend = FALSE
           )
         }
       } else {
-        genes1 <- rownames(pgx$X)
+        genes1 <- rownames(ngs$X)
         gg <- intersect(toupper(higenes), toupper(genes1))
         higenes1 <- genes1[match(gg, toupper(genes1))]
         p <- pgx.plotContrast(
-          pgx,
+          ngs,
           contrast = ct, hilight = higenes1,
           ntop = ntop, cex.lab = cex.lab, ## dlim=0.06,
           par.sq = TRUE, type = type, plotlib = "base"
@@ -221,6 +222,47 @@ CompareBoard <- function(id, pgx) {
       p
     }
 
+    ## ============================================================================
+    ## Score table
+    ## ============================================================================
+
+    # score_table.RENDER <- shiny::reactive({
+    #
+    #     df <- getOmicsScoreTable()
+    #     if(is.null(df)) return(NULL)
+    #     shiny::req(df)
+    #     numeric.cols <- 2:ncol(df)
+    #
+    #     DT::datatable(
+    #             df, rownames=TRUE, ## escape = c(-1,-2),
+    #             extensions = c('Buttons','Scroller'),
+    #             selection=list(mode='single', target='row', selected=NULL),
+    #             class = 'compact cell-border stripe hover',
+    #             fillContainer = TRUE,
+    #             options=list(
+    #                 dom = 'lfrtip',
+    #                 scrollX = TRUE,
+    #                 scrollY = '70vh',
+    #                 scroller = TRUE,
+    #                 deferRender = TRUE
+    #             )  ## end of options.list
+    #         ) %>%
+    #         DT::formatSignif(numeric.cols,3) %>%
+    #         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
+    #
+    # })
+    #
+    # score_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
+    #
+    # score_table <- shiny::callModule(
+    #     tableModule, id = "score_table",
+    #     func = score_table.RENDER, ## ns=ns,
+    #     info.text = score_table_info,
+    #     title = "CORRELATION SCORE",
+    #     label = "b",
+    #     height = c(235,750),
+    #     width = c("auto",1600)
+    # )
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -232,7 +274,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_compare1_server(
       "dt1",
-      pgx = pgx,
+      inputData = inputData,
       input.contrast1 = input.contrast1,
       hilightgenes = hilightgenes,
       createPlot = createPlot,
@@ -245,7 +287,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_compare2_server(
       "dt2",
-      pgx = pgx,
+      inputData = inputData,
       input.contrast2 = input.contrast2,
       hilightgenes = hilightgenes,
       createPlot = createPlot,
@@ -258,7 +300,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_fc_correlation_server(
       "fcfcplot",
-      pgx = pgx,
+      inputData = inputData,
       dataset2 = dataset2,
       hilightgenes = hilightgenes,
       input.contrast1 = input.contrast1,
@@ -270,7 +312,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_cum_fc1_server(
       "cumfcplot1",
-      pgx = pgx,
+      inputData = inputData,
       dataset2 = dataset2,
       cum_fc = cum_fc,
       input.contrast1 = input.contrast1,
@@ -280,7 +322,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_cum_fc2_server(
       "cumfcplot2",
-      pgx = pgx,
+      inputData = inputData,
       dataset2 = dataset2,
       cum_fc = cum_fc,
       input.contrast1 = input.contrast1,
@@ -300,7 +342,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_expression_server(
       "multibarplot",
-      pgx = pgx,
+      inputData = inputData,
       dataset2 = dataset2,
       input.contrast1 = input.contrast1,
       input.contrast2 = input.contrast2,
@@ -314,7 +356,7 @@ CompareBoard <- function(id, pgx) {
 
     compare_plot_gene_corr_server(
       "genecorr",
-      pgx = pgx,
+      inputData = inputData,
       dataset2 = dataset2,
       input.contrast1 = input.contrast1,
       input.contrast2 = input.contrast2,

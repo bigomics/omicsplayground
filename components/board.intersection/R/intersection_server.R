@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods) {
+IntersectionBoard <- function(id, inputData, selected_gxmethods, selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
@@ -37,11 +37,12 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     ## update choices upon change of data set
     shiny::observe({
-      ## req(pgx)
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      ## req(ngs)
+      if (is.null(ngs)) {
         return(NULL)
       }
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
+      comparisons <- colnames(ngs$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "comparisons",
         choices = comparisons,
@@ -52,19 +53,20 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
     shiny::observe({
-      ## shiny::req(pgx,input$level)
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      ## shiny::req(ngs,input$level)
+      if (is.null(ngs)) {
         return(NULL)
       }
       shiny::req(input$level)
-      ## flt.choices = names(pgx$families)
+      ## flt.choices = names(ngs$families)
       if (input$level == "geneset") {
         ft <- names(COLLECTIONS)
-        nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
+        nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ft <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+        ft <- pgx.getFamilies(ngs, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
       ## if(input$level=="gene") ft = sort(c("<custom>",ft))
@@ -89,18 +91,19 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     getFoldChangeMatrix <- shiny::reactive({
       ##
-      ## Get full foldchange matrix from pgx object.
+      ## Get full foldchange matrix from ngs object.
       ##
       ##
       ##
       fc0 <- NULL
       qv0 <- NULL
-      alertDataLoaded(session, pgx)
-      shiny::req(pgx)
+      ngs <- inputData()
+      alertDataLoaded(session, ngs)
+      shiny::req(ngs)
 
-      sel <- names(pgx$gset.meta$meta)
+      sel <- names(ngs$gset.meta$meta)
       ## sel = input_comparisons()
-      ## sel = intersect(sel, names(pgx$gset.meta$meta))
+      ## sel = intersect(sel, names(ngs$gset.meta$meta))
       ## if(length(sel)==0) return(NULL)
 
       if (input$level == "geneset") {
@@ -110,21 +113,21 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
           return(NULL)
         }
 
-        ## fc0 = sapply(pgx$gset.meta$meta[sel], function(x)
+        ## fc0 = sapply(ngs$gset.meta$meta[sel], function(x)
         ##    rowMeans(unclass(x$fc)[,gsetmethods,drop=FALSE]))
-        fc0 <- sapply(pgx$gset.meta$meta[sel], function(x) x$meta.fx)
-        rownames(fc0) <- rownames(pgx$gset.meta$meta[[1]])
-        qv0 <- sapply(pgx$gset.meta$meta[sel], function(x) {
+        fc0 <- sapply(ngs$gset.meta$meta[sel], function(x) x$meta.fx)
+        rownames(fc0) <- rownames(ngs$gset.meta$meta[[1]])
+        qv0 <- sapply(ngs$gset.meta$meta[sel], function(x) {
           apply(unclass(x$q)[, gsetmethods, drop = FALSE], 1, max)
         })
-        rownames(qv0) <- rownames(pgx$gset.meta$meta[[1]])
+        rownames(qv0) <- rownames(ngs$gset.meta$meta[[1]])
 
         ## apply user selected filter
         gsets <- rownames(fc0)
         if (input$filter == "<custom>") {
           gsets <- strsplit(input$customlist, split = "[, ;]")[[1]]
           if (length(gsets) > 0) {
-            gsets <- intersect(rownames(pgx$gsetX), gsets)
+            gsets <- intersect(rownames(ngs$gsetX), gsets)
           }
         } else if (input$filter != "<all>") {
           gsets <- unique(unlist(COLLECTIONS[input$filter]))
@@ -139,18 +142,18 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         gxmethods <- c("trend.limma", "edger.qlf", "deseq2.wald")
         gxmethods <- selected_gxmethods() ## reactive object from EXPRESSION section
 
-        mq1 <- pgx$gx.meta$meta[[1]]$meta.q
+        mq1 <- ngs$gx.meta$meta[[1]]$meta.q
 
         if (length(gxmethods) < 1 || gxmethods[1] == "") {
           return(NULL)
         }
 
-        fc0 <- sapply(pgx$gx.meta$meta[sel], function(x) x$meta.fx)
-        rownames(fc0) <- rownames(pgx$gx.meta$meta[[1]])
-        qv0 <- sapply(pgx$gx.meta$meta[sel], function(x) {
+        fc0 <- sapply(ngs$gx.meta$meta[sel], function(x) x$meta.fx)
+        rownames(fc0) <- rownames(ngs$gx.meta$meta[[1]])
+        qv0 <- sapply(ngs$gx.meta$meta[sel], function(x) {
           apply(unclass(x$q)[, gxmethods, drop = FALSE], 1, max)
         })
-        rownames(qv0) <- rownames(pgx$gx.meta$meta[[1]])
+        rownames(qv0) <- rownames(ngs$gx.meta$meta[[1]])
         dim(fc0)
         dim(qv0)
 
@@ -159,12 +162,12 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         if (input$filter == "<custom>") {
           genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
           if (length(genes) > 0) {
-            sel.probes <- filterProbes(pgx$genes, genes)
+            sel.probes <- filterProbes(ngs$genes, genes)
           }
         } else if (input$filter != "<all>") {
           ## gset <- GSETS[[input$filter]]
           gset.genes <- unlist(getGSETS(input$filter))
-          sel.probes <- filterProbes(pgx$genes, gset.genes)
+          sel.probes <- filterProbes(ngs$genes, gset.genes)
         }
         sel.probes <- intersect(sel.probes, rownames(fc0))
         fc1 <- fc0[sel.probes, , drop = FALSE]
@@ -203,16 +206,17 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       ## Switch between FC profile or NMF vectors
       ##
       ##
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
       progress <- shiny::Progress$new()
       on.exit(progress$close())
 
       ## ------------ UMAP clustering (genes) -----------------
       progress$inc(0.33, "calculating UMAP for genes...")
-      if ("cluster.genes" %in% names(pgx)) {
-        pos <- pgx$cluster.genes$pos[["umap2d"]]
+      if ("cluster.genes" %in% names(ngs)) {
+        pos <- ngs$cluster.genes$pos[["umap2d"]]
       } else {
-        X1 <- pgx$X
+        X1 <- ngs$X
         X1 <- (X1 - rowMeans(X1)) / mean(apply(X1, 1, sd, na.rm = TRUE))
         pos <- pgx.clusterBigMatrix(
           t(X1),
@@ -223,10 +227,10 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
       ## ------------ UMAP clustering (genesets) -----------------
       progress$inc(0.33, "calculating UMAP for genesets...")
-      if ("cluster.gsets" %in% names(pgx)) {
-        gsea.pos <- pgx$cluster.gsets$pos[["umap2d"]]
+      if ("cluster.gsets" %in% names(ngs)) {
+        gsea.pos <- ngs$cluster.gsets$pos[["umap2d"]]
       } else {
-        X2 <- pgx$gsetX
+        X2 <- ngs$gsetX
         X2 <- (X2 - rowMeans(X2)) / mean(apply(X2, 1, sd, na.rm = TRUE))
         gsea.pos <- pgx.clusterBigMatrix(
           t(X2),
@@ -237,8 +241,8 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       }
 
       ## ------------ get signature matrices -----------------
-      F <- pgx.getMetaMatrix(pgx, level = "gene")
-      G <- pgx.getMetaMatrix(pgx, level = "geneset")
+      F <- pgx.getMetaMatrix(ngs, level = "gene")
+      G <- pgx.getMetaMatrix(ngs, level = "geneset")
       ## f.score <- F$fc * -log10(F$qv)
       ## g.score <- G$fc * -log10(G$qv)
       f.score <- F$fc * (1 - F$qv)**4 ## q-weighted FC
@@ -529,6 +533,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## -------------------------------------------
 
     getGeneTable <- shiny::reactive({
+      ngs <- inputData()
       out <- getCurrentSig()
 
       W <- out$sig
@@ -543,7 +548,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       }
 
       ## only genes
-      W <- W[rownames(W) %in% rownames(pgx$X), , drop = FALSE]
+      W <- W[rownames(W) %in% rownames(ngs$X), , drop = FALSE]
       W <- W[, sel0, drop = FALSE]
 
       tt <- NA
@@ -608,6 +613,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## -------------------------------------------
 
     ctGseaTable.RENDER <- shiny::reactive({
+      ngs <- inputData()
       out <- getCurrentSig()
       df <- out$gsea
       sel0 <- input_comparisons()
@@ -668,7 +674,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     intersection_plot_venn_diagram_server(
       "venndiagram",
-      pgx           = pgx,
+      inputData           = inputData,
       level               = input$level,
       input_comparisons   = input_comparisons,
       getFoldChangeMatrix = getFoldChangeMatrix,
@@ -679,7 +685,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       "scatterplot",
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
       level                     = input$level,
-      pgx                 = pgx,
+      inputData                 = inputData,
       watermark                 = WATERMARK
     )
 
@@ -689,7 +695,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       "FoldchangeHeatmap",
       getFoldChangeMatrix       = getFoldChangeMatrix,
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
-      pgx                 = pgx,
+      inputData                 = inputData,
       level                     = input$level,
       watermark                 = WATERMARK
     )
@@ -697,7 +703,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     contrast_correlation_server(
       "ctcorrplot",
       getFoldChangeMatrix = getFoldChangeMatrix,
-      pgx           = pgx,
+      inputData           = inputData,
       input_comparisons   = input_comparisons
     )
   })

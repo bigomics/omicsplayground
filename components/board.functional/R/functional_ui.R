@@ -53,23 +53,21 @@ FunctionalUI <- function(id) {
           functional_plot_kegg_graph_ui(ns("kegg_graph"),
             label = "a"
           ),
-          functional_table_kegg_table_ui(
-            ns("kegg_table"),
-            label = "b",
-            height = c(270, TABLE_HEIGHT_MODAL),
-            width = c("100%", "90%")
-          )
-        ),
-        div(
-          class = "col-md-6",
           functional_plot_kegg_actmap_ui(
             ns("kegg_actmap"),
             label = "c"
           )
+        ),
+        div(
+          class = "col-md-6",
+          functional_table_kegg_table_ui(
+            ns("kegg_table"),
+            height = c(270, TABLE_HEIGHT_MODAL),
+            width = c("100%", "90%")
+          )
         )
       ),
       tags$div(
-        class = "caption",
         HTML(strwrap("<b>(a)</b> <b>KEGG pathway map.</b> Genes are colored according to
              their upregulation (red) or downregulation (blue) in the contrast
              profile. <b>(b)</b> <b>Enrichment table</b> reporting enrichment

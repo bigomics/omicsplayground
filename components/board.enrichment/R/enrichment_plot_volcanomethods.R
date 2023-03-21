@@ -19,17 +19,18 @@ enrichment_plot_volcanomethods_ui <- function(id, height, width) {
 }
 
 enrichment_plot_volcanomethods_server <- function(id,
-                                                  pgx,
+                                                  inputData,
                                                   gs_features,
                                                   gs_contrast,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     volcanoMethods.RENDER <- shiny::reactive({
-      shiny::req(pgx, gs_features())
+      ngs <- inputData()
+      shiny::req(ngs, gs_features())
 
       cmp <- 1
       cmp <- gs_contrast()
-      mx <- pgx$gset.meta$meta[[cmp]]
+      mx <- ngs$gset.meta$meta[[cmp]]
       fx <- unclass(mx$fc)
       qv <- unclass(mx$q)
       pv <- unclass(mx$p)

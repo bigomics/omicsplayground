@@ -29,33 +29,27 @@ clean.force:
 show.branch:
 	@echo $(BRANCH)
 
-docker.run:
+run.docker:
 	@echo running docker $(TAG) at port 4000
-	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
+	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
-docker.run2:
+run.docker2:
 	@echo running docker $(TAG) at port 4001
-	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(TAG)
+	docker run --rm -p 4001:3838 bigomics/omicsplayground:$(TAG)
 
-docker: FORCE
+build.base:
+	@echo building docker BASE
+	docker build --no-cache \
+		-f docker/Dockerfile.base \
+	  	-t bigomics/omicsplayground:base-ub2204 .
+
+build.docker:
 	@echo building docker $(TAG)
 	docker build --no-cache --build-arg TAG=$(TAG) \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(TAG) .
 
-docker.base: FORCE
-	@echo building docker BASE
-	docker build  \
-		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204 .
-
-docker.test: FORCE
-	@echo building test docker 
-	docker build --no-cache \
-		-f docker/Dockerfile.test \
-	  	-t bigomics/omicsplayground:test .
-
-docker.bash:
+bash.docker:
 	@echo bash into docker $(TAG)
 	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 

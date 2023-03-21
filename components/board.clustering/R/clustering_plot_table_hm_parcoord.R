@@ -97,7 +97,7 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
       nrange <- length(rr)
       for (i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
-      zx <- round(zx, digits = 4)
+      zx <- round(zx, digits = 3)
       list(mat = zx, clust = filt$idx)
     })
 
@@ -121,18 +121,18 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       list(mat = mat[keep, , drop = FALSE], clust = clust[keep])
     })
 
-    plot_data <- function() {
-      hm_parcoord.matrix()
-    }
-    
     hm_parcoord.RENDER <- function() {
-      pc <- plot_data()
+      pc <- hm_parcoord.matrix()
+      shiny::req(pc)
       zx <- pc$mat
       ## build dimensions
       dimensions <- list()
       for (i in 1:ncol(zx)) {
         dimensions[[i]] <- list(
           range = c(min(zx[, i]), max(zx[, i])),
+          ## constraintrange = c(100000,150000),
+          ## tickvals = c(0,0.5,1,2,3),
+          ## ticktext = c('A','AB','B','Y','Z'),
           visible = TRUE,
           label = colnames(zx)[i],
           values = zx[, i]
@@ -144,6 +144,7 @@ clustering_plot_table_hm_parcoord_server <- function(id,
 
       df <- data.frame(clust.id = clust.id, zx)
       klrpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
+      ## klrpal = rep(c("red","blue","green","yellow","magenta","cyan","black","grey"),99)
       klrpal <- klrpal[1:max(clust.id)]
       ## klrpal <- setNames(klrpal, sort(unique(clust.id)))
       klrpal2 <- lapply(1:length(klrpal), function(i) c((i - 1) / (length(klrpal) - 1), klrpal[i]))
@@ -153,6 +154,8 @@ clustering_plot_table_hm_parcoord_server <- function(id,
           type = "parcoords",
           line = list(
             color = ~clust.id,
+            ## colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))
+            ## colorscale = 'Jet',
             colorscale = klrpal2,
             cmin = min(clust.id), cmax = max(clust.id),
             showscale = FALSE
@@ -171,17 +174,12 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       plt
     }
 
-    hm_parcoord.RENDER_MODAL <- function() {
-      hm_parcoord.RENDER() %>%
-        plotly_modal_default()
-    }
-    
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
+      ## plotlib2 = "plotly",
       func = hm_parcoord.RENDER,
-      ## func2 = hm_parcoord.RENDER_MODAL,
-      csvFunc = plot_data,
+      csvFunc = hm_parcoord.matrix,
       res = c(90, 170),
       pdf.width = 8,
       pdf.height = 8,
@@ -189,12 +187,13 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       add.watermark = watermark
     )
 
-    ## Table ------------------------------------------------------------------
-    hm_parcoord_table.RENDER <- function() {
-      parcoord <- hm_parcoord.selected()
+    # Table
 
-      mat <- parcoord$mat
-      clust <- parcoord$clust
+    hm_parcoord_table.RENDER <- shiny::reactive({
+      hm_parcoord.selected <- hm_parcoord.selected()
+
+      mat <- hm_parcoord.selected$mat
+      clust <- hm_parcoord.selected$clust
       df <- data.frame(cluster = clust, mat, check.names = FALSE)
       numeric.cols <- 2:ncol(df)
       DT::datatable(
@@ -215,13 +214,13 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    }
+    })
 
-    hm_parcoord_table.RENDER_modal <- function() {
+    hm_parcoord_table.RENDER_modal <- shiny::reactive({
       dt <- hm_parcoord_table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    }
+    })
 
     TableModuleServer(
       "datasets",

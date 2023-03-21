@@ -53,7 +53,7 @@ signature_plot_markers_ui <- function(id, height) {
 #' @return
 #' @export
 signature_plot_markers_server <- function(id,
-                                          pgx,
+                                          inputData,
                                           getCurrentMarkers,
                                           IMMCHECK.GENES,
                                           watermark = FALSE) {
@@ -123,12 +123,13 @@ signature_plot_markers_server <- function(id,
       ## group (for currentmarkers)
       ##
       ##
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
       ## select samples
-      X <- pgx$X
+      X <- ngs$X
       sel <- colnames(X)
       X <- X[, sel]
 
@@ -139,13 +140,13 @@ signature_plot_markers_server <- function(id,
         return(NULL)
       }
 
-      xgene <- pgx$genes[rownames(X), "gene_name"]
+      xgene <- ngs$genes[rownames(X), "gene_name"]
       y <- 1 * (toupper(xgene) %in% toupper(gset))
       names(y) <- rownames(X)
 
       ## expression by group
-      ## grp = pgx$samples[colnames(X),"group"]
-      grp <- pgx$model.parameters$group
+      ## grp = ngs$samples[colnames(X),"group"]
+      grp <- ngs$model.parameters$group
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
       colnames(gX) <- groups
@@ -161,11 +162,12 @@ signature_plot_markers_server <- function(id,
     })
 
     markers.RENDER <- shiny::reactive({
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
-      markers <- pgx$families[[2]]
+      markers <- ngs$families[[2]]
       markers <- COLLECTIONS[[10]]
       markers <- getCurrentMarkers()
       if (is.null(markers)) {
@@ -173,10 +175,10 @@ signature_plot_markers_server <- function(id,
       }
 
       level <- "gene"
-      xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
+      xgene <- ngs$genes[rownames(ngs$X), ]$gene_name
       jj <- match(toupper(markers), toupper(xgene))
       jj <- setdiff(jj, NA)
-      gx <- pgx$X[jj, , drop = FALSE]
+      gx <- ngs$X[jj, , drop = FALSE]
 
       if (nrow(gx) == 0) {
         cat("WARNING:: Markers:: markers do not match!!\n")
@@ -184,9 +186,9 @@ signature_plot_markers_server <- function(id,
       }
 
       ## get t-SNE positions of samples
-      pos <- pgx$tsne2d[colnames(gx), ]
+      pos <- ngs$tsne2d[colnames(gx), ]
       gx <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
-      grp <- pgx$model.parameters$group
+      grp <- ngs$model.parameters$group
       zx <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
       rownames(gx) <- sub(".*:", "", rownames(gx))

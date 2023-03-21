@@ -32,7 +32,7 @@ expression_table_FDRtable_ui <- function(id, width, height) {
 #'
 #' @export
 expression_table_FDRtable_server <- function(id,
-                                             pgx,
+                                             ngs,
                                              methods, # input$gx_statmethod
                                              tabV,
                                              height, # c(tabH, 700)
@@ -49,11 +49,12 @@ expression_table_FDRtable_server <- function(id,
       }
 
       ## comp <- input$gx_contrast
+      ngs <- ngs()
 
-      kk <- rownames(pgx$gx.meta$sig.counts[[1]][[1]])
-      kk <- intersect(methods, rownames(pgx$gx.meta$sig.counts[[1]][[1]]))
-      counts.up <- pgx$gx.meta$sig.counts$up
-      counts.down <- pgx$gx.meta$sig.counts$down
+      kk <- rownames(ngs$gx.meta$sig.counts[[1]][[1]])
+      kk <- intersect(methods, rownames(ngs$gx.meta$sig.counts[[1]][[1]]))
+      counts.up <- ngs$gx.meta$sig.counts$up
+      counts.down <- ngs$gx.meta$sig.counts$down
       counts.up <- lapply(counts.up, function(x) x[kk, , drop = FALSE])
       counts.down <- lapply(counts.down, function(x) x[kk, , drop = FALSE])
       for (i in 1:length(counts.up)) {

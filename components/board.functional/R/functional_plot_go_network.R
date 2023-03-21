@@ -60,12 +60,13 @@ functional_plot_go_network_ui <- function(id,
 #' @return
 #' @export
 functional_plot_go_network_server <- function(id,
-                                              pgx,
+                                              inputData,
                                               fa_contrast,
                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
+        pgx <- inputData()
         fa_contrast <- fa_contrast()
 
         res <- list(

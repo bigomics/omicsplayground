@@ -38,6 +38,7 @@ upload_plot_pcaplot_server <- function(id,
     })
 
     pcaplot.RENDER <- shiny::reactive({
+      ## ngs <- inputData()
       ## X <- ngs$X
       pheno <- phenoRT()
       counts <- countsRT()

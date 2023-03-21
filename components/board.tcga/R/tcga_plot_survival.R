@@ -56,7 +56,7 @@ tcga_plot_survival_ui <- function(id, height, width) {
 #' @return
 #' @export
 tcga_plot_survival_server <- function(id,
-                                      pgx,
+                                      inputData,
                                       contrast,
                                       sigtype,
                                       genelist,
@@ -71,20 +71,21 @@ tcga_plot_survival_server <- function(id,
         return(NULL)
       }
 
-      req(pgx)
+      ngs <- inputData()
+      req(ngs)
 
       if (sigtype() == "contrast") {
         req(contrast())
 
-        res <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+        res <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
         sig <- res$fc[, contrast()]
       } else if (sigtype() == "genelist") {
         req(genelist())
         genes <- as.character(genelist())
         genes <- strsplit(genes, split = "[\t, \n]")[[1]]
         genes <- gsub("[ ]", "", genes)
-        sig <- rownames(pgx$X) %in% genes
-        names(sig) <- rownames(pgx$X)
+        sig <- rownames(ngs$X) %in% genes
+        names(sig) <- rownames(ngs$X)
       }
 
       showNotification("Computing survival probabilities...")

@@ -4,21 +4,14 @@
 ##
 
 
-WgcnaBoard <- function(id, pgx) {
+WgcnaBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
     rowH1 <- 250 ## row 1 height
     rowH2 <- 440 ## row 2 height
 
-    infotext <- "<b>Weighted gene co-expression network analysis (WGCNA)</b> is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets.
-
-<p>References:<br>
-<ol>
-<li>Langfelder, P. and Horvath, S., 2008. WGCNA: an R package for weighted correlation network analysis. BMC bioinformatics, 9(1), p.559.
-<li>Zhang, B. and Horvath, S., 2005. A general framework for weighted gene co-expression network analysis. Statistical applications in genetics and molecular biology, 4(1).
-</ol>
-"
+    infotext <- "Weighted gene co-expression network analysis (WGCNA) is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets."
 
     intra_caption <-
       "<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules."
@@ -47,14 +40,16 @@ WgcnaBoard <- function(id, pgx) {
     wgcna.compute <- shiny::eventReactive(
       {
         input$compute
+        ngs <- inputData()
         1
       },
       {
+        ngs <- inputData()
         require(WGCNA)
 
-        if ("wgcna" %in% names(pgx)) {
+        if ("wgcna" %in% names(ngs)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          return(pgx$wgcna)
+          return(ngs$wgcna)
         }
 
         pgx.showSmallModal("Calculating WGCNA...<br>please wait")
@@ -81,7 +76,7 @@ WgcnaBoard <- function(id, pgx) {
           dim(X)
         }
 
-        X <- as.matrix(pgx$X)
+        X <- as.matrix(ngs$X)
         dim(X)
         X <- X[order(-apply(X, 1, sd, na.rm = TRUE)), ]
         X <- X[!duplicated(rownames(X)), ]
@@ -115,7 +110,7 @@ WgcnaBoard <- function(id, pgx) {
         table(net$colors)
 
         ## clean up traits matrix
-        datTraits <- pgx$samples
+        datTraits <- ngs$samples
         ## no dates please...
         isdate <- apply(datTraits, 2, is.Date)
         datTraits <- datTraits[, !isdate, drop = FALSE]
@@ -157,8 +152,8 @@ WgcnaBoard <- function(id, pgx) {
           ## pos <- pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
           ## pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
           names(clust)
-          if ("cluster.genes" %in% names(pgx)) {
-            clust[["umap2d"]] <- pgx$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
+          if ("cluster.genes" %in% names(ngs)) {
+            clust[["umap2d"]] <- ngs$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
           }
           progress$inc(0.2)
         }
@@ -170,7 +165,7 @@ WgcnaBoard <- function(id, pgx) {
           gmt <- getGSETS(grep("HALLMARK|GOBP|^C[1-9]", names(iGSETS), value = TRUE))
           gse <- NULL
           ## bg <- unlist(me.genes)
-          bg <- toupper(rownames(pgx$X))
+          bg <- toupper(rownames(ngs$X))
           i <- 1
           for (i in 1:length(me.genes)) {
             gg <- toupper(me.genes[[i]])
@@ -217,7 +212,6 @@ WgcnaBoard <- function(id, pgx) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
-        size = 'l',
         easyClose = TRUE
       ))
     })

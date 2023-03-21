@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 WelcomeBoard <- function(id, auth) {}
@@ -8,17 +8,16 @@ WelcomeBoardInputs <- function(id) {}
 WelcomeBoardUI <- function(id) {}
 
 
-WelcomeBoard <- function(id, auth, enable_upload, r_global) {
+WelcomeBoard <- function(id, auth, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
       name <- auth$name()
-      dbg("[WelcomeBoard] name =",name)
       if (name %in% c("", NA, NULL)) {
         welcome <- "Welcome back..."
       } else {
-        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
+        first.name <- strsplit("ivo kwee", split = "[@ .]")[[1]][1]
         first.name <- paste0(
           toupper(substring(first.name, 1, 1)),
           substring(first.name, 2, nchar(first.name))
@@ -29,34 +28,8 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
     })
 
     observeEvent(input$init_example_data, {
-      r_global$load_example_trigger <- r_global$load_example_trigger +1
+      r_global$load_example_trigger <- TRUE
     })
-
-    observeEvent(input$init_upload_data, {
-      if(enable_upload) {
-        bigdash.openSidebar()
-        bigdash.selectTab( session, "upload-tab" )
-      } else {
-        shinyWidgets::sendSweetAlert(
-          session = session,
-          title = "Upload disabled",          
-          text ='Sorry, upload of new data is disabled for this account.',
-          type = "warning",
-          btn_labels = "OK",
-          closeOnClickOutside = FALSE
-        )
-      }
-    })
-
-    observeEvent(input$init_load_data, {
-      # close the right sidebar
-      shinyjs::runjs("$('#settings-container').trigger('click');")
-      shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
-
-      bigdash.openSidebar()
-      bigdash.selectTab( session, "load-tab" )
-    })
-
   })
 }
 
@@ -66,6 +39,7 @@ WelcomeBoardInputs <- function(id) {
 
 WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
+
   div(
     id = "welcome-page",
     br(),
@@ -83,21 +57,21 @@ WelcomeBoardUI <- function(id) {
         h3("I am new..."),
         shiny::actionButton(
           ns("init_example_data"),
-          label = "Load example dataset",
+          label = "Try example dataset",
           class = "btn btn-outline-info welcome-btn"
         )
       ),
       div(
         class = "col-md-7",
         h3("I'm an existing user..."),
-        shiny::actionButton(
-          ns("init_upload_data"),
-          label = "Upload new data",
+        tags$a(
+          id = "init-upload-data",
+          "Upload new data",
           class = "btn btn-outline-info welcome-btn"
         ),
-        shiny::actionButton(
-          ns("init_load_data"),
-          label = "Use my saved data",
+        tags$button(
+          id = "init-load-data",
+          "Use my saved data",
           class = "btn btn-outline-primary welcome-btn"
         )
       )

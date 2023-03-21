@@ -13,7 +13,8 @@ clustering_plot_clustpca_ui <- function(id,
                                         parent) {
   ns <- shiny::NS(id)
 
-  info_text <- tagsub(paste0(" The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (", a_PCA, ") or t-distributed stochastic embedding (", a_tSNE, ") algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other."))
+  info_text <- tagsub(paste0(" The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (", a_PCA, ") or t-distributed stochastic embedding (", a_tSNE, ") algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other.
+<br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot."))
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -72,10 +73,11 @@ clustering_plot_clustpca_server <- function(id,
 
       return(
         list(
-          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
           hmpca_options = input$hmpca_options,
           hmpca.colvar = hmpca.colvar(),
           hmpca.shapevar = hmpca.shapevar(),
+          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
+          pgx = pgx,
           hm_clustmethod = hm_clustmethod(),
           hmpca_legend = input$hmpca_legend
         )
@@ -83,12 +85,14 @@ clustering_plot_clustpca_server <- function(id,
     })
 
     plot.RENDER <- function() {
+      ## pgx <- inputData()
       pd <- plot_data()
 
       hmpca_options <- pd[["hmpca_options"]]
       hmpca.colvar <- pd[["hmpca.colvar"]]
       hmpca.shapevar <- pd[["hmpca.shapevar"]]
       pos <- pd[["df"]]
+      pgx <- pd[["pgx"]]
       hm_clustmethod <- pd[["hm_clustmethod"]]
       hmpca_legend <- pd[["hmpca_legend"]]
 
@@ -243,8 +247,7 @@ clustering_plot_clustpca_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {
-      plot.RENDER() %>%
-        plotly_modal_default()
+      plot.RENDER()
     }
 
     PlotModuleServer(
@@ -253,6 +256,8 @@ clustering_plot_clustpca_server <- function(id,
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
+      ## renderFunc = plotly::renderPlotly,
+      ## renderFunc2 = plotly::renderPlotly,
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 8,
       add.watermark = watermark

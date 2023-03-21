@@ -154,27 +154,26 @@ clustering_plot_featurerank_server <- function(id,
     })
 
     clust_featureRank.RENDER <- shiny::reactive({
-
       S <- calcFeatureRanking()
+
       if (is.null(S) || nrow(S) == 0 || ncol(S) == 0) {
         return(NULL)
       }
 
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 35)
+
       rownames(S) <- substring(rownames(S), 1, 80)
-      
+
+      cc1 <- grey.colors(ncol(S))
+
       pgx.stackedBarplot(
         x = t(S),
-        showlegend = TRUE,
+        showlegend = T,
         xlab = "Discriminant score",
-        ylab = "",
+        ylab = "Groups",
         horiz = TRUE
       )
-      #%>%
-      #  layout(legend = list(orientation = "h",   # show entries horizontally
-      #    xanchor = "center",  # use center of legend as anchor
-      #    x = 0.5))
     })
 
 

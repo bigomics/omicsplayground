@@ -453,6 +453,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
 
             pcaplot.RENDER <- shiny::reactive({
+                ##ngs <- inputData()
                 ##X <- ngs$X
                 pheno <- phenoRT()
                 counts <- countsRT()

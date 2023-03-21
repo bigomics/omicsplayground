@@ -13,12 +13,6 @@ html {
 	padding-top: 0.3rem;
     }
 
-
-    //hover on bigomics logo 
-    #logo-bigomics:hover  {
-        cursor: pointer;
-      }
-
     // disable on button dropdown elements
     .btn.dropdown-toggle::after {
 	content: none;	
@@ -45,6 +39,7 @@ html {
 //        min-width: 12rem;
     }
 
+
     #sidebar-help-title {
         padding-top: 10rem;
     }
@@ -59,10 +54,9 @@ html {
     }
 
     .sidebar-menu {
-//	padding: .7rem 0rem .7rem 1rem;
+	padding-left: 1rem;
 	font-size: 18px;
 	font-weight: bold;
-//	line-height: 1.4rem;
 	color: #333 !important;
     }
 
@@ -74,17 +68,12 @@ html {
 
     .sidebar-menu-item {
 	font-size: 17px;
-	line-height: 1.1rem;
 	font-weight: 400;
 	color: #333 !important;	
-	padding: 0 0.4rem 0 0.4rem;
+    	padding-left: 0.5rem;  // less indent
+	margin: -8px 0 0 0; // less on top
     }
-    
-/*    .sidebar-menu-item:has(> a[data-target='welcome-tab']) {
-	margin-top: -1rem;
-    }
-*/
-    
+
     .sidebar-label {
 	font-size: 18px;
     }
@@ -95,12 +84,8 @@ html {
     }
 
     .active-sidebar {
-	background-color: #EFEFEF;
+	background-color: #E8E8E8;
     }
 
-    .tab-sidebar {
-	line-height: 1.1rem;
-	padding: 0.65rem 0rem 0.65rem 0.7rem;	
-    }
     
 }

@@ -34,14 +34,15 @@ signature_plot_enplots_ui <- function(id, height, width) {
 #' @return
 #' @export
 signature_plot_enplots_server <- function(id,
-                                          pgx,
+                                          inputData,
                                           sigCalculateGSEA,
                                           enrichmentContrastTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     enplots.RENDER <- shiny::reactive({
-      alertDataLoaded(session, pgx)
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      alertDataLoaded(session, ngs)
+      if (is.null(ngs)) {
         return(NULL)
       }
 

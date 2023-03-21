@@ -91,13 +91,13 @@ DataViewBoard <- function(id, pgx) {
         pgx$counts
       },
       {
-        shiny::req(input$data_type)
         if (input$data_type %in% c("counts", "CPM")) {
           pp <- rownames(pgx$counts)
         } else {
           ## log2CPM
           pp <- rownames(pgx$X)
         }
+
         ## gene filter.
         genes <- sort(pgx$genes[pp, ]$gene_name)
         fc2 <- rowMeans(pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
@@ -111,10 +111,10 @@ DataViewBoard <- function(id, pgx) {
           )
         }
         shiny::updateSelectizeInput(session, "search_gene",
-                                    choices = genes1, selected = selgene,
-                                    ## options = list(maxOptions = 9999999),
-                                    options = list(maxOptions = 1001),
-                                    server = TRUE
+          choices = genes1, selected = selgene,
+          ## options = list(maxOptions = 9999999),
+          options = list(maxOptions = 1001),
+          server = TRUE
         )
       }
     )
@@ -276,9 +276,9 @@ DataViewBoard <- function(id, pgx) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    getCountStatistics <- reactiveVal()
-    observeEvent(c(input$data_groupby, input$data_samplefilter), {
+    getCountStatistics <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$samples)
+
       shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
       subtt <- NULL
 
@@ -388,8 +388,10 @@ DataViewBoard <- function(id, pgx) {
         prop.counts = prop.counts,
         gset.genes = gset.genes
       )
-      getCountStatistics(res)
-    }, ignoreNULL = TRUE)
+
+      res
+    })
+
 
     ## ================================================================================
     ## ================================= END ====================================

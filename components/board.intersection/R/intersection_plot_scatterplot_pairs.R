@@ -32,7 +32,7 @@ intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 80
 intersection_scatterplot_pairs_server <- function(id,
                                                   getActiveFoldChangeMatrix,
                                                   level,
-                                                  pgx,
+                                                  inputData,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -106,8 +106,9 @@ intersection_scatterplot_pairs_server <- function(id,
       ## tt <- sub("","",tt)  ## strip prefix??
       # if(input$level == "gene") {
       if (level == "gene") {
+        ngs <- inputData()
         g <- rownames(df)
-        tt <- paste0("<b>", g, "</b> ", pgx$genes[g, "gene_title"])
+        tt <- paste0("<b>", g, "</b> ", ngs$genes[g, "gene_title"])
       }
       tt <- gsub("_", " ", tt)
       tt <- sapply(tt, breakstring2, 50, brk = "<br>")

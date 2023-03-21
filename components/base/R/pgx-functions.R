@@ -1185,6 +1185,7 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
 ##-----------------------------------------------------------------------------
 
 filterFamily <- function(genes, family, ngs) {
+    ##ngs <- shiny::isolate(inputData())
     gg = ngs$families[[10]]
     gg = ngs$families[[family]]
     ## check probe name, short probe name or gene name for match

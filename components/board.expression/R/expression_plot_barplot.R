@@ -54,7 +54,7 @@ expression_plot_barplot_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param pgx
+#' @param ngs
 #' @param sel
 #' @param res
 #' @param watermark
@@ -64,7 +64,7 @@ expression_plot_barplot_ui <- function(id,
 #' @export
 expression_plot_barplot_server <- function(id,
                                            comp,
-                                           pgx,
+                                           ngs,
                                            sel,
                                            res,
                                            watermark = FALSE) {
@@ -76,18 +76,18 @@ expression_plot_barplot_server <- function(id,
       grouped <- input$barplot_grouped
       logscale <- input$barplot_logscale
       showothers <- input$barplot_showothers
+      ngs <- ngs()
       sel <- sel()
       res <- res()
-      shiny::req(sel())
 
       psel <- rownames(res)[sel]
-      gene <- pgx$genes[1, "gene_name"]
+      gene <- ngs$genes[1, "gene_name"]
 
-      gene <- pgx$genes[psel, "gene_name"]
+      gene <- ngs$genes[psel, "gene_name"]
       srt <- ifelse(grouped, 0, 35)
 
       return(list(
-        pgx = pgx,
+        ngs = ngs,
         gene = gene,
         comp = comp,
         sel = sel,
@@ -113,7 +113,7 @@ expression_plot_barplot_server <- function(id,
       }
 
       fig <- pgx.plotExpression(
-        pd[["pgx"]],
+        pd[["ngs"]],
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],

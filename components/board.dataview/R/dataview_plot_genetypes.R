@@ -125,15 +125,17 @@ dataview_plot_genetypes_server <- function(id,
           margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         ) %>%
-        plotly_default()
+        plotly_default1()
       fig
     }
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
-        plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE
+          showlegend = TRUE,
+          font = list(
+            size = 18
+          )
         )
       ## fig <- plotly::style(fig, marker.size = 14)
       fig

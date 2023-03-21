@@ -73,8 +73,8 @@ EnrichmentUI <- function(id) {
             class = "col-md-6",
             enrichment_plot_top_enrich_gsets_ui(
               ns("topEnriched"),
-              height = c(imgH, 700),
-              width = c("auto", "100%")
+              height = c(imgH, 720),
+              width = c("auto", 1500)
             )
           ),
           div(
@@ -82,7 +82,7 @@ EnrichmentUI <- function(id) {
             enrichment_plot_freq_top_gsets_ui(
               ns("topEnrichedFreq"),
               height = c(imgH, 500),
-              width = c("auto", "100%")
+              width = c("auto", 1200)
             )
           )
         ),
@@ -101,15 +101,15 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_volcano_ui(
               ns("subplot_volcano"),
-              height = c(imgH, 700),
-              width = c("auto", "100%")
+              height = c(imgH, 750),
+              width = c("auto", 900)
             )
           ),
           div(
             class = "col-md-3",
             enrichment_plot_barplot_ui(
               ns("subplot_barplot"),
-              height = c(imgH, 700),
+              height = c(imgH, 750),
               width = c("auto", 900)
             )
           ),
@@ -117,7 +117,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_geneplot_ui(
               ns("subplot_geneplot"),
-              height = c(imgH, 700),
+              height = c(imgH, 750),
               width = c("auto", 900)
             )
           ),
@@ -125,7 +125,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_scatter_ui(
               ns("subplot_scatter"),
-              height = c(imgH, 700),
+              height = c(imgH, 750),
               width = c("auto", 900)
             )
           )
@@ -160,7 +160,7 @@ EnrichmentUI <- function(id) {
           enrichment_plot_volcanoall_ui(
             ns("volcanoAll"),
             height = c(imgH, 450),
-            width = c("auto", "100%")
+            width = c("auto", 1500)
           ),
           tags$div(
             HTML("<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene
@@ -175,7 +175,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_volcanomethods_ui(
           ns("volcanoMethods"),
           height = c(imgH, 450),
-          width = c("auto", "100%")
+          width = c("auto", 1600)
         ),
         tags$div(
           HTML("<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene
@@ -184,8 +184,6 @@ EnrichmentUI <- function(id) {
         )
       )
     ),
-    br(),
-    br(),
     shiny::tabsetPanel(
       id = ns("tabs2"),
       shiny::tabPanel(
@@ -202,7 +200,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-7",
             enrichment_table_enrichment_analysis_ui(
               ns("gseatable"),
-              width = c("100%", "100%"),
+              width = c("100%", "90%"),
               height = c(285, TABLE_HEIGHT_MODAL)
             )
           ),
@@ -211,7 +209,7 @@ EnrichmentUI <- function(id) {
             enrichment_table_genes_in_geneset_ui(
               ns("genetable"),
               height = c(285, TABLE_HEIGHT_MODAL),
-              width = c("100%", "100%")
+              width = c("100%", "90%")
             )
           )
         )
@@ -226,7 +224,7 @@ EnrichmentUI <- function(id) {
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
           height = c(295, TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+          width = c("100%", "90%")
         )
       ),
       shiny::tabPanel(
@@ -239,7 +237,7 @@ EnrichmentUI <- function(id) {
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
           height = c(295, TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+          width = c("100%", "90%")
         )
       )
     )

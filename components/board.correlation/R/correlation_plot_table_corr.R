@@ -53,7 +53,7 @@ correlation_plot_table_corr_ui <- function(id,
       ns("datasets"),
       info.text = cor_table.info,
       height = c(360, TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
+      width = c("auto", "90%"),
       title = "Correlation table",
       label = "b"
     )
@@ -72,7 +72,7 @@ correlation_plot_table_corr_server <- function(id,
                                                getPartialCorrelation,
                                                getGeneCorr,
                                                cor_table,
-                                               pgx,
+                                               inputData,
                                                pcor_ntop,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -133,7 +133,8 @@ correlation_plot_table_corr_server <- function(id,
     ### TABLE
 
     cor_table.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       R <- getGeneCorr()
       if (is.null(R)) {
@@ -143,7 +144,7 @@ correlation_plot_table_corr_server <- function(id,
       P <- getPartialCorrelation()
       pcor <- P[match(rownames(R), rownames(P)), "pcor"]
 
-      title <- pgx$genes[rownames(R), "gene_title"]
+      title <- ngs$genes[rownames(R), "gene_title"]
       title <- substring(title, 1, 80)
       df <- data.frame(gene = rownames(R), title = title, cor = R[, "cor"], pcor = pcor)
 

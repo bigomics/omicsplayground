@@ -54,7 +54,7 @@ expression_plot_topgenes_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param pgx
+#' @param inputData
 #' @param res
 #' @param ii
 #' @param watermark
@@ -64,7 +64,7 @@ expression_plot_topgenes_ui <- function(id,
 #' @export
 expression_plot_topgenes_server <- function(id,
                                             comp,
-                                            pgx,
+                                            inputData,
                                             res,
                                             ii,
                                             watermark = FALSE) {
@@ -73,7 +73,8 @@ expression_plot_topgenes_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       res <- res()
       if (is.null(res) || nrow(res) == 0) {
@@ -97,7 +98,7 @@ expression_plot_topgenes_server <- function(id,
       mar1 <- 3.5
       ylab <- ifelse(logscale, "log2CPM", "CPM")
 
-      ny <- nrow(pgx$samples) ## ???!!
+      ny <- nrow(ngs$samples) ## ???!!
       show.names <- ifelse(!grouped & ny > 25, FALSE, TRUE)
       nx <- ifelse(grouped, 3, ny)
       nc <- 4
@@ -111,7 +112,7 @@ expression_plot_topgenes_server <- function(id,
 
       return(list(
         res = res,
-        pgx = pgx,
+        ngs = ngs,
         comp = comp,
         grouped = grouped,
         showothers = showothers,
@@ -140,7 +141,7 @@ expression_plot_topgenes_server <- function(id,
       plts <- lapply(1:plots2show, function(x){
         gene <- rownames(pd[["res"]])[x]
         pgx.plotExpression(
-          pd[["pgx"]],
+          pd[["ngs"]],
           # pd[["gene"]],
           gene,
           pd[["comp"]],
@@ -177,7 +178,7 @@ expression_plot_topgenes_server <- function(id,
         ## gene = sub(".*:","",top.up[i])
         # gene <- rownames(pd[["res"]])[i]
         # plt <- pgx.plotExpression(
-        #   pd[["pgx"]],
+        #   pd[["ngs"]],
         #   # pd[["gene"]],
         #   gene,
         #   pd[["comp"]],

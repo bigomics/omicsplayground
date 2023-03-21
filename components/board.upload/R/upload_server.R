@@ -12,11 +12,20 @@ UploadBoard <- function(id,
                           "genes" = 20000, "genesets" = 10000,
                           "datasets" = 10
                         ),
-                        enable_userdir = TRUE,
+                        enable_upload = TRUE,
                         enable_save = TRUE,
-                        r_global) {
+                        enable_userdir = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
+
+    loadedDataset <- shiny::reactiveVal(0) ## counts/trigger dataset upload
+
+    message("[UploadBoard] in.shinyproxy = ", in.shinyproxy())
+    message("[UploadBoard] SHINYPROXY_USERNAME = ", Sys.getenv("SHINYPROXY_USERNAME"))
+    message("[UploadBoard] SHINYPROXY_USERGROUPS = ", Sys.getenv("SHINYPROXY_USERGROUPS"))
+    message("[UploadBoard] pgx_dir = ", pgx_dir)
+
+    dbg("[UploadBoard] getwd = ", getwd())
 
     phenoRT <- shiny::reactive(uploaded$samples.csv)
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
@@ -122,82 +131,83 @@ UploadBoard <- function(id,
       pdir
     })
 
-    uploaded_pgx <- UploadModuleServer(
-      id = "upload_panel",
-      FILES = FILES,
-      pgx.dirRT = shiny::reactive(getPGXDIR()),
-      height = 720,
-      limits = limits
-    )
-    
-    shiny::observeEvent(uploaded_pgx(), {
-      dbg("[observe::uploaded_pgx] uploaded PGX detected!")
-      new_pgx <- uploaded_pgx()
-      
-      dbg("[observe::uploaded_pgx] initializing PGX object")
-      new_pgx <- pgx.initialize(new_pgx)
-      
-      ## update Session PGX
-      dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
-      for (i in 1:length(new_pgx)) {
-        pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
-      }
-      
-      savedata_button <- NULL
-      if (enable_save) {
-        ## -------------- save PGX file/object ---------------
-        pgxname <- sub("[.]pgx$", "", new_pgx$name)
-        pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
-        pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-        pgxname
-        
-        pgxdir <- getPGXDIR()
-        fn <- file.path(pgxdir, pgxname)
-        fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-        
-        ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## Note: Currently we use 'ngs' as object name but want to go
-        ## towards 'pgx' as standard name. Actually saving as RDS
-        ## should be better.
-        ngs <- new_pgx
-        save(ngs, file = fn)
-        
-        remove(ngs)
-        remove(new_pgx)
-        message("[UploadBoard::@savedata] updating PGXINFO")
-        pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
-        ## reload_pgxdir(reload_pgxdir()+1)
-      }
-      
-      ## shiny::removeModal()
-      msg1 <- "<b>Ready!</b>"
-      ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-      beepr::beep(10) ## short beep
-      
-      if (enable_save) {
-        msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library.
-                You can now start exploring your data."
-      } else {
-        msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
-      }
-      
-      showModal(
-        modalDialog(
-          HTML(msg1),
-          title = NULL,
-          size = "s",
-          footer = tagList(
-            modalButton("Start!")
-          )
-        )
+    if (enable_upload) {
+      uploaded_pgx <- UploadModuleServer(
+        id = "upload_panel",
+        FILES = FILES,
+        pgx.dirRT = shiny::reactive(getPGXDIR()),
+        height = 720,
+        ## limits = c(samples=20, comparisons=20, genes=8000),
+        limits = limits
       )
 
-      ## where does this go???
-      shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-      
-      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-      r_global$loadedDataset <- r_global$loadedDataset+1
-    })
+      shiny::observeEvent(uploaded_pgx(), {
+        dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+        new_pgx <- uploaded_pgx()
+
+        dbg("[observe::uploaded_pgx] initializing PGX object")
+        new_pgx <- pgx.initialize(new_pgx)
+
+        ## update Session PGX
+        dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
+        for (i in 1:length(new_pgx)) {
+          pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
+        }
+
+        DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected = NULL)
+
+        savedata_button <- NULL
+        if (enable_save) {
+          ## -------------- save PGX file/object ---------------
+          pgxname <- sub("[.]pgx$", "", new_pgx$name)
+          pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
+          pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
+          pgxname
+
+          pgxdir <- getPGXDIR()
+          fn <- file.path(pgxdir, pgxname)
+          fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
+
+          ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          ## Note: Currently we use 'ngs' as object name but want to go
+          ## towards 'pgx' as standard name. Actually saving as RDS
+          ## should be better.
+          ngs <- new_pgx
+          save(ngs, file = fn)
+
+          remove(ngs)
+          remove(new_pgx)
+
+
+          message("[UploadBoard::@savedata] updating PGXINFO")
+          pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+          ## reload_pgxdir(reload_pgxdir()+1)
+        }
+
+        ## shiny::removeModal()
+        msg1 <- "<b>Ready!</b>"
+        ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+        beepr::beep(10) ## short beep
+
+        if (enable_save) {
+          msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
+        } else {
+          msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
+        }
+        loadedDataset(loadedDataset() + 1) ## notify new data uploaded
+
+        showModal(
+          modalDialog(
+            HTML(msg1),
+            title = NULL,
+            size = "s",
+            footer = tagList(
+              modalButton("Start!")
+            )
+          )
+        )
+      })
+    }
 
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
@@ -289,12 +299,7 @@ UploadBoard <- function(id,
         ## dimensions from the given PGX/NGS object. Really?
         ##
         i <- grep("[.]pgx$", input$upload_files$name)
-
-        # load(input$upload_files$datapath[i], ngs <- new.env(), verbose = TRUE) ## load NGS/PGX
-
-        ngs <- local(get(load(input$upload_files$datapath[i], verbose = 0))) ## override any name
-
-
+        load(input$upload_files$datapath[i]) ## load NGS/PGX
         ## matlist[["counts.csv"]] <- ngs$counts
         ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
         ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
@@ -1382,7 +1387,7 @@ UploadBoard <- function(id,
     ## Board return object
     ## ------------------------------------------------
     res <- list(
-      loaded = reactive(r_global$loadedDataset)
+      loaded = loadedDataset
     )
     return(res)
   })

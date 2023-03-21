@@ -253,7 +253,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if (k.est == 2) {
           km <- kmeans(gx, centers = 2)
           km.rnk <- rank(km$centers, ties.method = "random")
-          grp.labels <- c("low", "high")[km.rnk]
+          grp.labels <- c("low", "high")[]
           grp <- grp.labels[km$cluster]
         } else if (k.est == 3) {
           km <- kmeans(gx, centers = 3)
@@ -427,6 +427,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     getClustAnnotCorrelation <- shiny::reactive({
+      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
       filt <- getTopMatrix()

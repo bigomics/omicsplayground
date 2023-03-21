@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx) {
+ExpressionBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -47,16 +47,16 @@ ExpressionBoard <- function(id, pgx) {
 
     ## update choices upon change of data set
     shiny::observe({
-      pgx <- pgx
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
-      contr <- colnames(pgx$model.parameters$contr.matrix)
+      contr <- colnames(ngs$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
-      fam <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      fam <- pgx.getFamilies(ngs, nmin = 10, extended = FALSE)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
-      gx.methods <- colnames(pgx$gx.meta$meta[[1]]$fc) ## available
+      gx.methods <- colnames(ngs$gx.meta$meta[[1]]$fc) ## available
       sel1 <- c(intersect(GX.DEFAULTTEST, gx.methods), gx.methods)
       sel1 <- head(unique(sel1), 3) ## maximum three!!
 
@@ -65,7 +65,7 @@ ExpressionBoard <- function(id, pgx) {
         selected = sel1
       )
 
-      shiny::updateCheckboxInput(session, "gx_ungroup", value = (ncol(pgx$X) <= 8))
+      shiny::updateCheckboxInput(session, "gx_ungroup", value = (ncol(ngs$X) <= 8))
     })
 
 
@@ -80,20 +80,24 @@ ExpressionBoard <- function(id, pgx) {
     genetable_rows_selected <- reactiveVal()
 
     observe({
-      req(genetable$rows_selected())
       genetable_rows_selected(genetable$rows_selected())
     })
+
 
     # reactives ########
 
 
     selected_gxmethods <- shiny::reactive({
-      req(pgx)
-      gx.methods0 <- colnames(pgx$gx.meta$meta[[1]]$fc)
+      ngs <- inputData()
+      req(ngs)
+      gx.methods0 <- colnames(ngs$gx.meta$meta[[1]]$fc)
       test <- input$gx_statmethod
       test <- intersect(test, gx.methods0)
       test
     })
+
+
+
 
 
     # functions #########
@@ -102,10 +106,11 @@ ExpressionBoard <- function(id, pgx) {
     comparison <- 1
     testmethods <- c("trend.limma")
     add.pq <- 0
-    getDEGtable <- function(pgx, testmethods, comparison, add.pq,
+    getDEGtable <- function(ngs, testmethods, comparison, add.pq,
                             lfc, fdr) {
-      ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      ## ngs = inputData()
+      ## if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
 
       if (is.null(testmethods)) {
         return(NULL)
@@ -121,7 +126,7 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       ## build meta table
-      mx <- pgx$gx.meta$meta[[comparison]]
+      mx <- ngs$gx.meta$meta[[comparison]]
       if (is.null(mx)) {
         return(NULL)
       }
@@ -156,13 +161,13 @@ ExpressionBoard <- function(id, pgx) {
       stars <- sapply(rowSums(is.sig, na.rm = TRUE), star.symbols)
 
       ## recalculate group averages???
-      y0 <- pgx$model.parameters$exp.matrix[, comparison]
-      names(y0) <- rownames(pgx$model.parameters$exp.matrix)
-      AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE])
-      AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE])
+      y0 <- ngs$model.parameters$exp.matrix[, comparison]
+      names(y0) <- rownames(ngs$model.parameters$exp.matrix)
+      AveExpr1 <- rowMeans(ngs$X[rownames(mx), names(which(y0 > 0)), drop = FALSE])
+      AveExpr0 <- rowMeans(ngs$X[rownames(mx), names(which(y0 < 0)), drop = FALSE])
 
-      ## logFC <- unclass(pgx$gx.meta$meta[[comparison]][,"fc"])[,"trend.limma"]
-      ## logFC <- pgx$gx.meta$meta[[comparison]][,"meta.fx"]
+      ## logFC <- unclass(ngs$gx.meta$meta[[comparison]][,"fc"])[,"trend.limma"]
+      ## logFC <- ngs$gx.meta$meta[[comparison]][,"meta.fx"]
       logFC <- mx$meta.fx
       ## logFC <- (AveExpr1 - AveExpr0)  ## override ??? yes: see "contrast in R" Rose Maier 2015...
       ## [hack] adjust averages to match logFC...
@@ -171,8 +176,8 @@ ExpressionBoard <- function(id, pgx) {
       AveExpr0 <- mean0 - logFC / 2
 
       ## gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
-      aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
-      gene.annot <- pgx$genes[rownames(mx), aa]
+      aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(ngs$genes))
+      gene.annot <- ngs$genes[rownames(mx), aa]
       gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
       res <- data.frame(gene.annot,
         logFC = logFC,
@@ -191,17 +196,19 @@ ExpressionBoard <- function(id, pgx) {
     }
 
     fullDiffExprTable <- shiny::reactive({
-      print('REACTIVE1 RUNNING')
       ## return the full DE table
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
+      comp <- 1
+      tests <- "trend.limma"
+      fdr <- 1
+      lfc <- 0
       comp <- input$gx_contrast
       tests <- input$gx_statmethod
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
-
-      req(input$gx_contrast, input$gx_statmethod, input$gx_fdr, input$gx_lfc)
 
       if (is.null(comp)) {
         return(NULL)
@@ -209,7 +216,7 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(tests)) {
         return(NULL)
       }
-      res <- getDEGtable(pgx,
+      res <- getDEGtable(ngs,
         testmethods = tests, comparison = comp,
         add.pq = TRUE, lfc = lfc, fdr = fdr
       )
@@ -221,7 +228,7 @@ ExpressionBoard <- function(id, pgx) {
       if (gx_features != "<all>") {
         ## gset <- GSETS[[gx_features]]
         gset <- unlist(getGSETS(gx_features))
-        psel <- filterProbes(pgx$genes, gset)
+        psel <- filterProbes(ngs$genes, gset)
       }
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]
       dim(res)
@@ -235,8 +242,9 @@ ExpressionBoard <- function(id, pgx) {
       ## DE table filtered by FDR and gene family
       ##
       ##
-      ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx, input$gx_features, input$gx_fdr, input$gx_lfc)
+      ngs <- inputData()
+      ## if(is.null(ngs)) return(NULL)
+      shiny::req(ngs, input$gx_features, input$gx_fdr, input$gx_lfc)
 
       comp <- 1
       test <- "trend.limma"
@@ -245,8 +253,8 @@ ExpressionBoard <- function(id, pgx) {
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
 
-      ## res = getDEGtable(pgx, testmethods="trend.limma", comparison=1,add.pq=FALSE)
-      ## res = getDEGtable(pgx, testmethods=tests, comparison=comp,
+      ## res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
+      ## res = getDEGtable(ngs, testmethods=tests, comparison=comp,
       ## add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
       res <- fullDiffExprTable()
       if (is.null(res) || nrow(res) == 0) {
@@ -306,7 +314,7 @@ ExpressionBoard <- function(id, pgx) {
 
     expression_plot_maplot_server(
       id = "plots_maplot",
-      pgx = pgx,
+      inputData = inputData,
       gx_fdr = reactive(input$gx_fdr),
       gx_contrast = reactive(input$gx_contrast),
       gx_lfc = reactive(input$gx_lfc),
@@ -323,7 +331,7 @@ ExpressionBoard <- function(id, pgx) {
     expression_plot_barplot_server(
       id = "plots_barplot",
       comp = shiny::reactive(input$gx_contrast),
-      pgx = pgx,
+      ngs = inputData,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
       watermark = FALSE
@@ -332,7 +340,7 @@ ExpressionBoard <- function(id, pgx) {
     expression_plot_topfoldchange_server(
       id = "plots_topfoldchange",
       comp = shiny::reactive(input$gx_contrast),
-      pgx = pgx,
+      ngs = inputData,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
       watermark = FALSE
@@ -341,10 +349,11 @@ ExpressionBoard <- function(id, pgx) {
     # tab differential expression > Top genes ####
 
     getAllContrasts <- shiny::reactive({
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
-      comp <- names(pgx$gx.meta$meta)
+      comp <- names(ngs$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
       }
@@ -353,7 +362,7 @@ ExpressionBoard <- function(id, pgx) {
       ## fdr=1;lfc=0
       ## fdr = as.numeric(input$gx_fdr)
       ## lfc = as.numeric(input$gx_lfc)
-      tests <- colnames(pgx$gx.meta$meta[[1]]$p)
+      tests <- colnames(ngs$gx.meta$meta[[1]]$p)
       tests <- input$gx_statmethod
       if (is.null(tests)) {
         return(NULL)
@@ -365,7 +374,7 @@ ExpressionBoard <- function(id, pgx) {
       Q <- list()
       shiny::withProgress(message = "computing contrasts ...", value = 0, {
         for (i in 1:length(comp)) {
-          res <- getDEGtable(pgx,
+          res <- getDEGtable(ngs,
             testmethods = tests, comparison = comp[i],
             add.pq = FALSE, lfc = 0, fdr = 1
           )
@@ -391,7 +400,7 @@ ExpressionBoard <- function(id, pgx) {
     expression_plot_topgenes_server(
       id = "topgenes",
       comp = shiny::reactive(input$gx_contrast),
-      pgx = pgx,
+      inputData = inputData,
       res = filteredDiffExprTable,
       ii = genetable$rows_current,
       watermark = FALSE
@@ -401,7 +410,7 @@ ExpressionBoard <- function(id, pgx) {
 
     expression_plot_volcanoAll_server(
       id = "volcanoAll",
-      pgx = pgx,
+      inputData = inputData,
       getAllContrasts = getAllContrasts,
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
@@ -413,7 +422,7 @@ ExpressionBoard <- function(id, pgx) {
 
     expression_plot_volcanoMethods_server(
       id = "volcanoMethods",
-      pgx = pgx,
+      inputData = inputData,
       comp = shiny::reactive(input$gx_contrast),
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
@@ -426,6 +435,7 @@ ExpressionBoard <- function(id, pgx) {
     # rendering tables ####
 
     gx_related_genesets <- shiny::reactive({
+      ngs <- inputData()
       res <- filteredDiffExprTable()
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
@@ -444,18 +454,18 @@ ExpressionBoard <- function(id, pgx) {
       gene0 <- rownames(res)[sel.row]
       gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
 
-      j <- which(toupper(rownames(pgx$GMT)) == gene1)
-      gset <- names(which(pgx$GMT[j, ] != 0))
-      gset <- intersect(gset, rownames(pgx$gsetX))
+      j <- which(toupper(rownames(ngs$GMT)) == gene1)
+      gset <- names(which(ngs$GMT[j, ] != 0))
+      gset <- intersect(gset, rownames(ngs$gsetX))
       if (length(gset) == 0) {
         return(NULL)
       }
 
-      fx <- pgx$gset.meta$meta[[contr]]$meta.fx
-      names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
+      fx <- ngs$gset.meta$meta[[contr]]$meta.fx
+      names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
       fx <- round(fx[gset], digits = 4)
 
-      rho <- cor(t(pgx$gsetX[gset, ]), pgx$X[gene0, ])[, 1]
+      rho <- cor(t(ngs$gsetX[gset, ]), ngs$X[gene0, ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 
@@ -482,7 +492,7 @@ ExpressionBoard <- function(id, pgx) {
 
     expression_table_fctable_server(
       id = "fctable",
-      pgx = pgx,
+      ngs = inputData,
       res = filteredDiffExprTable,
       metaFC = metaFC,
       metaQ = metaQ,
@@ -493,7 +503,7 @@ ExpressionBoard <- function(id, pgx) {
 
     expression_table_FDRtable_server(
       id = "FDRtable",
-      pgx = pgx,
+      ngs = inputData,
       methods = shiny::reactive(input$gx_statmethod),
       tabV = tabV,
       height = c(tabH, 700),
@@ -503,19 +513,21 @@ ExpressionBoard <- function(id, pgx) {
     # reactive values to return to parent environment  #########
 
     metaQ <- shiny::reactive({
-      req(pgx)
+      ngs <- inputData()
+      req(ngs)
       methods <- selected_gxmethods()
-      metaQ <- sapply(pgx$gx.meta$meta, function(m) apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
-      rownames(metaQ) <- rownames(pgx$gx.meta$meta[[1]])
+      metaQ <- sapply(ngs$gx.meta$meta, function(m) apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      rownames(metaQ) <- rownames(ngs$gx.meta$meta[[1]])
       metaQ
     })
 
     metaFC <- shiny::reactive({
-      req(pgx)
+      ngs <- inputData()
+      req(ngs)
       methods <- selected_gxmethods()
-      ## metaFC <- sapply(pgx$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
-      metaFC <- sapply(pgx$gx.meta$meta, function(m) m$meta.fx)
-      rownames(metaFC) <- rownames(pgx$gx.meta$meta[[1]])
+      ## metaFC <- sapply(ngs$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
+      metaFC <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
+      rownames(metaFC) <- rownames(ngs$gx.meta$meta[[1]])
       metaFC
     })
 

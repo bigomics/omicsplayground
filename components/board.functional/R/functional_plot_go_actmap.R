@@ -55,7 +55,7 @@ functional_plot_go_actmap_ui <- function(id,
 #' @return
 #' @export
 functional_plot_go_actmap_server <- function(id,
-                                             pgx,
+                                             inputData,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -110,6 +110,7 @@ functional_plot_go_actmap_server <- function(id,
       }
 
       plot_data <- shiny::reactive({
+        pgx <- inputData()
         shiny::req(pgx)
 
         res <- list(

@@ -13,34 +13,34 @@ featuremap_plot_gene_sig_ui <- function(id, label = "", height = c(600, 800)) {
     title = "Gene Signatures",
     label = "b",
     info.text = info_text,
-    height = c(600, 700),
-    width = c("auto", "100%"),
+    height = c(600, 750), width = c("auto", 1200),
     download.fmt = c("png", "pdf")
   )
 }
 
 featuremap_plot_gene_sig_server <- function(id,
-                                            pgx,
+                                            inputData,
                                             getGeneUMAP,
                                             sigvar,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneSigPlots.plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       pos <- getGeneUMAP()
 
       pheno <- "tissue"
       pheno <- sigvar()
-      if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$X - rowMeans(pgx$X)
-        y <- pgx$samples[, pheno]
+      if (pheno %in% colnames(ngs$samples)) {
+        X <- ngs$X - rowMeans(ngs$X)
+        y <- ngs$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
       } else {
-        F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
+        F <- pgx.getMetaMatrix(ngs, level = "gene")$fc
       }
       if (nrow(F) == 0) {
         return(NULL)

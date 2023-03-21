@@ -60,7 +60,7 @@ singlecell_plot_crosstabPlot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_crosstabPlot_server <- function(id,
-                                                pgx,
+                                                inputData,
                                                 samplefilter,
                                                 getDeconvResults2,
                                                 crosstabvar, # input$crosstabvar
@@ -73,11 +73,12 @@ singlecell_plot_crosstabPlot_server <- function(id,
     plot_data <- shiny::reactive({
       ## if(!input$tsne.all) return(NULL)
 
+      ngs <- inputData()
       crosstabvar <- crosstabvar()
       gene <- gene()
       pheno <- pheno()
 
-      scores <- pgx$deconv[[1]][[1]] ## just an example...
+      scores <- ngs$deconv[[1]][[1]] ## just an example...
       if (crosstabvar == "<cell type>") {
         scores <- getDeconvResults2()
         if (is.null(scores)) {
@@ -85,18 +86,18 @@ singlecell_plot_crosstabPlot_server <- function(id,
         }
         scores <- pmax(scores, 0) ## ??
       } else {
-        x <- as.character(pgx$Y[, 1])
-        x <- as.character(pgx$Y[, crosstabvar])
+        x <- as.character(ngs$Y[, 1])
+        x <- as.character(ngs$Y[, crosstabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix(~ 0 + x)
-        rownames(scores) <- rownames(pgx$Y)
+        rownames(scores) <- rownames(ngs$Y)
         colnames(scores) <- sub("^x", "", colnames(scores))
       }
 
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
       kk <- 1:nrow(scores)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
+      kk <- selectSamplesFromSelectedLevels(ngs$Y, samplefilter())
       scores <- scores[kk, , drop = FALSE]
       scores <- scores[, which(colSums(scores) > 0), drop = FALSE]
       scores[which(is.na(scores))] <- 0
@@ -117,22 +118,22 @@ singlecell_plot_crosstabPlot_server <- function(id,
       )
 
       ## expected counts per stat level
-      ## kk.counts <- colSums(pgx$counts[,kk,drop=FALSE])  ## total count of selected samples
-      kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE]) ## approximate counts from log2X
+      ## kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
+      kk.counts <- colSums(2**ngs$X[, kk, drop = FALSE]) ## approximate counts from log2X
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]
 
       getProportionsTable <- function(pheno, is.gene = FALSE) {
         y <- NULL
         ## if("gene" %in% input$crosstaboptions) {
         if (is.gene) {
-          xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
-          gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
+          xgene <- ngs$genes[rownames(ngs$X), ]$gene_name
+          gx <- ngs$X[which(xgene == pheno), kk, drop = FALSE]
           gx.highTH <- mean(gx, na.rm = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
-        } else if (pheno %in% colnames(pgx$samples)) {
-          y <- pgx$samples[kk, 1]
-          y <- pgx$samples[kk, pheno]
+        } else if (pheno %in% colnames(ngs$samples)) {
+          y <- ngs$samples[kk, 1]
+          y <- ngs$samples[kk, pheno]
           pheno <- tolower(pheno)
         } else if (pheno == "<cell type>") {
           res1 <- getDeconvResults2()
@@ -210,7 +211,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       }
 
       ## select phenotype variable
-      head(pgx$samples)
+      head(ngs$samples)
       #pheno <- 1
       #pheno <- "cluster"
       #pheno <- "activated"
@@ -224,7 +225,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       ## pheno="cluster"
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
-      #gene <- pgx$genes$gene_name[1]
+      #gene <- ngs$genes$gene_name[1]
       gene <- gene
       if (gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-CorrelationBoard <- function(id, pgx) {
+CorrelationBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -41,35 +41,37 @@ CorrelationBoard <- function(id, pgx) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
-      genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
+      genes <- sort(ngs$genes[rownames(ngs$X), ]$gene_name)
       sel <- genes[1] ## most var gene
-      sel <- names(head(sort(-rowMeans(pgx.getMetaMatrix(pgx)$fc**2)), 1))
+      sel <- names(head(sort(-rowMeans(pgx.getMetaMatrix(ngs)$fc**2)), 1))
       shiny::updateSelectizeInput(session, "cor_gene", choices = genes, selected = sel, server = TRUE)
 
-      fam <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      fam <- pgx.getFamilies(ngs, nmin = 10, extended = FALSE)
       fam <- sort(c("<custom>", fam))
       shiny::updateSelectInput(session, "cor_features", choices = fam)
 
-      px <- colnames(pgx$Y)
+      px <- colnames(ngs$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
       shiny::updateSelectInput(session, "cor_group", choices = px, selected = s1)
     })
 
 
     getFilteredExpression <- shiny::reactive({
-      shiny::req(pgx, input$cor_gene)
-      X <- pgx$X
+      ngs <- inputData()
+      shiny::req(ngs, input$cor_gene)
+      X <- ngs$X
       gene <- rownames(X)[1]
       gene <- input$cor_gene
 
       ## filter genes
       ft <- input$cor_features
       if (ft == "<custom>" && input$cor_customfeatures != "") {
-        genes <- toupper(pgx$genes$gene_name)
+        genes <- toupper(ngs$genes$gene_name)
         gg1 <- strsplit(input$cor_customfeatures, split = "[, ;\n\t]")[[1]]
         if (length(gg1) == 1) gg1 <- paste0(gg1, "*")
         gg1 <- gsub("[ \n\t]", "", gg1)
@@ -80,13 +82,13 @@ CorrelationBoard <- function(id, pgx) {
           })
           gg1 <- unique(c(gg1, unlist(gg2)))
         }
-        gg1 <- gg1[which(toupper(gg1) %in% toupper(pgx$genes$gene_name))]
-        psel <- filterProbes(pgx$genes, c(gg1, gene))
+        gg1 <- gg1[which(toupper(gg1) %in% toupper(ngs$genes$gene_name))]
+        psel <- filterProbes(ngs$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
       } else if (ft != "<all>" && ft %in% names(iGSETS)) {
         ft <- input$cor_features
-        psel <- filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
+        psel <- filterProbes(ngs$genes, c(gene, unlist(getGSETS(ft))))
         ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -97,9 +99,10 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getPartialCorrelationMatrix <- shiny::reactive({
-      shiny::req(pgx, input$cor_gene)
+      ngs <- inputData()
+      shiny::req(ngs, input$cor_gene)
 
-      gene <- rownames(pgx$X)[1]
+      gene <- rownames(ngs$X)[1]
       gene <- input$cor_gene
 
       ## filter gene expression matrix
@@ -135,19 +138,20 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getGeneCorr <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
       gene <- input$cor_gene
       if (is.null(gene)) {
         return(NULL)
       }
 
       ## corr always in log.scale and restricted to selected samples subset
-      zx <- pgx$X
+      zx <- ngs$X
       zx <- getFilteredExpression()
       dim(zx)
       zx.genes0 <- rownames(zx)
       ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
-      zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
+      zx.genes <- as.character(ngs$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
@@ -167,8 +171,8 @@ CorrelationBoard <- function(id, pgx) {
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
 
       rho.genes <- rownames(zx)
-      if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-        rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
+      if ("hgnc_symbol" %in% colnames(ngs$genes)) {
+        rho.genes <- as.character(ngs$genes[zx.genes0, ]$hgnc_symbol)
       }
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
       rownames(R) <- zx.genes0
@@ -179,7 +183,8 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getFullGeneCorr <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       gene <- input$cor_gene
       if (is.null(gene)) {
@@ -187,10 +192,10 @@ CorrelationBoard <- function(id, pgx) {
       }
 
       ## corr always in log.scale and restricted to selected samples subset
-      zx <- pgx$X
+      zx <- ngs$X
       zx.genes0 <- rownames(zx)
       ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
-      zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
+      zx.genes <- as.character(ngs$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
@@ -210,8 +215,8 @@ CorrelationBoard <- function(id, pgx) {
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
 
       rho.genes <- rownames(zx)
-      if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-        rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
+      if ("hgnc_symbol" %in% colnames(ngs$genes)) {
+        rho.genes <- as.character(ngs$genes[zx.genes0, ]$hgnc_symbol)
       }
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
       rownames(R) <- zx.genes0
@@ -230,7 +235,8 @@ CorrelationBoard <- function(id, pgx) {
     ## ----------------------------------------------------------------------
 
     cum_corplot_data <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
       R <- getGeneCorr()
 
       ## get top correlated genes
@@ -298,22 +304,23 @@ CorrelationBoard <- function(id, pgx) {
     ## --------------------------------------------------------------------------------
 
     getCorrelationGSEA <- shiny::reactive({
-      alertDataLoaded(session, pgx)
-      shiny::req(pgx)
+      ngs <- inputData()
+      alertDataLoaded(session, ngs)
+      shiny::req(ngs)
 
       pgx.showSmallModal("Calculating correlation GSEA...<br>please wait")
 
       gene <- "CD4"
-      gene <- rownames(pgx$X)[1]
+      gene <- rownames(ngs$X)[1]
       gene <- input$cor_gene
 
       ## single gene correlation as rank metric
-      gx <- pgx$X[gene, ]
-      rho <- cor(t(pgx$X), gx, use = "pairwise")[, 1]
+      gx <- ngs$X[gene, ]
+      rho <- cor(t(ngs$X), gx, use = "pairwise")[, 1]
       names(rho) <- toupper(names(rho))
 
-      ## gmt <- GSETS[colnames(pgx$GMT)]
-      gmt <- getGSETS(colnames(pgx$GMT))
+      ## gmt <- GSETS[colnames(ngs$GMT)]
+      gmt <- getGSETS(colnames(ngs$GMT))
       ## gmt <- GSETS  ## all???
       gsea <- fgsea::fgsea(gmt, rho, minSize = 15, maxSize = 1000)
       gsea <- gsea[order(-gsea$NES), ]
@@ -397,11 +404,12 @@ CorrelationBoard <- function(id, pgx) {
       ## res1 <- res1[rowSums(is.na(res1))==0,]
 
       ph <- "ER_STATUS"
+      ngs <- inputData()
       ph <- input$cor_group
       shiny::req(ph)
 
-      grp <- factor(pgx$samples[, ph])
-      ndim <- nrow(pgx$samples)
+      grp <- factor(ngs$samples[, ph])
+      ndim <- nrow(ngs$samples)
       sel1 <- which(as.integer(grp) == 1)
       sel2 <- which(as.integer(grp) == 2)
       NTOP <- 25
@@ -426,7 +434,7 @@ CorrelationBoard <- function(id, pgx) {
       for (i in 1:nplots) {
         gene1 <- res1$Gene2[i]
         gene2 <- res1$Gene1[i]
-        X1 <- pgx$X[c(gene1, gene2), ]
+        X1 <- ngs$X[c(gene1, gene2), ]
         dgca.scatterplot(X1, gene1, gene2,
           grp = grp, cex = cex,
           key = 0, rho = 1, col = klrpal
@@ -481,7 +489,7 @@ CorrelationBoard <- function(id, pgx) {
       getPartialCorrelation = getPartialCorrelation,
       getGeneCorr           = getGeneCorr,
       cor_table             = cor_table,
-      pgx             = pgx,
+      inputData             = inputData,
       pcor_ntop             = input$pcor_ntop,
       watermark             = WATERMARK
     )
@@ -489,7 +497,7 @@ CorrelationBoard <- function(id, pgx) {
     correlation_plot_scattercorr_server(
       "cor_scatter",
       getFilteredExpression = getFilteredExpression,
-      pgx = pgx,
+      inputData = inputData,
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
       cor_gene = input$cor_gene,
@@ -497,9 +505,9 @@ CorrelationBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    correlation_plot_correlation_UMAP_server(
+    correlation_plot_partial_correlation_server(
       "cor_umap",
-      pgx       = pgx,
+      inputData       = inputData,
       cor_gene        = input$cor_gene,
       getFullGeneCorr = getFullGeneCorr,
       getGeneCorr     = getGeneCorr,

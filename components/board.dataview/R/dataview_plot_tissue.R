@@ -127,14 +127,16 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
           bargap = .4,
           margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
-        plotly_default()
+        plotly_default1()
     }
 
     modal_plot.RENDER <- function() {
       plot.RENDER() %>%
-        plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE ## TODO: I guess a legend makes sense here?
+          showlegend = TRUE, ## TODO: I guess a legend makes sense here?
+          font = list(
+            size = 18
+          )
         )
     }
 

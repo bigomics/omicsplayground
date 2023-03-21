@@ -32,8 +32,8 @@ correlation_plot_cor_graph_ui <- function(id,
     label = "a",
     info.text = info_text,
     options = cor_graph.opts,
-    width = c(700, "100%"),
-    height = c(700, 700),
+    width = c(700, 720),
+    height = c(700, 1000),
     download.fmt = c("png", "pdf", "csv"),
   )
 }

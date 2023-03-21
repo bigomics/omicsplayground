@@ -37,7 +37,7 @@ expression_plot_topfoldchange_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param pgx
+#' @param ngs
 #' @param sel
 #' @param res
 #' @param watermark
@@ -47,7 +47,7 @@ expression_plot_topfoldchange_ui <- function(id,
 #' @export
 expression_plot_topfoldchange_server <- function(id,
                                                  comp,
-                                                 pgx,
+                                                 ngs,
                                                  sel,
                                                  res,
                                                  watermark = FALSE) {
@@ -56,12 +56,12 @@ expression_plot_topfoldchange_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
+      ngs <- ngs()
       sel <- sel()
       res <- res()
-      shiny::req(sel())
 
       psel <- rownames(res)[sel]
-      gene <- pgx$genes[psel, "gene_name"]
+      gene <- ngs$genes[psel, "gene_name"]
 
       if (is.null(sel) || length(sel) == 0) { # Ugly
         return(list(sel = sel))
@@ -70,7 +70,7 @@ expression_plot_topfoldchange_server <- function(id,
       if (is.null(comp) || length(comp) == 0) {
         return(NULL)
       }
-      fc <- sapply(pgx$gx.meta$meta, function(x) x[psel, "meta.fx"])
+      fc <- sapply(ngs$gx.meta$meta, function(x) x[psel, "meta.fx"])
       top.up <- head(names(sort(fc[which(fc > 0)], decreasing = TRUE)), 10)
       top.dn <- head(names(sort(fc[which(fc < 0)], decreasing = FALSE)), 10)
       fc.top <- c(fc[top.up], fc[top.dn])

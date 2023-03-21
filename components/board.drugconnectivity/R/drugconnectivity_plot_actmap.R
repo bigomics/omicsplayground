@@ -124,6 +124,7 @@ drugconnectivity_plot_actmap_server <- function(id,
       }
 
       plot_data <- shiny::reactive({
+        pgx <- pgx()
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)

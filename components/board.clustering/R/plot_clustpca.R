@@ -79,6 +79,7 @@ plot_clustpca_server <- function(id,
 
     hm_getClusterPositions <- shiny::reactive({
 
+      ## pgx <- inputData()
       ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
       ## take full matrix
@@ -166,6 +167,7 @@ plot_clustpca_server <- function(id,
     })
 
     plot.RENDER <- function() {
+      ## pgx <- inputData()
       pd <- plot_data()
       hmpca_options <- pd[["hmpca_options"]]
       hmpca.colvar <- pd[["hmpca.colvar"]]

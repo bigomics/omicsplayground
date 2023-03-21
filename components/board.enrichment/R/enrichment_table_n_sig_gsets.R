@@ -18,15 +18,16 @@ enrichment_table_n_sig_gsets_ui <- function(id, width, height) {
 }
 
 enrichment_table_n_sig_gsets_server <- function(id,
-                                                pgx,
+                                                inputData,
                                                 gs_statmethod) {
   moduleServer(id, function(input, output, session) {
     tabH <- 340 ## row height of panels
 
     FDRtable.RENDER <- shiny::reactive({
-      shiny::req(pgx, gs_statmethod())
+      ngs <- inputData()
+      shiny::req(ngs, gs_statmethod())
 
-      meta <- pgx$gset.meta
+      meta <- ngs$gset.meta
       test <- gs_statmethod()
 
       if (length(test) == 1) {

@@ -75,7 +75,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotCMAP <- function(pgx, db, contr, moa.target, moa.class,
                            labtype = "drugs", showlabel = TRUE,
                            npoints = 100, nlabel = 10,
@@ -211,7 +210,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
 
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = pgx,
+          pgx = pgx(),
           dsea = getActiveDSEA(),
           cmap_table = cmap_table,
           moa.class = getMOA.class(),

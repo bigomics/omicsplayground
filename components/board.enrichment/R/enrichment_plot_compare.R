@@ -19,15 +19,15 @@ enrichment_plot_compare_ui <- function(id, height, width) {
 }
 
 enrichment_plot_compare_server <- function(id,
-                                           pgx,
+                                           inputData,
                                            gs_contrast,
                                            gset_selected,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    render_compare <- function() {
-      shiny::req(pgx, gs_contrast())
+    compare.RENDER <- shiny::reactive({
+      ngs <- inputData()
+      shiny::req(ngs, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()
@@ -35,7 +35,7 @@ enrichment_plot_compare_server <- function(id,
         return(NULL)
       }
 
-      gset <- rownames(pgx$gsetX)[1]
+      gset <- rownames(ngs$gsetX)[1]
       gset <- gset_selected()
       if (is.null(gset)) {
         frame()
@@ -44,13 +44,13 @@ enrichment_plot_compare_server <- function(id,
       }
       gset <- gset[1]
 
-      score <- sapply(pgx$gset.meta$meta, function(x) x[gset, "meta.fx"])
+      score <- sapply(ngs$gset.meta$meta, function(x) x[gset, "meta.fx"])
 
       top.up <- names(sort(score[which(score > 0)], decreasing = TRUE))
       top.dn <- names(sort(score[which(score < 0)]))
-      genes <- names(which(pgx$GMT[, gset] != 0))
+      genes <- names(which(ngs$GMT[, gset] != 0))
       genes <- toupper(sub(".*:", "", genes))
-      gx.meta <- pgx$gx.meta$meta
+      gx.meta <- ngs$gx.meta$meta
 
       gsmethods <- selected_gsetmethods()
 
@@ -65,7 +65,7 @@ enrichment_plot_compare_server <- function(id,
           names(rnk0) <- rownames(gx.meta[[1]])
           names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
 
-          gs.meta <- pgx$gset.meta$meta[[cmp]]
+          gs.meta <- ngs$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
           gs1 <- breakstring(gset, 28, 50, force = FALSE)
@@ -88,7 +88,7 @@ enrichment_plot_compare_server <- function(id,
           names(rnk0) <- rownames(gx.meta[[1]])
           names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
 
-          gs.meta <- pgx$gset.meta$meta[[cmp]]
+          gs.meta <- ngs$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
           gs1 <- breakstring(gset, 28, 50, force = FALSE)
@@ -102,23 +102,13 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-#      p <- grDevices::recordPlot()
-#      p
-    }
+      p <- grDevices::recordPlot()
+      p
+    })
 
-    compare.RENDER <- function() {
-      render_compare()
-    }
-    
-    compare.RENDER2 <- function() {
-      render_compare()
-    }
-
-    
     PlotModuleServer(
       "plot",
       func = compare.RENDER,
-      func2 = compare.RENDER,      
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
       add.watermark = watermark

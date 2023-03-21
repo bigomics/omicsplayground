@@ -40,7 +40,7 @@ expression_table_fctable_ui <- function(id, width, height) {
 #'
 #' @export
 expression_table_fctable_server <- function(id,
-                                            pgx,
+                                            ngs, # inputData()
                                             res, # filteredDiffExprTable
                                             metaFC,
                                             metaQ,
@@ -51,15 +51,16 @@ expression_table_fctable_server <- function(id,
     ns <- session$ns
 
     fctable.RENDER <- shiny::reactive({
+      ngs <- ngs()
       res <- res()
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
 
-      ## F <- sapply(pgx$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-      ## Q <- sapply(pgx$gx.meta$meta, function(x) x$meta.q)
-      ## F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      ## rownames(F)=rownames(Q)=rownames(pgx$gx.meta$meta[[1]])
+      ## F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+      ## Q <- sapply(ngs$gx.meta$meta, function(x) x$meta.q)
+      ## F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
+      ## rownames(F)=rownames(Q)=rownames(ngs$gx.meta$meta[[1]])
       F <- metaFC()
       Q <- metaQ()
 

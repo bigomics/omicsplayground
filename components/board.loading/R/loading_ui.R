@@ -15,6 +15,7 @@ downloadButton2 <- function(outputId, label = "Download", class = NULL, ...) {
 LoadingInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
+    ##    shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
     shiny::hr(), shiny::br(),
     shiny::checkboxGroupInput(ns("flt_datatype"), "datatype", choices = ""),
     shiny::checkboxGroupInput(ns("flt_organism"), "organism", choices = "")
@@ -27,80 +28,48 @@ LoadingUI <- function(id) {
   div(
     class = "p-1",
     uiOutput(ns("navheader")),
-    shiny::tabsetPanel(
-      id = ns('tabs'),
-      shiny::tabPanel(
-        'User',
-        div(
-          class = "row",
-          div(
-            class = "col-md-7",
-            loading_table_datasets_ui(
-              ns("pgxtable"),
-              height = c("65vh", 700),
-              width = c("100%", "100%")
-            ),
-            div(
-              id = "load-action-buttons",
-              # this button is needed to trigger download but should be hidden
-              shiny::downloadLink(
-                ns("download_pgx_btn"),
-                label = "",
-                icon = NULL,
-                width = '0%'
-              ),
-              # this button is needed to trigger download but should be hidden
-              shiny::downloadLink(
-                ns("download_zip_btn"),
-                label = "",
-                icon = NULL,
-                width = '0%'
-              ),
-              shiny::actionButton(
-                ns("loadbutton"),
-                label = "Load Dataset", icon = icon("file-import"),
-                class = "btn btn-outline-primary"
-              )
-            )
-          ),
-          div(
-            class = "col-md-5",
-            loading_tsne_ui(ns("tsne"),
-              height = c("65vh", "70vh"),
-              width = c("auto",  "100%")
-            )
-          )
+    br(), br(),
+
+    ## table----------------
+    div(
+      class = "row",
+      div(
+        class = "col-md-7",
+        loading_table_datasets_ui(
+          ns("pgxtable"),
+          height = c("65vh", 700),
+          width = c("100%", "50%")
         )
       ),
+      div(
+        class = "col-md-5",
+        loading_tsne_ui(ns("tsne"), height = c("65vh", "70vh"))
+      )
+    ),
+    br(),
 
-      shiny::tabPanel(
-        'Shared',
-        div(
-          class = "row",
-          div(
-            class = "col-md-7",
-            loading_table_datasets_shared_ui(
-              ns("pgxtable_shared"),
-              height = c("65vh", 700),
-              width = c("100%", "100%")
-            ),
-            div(
-              id = "load-action-buttons",
-              shiny::actionButton(
-                ns("importbutton"),
-                label = "Import dataset", icon = icon("file-import"),
-                class = "btn btn-outline-primary"
-              )
-            )
-          ),
-          div(
-            class = "col-md-5",
-            loading_tsne_ui(ns("tsne_shared"),
-              height = c("65vh", "70vh"),
-              width = c("auto",  "100%")
-            )
-          )
-        )
+    ## buttons----------------
+    div(
+      id = "load-action-buttons",
+      shiny::actionButton(
+        ns("deletebutton"),
+        label = "Delete dataset", icon = icon("trash"),
+        class = "btn btn-outline-danger-hover"
+      ),
+      shiny::downloadButton(
+        ns("downloadpgx"),
+        label = "Download PGX", ## icon=icon("download"),
+        class = "btn btn-outline-dark-hover"
+      ),
+      downloadButton2(
+        ns("downloadzip"),
+        label = "Download ZIP", icon = icon("file-archive"),
+        class = "btn btn-outline-dark-hover"
+      ),
+      shiny::actionButton(
+        ns("loadbutton"),
+        label = "Load dataset", icon = icon("file-import"),
+        class = "btn btn-outline-primary"
       )
     )
   )

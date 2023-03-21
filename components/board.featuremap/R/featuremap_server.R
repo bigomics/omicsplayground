@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FeatureMapBoard <- function(id, pgx) {
+FeatureMapBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -30,7 +30,8 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       families <- names(FAMILIES)
       shiny::updateSelectInput(session, "filter_genes",
@@ -38,13 +39,13 @@ FeatureMapBoard <- function(id, pgx) {
         selected = "<all>"
       )
 
-      gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
+      gsetcats <- sort(unique(gsub(":.*", "", rownames(ngs$gsetX))))
       shiny::updateSelectInput(session, "filter_gsets",
         choices = gsetcats,
         selected = "H"
       )
 
-      cvar <- pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+      cvar <- pgx.getCategoricalPhenotypes(ngs$samples, max.ncat = 99)
       cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
       shiny::updateSelectInput(session, "sigvar",
         choices = cvar,
@@ -171,9 +172,10 @@ FeatureMapBoard <- function(id, pgx) {
 
     getGeneUMAP_FC <- shiny::reactive({
       ## buffered reactive
+      ngs <- inputData()
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
+          F <- pgx.getMetaMatrix(ngs, level = "gene")$fc
           F <- scale(F, center = FALSE)
           pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
           pos <- pos.compact(pos)
@@ -185,20 +187,22 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     getGeneUMAP <- shiny::reactive({
+      ngs <- inputData()
       if (input$umap_type == "logFC") {
         message("[getGeneUMAP] computing foldchange UMAP")
         pos <- getGeneUMAP_FC()
       } else {
-        pos <- pgx$cluster.genes$pos[["umap2d"]]
+        pos <- ngs$cluster.genes$pos[["umap2d"]]
       }
       pos
     })
 
     getGsetUMAP_FC <- shiny::reactive({
       ## buffered reactive
+      ngs <- inputData()
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
+          F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
           F <- scale(F, center = FALSE)
           pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
           pos <- pos.compact(pos)
@@ -210,11 +214,12 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     getGsetUMAP <- shiny::reactive({
+      ngs <- inputData()
       if (input$umap_type == "logFC") {
         message("[getGsetUMAP] computing foldchange UMAP (genesets)")
         pos <- getGsetUMAP_FC()
       } else {
-        pos <- pgx$cluster.gsets$pos[["umap2d"]]
+        pos <- ngs$cluster.gsets$pos[["umap2d"]]
       }
       pos
     })
@@ -229,7 +234,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_gene_map_server(
       "gene_map",
-      pgx    = pgx,
+      inputData    = inputData,
       getGeneUMAP  = getGeneUMAP,
       plotUMAP     = plotUMAP,
       sigvar       = shiny::reactive(input$sigvar),
@@ -241,7 +246,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_gene_sig_server(
       "gene_sig",
-      pgx         = pgx,
+      inputData         = inputData,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),
       plotFeaturesPanel = plotFeaturesPanel,
@@ -252,7 +257,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_table_geneset_map_server(
       "gsetUMAP",
-      pgx = pgx,
+      inputData = inputData,
       getGsetUMAP = getGsetUMAP,
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
@@ -264,7 +269,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_gset_sig_server(
       "gsetSigPlots",
-      pgx         = pgx,
+      inputData         = inputData,
       getGsetUMAP       = getGsetUMAP,
       sigvar            = shiny::reactive(input$sigvar),
       plotFeaturesPanel = plotFeaturesPanel,

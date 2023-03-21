@@ -3,7 +3,7 @@
 ##
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
-TcgaBoard <- function(id, pgx) {
+TcgaBoard <- function(id, inputData) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 800
@@ -28,10 +28,11 @@ TcgaBoard <- function(id, pgx) {
     })
 
     observe({
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
+      comparisons <- colnames(ngs$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       updateSelectInput(session, "contrast", choices = comparisons, selected = head(comparisons, 1))
     })
@@ -46,7 +47,7 @@ TcgaBoard <- function(id, pgx) {
 
     tcga_plot_survival_server(
       "tcga_tcgasurv",
-      pgx,
+      inputData,
       contrast = shiny::reactive(input$contrast),
       sigtype = shiny::reactive(input$sigtype),
       genelist = shiny::reactive(input$genelist),

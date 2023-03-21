@@ -3,10 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-loading_tsne_ui <- function(id, 
-                            label = "",
-                            height,
-                            width) {
+loading_tsne_ui <- function(id, label = "", height = c(350, 600)) {
   ns <- shiny::NS(id)
 
   info_text <- paste0("<b>Similarity clustering</b> of fold-change signatures colored by data sets using t-SNE. Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.")
@@ -17,22 +14,20 @@ loading_tsne_ui <- function(id,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
-    width = width,
+    width = c("auto", "100%"),
     height = height,
     label = label,
     title = "Dataset explorer"
   )
 }
 
-loading_tsne_server <- function(id, pgx.dirRT,
+loading_tsne_server <- function(id,
                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
-      pgx.dir <- pgx.dirRT()
-      tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
-      pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
+      ## source("../../app/R/global.R",chdir=TRUE)
+      tsne.file <- file.path(PGX.DIR, "datasets-tsne.csv")
+      pgx.files <- sub("[.]pgx$", "", dir(PGX.DIR, pattern = ".pgx$"))
 
       pos <- NULL
       if (file.exists(tsne.file)) {
@@ -48,8 +43,7 @@ loading_tsne_server <- function(id, pgx.dirRT,
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos)) {
-        dbg("[loading_tsneplot.R] recalculating tSNE positions...")
-        F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
+        F <- data.table::fread(file.path(PGX.DIR, "datasets-allFC.csv"))
         F <- as.matrix(F[, -1], rownames = F[[1]])
         dim(F)
         ## F[is.na(F)] <- 0
@@ -94,42 +88,22 @@ loading_tsne_server <- function(id, pgx.dirRT,
     plot.RENDER <- function() {
       df <- plot_data()
       shiny::req(df)
-      
-      dataset_pos <- df[[2]]
-      marker_size <- ifelse( nrow(df[[1]]) > 50, 5, 10)
-      
+
+      dataset.pos <- df[[2]]
+
       fig <- plotly::plot_ly(
         data = df[[1]],
         x = ~x,
         y = ~y,
         text = ~ paste("Dataset:", dataset, "<br>Comparison:", comparison),
-        color = ~dataset,
-        ## colors = omics_pal_c(palette = "brand_blue")(100),
-        marker = list(
-          size = marker_size,
-          line = list(
-            color = omics_colors("super_dark_grey"),
-            width = 1.0
-          )
-        )
+        color = ~dataset
       )
 
-      dy <- diff(range(dataset_pos[,"y"]))
-      dbg("[loading_tsneplot.R] range.y=",dy)
-      
       fig <- fig %>%
         plotly::add_annotations(
-          x = dataset_pos[,"x"],
-          y = dataset_pos[,"y"],
-          text = rownames(dataset_pos),
-          xref = "x",
-          yref = "y",          
-          ## textposition = 'top',
-          xanchor = "middle",
-          yanchor = "bottom",
-          yshift = 0.02*dy,
-#          ax = 0,
-#          ay = -0.05 * dy,
+          x = dataset.pos[, "x"],
+          y = dataset.pos[, "y"],
+          text = rownames(dataset.pos),
           showarrow = FALSE
         )
 
@@ -150,9 +124,6 @@ loading_tsne_server <- function(id, pgx.dirRT,
     }
 
     modal_plot.RENDER <- function() {
-      df <- plot_data()
-      shiny::req(df)
-      marker_size <- ifelse( nrow(df[[1]]) > 50, 6, 12)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,
@@ -160,7 +131,7 @@ loading_tsne_server <- function(id, pgx.dirRT,
             size = 16
           )
         )
-      p <- plotly::style(p, marker.size = marker_size)
+      p <- plotly::style(p, marker.size = 11)
       p
     }
 

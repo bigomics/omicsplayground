@@ -18,17 +18,18 @@ enrichment_table_gset_enrich_all_contrasts_ui <- function(id, width, height) {
 }
 
 enrichment_table_gset_enrich_all_contrasts_server <- function(id,
-                                                              pgx,
+                                                              inputData,
                                                               getFilteredGeneSetTable) {
   moduleServer(id, function(input, output, session) {
     tabH <- 340 ## row height of panels
 
     fctable.RENDER <- shiny::reactive({
+      ngs <- inputData()
 
       ## get all contrasts
-      F <- sapply(pgx$gset.meta$meta, function(x) x[, "meta.fx"])
+      F <- sapply(ngs$gset.meta$meta, function(x) x[, "meta.fx"])
       colnames(F) <- gsub("_", " ", colnames(F))
-      rownames(F) <- rownames(pgx$gset.meta$meta[[1]])
+      rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
       fc.var <- round(rowMeans(F**2, na.rm = TRUE), digits = 3)
       gs <- substring(rownames(F), 1, 60)
       F1 <- data.frame(geneset = gs, fc.var = fc.var, round(F, digits = 3), check.names = FALSE)

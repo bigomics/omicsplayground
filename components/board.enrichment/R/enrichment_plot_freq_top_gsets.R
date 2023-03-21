@@ -46,21 +46,22 @@ enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
 }
 
 enrichment_plot_freq_top_gsets_server <- function(id,
-                                                  pgx,
+                                                  inputData,
                                                   getFilteredGeneSetTable,
                                                   gs_contrast,
                                                   gseatable,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
+      ngs <- inputData()
       rpt <- getFilteredGeneSetTable()
-      shiny::req(pgx, rpt, gs_contrast())
+      shiny::req(ngs, rpt, gs_contrast())
 
       comp <- gs_contrast()
       if (is.null(comp)) {
         return(NULL)
       }
-      if (!(comp %in% names(pgx$gx.meta$meta))) {
+      if (!(comp %in% names(ngs$gx.meta$meta))) {
         return(NULL)
       }
 
@@ -75,7 +76,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       fcweight <- input$gs_enrichfreq_fcweight
       return(
         list(
-          pgx,
+          ngs,
           rpt,
           ntop,
           gset.weight,
@@ -87,7 +88,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
     topEnrichedFreq.RENDER <- function() {
       dt <- plot_data()
       shiny::req(dt)
-      pgx <- dt[[1]]
+      ngs <- dt[[1]]
       rpt <- dt[[2]]
       ntop <- dt[[3]]
       gset.weight <- dt[[4]]
@@ -99,11 +100,11 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       top <- rownames(rpt)
       top <- head(top, ntop)
-      if (!all(top %in% colnames(pgx$GMT))) {
+      if (!all(top %in% colnames(ngs$GMT))) {
         return(NULL)
       }
 
-      F <- 1 * (pgx$GMT[, top, drop = FALSE] > 0)
+      F <- 1 * (ngs$GMT[, top, drop = FALSE] > 0)
       F <- as.matrix(F)
       wt <- FALSE
       if (gset.weight) {

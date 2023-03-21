@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-SignatureBoard <- function(id, pgx, selected_gxmethods) {
+SignatureBoard <- function(id, inputData, selected_gxmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -55,7 +55,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     shiny::observe({
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
       type <- "contrast"
@@ -63,7 +64,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        contr <- sort(names(pgx$gx.meta$meta))
+        contr <- sort(names(ngs$gx.meta$meta))
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
@@ -105,7 +106,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       ##
       ##
 
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
@@ -115,8 +117,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       dbg("<signature:getCurrentMarkers> called\n")
 
       level <- "gene"
-      features <- toupper(pgx$genes$gene_name)
-      xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
+      features <- toupper(ngs$genes$gene_name)
+      xfeatures <- toupper(ngs$genes[rownames(ngs$X), "gene_name"])
       gset <- NULL
       if (input$feature == "<custom>") {
         gset <- input_genelistUP()
@@ -128,21 +130,21 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
           if (grepl("^@", gset[1]) && gene %in% xfeatures) {
             ## most correlated with this genes
             jj <- match(gene, xfeatures) ## single gene
-            rho <- cor(t(pgx$X), pgx$X[jj, ])[, 1]
+            rho <- cor(t(ngs$X), ngs$X[jj, ])[, 1]
             gset <- head(names(sort(abs(rho), decreasing = TRUE)), 36) ## how many?
           } else {
             ## grep-like match
             rx <- toupper(gset[1])
             rx <- grep(rx, xfeatures, value = TRUE, ignore.case = TRUE)
-            gset <- rownames(pgx$X)[which(xfeatures %in% rx)] ## all probes matching gene
+            gset <- rownames(ngs$X)[which(xfeatures %in% rx)] ## all probes matching gene
           }
         }
       } else if (type == "contrast" &&
-        input$feature %in% names(pgx$gx.meta$meta)) {
+        input$feature %in% names(ngs$gx.meta$meta)) {
         contr <- input$feature
-        fx <- pgx$gx.meta$meta[[contr]]$meta.fx
-        probes <- rownames(pgx$gx.meta$meta[[contr]])
-        genes <- toupper(pgx$genes[probes, "gene_name"])
+        fx <- ngs$gx.meta$meta[[contr]]$meta.fx
+        probes <- rownames(ngs$gx.meta$meta[[contr]])
+        genes <- toupper(ngs$genes[probes, "gene_name"])
         top.genes <- genes[order(-fx)]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
@@ -164,20 +166,21 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       ## Calculate fgsea for current marker selection and active
       ## datasets.
       ##
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
 
       ## observe input list
-      gset <- head(rownames(pgx$X), 100)
+      gset <- head(rownames(ngs$X), 100)
       gset <- getCurrentMarkers()
       if (is.null(gset)) {
         return(NULL)
       }
 
       ## get all logFC of this dataset
-      meta <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
       F <- meta$fc
       rownames(F) <- toupper(rownames(F))
 
@@ -274,20 +277,21 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       ##
       ##
       ##
-      if (is.null(pgx)) {
+      ngs <- inputData()
+      if (is.null(ngs)) {
         return(NULL)
       }
 
-      markers <- head(rownames(pgx$X), 100)
+      markers <- head(rownames(ngs$X), 100)
       markers <- getCurrentMarkers()
       if (is.null(markers)) {
         return(NULL)
       }
 
       ## fold change just for ranking of genes
-      ## F <- sapply(pgx$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-      F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
+      ## F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+      F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
+      rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
       fx <- rowMeans(F**2)
 
       ## fisher test
@@ -363,7 +367,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     getEnrichmentGeneTable <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       gsea <- sigCalculateGSEA()
       if (is.null(gsea)) {
@@ -375,7 +380,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         return(NULL)
       }
 
-      meta <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
       rownames(fc) <- toupper(rownames(fc))
@@ -413,7 +418,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
 
     signature_plot_enplots_server(
       "enplots",
-      pgx = pgx,
+      inputData = inputData,
       sigCalculateGSEA = sigCalculateGSEA,
       enrichmentContrastTable = enrichmentContrastTable,
       watermark = WATERMARK
@@ -423,7 +428,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
 
     signature_plot_volcano_server(
       "volcanoPlots",
-      pgx = pgx,
+      inputData = inputData,
       sigCalculateGSEA = sigCalculateGSEA,
       enrichmentContrastTable = enrichmentContrastTable,
       selected_gxmethods = selected_gxmethods,
@@ -454,7 +459,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
 
     signature_plot_markers_server(
       "markers",
-      pgx = pgx,
+      inputData = inputData,
       getCurrentMarkers = getCurrentMarkers,
       IMMCHECK.GENES = IMMCHECK.GENES,
       watermark = WATERMARK

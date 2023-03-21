@@ -19,7 +19,7 @@ enrichment_plot_volcanoall_ui <- function(id, height, width) {
 }
 
 enrichment_plot_volcanoall_server <- function(id,
-                                              pgx,
+                                              inputData,
                                               gs_features,
                                               gs_statmethod,
                                               gs_fdr,
@@ -28,12 +28,13 @@ enrichment_plot_volcanoall_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     volcanoAll.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
       if (is.null(gs_features())) {
         return(NULL)
       }
 
-      meta <- pgx$gset.meta$meta
+      meta <- ngs$gset.meta$meta
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {
@@ -52,7 +53,7 @@ enrichment_plot_volcanoall_server <- function(id,
       i <- 1
       mx.list <- list()
       for (i in 1:length(meta)) {
-        mx.list[[i]] <- calcGsetMeta(i, gsmethod, pgx = pgx)
+        mx.list[[i]] <- calcGsetMeta(i, gsmethod, ngs = ngs)
       }
       names(mx.list) <- names(meta)
 

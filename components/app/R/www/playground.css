@@ -468,6 +468,14 @@ input[type="checkbox"], input[type="radio"] {
     width: 900px;
     top: 0px;
 }
+.modal-dialog.modal-lg {
+    width: 1400px;
+    top: 0px;	       
+}
+.modal-dialog.modal-sm {
+    width: 400px;
+    top: 100px;	           
+}
 
 .modal-content {
     border:0;

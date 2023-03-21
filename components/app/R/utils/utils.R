@@ -11,7 +11,7 @@
 
 
 req2 <- function(x) {
-    if("reactivevalues" %in% class(x)) {
+    if("reactivevalues" %in% class(x)) {        
         if(length(names(x))==0) return(req(FALSE))
         return(req(all(!sapply(x,is.null))))
     }
@@ -25,31 +25,20 @@ envcat <- function(var) {
 	message(var," = ",Sys.getenv(var))
 }
 
-mem.proc <- function(digits=0) {
-  mem <- "[? MB]" 
-  if(Sys.info()["sysname"] %in% c("Linux")) {
-    file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
-    what <- vector("character", 52)
-    ## In your logging routine
-    vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
-    vsz <- vsz / (1024**2) ## MB
-    ##cat("Virtual size: ", vsz, " MB\n", sep = "")
-    mem <- paste0(round(vsz,digits),"MB")
-  }
-  mem 
+# TODO: this is a version that respects the DEBUG flag, but it's not being used
+dbg <- function(...) {
+	if(DEBUG) {
+		msg <- list(...)
+		msg <- paste(sapply(msg, function(s) paste(s,collapse=" ")),collapse=" ")
+		message(msg)
+	}
 }
 
-info <- function(..., type="INFO") {
-  dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  msg = "some message"
-  msg = sapply( list(...),paste,collapse=" ")
-  dd <- paste0("[",dd,"]")
-  mm <- paste0("[",mem.proc(),"]")
-  type <- paste0("[",type,"]")
-  message(paste0(type,dd,mm," --- ",sub("\n$","",paste(msg,collapse=" "))))
+dbg <- function(...) {
+    dd <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+    msg = sapply( list(...),paste,collapse=" ")
+    message(paste0(dd,"  DBG --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
-
-dbg <- function(...) info(..., type="DBUG")
 
 ## Parse access logs
 ACCESS.LOG <- NULL
@@ -84,28 +73,32 @@ tipifyB <- function(...) {
 # TODO: this function isn't being used
 premium.feature <- function(...) {
 	message("[premium.feature] USER_MODE = ",USER_MODE)
-	message("[premium.feature] DEV = ",DEV)
+	message("[premium.feature] DEV = ",DEV)        
 	el <- list(...)
 	if(USER_MODE %in% c("pro","premium","dev")) return(el)
-	tipify( disabled(...),
-		 "This is a Premium feature. Upgrade to enable this feature."
-	)
+	tipify(disabled(...),
+				 "This is a Premium feature. Upgrade to enable this feature."
+	)    
+	
 }
 
 # TODO: this function can be a variable
 in.shinyproxy <- function() {
-        return(Sys.getenv("SHINYPROXY_USERNAME") != "")
+	## Determine if we are in ShinyProxy
+	##
+	vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
+						"PLAYGROUND_USERID","PLAYGROUND_LEVEL")
+	vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
+	vals <- sapply(vars,Sys.getenv)
+	all(vals!="")
 }
 
-tabRequire <- function(pgx, session, tabname, slot) {
-        has.slot <- (slot %in% names(pgx))
-        if(!has.slot) {
-          cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
-          ##hideTab(tabname, subtab)
-          bigdash.hideTab(session, tabname)
+tabRequire <- function(pgx, slot, tabname, subtab) {
+	if(!slot %in% names(pgx)) {
+		cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
+		hideTab(tabname, subtab)
 	} else {
-          ##showTab(tabname, subtab)
-          bigdash.showTab(session, tabname)          
+		showTab(tabname, subtab)
 	}
 }
 
@@ -116,7 +109,7 @@ fileRequire <- function(file, tabname, subtab) {
 		message(paste("[MAIN] file ",file," not found. Hiding",subtab,"\n"))
 		hideTab(tabname, subtab)
 	} else {
-		message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))
+		message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))        
 		showTab(tabname, subtab)
 	}
 }
@@ -134,16 +127,17 @@ tabView <- function(title, tab.inputs, tab.ui, id=title) {
              ))
 }
 
-toggleTab <- function(inputId, target, do.show, req.file=NULL, session=session ) {
+toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
     if(!is.null(req.file)) {
         file1 <- search_path(c(FILES,FILESX),req.file)
         has.file <- !is.null(file1[1])
         do.show <- do.show && has.file
     }
     if(do.show) {
-      shiny::showTab(inputId, target)
-    } else {
-      shiny::hideTab(inputId, target)
+        shiny::showTab(inputId, target)
+    }
+    if(!do.show) {
+        shiny::hideTab(inputId, target)
     }
 }
 
@@ -171,8 +165,8 @@ sever_screen <- function() {
                           ##        ),
                           shiny::br(),
                           shiny::tags$a(
-                                          onClick = "sendLog()",
-                                          class = "btn btn-sm btn-warning",
+                                          onClick = "sendLog()", 
+                                          class = "btn btn-sm btn-warning", 
                                           "Send error to developers"
                                       )
                       ),
@@ -185,7 +179,7 @@ sever_screen <- function() {
                shiny::div(
                           id="sever-reload-btn",
                           sever::reload_button("Relaunch", class = "info"),
-                          style="display:none;"
+                          style="display:none;"             
                       )
            )
 }
@@ -225,7 +219,7 @@ sever_screen2 <- function(session_id) {
       shiny::br(),
       shiny::tags$a(
         onClick = HTML(paste0("sendLog2('",session_id,"')")),
-        class = "btn btn-sm btn-warning",
+        class = "btn btn-sm btn-warning", 
         "Send error to developers"
       )
     ),
@@ -238,7 +232,7 @@ sever_screen2 <- function(session_id) {
     shiny::div(
       id="sever-reload-btn",
       sever::reload_button("Relaunch", class = "info"),
-      style="display:none;"
+      style="display:none;"             
     )
   )
 }

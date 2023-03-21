@@ -3406,6 +3406,7 @@ pgx.stackedBarplot <- function(x,
                                ) {
 
   x_plot <- cbind(data.frame(groups = rownames(x)), x)
+
   x_plot <- data.table::melt(x_plot, id.vars='groups',value.name = "Effect")
 
   if(horiz == FALSE){
@@ -3419,18 +3420,15 @@ pgx.stackedBarplot <- function(x,
     colnames(x_plot)[c3] <- "variable"
     }
 
-  plotly::plot_ly(
-      x_plot, x = ~groups,
-      y = ~Effect,
-      type = 'bar',
-      name = ~variable,
-      color = ~variable) %>%
-    plotly::layout(
-      showlegend = showlegend,
-      barmode = 'stack',
-      yaxis = list(title = ylab),
-      xaxis = list(title = xlab)) %>%
-    plotly_default()
+  plotly::plot_ly(x_plot, x = ~groups,
+                  y = ~Effect,
+                  type = 'bar',
+                  name = ~variable,
+                  color = ~variable) %>%
+    plotly::layout(showlegend = showlegend, barmode = 'stack',
+                   yaxis = list(title = ylab),
+                   xaxis = list(title = xlab)) %>%
+    plotly_default1()
 
 }
 
@@ -4046,7 +4044,7 @@ pgx.boxplot.PLOTLY <- function(
       font = list(family = font_family),
       margin = margin
     ) %>%
-    plotly_default()
+    plotly_default1()
 
 }
 
@@ -4078,19 +4076,21 @@ pgx.barplot.PLOTLY <- function(
   annotations_xanchor = NULL,
   annotations_yanchor = NULL,
   annotations_showarrow = NULL
-) {
+){
 
   # calculate error bars
 
   # calculate summary statistics for groups
+
   if(plotRawValues == FALSE){
     data_stats <- do.call(data.frame,
-      aggregate(data[[y]],
-        list(data[[x]]),
-        function(val)
-          c(mean = mean(val), sd = sd(val))))
-  } else {
+                          aggregate(data[[y]],
+                                    list(data[[x]]),
+                                    function(val)
+                                      c(mean = mean(val), sd = sd(val))))
+  }else{
     data_stats <- data
+
   }
 
   ngroups <- length(unique(data_stats[[1]]))
@@ -4110,12 +4110,7 @@ pgx.barplot.PLOTLY <- function(
       color = fillcolor
     ),
     line = ~list(color = linecolor),
-    hoverinfo = hoverinfo,
-    hovertemplate = paste0(
-      "<b>%{x}</b><br>",
-      "%{yaxis.title.text}: %{y:",hoverformat,"}<br>",
-      "<extra></extra>"
-      )
+    hoverinfo = hoverinfo
   ) %>%
     plotly::layout(
       title = list(text = title,
@@ -4126,7 +4121,7 @@ pgx.barplot.PLOTLY <- function(
       xaxis = list(title = xaxistitle),
       font = list(family = font_family),
       margin = margin,
-      bargap = bargap,
+      bargap=bargap,
       annotations = list(
         x = annotations_x,
         y = annotations_y,
@@ -4138,6 +4133,6 @@ pgx.barplot.PLOTLY <- function(
         showarrow = annotations_showarrow
       )
     ) %>%
-    plotly_default()
+    plotly_default1()
 
 }

@@ -49,26 +49,27 @@ singlecell_plot_phenoplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_phenoplot_server <- function(id,
-                                             pgx,
+                                             inputData,
                                              pfGetClusterPositions,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      ngs <- inputData()
+      ## if(is.null(ngs)) return(NULL)
+      shiny::req(ngs)
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)
       }
 
-      pos <- pgx$tsne2d
+      pos <- ngs$tsne2d
       pos <- clust.pos
       sel <- rownames(pos)
-      pheno <- colnames(pgx$Y)
+      pheno <- colnames(ngs$Y)
       return(list(
-        pgx = pgx,
+        ngs = ngs,
         pos = pos,
         sel = sel,
         pheno = pheno
@@ -103,7 +104,7 @@ singlecell_plot_phenoplot_server <- function(id,
       for (i in 1:min(20, length(pd[["pheno"]]))) {
         px <- 4
         px <- pd[["pheno"]][i]
-        y <- pd[["pgx"]]$Y[pd[["sel"]], px]
+        y <- pd[["ngs"]]$Y[pd[["sel"]], px]
         y[which(y %in% c(NA, "", " ", "NA", "na"))] <- NA
         if (sum(!is.na(y)) == 0) next
 

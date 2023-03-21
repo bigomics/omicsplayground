@@ -60,8 +60,8 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cumEnrichmentPlot_server <- function(id,
-                                                       pgx,
-                                                       sigdb,
+                                                       inputData,
+                                                       cmap_sigdb,
                                                        getConnectivityScores,
                                                        connectivityScoreTable,
                                                        getEnrichmentMatrix,
@@ -70,9 +70,9 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       cumEnrichmentTable <- shiny::reactive({
-        sigdb <- sigdb()
-        shiny::req(sigdb)
-        if (!grepl(".h5$", sigdb)) {
+        cmap_sigdb <- cmap_sigdb()
+        shiny::req(cmap_sigdb)
+        if (!grepl(".h5$", cmap_sigdb)) {
           return(NULL)
         }
 
@@ -84,6 +84,7 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         shiny::req(ii)
 
         sel <- head(df$pathway[ii], 10)
+        sigdb <- cmap_sigdb
         F <- getEnrichmentMatrix(sigdb, select = sel)
         if (is.null(F)) {
           return(NULL)
@@ -136,9 +137,7 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
 
         pgx.stackedBarplot(
           x = data.frame(F),
-          ylab = "cumulative enrichment",
-          xlab = "",
-          showlegend = FALSE
+          ylab = "cumulative enrichment", showlegend = FALSE
         )
       })
 

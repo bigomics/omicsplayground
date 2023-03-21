@@ -43,7 +43,6 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-
 data/*.pgx
 !data/example-data.pgx
 data/*.csv

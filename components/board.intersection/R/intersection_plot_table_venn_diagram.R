@@ -61,7 +61,7 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
 
 
 intersection_plot_venn_diagram_server <- function(id,
-                                                  pgx,
+                                                  inputData,
                                                   level,
                                                   input_comparisons,
                                                   getFoldChangeMatrix,
@@ -209,10 +209,11 @@ intersection_plot_venn_diagram_server <- function(id,
     getSignificanceCalls <- shiny::reactive({
       ## Gets the matrix of significance calls.
       ##
+      ngs <- inputData()
 
-      sel <- head(names(pgx$gset.meta$meta), 7)
+      sel <- head(names(ngs$gset.meta$meta), 7)
       sel <- input_comparisons()
-      sel <- intersect(sel, names(pgx$gset.meta$meta))
+      sel <- intersect(sel, names(ngs$gset.meta$meta))
       if (length(sel) == 0) {
         return(NULL)
       }
@@ -327,7 +328,8 @@ intersection_plot_venn_diagram_server <- function(id,
     })
 
     venntable.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       ## get foldchanges
       fc0 <- getSignificantFoldChangeMatrix() ## isolate??
@@ -337,7 +339,7 @@ intersection_plot_venn_diagram_server <- function(id,
 
       ## add gene name/title
       if (level == "gene") {
-        gene <- as.character(pgx$genes[rownames(fc0), "gene_name"])
+        gene <- as.character(ngs$genes[rownames(fc0), "gene_name"])
         gene.tt <- substring(GENE.TITLE[gene], 1, 50)
         gene.tt <- as.character(gene.tt)
         ## fc0 = data.frame( name=name, title=gene.tt, fc0)

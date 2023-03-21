@@ -22,7 +22,7 @@ enrichment_plot_volcano_ui <- function(id, height, width) {
 }
 
 enrichment_plot_volcano_server <- function(id,
-                                           pgx,
+                                           inputData,
                                            gs_contrast,
                                            selected_gxmethods,
                                            gset_selected,
@@ -35,20 +35,22 @@ enrichment_plot_volcano_server <- function(id,
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
 
-      gx.meta <- pgx$gx.meta$meta[[comp]]
+      gx.meta <- ngs$gx.meta$meta[[comp]]
       meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max) ## max q-value
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
-      gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
+      gx.annot <- ngs$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
       gs <- gset_selected()
@@ -96,20 +98,22 @@ enrichment_plot_volcano_server <- function(id,
     })
 
     subplot_volcano.PLOTLY <- shiny::reactive({
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      shiny::req(pgx)
+      ngs <- inputData()
+      shiny::req(ngs)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
 
-      gx.meta <- pgx$gx.meta$meta[[comp]]
+      gx.meta <- ngs$gx.meta$meta[[comp]]
       meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max, na.rm = TRUE)
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
-      gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
+      gx.annot <- ngs$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
       gs <- gset_selected()
