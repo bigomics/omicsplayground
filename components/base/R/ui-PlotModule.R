@@ -47,6 +47,8 @@ PlotModuleUI <- function(id,
                        info.width="300px",
                        show.maximize = TRUE,
                        height = c(400,800),
+                       card_height = "auto",
+                       card_footer_height = "50px", #"auto"
                        width = c("auto","100%"),
                        pdf.width = 8,
                        pdf.height = 8
@@ -234,11 +236,13 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")
     }
-    div(
-      #class = "plotmodule",
+    # div(   #FIXME REMOVE THIS DIV
+    #   #class = "plotmodule",
       bslib::card(
+        full_screen = FALSE,
+        height = "100%",
         bslib::card_body_fill(
-                  div( header, class="plotmodule-header"),
+                  div(header, class="plotmodule-header"),
                   outputFunc(ns("renderfigure")) %>%
                         shinycssloaders::withSpinner(),
                   caption,
@@ -268,11 +272,15 @@ PlotModuleUI <- function(id,
                           )
             ),
         bslib::card_footer(
-              div(class="caption", shiny::HTML(info.text) )
+          # change card_footer to card_body or re-do the overflow
+          # style = "height: 70px;", # ???
+          # I can define the overflow (!!!)
+          # change scroll to be scoped to the footer (?)
+          # style = "height:0px;"
+          # replace card_footer with card_body and style 
+          div(class="caption", shiny::HTML(info.text))
         )
       )
-    )
-
 }
 
 
