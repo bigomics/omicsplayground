@@ -27,6 +27,11 @@ LoadingUI <- function(id) {
   div(
     class = "p-1",
     uiOutput(ns("navheader")),
+    shinyWidgets::materialSwitch(
+        inputId = "Id077",
+        label = "Primary",
+        value = TRUE,
+        status = "primary"),
     shiny::tabsetPanel(
       id = ns('tabs'),
       shiny::tabPanel(
