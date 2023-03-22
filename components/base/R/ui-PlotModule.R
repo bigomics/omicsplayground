@@ -273,7 +273,7 @@ PlotModuleUI <- function(id,
                       )
             ),
         bslib::card_body(
-          class = "card-footer d-flex justify-content-center align-items-center", # center the content horizontally and vertically
+          class = "card-footer", # center the content horizontally and vertically
           style = paste0("height:", card_footer_height, "; padding: 2px 0 0 2px;"), # add left and top margin of 2 pixels
           div(class="caption", shiny::HTML(info.text))
         )
