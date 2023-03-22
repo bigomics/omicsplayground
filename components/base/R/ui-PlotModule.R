@@ -47,8 +47,8 @@ PlotModuleUI <- function(id,
                        info.width="300px",
                        show.maximize = TRUE,
                        height = c(400,800),
-                       card_height = "auto",
-                       card_footer_height = "50px", #"auto"
+                       card_height = "100%",
+                       card_footer_height = "60px",
                        width = c("auto","100%"),
                        pdf.width = 8,
                        pdf.height = 8
@@ -240,47 +240,41 @@ PlotModuleUI <- function(id,
     #   #class = "plotmodule",
       bslib::card(
         full_screen = FALSE,
-        height = "100%",
+        style = "height: 100%;",
         bslib::card_body_fill(
-                  div(header, class="plotmodule-header"),
-                  outputFunc(ns("renderfigure")) %>%
-                        shinycssloaders::withSpinner(),
-                  caption,
-                  shiny::div(class="popup-modal",
-                              modalUI(
-                                    id = ns("plotPopup"),
-                                    title = title,
-                                    size = "fullscreen",
-                                    footer = NULL,
-                                    popupfigUI()
-                                )
-                              ),
-                  shiny::div(class="popup-modal",
-                              modalUI(
-                                    id = ns("plotPopup_editor"),
-                                    title = "Editor",
-                                    size = "fullscreen",
-                                    footer = NULL,
-                                    popupfigUI_editor()
-                                )
-                              ),
-                  shiny::tagList(
-                              shiny::tags$head(shiny::tags$style(modaldialog.style)),
-                              shiny::tags$head(shiny::tags$style(modalbody.style)),
-                              shiny::tags$head(shiny::tags$style(modalcontent.style)),
-                              shiny::tags$head(shiny::tags$style(modalfooter.none))
-                          )
+              div(header, class="plotmodule-header"),
+              div(outputFunc(ns("renderfigure")) %>%
+                    shinycssloaders::withSpinner()
+                  ),
+              caption,
+              shiny::div(class="popup-modal",
+                          modalUI(
+                                id = ns("plotPopup"),
+                                title = title,
+                                size = "fullscreen",
+                                footer = NULL,
+                                popupfigUI()
+                            )
+                          ),
+              shiny::div(class="popup-modal",
+                          modalUI(
+                                id = ns("plotPopup_editor"),
+                                title = "Editor",
+                                size = "fullscreen",
+                                footer = NULL,
+                                popupfigUI_editor()
+                            )
+                          ),
+              shiny::tagList(
+                          shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                          shiny::tags$head(shiny::tags$style(modalbody.style)),
+                          shiny::tags$head(shiny::tags$style(modalcontent.style)),
+                          shiny::tags$head(shiny::tags$style(modalfooter.none))
+                      )
             ),
         bslib::card_body(
           class = "card-footer",
-          style = "height: 60px",
-          
-          # change card_footer to card_body or re-do the overflow
-          # style = "height: 70px;", # ???
-          # I can define the overflow (!!!)
-          # change scroll to be scoped to the footer (?)
-          # style = "height:0px;"
-          # replace card_footer with card_body and style 
+          style = paste0("height:", card_footer_height, ";"),
           div(class="caption", shiny::HTML(info.text))
         )
       )
