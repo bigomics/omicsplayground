@@ -29,12 +29,6 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       ns("gene_map"),
       title = "Gene UMAP",
       label = "a",
-      # outputFunc = function(x, width, height) {
-      #   plotOutput(x,
-      #     brush = ns("geneUMAP_brush"), width = width,
-      #     height = height
-      #   )
-      # },
       plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
@@ -46,7 +40,7 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
     TableModuleUI(
       ns("datasets"),
       info.text = info_text_table,
-      height = c(280, TABLE_HEIGHT_MODAL),
+      height = c("30vh", TABLE_HEIGHT_MODAL),
       width = c("auto", "90%"),
       title = "Gene table",
       label = "c"
@@ -62,6 +56,9 @@ featuremap_plot_gene_map_server <- function(id,
                                             filter_genes,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
     selGenes <- shiny::reactive({
       shiny::req(pgx)
       sel <- filter_genes()
@@ -131,8 +128,9 @@ featuremap_plot_gene_map_server <- function(id,
 
       p <- plotUMAP(pos, fc, hilight,
         nlabel = nlabel, title = colorby,
-        cex = 1.2, source = "", plotlib = "plotly"
-      )
+        cex = 1.2, plotlib = "plotly",
+        source = ns("gene_filter")
+      ) %>% plotly::layout(dragmode = "select")
       p
     })
 
@@ -159,13 +157,10 @@ featuremap_plot_gene_map_server <- function(id,
 
       ## detect brush
       sel.genes <- NULL
-      ## b <- input$ftmap-geneUMAP_brush  ## ugly??
-      b <- NULL
-      b <- input[["geneUMAP_brush"]] ## ugly??
+      b <- plotly::event_data("plotly_selected", source = ns("gene_filter"))
       if (!is.null(b) & length(b) > 0) {
-        sel <- which(pos[, 1] > b$xmin & pos[, 1] < b$xmax &
-          pos[, 2] > b$ymin & pos[, 2] < b$ymax)
-        sel.genes <- rownames(pos)[sel]
+        sel <- b$key
+        sel.genes <- rownames(pos)[rownames(pos) %in% sel]
       }
 
       pheno <- "tissue"
@@ -207,8 +202,8 @@ featuremap_plot_gene_map_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "70vh",
+          scrollX = TRUE,
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
