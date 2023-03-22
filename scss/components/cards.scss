@@ -11,4 +11,9 @@ html {
         /* align-items: center; */
         float: right;
     }
+
+    .form-check-input:checked {
+        background-color: #4081dc;
+        border-color: #b8ddff;
+    }
 }
