@@ -26,7 +26,20 @@ LoadingUI <- function(id) {
 
   div(
     class = "p-1",
-    uiOutput(ns("navheader")),
+    fillRow(
+        flex = c(NA, NA, 1),
+        shiny::div(
+          id = "navheader-current-section",
+          HTML("Load dataset &nbsp;"),
+          shiny::actionLink(
+            ns("module_info"), "",
+            icon = shiny::icon("info-circle"),
+            style = "color: #ccc;"
+          )
+        ),
+        #shiny::div(shiny::uiOutput("pgx_stats"), id = "navheader-dataset-stats"),
+        shiny::div(selector_default(ns("hide_caption"), label = "Show captions"))
+      ),
     shiny::tabsetPanel(
       id = ns('tabs'),
       shiny::tabPanel(
@@ -34,7 +47,9 @@ LoadingUI <- function(id) {
         div(
           class = "row",
           div(
+            
             class = "col-md-7",
+            
             loading_table_datasets_ui(
               ns("pgxtable"),
               height = c("65vh", 700),
