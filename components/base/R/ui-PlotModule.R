@@ -272,6 +272,8 @@ PlotModuleUI <- function(id,
                           )
             ),
         bslib::card_footer(
+          style = "height: 70px;",
+          class="overflow-auto",
           # change card_footer to card_body or re-do the overflow
           # style = "height: 70px;", # ???
           # I can define the overflow (!!!)
