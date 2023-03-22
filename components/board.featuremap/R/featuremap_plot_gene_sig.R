@@ -26,6 +26,7 @@ featuremap_plot_gene_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     geneSigPlots.plot_data <- shiny::reactive({
       shiny::req(pgx)
 
@@ -70,6 +71,7 @@ featuremap_plot_gene_sig_server <- function(id,
 
     PlotModuleServer(
       "gene_sig",
+      plotlib = "base",
       func = geneSigPlots.RENDER,
       csvFunc = geneSigPlots.plot_data,
       pdf.width = 5, pdf.height = 5,

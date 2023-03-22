@@ -750,10 +750,11 @@ PlotModuleServer <- function(
               # If the plotting function is `plotly`, add the edit button
               render <- renderFunc({
                 # By default remove plotly logo from all plots
-                plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
+                plot <- func() %>%
+                  plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
-                plot <- plot %>%
-                  plotly_default()
+                #                plot <- plot %>%
+                #                  plotly_default()
                 # If there is already custom buttons, append the edit one
                 # (issue #2210 plotly/plotly.R)
                 if(inherits(plot$x$config$modeBarButtons, "list")){
@@ -775,9 +776,8 @@ PlotModuleServer <- function(
             } else {
               render <- renderFunc(func())
             }
-
-
           }
+
           if(is.null(render2) && !is.null(func2)) {
             if(plotlib2 == "plotly"){
               render2 <- renderFunc2({

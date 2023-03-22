@@ -6,7 +6,7 @@
 featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
+  info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation of log-expression (sd.X) or fold-change  (sd.FC). The distance metric is covariance between gene expression. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
 
   info_text_table <- "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot."
 
@@ -19,7 +19,8 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("umap_colorby"), "color by:",
-      choices = c("sd.X", "var.FC", "mean.FC"),
+      ##choices = c("sd.X", "var.FC", "mean.FC"),
+      choices = c("sd.X", "sd.FC"),
       selected = "sd.X", inline = TRUE
     )
   )
@@ -66,54 +67,21 @@ featuremap_plot_gene_map_server <- function(id,
       selgenes
     })
 
-    geneUMAP.RENDER <- shiny::reactive({
-      shiny::req(pgx)
-
-      pos <- getGeneUMAP()
-      hilight <- NULL
-      colgamma <- as.numeric(input$umap_gamma)
-
-      ## select on table filter
-      F <- pgx.getMetaMatrix(pgx)$fc
-      F <- scale(F, center = FALSE)
-      colorby <- input$umap_colorby
-      if (colorby == "sd.FC") {
-        fc <- (rowMeans(F**2))**0.2
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
-      } else {
-        ## sdX
-        cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
-        fc <- sqrt(rowMeans(cX**2))
-      }
-      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
-      hilight <- names(sort(-fc))
-
-      ## filter on table
-      hilight <- selGenes()
-      nlabel <- as.integer(input$umap_nlabel)
-
-      p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 0.9, source = "", plotlib = "base"
-      )
-      p
-    })
-
-    geneUMAP.RENDER2 <- shiny::reactive({
-      shiny::req(pgx)
+    plot_data <- shiny::reactive({
 
       ## pos <- pgx$cluster.genes$pos[['umap2d']]
       pos <- getGeneUMAP()
-      hilight <- NULL
+      colnames(pos) <- c("x","y")
+      hilight <- selGenes()
       colgamma <- as.numeric(input$umap_gamma)
+      colorby <- input$umap_colorby
+      nlabel <- as.integer(input$umap_nlabel)
 
       ## select on table filter
       F <- pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
-      colorby <- input$umap_colorby
       if (colorby == "var.FC") {
-        fc <- (rowMeans(F**2))**0.2
+        fc <- (rowMeans(F**2))**0.5
       } else if (colorby == "mean.FC") {
         fc <- rowMeans(F)
       } else {
@@ -122,24 +90,64 @@ featuremap_plot_gene_map_server <- function(id,
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
-      ## filter on table
-      hilight <- selGenes()
-      nlabel <- as.integer(input$umap_nlabel)
-
-      p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 1.2, plotlib = "plotly",
-        source = ns("gene_filter")
-      ) %>% plotly::layout(dragmode = "select")
-      p
+      pd <- list(
+        df = data.frame(pos, fc=fc),
+        hilight = hilight,
+        colgamma = colgamma,
+        nlabel = nlabel,
+        colorby = colorby
+      )
+      
     })
+    
+    render_geneUMAP <- function() {
 
+      pd  <- plot_data()
+      pos <- pd$df[,c("x","y")]
+      fc  <- pd$df[,c("fc")]
+      hilight <- pd$hilight
+      nlabel  <- pd$nlabel
+      colorby <- pd$colorby
+      
+      p <- plotUMAP(
+        pos,
+        fc,
+        hilight,
+        nlabel = nlabel,
+        title = colorby,
+        cex = 1.2,
+        plotlib = "plotly",
+        source = ns("gene_filter")
+      ) %>%
+        plotly::layout(dragmode = "select")
+      p
+    }
+
+    geneUMAP.RENDER <- function() {
+      p <- render_geneUMAP() %>%
+        plotly::config(
+          modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
+        ) %>%
+        plotly_default()
+      p
+    }
+
+    geneUMAP.RENDER2 <- function() {
+      p <- render_geneUMAP() %>%
+        plotly::config(
+          modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
+        ) %>%
+        plotly_modal_default()
+      p
+    }
+    
     PlotModuleServer(
       "gene_map",
       plotlib = "plotly",
       plotlib2 = "plotly",
-      func = geneUMAP.RENDER2,
+      func = geneUMAP.RENDER,
       func2 = geneUMAP.RENDER2,
+      csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
     )
