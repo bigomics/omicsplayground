@@ -7,7 +7,7 @@
 dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
   info_text <- paste(
-    "Top 15 tissues for the selected gene in the tissue expression ",
+    "Top 20 tissues for the selected gene in the tissue expression ",
     a_GTEx, " dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
   )
 
