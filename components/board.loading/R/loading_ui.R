@@ -80,6 +80,7 @@ LoadingUI <- function(id) {
           ),
           div(
             class = "col-md-5",
+            style = "height: 100%;",
             loading_tsne_ui(ns("tsne"),
               height = c("65vh", "70vh"),
               width = c("auto",  "100%")
