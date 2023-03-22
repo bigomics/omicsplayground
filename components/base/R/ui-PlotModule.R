@@ -271,9 +271,10 @@ PlotModuleUI <- function(id,
                               shiny::tags$head(shiny::tags$style(modalfooter.none))
                           )
             ),
-        bslib::card_footer(
-          style = "height: 70px;",
-          class="overflow-auto",
+        bslib::card_body(
+          class = "card-footer",
+          style = "height: 60px",
+          
           # change card_footer to card_body or re-do the overflow
           # style = "height: 70px;", # ???
           # I can define the overflow (!!!)
