@@ -95,9 +95,9 @@ FeatureMapBoard <- function(id, pgx) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        title = title
+        title = title,
         ## legend.pos = 'bottomright',
-        ## source = source,
+        source = source,
         ## key = rownames(pos)
       )
 

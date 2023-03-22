@@ -28,12 +28,6 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
-      # outputFunc = function(x, width, height) {
-      #   plotOutput(x,
-      #     brush = ns("gsetUMAP_brush"), width = width,
-      #     height = height
-      #   )
-      # },
       plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
@@ -61,6 +55,9 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                                      sigvar,
                                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
     selGsets <- shiny::reactive({
       shiny::req(pgx)
       db <- filter_gsets()
@@ -126,8 +123,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
       par(mfrow = c(1, 1))
       p <- plotUMAP(pos, fc, hilight,
         nlabel = nlabel, title = colorby,
-        cex = 1.2, source = "", plotlib = "plotly"
-      )
+        cex = 1.2, source =  ns("geneset_filter"), plotlib = "plotly"
+      ) %>% plotly::layout(dragmode = "select")
       p
     })
 
@@ -153,12 +150,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       ## detect brush
       sel.gsets <- NULL
-      b <- input[["gsetUMAP_brush"]] ## ugly??
+      b <- plotly::event_data("plotly_selected", source = ns("geneset_filter"))
 
       if (!is.null(b) & length(b)) {
-        sel <- which(pos[, 1] > b$xmin & pos[, 1] < b$xmax &
-          pos[, 2] > b$ymin & pos[, 2] < b$ymax)
-        sel.gsets <- rownames(pos)[sel]
+        sel <- b$key
+        sel.gsets <- rownames(pos)[rownames(pos) %in% sel]
       }
 
       pheno <- "tissue"
@@ -197,7 +193,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "70vh",
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
