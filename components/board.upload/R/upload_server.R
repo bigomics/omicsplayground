@@ -31,28 +31,6 @@ UploadBoard <- function(id,
       rv$pheno <- phenoRT()
     })
 
-    observe({
-      phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>", "<gene>")
-      phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-      psel <- c(grep("sample|patient|name|id|^[.]", phenotypes,
-        value = TRUE,
-        invert = TRUE
-      ), phenotypes)[1]
-      shiny::updateSelectInput(
-        session = session,
-        inputId = "param",
-        choices = phenotypes,
-        selected = psel
-      )
-      genes <- sort(rownames(corrected_counts()))
-      shiny::updateSelectInput(
-        session = session,
-        inputId = "gene",
-        choices = genes,
-        selected = genes[1]
-      )
-    })
-
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
