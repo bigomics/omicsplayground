@@ -48,7 +48,7 @@ PlotModuleUI <- function(id,
                        show.maximize = TRUE,
                        height = c(400,800),
                        card_height = "100%",
-                       card_footer_height = "60px",
+                       card_footer_height = "65px",
                        width = c("auto","100%"),
                        pdf.width = 8,
                        pdf.height = 8
