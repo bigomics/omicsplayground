@@ -633,8 +633,10 @@ LoadingBoard <- function(id,
       shiny::req(pgx)
       ndatasets <- nrow(pgx)
       nsamples <- sum(as.integer(pgx$nsamples), na.rm = TRUE)
-      output$pgx_stats <- HTML(paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples"))
+      paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
     })
+    
+    output$pgx_stats_ui <- shiny::renderUI(HTML(pgx_stats()))
 
     ## ================================================================================
     ## Data sets table
