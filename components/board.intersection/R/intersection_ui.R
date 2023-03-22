@@ -96,6 +96,7 @@ IntersectionUI <- function(id) {
   )
   div(
     boardHeader(title = "Compare signatures", info_link = ns("info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

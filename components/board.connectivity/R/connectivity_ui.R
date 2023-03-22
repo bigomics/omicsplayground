@@ -179,6 +179,7 @@ ConnectivityUI <- function(id) {
     )
   div(
     boardHeader(title = "Similar experiments", info_link = ns("info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

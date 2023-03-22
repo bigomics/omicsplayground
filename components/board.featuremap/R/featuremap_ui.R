@@ -51,6 +51,7 @@ FeatureMapUI <- function(id) {
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

@@ -114,6 +114,7 @@ FunctionalUI <- function(id) {
 
   page_ui <- div(
     boardHeader(title = "Pathway Analysis", info_link = ns("fa_info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
   return(page_ui)

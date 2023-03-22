@@ -102,6 +102,7 @@ CorrelationUI <- function(id) {
   )
   div(
     boardHeader(title = "Correlation analysis", info_link = ns("data_info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

@@ -62,6 +62,7 @@ BiomarkerUI <- function(id) {
   
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tagList(
       div(
         class = "row row-cols-1 row-cols-md-2 row-cols-xxxl-4",
@@ -83,7 +84,7 @@ BiomarkerUI <- function(id) {
         )
       ),
       tags$div(
-        class = "caption",        
+        class = "caption",
         HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> Boxplots show the expression of biomarker genes across the groups. <b>(c)</b> The heatmap shows the expression distribution for the top most important features. <b>(d)</b> The decision tree shows (one) tree solution for classification based on the top most important features. ")
       )
     )

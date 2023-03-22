@@ -246,6 +246,7 @@ EnrichmentUI <- function(id) {
   )
   div(
     boardHeader(title = "Geneset enrichment", info_link = ns("gs_info")),
+    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }
