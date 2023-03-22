@@ -124,7 +124,7 @@ clustering_plot_table_hm_parcoord_server <- function(id,
     plot_data <- function() {
       hm_parcoord.matrix()
     }
-    
+
     hm_parcoord.RENDER <- function() {
       pc <- plot_data()
       zx <- pc$mat
@@ -175,17 +175,16 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       hm_parcoord.RENDER() %>%
         plotly_modal_default()
     }
-    
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = hm_parcoord.RENDER,
-      ## func2 = hm_parcoord.RENDER_MODAL,
+      func2 = hm_parcoord.RENDER_MODAL,
       csvFunc = plot_data,
       res = c(90, 170),
       pdf.width = 8,
       pdf.height = 8,
-      hm_parcoord.matrix,
       add.watermark = watermark
     )
 
