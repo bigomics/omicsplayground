@@ -64,7 +64,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         color = tissue.klr
       )
       df <- df[with(df, order(-x)), ]
-      df <- df[1:15, ] # select top 15 tissues
+      df <- df[1:20, ] # select top 15 tissues
 
       return(
         list(
