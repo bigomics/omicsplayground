@@ -4,24 +4,18 @@ let pricing;
 $(document).ready(function() {
 	// this piece of code print the message on chrome console but not when I place here (!!!)
 	$(document).on('change', '.form-check-input', function(e) {
-		console.log("entered clicked");
   })
 
 	$(document).on('change', '.form-check-input', function(e) {
-	  console.info("entered clicked");
-	  console.log("dsadsad");
 	  if ($(this).prop("checked") === true) {
-		console.info("checked true")
 		$(".card-footer").show()
 	  };
   
 	  if ($(this).prop("checked") === false) {
-		console.info("checked false")
 		$(".card-footer").hide()
 	  };
 	});
   });
-
 
 Shiny.addCustomMessageHandler('set-user', (msg) => {
 	$('#authentication-user').text(msg.user);
