@@ -2,17 +2,15 @@ let db;
 let pricing;
 
 $(document).ready(function() {
-	// this piece of code print the message on chrome console but not when I place here (!!!)
-	$(document).on('change', '.form-check-input', function(e) {
-	})
-  
 	$(document).on('change', '.form-check-input', function(e) {
 	  if ($(this).prop("checked") === true) {
-		$(".card-footer").removeClass("d-none");
+		$(".card-footer").show().animate({height: '65px'}, 200);
 	  };
   
 	  if ($(this).prop("checked") === false) {
-		$(".card-footer").addClass("d-none");
+		$(".card-footer").animate({height: '0px'}, 200, function() {
+		  $(this).hide();
+		});
 	  };
 	});
   });
