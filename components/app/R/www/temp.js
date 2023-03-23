@@ -4,12 +4,12 @@ let pricing;
 $(document).ready(function() {
 	$(document).on('change', '.form-check-input', function(e) {
 	  if ($(this).prop("checked") === true) {
-		$(".card-footer").show().animate({height: '65px'}, 200);
+		$(".card-footer").show().animate({height: '65px'}, 200).addClass("d-none");
 	  };
   
 	  if ($(this).prop("checked") === false) {
 		$(".card-footer").animate({height: '0px'}, 200, function() {
-		  $(this).hide();
+		  $(this).hide().removeClass("d-none");
 		});
 	  };
 	});
