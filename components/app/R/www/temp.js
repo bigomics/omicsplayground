@@ -8,12 +8,19 @@ $(document).ready(function() {
   
 	$(document).on('change', '.form-check-input', function(e) {
 	  if ($(this).prop("checked") === true) {
-		$(".card-footer").removeClass("d-none");
+	      console.log("show captions");
+	      //$(".card-footer").removeClass("d-none");
+	      $(".card-footer").animate({height:'65px'}, 100);	      
 	  };
   
 	  if ($(this).prop("checked") === false) {
-		$(".card-footer").addClass("d-none");
+	      console.log("hide captions");
+	      //$(".card-footer").addClass("d-none");
+	      $(".card-footer").animate({height:'0px'}, 100);	      	      
 	  };
+	 $(window).resize();
+         //$(window).trigger('resize');
+	 console.log("trigger window resize");
 	});
   });
   

@@ -17,7 +17,9 @@ dataview_plot_boxplot_ui <- function(id, label = "", height = c(600, 800)) {
     label = label,
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
-    height = height
+    #height = height
+    height = c("300px","100%"),
+    #card_height = height[1]
   )
 }
 

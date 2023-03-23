@@ -101,7 +101,8 @@ ClusteringUI <- function(id) {
           clustering_plot_hm_splitmap_ui(
             id = ns("hm_splitmap"),
             label = "a",
-            height = fullH - 80,
+            #            height = fullH - 80,
+            height = 900,
             width = "100%"
           ),
           tags$div(

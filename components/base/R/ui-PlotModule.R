@@ -238,15 +238,25 @@ PlotModuleUI <- function(id,
     }
     # div(   #FIXME REMOVE THIS DIV
     #   #class = "plotmodule",
-      bslib::card(
+    e =  bslib::card(
         full_screen = FALSE,
-        style = "height: 100%;",
+        #  style = "height: 100%;",
+#        height = card_height,
+        #        bslib::card_body_fill(
+        bslib::card_header(
+          div(header, class="plotmodule-header")
+        ),
+#        div(header, class="plotmodule-header"),
         bslib::card_body_fill(
-              div(header, class="plotmodule-header"),
-              div(outputFunc(ns("renderfigure")) %>%
-                    shinycssloaders::withSpinner()
-                  ),
-              caption,
+          #height = card_height,
+         height = height.1, 
+         outputFunc(ns("renderfigure")),          
+         ##outputFunc(ns("renderfigure"), width=width.1, height=height.1),
+         #     div(
+         #       outputFunc(ns("renderfigure")) %>%
+         #         shinycssloaders::withSpinner()
+         #     ),
+#             caption,
               shiny::div(class="popup-modal",
                           modalUI(
                                 id = ns("plotPopup"),
@@ -277,7 +287,10 @@ PlotModuleUI <- function(id,
           style = paste0("height:", card_footer_height, "; padding: 2px 0 0 2px;"), # add left and top margin of 2 pixels
           div(class="caption", shiny::HTML(info.text))
         )
-      )
+      ) ## end of card
+
+    e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
+    return(e)
 }
 
 

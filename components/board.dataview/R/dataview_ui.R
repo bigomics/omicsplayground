@@ -65,57 +65,87 @@ DataViewUI <- function(id) {
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("35vh", "70vh") ## heights for small and fullscreen image
+  imgH <- c("100%", "70vh") ## heights for small and fullscreen image
+  imgH <- c("300px", "70vh") ## heights for small and fullscreen image
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
 
-
     # QC tab #####
-
     shiny::tabPanel(
       "Sample QC",
+      #shinyjqui::jqui_sortable(
+      ##  div(
+      ##    class = "row",
+      ##    div(
+      ##      class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##      dataview_plot_totalcounts_ui(
+      ##        ns("counts_total"),
+      ##        height = imgH,
+      ##        label = "a"
+      ##      )
+      ##    ),
+      ##    div(
+      ##      class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##      dataview_plot_boxplot_ui(
+      ##        ns("counts_boxplot"),
+      ##        height = imgH,
+      ##        label = "b"
+      ##      )
+      ##    ),
+      ##    div(
+      ##      class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##      dataview_plot_histogram_ui(
+      ##        ns("counts_histplot"),
+      ##        height = imgH,
+      ##        label = "c"
+      ##      )
+      ##    ),
+      ##    div(
+      ##      class = "col-lg-6 col-xxl-5 col-xxxl-3",
+      ##      dataview_plot_genetypes_ui(
+      ##        ns("counts_genetypes"),
+      ##        height = imgH, label = "d"
+      ##      )
+      ##    ),
+      ##    div(
+      ##      class = "col-lg-9 col-xxl-7 col-xxxl-5",
+      ##      dataview_plot_abundance_ui(
+      ##        ns("counts_abundance"),
+      ##        height = imgH, label = "e"
+      ##      )
+      ##    )
+      ## ),
       shinyjqui::jqui_sortable(
-      div(
-        class = "row",
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_totalcounts_ui(
-            ns("counts_total"),
-            height = imgH,
-            label = "a"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_boxplot_ui(
-            ns("counts_boxplot"),
-            height = imgH,
-            label = "b"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_histogram_ui(
-            ns("counts_histplot"),
-            height = imgH,
-            label = "c"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-5 col-xxxl-3",
-          dataview_plot_genetypes_ui(
-            ns("counts_genetypes"),
-            height = imgH, label = "d"
-          )
-        ),
-        div(
-          class = "col-lg-9 col-xxl-7 col-xxxl-5",
-          dataview_plot_abundance_ui(
-            ns("counts_abundance"),
-            height = imgH, label = "e"
-          )
-        )
-      )),
+       bslib::layout_column_wrap(
+         width = "500",
+         heights_equal = "row",
+         fill = FALSE,
+         dataview_plot_totalcounts_ui(
+           ns("counts_total"),
+           height = c("250px","70vh"),
+           label = "a"
+         ),
+         dataview_plot_boxplot_ui(
+           ns("counts_boxplot"),
+           height = imgH,
+           label = "b"
+         ),
+         dataview_plot_histogram_ui(
+           ns("counts_histplot"),
+           height = c("350px","70vh"),
+           label = "c"
+          ),
+         dataview_plot_genetypes_ui(
+           ns("counts_genetypes"),
+           height = imgH, label = "d"
+         ),
+         dataview_plot_abundance_ui(
+           ns("counts_abundance"),
+           height = imgH, label = "e"
+         )
+       )
+      ),
       tags$div(
         class = "caption",
         HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
