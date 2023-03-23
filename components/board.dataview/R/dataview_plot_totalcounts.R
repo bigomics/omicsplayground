@@ -20,9 +20,7 @@ dataview_plot_totalcounts_ui <- function(id, label = "", height = c(600, 800)) {
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = c("auto", "100%"),
-    # height = height,
-    height = c("250px","70vh"),
-    #card_height = height[1]
+    height = height
   )
 }
 

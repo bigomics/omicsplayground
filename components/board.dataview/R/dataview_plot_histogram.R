@@ -20,8 +20,6 @@ dataview_plot_histogram_ui <- function(id, label = "", height = c(600, 800)) {
     download.fmt = c("png", "pdf", "csv"),
     width = c("auto", "100%"),
     height = height
-    #height = c("100%","100%")
-    #card_height = height[1]    
   )
 }
 
