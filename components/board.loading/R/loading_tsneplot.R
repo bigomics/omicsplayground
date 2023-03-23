@@ -6,8 +6,7 @@
 loading_tsne_ui <- function(id,
                             label = "",
                             height,
-                            width,
-                            card_height = "100%") {
+                            width) {
   ns <- shiny::NS(id)
 
   info_text <- paste0("<b>Similarity clustering</b> of fold-change signatures colored by data sets using t-SNE. Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.")
@@ -21,8 +20,7 @@ loading_tsne_ui <- function(id,
     width = width,
     height = height,
     label = label,
-    title = "Dataset explorer",
-    card_height = card_height
+    title = "Dataset explorer"
   )
 }
 
