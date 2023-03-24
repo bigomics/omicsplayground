@@ -2,7 +2,7 @@ let db;
 let pricing;
 
 $(document).ready(function() {
-	$(document).on('change', '.form-check-input', function(e) {
+	$(document).on('change', '.card-footer-checked', function(e) {
 	  if ($(this).prop("checked") === true) {
 		$(".card-footer").show().animate({height: '65px'}, 200);
 	  };
