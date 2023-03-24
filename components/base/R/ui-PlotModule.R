@@ -307,7 +307,7 @@ PlotModuleServer <- function(
          download.png = NULL,
          download.html = NULL,
          download.csv = NULL,
-       0  download.obj = NULL,
+         download.obj = NULL,
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
