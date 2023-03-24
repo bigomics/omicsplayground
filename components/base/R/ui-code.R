@@ -127,11 +127,11 @@ fileInput2 <- function(inputId, label, multiple = FALSE, accept = NULL, width = 
             tags$div(class = "progress-bar")))
 }
 
-selector_default <- function(inputId, label = "Text to appear in Switch") {
+selector_default <- function(inputId, class = NULL, label = "Text to appear in Switch") {
   tags$div(
     class = "form-check form-switch",
     tags$input(
-      class = "form-check-input",
+      class = paste("form-check-input", class),
       type = "checkbox",
       role = "switch",
       id = inputId,
