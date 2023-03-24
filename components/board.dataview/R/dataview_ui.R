@@ -197,19 +197,15 @@ DataViewUI <- function(id) {
 
     # counts table tab #####
     shiny::tabPanel(
-      "Counts table",
-      dataview_table_rawdata_ui(
-        ns("rawdatatable"),
-        height = c("75vh", TABLE_HEIGHT_MODAL),
-        width = c("100%", "100%")
-      ),
-      tags$div(
-        class = "caption",
-        HTML("<b>Gene table.</b> The table shows the gene expression values per sample, or average
-              expression values across the groups. The column 'rho' reports the correlation with the
-              gene selected in 'Search gene' in the left side bar. If the data type selected is counts,
-              the geometric mean is calculated.")
-      )
+        "Counts table",
+        bslib::layout_column_wrap(
+            width = 1,
+            dataview_table_rawdata_ui(
+                ns("rawdatatable"),
+                height = c("75vh", TABLE_HEIGHT_MODAL),
+                width = c("100%", "100%")
+            )
+        )
     ),
     # Sample information #####
     shiny::tabPanel(

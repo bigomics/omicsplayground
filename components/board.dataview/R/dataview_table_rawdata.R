@@ -6,11 +6,8 @@
 
 dataview_table_rawdata_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
-
-  dropdown_search_gene <- "<code>Search gene</code>"
-  menu_grouped <- "<code>grouped</code>"
-  menu_options <- "<code>Options</code>"
-  info_text <- paste0("Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ", menu_grouped, " in the main <i>Options</i> to see the exact expression values per sample (or cell).", "The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ", dropdown_search_gene, " setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).")
+  
+  info_text <- "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."
 
   TableModuleUI(
     ns("datasets"),
