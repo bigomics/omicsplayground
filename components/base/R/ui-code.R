@@ -134,11 +134,8 @@ selector_default <- function(class = NULL, label = "Text to appear in Switch") {
       class = paste("form-check-input", class),
       type = "checkbox",
       role = "switch",
-      checked = TRUE
+      checked = TRUE,
     ),
-    tags$label(
-      class = "form-check-label",
-      label
+    tags$label(label)
     )
-  )
 }
