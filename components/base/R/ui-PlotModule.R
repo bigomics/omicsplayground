@@ -240,8 +240,7 @@ PlotModuleUI <- function(id,
       bslib::card_body_fill(
         style = paste0("height: ",height.1,";"),
         div(header, class="plotmodule-header"),
-        outputFunc(ns("renderfigure"))%>%
-                    shinycssloaders::withSpinner(),
+        outputFunc(ns("renderfigure")),
         shiny::div(class="popup-modal",
                     modalUI(
                           id = ns("plotPopup"),
