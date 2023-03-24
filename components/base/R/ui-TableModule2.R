@@ -109,17 +109,19 @@ TableModuleUI <- function(id,
   modalfooter.none <- paste0("#",ns("datatablePopup")," .modal-footer{display:none;}")
 
   # Div construction
-  div( class="tablemodule",
-       shiny::fillCol(
-         flex = c(NA,1,NA,0.001,NA),
-         height = height.1,
-         div( header, class="tablemodule-header"),
-         DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
-           shinycssloaders::withSpinner(),
-         div(
-           class = "footer",
-           shiny::HTML(caption)
-         ),
+  e =   bslib::card(
+      class="tablemodule",      
+      full_screen = FALSE, #full_screen = TRUE breaks reactivity
+      bslib::card_body_fill(
+          height = height.1,
+          div(header, class="tablemodule-header"),
+          ##          DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
+          DT::DTOutput(ns("datatable")) %>%
+              shinycssloaders::withSpinner(),
+#          div(
+#           class = "footer",
+#           shiny::HTML(caption)
+#         ),
          shiny::div(class="popup-modal",
                     modalUI(
                       id = ns("datatablePopup"),
@@ -135,8 +137,16 @@ TableModuleUI <- function(id,
 #           shiny::tags$head(shiny::tags$style(modalcontent.style)),  ## remove?
            shiny::tags$head(shiny::tags$style(modalfooter.none))
          )
-       )
-  )
+      ),
+      bslib::card_body(
+          class = "card-footer", # center the content horizontally and vertically
+##          height = card_footer_height,
+##          style = paste0("height:", card_footer_height, "; padding: 2px 0 0 2px;"), # add left and top margin of 2 pixels
+          div(class="caption", shiny::HTML(info.text))
+      )
+  ) ## end of card
+  e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
+  return(e)
 }
 
 TableModuleServer <- function(id,

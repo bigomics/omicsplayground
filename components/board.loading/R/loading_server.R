@@ -635,23 +635,8 @@ LoadingBoard <- function(id,
       nsamples <- sum(as.integer(pgx$nsamples), na.rm = TRUE)
       paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
     })
-
-    output$navheader <- shiny::renderUI({
-      fillRow(
-        flex = c(NA, NA, 1),
-        shiny::div(
-          id = "navheader-current-section",
-          HTML("Load dataset &nbsp;"),
-          shiny::actionLink(
-            ns("module_info"), "",
-            icon = shiny::icon("info-circle"),
-            style = "color: #ccc;"
-          )
-        ),
-        shiny::div(HTML(pgx_stats()), id = "navheader-dataset-stats"),
-        shiny::br()
-      )
-    })
+    
+    output$pgx_stats_ui <- shiny::renderUI(HTML(pgx_stats()))
 
     ## ================================================================================
     ## Data sets table

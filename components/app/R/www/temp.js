@@ -1,5 +1,20 @@
 let db;
 let pricing;
+
+$(document).ready(function() {
+	$(document).on('change', '.card-footer-checked', function(e) {
+	  if ($(this).prop("checked") === true) {
+		$(".card-footer").show().animate({height: '65px'}, 200);
+	  };
+  
+	  if ($(this).prop("checked") === false) {
+		$(".card-footer").animate({height: '0px'}, 200, function() {
+		  $(this).hide();
+		});
+	  };
+	});
+  });
+  
 Shiny.addCustomMessageHandler('set-user', (msg) => {
 	$('#authentication-user').text(msg.user);
 	pricing = msg.pricing;

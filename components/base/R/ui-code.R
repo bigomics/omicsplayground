@@ -126,3 +126,16 @@ fileInput2 <- function(inputId, label, multiple = FALSE, accept = NULL, width = 
             class = "progress active shiny-file-input-progress", 
             tags$div(class = "progress-bar")))
 }
+
+selector_default <- function(class = NULL, label = "Text to appear in Switch") {
+  tags$div(
+    class = "form-check form-switch",
+    tags$input(
+      class = paste("form-check-input", class),
+      type = "checkbox",
+      role = "switch",
+      checked = TRUE,
+    ),
+    tags$label(label)
+    )
+}

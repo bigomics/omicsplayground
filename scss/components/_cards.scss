@@ -1,0 +1,24 @@
+html {
+    .card{
+        --bs-card-spacer-y: 0.6rem !important;
+    }
+    .card-footer {
+        background-color: #F7FAFD;
+    }
+
+    .card-selector-header{
+        margin-top: 10px;
+        margin-left: 10px;
+    }
+
+    .form-check.form-switch {
+        font-size: 16px;
+        /* align-items: center; */
+        float: right;
+    }
+
+    .form-check-input:checked {
+        background-color: #4081dc;
+        border-color: #b8ddff;
+    }
+}

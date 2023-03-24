@@ -102,13 +102,6 @@ ClusteringUI <- function(id) {
             label = "a",
             height = fullH - 80,
             width = "100%"
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
-                        clustering. Red corresponds to overexpression, blue to underexpression of the gene.
-                        At the same time, gene clusters are functionally annotated in the
-                        'Annotate clusters' panel on the right.")
           )
         ),
         shiny::tabPanel(

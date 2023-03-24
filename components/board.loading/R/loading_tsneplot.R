@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-loading_tsne_ui <- function(id, 
+loading_tsne_ui <- function(id,
                             label = "",
                             height,
                             width) {
