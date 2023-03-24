@@ -2,6 +2,10 @@ html {
     .card{
         --bs-card-spacer-y: 0.6rem !important;
     }
+    .caption {
+        margin: 4px;
+    }
+    
     .card-footer {
         background-color: #F7FAFD;
     }
