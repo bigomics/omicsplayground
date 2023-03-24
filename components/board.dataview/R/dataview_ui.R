@@ -284,7 +284,6 @@ DataViewUI <- function(id) {
 
   div(
     div(boardHeader(title = "Data View", info_link = ns("data_info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions"))
     ),
     tabs
   )
