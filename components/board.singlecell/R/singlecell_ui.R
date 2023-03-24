@@ -32,7 +32,6 @@ SingleCellUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
   div(
     boardHeader(title = "Single Cell Board", info_link = ns("infotext")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     div(
       shiny::fillCol(
         flex = c(1),

@@ -90,7 +90,6 @@ TcgaUI <- function(id) {
   )
   div(
     boardHeader(title = "TCGA", info_link = ns("tcga_info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

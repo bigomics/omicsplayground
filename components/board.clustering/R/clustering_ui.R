@@ -91,7 +91,6 @@ ClusteringUI <- function(id) {
     class = "row",
     ## h4("Cluster Samples"),
     boardHeader(title = "Cluster Samples", info_link = ns("clust_info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     div(
       class = "col-md-7",
       shiny::tabsetPanel(

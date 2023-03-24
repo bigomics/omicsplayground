@@ -37,7 +37,8 @@ LoadingUI <- function(id) {
             style = "color: #ccc;"
           )
         ),
-        shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats")
+        shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats"),
+        shiny::div(selector_default(ns("hide_caption"), label = "Show captions"))
       ),
     shiny::tabsetPanel(
       id = ns('tabs'),

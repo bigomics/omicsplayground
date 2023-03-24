@@ -73,7 +73,6 @@ WordCloudUI <- function(id) {
   )
   div(
     boardHeader(title = "Word cloud", info_link = ns("wc_info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

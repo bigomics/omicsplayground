@@ -176,7 +176,6 @@ SignatureUI <- function(id) {
   )
   div(
     boardHeader(title = "Test signatures", info_link = ns("info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }

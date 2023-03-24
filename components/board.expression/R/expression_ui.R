@@ -67,7 +67,6 @@ ExpressionUI <- function(id) {
 
   div(
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     div(
       tagList(
         div(

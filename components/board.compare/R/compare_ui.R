@@ -157,7 +157,6 @@ CompareUI <- function(id) {
   )
   div(
     boardHeader(title = "Compare datasets", info_link = ns("info")),
-    div(selector_default(ns("hide_caption"), label = "Show captions")),
     tabs
   )
 }
