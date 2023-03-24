@@ -53,7 +53,7 @@ correlation_plot_table_corr_ui <- function(id,
       ns("datasets"),
       info.text = cor_table.info,
       height = c(360, TABLE_HEIGHT_MODAL),
-      width = c("auto", "90%"),
+      width = c("auto", "100%"),
       title = "Correlation table",
       label = "b"
     )

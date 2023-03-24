@@ -6,7 +6,7 @@
 featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genesets that are clustered nearby have high covariance."
+  info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance."
 
   info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
 
@@ -18,7 +18,8 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
-      choices = c("sd.X", "sd.FC", "mean.FC"),
+      ##choices = c("sd.X", "sd.FC", "mean.FC"),
+      choices = c("sd.X", "sd.FC"),      
       selected = "sd.X", inline = TRUE
     )
   )
@@ -28,17 +29,12 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
-      # outputFunc = function(x, width, height) {
-      #   plotOutput(x,
-      #     brush = ns("gsetUMAP_brush"), width = width,
-      #     height = height
-      #   )
-      # },
       plotlib = "plotly",
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 750), width = c("auto", 1200),
+      height = c(600, 700),
+      width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
     ),
     TableModuleUI(
@@ -60,6 +56,9 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                                      sigvar,
                                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
     selGsets <- shiny::reactive({
       shiny::req(pgx)
       db <- filter_gsets()
@@ -68,7 +67,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gsets
     })
 
-    gsetUMAP.RENDER <- shiny::reactive({
+    gsetUMAP.RENDER.SAVE <- shiny::reactive({
 
       pos <- getGsetUMAP()
       hilight <- NULL
@@ -99,17 +98,19 @@ featuremap_plot_table_geneset_map_server <- function(id,
       p
     })
 
-    gsetUMAP.RENDER2 <- shiny::reactive({
-
+    plot_data <- shiny::reactive({
       pos <- getGsetUMAP()
-      hilight <- NULL
-      colgamma <- as.numeric(input$gsmap_gamma)
+      colnames(pos) <- c("x","y")
 
+      hilight <- selGsets()
+      colgamma <- as.numeric(input$gsmap_gamma)
+      nlabel <- as.integer(input$gsmap_nlabel)
+      colorby <- input$gsmap_colorby
+      
       F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      colorby <- input$gsmap_colorby
       if (colorby == "var.FC") {
-        fc <- (rowMeans(F**2))**0.2
+        fc <- (rowMeans(F**2))**0.5
       } else if (colorby == "mean.FC") {
         fc <- rowMeans(F)
       } else {
@@ -118,24 +119,65 @@ featuremap_plot_table_geneset_map_server <- function(id,
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
-      ## filter on table
-      hilight <- selGsets()
-      nlabel <- as.integer(input$gsmap_nlabel)
-
-      par(mfrow = c(1, 1))
-      p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 1.2, source = "", plotlib = "plotly"
+      pd <- list(
+        df = data.frame(pos, fc=fc),
+        hilight = hilight,
+        colgamma = colgamma,
+        nlabel = nlabel,
+        colorby = colorby
       )
-      p
-    })
 
+    })
+    
+    render_gsetUMAP <- function() {
+
+      pd  <- plot_data()
+      pos <- pd$df[,c("x","y")]
+      fc  <- pd$df[,c("fc")]
+      hilight <- pd$hilight
+      nlabel  <- pd$nlabel
+      colorby <- pd$colorby
+      
+      ## filter on table
+      p <- plotUMAP(
+        pos,
+        fc,
+        hilight,
+        nlabel = nlabel,
+        title = colorby,
+        cex = 1.2,
+        source =  ns("geneset_filter"),
+        plotlib = "plotly"
+      ) %>%
+        plotly::layout(dragmode = "select")
+      p
+    }
+
+    gsetUMAP.RENDER <- function() {
+      p <- render_gsetUMAP() %>%
+        plotly::config(
+          modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
+        ) %>%
+        plotly_default()
+      p
+    }
+
+    gsetUMAP.RENDER2 <- function() {
+      p <- render_gsetUMAP() %>%
+        plotly::config(
+          modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
+        ) %>%
+        plotly_modal_default()
+      p
+    }
+    
     PlotModuleServer(
       "gset_map",
       plotlib = "plotly",
       plotlib2 = "plotly",
-      func = gsetUMAP.RENDER2,
+      func = gsetUMAP.RENDER,
       func2 = gsetUMAP.RENDER2,
+      csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       add.watermark = watermark
     )
@@ -152,12 +194,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       ## detect brush
       sel.gsets <- NULL
-      b <- input[["gsetUMAP_brush"]] ## ugly??
+      b <- plotly::event_data("plotly_selected", source = ns("geneset_filter"))
 
       if (!is.null(b) & length(b)) {
-        sel <- which(pos[, 1] > b$xmin & pos[, 1] < b$xmax &
-          pos[, 2] > b$ymin & pos[, 2] < b$ymax)
-        sel.gsets <- rownames(pos)[sel]
+        sel <- b$key
+        sel.gsets <- rownames(pos)[rownames(pos) %in% sel]
       }
 
       pheno <- "tissue"
@@ -196,7 +237,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "70vh",
+          scrollY = "20vh",
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

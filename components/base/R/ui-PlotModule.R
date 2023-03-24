@@ -58,7 +58,7 @@ PlotModuleUI <- function(id,
 
     if(is.null(plotlib2)) plotlib2 <- plotlib
     if(length(height)==1) height <- c(height,800)
-    if(length(width)==1)  width  <- c(width,1200)
+    if(length(width)==1)  width  <- c(width,"100%")
 
 
     ifnotchar.int <- function(s) suppressWarnings(
@@ -174,6 +174,13 @@ PlotModuleUI <- function(id,
         flex = c(NA,1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
         label,
+        DropdownMenu(
+            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
+            width = "250px",
+            size = "xs",
+            icon = shiny::icon("info"),
+            status = "default"
+        ),
         options.button,
         shiny::div(class='download-button', title='download', dload.button),
         shiny::div(class='zoom-button', title='zoom', zoom.button)
@@ -186,6 +193,9 @@ PlotModuleUI <- function(id,
     popupfigUI <- function() {
         w <- width.2
         h <- height.2
+
+        ## NOTE: this was in the server before and we could ask the
+        ## image size. How to do this in the UI part?
         if(FALSE && plotlib2=="image") {
             ## retains aspect ratio
             ##
@@ -204,7 +214,9 @@ PlotModuleUI <- function(id,
             caption2 <- shiny::HTML(caption2)
             caption2 <- shiny::div(caption2, class="caption2 popup-plot-caption")
         }
-        shiny::tagList(
+        ##        shiny::tagList(
+        shiny::div(
+          class = "popup-plot-body",
           shiny::div(
             class = "popup-plot",
             tryCatch({
@@ -220,9 +232,10 @@ PlotModuleUI <- function(id,
     }
 
     popupfigUI_editor <- function(){
-      htmlOutput(ns("editor_frame"))
+        htmlOutput(ns("editor_frame"))
     }
 
+    ## inline styles
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 150px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
@@ -294,7 +307,7 @@ PlotModuleServer <- function(
          download.png = NULL,
          download.html = NULL,
          download.csv = NULL,
-         download.obj = NULL,
+       0  download.obj = NULL,
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
@@ -303,8 +316,6 @@ PlotModuleServer <- function(
     moduleServer(
       id,
       function(input, output, session) {
-
-
 
           ns <- session$ns
 
@@ -655,8 +666,8 @@ PlotModuleServer <- function(
 
           if(is.null(func2)) func2 <- func
           if(is.null(plotlib2)) plotlib2 <- plotlib
-          if(length(height)==1) height <- "auto"
-          if(length(width)==1)  width  <- "auto"
+          if(length(height)==1) height <- c(height,700)
+          if(length(width)==1)  width  <- c(width,1200)
           if(length(res)==1)    res    <- c(res, 1.3*res)
 
           res.1 <- res[1]
@@ -743,10 +754,11 @@ PlotModuleServer <- function(
               # If the plotting function is `plotly`, add the edit button
               render <- renderFunc({
                 # By default remove plotly logo from all plots
-                plot <- func() %>% plotly::config(displaylogo = FALSE) %>%
+                plot <- func() %>%
+                  plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
-                plot <- plot %>%
-                  plotly_default()
+                #                plot <- plot %>%
+                #                  plotly_default()
                 # If there is already custom buttons, append the edit one
                 # (issue #2210 plotly/plotly.R)
                 if(inherits(plot$x$config$modeBarButtons, "list")){
@@ -768,9 +780,8 @@ PlotModuleServer <- function(
             } else {
               render <- renderFunc(func())
             }
-
-
           }
+
           if(is.null(render2) && !is.null(func2)) {
             if(plotlib2 == "plotly"){
               render2 <- renderFunc2({

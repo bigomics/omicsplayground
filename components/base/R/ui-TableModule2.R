@@ -103,10 +103,10 @@ TableModuleUI <- function(id,
       caption2
     )
   }
-  modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
-  modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
-  modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
-  modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
+  modaldialog.style <- paste0("#",ns("datatablePopup")," .modal-dialog {width:",width.2,";}")
+  modalbody.style <- paste0("#",ns("datatablePopup")," .modal-body {min-height:",height.2,"; padding:30px 300px;}")
+  modalcontent.style <- paste0("#",ns("datatablePopup")," .modal-content {width:100vw;}")
+  modalfooter.none <- paste0("#",ns("datatablePopup")," .modal-footer{display:none;}")
 
   # Div construction
   e =   bslib::card(
@@ -132,9 +132,9 @@ TableModuleUI <- function(id,
                     )
          ),
          shiny::tagList(
-           shiny::tags$head(shiny::tags$style(modaldialog.style)),
-           shiny::tags$head(shiny::tags$style(modalbody.style)),
-           shiny::tags$head(shiny::tags$style(modalcontent.style)),
+#           shiny::tags$head(shiny::tags$style(modaldialog.style)), ## remove?
+#           shiny::tags$head(shiny::tags$style(modalbody.style)),   ## remove?
+#           shiny::tags$head(shiny::tags$style(modalcontent.style)),  ## remove?
            shiny::tags$head(shiny::tags$style(modalfooter.none))
          )
       ),

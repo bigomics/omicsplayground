@@ -124,7 +124,7 @@ ExpressionUI <- function(id) {
                 id = ns("topgenes"),
                 label = "a",
                 height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", 1600)
+                width = c("auto", "100%")
               ),
               shiny::br(),
               tags$div(
@@ -185,7 +185,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-8",
                   expression_table_genetable_ui(
                     ns("genetable"),
-                    width = c("100%", "90%"),
+                    width = c("100%", "100%"),
                     height = c("300px", TABLE_HEIGHT_MODAL)
                   )
                 ),
@@ -193,7 +193,7 @@ ExpressionUI <- function(id) {
                   class = "col-md-4",
                   expression_table_gsettable_ui(
                     ns("gsettable"),
-                    width = c("100%", "90%"),
+                    width = c("100%", "100%"),
                     height = c("300px", TABLE_HEIGHT_MODAL)
                   )
                 )
@@ -208,7 +208,7 @@ ExpressionUI <- function(id) {
               ),
               expression_table_fctable_ui(
                 ns("fctable"),
-                width = c("100%", "90%"),
+                width = c("100%", "100%"),
                 height = c("300px", TABLE_HEIGHT_MODAL)
               )
             ),
@@ -220,7 +220,7 @@ ExpressionUI <- function(id) {
               ),
               expression_table_FDRtable_ui(
                 ns("FDRtable"),
-                width = c("100%", "90%"),
+                width = c("100%", "100%"),
                 height = c("300px", TABLE_HEIGHT_MODAL)
               )
             )

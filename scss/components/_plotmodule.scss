@@ -34,6 +34,12 @@ html {
 	display: none;
     }
 
+    // center contents 
+    .popup-plot > div {
+	margin-left: auto;
+	margin-right: auto;
+    }
+    
     /* -------------------------- TableModule ---------------------- */
     .tablemodule {
 //	padding: 5px 15px 50px 15px; 

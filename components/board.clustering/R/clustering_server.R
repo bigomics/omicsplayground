@@ -253,7 +253,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if (k.est == 2) {
           km <- kmeans(gx, centers = 2)
           km.rnk <- rank(km$centers, ties.method = "random")
-          grp.labels <- c("low", "high")[]
+          grp.labels <- c("low", "high")[km.rnk]
           grp <- grp.labels[km$cluster]
         } else if (k.est == 3) {
           km <- kmeans(gx, centers = 3)

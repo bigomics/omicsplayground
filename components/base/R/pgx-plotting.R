@@ -3253,7 +3253,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
 
     if(!is.null(hilight2)) {
         jj <- which(rownames(df) %in% hilight2)
-        message("[pgx.scatterPlotXY.PLOTLY] hilight2 points : len.jj = ",length(jj))
         plt <- plt %>%
                 plotly::add_annotations(
                     data = df[jj,,drop=FALSE],

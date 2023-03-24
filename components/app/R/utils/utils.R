@@ -45,11 +45,11 @@ info <- function(..., type="INFO") {
   msg = sapply( list(...),paste,collapse=" ")
   dd <- paste0("[",dd,"]")
   mm <- paste0("[",mem.proc(),"]")
-  type <- strtrim(paste0("[",type,"]   "),6)
-  message(paste(type,dd,mm,"---",sub("\n$","",paste(msg,collapse=" "))))
+  type <- paste0("[",type,"]")
+  message(paste0(type,dd,mm," --- ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
-dbg <- function(...) info(..., type="DBG")
+dbg <- function(...) info(..., type="DBUG")
 
 ## Parse access logs
 ACCESS.LOG <- NULL
@@ -87,21 +87,14 @@ premium.feature <- function(...) {
 	message("[premium.feature] DEV = ",DEV)
 	el <- list(...)
 	if(USER_MODE %in% c("pro","premium","dev")) return(el)
-	tipify(disabled(...),
-				 "This is a Premium feature. Upgrade to enable this feature."
+	tipify( disabled(...),
+		 "This is a Premium feature. Upgrade to enable this feature."
 	)
-
 }
 
 # TODO: this function can be a variable
 in.shinyproxy <- function() {
-	## Determine if we are in ShinyProxy
-	##
-	vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
-						"PLAYGROUND_USERID","PLAYGROUND_LEVEL")
-	vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
-	vals <- sapply(vars,Sys.getenv)
-	all(vals!="")
+        return(Sys.getenv("SHINYPROXY_USERNAME") != "")
 }
 
 tabRequire <- function(pgx, session, tabname, slot) {

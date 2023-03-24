@@ -497,7 +497,7 @@ CorrelationBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    correlation_plot_partial_correlation_server(
+    correlation_plot_correlation_UMAP_server(
       "cor_umap",
       pgx       = pgx,
       cor_gene        = input$cor_gene,

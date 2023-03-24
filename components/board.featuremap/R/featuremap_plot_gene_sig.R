@@ -13,7 +13,8 @@ featuremap_plot_gene_sig_ui <- function(id, label = "", height = c(600, 800)) {
     title = "Gene Signatures",
     label = "b",
     info.text = info_text,
-    height = c(600, 750), width = c("auto", 1200),
+    height = c(600, 700),
+    width = c("auto", "100%"),
     download.fmt = c("png", "pdf")
   )
 }
@@ -25,6 +26,7 @@ featuremap_plot_gene_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     geneSigPlots.plot_data <- shiny::reactive({
       shiny::req(pgx)
 
@@ -69,6 +71,7 @@ featuremap_plot_gene_sig_server <- function(id,
 
     PlotModuleServer(
       "gene_sig",
+      plotlib = "base",
       func = geneSigPlots.RENDER,
       csvFunc = geneSigPlots.plot_data,
       pdf.width = 5, pdf.height = 5,

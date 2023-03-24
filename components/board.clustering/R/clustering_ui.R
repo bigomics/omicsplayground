@@ -126,7 +126,7 @@ ClusteringUI <- function(id) {
           clustering_plot_table_hm_parcoord_ui(
             id = ns("hm_parcoord"),
             label = "a",
-            width = c("100%", 1000),
+            width = c("100%", "100%"),
             height = c(0.45 * fullH, 600)
           ),
           br(),
@@ -152,12 +152,12 @@ ClusteringUI <- function(id) {
             id = ns("plots_clustannot"),
             label = "a",
             height = c(360, 600),
-            width = c("100%", 1000)
+            width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
             height = c(330, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
+            width = c("auto", "100%")
           ),
           tags$div(
             class = "caption",
@@ -184,8 +184,8 @@ ClusteringUI <- function(id) {
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
             label = "",
-            height = c(fullH - 80, 700),
-            width = c("auto", 800)
+            height = c(fullH - 80, 650),
+            width = c("auto", "100%")
           ),
           tags$div(
             class = "caption",

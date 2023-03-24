@@ -325,11 +325,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     
     if(ncol(X)<=6) X <- cbind(X,X,X,X,X,X)
     dim(X)
-    dbg("[pgx.clusterBigMatrix] 2a: dim(X)=",dim(X),"\n")
 
     if(nrow(X)<=3) X <- rbind(X,X,X,X)
     dim(X)
-    dbg("[pgx.clusterBigMatrix] 2b: dim(X)=",dim(X),"\n")    
 
     ## add small variation...
     X <- X + 1e-3*matrix(rnorm(length(X)),nrow(X),ncol(X))
@@ -349,8 +347,6 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
     dim(X)
 
-    dbg("[pgx.clusterBigMatrix] 3: dim(X)=",dim(X),"\n")
-    
     all.pos <- list()
 
     if("pca" %in% methods && 2 %in% dims) {

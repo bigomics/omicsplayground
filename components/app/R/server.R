@@ -367,7 +367,7 @@ app_server <- function(input, output, session) {
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
         tabRequire(PGX, session, "cmap-tab", "connectivity")
-        tabRequire(PGX, session, "drugs-tab", "drugs")
+        tabRequire(PGX, session, "drug-tab", "drugs")
         tabRequire(PGX, session, "wordcloud-tab", "wordcloud")
         tabRequire(PGX, session, "cell-tab", "deconv")
         ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
