@@ -4,7 +4,7 @@
 ##
 
 
-dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_module_geneinfo_ui <- function(id, label = "", height = c("auto", 1000)) {
   ns <- shiny::NS(id)
 
 

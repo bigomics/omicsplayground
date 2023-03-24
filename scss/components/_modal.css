@@ -71,7 +71,7 @@ html {
 	font-size: 1rem !important; 
     }
 
-    .modal-body .gene-info-output {
+    .modal-body {
 	height: auto;
     }
     
