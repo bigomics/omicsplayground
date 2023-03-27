@@ -60,6 +60,7 @@ RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
 RUN R -e "BiocManager::install('KEGGgraph')"
 RUN R -e "install.packages(c('RSpectra'))"
 RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
+RUN R -e "install.packages('reticulate');library(reticulate);install_miniconda(force=TRUE);conda_install('r-reticulate','python-kaleido');conda_install('r-reticulate','plotly',channel='plotly');use_miniconda('r-reticulate')"
 
 #------------------------------------------------------------
 # Clean up when done.
