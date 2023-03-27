@@ -9,8 +9,9 @@ if(basename(getwd()) != "omicsplayground") {
   stop("This file is supposed to run from the root Playground folder")
 }
 
-options(Ncpus=8L)
+options(Ncpus = 8L)
 options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+options(timeout = 60*5)  ## download time.out
 
 if(1) {
     ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
