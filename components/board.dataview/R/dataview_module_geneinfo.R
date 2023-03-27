@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -25,7 +25,7 @@ dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800), wi
     caption2 = NULL,
     options = NULL,
     download.fmt = NULL,
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 GOOGLE_BASE_URL <- "https://firestore.googleapis.com/v1/projects"

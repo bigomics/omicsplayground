@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -123,7 +123,7 @@ app_server <- function(input, output, session) {
         pgx = PGX,
         limits = limits,
         auth = auth,
-        enable_userdir = opt$ENABLE_USERDIR,        
+        enable_userdir = opt$ENABLE_USERDIR,
         r_global = r_global
     )
 
@@ -156,7 +156,7 @@ app_server <- function(input, output, session) {
     })
 
     is_data_loaded <- reactive({
-        has_data <- env$load$loaded() 
+        has_data <- env$load$loaded()
         if(opt$ENABLE_UPLOAD) has_data <- (has_data|| env$upload$loaded())
         has_data
     })
@@ -363,7 +363,7 @@ app_server <- function(input, output, session) {
         bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         ##bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
-        
+
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
         tabRequire(PGX, session, "cmap-tab", "connectivity")
@@ -565,6 +565,20 @@ Upgrade today and experience advanced analysis features without the time limit.<
     observeEvent( input$quit, {
         dbg("[server.R:quit] closing session... ")
         session$close()
+    })
+
+    # This code will run when there is a shiny error. Then this
+    # error will be shown on the app. Note that errors that are
+    # not related to Shiny are not caught (e.g. an error on the
+    # global.R file is not caught by this)
+    options(shiny.error = function() {
+      # The error message is on the parent environment, it is
+      # not passed to the function called on error
+      parent_env <- parent.frame()
+      error <- parent_env$e
+      sever::sever(sever_screen0(
+        error
+      ), bg_color = "#004c7d")
     })
 
     ## This code will be run after the client has disconnected

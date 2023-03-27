@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ngs.hiveplot <- function(ngs, pheno, level=1, ntop=400, main="", axis.lab=c("GX","CN","ME"),

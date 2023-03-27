@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #########################################################################
@@ -26,7 +26,7 @@ envcat <- function(var) {
 }
 
 mem.proc <- function(digits=0) {
-  mem <- "[? MB]" 
+  mem <- "[? MB]"
   if(Sys.info()["sysname"] %in% c("Linux")) {
     file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
     what <- vector("character", 52)
@@ -36,7 +36,7 @@ mem.proc <- function(digits=0) {
     ##cat("Virtual size: ", vsz, " MB\n", sep = "")
     mem <- paste0(round(vsz,digits),"MB")
   }
-  mem 
+  mem
 }
 
 info <- function(..., type="INFO") {
@@ -105,7 +105,7 @@ tabRequire <- function(pgx, session, tabname, slot) {
           bigdash.hideTab(session, tabname)
 	} else {
           ##showTab(tabname, subtab)
-          bigdash.showTab(session, tabname)          
+          bigdash.showTab(session, tabname)
 	}
 }
 
@@ -190,18 +190,83 @@ sever_screen <- function() {
            )
 }
 
-sever_screen0 <- function() {
+sever_screen0 <- function(error = NULL) {
+  err_traceback <- capture.output(
+    printStackTrace(
+      error,
+      full = get_devmode_option("shiny.fullstacktrace",
+                                FALSE),
+      offset = getOption("shiny.stacktraceoffset", TRUE)),
+    type = "message"
+  )
+  err_message <- error$message
+
     shiny::tagList(
-               shiny::tags$h1(
-                               "Woops!", style="color:white;font-family:lato;"
-                           ),
-               shiny::p("You have been disconnected", style="font-size:15px;"),
-               shiny::br(),
-               shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
-                          width=450,height=250)),
-               shiny::br(),
-               sever::reload_button("Relaunch", class = "info")
-           )
+      shiny::div(
+        style = "
+          width: 100vw;
+          height: 100vh;
+        ",
+        shiny::div(
+          style = "
+            transform: translateY(50%);
+          ",
+          shiny::tags$h1(
+            "Woops!", style="color:white;font-family:lato;"
+          ),
+          shiny::p("You have been disconnected", style="font-size:15px;"),
+          shiny::br(),
+          shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
+                                width=450,height=250)),
+          shiny::br(),
+          sever::reload_button("Relaunch", class = "info"),
+          if(!is.null(error)){
+            tags$button("Show error",
+                        id = "showModalBtn",
+                        onClick = "document.getElementById('myModal').style.display = 'block';",
+                        class = "btn btn-danger")
+          }
+        ),
+        tags$div(
+          id = "myModal",
+          class = "modal",
+          style = "
+                      display: none;
+                      position: fixed;
+                      z-index: 1;
+                      left: 0;
+                      top: 0;
+                      width: 100%;
+                      height: 100%;
+                      overflow: auto;
+                      background-color: rgba(0,0,0,0.4);
+                     ",
+          tags$div(
+            class = "modal-content",
+            style = "
+              background-color: #fefefe;
+              margin: 15% auto;
+              padding: 20px;
+              border: 1px solid #888;
+              width: 45%;
+              color: black;
+              text-align: left;
+            ",
+            tags$button(class = "btn btn-info", HTML("&times;"),
+                        onClick = "document.getElementById('myModal').style.display = 'none';",
+                        style = "
+                                  position: absolute;
+                                  top: 5px;
+                                  right: 5px;
+                                 "),
+            tags$h3("Error Message"),
+            tags$p(err_message),
+            tags$h3("Error traceback"),
+            tags$p(HTML(paste(err_traceback, collapse = "<br>")))
+          )
+        )
+      )
+    )
 }
 
 

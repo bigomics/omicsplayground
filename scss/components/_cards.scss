@@ -3,9 +3,11 @@ html {
         --bs-card-spacer-y: 0.6rem !important;
     }
     .caption {
-        margin: 4px;
+        margin: 4px;   
     }
-
+    .caption:hover {
+        overflow: auto;
+    }
     .card-footer {
         background-color: #F7FAFD;
         padding: 2px 0 0 2px
