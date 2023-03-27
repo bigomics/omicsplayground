@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 style0 <- "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"

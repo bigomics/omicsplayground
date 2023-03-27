@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_phenoheatmap_ui <- function(id, label = "", height = c(600, 800)) {

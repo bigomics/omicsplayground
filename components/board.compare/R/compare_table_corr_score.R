@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 compare_table_corr_score_ui <- function(id, width, height) {
