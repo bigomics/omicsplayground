@@ -12,7 +12,7 @@ run.headless:
 	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"
 
 run.tee: 
-	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)" | tee 2&>1 log/run.log
+	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)" 2&>1 | tee -a run.log
 
 sass: FORCE
 	Rscript dev/sass.R
