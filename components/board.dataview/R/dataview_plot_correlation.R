@@ -5,7 +5,7 @@
 
 dataview_plot_correlation_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
-  info_text <- "Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively."
+  info_text <- "<b>Top correlated genes</b>. Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively. Darker color corresponds to higher expression of the gene."
 
   PlotModuleUI(
     ns("pltsrv"),

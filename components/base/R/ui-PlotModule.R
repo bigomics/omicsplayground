@@ -285,7 +285,7 @@ PlotModuleUI <- function(id,
         div(class="caption", shiny::HTML(info.text))
       )
     ) # end of card
-    e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
+#    e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
     return(e)
 }
 

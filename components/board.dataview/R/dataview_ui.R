@@ -129,70 +129,95 @@ DataViewUI <- function(id) {
     # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
-      div(
-        class = "row",
-        div(
-          class = "col-md-2",
-          dataview_module_geneinfo_ui(ns("geneinfo")),
+      ## div(
+      ##   class = "row",
+      ##   div(
+      ##     class = "col-md-2",
+      ##     dataview_module_geneinfo_ui(ns("geneinfo")),
+      ##   ),
+      ##   div(
+      ##     class = "col-md-10",
+      ##     div(
+      ##       class = "row",
+      ##       div(
+      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##         dataview_plot_expression_ui(
+      ##           ns("expressionplot"),
+      ##           height = imgH,
+      ##           label = "a"
+      ##         )
+      ##       ),
+      ##       div(
+      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##         dataview_plot_averagerank_ui(
+      ##           ns("averagerankplot"),
+      ##           height = imgH,
+      ##           label = "b"
+      ##         )
+      ##       ),
+      ##       div(
+      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
+      ##         dataview_plot_tsne_ui(
+      ##           ns("tsneplot"),
+      ##           height = imgH,
+      ##           label = "c"
+      ##         )
+      ##       ),
+      ##       div(
+      ##         class = "col-lg-9 col-xxl-7 col-xxxl-5",
+      ##         dataview_plot_correlation_ui(
+      ##           ns("correlationplot"),
+      ##           height = imgH,
+      ##           label = "d"
+      ##         )
+      ##       ),
+      ##       div(
+      ##         class = "col-lg-9 col-xxl-5 col-xxxl-3",
+      ##         dataview_plot_tissue_ui(
+      ##           ns("tissueplot"),
+      ##           height = imgH,
+      ##           label = "e"
+      ##         )
+      ##       )
+      ##     ),
+      shinyjqui::jqui_sortable(
+        bslib::layout_column_wrap(
+        width = "400px",
+        heights_equal = "row",
+        # height = "100vh",
+        dataview_module_geneinfo_ui(
+          ns("geneinfo"),
+          ##height = 700
+          height = imgH,
+          #width = c("200px","100%")
         ),
-        div(
-          class = "col-md-10",
-          div(
-            class = "row",
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_expression_ui(
-                ns("expressionplot"),
-                height = imgH,
-                label = "a"
-              )
-            ),
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_averagerank_ui(
-                ns("averagerankplot"),
-                height = imgH,
-                label = "b"
-              )
-            ),
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_tsne_ui(
-                ns("tsneplot"),
-                height = imgH,
-                label = "c"
-              )
-            ),
-#          ),
-#          div(
-#            class = "row",
-            div(
-              class = "col-lg-9 col-xxl-7 col-xxxl-5",
-              dataview_plot_correlation_ui(
-                ns("correlationplot"),
-                height = imgH,
-                label = "d"
-              )
-            ),
-            div(
-              class = "col-lg-9 col-xxl-5 col-xxxl-3",
-              dataview_plot_tissue_ui(
-                ns("tissueplot"),
-                height = imgH,
-                label = "e"
-              )
-            )
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases.
-            <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b>
-            Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by
-            expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
-            expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
-          )
+        dataview_plot_expression_ui(
+          ns("expressionplot"),
+          height = imgH,
+          label = "a"
+        ),
+        dataview_plot_averagerank_ui(
+          ns("averagerankplot"),
+          height = imgH,
+          label = "b"
+        ),
+        dataview_plot_tsne_ui(
+          ns("tsneplot"),
+          height = imgH,
+          label = "c"
+        ),
+        dataview_plot_correlation_ui(
+          ns("correlationplot"),
+          height = imgH,
+          label = "d"
+        ),
+        dataview_plot_tissue_ui(
+          ns("tissueplot"),
+          height = imgH,
+          label = "e"
         )
-      )
+        )
+        )
     ),
 
     # counts table tab #####
@@ -210,10 +235,11 @@ DataViewUI <- function(id) {
     # Sample information #####
     shiny::tabPanel(
       "Sample information",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
+      bslib::layout_column_wrap(
+        width = 1,
+        bslib::layout_column_wrap(
+          width = 1/2,
+          heights_equal = "row",
           shiny::div(
             dataview_plot_phenoheatmap_ui(
               ns("phenoheatmap"),
@@ -221,21 +247,21 @@ DataViewUI <- function(id) {
               label = "a"
             ),
             style = "overflow-y: auto;"
-          )
-        ),
-        div(
-          class = "col-md-6",
+          ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
             height = imgH,
             label = "b"
           )
+        ),
+        bslib::layout_column_wrap(
+          width = 1,
+          dataview_table_samples_ui(
+            ns("sampletable"),
+            height = c(350, TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         )
-      ),
-      dataview_table_samples_ui(
-        ns("sampletable"),
-        height = c(280, TABLE_HEIGHT_MODAL),
-        width = c("auto", "100%")
       ),
       tags$div(
         class = "caption",
