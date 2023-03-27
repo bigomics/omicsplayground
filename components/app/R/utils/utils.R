@@ -191,15 +191,19 @@ sever_screen <- function() {
 }
 
 sever_screen0 <- function(error = NULL) {
-  err_traceback <- capture.output(
-    printStackTrace(
-      error,
-      full = get_devmode_option("shiny.fullstacktrace",
-                                FALSE),
-      offset = getOption("shiny.stacktraceoffset", TRUE)),
-    type = "message"
-  )
-  err_message <- error$message
+  err_message <- NULL
+  err_traceback <- NULL
+  if(!is.null(error)){
+    err_traceback <- capture.output(
+      printStackTrace(
+        error,
+        full = get_devmode_option("shiny.fullstacktrace",
+                                  FALSE),
+        offset = getOption("shiny.stacktraceoffset", TRUE)),
+      type = "message"
+    )
+    err_message <- error$message
+  }
 
     shiny::tagList(
       shiny::div(
