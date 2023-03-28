@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
 ## DEAN ATTALI code recommendation:
 ## example of how a board module should be written (TcgaBoard)
 ##
