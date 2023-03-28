@@ -428,28 +428,42 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
                     dir.create(temp_dir)
 
+                    # Define input and output file paths
                     path_to_counts <- file.path(temp_dir, "counts.csv")
                     path_to_samples <- file.path(temp_dir, "samples.csv")
                     path_to_contrasts <- file.path(temp_dir, "contrasts.csv")
-                    batch.correct = FALSE ## done in UI
-                    prune.samples = TRUE  ## always prune
-                    filter.genes = filter.genes
-                    only.known = !remove.unknown
-                    only.proteincoding = only.proteincoding
-                    only.hugo = only.hugo
-                    convert.hugo = only.hugo
-                    do.cluster = TRUE
-                    cluster.contrasts = FALSE
+                    path_to_params <- file.path(temp_dir, "params.csv")
 
-                    script_path <- file.path(getwd(), "bin", "pgxcreate_op.R")
+                    library(processx)
 
+                    # Define create_pgx function arguments
+                    params <- data.frame(
+                        batch.correct = FALSE,
+                        prune.samples = TRUE,
+                        filter.genes = filter.genes,
+                        only.known = !remove.unknown,
+                        only.proteincoding = only.proteincoding,
+                        only.hugo = only.hugo,
+                        convert.hugo = only.hugo,
+                        do.cluster = TRUE,
+                        cluster.contrasts = FALSE
+                        )
+
+                    # Write input data to CSV files
+                    write.csv(params, file = path_to_params, row.names = TRUE)
                     write.csv(counts, file = path_to_counts, row.names = TRUE)
                     write.csv(samples, file = path_to_samples, row.names = TRUE)
-                    write.csv(contrasts, file = path_to_contrasts, row.names = TRUE)
-                    
-            
-                }
+                    write.csv(contrasts, file = path_to_contrasts, row.names = FALSE)
 
+                    # Define command to run create_pgx script
+                    script_path <- file.path(getwd(), "bin", "pgxcreate_op.R")
+
+                    cmd <- shQuote(temp_dir)
+                    p1 <- processx::run("Rscript", args = c(shQuote(script_path), cmd), echo = TRUE, echo_cmd = TRUE)
+                    
+                    }
+
+                
                 names(ngs)
                 message("[ComputePgxServer:@compute] computing PGX object")
                 progress$inc(0.2, detail = "computing PGX object")
