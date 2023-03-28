@@ -60,3 +60,4 @@ bigomics-extra.js
 Renviron.site
 .Rdata
 inst/doc
+*.csv
