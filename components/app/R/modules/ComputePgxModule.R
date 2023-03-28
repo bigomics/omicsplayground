@@ -456,10 +456,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     write.csv(contrasts, file = path_to_contrasts, row.names = FALSE)
 
                     # Define command to run create_pgx script
-                    script_path <- file.path(getwd(), "bin", "pgxcreate_op.R")
+                    script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
                     cmd <- shQuote(temp_dir)
-                    p1 <- processx::run("Rscript", args = c(shQuote(script_path), cmd), echo = TRUE, echo_cmd = TRUE)
+                    p <- processx::run("Rscript", args = c(shQuote(script_path), cmd))
                     
                     }
 
