@@ -399,21 +399,55 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 } else {
 
-                    ngs <- pgx.createPGX(
-                        counts, samples, contrasts, ## genes,
-                        X = NULL,   ## should we pass the pre-normalized expresson X ????
-                        batch.correct = FALSE, ## done in UI
-                        prune.samples = TRUE,  ## always prune
-                        filter.genes = filter.genes,
-                        ##only.chrom = FALSE,
-                        ##rik.orf = !excl.rikorf,
-                        only.known = !remove.unknown,
-                        only.proteincoding = only.proteincoding,
-                        only.hugo = only.hugo,
-                        convert.hugo = only.hugo,
-                        do.cluster = TRUE,
-                        cluster.contrasts = FALSE
-                    )
+                    browser()
+
+                    # ngs <- playbase::create_pgx(
+                    #     counts,
+                    #     samples, 
+                    #     contrasts, ## genes,
+                    #     X = NULL,   ## should we pass the pre-normalized expresson X ????
+                    #     batch.correct = FALSE, ## done in UI
+                    #     prune.samples = TRUE,  ## always prune
+                    #     filter.genes = filter.genes,
+                    #     ##only.chrom = FALSE,
+                    #     ##rik.orf = !excl.rikorf,
+                    #     only.known = !remove.unknown,
+                    #     only.proteincoding = only.proteincoding,
+                    #     only.hugo = only.hugo,
+                    #     convert.hugo = only.hugo,
+                    #     do.cluster = TRUE,
+                    #     cluster.contrasts = FALSE)
+
+
+                    # create folder with random name to store the csv files
+
+                    # Generate random name for temporary folder
+                    temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
+
+                    # Create temporary folder
+                    temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
+                    dir.create(temp_dir)
+
+                    path_to_counts <- file.path(temp_dir, "counts.csv")
+                    path_to_samples <- file.path(temp_dir, "samples.csv")
+                    path_to_contrasts <- file.path(temp_dir, "contrasts.csv")
+                    batch.correct = FALSE ## done in UI
+                    prune.samples = TRUE  ## always prune
+                    filter.genes = filter.genes
+                    only.known = !remove.unknown
+                    only.proteincoding = only.proteincoding
+                    only.hugo = only.hugo
+                    convert.hugo = only.hugo
+                    do.cluster = TRUE
+                    cluster.contrasts = FALSE
+
+                    script_path <- file.path(getwd(), "bin", "pgxcreate_op.R")
+
+                    write.csv(counts, file = path_to_counts, row.names = TRUE)
+                    write.csv(samples, file = path_to_samples, row.names = TRUE)
+                    write.csv(contrasts, file = path_to_contrasts, row.names = TRUE)
+                    
+            
                 }
 
                 names(ngs)
