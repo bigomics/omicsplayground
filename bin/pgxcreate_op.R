@@ -10,8 +10,6 @@ print("script is running")
 args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
-temp_dir <- "C:/code/omicsplayground/data/temp_457074331"
-
 
 params  <- readRDS(file.path(temp_dir,"params.RData"))
 
