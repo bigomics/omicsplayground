@@ -371,7 +371,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
 
                 # Create temporary folder
-                temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
+                temp_dir <- file.path(file.path(get_opg_root(),"data"), temp_folder)
                 dir.create(temp_dir)
 
                 path_to_params <- file.path(temp_dir, "params.RData")
@@ -416,6 +416,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
                 cmd <- shQuote(temp_dir)
+
+               
                 
                 # bigdash.showTabsGoToDataView(session)
                 # r_global$load_example_trigger <- r_global$load_example_trigger +1
@@ -430,6 +432,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 r_global$load_example_trigger <- r_global$load_example_trigger + 1
 
                 # Start the process and store it in the reactive value
+
+                 dbg(cmd)
+                 dbg(script_path)
                  process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
             })
