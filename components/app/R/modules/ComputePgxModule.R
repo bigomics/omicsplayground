@@ -36,7 +36,7 @@ ComputePgxUI <- function(id) {
 ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, metaRT,
                              FILES, pgx.dirRT, enable_button = TRUE, alertready = TRUE,
                              max.genes = 20000, max.genesets = 10000,
-                             max.datasets = 100, height = 720 )
+                             max.datasets = 100, height = 720, r_global)
 {
     shiny::moduleServer(
         id,
@@ -242,6 +242,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             ## After confirmation is received, start computing the PGX
             ## object from the uploaded files
             ## ------------------------------------------------------------------
+            # Define a reactive timer
+            check_process_status <- reactiveTimer(1000) # check every 1000 milliseconds (1 second)
+
+            # Define a reactive value to store the process object
+            process_obj <- reactiveVal(NULL)
+
+            
             computedPGX  <- shiny::reactiveVal(NULL)
 
             shiny::observeEvent( input$compute, {
@@ -357,101 +364,74 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 # message("[ComputePgxServer:@compute] creating PGX object")
                 # progress$inc(0.1, detail = "creating PGX object")
 
-                USE_FUTURES=1
-                USE_FUTURES=0
+                    
+                # create folder with random name to store the csv files
 
-                if(USE_FUTURES) {
+                # Generate random name for temporary folder
+                temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
 
-                    ## !!!TRYING TO USE FUTURES. BUT SEEMS STILL TO BLOCK
-                    ## OTHER SESSIONS!!!!
-                    ##
-                    ## IK 10.11.2021
+                # Create temporary folder
+                temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
+                dir.create(temp_dir)
 
-                    message("[ComputePgxServer:@compute] using futures ")
-                    f <- future::future({
-                        pgx.createPGX(
-                            counts, samples, contrasts, ## genes,
-                            X = NULL,   ## should we pass the pre-normalized expresson X ????
-                            batch.correct = FALSE, ## done in UI
-                            prune.samples = TRUE,  ## always prune
-                            filter.genes = filter.genes,
-                            ##only.chrom = FALSE,
-                            ##rik.orf = !excl.rikorf,
-                            only.known = !remove.unknown,
-                            only.proteincoding = only.proteincoding,
-                            only.hugo = only.hugo,
-                            convert.hugo = only.hugo,
-                            do.cluster = TRUE,
-                            cluster.contrasts = FALSE
-                        )
-                    })
-                    ## wait until done...
-                    while (!future::resolved(f)) {
-                        ##cat(count, "\n")
-                        message(".",appendLF = FALSE)
-                        Sys.sleep(15)  ## every 15s
-                    }
-                    message("done!\n")
-                    ##value(f)
-                    ngs <- future::value(f)
-                    names(ngs)
+                path_to_params <- file.path(temp_dir, "params.RData")
 
-                } else {
+                this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
-                    # create folder with random name to store the csv files
+                # Define create_pgx function arguments
+                params <- list(
+                    samples = samples,
+                    counts = counts,
+                    contrasts = contrasts,
+                    batch.correct = FALSE,
+                    prune.samples = TRUE,
+                    filter.genes = filter.genes,
+                    only.known = !remove.unknown,
+                    only.proteincoding = only.proteincoding,
+                    only.hugo = only.hugo,
+                    convert.hugo = only.hugo,
+                    do.cluster = TRUE,
+                    cluster.contrasts = FALSE,
+                    max.genes = max.genes,
+                    max.genesets = max.genesets,
+                    gx.methods = gx.methods,
+                    gset.methods = gset.methods,
+                    extra.methods = extra.methods,
+                    use.design = use.design,        ## no.design+prune are combined
+                    prune.samples = prune.samples,  ##
+                    do.cluster = TRUE,
+                    lib.dir = FILES,
+                    name = gsub("[ ]","_",input$upload_name),
+                    datatype = input$upload_datatype,
+                    description = input$upload_description,
+                    creator = "user",
+                    this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+                    date = this.date
+                    )
 
-                    # Generate random name for temporary folder
-                    temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
+                saveRDS(params, file=path_to_params)
 
-                    # Create temporary folder
-                    temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
-                    dir.create(temp_dir)
+                # Define command to run create_pgx script
+                
+                script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
-                    path_to_params <- file.path(temp_dir, "params.RData")
+                cmd <- shQuote(temp_dir)
+                
+                # bigdash.showTabsGoToDataView(session)
+                # r_global$load_example_trigger <- r_global$load_example_trigger +1
+                
+                # Function to start the process
+                
+                # Define command to run create_pgx script
+                script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
+                cmd <- shQuote(temp_dir)
 
-                    this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+                bigdash.showTabsGoToDataView(session)
+                r_global$load_example_trigger <- r_global$load_example_trigger + 1
 
-                    # Define create_pgx function arguments
-                    params <- list(
-                        samples = samples,
-                        counts = counts,
-                        contrasts = contrasts,
-                        batch.correct = FALSE,
-                        prune.samples = TRUE,
-                        filter.genes = filter.genes,
-                        only.known = !remove.unknown,
-                        only.proteincoding = only.proteincoding,
-                        only.hugo = only.hugo,
-                        convert.hugo = only.hugo,
-                        do.cluster = TRUE,
-                        cluster.contrasts = FALSE,
-                        max.genes = max.genes,
-                        max.genesets = max.genesets,
-                        gx.methods = gx.methods,
-                        gset.methods = gset.methods,
-                        extra.methods = extra.methods,
-                        use.design = use.design,        ## no.design+prune are combined
-                        prune.samples = prune.samples,  ##
-                        do.cluster = TRUE,
-                        lib.dir = FILES,
-                        name = gsub("[ ]","_",input$upload_name),
-                        datatype = input$upload_datatype,
-                        description = input$upload_description,
-                        creator = "user",
-                        this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-                        date = this.date
-                        )
+                # Start the process and store it in the reactive value
+                 process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
-                    saveRDS(params, file=path_to_params)
-
-                     browser()
-
-                    # Define command to run create_pgx script
-                    script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
-
-                    cmd <- shQuote(temp_dir)
-                    p <- processx::run("Rscript", args = c(shQuote(script_path), cmd))
-                    }
             })
 
             return(computedPGX)  ## pointing to reactive
