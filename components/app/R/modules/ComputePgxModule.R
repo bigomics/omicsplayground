@@ -398,25 +398,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     names(ngs)
 
                 } else {
-
-                    # ngs <- playbase::create_pgx(
-                    #     counts,
-                    #     samples, 
-                    #     contrasts, ## genes,
-                    #     X = NULL,   ## should we pass the pre-normalized expresson X ????
-                    #     batch.correct = FALSE, ## done in UI
-                    #     prune.samples = TRUE,  ## always prune
-                    #     filter.genes = filter.genes,
-                    #     ##only.chrom = FALSE,
-                    #     ##rik.orf = !excl.rikorf,
-                    #     only.known = !remove.unknown,
-                    #     only.proteincoding = only.proteincoding,
-                    #     only.hugo = only.hugo,
-                    #     convert.hugo = only.hugo,
-                    #     do.cluster = TRUE,
-                    #     cluster.contrasts = FALSE)
-
-
+                    
                     # create folder with random name to store the csv files
 
                     # Generate random name for temporary folder

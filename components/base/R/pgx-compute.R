@@ -118,14 +118,14 @@ pgx.createFromFiles <- function(count.file, samples.file, contrasts.file=NULL,
     ## start computing PGX object
     pgx <- pgx.computePGX(
         pgx, 
-        max.genes = 40000,
-        max.genesets = 20000,
-        gx.methods = gx.methods,
-        gset.methods = gset.methods,
-        extra.methods = extra.methods,
-        do.cluster = TRUE,
-        use.design = TRUE,
-        prune.samples = FALSE,
+        max.genes = params$max.genes,
+        max.genesets = params$max.genesets,
+        gx.methods = params$gx.methods,
+        gset.methods = params$gset.methods,
+        extra.methods = params$extra.methods,
+        do.cluster = params$do.cluster,
+        use.design = params$use.design,
+        prune.samples = params$prune.samples,
         lib.dir = FILES,
         progress=NULL
     )
