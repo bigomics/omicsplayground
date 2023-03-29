@@ -7,16 +7,14 @@
 
 ## Annotate clusters ############
 
-clustering_plot_table_hm_parcoord_ui <- function(id,
-                                                 label = "",
-                                                 height,
-                                                 width) {
+clustering_plot_parcoord_ui <- function(id,
+                                        label = "",
+                                        height = c(350, TABLE_HEIGHT_MODAL),
+                                        width  = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   info_text <- "The <strong>Parallel Coordinates</strong> panel
 displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap."
-
-  hm_parcoord_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
   hm_parcoord_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
@@ -25,8 +23,7 @@ displays the expression levels of selected genes across all conditions in the an
     )
   )
 
-  div(
-    PlotModuleUI(
+  PlotModuleUI(
       ns("pltmod"),
       title = "Parallel coordinates",
       label = label,
@@ -36,16 +33,27 @@ displays the expression levels of selected genes across all conditions in the an
       download.fmt = c("png", "pdf", "csv"),
       width = width,
       height = height
-    ),
-    TableModuleUI(
+  )
+  
+}
+
+clustering_table_parcoord_ui <- function(id,
+                                         label = "",
+                                         height = c(350, TABLE_HEIGHT_MODAL),
+                                         width  = c("auto", "100%")) {
+  ns <- shiny::NS(id)
+
+  hm_parcoord_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
+
+  TableModuleUI(
       ns("datasets"),
       info.text = hm_parcoord_table_info,
-      height = c(330, TABLE_HEIGHT_MODAL),
-      width = c("auto", "90%"),
+      height = height,
+      width = width,
       title = "Selected genes",
       label = "b"
-    )
   )
+  
 }
 
 clustering_plot_table_hm_parcoord_server <- function(id,

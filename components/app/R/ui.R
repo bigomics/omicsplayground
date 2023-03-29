@@ -590,8 +590,10 @@ app_ui <- function() {
         )
     }
 
+    info("[ui.R] >>> creating UI")
     ui <- createUI()
-
+    info("[ui.R] <<< finished UI!")
+    
     return(ui)
 }
 

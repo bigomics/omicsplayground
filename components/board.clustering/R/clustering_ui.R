@@ -85,8 +85,12 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 850 ## full height of page
+  fullH <- 800 ## full height of page
+  rowH  <- 350
 
+  fullH <- "80vh" ## full height of full page
+  rowH  <- "39.2vh"
+  
   div(
     class = "row",
     ## h4("Cluster Samples"),
@@ -100,7 +104,7 @@ ClusteringUI <- function(id) {
           clustering_plot_hm_splitmap_ui(
             id = ns("hm_splitmap"),
             label = "a",
-            height = fullH - 80,
+            height = fullH,
             width = "100%"
           )
         ),
@@ -109,7 +113,7 @@ ClusteringUI <- function(id) {
           clustering_plot_clustpca_ui(
             ns("PCAplot"),
             label = "",
-            height = c("70vh", "70vh"),
+            height = c(fullH, "70vh"),
             parent = ns
           ),
           tags$div(
@@ -123,25 +127,25 @@ ClusteringUI <- function(id) {
         ),
         shiny::tabPanel(
           "Parallel",
-          clustering_plot_table_hm_parcoord_ui(
-            id = ns("hm_parcoord"),
-            label = "a",
-            width = c("100%", "100%"),
-            height = c(0.45 * fullH, 600)
-          ),
-          br(),
-          tags$div(
-            class = "caption",
-            HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
-                            the expression levels of selected genes across all conditions.
-                            On the x-axis the experimental conditions are plotted. The y-axis shows the expression level
-                            of the genes grouped by condition. The colors correspond to the gene groups as
-                            defined by the hierarchical clustered heatmap. <b>(b)</b>
-                            Average expression of selected genes across conditions.")
-          )
+          shinyjqui::jqui_sortable(
+              bslib::layout_column_wrap(
+                 width = 1,                 
+                 clustering_plot_parcoord_ui(
+                     id = ns("hm_parcoord"),
+                     label = "a",
+                     width = c("100%", "100%"),
+                     height = c(rowH, 600)
+                 ),
+                 clustering_table_parcoord_ui(
+                     id = ns("hm_parcoord"),
+                     label = "a",
+                     width = c("100%", "100%"),
+                     height = c(rowH, 600)
+                 )
+              ) ## layout   
+          ) ## sortable
         )
-      ),
-    ),
+    )),
     div(
       class = "col-md-5",
       shiny::tabsetPanel(
@@ -151,12 +155,12 @@ ClusteringUI <- function(id) {
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
             label = "a",
-            height = c(360, 600),
+            height = c(rowH, 600),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
-            height = c(330, TABLE_HEIGHT_MODAL),
+            height = c(rowH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
           tags$div(
@@ -169,7 +173,7 @@ ClusteringUI <- function(id) {
           clustering_plot_phenoplot_ui(
             id = ns("clust_phenoplot"),
             label = "",
-            height = c(fullH - 80, 700)
+            height = c(fullH, 700)
           ),
           tags$div(
             class = "caption",
@@ -184,7 +188,7 @@ ClusteringUI <- function(id) {
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
             label = "",
-            height = c(fullH - 80, 650),
+            height = c(fullH, 650),
             width = c("auto", "100%")
           ),
           tags$div(
