@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
 #--------------------------------------------------------------------------------
 # This JS code is responsible for activating and desactivating the class `active`,
 # defined on `scss/components/_dropdownmenu.scss` when clicking a dropdown button.
