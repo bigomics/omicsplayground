@@ -334,12 +334,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
 
-                start_time <- Sys.time()
+                # start_time <- Sys.time()
                 ## Create a Progress object
-                progress <- shiny::Progress$new()
+                # progress <- shiny::Progress$new()
                 on.exit(progress$close())
-                progress$set(message = "Processing", value = 0)
-                pgx.showCartoonModal("Computation may take 5-20 minutes...")
+                # progress$set(message = "Processing", value = 0)
+                # pgx.showCartoonModal("Computation may take 5-20 minutes...")
 
                 flt="";use.design=TRUE;prune.samples=FALSE
                 flt <- input$filter_methods
@@ -355,8 +355,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
 
 
-                message("[ComputePgxServer:@compute] creating PGX object")
-                progress$inc(0.1, detail = "creating PGX object")
+                # message("[ComputePgxServer:@compute] creating PGX object")
+                # progress$inc(0.1, detail = "creating PGX object")
 
                 USE_FUTURES=1
                 USE_FUTURES=0
@@ -434,7 +434,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     path_to_contrasts <- file.path(temp_dir, "contrasts.csv")
                     path_to_params <- file.path(temp_dir, "params.csv")
 
-                    library(processx)
+                    this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
                     # Define create_pgx function arguments
                     params <- data.frame(
@@ -446,7 +446,23 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         only.hugo = only.hugo,
                         convert.hugo = only.hugo,
                         do.cluster = TRUE,
-                        cluster.contrasts = FALSE
+                        cluster.contrasts = FALSE,
+                        max.genes = max.genes,
+                        max.genesets = max.genesets,
+                        gx.methods = gx.methods,
+                        gset.methods = gset.methods,
+                        extra.methods = extra.methods,
+                        use.design = use.design,        ## no.design+prune are combined
+                        prune.samples = prune.samples,  ##
+                        do.cluster = TRUE,
+                        progress = progress,
+                        lib.dir = FILES,
+                        name = gsub("[ ]","_",input$upload_name),
+                        datatype = input$upload_datatype,
+                        description = input$upload_description,
+                        creator = "user",
+                        this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+                        date = this.date
                         )
 
                     # Write input data to CSV files
@@ -460,104 +476,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                     cmd <- shQuote(temp_dir)
                     p <- processx::run("Rscript", args = c(shQuote(script_path), cmd))
-                    
                     }
-
                 
-                names(ngs)
-                message("[ComputePgxServer:@compute] computing PGX object")
-                progress$inc(0.2, detail = "computing PGX object")
-
-                if(USE_FUTURES) {
-
-                    message("[ComputePgxServer:@compute] using futures ")
-                    f <- future::future({
-                        pgx.computePGX(
-                            ngs,
-                            max.genes = max.genes,
-                            max.genesets = max.genesets,
-                            gx.methods = gx.methods,
-                            gset.methods = gset.methods,
-                            extra.methods = extra.methods,
-                            use.design = use.design,        ## no.design+prune are combined
-                            prune.samples = prune.samples,  ##
-                            do.cluster = TRUE,
-                            progress = progress,
-                            lib.dir = FILES
-                        )
-                    })
-                    ## wait until done...
-                    while (!future::resolved(f)) {
-                        ##cat(count, "\n")
-                        message(".",appendLF = FALSE)
-                        Sys.sleep(15)  ## every 15s
-                    }
-                    message("done!\n")
-                    ##value(f)
-                    ngs <- future::value(f)
-                    names(ngs)
-
-                } else {
-
-                    ngs <- pgx.computePGX(
-                        ngs,
-                        max.genes = max.genes,
-                        max.genesets = max.genesets,
-                        gx.methods = gx.methods,
-                        gset.methods = gset.methods,
-                        extra.methods = extra.methods,
-                        use.design = use.design,        ## no.design+prune are combined
-                        prune.samples = prune.samples,  ##
-                        do.cluster = TRUE,
-                        progress = progress,
-                        lib.dir = FILES
-                    )
-                }
-
-                end_time <- Sys.time()
-                run_time  = end_time - start_time
-                run_time
-
-                message("[ComputePgxServer:@compute] total processing time of ",run_time," secs")
-
-                ##----------------------------------------------------------------------
-                ## annotate object
-                ##----------------------------------------------------------------------
-                names(ngs)
-                head(ngs$samples)
-                ngs$datatype = ""
-                ##ngs$datatype = input$upload_datatype
-                ##ngs$name = "(uploaded)"
-                ngs$name = gsub("[ ]","_",input$upload_name)
-                ngs$datatype    = input$upload_datatype
-                ngs$description = input$upload_description
-                ngs$creator <- "user"
-
-                this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-                ##ngs$date = date()
-                ngs$date = this.date
-
-                message("[ComputePgxServer:@compute] initialize object")
-
-                ## initialize and update global PGX object
-                ## ngs <- pgx.initialize(ngs)  ## here or later???
-                ##uploaded$pgx <- ngs
                 computedPGX(ngs)
-
-                ##----------------------------------------------------------------------
-                ## Remove modal and show we are ready
-                ##----------------------------------------------------------------------
-                ##removeModal()
-                if(alertready) {
-                    ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-                    beepr::beep(2)  ## short beep
-                    shinyalert::shinyalert("Ready!","We wish you lots of discoveries!")
-                }
-
-                ##for(s in names(uploaded)) uploaded[[s]] <- NULL
-                ##uploaded[["pgx"]] <- NULL
-                message("[ComputePgxServer:@compute] finished")
-
             })
 
             return(computedPGX)  ## pointing to reactive
