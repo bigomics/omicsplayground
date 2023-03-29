@@ -337,7 +337,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 # start_time <- Sys.time()
                 ## Create a Progress object
                 # progress <- shiny::Progress$new()
-                on.exit(progress$close())
                 # progress$set(message = "Processing", value = 0)
                 # pgx.showCartoonModal("Computation may take 5-20 minutes...")
 
@@ -398,7 +397,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     names(ngs)
 
                 } else {
-                    
+
                     # create folder with random name to store the csv files
 
                     # Generate random name for temporary folder
@@ -445,6 +444,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                     saveRDS(params, file=path_to_params)
 
+                     browser()
+
                     # Define command to run create_pgx script
                     script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
@@ -453,7 +454,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     }
             })
 
-            return(p)  ## pointing to reactive
+            return(computedPGX)  ## pointing to reactive
         } ## end-of-server
     )
 }
