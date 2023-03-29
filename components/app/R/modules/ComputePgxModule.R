@@ -399,8 +399,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 } else {
 
-                    browser()
-
                     # ngs <- playbase::create_pgx(
                     #     counts,
                     #     samples, 
@@ -428,16 +426,15 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
                     dir.create(temp_dir)
 
-                    # Define input and output file paths
-                    path_to_counts <- file.path(temp_dir, "counts.csv")
-                    path_to_samples <- file.path(temp_dir, "samples.csv")
-                    path_to_contrasts <- file.path(temp_dir, "contrasts.csv")
-                    path_to_params <- file.path(temp_dir, "params.csv")
+                    path_to_params <- file.path(temp_dir, "params.RData")
 
                     this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
                     # Define create_pgx function arguments
-                    params <- data.frame(
+                    params <- list(
+                        samples = samples,
+                        counts = counts,
+                        contrasts = contrasts,
                         batch.correct = FALSE,
                         prune.samples = TRUE,
                         filter.genes = filter.genes,
@@ -455,7 +452,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         use.design = use.design,        ## no.design+prune are combined
                         prune.samples = prune.samples,  ##
                         do.cluster = TRUE,
-                        progress = progress,
                         lib.dir = FILES,
                         name = gsub("[ ]","_",input$upload_name),
                         datatype = input$upload_datatype,
@@ -465,11 +461,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         date = this.date
                         )
 
-                    # Write input data to CSV files
-                    write.csv(params, file = path_to_params, row.names = TRUE)
-                    write.csv(counts, file = path_to_counts, row.names = TRUE)
-                    write.csv(samples, file = path_to_samples, row.names = TRUE)
-                    write.csv(contrasts, file = path_to_contrasts, row.names = FALSE)
+                    saveRDS(params, file=path_to_params)
 
                     # Define command to run create_pgx script
                     script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
@@ -477,11 +469,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     cmd <- shQuote(temp_dir)
                     p <- processx::run("Rscript", args = c(shQuote(script_path), cmd))
                     }
-                
-                computedPGX(ngs)
             })
 
-            return(computedPGX)  ## pointing to reactive
+            return(p)  ## pointing to reactive
         } ## end-of-server
     )
 }

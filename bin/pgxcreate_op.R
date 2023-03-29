@@ -9,45 +9,40 @@
 print("script is running")
 args = commandArgs(trailingOnly=TRUE)
 
-print(args)
-# library(playbase)
+temp_dir <- args[1]
+temp_dir <- "C:/code/omicsplayground/data/temp_457074331"
 
-# # Parse command-line arguments
-# params <- r
 
-# # Create temporary folder
-# temp_dir <- file.path("C:/code/omicsplayground/data", temp_folder)
-# dir.create(temp_dir)
+params  <- readRDS(file.path(temp_dir,"params.RData"))
 
-# # Copy input files to temporary folder
-# file.copy(args[2:4], temp_dir)
+# Call create_pgx function
+pgx <- playbase::create_pgx(
+  counts = params$counts,
+  samples = params$samples,
+  contrasts = params$contrasts,
+  X = NULL,
+  batch.correct = params$batch.correct,
+  prune.samples = params$prune.samples,
+  filter.genes = params$filter.genes,
+  only.known = params$only.known,
+  only.proteincoding = params$only.proteincoding,
+  only.hugo = params$only.hugo,
+  convert.hugo = params$convert.hugo,
+  do.cluster = params$do.cluster,
+  cluster.contrasts = params$cluster.contrasts
+)
 
-# # Load input data
-# counts <- read.csv(path_to_counts, header = TRUE, row.names = 1)
-# samples <- read.csv(path_to_samples, header = TRUE, row.names = 1)
-# contrasts <- read.csv(path_to_contrasts, header = TRUE, row.names = 1)
+pgx <- playbase::compute_pgx(
+  pgx = pgx,	
+  max.genes = params$max.genes,
+  max.genesets = params$max.genesets,
+  gx.methods = params$gx.methods,
+  gset.methods = params$gset.methods,
+  extra.methods = params$extra.methods,
+  use.design = params$use.design,        ## no.design+prune are combined
+  prune.samples = params$prune.samples,  ##
+  do.cluster = params$do.cluster,
+  )
 
-# # Call create_pgx function
-# ngs <- playbase::create_pgx(
-#   counts = counts,
-#   samples = samples,
-#   contrasts = contrasts,
-#   X = NULL,
-#   batch.correct = batch.correct,
-#   prune.samples = prune.samples,
-#   filter.genes = filter.genes,
-#   only.chrom = FALSE,
-#   rik.orf = !FALSE,
-#   only.known = only.known,
-#   only.proteincoding = only.proteincoding,
-#   only.hugo = only.hugo,
-#   convert.hugo = convert.hugo,
-#   do.cluster = do.cluster,
-#   cluster.contrasts = cluster.contrasts
-# )
-
-# # Save output to a CSV file
-# write.csv(ngs, path_to_output, row.names = TRUE)
-
-# # Remove temporary files
-# unlink(file.path(temp_dir, args[2:4]))
+# Save output to a CSV file
+save(pgx, file = file.path(temp_dir,"my.pgx"))
