@@ -76,6 +76,7 @@ if(!file.exists('00SourceAll.R')) {
   source('base/R/ui-TableModule.R',encoding='UTF-8')
   source('base/R/ui-TableModule2.R',encoding='UTF-8')
   source('base/R/ui-tooltip.R',encoding='UTF-8')
+  source('base/R/utils.R',encoding='UTF-8')
   source('base/R/xcr-graph.r',encoding='UTF-8')
   source('base/R/xcr-math.r',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_boxplots.R',encoding='UTF-8')

@@ -221,7 +221,7 @@ sever_screen0 <- function(error = NULL) {
           shiny::p("You have been disconnected", style="font-size:15px;"),
           shiny::br(),
           shiny::div(shiny::img(src=base64enc::dataURI(file="www/disconnected.png"),
-                                width=450,height=250)),
+                                width=540,height=300)),
           shiny::br(),
           sever::reload_button("Relaunch", class = "info"),
           if(!is.null(error)){

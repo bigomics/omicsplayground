@@ -55,16 +55,25 @@ FeatureMapUI <- function(id) {
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            featuremap_plot_gene_map_ui(ns("gene_map"))
+        bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/2,
+            featuremap_plot_gene_map_ui(
+                ns("gene_map"),
+                height = c("50vh", 800)
+            ),
+            featuremap_plot_gene_sig_ui(
+                ns("gene_sig"),
+                height = c("50vh", 800)
+            )
           ),
-          div(
-            class = "col-md-6",
-            featuremap_plot_gene_sig_ui(ns("gene_sig"))
-          )
+          featuremap_table_gene_map_ui(
+              ns("gene_map"),
+              height = c(400, 800)
+          ),
+          br()
         )
       ),
       shiny::tabPanel(

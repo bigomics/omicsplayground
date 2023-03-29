@@ -8,8 +8,6 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
 
   info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation of log-expression (sd.X) or fold-change  (sd.FC). The distance metric is covariance between gene expression. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
 
-  info_text_table <- "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot."
-
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
@@ -25,8 +23,7 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
     )
   )
 
-  div(
-    PlotModuleUI(
+  PlotModuleUI(
       ns("gene_map"),
       title = "Gene UMAP",
       label = "a",
@@ -34,18 +31,26 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 700),
+      height = height,
       width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
-    ),
-    TableModuleUI(
-      ns("datasets"),
+  )
+}
+
+featuremap_table_gene_map_ui <- function(id, label = "",
+                                         height = c(400, TABLE_HEIGHT_MODAL),
+                                         width = c("auto", "100%")) {
+  ns <- shiny::NS(id)
+
+  info_text_table <- "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot."
+
+  TableModuleUI(
+      ns("gene_table"),
       info.text = info_text_table,
-      height = c("30vh", TABLE_HEIGHT_MODAL),
-      width = c("auto", "90%"),
+      height = height,
+      width = width,
       title = "Gene table",
       label = "c"
-    )
   )
 }
 
@@ -80,16 +85,21 @@ featuremap_plot_gene_map_server <- function(id,
       ## select on table filter
       F <- pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
-      if (colorby == "var.FC") {
+      if (colorby == "sd.FC") {
         fc <- (rowMeans(F**2))**0.5
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
       } else {
         cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
+      ## conform
+      gg <- intersect(rownames(pos), names(fc))
+      pos <- pos[gg,]
+      fc <- fc[gg]
+
+      dbg("[featuremap_plot_table_gene_map.R] hilight =",head(hilight))
+      
       pd <- list(
         df = data.frame(pos, fc=fc),
         hilight = hilight,
@@ -104,11 +114,11 @@ featuremap_plot_gene_map_server <- function(id,
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
-      fc  <- pd$df[,c("fc")]
+      fc  <- setNames(pd$df[,"fc"], rownames(pd$df))
       hilight <- pd$hilight
       nlabel  <- pd$nlabel
       colorby <- pd$colorby
-      
+
       p <- plotUMAP(
         pos,
         fc,
@@ -211,7 +221,7 @@ featuremap_plot_gene_map_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -226,10 +236,11 @@ featuremap_plot_gene_map_server <- function(id,
     })
 
     TableModuleServer(
-      "datasets",
+      "gene_table",
       func = geneTable.RENDER,
       func2 = geneTable.RENDER_modal,
       selector = "none"
     )
-  })
+      
+  })  ## moduleServer
 }

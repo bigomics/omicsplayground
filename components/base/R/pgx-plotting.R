@@ -3034,19 +3034,34 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         displayModeBar=FALSE
     }
 
-    if(!is.null(var) && !is.null(ncol(var))) {
-        var <- var[,1]
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: hilight = ", head(hilight))
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: dim.pos = ", dim(pos))
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: dim.var = ", dim(var))
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: len.var = ", length(var))
+
+    if(!is.null(var) && NCOL(var)>1) {
+        dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1a: NCOL.var = ", NCOL(var))
+        var <- setNames(var[,1], names=rownames(var))
     }
     if(!is.null(var) && length(var)==nrow(pos) && is.null(names(var)) ) {
+        dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1b: head.rownames.pos = ", head(rownames(pos)))
         names(var) <- rownames(pos)
     }
     if(is.null(var)) {
         var <- rep("_",nrow(pos))
         names(var) <- rownames(pos)
     }
+
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: dim.pos = ", dim(pos))
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: len.var = ", length(var))
+
+
     var <- var[match(rownames(pos),names(var))]
     names(var) <- rownames(pos)
 
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: head.var = ", head(var))
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: head.names.var = ", head(names(var)))
+    
     if(is.null(type)) {
         type <- c("numeric","factor")[1 + class(var) %in% c("factor","character")]
     }
@@ -3221,12 +3236,14 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
             mode = "markers",
             type = "scattergl")
 
+    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 3: hilight = ", head(hilight))
+    
     if(!is.null(hilight)) {
 
         jj <- which(rownames(df) %in% hilight)
         col1 = 'transparent'
         if(!is.null(hilight.col)) col1 <- hilight.col
-        df1 <- df[jj,]
+        df1 <- df[jj,,drop=FALSE]
         plt <- plt %>%
             ##add_trace(
             plotly::add_markers(

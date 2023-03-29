@@ -38,7 +38,7 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       download.fmt = c("png", "pdf")
     ),
     TableModuleUI(
-      ns("datasets"),
+      ns("gset_table"),
       info.text = info_text_table,
       height = c(280, TABLE_HEIGHT_MODAL),
       width = c("auto", "90%"),
@@ -133,7 +133,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
-      fc  <- pd$df[,c("fc")]
+      fc  <- setNames(pd$df[,"fc"], rownames(pd$df))
       hilight <- pd$hilight
       nlabel  <- pd$nlabel
       colorby <- pd$colorby
@@ -237,7 +237,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -252,7 +252,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     })
 
     TableModuleServer(
-      "datasets",
+      "gset_table",
       func = gsetTable.RENDER,
       func2 = gsetTable.RENDER_modal,
       selector = "none"
