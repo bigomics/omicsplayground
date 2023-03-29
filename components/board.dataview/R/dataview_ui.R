@@ -129,97 +129,61 @@ DataViewUI <- function(id) {
     # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
-      ## div(
-      ##   class = "row",
-      ##   div(
-      ##     class = "col-md-2",
-      ##     dataview_module_geneinfo_ui(ns("geneinfo")),
-      ##   ),
-      ##   div(
-      ##     class = "col-md-10",
-      ##     div(
-      ##       class = "row",
-      ##       div(
-      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
-      ##         dataview_plot_expression_ui(
-      ##           ns("expressionplot"),
-      ##           height = imgH,
-      ##           label = "a"
-      ##         )
-      ##       ),
-      ##       div(
-      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
-      ##         dataview_plot_averagerank_ui(
-      ##           ns("averagerankplot"),
-      ##           height = imgH,
-      ##           label = "b"
-      ##         )
-      ##       ),
-      ##       div(
-      ##         class = "col-lg-6 col-xxl-4 col-xxxl-3",
-      ##         dataview_plot_tsne_ui(
-      ##           ns("tsneplot"),
-      ##           height = imgH,
-      ##           label = "c"
-      ##         )
-      ##       ),
-      ##       div(
-      ##         class = "col-lg-9 col-xxl-7 col-xxxl-5",
-      ##         dataview_plot_correlation_ui(
-      ##           ns("correlationplot"),
-      ##           height = imgH,
-      ##           label = "d"
-      ##         )
-      ##       ),
-      ##       div(
-      ##         class = "col-lg-9 col-xxl-5 col-xxxl-3",
-      ##         dataview_plot_tissue_ui(
-      ##           ns("tissueplot"),
-      ##           height = imgH,
-      ##           label = "e"
-      ##         )
-      ##       )
-      ##     ),
-      shinyjqui::jqui_sortable(
-        bslib::layout_column_wrap(
-        width = "400px",
-        heights_equal = "row",
-        # height = "100vh",
-        dataview_module_geneinfo_ui(
-          ns("geneinfo"),
-          ##height = 700
-          height = imgH,
-          #width = c("200px","100%")
+      div(
+        class = "row",
+        div(
+          class = "col-md-2",
+          dataview_module_geneinfo_ui(ns("geneinfo")),
         ),
-        dataview_plot_expression_ui(
-          ns("expressionplot"),
-          height = imgH,
-          label = "a"
-        ),
-        dataview_plot_averagerank_ui(
-          ns("averagerankplot"),
-          height = imgH,
-          label = "b"
-        ),
-        dataview_plot_tsne_ui(
-          ns("tsneplot"),
-          height = imgH,
-          label = "c"
-        ),
-        dataview_plot_correlation_ui(
-          ns("correlationplot"),
-          height = imgH,
-          label = "d"
-        ),
-        dataview_plot_tissue_ui(
-          ns("tissueplot"),
-          height = imgH,
-          label = "e"
+        div(
+          class = "col-md-10",
+          div(
+            class = "row",
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_expression_ui(
+                ns("expressionplot"),
+                height = imgH,
+                label = "a"
+              )
+            ),
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_averagerank_ui(
+                ns("averagerankplot"),
+                height = imgH,
+                label = "b"
+              )
+            ),
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_tsne_ui(
+                ns("tsneplot"),
+                height = imgH,
+                label = "c"
+              )
+            ),
+            div(
+              class = "col-lg-9 col-xxl-7 col-xxxl-5",
+              dataview_plot_correlation_ui(
+                ns("correlationplot"),
+                height = imgH,
+                label = "d"
+              )
+            ),
+            div(
+              class = "col-lg-9 col-xxl-5 col-xxxl-3",
+              dataview_plot_tissue_ui(
+                ns("tissueplot"),
+                height = imgH,
+                label = "e"
+              )
+            )
+          )
         )
-        )
-        )
+      )
     ),
-
+    
     # counts table tab #####
     shiny::tabPanel(
         "Counts table",
