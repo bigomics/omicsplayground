@@ -903,7 +903,8 @@ UploadBoard <- function(id,
       max.genes = as.integer(limits["genes"]),
       max.genesets = as.integer(limits["genesets"]),
       max.datasets = as.integer(limits["datasets"]),
-      height = height
+      height = height,
+      r_global = r_global
     )
 
     uploaded_pgx <- shiny::reactive({
