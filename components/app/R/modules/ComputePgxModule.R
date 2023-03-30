@@ -246,6 +246,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             # Define a reactive value to store the process object
             process_obj <- reactiveVal(NULL)
             computedPGX  <- shiny::reactiveVal(NULL)
+            temp_dir <- reactiveVal(NULL)
+            timer_state <- reactiveVal("stopped")
+            reactive_timer <- reactiveTimer(1000)  # Triggers every 1000 milliseconds (1 second)
+
+
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -371,12 +376,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
 
                 # Create temporary folder
-                temp_dir <- file.path(file.path(get_opg_root(),"data"), temp_folder)
-                dir.create(temp_dir)
+                temp_dir(file.path(file.path(get_opg_root(),"data"), temp_folder))
+                dir.create(temp_dir())
             
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
-                 path_to_params <- file.path(temp_dir, "params.RData")
+                 path_to_params <- file.path(temp_dir(), "params.RData")
 
                 # Define create_pgx function arguments
                 params <- list(
@@ -415,28 +420,28 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 
                 script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
-                cmd <- shQuote(temp_dir)
+                cmd <- shQuote(temp_dir())
                 
                 # Function to start the process
                 
                 # Define command to run create_pgx script
                 script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
-                cmd <- shQuote(temp_dir)
+                cmd <- shQuote(temp_dir())
 
-                bigdash.showTabsGoToDataView(session)
-                r_global$load_example_trigger <- r_global$load_example_trigger + 1
+                # bigdash.showTabsGoToDataView(session)
+                # r_global$load_example_trigger <- r_global$load_example_trigger + 1
 
                 # Start the process and store it in the reactive value
                  
+                 shinyalert::shinyalert("Ready!","Your dataset will be computed in the background. You will be notified when it is ready.")
+                 bigdash.selectTab(session, selected = 'welcome-tab')
+
                  dbg("[compute PGX process] : starting process")
+                 timer_state("running")
                  process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
             })
             
-            timer_state <- reactiveVal("running")
-            reactive_timer <- reactiveTimer(1000)  # Triggers every 1000 milliseconds (1 second)
-
-
             check_process_status <- reactive({
                  if (timer_state() == "stopped") {
                     return(NULL)
@@ -459,13 +464,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
-                    on_process_completed()
+                    browser()
+                    on_process_completed(temp_dir = temp_dir())
                 } else if (!is.null(process_status) && process_status != 0) {
                     
                     dbg("[compute PGX process] : process failed")
-                    dbg_dir <- file.path(file.path(get_opg_root(),"compute-pgx-failed"), temp_folder)
-                    dir.create(dbg_dir, recursive = TRUE)
-                    saveRDS(params, file = dbg_dir)
                     dbg("[compute PGX process] : params saved to ", dbg_dir)
 
                     on_process_error()
@@ -480,12 +483,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 })
 
             # Function to execute when the process is completed successfully
-            on_process_completed <- function() {
+            on_process_completed <- function(temp_dir) {
                 timer_state("stopped") # stop the timer
                 result_path <- file.path(temp_dir, "my.pgx")
 
                 if (file.exists(result_path)) {
-                    pgx <- load(file = file.path(temp_dir, "my.pgx"))
+                    pgx <- load(result_path)
+                    
                     computedPGX(pgx)
                 } else {
                     message("[compute PGX process] : Error: Result file not found")
