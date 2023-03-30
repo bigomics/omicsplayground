@@ -6,7 +6,7 @@
 ## (c) 2023 BigOmics Analytics 
 ##
 
-dbg("[compute PGX process] : starting process")
+message("[compute PGX process] : starting process")
 args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
