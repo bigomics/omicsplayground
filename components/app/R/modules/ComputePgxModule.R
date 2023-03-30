@@ -242,13 +242,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             ## After confirmation is received, start computing the PGX
             ## object from the uploaded files
             ## ------------------------------------------------------------------
-            # Define a reactive timer
-            check_process_status <- reactiveTimer(1000) # check every 1000 milliseconds (1 second)
-
+            
             # Define a reactive value to store the process object
             process_obj <- reactiveVal(NULL)
-
-            
             computedPGX  <- shiny::reactiveVal(NULL)
 
             shiny::observeEvent( input$compute, {
@@ -416,11 +412,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
 
                 cmd <- shQuote(temp_dir)
-
-               
-                
-                # bigdash.showTabsGoToDataView(session)
-                # r_global$load_example_trigger <- r_global$load_example_trigger +1
                 
                 # Function to start the process
                 
@@ -432,14 +423,48 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 r_global$load_example_trigger <- r_global$load_example_trigger + 1
 
                 # Start the process and store it in the reactive value
-
-                 dbg(cmd)
-                 dbg(script_path)
+                
                  process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
             })
 
-            return(computedPGX)  ## pointing to reactive
+            check_process_status <- reactive({
+                if (is.null(process_obj())) {
+                    return(NULL)
+                }
+                
+                process_status <- process_obj()$get_exit_status()
+                
+                if (!is.null(process_status) && process_status == 0) {
+                    # Process completed successfully
+                    on_process_completed()
+                } else if (!is.null(process_status) && process_status != 0) {
+                    #TODO write stderr code here
+                    
+                } else {
+                    # Process is still running, do nothing
+                    return(NULL)
+                }
+                
+                return(process_status)
+                })
+
+            # Function to execute when the process is completed successfully
+            on_process_completed <- function() {
+            result_path <- file.path(temp_dir, "my.pgx")
+
+            if (file.exists(result_path)) {
+                pgx <- load(file = file.path(temp_dir, "my.pgx"))
+                computedPGX(pgx)
+            } else {
+                message("Error: Result file not found")
+            }
+            unlink(temp_dir, recursive = TRUE)
+            }
+
+            observe(check_process_status())
+
+            return(computedPGX)
         } ## end-of-server
     )
 }
