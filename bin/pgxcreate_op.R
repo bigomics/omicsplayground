@@ -45,4 +45,4 @@ pgx <- playbase::compute_pgx(
 # Save output to a CSV file
 save(pgx, file = file.path(temp_dir,"my.pgx"))
 
-dbg("[compute PGX process] : starting finished, pgx is saved to my.pgx")
+message("[compute PGX process] : starting finished, pgx is saved to my.pgx")
