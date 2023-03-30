@@ -22,7 +22,7 @@ expression_plot_maplot_ui <- function(id,
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
+  info_text <- "<b>MA plot</b> showing mean signal intensity versus fold-change on the x and y axes, respectively. An application of a Bland-Altman (MA) plot for differential gene expression."
 
   PlotModuleUI(ns("pltmod"),
     title = "MA plot",

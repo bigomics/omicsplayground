@@ -2672,7 +2672,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      opacity=1, label.clusters=FALSE, labels=NULL,
                                      legend.ysp=0.85, legend.pos = "bottomleft",
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
-                                     label.type=c("text","box"),
+                                     label.type=c("text","box"), base_size=11, 
                                      title=NULL, nrows=NULL,  barscale=0.8 )
 {
     require(ggplot2)
@@ -2976,7 +2976,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
     if(!is.null(theme)) {
         plt <- plt + theme
     } else {
-        plt <- plt + theme_bw()
+        plt <- plt + theme_bw(base_size=base_size)
     }
 
     ## additional theme

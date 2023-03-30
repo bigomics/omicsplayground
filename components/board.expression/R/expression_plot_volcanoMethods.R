@@ -81,12 +81,13 @@ expression_plot_volcanoMethods_server <- function(id,
       return(pd)
     })
 
-    plot.RENDER <- function() {
+    render_plots <- function(base_size=11) {
       pd <- plot_data()
       shiny::req(pd)
 
       ## meta tables
-      mx <- pd[["pgx"]]$gx.meta$meta[[pd[["comp"]]]]
+      comp <- pd[["comp"]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       fc <- unclass(mx$fc)
       ## pv = unclass(mx$p)
       qv <- unclass(mx$q)
@@ -99,14 +100,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       ## methods = names(pgx$gx.meta$output)
       methods <- colnames(pd[["pgx"]]$gx.meta$meta[[1]]$fc)
-      nc <- 6
-      par(mfrow = c(2, 6), mar = c(4, 4, 2, 2) * 0, oma = c(1, 1, 0, 0) * 2)
-      if (nplots > 12) {
-        nplots <- min(nplots, 24)
-        par(mfrow = c(3, 8), mar = c(4, 4, 2, 2) * 0)
-        nc <- 8
-      }
-
+      plt <- list()
+      
       shiny::withProgress(message = "computing volcano plots ...", value = 0, {
         i <- 1
         for (i in 1:nplots) {
@@ -115,50 +110,94 @@ expression_plot_volcanoMethods_server <- function(id,
           qval <- qv[, i]
           sig.genes <- fc.genes[which(qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])]
           ## genes1 = intersect(sig.genes, sel.genes)
-          genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
-          gx.volcanoPlot.XY(
-            x = fx, pv = qval, gene = fc.genes,
-            render = "canvas", n = 5000, nlab = 5,
-            xlim = xlim, ylim = c(0, ymax), axes = FALSE,
-            use.fdr = TRUE, p.sig = pd[["fdr"]], lfc = pd[["lfc"]],
-            ## main=comp[i],
-            ## ma.plot=TRUE, use.rpkm=TRUE,
-            cex = 0.6, lab.cex = 1.5, highlight = genes1
+          genes2 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
+
+          ## gx.volcanoPlot.XY(
+          ##   x = fx, pv = qval, gene = fc.genes,
+          ##   render = "canvas", n = 5000, nlab = 5,
+          ##   xlim = xlim, ylim = c(0, ymax), axes = FALSE,
+          ##   use.fdr = TRUE, p.sig = pd[["fdr"]], lfc = pd[["lfc"]],
+          ##   ## main=comp[i],
+          ##   ## ma.plot=TRUE, use.rpkm=TRUE,
+          ##   cex = 0.6, lab.cex = 1.5, highlight = genes1
+          ## )
+
+          xy <- data.frame(x = fx, y = -log10(qval))
+          is.sig1 <- fc.genes %in% sig.genes
+          is.sig2 <- fc.genes %in% genes2
+          
+          plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+            xy,
+            title = methods[i],
+            cex.title = 0.85,
+            var = is.sig1,
+            type = "factor",
+            col = c("#bbbbbb", "#1e60bb"),
+            legend.pos = "none", ## plotlib="ggplot",
+            hilight = NULL,
+            hilight2 = genes2,
+            xlim = xlim,
+            ylim = c(0,ymax),
+            xlab = "difference  (log2FC)",
+            ylab = "significance  (-log10q)",
+            hilight.lwd = 0,
+            hilight.col = "#1e60bb",
+            hilight.cex = 1.5,
+            cex = 0.45,
+            cex.lab = 0.62,
+            base_size = base_size
           )
 
-          is.first <- (i %% nc == 1)
-          last.row <- ((i - 1) %/% nc == (nplots - 1) %/% nc)
-          is.first
-          last.row
-          if (is.first) axis(2, mgp = c(2, 0.7, 0), cex.axis = 0.8)
-          if (last.row) axis(1, mgp = c(2, 0.7, 0), cex.axis = 0.8)
-          graphics::box(lwd = 1, col = "black", lty = "solid")
-          legend("top",
-            legend = colnames(fc)[i], cex = 1.2,
-            bg = "white", box.lty = 0, inset = c(0, 0.01),
-            x.intersp = 0.1, y.intersp = 0.1
-          )
-          shiny::incProgress(1 / length(nplots))
+          if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }
       })
+
+      return(plt)
+    }
+      
+    plot.RENDER <- function() {      
+      plt <- render_plots(base_size=12)
+      nplots <- length(plt)
+      
+      ## layout
+      nr = 1
+      nc = 4
+      if(nplots > 4) {
+        nr = 2
+        nc = 6
+      }
+      if (nplots > 12) {
+        nr = 3
+        nc = 8
+      }
+      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
-    # modal_plot.RENDER <- function() {
-    #   plot.RENDER() %>%
-    #     plotly::layout(
-    #       ## showlegend = TRUE,
-    #       font = list(
-    #         size = 16
-    #       )
-    #     )
-    # }
-
+    modal_plot.RENDER <- function() {      
+      plt <- render_plots(base_size=18)
+      nplots <- length(plt)
+      
+      ## layout
+      nr = 1
+      nc = 2
+      if(nplots > 3) {
+        nr = 2
+        nc = 4
+      }
+      if (nplots > 8) {
+        nr = 3
+        nc = 6
+      }
+      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    }
+    
     PlotModuleServer(
       "pltmod",
-      plotlib = "ggplot",
+##      plotlib = "ggplot",
+      plotlib = "grid",
       func = plot.RENDER,
-      # func2 = modal_plot.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      func2 = modal_plot.RENDER,
+      ## csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark

@@ -22,7 +22,7 @@ expression_plot_volcano_ui <- function(id,
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
+  info_text <- "<b>Volcano-plot</b> showing fold-change (logFC) versus significance (-log10q) on the x and y axes, respectively. "
 
   PlotModuleUI(ns("pltmod"),
     title = "Volcano plot",

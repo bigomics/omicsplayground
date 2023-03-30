@@ -18,7 +18,7 @@ expression_plot_volcanoAll_ui <- function(id,
                                           width) {
   ns <- shiny::NS(id)
 
-  info_text <- "Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+  info_text <- "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
   PlotModuleUI(ns("pltmod"),
     title = "Volcano plots for all contrasts",
@@ -101,39 +101,18 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    plot.RENDER <- function() {
+    render_plots <- function(base_size=11) {
       pd <- plot_data()
       shiny::req(pd)
 
+      ymax <- 15
+      nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
+      ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
+      xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
+      
+      plt <- list()
+
       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
-        ## plot layout #####
-        ng <- length(pd[["comp"]])
-        nn <- c(2, max(ceiling(ng / 2), 5))
-        ## if(ng>12) nn = c(3,8)
-        par(mfrow = nn, mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
-        nr <- 2
-        nc <- ceiling(sqrt(ng))
-        if (ng > 24) {
-          nc <- max(ceiling(ng / 3), 6)
-          nr <- 3
-        } else if (TRUE && ng <= 4) {
-          nc <- 4
-          nr <- 1
-        } else {
-          nc <- max(ceiling(ng / 2), 6)
-          nr <- 2
-        }
-        nr
-        nc
-        par(mfrow = c(nr, nc))
-
-        ymax <- 15
-        nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
-        ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
-        xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
-
-
-        plt <- list()
         i <- 1
         for (i in 1:length(pd[["comp"]])) {
           qval <- pd[["Q"]][[i]]
@@ -148,44 +127,79 @@ expression_plot_volcanoAll_server <- function(id,
 
           plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
             xy,
-            title = pd[["comp"]][i], cex.title = 0.85,
-            var = is.sig2, type = "factor",
+            title = pd[["comp"]][i],
+            cex.title = 0.85,
+            var = is.sig2,
+            type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
             legend.pos = "none", ## plotlib="ggplot",
-            hilight = NULL, hilight2 = genes2,
-            xlim = xmax * c(-1, 1), ylim = c(0, ymax),
+            hilight = NULL,
+            hilight2 = genes2,
+            xlim = xmax * c(-1, 1),
+            ylim = c(0, ymax),
             xlab = "difference  (log2FC)",
             ylab = "significance  (-log10q)",
-            hilight.lwd = 0, hilight.col = "#1e60bb", hilight.cex = 1.5,
-            cex = 0.45, cex.lab = 0.62
+            hilight.lwd = 0,
+            hilight.col = "#1e60bb",
+            hilight.cex = 1.5,
+            cex = 0.45,
+            cex.lab = 0.62,
+            base_size = base_size
           )
-          ## ggplot2::theme(legend.position='none')
-          ## ggplot2::theme_bw(base_size=11)
 
           if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }
       }) ## progress
 
+      return(plt)
+    }
+
+
+    plot.RENDER <- function() {
+
+      plt <- render_plots(base_size=12)
+      nplots <- length(plt)
+      
+      ## plot layout #####
+      ## layout
+      nr = 1
+      nc = 4
+      if(nplots > 4) {
+        nr = 2
+        nc = 6
+      }
+      if (nplots > 12) {
+        nr = 3
+        nc = 8
+      }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
-    # modal_plot.RENDER <- function() {
-    #   plot.RENDER() %>%
-    #     plotly::layout(
-    #       ## showlegend = TRUE,
-    #       font = list(
-    #         size = 16
-    #       )
-    #     )
-    # }
 
+    modal_plot.RENDER <- function() {      
+      plt <- render_plots(base_size=18)
+      nplots <- length(plt)
+      
+      ## layout
+      nr = 1
+      nc = 2
+      if(nplots > 3) {
+        nr = 2
+        nc = 4
+      }
+      if (nplots > 8) {
+        nr = 3
+        nc = 6
+      }
+      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "grid",
       func = plot.RENDER,
-      # func2 = modal_plot.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      func2 = modal_plot.RENDER,
+      ## csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark

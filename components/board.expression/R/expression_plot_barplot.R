@@ -34,7 +34,7 @@ expression_plot_barplot_ui <- function(id,
     )
   )
 
-  info_text <- "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
+  info_text <- "<b>Differential expression</b> of the selected gene grouped or ungrouped."
 
   PlotModuleUI(ns("pltmod"),
     title = "Differential expression",

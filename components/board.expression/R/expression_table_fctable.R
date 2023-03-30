@@ -14,7 +14,7 @@
 expression_table_fctable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  fctable_text <- "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
+  fctable_text <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
 
   fctable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
