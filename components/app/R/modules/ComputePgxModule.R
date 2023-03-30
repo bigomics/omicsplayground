@@ -362,13 +362,21 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 # Create temporary folder
 
-                temp_dir <- tempfile(pattern = "pgx_")
-                
+                # temp_dir <- tempfile(pattern = "pgx_")
+
+                # dir.create(temp_dir)
+
+                # path_to_params <- file.path(temp_dir, "params.RData")
+
+                temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
+
+                # Create temporary folder
+                temp_dir <- file.path(file.path(get_opg_root(),"data"), temp_folder)
                 dir.create(temp_dir)
-
-                path_to_params <- file.path(temp_dir, "params.RData")
-
+            
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+                 path_to_params <- file.path(temp_dir, "params.RData")
 
                 # Define create_pgx function arguments
                 params <- list(
@@ -424,19 +432,33 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                  process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
             })
+            
+            timer_state <- reactiveVal("running")
+            reactive_timer <- reactiveTimer(1000)  # Triggers every 1000 milliseconds (1 second)
+
 
             check_process_status <- reactive({
+                 if (timer_state() == "stopped") {
+                    return(NULL)
+                    }
+                 
+                 reactive_timer()
+                
                 if (is.null(process_obj())) {
                     dbg("[compute PGX process] : process does not exist")
                     return(NULL)
-                }
+                    }
                 
                 process_status <- process_obj()$get_exit_status()
+                process_alive <- process_obj()$is_alive()
+
+                dbg("[compute PGX process] status", process_status)
+
+                
                 
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
-                    browser()
                     on_process_completed()
                 } else if (!is.null(process_status) && process_status != 0) {
                     
@@ -454,34 +476,36 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     return(NULL)
                 }
                 
-                return(process_status)
+                return(NULL)
                 })
 
             # Function to execute when the process is completed successfully
             on_process_completed <- function() {
-            result_path <- file.path(temp_dir, "my.pgx")
+                timer_state("stopped") # stop the timer
+                result_path <- file.path(temp_dir, "my.pgx")
 
-            if (file.exists(result_path)) {
-                pgx <- load(file = file.path(temp_dir, "my.pgx"))
-                computedPGX(pgx)
-            } else {
-                message("[compute PGX process] : Error: Result file not found")
-            }
-            unlink(temp_dir, recursive = TRUE)
+                if (file.exists(result_path)) {
+                    pgx <- load(file = file.path(temp_dir, "my.pgx"))
+                    computedPGX(pgx)
+                } else {
+                    message("[compute PGX process] : Error: Result file not found")
+                }
+                unlink(temp_dir, recursive = TRUE)
             }
             
             on_process_error <- function() {
-            message("Error: Process completed with an error")
-            stderr_output <- process_obj()$read_error_lines()
-            
-            if (length(stderr_output) > 0) {
-                message("Standard error output from the process:")
-                for (line in stderr_output) {
-                message(line)
+                timer_state("stopped") # stop the timer
+                message("Error: Process completed with an error")
+                stderr_output <- process_obj()$read_error_lines()
+                
+                if (length(stderr_output) > 0) {
+                    message("Standard error output from the process:")
+                    for (line in stderr_output) {
+                    message(line)
+                    }
+                } else {
+                    message("No standard error output available from the process")
                 }
-            } else {
-                message("No standard error output available from the process")
-            }
             }
 
             observe(check_process_status())
