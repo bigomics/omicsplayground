@@ -6,7 +6,7 @@
 ## (c) 2023 BigOmics Analytics 
 ##
 
-print("script is running")
+dbg("[compute PGX process] : starting process")
 args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
@@ -44,3 +44,5 @@ pgx <- playbase::compute_pgx(
 
 # Save output to a CSV file
 save(pgx, file = file.path(temp_dir,"my.pgx"))
+
+dbg("[compute PGX process] : starting finished, pgx is saved to my.pgx")

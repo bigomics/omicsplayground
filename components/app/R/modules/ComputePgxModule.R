@@ -423,13 +423,15 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 r_global$load_example_trigger <- r_global$load_example_trigger + 1
 
                 # Start the process and store it in the reactive value
-                
+                 
+                 dbg("[compute PGX process] : starting process")
                  process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
 
             })
 
             check_process_status <- reactive({
                 if (is.null(process_obj())) {
+                    dbg("[compute PGX process] : process does not exist")
                     return(NULL)
                 }
                 
@@ -437,12 +439,16 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
+                    dbg("[compute PGX process] : process completed")
                     on_process_completed()
                 } else if (!is.null(process_status) && process_status != 0) {
-                    #TODO write stderr code here
+                    
+                    dbg("[compute PGX process] : process failed")
+                    on_process_error()
                     
                 } else {
                     # Process is still running, do nothing
+                    dbg("[compute PGX process] : process still running")
                     return(NULL)
                 }
                 
@@ -457,9 +463,23 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 pgx <- load(file = file.path(temp_dir, "my.pgx"))
                 computedPGX(pgx)
             } else {
-                message("Error: Result file not found")
+                message("[compute PGX process] : Error: Result file not found")
             }
             unlink(temp_dir, recursive = TRUE)
+            }
+            
+            on_process_error <- function() {
+            message("Error: Process completed with an error")
+            stderr_output <- process_obj()$read_error_lines()
+            
+            if (length(stderr_output) > 0) {
+                message("Standard error output from the process:")
+                for (line in stderr_output) {
+                message(line)
+                }
+            } else {
+                message("No standard error output available from the process")
+            }
             }
 
             observe(check_process_status())
