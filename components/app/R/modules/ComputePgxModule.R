@@ -448,7 +448,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
                     
-                    browser()
                     on_process_completed(temp_dir = temp_dir())
                 } else if (!is.null(process_status) && process_status != 0) {
                     
@@ -472,7 +471,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 result_path <- file.path(temp_dir, "my.pgx")
 
                 if (file.exists(result_path)) {
-                    pgx <- load(result_path)
+                    load(result_path)
                     
                     computedPGX(pgx)
                 } else {
