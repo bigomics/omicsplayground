@@ -363,6 +363,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 # Create temporary folder
 
                 temp_dir <- tempfile(pattern = "pgx_")
+                
+                dir.create(temp_dir)
 
                 path_to_params <- file.path(temp_dir, "params.RData")
 
