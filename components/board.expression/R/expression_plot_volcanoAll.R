@@ -163,8 +163,8 @@ expression_plot_volcanoAll_server <- function(id,
       ## plot layout #####
       ## layout
       nr = 1
-      nc = 4
-      if(nplots > 4) {
+      nc = 5
+      if(nplots > 5) {
         nr = 2
         nc = 6
       }

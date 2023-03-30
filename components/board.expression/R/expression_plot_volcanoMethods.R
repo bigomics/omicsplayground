@@ -65,8 +65,6 @@ expression_plot_volcanoMethods_server <- function(id,
 
       fdr <- as.numeric(fdr()) 
       lfc <- as.numeric(lfc()) 
-      genes <- NULL
-
       gset <- getGSETS(features)
       sel.genes <- unique(unlist(gset))
 
@@ -161,8 +159,8 @@ expression_plot_volcanoMethods_server <- function(id,
       
       ## layout
       nr = 1
-      nc = 4
-      if(nplots > 4) {
+      nc = 5
+      if(nplots > 5) {
         nr = 2
         nc = 6
       }
