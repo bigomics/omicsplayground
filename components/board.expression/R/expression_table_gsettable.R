@@ -51,16 +51,14 @@ expression_table_gsettable_server <- function(id,
       df$geneset <- wrapHyperLink(df$geneset, rownames(df))
 
       DT::datatable(df,
-        class = "compact",
+#        class = "compact",  ## not good!
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          # paging = TRUE,
-          # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(

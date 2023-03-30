@@ -191,7 +191,6 @@ ExpressionBoard <- function(id, pgx) {
     }
 
     fullDiffExprTable <- shiny::reactive({
-      print('REACTIVE1 RUNNING')
       ## return the full DE table
       if (is.null(pgx)) {
         return(NULL)

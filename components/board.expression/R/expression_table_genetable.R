@@ -91,7 +91,7 @@ expression_table_genetable_server <- function(id,
           # paging = TRUE,
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(

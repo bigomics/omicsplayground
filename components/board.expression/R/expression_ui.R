@@ -186,7 +186,7 @@ ExpressionUI <- function(id) {
                   expression_table_genetable_ui(
                     ns("genetable"),
                     width = c("100%", "100%"),
-                    height = c("300px", TABLE_HEIGHT_MODAL)
+                    height = c("400px", TABLE_HEIGHT_MODAL)
                   )
                 ),
                 div(
@@ -194,7 +194,7 @@ ExpressionUI <- function(id) {
                   expression_table_gsettable_ui(
                     ns("gsettable"),
                     width = c("100%", "100%"),
-                    height = c("300px", TABLE_HEIGHT_MODAL)
+                    height = c("400px", TABLE_HEIGHT_MODAL)
                   )
                 )
               )
@@ -209,7 +209,7 @@ ExpressionUI <- function(id) {
               expression_table_fctable_ui(
                 ns("fctable"),
                 width = c("100%", "100%"),
-                height = c("300px", TABLE_HEIGHT_MODAL)
+                height = c("400px", TABLE_HEIGHT_MODAL)
               )
             ),
             shiny::tabPanel(
@@ -221,7 +221,7 @@ ExpressionUI <- function(id) {
               expression_table_FDRtable_ui(
                 ns("FDRtable"),
                 width = c("100%", "100%"),
-                height = c("300px", TABLE_HEIGHT_MODAL)
+                height = c("400px", TABLE_HEIGHT_MODAL)
               )
             )
           )

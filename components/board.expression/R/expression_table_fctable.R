@@ -101,7 +101,7 @@ expression_table_fctable_server <- function(id,
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = "220",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
