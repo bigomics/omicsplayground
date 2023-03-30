@@ -422,18 +422,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 cmd <- shQuote(temp_dir())
                 
-                # Function to start the process
-                
                 # Define command to run create_pgx script
                 script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
                 cmd <- shQuote(temp_dir())
 
-                # bigdash.showTabsGoToDataView(session)
-                # r_global$load_example_trigger <- r_global$load_example_trigger + 1
-
                 # Start the process and store it in the reactive value
                  
-                 shinyalert::shinyalert("Ready!","Your dataset will be computed in the background. You will be notified when it is ready.")
+                 shinyalert::shinyalert("Ready!","Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the mean time.")
                  bigdash.selectTab(session, selected = 'welcome-tab')
 
                  dbg("[compute PGX process] : starting process")
@@ -459,12 +454,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 dbg("[compute PGX process] status", process_status)
 
-                
-                
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
-                    browser()
                     on_process_completed(temp_dir = temp_dir())
                 } else if (!is.null(process_status) && process_status != 0) {
                     
@@ -478,7 +470,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     dbg("[compute PGX process] : process still running")
                     return(NULL)
                 }
-                
                 return(NULL)
                 })
 
