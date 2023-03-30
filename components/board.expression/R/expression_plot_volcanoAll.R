@@ -18,7 +18,7 @@ expression_plot_volcanoAll_ui <- function(id,
                                           width) {
   ns <- shiny::NS(id)
 
-  info_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+  info_text <- "Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
   PlotModuleUI(ns("pltmod"),
     title = "Volcano plots for all contrasts",
@@ -48,7 +48,8 @@ expression_plot_volcanoAll_server <- function(id,
                                               lfc,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    # reactive function listening for changes in input
+
+    ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       features <- features()
 
@@ -80,15 +81,24 @@ expression_plot_volcanoAll_server <- function(id,
         sel.genes <- unique(unlist(gset))
       }
 
-
-      return(list(
+      ## combined matrix for output
+      matF <- do.call(cbind,F)
+      colnames(matF) <- paste0("fc.",names(F))
+      matQ <- do.call(cbind,Q)
+      colnames(matQ) <- paste0("q.",names(Q))
+      FQ <- cbind(matF, matQ)
+      
+      pd <- list(
+        FQ = FQ,   ## Remember: the first element is returned as downloadable CSV
         comp = comp,
         fdr = fdr,
         lfc = lfc,
         sel.genes = sel.genes,
         F = F,
         Q = Q
-      ))
+      )
+
+      return(pd)
     })
 
     plot.RENDER <- function() {

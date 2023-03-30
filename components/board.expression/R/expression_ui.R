@@ -64,6 +64,7 @@ ExpressionUI <- function(id) {
   fullH <- 800 ## full height of page
   rowH <- 340 ## full height of page
   imgH <- 340 ## height of images
+  imgH <- "35vh" ## height of images
 
   div(
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
@@ -120,49 +121,43 @@ ExpressionUI <- function(id) {
             ),
             shiny::tabPanel(
               "Top genes",
-              expression_plot_topgenes_ui(
-                id = ns("topgenes"),
-                label = "a",
-                height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              shiny::br(),
-              tags$div(
-                class = "caption",
-                HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top
-                      most differentially (both positively and negatively) expressed genes for
-                      the selected contrast.")
+              bslib::layout_column_wrap(
+                width = 1,
+                expression_plot_topgenes_ui(
+                    id = ns("topgenes"),
+                    label = "a",
+                    height = c(imgH, TABLE_HEIGHT_MODAL),
+                    width = c("auto", "100%")
+                )
               )
+#              tags$div(
+#                class = "caption",
+#                HTML("<b>Top differentially expressed genes.</b> Expression barplots of the top
+#                      most differentially (both positively and negatively) expressed genes for
+#                      the selected contrast.")
+#              )
             ),
             shiny::tabPanel(
               "Volcano (all)",
-              expression_plot_volcanoAll_ui(ns("volcanoAll"),
-                label = "a",
-                height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              shiny::br(),
-              tags$div(
-                class = "caption",
-                HTML("<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano
-                        plots of genes for all contrasts. Experimental contrasts with better statistical significance will
-                        show volcano plots with 'higher' wings.")
+              bslib::layout_column_wrap(
+                width = 1,
+                expression_plot_volcanoAll_ui(ns("volcanoAll"),
+                  label = "a",
+                  height = c(imgH, TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                )
               )
             ),
             shiny::tabPanel(
               "Volcano (methods)",
-              expression_plot_volcanoMethods_ui(
-                id = ns("volcanoMethods"),
-                label = "a",
-                height = c(imgH, TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              shiny::br(),
-              tags$div(
-                class = "caption",                
-                HTML("<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots
-                        of genes by multiple differential expression methods for the selected contrast.
-                        Methods showing better statistical significance will show volcano plots with 'higher' wings.")
+              bslib::layout_column_wrap(
+                width = 1,
+                expression_plot_volcanoMethods_ui(
+                  id = ns("volcanoMethods"),
+                  label = "a",
+                  height = c(imgH, TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                )
               )
             )
           )
@@ -214,10 +209,6 @@ ExpressionUI <- function(id) {
             ),
             shiny::tabPanel(
               "FDR table",
-              tags$div(
-                class = "caption",                
-                HTML("<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes.")
-              ),
               expression_table_FDRtable_ui(
                 ns("FDRtable"),
                 width = c("100%", "100%"),

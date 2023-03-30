@@ -93,7 +93,7 @@ expression_table_fctable_server <- function(id,
       dt <- DT::datatable(df,
         rownames = FALSE,
         # class = 'compact cell-border stripe hover',
-        class = "compact hover",
+        # class = "compact hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = c(1)),
         fillContainer = TRUE,
@@ -101,8 +101,9 @@ expression_table_fctable_server <- function(id,
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "220",
-          scroller = TRUE, deferRender = TRUE
+          scrollY = 220,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

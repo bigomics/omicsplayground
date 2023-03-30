@@ -19,7 +19,7 @@ expression_plot_volcanoMethods_ui <- function(id,
                                               width) {
   ns <- shiny::NS(id)
 
-  info_text <- "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots provided by multiple differential expression calculation methods for the selected contrast. This provides users an overview of the statistics of all methods at the same time."
+  info_text <- "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings. This provides a comparative overview of the relative statistical power between all methods."
 
   PlotModuleUI(ns("pltmod"),
     title = "Volcano plots for all methods",
@@ -49,7 +49,8 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   lfc, # input$gx_lfc
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    # reactive function listening for changes in input
+
+    ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       comp <- comp()
       features <- features()
@@ -62,23 +63,22 @@ expression_plot_volcanoMethods_server <- function(id,
         return(NULL)
       }
 
-      comp <- names(pgx$gx.meta$meta)[1]
-      fdr <- as.numeric(fdr()) # fdr <- 1
-      lfc <- as.numeric(lfc()) # lfc <- 1
+      fdr <- as.numeric(fdr()) 
+      lfc <- as.numeric(lfc()) 
       genes <- NULL
 
       gset <- getGSETS(features)
       sel.genes <- unique(unlist(gset))
 
-      return(
-        list(
+      pd <- list(
           pgx = pgx,
           fdr = fdr,
           lfc = lfc,
           comp = comp,
           sel.genes = sel.genes
-        )
       )
+        
+      return(pd)
     })
 
     plot.RENDER <- function() {
