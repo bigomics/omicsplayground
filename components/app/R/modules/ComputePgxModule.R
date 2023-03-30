@@ -366,17 +366,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 # Generate random name for temporary folder
 
                 # Create temporary folder
-
-                # temp_dir <- tempfile(pattern = "pgx_")
-
-                # dir.create(temp_dir)
-
-                # path_to_params <- file.path(temp_dir, "params.RData")
-
-                temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
-
-                # Create temporary folder
-                temp_dir(file.path(file.path(get_opg_root(),"data"), temp_folder))
+                temp_dir(tempfile(pattern = "pgx_"))
                 dir.create(temp_dir())
             
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -457,6 +447,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
+                    
+                    browser()
                     on_process_completed(temp_dir = temp_dir())
                 } else if (!is.null(process_status) && process_status != 0) {
                     
@@ -475,6 +467,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
+                
                 timer_state("stopped") # stop the timer
                 result_path <- file.path(temp_dir, "my.pgx")
 
