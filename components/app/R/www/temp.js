@@ -4,7 +4,7 @@ let pricing;
 $(document).ready(function() {
 	$(document).on('change', '.card-footer-checked', function(e) {
 	  if ($(this).prop("checked") === true) {
-		$(".card-footer").show().animate({height: "3rem"}, 200);
+		$(".card-footer").show().animate({height: "4.2rem"}, 200);
 	  };
   
 	  if ($(this).prop("checked") === false) {
