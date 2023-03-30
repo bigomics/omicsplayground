@@ -355,20 +355,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 use.design <- !("noLM.prune" %in% input$dev_options)
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
-
-
-                # message("[ComputePgxServer:@compute] creating PGX object")
-                # progress$inc(0.1, detail = "creating PGX object")
-
                     
                 # create folder with random name to store the csv files
 
                 # Generate random name for temporary folder
-                temp_folder <- paste0("temp_", as.integer(runif(1, 100000000, 999999999)))
 
                 # Create temporary folder
-                temp_dir <- file.path(file.path(get_opg_root(),"data"), temp_folder)
-                dir.create(temp_dir)
+
+                temp_dir <- tempfile(pattern = "pgx_")
 
                 path_to_params <- file.path(temp_dir, "params.RData")
 
@@ -440,10 +434,16 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
                     dbg("[compute PGX process] : process completed")
+                    browser()
                     on_process_completed()
                 } else if (!is.null(process_status) && process_status != 0) {
                     
                     dbg("[compute PGX process] : process failed")
+                    dbg_dir <- file.path(file.path(get_opg_root(),"compute-pgx-failed"), temp_folder)
+                    dir.create(dbg_dir, recursive = TRUE)
+                    saveRDS(params, file = dbg_dir)
+                    dbg("[compute PGX process] : params saved to ", dbg_dir)
+
                     on_process_error()
                     
                 } else {
