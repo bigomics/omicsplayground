@@ -2625,7 +2625,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                 }
                 cex.lab2 <- c(rep(1,nrow(df)),df$cex)
                 if(repel) {
-                    dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels...")
                     ##nc <- wordcloud::wordlayout(df2$x, df2$y, df2$z,
                     nc <- repelwords(df2$x, df2$y, df2$z,
                                      xlim = xlim1, ylim = ylim1,
@@ -2634,12 +2633,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                     nc <- Matrix::tail(nc,nrow(df))
                     lab.pos <- data.frame(x=nc[,1]+.5*nc[,3], y=nc[,2]+.5*nc[,4])
                 } else {
-                    ##dbg("[pgx.scatterPlotXY.BASE] 6: fixed labels...")
                     lab.pos <- data.frame(x=pos[jj,1], y=pos[jj,2])
                 }
                 rownames(lab.pos) <- rownames(pos)[jj]
             } else {
-                dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")
                 lab.pos <- lab.pos[match(rownames(df),rownames(lab.pos)),]
             }
             segments(df$x, df$y, lab.pos$x, lab.pos$y, col='#222222AA', lwd=0.85)
@@ -2940,7 +2937,6 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
 
     if(!is.null(hilight)) {
         sel <- which(df$name %in% hilight)
-        dbg("[pgx.scatterPlotXY.GGPLOT] sel = ",sel)
         if(is.null(hilight.col)) hilight.col <- 'transparent'
         plt <- plt +
             geom_point(
@@ -3034,17 +3030,10 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         displayModeBar=FALSE
     }
 
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: hilight = ", head(hilight))
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: dim.pos = ", dim(pos))
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: dim.var = ", dim(var))
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1: len.var = ", length(var))
-
     if(!is.null(var) && NCOL(var)>1) {
-        dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1a: NCOL.var = ", NCOL(var))
         var <- setNames(var[,1], names=rownames(var))
     }
     if(!is.null(var) && length(var)==nrow(pos) && is.null(names(var)) ) {
-        dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 1b: head.rownames.pos = ", head(rownames(pos)))
         names(var) <- rownames(pos)
     }
     if(is.null(var)) {
@@ -3052,15 +3041,8 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         names(var) <- rownames(pos)
     }
 
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: dim.pos = ", dim(pos))
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: len.var = ", length(var))
-
-
     var <- var[match(rownames(pos),names(var))]
     names(var) <- rownames(pos)
-
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: head.var = ", head(var))
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 2: head.names.var = ", head(names(var)))
     
     if(is.null(type)) {
         type <- c("numeric","factor")[1 + class(var) %in% c("factor","character")]
@@ -3142,8 +3124,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         }
         cpal <- Matrix::head(rep(cpal,99),nz)
 
-        ##pt.col <- cpal[z1]
-        ##pt.col[is.na(pt.col)] <- "#DDDDDD55"
         if(opacity<1) {
             ##pt.col <- add_opacity(pt.col, opacity)
             cpal <- add_opacity(cpal, opacity**0.33)
@@ -3164,13 +3144,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
     if(type=="numeric") {
         z <- as.numeric(var)
         z1 <- NULL
-        ## if(!is.null(zlim)) {
-        ##     z1 <- (z - min(zlim)) / diff(zlim)
-        ##     z1 <- pmin(pmax(z1,0),1) ## clip
-        ## } else {
-        ##     z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
-        ## }
-        ## if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         cpal <- rev(viridis::viridis(11))
         cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
         if(opacity<1) {
@@ -3180,6 +3153,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         ## df <- data.frame( x=pos[,1], y=pos[,2], variable=z, text=tooltip1 )
         df <- data.frame(x=pos[,1], y=pos[,2], name=rownames(pos),
                          value=z, text=tooltip1, label=label1)
+        rownames(df) <- rownames(pos)
 
         ## plot low values first
         df <- df[order(abs(z)),,drop=FALSE]
@@ -3191,15 +3165,14 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
             cmin = -cmax
         }
     }
-
+    
     ## remove NA??
     ##df <- df[!is.na(df$value),]
-
+    
     ##---------------- call PLOTLY -----------
     if(is.null(source)) source <- paste0(sample(LETTERS,10),collapse='')
     ##plt <- plotly::plot_ly(df,
     plt <- plotly::plot_ly(
-        ##data = df[jj,,drop=FALSE],
         source = source,
         ##key = rownames(df),
         showlegend = FALSE
@@ -3235,15 +3208,13 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
             key = ~label,
             mode = "markers",
             type = "scattergl")
-
-    dbg("[pgx-plotting.R:pgx.scatterPlotXY.PLOTLY] 3: hilight = ", head(hilight))
     
     if(!is.null(hilight)) {
 
         jj <- which(rownames(df) %in% hilight)
         col1 = 'transparent'
         if(!is.null(hilight.col)) col1 <- hilight.col
-        df1 <- df[jj,,drop=FALSE]
+        
         plt <- plt %>%
             ##add_trace(
             plotly::add_markers(
@@ -3854,7 +3825,6 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     ## ------ split Y-axis (genes) by factor
     hc.order <- function(x) {
         suppressWarnings( dd <- as.dist(1 - stats::cor(t(x),use="pairwise")) )
-        ## cat("DBG >pgx-plotting:pgx.splitHeatmapX> sum.is.na.dd=",sum(is.na(dd)),"\n")
         if(sum(is.na(dd))) dd[is.na(dd)] <- 1
         hc <- fastcluster::hclust(dd, method="ward.D2" )
         rownames(x)[hc$order]

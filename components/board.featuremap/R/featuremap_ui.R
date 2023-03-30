@@ -61,16 +61,16 @@ FeatureMapUI <- function(id) {
           bslib::layout_column_wrap(
             width = 1/2,
             featuremap_plot_gene_map_ui(
-                ns("gene_map"),
+                ns("geneUMAP"),
                 height = c("50vh", 800)
             ),
             featuremap_plot_gene_sig_ui(
-                ns("gene_sig"),
+                ns("geneSigPlots"),
                 height = c("50vh", 800)
             )
           ),
           featuremap_table_gene_map_ui(
-              ns("gene_map"),
+              ns("geneUMAP"),
               height = c(400, 800)
           ),
           br()
@@ -78,16 +78,25 @@ FeatureMapUI <- function(id) {
       ),
       shiny::tabPanel(
         "Geneset",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            featuremap_plot_table_geneset_map_ui(ns("gsetUMAP"))
+        bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/2,
+            featuremap_plot_geneset_map_ui(
+                ns("gsetUMAP"),
+                height = c("50vh", 800)                
+            ),                     
+            featuremap_plot_gset_sig_ui(
+                ns("gsetSigPlots"),
+                height = c("50vh", 800)
+            )
           ),
-          div(
-            class = "col-md-6",
-            featuremap_plot_gset_sig_ui(ns("gsetSigPlots"))
-          )
+          featuremap_table_geneset_map_ui(
+              ns("gsetUMAP"),
+              height = c(400, 800)
+          ),
+          br()
         )
       )
     )

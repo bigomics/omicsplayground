@@ -98,10 +98,9 @@ featuremap_plot_gene_map_server <- function(id,
       pos <- pos[gg,]
       fc <- fc[gg]
 
-      dbg("[featuremap_plot_table_gene_map.R] hilight =",head(hilight))
-      
       pd <- list(
         df = data.frame(pos, fc=fc),
+        fc = fc,
         hilight = hilight,
         colgamma = colgamma,
         nlabel = nlabel,
@@ -114,7 +113,7 @@ featuremap_plot_gene_map_server <- function(id,
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
-      fc  <- setNames(pd$df[,"fc"], rownames(pd$df))
+      fc  <- pd$fc
       hilight <- pd$hilight
       nlabel  <- pd$nlabel
       colorby <- pd$colorby

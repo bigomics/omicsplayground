@@ -3,12 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
+featuremap_plot_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
 
   info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance."
-
-  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
 
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
@@ -24,8 +22,7 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
     )
   )
 
-  div(
-    PlotModuleUI(
+  PlotModuleUI(
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
@@ -36,15 +33,23 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       height = c(600, 700),
       width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
-    ),
-    TableModuleUI(
+  )
+}
+
+featuremap_table_geneset_map_ui <- function(id, label = "",
+                                            height = c(400, TABLE_HEIGHT_MODAL),
+                                            width = c("auto", "100%")) {
+  ns <- shiny::NS(id)
+
+  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
+
+  TableModuleUI(
       ns("gset_table"),
       info.text = info_text_table,
-      height = c(280, TABLE_HEIGHT_MODAL),
-      width = c("auto", "90%"),
+      height = height,
+      width = width,
       title = "Geneset table",
       label = "c"
-    )
   )
 }
 
@@ -109,18 +114,22 @@ featuremap_plot_table_geneset_map_server <- function(id,
       
       F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      if (colorby == "var.FC") {
+      if (colorby == "sd.FC") {
         fc <- (rowMeans(F**2))**0.5
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
       } else {
         cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
+      ## conform
+      gg <- intersect(rownames(pos), names(fc))
+      pos <- pos[gg,]
+      fc <- fc[gg]
+      
       pd <- list(
         df = data.frame(pos, fc=fc),
+        fc = fc,  
         hilight = hilight,
         colgamma = colgamma,
         nlabel = nlabel,
@@ -133,11 +142,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
-      fc  <- setNames(pd$df[,"fc"], rownames(pd$df))
+      fc <- pd$fc
       hilight <- pd$hilight
       nlabel  <- pd$nlabel
       colorby <- pd$colorby
-      
+        
       ## filter on table
       p <- plotUMAP(
         pos,

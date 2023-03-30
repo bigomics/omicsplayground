@@ -60,28 +60,19 @@ FeatureMapBoard <- function(id, pgx) {
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, source = "", plotlib = "base") {
 
-      dbg("[featuremap_server.R:plotUMAP] 0: hilight = ", head(hilight))
-
       if (!is.null(hilight)) {
-
-          dbg("[featuremap_server.R:plotUMAP] 0: rownames.pos = ", head(rownames(pos)))
-          dbg("[featuremap_server.R:plotUMAP] 0: names.var = ", head(names(var)))
           
-            hilight <- intersect(hilight, rownames(pos))
-            hilight <- intersect(hilight, names(var))
-            hilight <- hilight[order(-var[hilight])]
-
-            dbg("[featuremap_server.R:plotUMAP] 1: hilight = ", head(hilight))
-            
-            if (min(var, na.rm = TRUE) < 0) {
-                hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
-                hilight2 <- unique(hilight2)
-            } else {
+          hilight <- intersect(hilight, rownames(pos))
+          hilight <- intersect(hilight, names(var))
+          hilight <- hilight[order(-var[hilight])]
+          
+          if (min(var, na.rm = TRUE) < 0) {
+              hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
+              hilight2 <- unique(hilight2)
+          } else {
                 hilight2 <- head(hilight, nlabel)
-            }
+          }
       }
-
-      dbg("[featuremap_server.R:plotUMAP] 2: hilight = ", head(hilight))
       
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
 
@@ -91,7 +82,7 @@ FeatureMapBoard <- function(id, pgx) {
       ## cex = 0.9
       ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
-
+        
       p <- pgx.scatterPlotXY(
         pos,
         var = var,
@@ -241,7 +232,7 @@ FeatureMapBoard <- function(id, pgx) {
     # Gene Map
 
     featuremap_plot_gene_map_server(
-      "gene_map",
+      "geneUMAP",
       pgx    = pgx,
       getGeneUMAP  = getGeneUMAP,
       plotUMAP     = plotUMAP,
@@ -253,7 +244,7 @@ FeatureMapBoard <- function(id, pgx) {
     # Gene Signatures
 
     featuremap_plot_gene_sig_server(
-      "gene_sig",
+      "geneSigPlots",
       pgx         = pgx,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),
