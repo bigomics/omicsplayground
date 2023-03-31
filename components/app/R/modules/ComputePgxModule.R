@@ -500,7 +500,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 } else {
                     shinyjs::disable("compute")
                     shiny::insertUI(
-                        selector = "body",
+                        selector = ".current-dataset",
                         where = "beforeEnd",
                         ui = loading_spinner("Computation in progress...")
                         )

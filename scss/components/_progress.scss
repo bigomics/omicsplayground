@@ -13,4 +13,18 @@ html {
     border-radius: 0px;
     background-color: $canvas;
   }
+
+  .spinner-container {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    z-index: 999;
+  }
+  
+  .spinner-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
 }
