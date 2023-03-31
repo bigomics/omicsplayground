@@ -493,6 +493,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
             observe(check_process_status())
 
+            observe({
+                if (timer_state() == "stopped") {
+                    shinyjs::enable("compute")
+                } else {
+                    shinyjs::disable("compute")
+                }
+                })
+
             return(computedPGX)
         } ## end-of-server
     )
