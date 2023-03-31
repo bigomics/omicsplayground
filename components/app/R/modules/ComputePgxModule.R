@@ -368,6 +368,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 # Create temporary folder
                 temp_dir(tempfile(pattern = "pgx_"))
                 dir.create(temp_dir())
+
+                dbg("[compute PGX process] : tempFile", temp_dir())
             
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
@@ -438,6 +440,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 process_status <- process_obj()$get_exit_status()
                 process_alive <- process_obj()$is_alive()
 
+                dbg("[compute PGX process] : file Location:", temp_dir())
                 dbg("[compute PGX process] status: ", process_alive)
 
                 if (!is.null(process_status) && process_status == 0) {
