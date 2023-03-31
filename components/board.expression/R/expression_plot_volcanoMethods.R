@@ -79,7 +79,7 @@ expression_plot_volcanoMethods_server <- function(id,
       return(pd)
     })
 
-    render_plots <- function(base_size=11) {
+    render_plots <- function(cex=NULL, base_size=11) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -141,10 +141,10 @@ expression_plot_volcanoMethods_server <- function(id,
             hilight.lwd = 0,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
-            cex = 0.45,
-            cex.lab = 0.62,
+            cex = cex,
+            cex.lab = 1.7*cex,
             base_size = base_size
-          )
+          ) + theme_bw(base_size = base_size)
 
           if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }
@@ -154,7 +154,7 @@ expression_plot_volcanoMethods_server <- function(id,
     }
       
     plot.RENDER <- function() {      
-      plt <- render_plots(base_size=12)
+      plt <- render_plots(cex=0.45, base_size=11)
       nplots <- length(plt)
       
       ## layout
@@ -172,7 +172,8 @@ expression_plot_volcanoMethods_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {      
-      plt <- render_plots(base_size=18)
+
+      plt <- render_plots(cex=1, base_size=18)
       nplots <- length(plt)
       
       ## layout
