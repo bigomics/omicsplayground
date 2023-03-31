@@ -408,20 +408,17 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 saveRDS(params, file=path_to_params)
 
-                cmd <- shQuote(temp_dir())
-                
-                # Define command to run create_pgx script
-                script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
-                cmd <- shQuote(temp_dir())
+                # Normalize paths
+                script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
+                cmd <- normalizePath(temp_dir())
 
                 # Start the process and store it in the reactive value
-                 
-                 shinyalert::shinyalert("Ready!","Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the mean time.")
-                 bigdash.selectTab(session, selected = 'welcome-tab')
+                shinyalert::shinyalert("Ready!", "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                bigdash.selectTab(session, selected = 'welcome-tab')
 
-                 dbg("[compute PGX process] : starting process")
-                 timer_state("running")
-                 process_obj(processx::process$new("Rscript", args = c(shQuote(script_path), cmd), supervise = TRUE))
+                dbg("[compute PGX process] : starting process")
+                timer_state("running")
+                process_obj(processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE))
 
             })
             
