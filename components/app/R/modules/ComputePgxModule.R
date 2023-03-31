@@ -247,8 +247,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             process_obj <- reactiveVal(NULL)
             computedPGX  <- shiny::reactiveVal(NULL)
             temp_dir <- reactiveVal(NULL)
-            timer_state <- reactiveVal("stopped")
-            reactive_timer <- reactiveTimer(1000)  # Triggers every 1000 milliseconds (1 second)
+            timer_state <- reactiveVal("stopped") 
+            reactive_timer <- reactiveTimer(10000)  # Triggers every 10000 milliseconds (10 second)
 
 
 
@@ -406,10 +406,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 saveRDS(params, file=path_to_params)
 
-                # Define command to run create_pgx script
-                
-                script_path <- file.path(get_opg_root(), "bin", "pgxcreate_op.R")
-
                 cmd <- shQuote(temp_dir())
                 
                 # Define command to run create_pgx script
@@ -442,7 +438,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 process_status <- process_obj()$get_exit_status()
                 process_alive <- process_obj()$is_alive()
 
-                dbg("[compute PGX process] status", process_status)
+                dbg("[compute PGX process] status: ", process_alive)
 
                 if (!is.null(process_status) && process_status == 0) {
                     # Process completed successfully
@@ -450,9 +446,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     
                     on_process_completed(temp_dir = temp_dir())
                 } else if (!is.null(process_status) && process_status != 0) {
-                    
-                    dbg("[compute PGX process] : process failed")
-                    dbg("[compute PGX process] : params saved to ", dbg_dir)
 
                     on_process_error()
                     
