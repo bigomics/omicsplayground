@@ -177,6 +177,7 @@ UploadBoard <- function(id,
       }else{
         # what this does???
         # shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+        bigdash.selectTab(session, selected = 'load-tab')
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         r_global$loadedDataset <- r_global$loadedDataset+1
 
