@@ -139,3 +139,20 @@ selector_default <- function(class = NULL, label = "Text to appear in Switch") {
     tags$label(label)
     )
 }
+
+
+loading_spinner <- function(text = "Loading...") {
+  shiny::tags$div(
+    class = "spinner-container",
+    style = "position: fixed; bottom: 5px; right: 5px; z-index: 999;",
+    shiny::tags$div(
+      class = "spinner-border text-primary",
+      role = "status",
+      shiny::tags$span("Loading...", class = "visually-hidden")
+    ),
+    shiny::tags$div(
+      class = "spinner-text",
+      text
+    )
+  )
+}

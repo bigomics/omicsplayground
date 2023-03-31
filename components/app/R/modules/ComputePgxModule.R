@@ -496,8 +496,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             observe({
                 if (timer_state() == "stopped") {
                     shinyjs::enable("compute")
+                    shiny::removeUI(selector = "#spinner-container")
                 } else {
                     shinyjs::disable("compute")
+                    shiny::insertUI(
+                        selector = "body",
+                        where = "beforeEnd",
+                        ui = loading_spinner("Computation in progress...")
+                        )
                 }
                 })
 
