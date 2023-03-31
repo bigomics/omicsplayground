@@ -110,6 +110,7 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+
       new_pgx <- uploaded_pgx()
 
       dbg("[observe::uploaded_pgx] initializing PGX object")
@@ -170,11 +171,17 @@ UploadBoard <- function(id,
         )
       )
 
-      ## where does this go???
-      shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+      if(r_global$loadedDataset > 0){
+        # check if user already has a dataset loaded and have a different UX in that case
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+      }else{
+        # what this does???
+        # shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        r_global$loadedDataset <- r_global$loadedDataset+1
 
-      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-      r_global$loadedDataset <- r_global$loadedDataset+1
+      }
+      
     })
 
     # Some 'global' reactive variables used in this file
