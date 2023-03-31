@@ -50,7 +50,7 @@ gx.hist <- function(gx, main="",ylim=NULL) {
 #levels. One must define the number of colors. The limits of the color
 #scale("zlim") or the break points for the color dplyr::changes("breaks") can 
 #also be defined. when breaks and zlim are defined, breaks overrides zlim.
-val2col<-function(z, zlim, col = heat.colors(12), breaks){
+val2col <- function(z, zlim, col = heat.colors(12), breaks){
     if(!missing(breaks)){
         if(length(breaks) != (length(col)+1)){stop("must have one more break than colour")}
     }
