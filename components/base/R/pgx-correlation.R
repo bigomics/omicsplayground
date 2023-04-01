@@ -33,8 +33,7 @@ pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
     return(res)
 }
 
-pgx.plotPartialCorrelationGraph <-
-  function(res, gene, rho.min=0.1, nsize=-1, main="",
+pgx.plotPartialCorrelationGraph <- function(res, gene, rho.min=0.1, nsize=-1, main="",
              vsize=10, edge.width=10, label.cex=0.8,
              radius=-1, plot=TRUE, layout="fr")
 {    
@@ -79,7 +78,6 @@ pgx.plotPartialCorrelationGraph <-
     isolated = which(igraph::degree(G1)==0 & igraph::V(G)$name!=gene)
     G1 = igraph::delete.vertices(G1, isolated)
 
-    dbg("[pgx.plotPartialCorrelationGraph] len.VG = ",length(igraph::V(G1)))
     if(length(igraph::V(G1)) <= 1)  return()
 
     ## get only nodes within radius
@@ -132,24 +130,6 @@ pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS
 
 pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FALSE)
 {    
-    ##
-    
-    
-    
-    ##
-    
-    ##
-    ##
-    
-    
-    
-    ##
-    
-
-    if(0) {
-        tX <- t(Matrix::head(ngs$X,500))
-    }
-
     if(fast || ncol(tX)>1000) {
         method <- intersect(method, PCOR.FAST)
         method
@@ -444,22 +424,12 @@ pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.8, pcor.mi
         plot(gr2, layout=ly)
 
     }
-
-    ##P1 <- P * (abs(P)>0.1)
-    ##P1 <- 0.5*(P1 + t(P1))
-    ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
-    ##out <- list(graph=gr2)
-    ##return(out)
 }
 
 
 ##df=ngs$samples
 pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 {
-
-    
-    
-
     df <- type.convert(df)
     cl <- sapply(df,class)
     cvar <- which(cl %in% c("numeric","integer"))
