@@ -878,13 +878,9 @@ sigdb.getConnectivityContrasts <- function(sigdb) {
 
 sigdb.getConnectivityMatrix <- function(sigdb, select=NULL, genes=NULL)
 {
-
-
     if(0) {
         sigdb = "sigdb-archs4.h5"
         sigdb = "sigdb-creeds.h5"
-        sigdb <- input$cmap_sigdb
-        shiny::req(sigdb)
     }
     if(sigdb=="" || is.null(sigdb)) {
         warning("[getConnectivityMatrix] ***WARNING*** sigdb=",sigdb)
