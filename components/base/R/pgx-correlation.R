@@ -34,7 +34,7 @@ pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
 }
 
 pgx.plotPartialCorrelationGraph <-
-    function(res, gene, rho.min=0.1, nsize=-1, main="",
+  function(res, gene, rho.min=0.1, nsize=-1, main="",
              vsize=10, edge.width=10, label.cex=0.8,
              radius=-1, plot=TRUE, layout="fr")
 {    
@@ -116,8 +116,7 @@ PCOR.METHODS = c("cor","pcor","pcor.shrink", "glasso", "huge",
                "fastclime", "FastGGM", "SILGGM")
 
 ##gene="CD4";X=ngs$X;nmax=200;method=PCOR.FAST;nmax=100;fast=TRUE
-pgx.computePartialCorrelationAroundGene <-
-    function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
+pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
     rho <- stats::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
@@ -320,11 +319,10 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
 
 ##rho.min=0.7;nsize=20;main="";what="graph";edge.width=5;layout="fr"
 
-pgx.plotPartialCorrelationAroundGene <-
-    function(res, gene, rho.min=0.8, pcor.min=0, 
-             nsize=-1, main="",
-             what=c("cor","pcor","graph"),
-             edge.width=10, layout="fr")
+pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.8, pcor.min=0, 
+                                                 nsize=-1, main="",
+                                                 what=c("cor","pcor","graph"),
+                                                 edge.width=10, layout="fr")
 {    
 
     rho <- res$rho    

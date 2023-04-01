@@ -3,6 +3,11 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+star.symbols <- function(n, pch="\u2605") {
+    if(n==0) return("")
+    paste(rep(pch,n),collapse="")
+}
+
 gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 {
     ## Creates gadget from a Shiny module. Gadget are browser-based UI

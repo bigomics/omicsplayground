@@ -123,11 +123,6 @@ util.findboxes <- function( df, xcol, ycol,
   return(finaldf)
 }
 
-star.symbols <- function(n, pch="\u2605") {
-    if(n==0) return("")
-    paste(rep(pch,n),collapse="")
-}
-
 search_path <- function(paths, file) {
     dir <- paths[which(file.exists(file.path(paths,file)))]
     if(length(dir)==0) return(NULL)
