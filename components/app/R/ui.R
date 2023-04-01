@@ -277,8 +277,6 @@ app_ui <- function() {
         )
         
         big_theme2 = bigdash::big_theme()
-        ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
-                ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
         big_theme2 <- bslib::bs_add_variables(big_theme2, 
           "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
           .where = "declarations"

@@ -1,9 +1,17 @@
 html {
 
+  body {
+      a {
+	  color: $main;
+	  text-decoration: none;
+      }
+      font-size: 14px;
+/*    font-family: "Cubano"; */
+  }
+  
   .content {
     min-height: 800px;
   }
-
 
   h2 {
       font-size: 1.85em;
@@ -28,19 +36,6 @@ html {
   }
 
   /* ---------------------------- template specfic -------------------------- */
-
-  body {
-      a {
-	  color: $main;
-	  text-decoration: none;
-      }
-      font-size: 14px;
-  }
-
-  /* space in innner tabpanes */
-  .tabbable .tab-content {
-//    padding: 15px 20px;
-  }
 
   .tabbable .nav-tabs {
     padding: 0px;
@@ -90,8 +85,6 @@ html {
   .gene-info-output {
     font-size: 0.9em;
     background-color: #dde6f0BB;
-    //padding: 20px 10px 10px 10px;
-    //overflow: hidden;
     height: 1000px;
   }
   
