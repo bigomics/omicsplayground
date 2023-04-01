@@ -3724,9 +3724,9 @@ corclust <- function(x) {
 ##
 ##
 require(iheatmapr)
-setMethod(add_col_annotation,
-          c(p = "Iheatmap"),
-          function(p,
+#setMethod(add_col_annotation,
+#          c(p = "Iheatmap"),
+iheatmapr.add_col_annotation <- function(p,
                    annotation,
                    colors = NULL,
                    side = c("top","bottom"),
@@ -3781,12 +3781,8 @@ setMethod(add_col_annotation,
               }
             }
             return(p)
-          })
+          }#)
 
-
-##X=head(ngs$X,100);annot=ngs$samples
-##row_annot_width=0.03;colors=NULL;label_size=11;scale="row.center"
-##xtips=NULL;ytips=NULL;lmar=60
 
 pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
                                        xtips=NULL, ytips=NULL, row_clust=TRUE,
@@ -3911,7 +3907,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
         ##add_row_dendro(hr, size = dd) %>%
         iheatmapr::add_row_title("Genes") %>%
         iheatmapr::add_col_title(names(xx)[1], side="top") %>%
-        add_col_annotation(
+        iheatmapr.add_col_annotation(
             size = col_annot_height, buffer = 0.005, side="bottom",
             colors = colors0, show_title=TRUE,
             annotF[colnames(xx[[1]]),,drop=FALSE])
@@ -3948,7 +3944,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
                 ##add_col_clustering() %>%
                 iheatmapr::add_col_dendro(hc, size = 0.06) %>%
                 iheatmapr::add_col_title(names(xx)[i], side="top") %>%
-                add_col_annotation(
+                iheatmapr.add_col_annotation(
                     size = col_annot_height, buffer = 0.005, side="bottom",
                     colors = colors0, show_title=FALSE,
                     data.frame(annotF[colnames(x1),,drop=FALSE]))
