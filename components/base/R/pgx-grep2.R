@@ -499,7 +499,6 @@ run_tximport_kallisto <- function (srr_id, species = c("human", "mouse", "rat"),
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel
-
 trimgalore_fastq <- function(fastq1, fastq2 = NULL, adapter1 = NULL, adapter2 = NULL,
                        illumina = FALSE, nextera = FALSE, small_rna = FALSE,
                        minlength = 20, minqual = 20, trimN = TRUE,

@@ -752,7 +752,7 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
     D
 }
 
-shortstring = function(s,n) {
+shortstring <- function(s,n) {
     s=as.character(s);
     ifelse(nchar(s)<=n,s,paste0(substring(s,1,n),"..."))
 }
