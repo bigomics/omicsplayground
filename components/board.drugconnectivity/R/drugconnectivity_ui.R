@@ -55,7 +55,7 @@ DrugConnectivityUI <- function(id) {
             drugconnectivity_table_dsea_ui(
               ns("dsea_table"),
               height = c(360, TABLE_HEIGHT_MODAL),
-              width = c("100%", "90%")
+              width = c("100%", "100%")
             )
           ),
           div(
@@ -80,7 +80,7 @@ DrugConnectivityUI <- function(id) {
                 drugconnectivity_table_cmap_ui(
                   ns("cmap_table"),
                   height = c(380, TABLE_HEIGHT_MODAL),
-                  width = c("100%", "90%")
+                  width = c("100%", "100%")
                 )
               ),
               shiny::br(),

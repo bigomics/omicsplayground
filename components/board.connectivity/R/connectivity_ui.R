@@ -66,7 +66,7 @@ ConnectivityUI <- function(id) {
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable"),
               height = c("10vh", TABLE_HEIGHT_MODAL),
-              width = c("auto", "90%"),
+              width = c("auto", "100%"),
               label = "b"
             )
           ),
@@ -164,7 +164,7 @@ ConnectivityUI <- function(id) {
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable2"),
               height = c(660, TABLE_HEIGHT_MODAL),
-              width = c("auto", "90%")
+              width = c("auto", "100%")
             )
           )
         ),

@@ -238,7 +238,7 @@ PlotModuleUI <- function(id,
 
     ## inline styles (should be in CSS...)
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
-    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 100px;}")
+    modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 150px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
     modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
 
@@ -249,7 +249,7 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")
     }
-    e =   bslib::card(
+    e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       bslib::card_body_fill(
         style = paste0("height: ",height.1,";"),

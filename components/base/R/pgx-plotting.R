@@ -4033,12 +4033,28 @@ pgx.barplot.PLOTLY <- function(
   xaxistitle = FALSE,
   yrange = NULL,
   font_family = "Lato",
-  ##margin = list(l = 10, r = 10, b = 65, t = 30),
   margin = list(l = 10, r = 10, b = 10, t = 10),
   grouped = TRUE, #true will calculate mean +/- (sd) across groups
   annotations = NULL
 ) {
 
+  if(0) {
+    title = NULL
+    color = omics_colors("brand_blue")
+    fillcolor = omics_colors("light_blue")
+    linecolor = omics_colors("brand_blue")
+    titlecolor = "#1f77b4"
+    hoverinfo = "y"
+    hoverformat = ".2f"
+    yaxistitle = FALSE
+    xaxistitle = FALSE
+    yrange = NULL
+    font_family = "Lato"
+    margin = list(l = 10, r = 10, b = 10, t = 10)
+    grouped = TRUE #true will calculate mean +/- (sd) across groups
+    annotations = NULL
+  }
+  
   # calculate error bars
 
   # calculate summary statistics for groups
@@ -4064,12 +4080,10 @@ pgx.barplot.PLOTLY <- function(
       color = "#000000")
   }
   
-  dbg("[pgx-plotting] head.error_y = ",head(error_y))
-  
-  plotly::plot_ly(
+  p <- plotly::plot_ly(
     data = data_stats,
-    x = ~data_stats[[x]],
-    y = ~data_stats[[y]],
+    x = data_stats[[x]],
+    y = data_stats[[y]],
     type = "bar",
     error_y = error_y,
     marker = list(
@@ -4096,5 +4110,6 @@ pgx.barplot.PLOTLY <- function(
       annotations = annotations
     ) %>%
     plotly_default()
-
+  
+  return(p)
 }
