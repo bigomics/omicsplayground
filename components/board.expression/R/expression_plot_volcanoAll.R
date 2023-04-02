@@ -51,16 +51,17 @@ expression_plot_volcanoAll_server <- function(id,
 
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
-      features <- features()
-
 
       if (is.null(pgx)) {
         return(NULL)
       }
+      
+      features <- features()
       ct <- getAllContrasts()
       F <- ct$F
       Q <- ct$Q
 
+      
       ## comp = names(pgx$gx.meta$meta)
       comp <- names(F)
       if (length(comp) == 0) {
@@ -144,7 +145,7 @@ expression_plot_volcanoAll_server <- function(id,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.7*cex,
+            cex.lab = 1.8*cex,
             base_size = base_size
           ) + theme_bw(base_size = base_size)
           
@@ -158,7 +159,7 @@ expression_plot_volcanoAll_server <- function(id,
 
     plot.RENDER <- function() {
 
-      plt <- render_plots(cex=0.45, base_size=11)
+      plt <- render_plots(cex=0.5, base_size=11)
       nplots <- length(plt)
       
       ## plot layout #####
@@ -179,7 +180,7 @@ expression_plot_volcanoAll_server <- function(id,
 
     modal_plot.RENDER <- function() {      
 
-      plt <- render_plots(cex=1, base_size=16)
+      plt <- render_plots(cex=0.9, base_size=16)
       nplots <- length(plt)
       
       ## layout

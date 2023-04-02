@@ -34,11 +34,12 @@ options(DT.options = list(
   scrollX = TRUE,
   fillContainer = FALSE
 ))
+
 # Set global modal height values for tables.
-  # - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
-  # this only defines the srollable part of the table, not the header height.
-  # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
-  # this will define how close the caption is to the table.
+# - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
+# this only defines the srollable part of the table, not the header height.
+# - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
+# this will define how close the caption is to the table.
 SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 

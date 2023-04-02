@@ -75,8 +75,11 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      shiny::req(pgx, sel1())
+      shiny::req(pgx)
 
+      dbg("[expression_plot_maplot.R] sel1 = ",sel1())
+      ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
+      
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
 
@@ -195,8 +198,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) %>%
-        plotly::layout(margin = list(b = 65))
+      )  ## %>% plotly::layout(margin = list(b = 65))
       plt
     }
 

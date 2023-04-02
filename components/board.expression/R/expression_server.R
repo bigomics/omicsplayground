@@ -65,7 +65,7 @@ ExpressionBoard <- function(id, pgx) {
         selected = sel1
       )
 
-      shiny::updateCheckboxInput(session, "gx_ungroup", value = (ncol(pgx$X) <= 8))
+      shiny::updateCheckboxInput(session, "gx_grouped", value = (ncol(pgx$X) <= 8))
     })
 
 
@@ -80,7 +80,7 @@ ExpressionBoard <- function(id, pgx) {
     genetable_rows_selected <- reactiveVal()
 
     observe({
-      req(genetable$rows_selected())
+      ## req(genetable$rows_selected())
       genetable_rows_selected(genetable$rows_selected())
     })
 
@@ -97,8 +97,6 @@ ExpressionBoard <- function(id, pgx) {
 
 
     # functions #########
-
-
     comparison <- 1
     testmethods <- c("trend.limma")
     add.pq <- 0
@@ -283,13 +281,10 @@ ExpressionBoard <- function(id, pgx) {
       ## res <- head(res, 1000)
       return(res)
     })
-    ## %>%
-    ## bindCache(input$gx_features, input$gx_fdr, input$gx_lfc)
 
     # Plotting ###
 
     # tab differential expression > Plot ####
-
     expression_plot_volcano_server(
       id = "plots_volcano",
       comp1 = shiny::reactive(input$gx_contrast),
@@ -423,7 +418,6 @@ ExpressionBoard <- function(id, pgx) {
     # tab differential expression > Volcano Methods ####
 
     # rendering tables ####
-
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
       if (is.null(res) || nrow(res) == 0) {
@@ -435,11 +429,9 @@ ExpressionBoard <- function(id, pgx) {
       }
       ## get table
       sel.row <- 1
-      ## sel.row = input$genetable_rows_selected
       sel.row <- genetable_rows_selected()
-      if (is.null(sel.row)) {
-        return(NULL)
-      }
+      if (is.null(sel.row)) return(NULL)
+      
       gene0 <- rownames(res)[sel.row]
       gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
 

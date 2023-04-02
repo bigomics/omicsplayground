@@ -58,8 +58,10 @@ expression_plot_topfoldchange_server <- function(id,
       comp <- comp() # input$gx_contrast
       sel <- sel()
       res <- res()
-      shiny::req(sel())
 
+      ##shiny::req(sel())
+      shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
+      
       psel <- rownames(res)[sel]
       gene <- pgx$genes[psel, "gene_name"]
 
@@ -103,17 +105,6 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      par(mfrow = c(1, 1), mar = c(4, 4, 2, 2) * 1, mgp = c(2, 0.8, 0), oma = c(1, 1, 1, 0.5) * 0.2)
-      par(mfrow = c(1, 1), mar = c(6, 3, 0, 1), mgp = c(2, 0.8, 0), oma = c(1, 0, 0, 0))
-      nch <- max(nchar(names(pd[["fc.top"]])))
-      m1 <- ifelse(nch > 12, 12, 8)
-      m1 <- ifelse(nch > 30, 16, m1)
-
-      par(mar = c(3.2, m1 - 0.5, 1, 1))
-      cex1 <- 0.9
-      nn <- sum(!is.na(pd[["fc.top"]]))
-      if (nn > 15) cex1 <- 0.8
-
       pgx.barplot.PLOTLY(
         data = data.frame(
           x = names(pd[["fc.top"]]),
@@ -126,11 +117,9 @@ expression_plot_topfoldchange_server <- function(id,
         xaxistitle = "Groups",
         yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
         fillcolor = pd[["klr"]],
-        plotRawValues = TRUE
+        grouped = FALSE
       )
     }
-
-
 
     PlotModuleServer(
       "pltmod",

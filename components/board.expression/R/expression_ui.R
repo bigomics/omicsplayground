@@ -119,7 +119,8 @@ ExpressionUI <- function(id) {
               "Volcano (all)",
               bslib::layout_column_wrap(
                 width = 1,
-                expression_plot_volcanoAll_ui(ns("volcanoAll"),
+                expression_plot_volcanoAll_ui(
+                  id = ns("volcanoAll"),
                   label = "a",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")

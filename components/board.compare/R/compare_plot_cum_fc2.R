@@ -70,7 +70,7 @@ compare_plot_cum_fc2_server <- function(id,
         xaxistitle = "Genes",
         title = "Dataset 2",
         type = "bar",
-        plotRawValues = TRUE
+        grouped = FALSE
       )
       fig
     })

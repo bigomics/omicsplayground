@@ -77,10 +77,17 @@ enrichment_plot_barplot_server <- function(id,
       if (!grouped && ncol(pgx$X) > 15) srt <- 60
       pgx.plotExpression(
         pgx, gset,
-        comp = comp0, logscale = TRUE, level = "geneset",
-        collapse.others = collapse.others, grouped = grouped,
-        cex = 1.1, srt = srt, main = "", ylab = "enrichment (avg logFC)",
-        xlab = breakstring(gset, 42, 80)
+        comp = comp0,
+        logscale = TRUE,
+        level = "geneset",
+        collapse.others = collapse.others,
+        grouped = grouped,
+        cex = 1.1,
+        srt = srt,
+        main = "",
+        ylab = "enrichment (avg logFC)",
+        xlab = breakstring(gset, 42, 80),
+        plotlib = "plotly"
       )
     }
 

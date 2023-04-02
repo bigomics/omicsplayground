@@ -55,6 +55,8 @@ expression_plot_volcanoMethods_server <- function(id,
       comp <- comp()
       features <- features()
 
+      dbg("[expression_plot_volcanoMethods.R] comp = ",comp)
+      
       if (is.null(comp)) {
         return(NULL)
       }
@@ -116,9 +118,6 @@ expression_plot_volcanoMethods_server <- function(id,
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
-
-          dbg("[expression_plot_volcanoMethods.R] genes1 = ",head(genes1))
-          dbg("[expression_plot_volcanoMethods.R] genes2 = ",head(genes2))          
           
           plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
             xy,

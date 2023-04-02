@@ -1077,14 +1077,9 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
                                collapse.others=TRUE, showothers=TRUE,
                                max.points = 200, group.names=NULL,
                                main=NULL, xlab=NULL, ylab=NULL, names=TRUE,
-                               annotations_x = NULL,
-                               annotations_y = NULL,
-                               annotations_text = NULL,
-                               annotations_xref = NULL,
-                               annotations_yref = NULL,
-                               annotations_xanchor = NULL,
-                               annotations_yanchor = NULL,
-                               annotations_showarrow = NULL)
+                               plotly.annotations = NULL,
+                               plotly.margin = NULL,
+                               plotlib = "base")
 {
     if(0) {
         logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
@@ -1222,6 +1217,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
     if(is.null(main)) main <- probe
     ##if(ncol(X) <= 20) {
     if(!grouped) {
+        ## NOT GROUPED BARPLOTS      
         nx = length(gx)
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -1230,40 +1226,41 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         klr = grp.klr[as.character(xgroup)]
         klr[is.na(klr)] <- "#e5e5e5"
 
-        fig <- pgx.barplot.PLOTLY(
-          data = data.frame(
-            gx = gx,
-            xgroup = factor(names(gx), levels = names(gx))
-          ),
-          x = "xgroup",
-          y = "gx",
-          title = main,
-          yaxistitle = ylab,
-          xaxistitle = xlab,
-          annotations_x = annotations_x,
-          annotations_y = annotations_y,
-          annotations_text = annotations_text,
-          annotations_xref = annotations_xref,
-          annotations_yref = annotations_yref,
-          annotations_xanchor = annotations_xanchor,
-          annotations_yanchor = annotations_yanchor,
-          annotations_showarrow = annotations_showarrow
-        )
-
-        # gx.min = 0
-        # if(min(gx)<0) gx.min <- min(gx)
-        # ylim <- c(gx.min,1.3*max(gx))
-        # bx = barplot( gx[], col=klr[], ylim=ylim,
-        #              ## offset = 0, ylim=c(gx.min,max(gx)),
-        #              las=3, ylab=ylab, names.arg=NA, border = NA)
-        if(nx>20 && names==FALSE) { # remove x axis to labels if condition is met
-          fig <- plotly::layout(p = fig, xaxis = list(showticklabels = FALSE))
+      if(plotlib=="plotly") {
+        
+          fig <- pgx.barplot.PLOTLY(
+            data = data.frame(
+              gx = gx,
+              xgroup = factor(names(gx), levels = names(gx))
+            ),
+            x = "xgroup",
+            y = "gx",
+            grouped = FALSE,
+            title = main,
+            yaxistitle = ylab,
+            xaxistitle = xlab,
+            annotations = plotly.annotations,
+            margin = plotly.margin
+          )
+          if(nx>20 || names==FALSE) { # remove x axis to labels if condition is met
+            fig <- plotly::layout(p = fig, xaxis = list(showticklabels = FALSE))
+          }
           return(fig)
+
+      } else {
+        
+          ## plot using base graphics
+          gx.min = 0
+          if(min(gx)<0) gx.min <- min(gx)
+          ylim <- c(gx.min,1.3*max(gx))
+          bx = barplot( gx[], col=klr[], ylim=ylim,
+            ## offset = 0, ylim=c(gx.min,max(gx)),
+           las=3, ylab=ylab, names.arg=NA, border = NA)
         }
 
-
-        return(fig)
     } else {
+
+        ## GROUPED PLOTS      
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
             if(!logscale) ylab = "expression (CPM)"
@@ -1276,39 +1273,37 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
         names(grp.klr1) <- as.character(xlevels)
         ##col=grp.klr1;las=3;names.cex=cex;
 
-        fig <- pgx.barplot.PLOTLY(
-          data = data.frame(
-            gx = gx,
-            xgroup = xgroup
-          ),
-          x = "xgroup",
-          y = "gx",
-          fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
-          title = main,
-          yaxistitle = ylab,
-          xaxistitle = xlab,
-          annotations_x = annotations_x,
-          annotations_y = annotations_y,
-          annotations_text = annotations_text,
-          annotations_xref = annotations_xref,
-          annotations_yref = annotations_yref,
-          annotations_xanchor = annotations_xanchor,
-          annotations_yanchor = annotations_yanchor,
-          annotations_showarrow = annotations_showarrow
+        if(plotlib=="plotly") {
+          ## plot using plotly
+          fig <- pgx.barplot.PLOTLY(
+            data = data.frame(
+              gx = gx,
+              xgroup = xgroup
+            ),
+            x = "xgroup",
+            y = "gx",
+            grouped = TRUE,
+            fillcolor = grp.klr1, #grp.klr1[match(xgroup, names(grp.klr1))]
+            title = main,
+            yaxistitle = ylab,
+            xaxistitle = xlab,
+            annotations = plotly.annotations,
+            margin = plotly.margin            
           )
+          return(fig)
 
-        return(fig)
-
-
-        # gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
-        #           first = xlevels[1],
-        #           col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
-        #           max.points=max.points, xlab=xlab, names=names,
-        #           ## sig.stars=TRUE, max.stars=5,
-        #           las=3, names.cex=cex, srt=srt)
-        # title(main, cex.main=1.0, line=0)
+        } else {
+          ## plot using base graphics
+          gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
+                   first = xlevels[1],
+                   col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
+                   max.points=max.points, xlab=xlab, names=names,
+                   ## sig.stars=TRUE, max.stars=5,
+                   las=3, names.cex=cex, srt=srt)
+           title(main, cex.main=1.0, line=0)
+           return()
+        }
     }
-
 }
 
 pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","geneset"),
@@ -3982,12 +3977,11 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
 }
 
 
-
+## too many unnecessary options... Cedric?
 pgx.boxplot.PLOTLY <- function(
   data,
   x = NULL,
   y = NULL,
-  type = "box",
   title = NULL,
   color = omics_colors("brand_blue"),
   fillcolor = omics_colors("light_blue"),
@@ -3998,13 +3992,13 @@ pgx.boxplot.PLOTLY <- function(
   xaxistitle = FALSE,
   font_family = "Lato",
   margin = list(l = 10, r = 10, b = 10, t = 10)
-  ){
+  ) {
 
   plotly::plot_ly(
     data = data,
     x = ~get(x),
     y = ~get(y),
-    type = type,
+    type = "box",
     marker = list(
       color = color,
       fillcolor = fillcolor
@@ -4028,7 +4022,6 @@ pgx.barplot.PLOTLY <- function(
   data,
   x = NULL,
   y = NULL,
-  type = "bar",
   title = NULL,
   color = omics_colors("brand_blue"),
   fillcolor = omics_colors("light_blue"),
@@ -4040,44 +4033,45 @@ pgx.barplot.PLOTLY <- function(
   xaxistitle = FALSE,
   yrange = NULL,
   font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 65, t = 30),
-  plotRawValues = FALSE, #false will calculate mean +/- (sd) across groups
-  annotations_x = NULL,
-  annotations_y = NULL,
-  annotations_text = NULL,
-  annotations_xref = NULL,
-  annotations_yref = NULL,
-  annotations_xanchor = NULL,
-  annotations_yanchor = NULL,
-  annotations_showarrow = NULL
+  ##margin = list(l = 10, r = 10, b = 65, t = 30),
+  margin = list(l = 10, r = 10, b = 10, t = 10),
+  grouped = TRUE, #true will calculate mean +/- (sd) across groups
+  annotations = NULL
 ) {
 
   # calculate error bars
 
   # calculate summary statistics for groups
-  if(plotRawValues == FALSE){
+  if(grouped) {
     data_stats <- do.call(data.frame,
       aggregate(data[[y]],
         list(data[[x]]),
         function(val)
           c(mean = mean(val), sd = sd(val))))
+    colnames(data_stats) <- c(x, y, "sd")
   } else {
     data_stats <- data
   }
-
+  
   ngroups <- length(unique(data_stats[[1]]))
+  bargap <- ifelse(ngroups == 2, 0.5, NA)
 
-  bargap <- ifelse(ngroups ==2, 0.5, NA)
-
+  error_y <- NULL
+  if(grouped) {
+    error_y <- list(
+      array = data_stats[[3]],
+      thickness = 1,
+      color = "#000000")
+  }
+  
+  dbg("[pgx-plotting] head.error_y = ",head(error_y))
+  
   plotly::plot_ly(
     data = data_stats,
-    x = ~data_stats[[1]],
-    y = ~data_stats[[2]],
-    type = type,
-    error_y = list(array = unlist(ifelse(!plotRawValues,
-                                         data_stats[3],
-                                         FALSE)),
-                   color = "#000000"),
+    x = ~data_stats[[x]],
+    y = ~data_stats[[y]],
+    type = "bar",
+    error_y = error_y,
     marker = list(
       color = fillcolor
     ),
@@ -4099,16 +4093,7 @@ pgx.barplot.PLOTLY <- function(
       font = list(family = font_family),
       margin = margin,
       bargap = bargap,
-      annotations = list(
-        x = annotations_x,
-        y = annotations_y,
-        text = annotations_text,
-        xref = annotations_xref,
-        yref = annotations_yref,
-        xanchor = annotations_xanchor,  # center of text
-        yanchor = annotations_yanchor,  # bottom of text
-        showarrow = annotations_showarrow
-      )
+      annotations = annotations
     ) %>%
     plotly_default()
 

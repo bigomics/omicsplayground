@@ -53,7 +53,7 @@ expression_table_genetable_server <- function(id,
 
     ns <- session$ns
 
-    table.RENDER <- shiny::reactive({
+    table.RENDER <- function() {
       res <- res()
 
       if (is.null(res) || nrow(res) == 0) {
@@ -84,7 +84,7 @@ expression_table_genetable_server <- function(id,
         ## class = 'compact cell-border stripe hover',
         class = "compact hover",
         extensions = c("Scroller"),
-        selection = list(mode = "single", target = "row", selected = 1),
+        selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
@@ -110,13 +110,13 @@ expression_table_genetable_server <- function(id,
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-    })
+    }
 
-    table.RENDER_modal <- shiny::reactive({
+    table.RENDER_modal <- function() {
       dt <- table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     genetable <- TableModuleServer(
       "datasets",
