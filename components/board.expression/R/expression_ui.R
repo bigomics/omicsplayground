@@ -169,18 +169,24 @@ ExpressionUI <- function(id) {
             ),
             shiny::tabPanel(
               "Foldchange (all)",
-              expression_table_fctable_ui(
-                ns("fctable"),
-                width = c("100%", "100%"),
-                height = c("400px", TABLE_HEIGHT_MODAL)
+              bslib::layout_column_wrap(
+                width = 1,
+                expression_table_fctable_ui(
+                  ns("fctable"),
+                  width = c("100%", "100%"),
+                  height = c("400px", TABLE_HEIGHT_MODAL)
+                )
               )
             ),
             shiny::tabPanel(
               "FDR table",
-              expression_table_FDRtable_ui(
-                ns("FDRtable"),
-                width = c("100%", "100%"),
-                height = c("400px", TABLE_HEIGHT_MODAL)
+              bslib::layout_column_wrap(
+                width = 1,
+                expression_table_FDRtable_ui(
+                  ns("FDRtable"),
+                  width = c("100%", "100%"),
+                  height = c("400px", TABLE_HEIGHT_MODAL)
+                )
               )
             )
           )

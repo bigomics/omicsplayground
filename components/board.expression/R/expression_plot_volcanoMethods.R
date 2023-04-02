@@ -65,9 +65,12 @@ expression_plot_volcanoMethods_server <- function(id,
 
       fdr <- as.numeric(fdr()) 
       lfc <- as.numeric(lfc()) 
-      gset <- getGSETS(features)
-      sel.genes <- unique(unlist(gset))
-
+      sel.genes <- rownames(pgx$X)
+      if (features != "<all>") {
+        gset <- getGSETS(features)
+        sel.genes <- unique(unlist(gset))
+      }
+      
       pd <- list(
           pgx = pgx,
           fdr = fdr,
@@ -104,25 +107,18 @@ expression_plot_volcanoMethods_server <- function(id,
         i <- 1
         for (i in 1:nplots) {
           fx <- fc[, i]
-          ## pval = pv[,i]
-          qval <- qv[, i]
-          sig.genes <- fc.genes[which(qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])]
-          ## genes1 = intersect(sig.genes, sel.genes)
-          genes2 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
-
-          ## gx.volcanoPlot.XY(
-          ##   x = fx, pv = qval, gene = fc.genes,
-          ##   render = "canvas", n = 5000, nlab = 5,
-          ##   xlim = xlim, ylim = c(0, ymax), axes = FALSE,
-          ##   use.fdr = TRUE, p.sig = pd[["fdr"]], lfc = pd[["lfc"]],
-          ##   ## main=comp[i],
-          ##   ## ma.plot=TRUE, use.rpkm=TRUE,
-          ##   cex = 0.6, lab.cex = 1.5, highlight = genes1
-          ## )
-
+          qval <- qv[,i]
+          is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
+          sig.genes <- fc.genes[which(is.sig)]          
+          genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
+          genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
+          
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
+
+          dbg("[expression_plot_volcanoMethods.R] genes1 = ",head(genes1))
+          dbg("[expression_plot_volcanoMethods.R] genes2 = ",head(genes2))          
           
           plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -132,7 +128,7 @@ expression_plot_volcanoMethods_server <- function(id,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
             legend.pos = "none", ## plotlib="ggplot",
-            hilight = NULL,
+            hilight = genes1,
             hilight2 = genes2,
             xlim = xlim,
             ylim = c(0,ymax),
@@ -173,7 +169,7 @@ expression_plot_volcanoMethods_server <- function(id,
 
     modal_plot.RENDER <- function() {      
 
-      plt <- render_plots(cex=1, base_size=18)
+      plt <- render_plots(cex=1, base_size=16)
       nplots <- length(plt)
       
       ## layout

@@ -134,7 +134,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       plot.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE ## TODO: I guess a legend makes sense here?
+          showlegend = FALSE ## TODO: I guess a legend makes sense here?
         )
     }
 

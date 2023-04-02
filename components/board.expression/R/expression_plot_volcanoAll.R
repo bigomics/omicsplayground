@@ -115,21 +115,22 @@ expression_plot_volcanoAll_server <- function(id,
       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
         i <- 1
         for (i in 1:length(pd[["comp"]])) {
+
           qval <- pd[["Q"]][[i]]
           fx <- pd[["F"]][[i]]
-          fc.gene <- names(qval)
+          fc.genes <- names(qval)
           is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
-          sig.genes <- fc.gene[which(is.sig)]
+          sig.genes <- fc.genes[which(is.sig)]
           genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
           genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
           xy <- data.frame(x = fx, y = -log10(qval))
-          is.sig2 <- factor(is.sig, levels = c(FALSE, TRUE))
+          is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
 
           plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
             xy,
             title = pd[["comp"]][i],
             cex.title = 0.85,
-            var = is.sig2,
+            var = is.sig1,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
             legend.pos = "none", ## plotlib="ggplot",
@@ -163,8 +164,8 @@ expression_plot_volcanoAll_server <- function(id,
       ## plot layout #####
       ## layout
       nr = 1
-      nc = 5
-      if(nplots > 5) {
+      nc = 6
+      if(nplots > 6) {
         nr = 2
         nc = 6
       }
@@ -178,7 +179,7 @@ expression_plot_volcanoAll_server <- function(id,
 
     modal_plot.RENDER <- function() {      
 
-      plt <- render_plots(cex=1, base_size=18)
+      plt <- render_plots(cex=1, base_size=16)
       nplots <- length(plt)
       
       ## layout

@@ -78,12 +78,12 @@ dataview_module_geneinfo_server <- function(id,
 
     info.RENDER <- function() {
       res <- geneinfo_data()
-      shiny::HTML(res)
+      div( shiny::HTML(res), class="gene-info")
     }
 
     modal_info.RENDER <- function() {
       res <- geneinfo_data()
-      div(shiny::HTML(res), style="font-size:1.3em;")
+      div(shiny::HTML(res), class="gene-info", style="font-size:1.3em;")
     }
 
     PlotModuleServer(

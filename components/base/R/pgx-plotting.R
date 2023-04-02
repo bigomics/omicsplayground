@@ -4024,8 +4024,6 @@ pgx.boxplot.PLOTLY <- function(
 
 }
 
-
-
 pgx.barplot.PLOTLY <- function(
   data,
   x = NULL,
