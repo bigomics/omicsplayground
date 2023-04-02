@@ -14,7 +14,7 @@
 clustering_table_clustannot_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  clustannot_table_info_text <- "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+  clustannot_table_info_text <- "<b>Average correlation values</b> of annotation terms, for each gene cluster. In this table, users can check mean correlation values of features in the clusters with respect to the annotation term of the references database selected in the settings."
 
   TableModuleUI(
     ns("datasets"),

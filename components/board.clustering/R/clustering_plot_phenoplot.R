@@ -9,19 +9,18 @@ clustering_plot_phenoplot_ui <- function(id,
                                          height) {
   ns <- shiny::NS(id)
 
-  info <- tagsub("<strong>Phenotype distribution.</strong> This figure visualizes
-  the distribution of the available phenotype data. You can choose to put the group labels in the
-  figure or as separate legend in the {Label} setting, in the plot {{settings}}")
+  info <- tagsub("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.")
 
   phenoplot.opts <- shiny::tagList(
-    shiny::radioButtons(ns("labelmode"), "Label", c("groups", "legend"), inline = TRUE)
+    shiny::checkboxInput(ns("showlabels"), "Show group labels", TRUE)
   )
 
   PlotModuleUI(
     ns("pltmod"),
     title = "Phenotype distribution",
     label = label,
-    plotlib = "base",
+    #    plotlib = "base",
+    plotlib = "plotly",
     info.text = info,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -63,27 +62,36 @@ clustering_plot_phenoplot_server <- function(id,
         list(
           df = df,
           pheno = pheno,
-          labelmode = input$labelmode
+          showlabels = input$showlabels
         )
       )
     })
 
-    renderPlots <- function( pd, mfrow, mar ) {
 
-      dbg("[clustering_plot_phenoplot.R]")
+    if(0) {
+      load("~/Playground/pgx/example-data.pgx")
+      source("~/Playground/omicsplayground/components/00SourceAll.R",chdir=TRUE)
+      Y <- ngs$samples
+      pos <- ngs$tsne2d
+      pheno <- colnames(Y)
+      COLORS <- rainbow(16)
+    }
+    
+    render_plotly <- function(pd, pheno, cex=1) {
+
       pheno <- pd[["pheno"]]
       Y <- pd[["df"]][,pheno]
-      labelmode <- pd[["labelmode"]]
+      showlabels <- pd[["showlabels"]]
       pos <- pd[["df"]][,c("x","y")]
 
-      ## set layout
-      par(mfrow = mfrow, mar = mar)
-      i <- 1
-
-      cex1 <- 1.1 * c(1.8, 1.3, 0.8, 0.5)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+      ## points size depending on how many points we have
+      ncex <- cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))
+      cex1 <- 0.8 * cex * c(1.8, 1.3, 0.8, 0.5)[ncex]
       cex1 <- cex1 * ifelse(length(pheno) > 6, 0.8, 1)
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
+      plt <- list()
+      i=1
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
         colvar <- factor(Y[, 1])
@@ -97,80 +105,73 @@ clustering_plot_phenoplot_server <- function(id,
         if (length(jj)) klr1[jj] <- "#AAAAAA22"
         tt <- tolower(pheno[i])
 
-        ## ------- start plot
-        base::plot(pos[, ],
-          pch = 19, cex = cex1, col = klr1,
-          fg = gray(0.5), bty = "o", xaxt = "n", yaxt = "n",
-          xlab = "tSNE1", ylab = "tSNE2"
+        ## ------- start plot        
+        p <- pgx.scatterPlotXY.PLOTLY(
+          pos,
+          var = colvar,
+          col = klrpal,
+          cex = cex1,
+          xlab = "",
+          ylab = "",
+          title = tt,
+          cex.title = cex*1.1,
+          cex.clust = cex*1.1,
+          label.clusters = showlabels
+        ) %>% plotly::layout(
+          ## showlegend = TRUE,
+          plot_bgcolor = "#f8f8f8"
         )
-        title(tt, cex.main = 1.3, line = 0.5, col = "grey40")
-        if (labelmode == "legend") {
-          legend("bottomright",
-            legend = levels(colvar), fill = klrpal,
-            cex = 0.95, y.intersp = 0.85, bg = "white"
-          )
-        } else {
-          grp.pos <- apply(pos, 2, function(x) tapply(x, colvar, mean, na.rm = TRUE))
-          grp.pos <- apply(pos, 2, function(x) tapply(x, colvar, median, na.rm = TRUE))
-          nvar <- length(setdiff(colvar, NA))
-          if (nvar == 1) {
-            grp.pos <- matrix(grp.pos, nrow = 1)
-            rownames(grp.pos) <- setdiff(colvar, NA)[1]
-          }
-          labels <- rownames(grp.pos)
-          boxes <- sapply(nchar(labels), function(n) paste(rep("\u2588", n), collapse = ""))
-          cex2 <- 0.9 * cex1**0.33
-          text(grp.pos, labels = boxes, cex = cex2 * 0.95, col = "#CCCCCC99")
-          text(grp.pos, labels = labels, font = 2, cex = cex2)
-        }
-      }
+        
+        plt[[i]] <- p
+      } 
+      return(plt)
     }
 
-    plot.RENDER <- function() {
+    plotly.RENDER <- function() {
 
       pd <- plot_data()
-      pheno <- pd[["pheno"]]
+      pheno <- pd[["pheno"]]      
+      plt <- render_plotly(pd, pheno, cex=0.8) 
       
-      ## layout
-      mfrow = c(3,2)
-      mar = c(0.3, 0.7, 2.8, 0.7)
-      if (length(pheno) >= 6) {
-        mfrow = c(4, 3)
-        mar = c(0.3, 0.4, 2.8, 0.4) * 0.8
-      }
-      if (length(pheno) >= 12) {
-        mfrow = c(5, 4)
-        mar = c(0.2, 0.2, 2.5, 0.2) * 0.8
-      }
-      renderPlots( pd, mfrow, mar ) 
+      nr = min(3,length(plt))
+      if (length(plt) >= 6)  nr = 4
+      if (length(plt) >= 12)  nr = 5
+      
+      fig <- plotly::subplot(
+        plt,
+        nrows = nr,
+        margin = 0.05
+      ) %>% plotly_default()
+
+      return(fig)
     }
 
-    plot.RENDER2 <- function() {
+    plotly_modal.RENDER <- function() {
 
       pd <- plot_data()
-      pheno <- pd[["pheno"]]
-
-      ## layout
-      mfrow = c(2,3)
-      mar = c(0.3, 0.7, 2.8, 0.7)
-      if (length(pheno) >= 6) {
-        mfrow = c(3, 4)
-        mar = c(0.3, 0.4, 2.8, 0.4) * 0.8
-      }
-      if (length(pheno) >= 12) {
-        mfrow = c(4, 5)
-        mar = c(0.2, 0.2, 2.5, 0.2) * 0.8
-      }
-      renderPlots( pd, mfrow, mar ) 
+      pheno <- pd[["pheno"]]      
+      plt <- render_plotly(pd, pheno, cex=1.3) 
+      
+      nc = min(3,length(plt))
+      if (length(plt) >= 6)  nc = 4
+      if (length(plt) >= 12)  nc = 5
+      nr <- ceiling(length(plt)/nc)
+      
+      fig <- plotly::subplot(
+        plt,
+        nrows = nr,
+        margin = 0.05
+      ) %>% plotly_modal_default()
+      
+      return(fig)
     }
-    
     
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
-      ## plotlib2 = "plotly",
-      func = plot.RENDER,
-      func2 = plot.RENDER2,
+      ##plotlib = "base",
+      plotlib = "plotly",      
+      func = plotly.RENDER,
+      func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(85), ## resolution of plots
       pdf.width = 6, pdf.height = 9,

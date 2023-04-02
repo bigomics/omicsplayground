@@ -56,7 +56,7 @@ DataViewBoard <- function(id, pgx) {
 
 
     ## ------- observe functions -----------
-    shiny::observeEvent(input$data_info, {
+    shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Data View Board</strong>"),
         shiny::HTML(data_infotext),

@@ -20,6 +20,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
 ')
 
+    ## ------- observe functions -----------
+    shiny::observeEvent(input$board_info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Clustering Board</strong>"),
+        shiny::HTML(clust_infotext),
+        easyClose = TRUE, size = "l"
+      ))
+    })
+
     # modules ########
     # observe functions ########
 
@@ -110,9 +119,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         } else if (ft == "<contrast>") {
           ct <- input$hm_contrast
           shiny::req(ct)
-          shiny::req(hm_splitmap$hm_ntop())
+          shiny::req(splitmap$hm_ntop())
           fc <- names(sort(pgx.getMetaMatrix(pgx)$fc[, ct]))
-          n1 <- floor(as.integer(hm_splitmap$hm_ntop()) / 2)
+          n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
@@ -209,11 +218,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
 
       nmax <- 4000
-      nmax <- as.integer(hm_splitmap$hm_ntop())
+      nmax <- as.integer(splitmap$hm_ntop())
       idx <- NULL
       splitvar <- "none"
-      splitvar <- hm_splitmap$hm_splitvar()
-      splitby <- hm_splitmap$hm_splitby()
+      splitvar <- splitmap$hm_splitvar()
+      splitby <- splitmap$hm_splitby()
       do.split <- splitby != "none"
 
       if (splitby == "gene" && !splitvar %in% rownames(pgx$X)) {
@@ -277,7 +286,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       ## Any BMC scaling?? ##########
 
-      if (do.split && hm_splitmap$hm_scale() == "BMC") {
+      if (do.split && splitmap$hm_scale() == "BMC") {
         dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")
         for (g in unique(grp)) {
           jj <- which(grp == g)
@@ -290,7 +299,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       topmode <- "specific"
       topmode <- "sd"
-      topmode <- hm_splitmap$hm_topmode()
+      topmode <- splitmap$hm_topmode()
       if (topmode == "specific" && length(table(grp)) <= 1) {
         topmode <- "sd"
       }
@@ -310,7 +319,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         NPCA <- 5
         svdres <- irlba::irlba(zx - rowMeans(zx), nv = NPCA)
         ntop <- 12
-        ntop <- as.integer(hm_splitmap$hm_ntop()) / NPCA
+        ntop <- as.integer(splitmap$hm_ntop()) / NPCA
         gg <- rownames(zx)
         sv.top <- lapply(1:NPCA, function(i) gg[head(order(-abs(svdres$u[, i])), ntop)])
         gg.top <- unlist(sv.top)
@@ -342,7 +351,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         gg <- rownames(zx)
         ntop <- 12
-        ntop <- ceiling(as.integer(hm_splitmap$hm_ntop()) / ncol(grp.dx))
+        ntop <- ceiling(as.integer(splitmap$hm_ntop()) / ncol(grp.dx))
         grp.top <- lapply(1:nc, function(i) gg[head(order(-grp.dx[, i]), ntop)])
         ## idx <- unlist(sapply(1:nc,function(i) rep(i,length(grp.top[[i]]))))
         idx <- unlist(mapply(rep, 1:nc, sapply(grp.top, length)))
@@ -369,7 +378,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
 
       CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
-      CLUSTK <- as.integer(hm_splitmap$hm_clustk())
+      CLUSTK <- as.integer(splitmap$hm_clustk())
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
         system.time(hc <- fastcluster::hclust(D, method = "ward.D2"))
@@ -484,7 +493,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       ## ----------- for each gene cluster compute average correlation
       hm_topmode <- "sd"
-      hm_topmode <- hm_splitmap$hm_topmode()
+      hm_topmode <- splitmap$hm_topmode()
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
@@ -611,8 +620,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     # plots ##########
 
-    hm_splitmap <- clustering_plot_hm_splitmap_server(
-      id = "hm_splitmap",
+    splitmap <- clustering_plot_splitmap_server(
+      id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
       hm_level = shiny::reactive(input$hm_level),
@@ -629,9 +638,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       parent = ns
     )
 
-    clustering_plot_table_hm_parcoord_server(
-      id = "hm_parcoord",
-      hm_parcoord.matrix = hm_parcoord.matrix,
+    clustering_plot_table_parcoord_server(
+      id = "parcoord",
+      parcoord.matrix = parcoord.matrix,
       getTopMatrix = getTopMatrix,
       watermark = FALSE
     )

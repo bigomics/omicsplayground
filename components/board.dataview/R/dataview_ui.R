@@ -15,8 +15,6 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    #      withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
-    #          "Show more information about this module."),
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), "Gene:", choices = NULL),
       "Enter a gene of interest for the analysis.",
@@ -261,7 +259,6 @@ DataViewUI <- function(id) {
     ),
 
     # Resource info #####
-
     shiny::tabPanel(
       "Resource info",
       dataview_table_rescources_ui(ns("resources"))
@@ -269,7 +266,7 @@ DataViewUI <- function(id) {
   )
 
   div(
-    div(boardHeader(title = "Data View", info_link = ns("data_info")),
+    div(boardHeader(title = "Data View", info_link = ns("board_info")),
     ),
     tabs
   )

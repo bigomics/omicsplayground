@@ -333,11 +333,6 @@ pgx.scatterPlot <- function(pgx, pheno=NULL, gene=NULL,
             var <- var[rownames(pos)]
             tooltip <- rownames(pos)
         }
-        if(0) {
-            pgx.scatterPlotXY.BASE(pos, var)
-            pgx.scatterPlotXY.GGPLOT(pos, var)
-            pgx.scatterPlotXY.PLOTLY(pos, var)
-        }
 
         plt <- pgx.scatterPlotXY(
             pos, var, plotlib=plotlib, ## title=contrast,
@@ -3010,9 +3005,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                                      title="", nrows=NULL, source=NULL, key=NULL,
                                      displayModeBar=FALSE)
 {
-
-
-
 
     if(0) {
         var=NULL; type=NULL; col=NULL;

@@ -16,7 +16,7 @@ clustering_plot_parcoord_ui <- function(id,
   info_text <- "The <strong>Parallel Coordinates</strong> panel
 displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap."
 
-  hm_parcoord_opts <- shiny::tagList(
+  parcoord_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
       "Scale expression values to mean=0 and SD=1.",
       placement = "right", options = list(container = "body")
@@ -29,7 +29,7 @@ displays the expression levels of selected genes across all conditions in the an
       label = label,
       plotlib = "plotly",
       info.text = info_text,
-      options = hm_parcoord_opts,
+      options = parcoord_opts,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
       height = height
@@ -43,11 +43,11 @@ clustering_table_parcoord_ui <- function(id,
                                          width  = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
-  hm_parcoord_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
+  parcoord_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
   TableModuleUI(
       ns("datasets"),
-      info.text = hm_parcoord_table_info,
+      info.text = parcoord_table_info,
       height = height,
       width = width,
       title = "Selected genes",
@@ -56,8 +56,8 @@ clustering_table_parcoord_ui <- function(id,
   
 }
 
-clustering_plot_table_hm_parcoord_server <- function(id,
-                                                     hm_parcoord.matrix,
+clustering_plot_table_parcoord_server <- function(id,
+                                                     parcoord.matrix,
                                                      watermark = FALSE,
                                                      getTopMatrix) {
   moduleServer(id, function(input, output, session) {
@@ -77,7 +77,7 @@ clustering_plot_table_hm_parcoord_server <- function(id,
         return()
       }
 
-      pc <- hm_parcoord.matrix()
+      pc <- parcoord.matrix()
       shiny::req(pc)
       ## careful of the indexing in JS (0) versus R (1)!
       dimension_name <- colnames(pc$mat)[[dimension + 1]]
@@ -86,36 +86,36 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       ## is nicer to work with
       info <- d[[1]][[1]]
       if (length(dim(info)) == 3) {
-        hm_parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[, i, ])
+        parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[, i, ])
       } else {
-        hm_parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
+        parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
       }
     })
 
 
-    hm_parcoord.ranges <- shiny::reactiveValues()
+    parcoord.ranges <- shiny::reactiveValues()
 
-    hm_parcoord.matrix <- shiny::reactive({
+    parcoord.matrix <- shiny::reactive({
       filt <- getTopMatrix()
       shiny::req(filt)
       zx <- filt$mat[, ]
       if (input$hm_pcscale) {
         zx <- t(scale(t(zx)))
       }
-      rr <- shiny::isolate(shiny::reactiveValuesToList(hm_parcoord.ranges))
+      rr <- shiny::isolate(shiny::reactiveValuesToList(parcoord.ranges))
       nrange <- length(rr)
-      for (i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
+      for (i in names(rr)) parcoord.ranges[[i]] <- NULL
       zx <- round(zx, digits = 4)
       list(mat = zx, clust = filt$idx)
     })
 
-    hm_parcoord.selected <- shiny::reactive({
-      mat <- hm_parcoord.matrix()$mat
-      clust <- hm_parcoord.matrix()$clust
+    parcoord.selected <- shiny::reactive({
+      mat <- parcoord.matrix()$mat
+      clust <- parcoord.matrix()$clust
       shiny::req(mat)
       keep <- TRUE
-      for (i in names(hm_parcoord.ranges)) {
-        range_ <- hm_parcoord.ranges[[i]]
+      for (i in names(parcoord.ranges)) {
+        range_ <- parcoord.ranges[[i]]
         range_ <- range_[sapply(range_, length) > 0]
         if (length(range_) > 0) {
           keep_var <- FALSE
@@ -130,10 +130,10 @@ clustering_plot_table_hm_parcoord_server <- function(id,
     })
 
     plot_data <- function() {
-      hm_parcoord.matrix()
+      parcoord.matrix()
     }
 
-    hm_parcoord.RENDER <- function() {
+    parcoord.RENDER <- function() {
       pc <- plot_data()
       zx <- pc$mat
       ## build dimensions
@@ -179,16 +179,16 @@ clustering_plot_table_hm_parcoord_server <- function(id,
       plt
     }
 
-    hm_parcoord.RENDER_MODAL <- function() {
-      hm_parcoord.RENDER() %>%
+    parcoord.RENDER_MODAL <- function() {
+      parcoord.RENDER() %>%
         plotly_modal_default()
     }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      func = hm_parcoord.RENDER,
-      func2 = hm_parcoord.RENDER_MODAL,
+      func = parcoord.RENDER,
+      func2 = parcoord.RENDER_MODAL,
       csvFunc = plot_data,
       res = c(90, 170),
       pdf.width = 8,
@@ -197,8 +197,8 @@ clustering_plot_table_hm_parcoord_server <- function(id,
     )
 
     ## Table ------------------------------------------------------------------
-    hm_parcoord_table.RENDER <- function() {
-      parcoord <- hm_parcoord.selected()
+    parcoord_table.RENDER <- function() {
+      parcoord <- parcoord.selected()
 
       mat <- parcoord$mat
       clust <- parcoord$clust
@@ -224,16 +224,16 @@ clustering_plot_table_hm_parcoord_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    hm_parcoord_table.RENDER_modal <- function() {
-      dt <- hm_parcoord_table.RENDER()
+    parcoord_table.RENDER_modal <- function() {
+      dt <- parcoord_table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }
 
     TableModuleServer(
       "datasets",
-      func = hm_parcoord_table.RENDER,
-      func2 = hm_parcoord_table.RENDER_modal,
+      func = parcoord_table.RENDER,
+      func2 = parcoord_table.RENDER_modal,
       selector = "none"
     )
   })

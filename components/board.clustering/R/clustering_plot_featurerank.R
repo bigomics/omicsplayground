@@ -10,7 +10,7 @@ clustering_plot_featurerank_ui <- function(id,
                                            width) {
   ns <- shiny::NS(id)
 
-  clust_featureRank_info <- "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
+  clust_featureRank_info <- "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.  The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
 
 
   clust_featureRank.opts <- shiny::tagList(
@@ -107,8 +107,6 @@ clustering_plot_featurerank_server <- function(id,
         grp <- Y[, i]
         grp <- as.character(grp)
 
-        cat("[calcFeatureRanking] head(grp)=", head(grp), "\n")
-
         score <- rep(NA, length(features))
         names(score) <- names(features)
         j <- 1
@@ -121,8 +119,6 @@ clustering_plot_featurerank_server <- function(id,
           pp <- intersect(pp, rownames(X))
           X1 <- X[pp, , drop = FALSE]
           dim(X1)
-          ## cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
-          ## if( nrow(X1)
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method

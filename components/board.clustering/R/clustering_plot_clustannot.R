@@ -10,7 +10,7 @@ clustering_plot_clusterannot_ui <- function(id,
                                             width) {
   ns <- shiny::NS(id)
 
-  clustannot_plots_text <- paste0("The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.")
+  clustannot_plots_text <- paste0("<b>Cluster annotation.</b> Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap. For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.")
 
   clustannot_plots.opts <- shiny::tagList(
     withTooltip(
@@ -176,7 +176,6 @@ clustering_plot_clusterannot_server <- function(id,
             ##       the axis range is the same but the tooltip and axis are out of sync)
             xaxis = list(
               range = c(0, .9),
-              font = list(family = "Lato"),
               titlefont = list(size = fontsize*1.2),
               tickfont = list(size = fontsize),
               showgrid = FALSE,

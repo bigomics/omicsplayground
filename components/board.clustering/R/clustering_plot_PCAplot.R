@@ -169,6 +169,7 @@ clustering_plot_clustpca_server <- function(id,
           )
         }
       } else {
+        
         ## 2D plot
         j0 <- 1:nrow(df)
         j1 <- NULL

@@ -6,9 +6,6 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    #        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
-    #                "Show more information and video tutorial about this module."),
-    #        shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("hm_features"), "Features:", choices = NULL, multiple = FALSE),
       "Select a family of features.",
       placement = "top"
@@ -94,17 +91,17 @@ ClusteringUI <- function(id) {
   div(
     class = "row",
     ## h4("Cluster Samples"),
-    boardHeader(title = "Cluster Samples", info_link = ns("clust_info")),
+    boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
     div(
       class = "col-md-7",
       shiny::tabsetPanel(
         id = ns("tabs1"),
         shiny::tabPanel(
           "Heatmap",
-          clustering_plot_hm_splitmap_ui(
-            id = ns("hm_splitmap"),
+          clustering_plot_splitmap_ui(
+            id = ns("splitmap"),
             label = "a",
-            height = fullH,
+            height = c(fullH,"80vh"),
             width = "100%"
           )
         ),
@@ -131,13 +128,13 @@ ClusteringUI <- function(id) {
               bslib::layout_column_wrap(
                  width = 1,                 
                  clustering_plot_parcoord_ui(
-                     id = ns("hm_parcoord"),
+                     id = ns("parcoord"),
                      label = "a",
                      width = c("100%", "100%"),
                      height = c(rowH, 600)
                  ),
                  clustering_table_parcoord_ui(
-                     id = ns("hm_parcoord"),
+                     id = ns("parcoord"),
                      label = "a",
                      width = c("100%", "100%"),
                      height = c(rowH, 600)
@@ -155,17 +152,13 @@ ClusteringUI <- function(id) {
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
             label = "a",
-            height = c(rowH, 600),
+            height = c(rowH, 650),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
             height = c(rowH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster.")
           )
         ),
         shiny::tabPanel(
@@ -173,14 +166,7 @@ ClusteringUI <- function(id) {
           clustering_plot_phenoplot_ui(
             id = ns("clust_phenoplot"),
             label = "",
-            height = c(fullH, 700)
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
-                            superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be
-                            driven by the particular phenotype that is controlled by the experimental condition
-                            or unwanted batch effects.")
+            height = c(fullH, 650)
           )
         ),
         shiny::tabPanel(
@@ -190,12 +176,6 @@ ClusteringUI <- function(id) {
             label = "",
             height = c(fullH, 650),
             width = c("auto", "100%")
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
-                            The plot ranks the discriminative power of feature sets (or gene sets) as the
-                            cumulative discriminant score for all phenotype variables.")
           )
         )
       )

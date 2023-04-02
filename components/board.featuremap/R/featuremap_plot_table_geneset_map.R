@@ -30,7 +30,7 @@ featuremap_plot_geneset_map_ui <- function(id, label = "", height = c(600, 800))
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 700),
+      height = height,
       width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
   )
@@ -72,37 +72,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gsets
     })
 
-    gsetUMAP.RENDER.SAVE <- shiny::reactive({
-
-      pos <- getGsetUMAP()
-      hilight <- NULL
-      colgamma <- as.numeric(input$gsmap_gamma)
-
-      F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
-      F <- scale(F, center = FALSE)
-      colorby <- input$gsmap_colorby
-      if (colorby == "sd.FC") {
-        fc <- (rowMeans(F**2))**0.2
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
-      } else {
-        cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
-        fc <- sqrt(rowMeans(cX**2))
-      }
-      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
-
-      ## filter on table
-      hilight <- selGsets()
-      nlabel <- as.integer(input$gsmap_nlabel)
-
-      par(mfrow = c(1, 1))
-      p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 0.9, source = "", plotlib = "base"
-      )
-      p
-    })
-
     plot_data <- shiny::reactive({
       pos <- getGsetUMAP()
       colnames(pos) <- c("x","y")
@@ -138,7 +107,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     })
     
-    render_gsetUMAP <- function() {
+    render_gsetUMAP <- function(cex.label=1) {
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
@@ -155,6 +124,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         nlabel = nlabel,
         title = colorby,
         cex = 1.2,
+        cex.label = cex.label,
         source =  ns("geneset_filter"),
         plotlib = "plotly"
       ) %>%
@@ -163,7 +133,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     }
 
     gsetUMAP.RENDER <- function() {
-      p <- render_gsetUMAP() %>%
+      p <- render_gsetUMAP(cex.label=0.9) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -172,7 +142,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     }
 
     gsetUMAP.RENDER2 <- function() {
-      p <- render_gsetUMAP() %>%
+      p <- render_gsetUMAP(cex.label=1.3) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%

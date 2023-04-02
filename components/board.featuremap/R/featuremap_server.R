@@ -58,7 +58,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
-                         zlim = NULL, cex = 0.9, source = "", plotlib = "base") {
+                         zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
 
       if (!is.null(hilight)) {
           
@@ -88,7 +88,7 @@ FeatureMapBoard <- function(id, pgx) {
         var = var,
         plotlib = plotlib,
         softmax = TRUE,
-        cex.lab = 1.3 * cexlab,
+        cex.lab = 1.2 * cex.label * cexlab,
         opacity = opacity,
         cex = cex,
         zsym = (min(var, na.rm = TRUE) < 0),
