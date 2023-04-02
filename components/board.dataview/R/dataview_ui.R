@@ -68,62 +68,6 @@ DataViewUI <- function(id) {
     id = ns("tabs"),
 
 
-    # QC tab #####
-
-    shiny::tabPanel(
-      "Sample QC",
-      shinyjqui::jqui_sortable(
-      div(
-        class = "row",
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_totalcounts_ui(
-            ns("counts_total"),
-            height = imgH,
-            label = "a"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_boxplot_ui(
-            ns("counts_boxplot"),
-            height = imgH,
-            label = "b"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-4 col-xxxl-3",
-          dataview_plot_histogram_ui(
-            ns("counts_histplot"),
-            height = imgH,
-            label = "c"
-          )
-        ),
-        div(
-          class = "col-lg-6 col-xxl-5 col-xxxl-3",
-          dataview_plot_genetypes_ui(
-            ns("counts_genetypes"),
-            height = imgH, label = "d"
-          )
-        ),
-        div(
-          class = "col-lg-9 col-xxl-7 col-xxxl-5",
-          dataview_plot_abundance_ui(
-            ns("counts_abundance"),
-            height = imgH, label = "e"
-          )
-        )
-      )),
-      tags$div(
-        class = "caption",
-        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
-            the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
-            <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
-            the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
-            Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
-      )
-    ),
-
     # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
@@ -182,6 +126,61 @@ DataViewUI <- function(id) {
       )
     ),
     
+    # QC tab #####
+    shiny::tabPanel(
+      "Sample QC",
+      shinyjqui::jqui_sortable(
+      div(
+        class = "row",
+        div(
+          class = "col-lg-6 col-xxl-4 col-xxxl-3",
+          dataview_plot_totalcounts_ui(
+            ns("counts_total"),
+            height = imgH,
+            label = "a"
+          )
+        ),
+        div(
+          class = "col-lg-6 col-xxl-4 col-xxxl-3",
+          dataview_plot_boxplot_ui(
+            ns("counts_boxplot"),
+            height = imgH,
+            label = "b"
+          )
+        ),
+        div(
+          class = "col-lg-6 col-xxl-4 col-xxxl-3",
+          dataview_plot_histogram_ui(
+            ns("counts_histplot"),
+            height = imgH,
+            label = "c"
+          )
+        ),
+        div(
+          class = "col-lg-6 col-xxl-5 col-xxxl-3",
+          dataview_plot_genetypes_ui(
+            ns("counts_genetypes"),
+            height = imgH, label = "d"
+          )
+        ),
+        div(
+          class = "col-lg-9 col-xxl-7 col-xxxl-5",
+          dataview_plot_abundance_ui(
+            ns("counts_abundance"),
+            height = imgH, label = "e"
+          )
+        )
+      )),
+      tags$div(
+        class = "caption",
+        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
+            the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
+            <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
+            the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
+            Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
+      )
+    ),
+
     # counts table tab #####
     shiny::tabPanel(
         "Counts table",
@@ -202,13 +201,10 @@ DataViewUI <- function(id) {
         bslib::layout_column_wrap(
           width = 1/2,
           heights_equal = "row",
-          shiny::div(
-            dataview_plot_phenoheatmap_ui(
-              ns("phenoheatmap"),
-              height = imgH,
-              label = "a"
-            ),
-            style = "overflow-y: auto;"
+          dataview_plot_phenoheatmap_ui(
+            ns("phenoheatmap"),
+            height = imgH,
+            label = "a"
           ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
@@ -220,21 +216,9 @@ DataViewUI <- function(id) {
           width = 1,
           dataview_table_samples_ui(
             ns("sampletable"),
-            height = c(350, TABLE_HEIGHT_MODAL),
+            height = c(300, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
-        )
-      ),
-      tags$div(
-        class = "caption",
-        HTML(
-          "<b>(a)</b> <b>Phenotype clustering.</b> Clustered heatmap of sample information
-            (i.e. phenotype data).", "<b>(b)</b> <b>Phenotype association matrix.</b> Clustered
-            heatmap of phenotype association. The values corresponds to the -log10(p) value of
-            the corresponding statistical test between two phenotype variables. A higher value
-            corresponds to stronger 'correlation'.", "<b>(c)</b> <b>Sample information table.
-            </b> Phenotype information about the samples. Phenotype variables starting with
-            a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
         )
       )
     ),

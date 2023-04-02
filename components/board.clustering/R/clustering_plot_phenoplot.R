@@ -131,7 +131,7 @@ clustering_plot_phenoplot_server <- function(id,
 
       pd <- plot_data()
       pheno <- pd[["pheno"]]      
-      plt <- render_plotly(pd, pheno, cex=0.8) 
+      plt <- render_plotly(pd, pheno, cex=0.85) 
       
       nr = min(3,length(plt))
       if (length(plt) >= 6)  nr = 4
