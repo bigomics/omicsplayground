@@ -278,7 +278,6 @@ singlecell_plot_markersplot_server <- function(id,
           margin = list(l=0,r=0,b=0,t=50), # lfbt  
           title = list(size=18)
         ) 
-        
       return(fig)
     }
     
