@@ -14,19 +14,10 @@
 #' @export
 functional_plot_go_network_ui <- function(id,
                                           label = "",
-                                          rowH = 660) {
+                                          height = c(400, 750)
+                                          ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("The <strong>Gene Ontology</strong> (GO) provides a
-                       computational representation of the current knowledge
-                       about roles of genes for many organisms in terms of
-                       molecular functions, cellular components and biological
-                       processes. The structure of GO can be described in terms
-                       of a graph, where each GO term is a node, and the
-                       relationships between the terms are edges between the
-                       nodes. GO is loosely hierarchical, with ‘child’ terms
-                       being more specialized than their ‘parent’ terms. The
-                       graph is interactive. You can move the graph and zoom in
-                       using the mouse.")
+  info_text <- strwrap("<strong>Gene Ontology graph.</strong> The graph represents the enrichment of the GO terms as a tree structure. GO provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse.")
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -46,8 +37,8 @@ functional_plot_go_network_ui <- function(id,
     info.text = info_text,
     options = plot_opts,
     download.fmt = c("pdf", "png"),
-    height = c(0.55 * rowH, 750),
-    width = c("100%", 1400)
+    height = height,
+    width = c("100%", "100%")
   )
 }
 

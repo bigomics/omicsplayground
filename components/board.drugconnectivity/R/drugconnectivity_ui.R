@@ -44,58 +44,62 @@ DrugConnectivityUI <- function(id) {
               class = "row",
               div(
                 class = "col-md-6",
-                drugconnectivity_plot_enplots_ui(ns("dsea_enplots"), label = "a")
+                drugconnectivity_plot_enplots_ui(
+                  id = ns("dsea_enplots"),
+                  height = c(350, TABLE_HEIGHT_MODAL),
+                  label = "a"
+                )
               ),
               div(
                 class = "col-md-6",
-                drugconnectivity_plot_moa_ui(ns("dsea_moaplot"), label = "c")
+                drugconnectivity_plot_moa_ui(
+                  id = ns("dsea_moaplot"),
+                  height = c(350, TABLE_HEIGHT_MODAL),                  
+                  label = "c"
+                )
               )
             ),
-            br(),
             drugconnectivity_table_dsea_ui(
               ns("dsea_table"),
-              height = c(360, TABLE_HEIGHT_MODAL),
+              height = c(300, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             )
           ),
           div(
             class = "col-md-3",
-            drugconnectivity_plot_actmap_ui(ns("dsea_actmap"), label = "d")
+            drugconnectivity_plot_actmap_ui(
+              ns("dsea_actmap"),
+              height = c(700, TABLE_HEIGHT_MODAL),
+              width = c("100%", "100%"),              
+              label = "d"
+            )
           )
         )
       ),
       shiny::tabPanel(
         "Connectivity map (beta)",
         shiny::div(
-          shiny::fillCol(
-            flex = c(NA, 0.035, 1),
-            height = 750,
-            shiny::fillRow(
-              height = 660,
-              flex = c(1, 0.05, 1.5),
-              shiny::fillCol(
-                flex = c(1.15, 0.05, 1),
-                drugconnectivity_plot_cmap_enplot_ui(ns("cmap_enplot"), label = "a"),
-                shiny::br(),
-                drugconnectivity_table_cmap_ui(
-                  ns("cmap_table"),
-                  height = c(380, TABLE_HEIGHT_MODAL),
-                  width = c("100%", "100%")
-                )
-              ),
-              shiny::br(),
-              drugconnectivity_plot_cmap_dsea_ui(ns("cmap_dsea"), label = "c")
+          class = "row",
+          div(
+            class = "col-md-5",
+            drugconnectivity_plot_cmap_enplot_ui(
+              id = ns("cmap_enplot"),
+              label = "a"
             ),
-            div(
-              class = "caption",
-              HTML("<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation
-                         profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical
-                         results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b>
-                         Plot showing the top signatures as UMAP. Each point is one L1000 experiment.
-                         The color corresponds to the rank correlation between the drug signatures and your selected contrast.")
+            drugconnectivity_table_cmap_ui(
+              id = ns("cmap_table"),
+              height = c(380, TABLE_HEIGHT_MODAL),
+              width = c("100%", "100%")
+            )
+          ),
+          div(
+            class = "col-md-7",
+            drugconnectivity_plot_cmap_dsea_ui(
+              id = ns("cmap_dsea"),
+              label = "c"
             )
           )
-        )
+        ) ## end of row
       )
     )
   )

@@ -14,13 +14,10 @@
 #' @export
 drugconnectivity_plot_cmap_dsea_ui <- function(id,
                                                label = "",
-                                               height = c(750, 750)) {
+                                               height = c(700, "80vh")
+                                               ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>Connectivity map.</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space.")
+  info_text <- strwrap("<b>Connectivity map.</b> Plot showing the top signatures as UMAP. Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast.")
 
   plot_opts <- shiny::tagList(
     tipifyL(
@@ -51,8 +48,8 @@ drugconnectivity_plot_cmap_dsea_ui <- function(id,
     info.text = info_text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(750, 750),
-    width = c("auto", 900),
+    height = height,
+    width = c("auto", "100%")
   )
 }
 

@@ -14,16 +14,10 @@
 #' @export
 functional_plot_kegg_actmap_ui <- function(id,
                                            label = "",
-                                           rowH = 660) {
+                                           height = c(660, 750)
+                                           ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("The <strong>KEGG activation matrix</strong> visualizes
-                       the activation levels of pathways (or pathway keywords)
-                       across multiple contrast profiles. This facilitates to
-                       quickly see and detect the similarities of certain
-                       pathways between contrasts. The size of the circles
-                       correspond to their relative activation, and are colored
-                       according to their upregulation (red) or downregulation
-                       (blue) in the contrast profile.")
+  info_text <- strwrap("<strong>KEGG activation matrix</strong> visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.")
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -42,8 +36,8 @@ functional_plot_kegg_actmap_ui <- function(id,
     plotlib = "base",
     info.text = info_text,
     options = plot_opts,
-    height = c(rowH, 750),
-    width = c("100%", 1400)
+    height = height,
+    width = c("100%", "100%")
   )
 }
 
@@ -121,15 +115,14 @@ functional_plot_kegg_actmap_server <- function(id,
 
       plot_data <- shiny::reactive({
         df <- getKeggTable()
-
         res <- list(
-          pgx = pgx,
-          df = df
+          df = df,
+          pgx = pgx
         )
         return(res)
       })
 
-      plot_RENDER <- shiny::reactive({
+      plot_RENDER <- function() {
         res <- plot_data()
         pgx <- res$pgx
         df <- res$df
@@ -142,9 +135,9 @@ functional_plot_kegg_actmap_server <- function(id,
           normalize = input$kegg_normalize,
           nterms = 50, nfc = 25
         )
-      })
+      }
 
-      plot_RENDER2 <- shiny::reactive({
+      plot_RENDER2 <- function() {
         res <- plot_data()
         pgx <- res$pgx
         df <- res$df
@@ -157,7 +150,7 @@ functional_plot_kegg_actmap_server <- function(id,
           normalize = input$kegg_normalize,
           nterms = 50, nfc = 100
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",

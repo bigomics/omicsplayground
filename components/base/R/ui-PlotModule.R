@@ -68,6 +68,9 @@ PlotModuleUI <- function(id,
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
 
+    ## OVERRIDE WIDTH: for fullscreen modal always 100%
+    width.2 = "100%"   
+    
     getOutputFunc <- function(plotlib)
     {
         FUN <- switch(

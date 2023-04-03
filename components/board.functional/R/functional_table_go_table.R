@@ -7,11 +7,7 @@
 functional_table_go_table_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  info_text <- strwrap("<strong>GO score table.</strong> The scoring of a GO
-                         term is performed by considering the cumulative score
-                         of all terms from that term to the root node. That
-                         means that GO terms that are supported by higher level
-                         terms levels are preferentially scored.")
+  info_text <- strwrap("<strong>GO score table.</strong> The score of a GO term is the cumulative score of all higher order terms, i.e. of all terms from that term to the root node. That means that high scoring GO terms are supported by other higher level enriched terms.")
 
   TableModuleUI(
     ns("datasets"),
@@ -85,14 +81,16 @@ functional_table_go_table_server <- function(id,
 
       DT::datatable(dt,
         rownames = FALSE, escape = c(-1, -2),
-        class = "compact cell-border stripe hover",
+        ## class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "15vh", scroller = TRUE, deferRender = TRUE
+          scrollY = 180,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

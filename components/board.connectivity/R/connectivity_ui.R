@@ -61,11 +61,11 @@ ConnectivityUI <- function(id) {
             connectivity_plot_FCFCplots_ui(
               ns("FCFCplots"), label = "a",
               height = c(350, 600),
-              width = c("auto", 1280)
+              width = c("auto", "100%")
             ),
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable"),
-              height = c("10vh", TABLE_HEIGHT_MODAL),
+              height = c(350, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%"),
               label = "b"
             )
@@ -73,7 +73,8 @@ ConnectivityUI <- function(id) {
           div(
             class = "col-md-6",
             connectivity_plot_scatterPlot_ui(
-              ns("scatterPlot"), label = "c")
+              ns("scatterPlot"),
+              label = "c")
             )
         ),
         tags$div(
@@ -96,51 +97,54 @@ ConnectivityUI <- function(id) {
       ),
       shiny::tabPanel(
         "FC heatmap",
+        shinyjqui::jqui_sortable(
         div(
           class = "row",
           div(
             class = "col-md-7",
-            connectivity_plot_cumFCplot_ui(ns("cumFCplot"),
+            connectivity_plot_cumFCplot_ui(
+              id = ns("cumFCplot"),
               label = "a",
               height = c(300, 600),
-              width = c("auto", 1300)
+              width = c("auto", "100%")
             )
           ),
           div(
             class = "col-md-5",
-            connectivity_plot_cumEnrichmentPlot_ui(ns("cumEnrichmentPlot"),
+            connectivity_plot_cumEnrichmentPlot_ui(
+              id = ns("cumEnrichmentPlot"),
               label = "b",
               height = c(300, 600),
-              width = c("auto", 1000)
+              width = c("auto", "100%")
+            )
+          ),
+          div(
+            class = "col-md-12",
+            connectivity_plot_connectivityHeatmap_ui(
+              id = ns("connectivityHeatmap"),
+              label = "c"
             )
           )
-        ),
-        shiny::br(),
-        connectivity_plot_connectivityHeatmap_ui(ns("connectivityHeatmap"), label = "c"),
-        tags$div(
-          class = "caption",
-          HTML(paste(
-            "<b>(a)</b> <b>Meta-foldchange.</b> The barplot visualizes the
-            cumulative foldchange between the top-10 most similar profiles.",
-            "<b>(b)</b> <b>Meta-enrichment.</b> The barplot visualizes the
-            cumulative enrichment of the top-10 most similar profiles.",
-            "<b>(c)</b> <b>Connectivity Heatmap.</b> Similarity of the contrasts
-            profiles as a heatmap. Contrasts that are similar will be clustered
-            close together."
-          ))
-        )
+        ))
       ),
+      ## ----------------------------- panel 3 -------------------------
       shiny::tabPanel(
         "Meta-graph",
         div(
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_leadingEdgeGraph_ui(ns("leadingEdgeGraph"), label = "a")
+            connectivity_plot_leadingEdgeGraph_ui(
+              id = ns("leadingEdgeGraph"),
+              label = "a"
+            )
           ),
           div(
             class = "col-md-6",
-            connectivity_plot_enrichmentGraph_ui(ns("enrichmentGraph"), label = "b")
+            connectivity_plot_enrichmentGraph_ui(
+              id = ns("enrichmentGraph"),
+              label = "b"
+            )
           )
         ),
         tags$div(

@@ -6,7 +6,7 @@
 signature_table_overlap_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  info_text <- "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
+  info_text <- "<b>Overlap/Similarity table.</b><b>(a)</b> Table summarizing the results of the Fishers's test for overlap. The column \'common genes\' reports the shared gene in order of largest fold-change. The table reports the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
 
   TableModuleUI(
     ns("datasets"),
@@ -33,7 +33,7 @@ signature_table_overlap_server <- function(id,
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       DT::datatable(df,
-        class = "compact cell-border stripe",
+##      class = "compact cell-border stripe",
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         selection = "none",

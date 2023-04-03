@@ -425,7 +425,7 @@ ConnectivityBoard <- function(id, pgx) {
       "connectivityScoreTable",
       getConnectivityScores = getConnectivityScores,
       columns = c("pathway", "score", "rho", "NES", "padj"),
-      height = "170px"
+      height = "200px" ## scrollY height
     )
 
     ## ================================================================================

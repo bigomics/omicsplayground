@@ -14,7 +14,7 @@
 #' @export
 signature_plot_markers_ui <- function(id, height) {
   ns <- shiny::NS(id)
-  info_text <- "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
+  info_text <- "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene. After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
 
   markers.opts <- shiny::tagList(
     withTooltip(

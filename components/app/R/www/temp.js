@@ -8,7 +8,7 @@ $(document).ready(function() {
         $(".card-footer-checked").prop("checked", isChecked);
 	  
 		if ($(this).prop("checked") === true) {
-		$(".card-footer").show().animate({height: "4.2rem"}, 200);
+		$(".card-footer").show().animate({height: "4rem"}, 200);
 	};
   
 	  if ($(this).prop("checked") === false) {

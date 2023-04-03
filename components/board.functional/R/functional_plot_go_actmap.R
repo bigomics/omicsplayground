@@ -14,7 +14,8 @@
 #' @export
 functional_plot_go_actmap_ui <- function(id,
                                          label = "",
-                                         rowH = 660) {
+                                         height = c(400, 700)
+                                         ) {
   ns <- shiny::NS(id)
   info_text <- strwrap(
     "The <b>GO activation matrix</b> visualizes the activation of GO terms
@@ -41,8 +42,8 @@ functional_plot_go_actmap_ui <- function(id,
     plotlib = "base",
     info.text = info_text,
     options = plot_opts,
-    height = c(rowH, 750),
-    width = c("100%", 1400),
+    height = height,
+    width = c("100%", "100%"),
   )
 }
 
@@ -118,7 +119,7 @@ functional_plot_go_actmap_server <- function(id,
         return(res)
       })
 
-      plot_RENDER <- shiny::reactive({
+      plot_RENDER <- function() {
         res <- plot_data()
         pgx <- res$pgx
 
@@ -135,9 +136,9 @@ functional_plot_go_actmap_server <- function(id,
           maxterm = 50,
           maxfc = 25
         )
-      })
+      }
 
-      plot_RENDER2 <- shiny::reactive({
+      plot_RENDER2 <- function() {
         res <- plot_data()
         pgx <- res$pgx
 
@@ -154,7 +155,7 @@ functional_plot_go_actmap_server <- function(id,
           maxterm = 50,
           maxfc = 100
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",

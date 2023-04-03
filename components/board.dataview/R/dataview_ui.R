@@ -75,7 +75,9 @@ DataViewUI <- function(id) {
         class = "row",
         div(
           class = "col-md-2",
-          dataview_module_geneinfo_ui(ns("geneinfo")),
+          dataview_module_geneinfo_ui(
+            id = ns("geneinfo")
+          ),
         ),
         div(
           class = "col-md-10",
@@ -84,7 +86,7 @@ DataViewUI <- function(id) {
             div(
               class = "col-lg-6 col-xxl-4 col-xxxl-3",
               dataview_plot_expression_ui(
-                ns("expressionplot"),
+                id = ns("expressionplot"),
                 height = imgH,
                 label = "a"
               )

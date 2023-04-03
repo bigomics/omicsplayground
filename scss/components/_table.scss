@@ -48,6 +48,15 @@ html {
 	background-color: #f7fafd;
     }
 
+    // https://github.com/rstudio/DT/issues/951
+    .dataTables.html-widget.html-widget-static-bound { 
+	height: auto !important;
+	width: 90vw !important;
+    }
+    .dataTables_scrollBody {
+	height: unset !important;
+    }    
+    
     table.dataTable {
 	border-collapse: collapse !important;
     }
@@ -80,5 +89,5 @@ html {
 	color: black;
 	font-weight: 600;
     }
-    
+
 }

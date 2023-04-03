@@ -73,7 +73,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-6",
             enrichment_plot_top_enrich_gsets_ui(
               ns("topEnriched"),
-              height = c(imgH, 700),
+              height = c(imgH, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           ),
@@ -81,7 +81,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-6",
             enrichment_plot_freq_top_gsets_ui(
               ns("topEnrichedFreq"),
-              height = c(imgH, 500),
+              height = c(imgH, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )

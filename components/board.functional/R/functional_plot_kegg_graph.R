@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -14,14 +14,14 @@
 #' @export
 functional_plot_kegg_graph_ui <- function(id,
                                           label = "",
-                                          rowH = 660) {
+                                          height = c(400,700),
+                                          width = c("auto","100%")
+                                          ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>KEGG pathways</strong> are a collection of
-    manually curated pathways representing the current knowledge of molecular
-    interactions, reactions and relation networks as pathway maps. In the
-    pathway map, genes are colored according to their upregulation (red) or
-    downregulation (blue) in the contrast profile. Each pathway is scored for
-    the selected contrast profile and reported in the table below.")
+  info_text <- strwrap("<strong>KEGG pathway.</strong> Genes are colored according
+    to their upregulation (red) or downregulation (blue) in the contrast profile.
+    Each pathway is scored for the selected contrast profile and reported in
+    the table below.")
 
   PlotModuleUI(ns("plot"),
     title = "Kegg pathway map",
@@ -30,9 +30,9 @@ functional_plot_kegg_graph_ui <- function(id,
     info.text = info_text,
     info.width = "350px",
     options = NULL,
-    download.fmt = "png",
-    height = c(0.53 * rowH, 700),
-    width = c("100%", 1280),
+    download.fmt = c("png","csv"),
+    height = height,
+    width = width
   )
 }
 
@@ -52,24 +52,27 @@ functional_plot_kegg_graph_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plot_data <- shiny::reactive({
 
+
+      ## plot_data <- shiny::reactive({
+      plot_data <- function() {
         ## folder with predownloaded XML files
         xml.dir <- file.path(FILES, "kegg-xml")
         xml.dir <- normalizePath(xml.dir) ## absolute path
         res <- list(
-          pgx = pgx,
           df = getFilteredKeggTable(),
           kegg_table = kegg_table,
           fa_contrast = fa_contrast(),
           xml.dir = xml.dir
         )
         return(res)
-      })
+      }#)
 
-      plot_RENDER <- shiny::reactive({
+      #      getPathwayImage <- function() {
+      getPathwayImage <- shiny::reactive({
         res <- plot_data()
-        pgx <- res$pgx
+        shiny::req(res, res$df)
+        
         df <- res$df
         fa_contrast <- res$fa_contrast
         kegg_table <- res$kegg_table
@@ -126,7 +129,6 @@ functional_plot_kegg_graph_server <- function(id,
           pw.genes <- unlist(getGSETS(as.character(pathway.name)))
         }
         
-        
         ## We temporarily switch the working directory to always readable
         ## TMP folder
         curwd <- getwd()
@@ -146,18 +148,75 @@ functional_plot_kegg_graph_server <- function(id,
         ## back to previous working folder
         setwd(curwd)
 
-        outfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
-        if (!file.exists(outfile)) {
+        imgfile="/tmp/hsa00010.png"
+        imgfile <- file.path(tmpdir, paste0("hsa", pathway.id, ".pathview.png"))
+        if (!file.exists(imgfile)) {
           return(NULL.IMG)
         }
 
+        img.dim <- NULL
+        if(grepl("png|PNG",imgfile)) img.dim <- dim(png::readPNG(imgfile))[1:2]
+        if(grepl("jpg|JPG",imgfile)) img.dim <- dim(jpeg::readJPEG(imgfile))[1:2]
+        img.dim
+
         list(
-          src = outfile,
+          src = imgfile,
           contentType = "image/png",
-          width = "100%", height = "100%", ## actual size: 1040x800
+          #width = "100%", height = "100%", ## actual size: 1040x800
+          width = img.dim[2], height = img.dim[1], ## actual size
+          ##width = img.width, height = img.height, ## actual size
           alt = "pathview image"
         )
       })
+
+      calcImageSize <- function(img.height, img.width, client.height, client.width ) {
+
+        client.aspectratio <- client.width / client.height
+        img.aspectratio <- img.width / img.height
+        dbg("[functional_plot_kegg_graph.R] img.height=", img.height)
+        dbg("[functional_plot_kegg_graph.R] img.width=", img.width)        
+        
+        new.width=new.height=400
+        if(client.aspectratio > img.aspectratio) {
+          new.height <- "100%"
+          new.width <- (client.height / img.height) * img.width
+        } else {
+          new.width <- "100%"
+          new.height <- (client.width / img.width) * img.height
+        }
+        dbg("[functional_plot_kegg_graph.R] img.width=", new.width)
+        dbg("[functional_plot_kegg_graph.R] img.height=", new.height)
+        
+        c(height = new.height, width = new.width)
+      }
+      
+      plot_RENDER <- function() {
+
+        width=height=NULL
+        client.width  <- session$clientData$"output_pathway-kegg_graph-plot-renderfigure_width"
+        client.height <- session$clientData$"output_pathway-kegg_graph-plot-renderfigure_height"
+        client.pixelratio <- session$clientData$pixelratio
+        client.pixelratio <- 1
+        dbg("[functional_plot_kegg_graph.R] client.width=", client.width)
+        dbg("[functional_plot_kegg_graph.R] client.height=", client.height)
+        dbg("[functional_plot_kegg_graph.R] client.pixelratio=", client.pixelratio)        
+
+        img <- getPathwayImage()
+        shiny::req(img$width, img$height)
+
+        if(0) {
+          res <- calcImageSize(img$height, img$width, client.height, client.width)        
+          dbg("[functional_plot_kegg_graph.R] res.width=", res["width"])
+          dbg("[functional_plot_kegg_graph.R] res.height=", res["height"])
+          img$width  <- res["width"]
+          img$height <- res["height"]
+        } else {
+          img$width  <- "100%"
+          img$height <- "100%"
+        }
+        
+        return(img)
+      }
 
       PlotModuleServer(
         "plot",
