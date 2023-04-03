@@ -41,27 +41,6 @@ SingleCellUI <- function(id) {
           id = ns("tabs"),
           shiny::tabPanel(
             "Cell type",
-            ## div(
-            ##   class = "row",
-            ##   div(
-            ##     class = "col-md-6",
-            ##     singlecell_plot_icpplot_ui(ns("icpplot"),
-            ##       label = "a",
-            ##       height = c(fullH - 80, modH),
-            ##       width = c("100%", "100%"),
-            ##       parent = ns
-            ##     )
-            ##   ),
-            ##   div(
-            ##     class = "col-md-6",
-            ##     singlecell_plot_phenoplot_ui(
-            ##       id = ns("phenoplot"),
-            ##       label = "b",
-            ##       height = c(fullH - 80, modH),
-            ##       width = c("100%", "100%")
-            ##     )
-            ##   )
-            ## )
             bslib::layout_column_wrap(
               width = 1/2,
               singlecell_plot_icpplot_ui(
@@ -81,53 +60,41 @@ SingleCellUI <- function(id) {
           ),
           shiny::tabPanel(
             "Mapping",
-            div(
-              class = "row",
-              div(
-                class = "col-md-6",
-                singlecell_plot_mappingplot_ui(
+            bslib::layout_column_wrap(
+              width = 1/2,
+              singlecell_plot_mappingplot_ui(
                   id = ns("mappingplot"),
                   label = "a",
-                  height = c(fullH - 80, modH),
-                  width = c("100%", 1000),
+                  height = c("70vh", modH),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               ),
-              div(
-                class = "col-md-6",
-                singlecell_plot_crosstabPlot_ui(
+              singlecell_plot_crosstabPlot_ui(
                   id = ns("crosstabPlot"),
                   label = "b",
-                  height = c(fullH - 80, modH),
-                  width = c("100%", 900),
+                  height = c("70vh", modH),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               )
             )
           ),
           shiny::tabPanel(
             "Markers",
-            div(
-              class = "row",
-              div(
-                class = "col-md-6",
-                singlecell_plot_markersplot_ui(
+            bslib::layout_column_wrap(
+              width = 1/2,
+              singlecell_plot_markersplot_ui(
                   id = ns("markersplot"),
                   label = "a",
-                  height = c(fullH - 80, modH),
-                  width = c("100%", 1000),
+                  height = c("70vh", modH),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               ),
-              div(
-                class = "col-md-6",
-                singlecell_plot_cytoplot_ui(
+              singlecell_plot_cytoplot_ui(
                   id = ns("cytoplot"),
                   label = "b",
-                  height = c(fullH - 80, modH),
-                  width = c("100%", 600),
+                  height = c("70vh", modH),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               )
             )
           )

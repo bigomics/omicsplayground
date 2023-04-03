@@ -156,13 +156,11 @@ singlecell_plot_phenoplot_server <- function(id,
     plotly.RENDER <- function() {
       pd  <- plot_data()  
       plt <- get_plots() 
-
       ## layout
       nr = 2
       if (length(plt) > 4) nr = 3
       if (length(plt) > 6) nr = 4
       if (length(plt) > 12) nr = 5
-
       fig <- plotly::subplot(
         plt,
         nrows = nr,
@@ -172,8 +170,19 @@ singlecell_plot_phenoplot_server <- function(id,
     }
 
     plotly_modal.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
-        plotly_modal_default()
+      pd  <- plot_data()  
+      plt <- get_plots() 
+      ## layout
+      nc = 2
+      if (length(plt) > 4) nc = 3
+      if (length(plt) > 6) nc = 4
+      if (length(plt) > 12) nc = 5
+      nr <- ceiling(length(plt)/nc)
+      fig <- plotly::subplot(
+        plt,
+        nrows = nr,
+        margin = 0.01
+      ) %>% plotly_modal_default()
       return(fig)
     }
     
