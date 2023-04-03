@@ -86,7 +86,7 @@ ClusteringUI <- function(id) {
   rowH  <- 350
 
   fullH <- "80vh" ## full height of full page
-  rowH  <- "39.2vh"
+  rowH  <- "40vh"
   
   div(
     class = "row",
@@ -152,7 +152,7 @@ ClusteringUI <- function(id) {
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
             label = "a",
-            height = c(380, 650),
+            height = c(rowH, 650),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
