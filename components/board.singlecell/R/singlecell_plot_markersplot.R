@@ -248,8 +248,6 @@ singlecell_plot_markersplot_server <- function(id,
         )
         plt[[i]] <- p
       }
-      ##mtext(term, outer = TRUE, cex = 1.0, line = 0.6)
-
       return(plt)
     }
 
@@ -264,20 +262,23 @@ singlecell_plot_markersplot_server <- function(id,
         plt,
         nrows = nr,
         margin = 0.01
-      ) %>% plotly::layout(
-        title = list(text=title, size=16)
+      ) %>%
+        plotly_default() %>%
+        plotly::layout(
+          title = list(text=title, size=12)
+        )
 ##        margin = c(l=0,r=0,b=0,t=30) # lrbt
-      ) %>%    
-        plotly_default()
       return(fig)
     }
 
     plotly_modal.RENDER <- function() {
       fig <- plotly.RENDER() %>%
+        plotly_modal_default() %>%
         plotly::layout(
-          margin = list(l=0,r=0,b=0,t=50) # lfbt  
-        ) %>%
-          plotly_modal_default()      
+          margin = list(l=0,r=0,b=0,t=50), # lfbt  
+          title = list(size=18)
+        ) 
+        
       return(fig)
     }
     

@@ -224,7 +224,7 @@ singlecell_plot_icpplot_server <- function(id,
         nrows = nr,
         margin = 0.01
       ) %>% plotly::layout(
-        title = list(text=pd$refset, size=16)
+        title = list(text=pd$refset, size=14)
 ##        margin = c(l=0,r=0,b=0,t=30) # lrbt
       ) %>%    
         plotly_default()
