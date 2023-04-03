@@ -171,6 +171,8 @@ html {
   }
 
   .current-dataset {
+    display: flex !important;
+    justify-content: space-evenly;
     padding: 8px 0vw;
     font-weight: 200;
     font-size: 16px;

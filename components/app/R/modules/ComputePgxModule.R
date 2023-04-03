@@ -448,7 +448,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 active_processes <- process_obj()
 
-                browser()
                 completed_indices <- c()
 
                 for (i in seq_along(active_processes)) {
@@ -459,8 +458,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     process_status <- current_process$get_exit_status()
                     process_alive <- current_process$is_alive()
 
+                    dbg("[compute PGX process] process: ", active_processes[[i]]$dataset_name)
                     dbg("[compute PGX process] : file Location:", temp_dir)
-                    dbg("[compute PGX process] status: ", process_alive)
 
                     if (!is.null(process_status) && process_status == 0) {
                         # Process completed successfully
@@ -525,8 +524,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         where = "beforeEnd",
                         ui = loading_spinner("Computation in progress...")
                         )
-                } else if (process_counter() == 0){
-                    shiny::removeUI(selector = "#spinner-container")
+                } else if (process_counter() == 0)
+                {
+                    shiny::removeUI(selector = ".current-dataset > .loading-spinner")
                 }
                 
                 if (process_counter() < MAX_PROCESS_COUNT) {
