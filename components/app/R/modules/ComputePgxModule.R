@@ -410,7 +410,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 cmd <- normalizePath(temp_dir())
 
                 # Start the process and store it in the reactive value
-                shinyalert::shinyalert("Ready!", "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                shinyalert::shinyalert("Computing!", "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
                 bigdash.selectTab(session, selected = 'welcome-tab')
 
                 dbg("[compute PGX process] : starting process")
