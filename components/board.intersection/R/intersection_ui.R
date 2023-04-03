@@ -63,13 +63,6 @@ IntersectionUI <- function(id) {
           class = "col-md-6",
           intersection_plot_venn_diagram_ui(ns("venndiagram"))
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots
-                for two or more differential expression profiles for multiple selected contrasts.
-                Similar profiles will show high correlation with points close to the diagonal.
-                <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts.
-                <b>(c)</b> <b>Intersection.</b> Genes in the selected overlap region.")
       )
     ),
     shiny::tabPanel(
@@ -84,13 +77,6 @@ IntersectionUI <- function(id) {
           class = "col-md-6",
           contrast_correlation_ui(ns("ctcorrplot"))
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Signature heatmap.</b> Similarity of the
-                signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange
-                values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells
-                correspond to the Pearson correlation coefficient. Red corresponds to positive correlation
-                    and blue to negative correlation.")
       ),
     ),
   )

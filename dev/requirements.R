@@ -127,7 +127,7 @@ pkg.used <- unique(renv.out$Package)
 pkg.extra <- c(
   "BioBase","SingleCellExperiment","preprocessCore",
   "liger","monocle3","bsutils","reshape","waiter","sever",
-  "RSpectra","SmartSVA","SILGGM","flashClust",
+  "RSpectra","SmartSVA","SILGGM","flashClust","ggrepel","ComplexHeatmap",
   "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne",
   'wordcloud2', 'optparse', 'docopt',"DT","plotly",
   'kableExtra', 'shinythemes', 'rworldmap',
