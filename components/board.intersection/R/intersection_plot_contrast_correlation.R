@@ -34,8 +34,8 @@ contrast_correlation_ui <- function(id, label = "", height = c(600, 800)) {
     info.text = info_text,
     options = ctcorrplot.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(550, 720),
-    width = c("auto", 1100)
+    height = height,
+    width = c("auto", "100%")
   )
 }
 

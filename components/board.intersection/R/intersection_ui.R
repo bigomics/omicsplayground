@@ -56,12 +56,17 @@ IntersectionUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-6",
-          intersection_scatterplot_pairs_ui(ns("scatterplot"))
+          class = "col-md-7",
+          intersection_scatterplot_pairs_ui(
+            id = ns("scatterplot"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)
+          )
         ),
         div(
-          class = "col-md-6",
-          intersection_plot_venn_diagram_ui(ns("venndiagram"))
+          class = "col-md-5",
+          intersection_plot_venn_diagram_ui(
+            id = ns("venndiagram")
+          )
         )
       )
     ),
@@ -70,18 +75,30 @@ IntersectionUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-6",
-          foldchange_heatmap_ui(ns("FoldchangeHeatmap"))
+          class = "col-md-7",
+          foldchange_heatmap_ui(
+            id = ns("FoldchangeHeatmap"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)            
+          )
         ),
         div(
-          class = "col-md-6",
-          contrast_correlation_ui(ns("ctcorrplot"))
+          class = "col-md-5",
+          contrast_correlation_ui(
+            id = ns("ctcorrplot"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)            
+          )
         )
       ),
     ),
   )
+
+
+  ## return this div
   div(
-    boardHeader(title = "Compare signatures", info_link = ns("info")),
+    boardHeader(
+      title = "Compare signatures",
+      info_link = ns("info")
+    ),
     tabs
   )
 }

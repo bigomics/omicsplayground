@@ -15,7 +15,7 @@ SignatureInputs <- function(id) {
         value = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA",
         rows = 15, placeholder = "Paste your gene list"
       ),
-      "Paste a list of signature genes.",
+      "Paste a list of genes that defines your signature.",
       placement = "top",
       options = list(container = "body")
     ),
@@ -70,8 +70,9 @@ SignatureInputs <- function(id) {
 SignatureUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800 ## full height of page
-  tabH <- "70vh"
+  fullH <- 700 ## full height of page
+  fullH <- "70vh" ## full height of page
+  halfH <- "35vh" ## full height of page
 
   tabs <- div(
     class = "row",
@@ -79,24 +80,25 @@ SignatureUI <- function(id) {
       class = "col-md-8",
       shiny::tabsetPanel(
         id = ns("tabs1"),
-        ## ----------------------------- panel markers ------------------        
-        shiny::tabPanel(
-          "Enrichment",
-          signature_plot_enplots_ui(
-            ns("enplots"),
-            height = c(fullH - 80, 750),
-            width = c("100%", "100%")
-          )
-        ),
+        ## ----------------------------- volcano panel  ------------------                
         shiny::tabPanel(
           "Volcano plots",
           signature_plot_volcano_ui(
             ns("volcanoPlots"),
-            height = c(fullH - 80, 780),
+            height = c(fullH, TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
           )
         ),
-        ## ----------------------------- panel markers ------------------        
+        ## ----------------------------- enrichment panel  ------------------        
+        shiny::tabPanel(
+          "Enrichment",
+          signature_plot_enplots_ui(
+            ns("enplots"),
+            height = c(fullH, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
+        ),
+        ## ----------------------------- overlap panel ------------------        
         shiny::tabPanel(
           "Overlap/similarity",
           bslib::layout_column_wrap(
@@ -104,11 +106,11 @@ SignatureUI <- function(id) {
             signature_plot_overlap_ui(
               ns("overlapScorePlot"),
               width = c("auto", "100%"),
-              height = c(0.4 * fullH, TABLE_HEIGHT_MODAL)
+              height = c(halfH, TABLE_HEIGHT_MODAL)
             ),
             signature_table_overlap_ui(
               ns("overlapTable"),
-              height = c(0.4 * fullH, TABLE_HEIGHT_MODAL),
+              height = c(halfH, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )
@@ -118,7 +120,7 @@ SignatureUI <- function(id) {
           "Markers",
           signature_plot_markers_ui(
             ns("markers"),
-            height = c(fullH - 100, 750)
+            height = c(fullH, TABLE_HEIGHT_MODAL)
           )
         )
       )

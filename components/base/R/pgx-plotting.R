@@ -4064,23 +4064,25 @@ pgx.boxplot.PLOTLY <- function(
 }
 
 pgx.barplot.PLOTLY <- function(
-  data,
-  x = NULL,
-  y = NULL,
-  title = NULL,
-  color = omics_colors("brand_blue"),
-  fillcolor = omics_colors("light_blue"),
-  linecolor = omics_colors("brand_blue"),
-  titlecolor = "#1f77b4",
-  hoverinfo = "y",
-  hoverformat = ".2f",
-  yaxistitle = FALSE,
-  xaxistitle = FALSE,
-  yrange = NULL,
-  font_family = "Lato",
-  margin = list(l = 10, r = 10, b = 10, t = 10),
-  grouped = TRUE, #true will calculate mean +/- (sd) across groups
-  annotations = NULL
+    data,
+    x = NULL,
+    y = NULL,
+    title = NULL,
+    color = omics_colors("brand_blue"),
+    fillcolor = omics_colors("light_blue"),
+    linecolor = omics_colors("brand_blue"),
+    titlecolor = "#1f77b4",
+    hoverinfo = "y",
+    hoverformat = ".2f",
+    yaxistitle = FALSE,
+    xaxistitle = FALSE,
+    xlen = NULL,
+    yrange = NULL,
+    font_family = "Lato",
+    #    margin = list(l = 10, r = 10, b = 10, t = 10),
+    margin = list(l = 0, r = 0, b = 0, t = 0),
+    grouped = TRUE, #true will calculate mean +/- (sd) across groups
+    annotations = NULL
 ) {
 
   if(0) {
@@ -4099,57 +4101,82 @@ pgx.barplot.PLOTLY <- function(
     grouped = TRUE #true will calculate mean +/- (sd) across groups
     annotations = NULL
   }
+
+  if(is.null(x)) x <- 1
+  if(is.null(y)) y <- 2
   
   # calculate error bars
-
   # calculate summary statistics for groups
   if(grouped) {
-    data_stats <- do.call(data.frame,
-      aggregate(data[[y]],
+    data <- do.call(data.frame,
+      stats::aggregate(data[[y]],
         list(data[[x]]),
         function(val)
           c(mean = mean(val), sd = sd(val))))
-    colnames(data_stats) <- c(x, y, "sd")
-  } else {
-    data_stats <- data
+    colnames(data) <- c(x, y, "sd")
   }
   
-  ngroups <- length(unique(data_stats[[1]]))
+  ngroups <- length(unique(data[[x]]))
   bargap <- ifelse(ngroups == 2, 0.5, NA)
 
   error_y <- NULL
   if(grouped) {
     error_y <- list(
-      array = data_stats[[3]],
+      array = data[["sd"]],
       thickness = 1,
       color = "#000000")
   }
+
+  data[["short.x"]] <- data[[x]]
+  if(!is.null(xlen)) {
+    sx <- shortstring(data[[x]], xlen)
+    i=1
+    ## make unique: sometimes shortened names gets duplicated
+    while(sum(duplicated(sx)) && i<1000) {
+      sx[which(duplicated(sx))] <- paste0(sx[which(duplicated(sx))]," ")
+      i=i+1
+    }
+    data[["short.x"]] <- factor(sx, levels=sx)
+  }
   
   p <- plotly::plot_ly(
-    data = data_stats,
-    x = data_stats[[x]],
-    y = data_stats[[y]],
-    type = "bar",
-    error_y = error_y,
-    marker = list(
-      color = fillcolor
-    ),
-    line = ~list(color = linecolor),
-    hoverinfo = hoverinfo,
-    hovertemplate = paste0(
-      "<b>%{x}</b><br>",
-      "%{yaxis.title.text}: %{y:",hoverformat,"}<br>",
-      "<extra></extra>"
-      )
+    data = data,
+    x = data[["short.x"]],
+    hovertext = data[[x]] ## original long text
   ) %>%
+    plotly::add_bars(
+      y = data[[y]],
+      error_y = error_y,
+      marker = list(
+        color = fillcolor
+      ),
+      line = list(
+        color = linecolor
+      ),
+      textposition = "none",
+      hoverinfo = hoverinfo,
+      hovertemplate = paste0(
+        "<b>%{hovertext}</b><br>",
+        "%{yaxis.title.text}: %{y:",hoverformat,"}<br>",
+        "<extra></extra>"
+      )
+    ) %>%
     plotly::layout(
-      title = list(text = title,
-                   font = list(color = titlecolor)),
-      yaxis = list(title = yaxistitle,
-                   hoverformat = hoverformat,
-                   range = yrange),
-      xaxis = list(title = xaxistitle),
-      font = list(family = font_family),
+      title = list(
+        text = title,
+        font = list(color = titlecolor)
+      ),
+      yaxis = list(
+        title = yaxistitle,
+        hoverformat = hoverformat,
+        range = yrange
+      ),
+      xaxis = list(
+        title = xaxistitle
+      ),
+      font = list(
+        family = font_family
+      ),
       margin = margin,
       bargap = bargap,
       annotations = annotations

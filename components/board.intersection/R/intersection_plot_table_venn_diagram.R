@@ -44,15 +44,15 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
       info.text = info_text,
       options = venndiagram.opts,
       download.fmt = c("png", "pdf", "csv"),
-      height = c(400, 700),
-      width = c("100%", 900)
+      height = c(400, TABLE_HEIGHT_MODAL),
+      width = c("100%", "100%")
     ),
     TableModuleUI(
       ns("datasets"),
       info.text = info_text.table,
       options = venntable_opts,
       height = c(260, TABLE_HEIGHT_MODAL),
-      width = c("auto", 1200),
+      width = c("auto", "100%"),
       title = "Leading-edge table",
       label = "e"
     )
