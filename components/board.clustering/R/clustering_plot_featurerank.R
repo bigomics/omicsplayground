@@ -149,16 +149,15 @@ clustering_plot_featurerank_server <- function(id,
       return(S)
     })
 
-    clust_featureRank.RENDER <- shiny::reactive({
-
+    render_featureRank <- function() {
       S <- calcFeatureRanking()
       if (is.null(S) || nrow(S) == 0 || ncol(S) == 0) {
         return(NULL)
       }
 
       ## top scoring
-      S <- tail(S[order(rowSums(S)), , drop = FALSE], 35)
-      rownames(S) <- substring(rownames(S), 1, 80)
+      S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
+      rownames(S) <- substring(rownames(S), 1, 50)
       
       pgx.stackedBarplot(
         x = t(S),
@@ -168,17 +167,26 @@ clustering_plot_featurerank_server <- function(id,
         horiz = TRUE
       )
       #%>%
-      #  layout(legend = list(orientation = "h",   # show entries horizontally
-      #    xanchor = "center",  # use center of legend as anchor
-      #    x = 0.5))
-    })
+      #  plotly::layout(
+      #    legend = list(orientation = "h")   # show entries horizontally
+      #  )
+    }
 
+    clust_featureRank.RENDER <- function() {
+      render_featureRank() %>%
+        plotly_default()
+    }
 
+    clust_featureRank.RENDER2 <- function() {
+      render_featureRank() %>%
+        plotly_modal_default()
+    }
+      
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "plotly",
       func = clust_featureRank.RENDER,
+      func2 = clust_featureRank.RENDER2,      
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
       ## renderFunc = plotly::renderPlotly,
       ## renderFunc2 = plotly::renderPlotly,

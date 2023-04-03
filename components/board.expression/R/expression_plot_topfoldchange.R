@@ -117,6 +117,7 @@ expression_plot_topfoldchange_server <- function(id,
         xaxistitle = "Groups",
         yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
         fillcolor = pd[["klr"]],
+        margin = list(l = 10, r = 10, b = 0, t = 30),        
         grouped = FALSE
       )
     }
