@@ -247,7 +247,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             computedPGX  <- shiny::reactiveVal(NULL)
             temp_dir <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
-            reactive_timer <- reactiveTimer(10000)  # Triggers every 10000 milliseconds (10 second)
+            reactive_timer <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
             MAX_PROCESS_COUNT <- 2
 
             shiny::observeEvent( input$compute, {
@@ -415,44 +415,63 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 dbg("[compute PGX process] : starting process")
                 process_counter(process_counter() + 1)
-                process_obj(processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'))
 
+                new_process <- list(
+                    process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                    dataset_name = gsub("[ ]","_",input$upload_name),
+                    temp_dir = temp_dir())
+
+                if(is.null(process_obj())) {
+                    process_obj(list(new_process))
+                } else {
+                    process_obj(list(process_obj(),new_process))
+                }
             })
 
             check_process_status <- reactive({
-                 if (process_counter() == 0) {
-                    return(NULL)
-                    }
 
-                 reactive_timer()
-
-                if (is.null(process_obj())) {
-                    dbg("[compute PGX process] : process does not exist")
-                    return(NULL)
-                    }
-
-                process_status <- process_obj()$get_exit_status()
-                process_alive <- process_obj()$is_alive()
-
-                dbg("[compute PGX process] : file Location:", temp_dir())
-                dbg("[compute PGX process] status: ", process_alive)
-
-                if (!is.null(process_status) && process_status == 0) {
-                    # Process completed successfully
-                    dbg("[compute PGX process] : process completed")
-
-                    on_process_completed(temp_dir = temp_dir())
-                } else if (!is.null(process_status) && process_status != 0) {
-
-                    on_process_error()
-
-                } else {
-                    # Process is still running, do nothing
-                    dbg("[compute PGX process] : process still running")
+                browser()
+                if (process_counter() == 0) {
                     return(NULL)
                 }
+
+                reactive_timer()
+
+                active_processes <- process_obj()
+                completed_indices <- c()
+
+                for (i in seq_along(active_processes)) {
+                    current_process <- active_processes[[i]]$process
+                    temp_dir <- active_processes[[i]]$temp_dir
+
+                    process_status <- current_process$get_exit_status()
+                    process_alive <- current_process$is_alive()
+
+                    dbg("[compute PGX process] : file Location:", temp_dir)
+                    dbg("[compute PGX process] status: ", process_alive)
+
+                    if (!is.null(process_status) && process_status == 0) {
+                        # Process completed successfully
+                        dbg("[compute PGX process] : process completed")
+                        on_process_completed(temp_dir = temp_dir)
+                        completed_indices <- c(completed_indices, i)
+                    } else if (!is.null(process_status) && process_status != 0) {
+                        on_process_error()
+                        completed_indices <- c(completed_indices, i)
+                    } else {
+                        # Process is still running, do nothing
+                        dbg("[compute PGX process] : process still running")
+                    }
+                }
+
+                # Remove completed processes from the list
+                if (length(completed_indices) > 0) {
+                    active_processes <- active_processes[-completed_indices]
+                    process_obj(active_processes)
+                }
+
                 return(NULL)
-                })
+            })
 
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
