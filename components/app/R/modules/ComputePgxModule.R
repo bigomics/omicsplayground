@@ -526,7 +526,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         )
                 } else if (process_counter() == 0)
                 {
-                    shiny::removeUI(selector = ".current-dataset > .loading-spinner")
+                    shiny::removeUI(selector = "#current-dataset > #spinner-container")
                 }
                 
                 if (process_counter() < MAX_PROCESS_COUNT) {

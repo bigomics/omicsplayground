@@ -15,13 +15,23 @@ html {
   }
 
   .spinner-container {
+    position: absolute;
     z-index: 999;
+    top: 50%;
+    transform: translateY(-50%);
+    left: -50px;
   }
-  
-  .spinner-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .spinner-container .spinner-text {
+    display: none;
+    position: absolute;
+    top: calc(50% + 30px);
+    left: calc(50% + 1.5rem);
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    z-index: 1;
+  }
+  #spinner-container:hover .spinner-text {
+    display: block;
   }
 
 }
