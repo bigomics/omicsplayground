@@ -1,0 +1,29 @@
+
+---
+options:
+  samples: samples
+  counts: counts
+  contrasts: contrasts
+  batch_correct: false
+  prune_samples: true
+  filter_genes: filter.genes
+  only_known: "!remove.unknown"
+  only_proteincoding: only.proteincoding
+  only_hugo: only.hugo
+  convert_hugo: only.hugo
+  do_cluster: true
+  cluster_contrasts: false
+  max_genes: max.genes
+  max_genesets: max.genesets
+  gx_methods: gx.methods
+  gset_methods: gset.methods
+  extra_methods: extra.methods
+  use_design: use.design
+  lib_dir: FILES
+  name: "gsub('[ ]','_',input$upload_name)"
+  datatype: input$upload_datatype
+  description: input$upload_description
+  creator: "user"
+  this_date: "format(Sys.time(), '%Y-%m-%d %H:%M:%S')"
+  date: this.date
+---
