@@ -152,12 +152,12 @@ ClusteringUI <- function(id) {
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
             label = "a",
-            height = c(rowH, 650),
+            height = c(390, 650),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
-            height = c(rowH, TABLE_HEIGHT_MODAL),
+            height = c(280, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         ),

@@ -64,13 +64,11 @@ clustering_table_clustannot_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip", buttons = c("copy", "csv", "pdf"),
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
-          scrollY = "23vh",
+          scrollX = TRUE,
+          scrollY = 140,
           scroller = TRUE,
           deferRender = TRUE
-        ) ## end of options.list
+        ) ## end of options
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })
