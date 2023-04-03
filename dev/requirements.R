@@ -216,7 +216,7 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 ##---------------------------------------------------------------------
 
 install.pkg('reticulate')
-reticulate::install_miniconda()
+reticulate::install_miniconda(force=TRUE)
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
 reticulate::use_miniconda('r-reticulate')

@@ -38,8 +38,8 @@ singlecell_plot_crosstabPlot_ui <- function(id,
     ## br(), cellArgs=list(width='80px')
   )
 
-  crosstabModule_info <- "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
-
+  crosstabModule_info <-
+    "<b>(b) Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
 
   PlotModuleUI(ns("plot"),
     label = label,

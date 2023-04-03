@@ -2663,7 +2663,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      legend.ysp=0.85, legend.pos = "bottomleft",
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
                                      label.type=c("text","box"), base_size=11, 
-                                     title=NULL, nrows=NULL,  barscale=0.8 )
+                                     title=NULL, barscale=0.8 )
 {
     require(ggplot2)
 
@@ -2997,7 +2997,8 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                                      opacity=1, label.clusters=FALSE,
                                      labels=NULL, label.type=NULL,
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
-                                     title="", nrows=NULL, source=NULL, key=NULL,
+                                     title="", title.y=1,
+                                     source=NULL, key=NULL,
                                      displayModeBar=FALSE)
 {
 
@@ -3013,7 +3014,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         opacity=1; label.clusters=FALSE;
         labels=NULL; label.type=NULL;
         tooltip=NULL; theme=NULL; set.par=TRUE;
-        title=""; nrows=NULL; source=NULL; key=NULL;
+        title=""; source=NULL; key=NULL;
         displayModeBar=FALSE
     }
 
@@ -3131,8 +3132,11 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
     if(type=="numeric") {
         z <- as.numeric(var)
         z1 <- NULL
-        cpal <- rev(viridis::viridis(11))
-        cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
+        if(is.null(col)) {
+            cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
+        } else {
+            cpal <- col
+        }
         if(opacity<1) {
             cpal <- add_opacity(cpal, opacity**0.33)
         }
@@ -3281,7 +3285,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                 annotations = list(text=title, font = list(size=14*cex.title),
                                    xref="paper", yref="paper",
                                    yanchor = "bottom", xanchor = "left",
-                                   align = "right", x=0, y=1 , showarrow = FALSE )
+                                   align = "right", x=0, y=title.y , showarrow = FALSE )
             )
     }
 
@@ -3299,7 +3303,7 @@ pgx.scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
                                   opacity=1, label.clusters=FALSE, labels=NULL,
                                   legend.ysp=0.85, legend.pos = "bottomleft",
                                   tooltip=NULL, theme=NULL, set.par=TRUE,
-                                  title=NULL, nrows=NULL,  barscale=0.8 )
+                                  title=NULL, barscale=0.8 )
 {
 
 
@@ -3313,7 +3317,7 @@ pgx.scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
         xlab = NULL;ylab=NULL
         opacity=1;label.clusters=FALSE;labels=NULL
         legend.ysp=0.85;legend.pos = "bottomleft"
-        title=NULL;nrows=NULL; barscale=0.8
+        title=NULL;barscale=0.8
     }
     if(is.null(colnames(pos))) {
         colnames(pos) <- c("x","y")
