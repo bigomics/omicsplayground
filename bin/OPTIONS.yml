@@ -7,29 +7,37 @@
 # options to compute pgx script
 ---
 params:
-  samples: "samples.csv"
-  counts: "counts.csv"
-  contrasts: "contrasts.csv"
-  batch_correct: FALSE
-  prune_samples: TRUE
-  filter_genes: filter.genes
-  only_known: "!remove.unknown"
-  only_proteincoding: only.proteincoding
-  only_hugo: only.hugo
-  convert_hugo: only.hugo
-  do_cluster: TRUE
-  cluster_contrasts: FALSE
-  max_genes: max.genes
-  max_genesets: max.genesets
-  gx_methods: gx.methods
-  gset_methods: gset.methods
-  extra_methods: extra.methods
-  use_design: TRUE
-  lib_dir: FILES
-  name: "gsub('[ ]','_',input$upload_name)"
-  datatype: input$upload_datatype
-  description: input$upload_description
-  creator: "user"
-  this_date: "format(Sys.time(), '%Y-%m-%d %H:%M:%S')"
-  date: this.date
+  - samples: "samples.csv"
+    input: filepath
+  - counts: "counts.csv"
+    input: filepath
+  - contrasts: "contrasts.csv"
+    input: filepath
+  - batch_correct: FALSE
+    input: boolean
+  - prune_samples: TRUE
+    input: boolean
+  - filter_genes: filter.genes
+  - only_known: "!remove.unknown"
+  - only_proteincoding: only.proteincoding
+  - only_hugo: only.hugo
+  - convert_hugo: only.hugo
+  - do_cluster: TRUE
+    input: boolean
+  - cluster_contrasts: FALSE
+    input: boolean
+  - max_genes: max.genes
+  - max_genesets: max.genesets
+  - gx_methods: gx.methods
+  - gset_methods: gset.methods
+  - extra_methods: extra.methods
+  - use_design: TRUE
+    input: boolean
+  - lib_dir: FILES
+  - name: dataset_name
+  - datatype: input$upload_datatype
+  - description: input$upload_description
+  - creator: "user"
+  - this_date: "format(Sys.time(), '%Y-%m-%d %H:%M:%S')"
+  - date: this.date
 ---
