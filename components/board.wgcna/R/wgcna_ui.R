@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 WgcnaInputs <- function(id) {
@@ -147,7 +147,7 @@ WgcnaUI <- function(id) {
             wgcna_table_genes_ui(
               ns("geneTable"),
               height = c(250, TABLE_HEIGHT_MODAL),
-              width = c("auto", "90%")
+              width = c("auto", "100%")
             )
           ),
           div(
@@ -155,7 +155,7 @@ WgcnaUI <- function(id) {
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
               height = c(250, TABLE_HEIGHT_MODAL),
-              width = c("auto", "90%")
+              width = c("auto", "100%")
             )
           )
         ),

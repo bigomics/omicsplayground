@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -14,7 +14,7 @@
 expression_table_fctable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  fctable_text <- "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
+  fctable_text <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
 
   fctable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
@@ -93,7 +93,7 @@ expression_table_fctable_server <- function(id,
       dt <- DT::datatable(df,
         rownames = FALSE,
         # class = 'compact cell-border stripe hover',
-        class = "compact hover",
+        # class = "compact hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = c(1)),
         fillContainer = TRUE,
@@ -101,8 +101,9 @@ expression_table_fctable_server <- function(id,
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollY = 220,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

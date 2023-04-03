@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -1839,7 +1839,7 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                 title <- shiny::HTML(paste0("<h4>",title,"</h4>"))
                 shiny::column(width=wd[i], title, plot_output(i,ht=100*ht[i]))
             })
-            outs <- do.call(tagList, outs)
+            outs <- do.call(shiny::tagList, outs)
             outs <- shinyjqui::jqui_sortable(shiny::div(outs)) ## make the boxes sortable..
             outs
         })
@@ -1879,14 +1879,11 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                     shinydashboardPlus::accordionItem( title=acc.name,
                                   shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(items))),
                                   collapsed=FALSE))
-                ##acc <- shinydashboardPlus::accordion(inputId=a, do.call(tagList,items))
-                ##acc <- do.call(accordion, c(do.call(tagList,items),inputId=a))
-                ##acc <- do.call(accordion, do.call(tagList,c(items,inputId=a)))
                 shiny::column(width=12, acc)
             }
             aa <- lapply(0:length(params), function(i) make.accordion(i))
             ##eval(call("accordion", list(tags, inputId="accordion1")))
-            shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(do.call(tagList,aa))))
+            shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(do.call(shiny::tagList,aa))))
         })
         shiny::outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
         shiny::outputOptions(output, "parametersUI", suspendWhenHidden=FALSE) ## important!!!

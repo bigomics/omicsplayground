@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## NOTE: needs global variables file
@@ -147,7 +147,7 @@ pgx.initialize <- function(pgx) {
     if(!all(obj.needed %in% names(pgx))) {
         obj.missing <- setdiff(obj.needed, names(pgx))
         msg <- paste("invalid pgx object. missing parts in object: ",obj.missing)
-        shiny::showNotification(msg,duration=NULL,type="error")
+        message("[pgx-init.R] *** WARNING ***",msg)
         ##stop(msg)
         return(NULL)
     }
@@ -156,7 +156,7 @@ pgx.initialize <- function(pgx) {
     if(FALSE && !all(vars.needed %in% colnames(pgx$samples))) {
         vars.missing <- setdiff(vars.needed, colnames(pgx$samples))
         msg <- paste("invalid pgx object. missing variables in object: ",vars.missing)
-        shiny::showNotification(msg,duration=NULL,type="error")
+        message("[pgx-init.R] *** WARNING ***",msg)        
         ##stop(msg)
         return(NULL)
     }

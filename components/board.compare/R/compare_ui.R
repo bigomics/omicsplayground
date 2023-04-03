@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 CompareInputs <- function(id) {
@@ -145,7 +145,7 @@ CompareUI <- function(id) {
           compare_table_corr_score_ui(
             ns("score_table"),
             height = c(235, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
+            width = c("auto", "100%")
           )
         ),
         div(

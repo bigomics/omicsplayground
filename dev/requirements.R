@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -9,8 +9,9 @@ if(basename(getwd()) != "omicsplayground") {
   stop("This file is supposed to run from the root Playground folder")
 }
 
-options(Ncpus=8L)
+options(Ncpus = 8L)
 options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+options(timeout = 60*5)  ## download time.out
 
 if(1) {
     ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
@@ -183,6 +184,7 @@ install.github("Coolgenome/iTALK")
 install.github('wt2015-github/FastGGM', force=TRUE)
 install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
+install_github('bigomics/bigdash', force=TRUE)
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)

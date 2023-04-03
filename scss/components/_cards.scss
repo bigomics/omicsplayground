@@ -1,25 +1,30 @@
 html {
-    .card{
+    
+    .card {
         --bs-card-spacer-y: 0.6rem !important;
     }
+    
     .caption {
         margin: 4px;   
     }
+    
     .caption:hover {
         overflow: auto;
     }
+    
     .card-footer {
         background-color: #F7FAFD;
-        padding: 2px 0 0 2px
+        padding: 2px 0 0 2px;
+	height: 4em !important;	
     }
-
+    
     .card-selector-header{
         margin-top: 10px;
         margin-left: 10px;
     }
 
     .form-check.form-switch {
-        font-size: 16px;
+        font-size: 14px;
         /* align-items: center; */
         float: right;
     }

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -68,6 +68,9 @@ PlotModuleUI <- function(id,
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
 
+    ## OVERRIDE WIDTH: for fullscreen modal always 100%
+    width.2 = "100%"   
+    
     getOutputFunc <- function(plotlib)
     {
         FUN <- switch(
@@ -104,6 +107,7 @@ PlotModuleUI <- function(id,
         options.button <- DropdownMenu(
           options,
           size = "xs",
+          width = "auto",
           icon = shiny::icon("bars"),
           status = "default"
         )
@@ -235,7 +239,7 @@ PlotModuleUI <- function(id,
         htmlOutput(ns("editor_frame"))
     }
 
-    ## inline styles
+    ## inline styles (should be in CSS...)
     modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,";}")
     modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"; padding:30px 150px;}")
     modalcontent.style <- paste0("#",ns("plotPopup")," .modal-content {width:100vw;}")
@@ -248,7 +252,7 @@ PlotModuleUI <- function(id,
         caption <- shiny::HTML(caption)
         caption <- shiny::div(caption, class="caption")
     }
-    e =   bslib::card(
+    e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       bslib::card_body_fill(
         style = paste0("height: ",height.1,";"),
@@ -285,7 +289,7 @@ PlotModuleUI <- function(id,
         div(class="caption", shiny::HTML(info.text))
       )
     ) # end of card
-    e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
+    ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
     return(e)
 }
 

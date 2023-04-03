@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -10,7 +10,7 @@ clustering_plot_featurerank_ui <- function(id,
                                            width) {
   ns <- shiny::NS(id)
 
-  clust_featureRank_info <- "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
+  clust_featureRank_info <- "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.  The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
 
 
   clust_featureRank.opts <- shiny::tagList(
@@ -107,8 +107,6 @@ clustering_plot_featurerank_server <- function(id,
         grp <- Y[, i]
         grp <- as.character(grp)
 
-        cat("[calcFeatureRanking] head(grp)=", head(grp), "\n")
-
         score <- rep(NA, length(features))
         names(score) <- names(features)
         j <- 1
@@ -121,8 +119,6 @@ clustering_plot_featurerank_server <- function(id,
           pp <- intersect(pp, rownames(X))
           X1 <- X[pp, , drop = FALSE]
           dim(X1)
-          ## cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
-          ## if( nrow(X1)
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
@@ -153,16 +149,15 @@ clustering_plot_featurerank_server <- function(id,
       return(S)
     })
 
-    clust_featureRank.RENDER <- shiny::reactive({
-
+    render_featureRank <- function() {
       S <- calcFeatureRanking()
       if (is.null(S) || nrow(S) == 0 || ncol(S) == 0) {
         return(NULL)
       }
 
       ## top scoring
-      S <- tail(S[order(rowSums(S)), , drop = FALSE], 35)
-      rownames(S) <- substring(rownames(S), 1, 80)
+      S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
+      rownames(S) <- substring(rownames(S), 1, 50)
       
       pgx.stackedBarplot(
         x = t(S),
@@ -172,17 +167,26 @@ clustering_plot_featurerank_server <- function(id,
         horiz = TRUE
       )
       #%>%
-      #  layout(legend = list(orientation = "h",   # show entries horizontally
-      #    xanchor = "center",  # use center of legend as anchor
-      #    x = 0.5))
-    })
+      #  plotly::layout(
+      #    legend = list(orientation = "h")   # show entries horizontally
+      #  )
+    }
 
+    clust_featureRank.RENDER <- function() {
+      render_featureRank() %>%
+        plotly_default()
+    }
 
+    clust_featureRank.RENDER2 <- function() {
+      render_featureRank() %>%
+        plotly_modal_default()
+    }
+      
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "plotly",
       func = clust_featureRank.RENDER,
+      func2 = clust_featureRank.RENDER2,      
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
       ## renderFunc = plotly::renderPlotly,
       ## renderFunc2 = plotly::renderPlotly,

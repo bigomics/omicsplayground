@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ##=============================================================================
@@ -121,11 +121,6 @@ util.findboxes <- function( df, xcol, ycol,
   finaldf <- cbind(posdf, moved)
   names(finaldf) <- c("x1", "y1", "x2", "y2")
   return(finaldf)
-}
-
-star.symbols <- function(n, pch="\u2605") {
-    if(n==0) return("")
-    paste(rep(pch,n),collapse="")
 }
 
 search_path <- function(paths, file) {
@@ -754,7 +749,7 @@ pgx.discretizePhenotypeMatrix <- function(df, min.ncat=2, max.ncat=20, remove.du
     df1
 }
 
-pgx.getNumericalPhenotypes <-function(df)
+pgx.getNumericalPhenotypes <- function(df)
 {
     is.bad = 0
     is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
@@ -772,7 +767,7 @@ pgx.getNumericalPhenotypes <-function(df)
 }
 
 ##max.ncat=9999;min.ncat=2
-pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=FALSE) {
+pgx.getCategoricalPhenotypes <- function(df, min.ncat=2, max.ncat=20, remove.dup=FALSE) {
     ##
     ##
     ##

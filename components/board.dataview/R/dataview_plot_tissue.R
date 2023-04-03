@@ -1,14 +1,13 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
 dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
   info_text <- paste(
-    "Top 20 tissues for the selected gene in the tissue expression ",
-    a_GTEx, " dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
+    "<b>Tissue expression</b>. Top expressing tissues for the selected gene in the tissue expression ", a_GTEx, " database. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
   )
 
   PlotModuleUI(
@@ -28,6 +27,7 @@ dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -64,7 +64,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         color = tissue.klr
       )
       df <- df[with(df, order(-x)), ]
-      df <- df[1:20, ] # select top 15 tissues
+      df <- df[1:12, ] # select top 15 tissues
 
       return(
         list(
@@ -105,7 +105,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       gene <- pdat$gene
 
       ## plot as regular bar plot
-      df <- dplyr::mutate(df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
+      df <- dplyr::mutate(
+        df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
 
       # df$tissue <- factor(df$tissue, levels = df$tissue)
 
@@ -134,7 +135,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       plot.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE ## TODO: I guess a legend makes sense here?
+          showlegend = FALSE ## TODO: I guess a legend makes sense here?
         )
     }
 

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 enrichment_plot_geneplot_ui <- function(id, height, width) {
@@ -69,10 +69,17 @@ enrichment_plot_geneplot_server <- function(id,
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
         pgx.plotExpression(
-          pgx, probe,
-          comp = comp0, logscale = TRUE, level = "gene",
-          collapse.others = collapse.others, grouped = grouped,
-          srt = srt, main = "", xlab = gene
+          pgx,
+          probe,
+          comp = comp0,
+          logscale = TRUE,
+          level = "gene",
+          collapse.others = collapse.others,
+          grouped = grouped,
+          srt = srt,
+          main = "",
+          xlab = gene,
+          plotlib = "plotly",
         )
       }
     }#)

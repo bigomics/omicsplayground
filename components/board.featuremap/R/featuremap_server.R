@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 FeatureMapBoard <- function(id, pgx) {
@@ -58,18 +58,22 @@ FeatureMapBoard <- function(id, pgx) {
 
     ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
-                         zlim = NULL, cex = 0.9, source = "", plotlib = "base") {
+                         zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
+
       if (!is.null(hilight)) {
-        hilight <- intersect(hilight, rownames(pos))
-        hilight <- intersect(hilight, names(var))
-        hilight <- hilight[order(-var[hilight])]
-        if (min(var, na.rm = TRUE) < 0) {
-          hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
-          hilight2 <- unique(hilight2)
-        } else {
-          hilight2 <- head(hilight, nlabel)
-        }
+          
+          hilight <- intersect(hilight, rownames(pos))
+          hilight <- intersect(hilight, names(var))
+          hilight <- hilight[order(-var[hilight])]
+          
+          if (min(var, na.rm = TRUE) < 0) {
+              hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
+              hilight2 <- unique(hilight2)
+          } else {
+                hilight2 <- head(hilight, nlabel)
+          }
       }
+      
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
 
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
@@ -78,13 +82,13 @@ FeatureMapBoard <- function(id, pgx) {
       ## cex = 0.9
       ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
-
+        
       p <- pgx.scatterPlotXY(
         pos,
         var = var,
         plotlib = plotlib,
         softmax = TRUE,
-        cex.lab = 1.3 * cexlab,
+        cex.lab = 1.2 * cex.label * cexlab,
         opacity = opacity,
         cex = cex,
         zsym = (min(var, na.rm = TRUE) < 0),
@@ -228,7 +232,7 @@ FeatureMapBoard <- function(id, pgx) {
     # Gene Map
 
     featuremap_plot_gene_map_server(
-      "gene_map",
+      "geneUMAP",
       pgx    = pgx,
       getGeneUMAP  = getGeneUMAP,
       plotUMAP     = plotUMAP,
@@ -240,7 +244,7 @@ FeatureMapBoard <- function(id, pgx) {
     # Gene Signatures
 
     featuremap_plot_gene_sig_server(
-      "gene_sig",
+      "geneSigPlots",
       pgx         = pgx,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),

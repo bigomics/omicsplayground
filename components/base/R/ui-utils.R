@@ -1,7 +1,12 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
+
+star.symbols <- function(n, pch="\u2605") {
+    if(n==0) return("")
+    paste(rep(pch,n),collapse="")
+}
 
 gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 {

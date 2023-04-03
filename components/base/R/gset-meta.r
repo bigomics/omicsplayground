@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ALL.GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
@@ -15,7 +15,6 @@ use.multicore=TRUE
 mc.threads=1
 if(0) {
     X=ngs$X;Y=ngs$samples;design=ngs$model.parameters$design;G=ngs$GMT
-    gmt <- 
     contr.matrix=ngs$model.parameters$contr.matrix;
     mc.cores=1;mc.threads=1;batch.correct=TRUE
     methods=c("fisher","gsva","fgsea")    
@@ -720,17 +719,10 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
 {
     ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
     
-    
-    ##gmt <- gmt[!duplicated(names(gmt))]
     if(is.null(bg)) {
         bg <- names(sort(table(unlist(gmt)),decreasing=TRUE))
     }
     gmt <- lapply(gmt, function(s) intersect(bg,s))
-    ##kk <- unique(names(gmt))
-    ## D <- Matrix::Matrix(0, nrow=length(bg),ncol=length(kk), sparse=TRUE)
-    ##D <- Matrix::sparseMatrix(1, 1, x=0, dims=c(length(bg),ncol=length(kk)))
-    ##rownames(D) <- bg
-    ##colnames(D) <- kk
     j=1
     idx <- c()
     if(use.multicore) {
@@ -760,7 +752,7 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
     D
 }
 
-shortstring = function(s,n) {
+shortstring <- function(s,n) {
     s=as.character(s);
     ifelse(nchar(s)<=n,s,paste0(substring(s,1,n),"..."))
 }
@@ -792,9 +784,6 @@ getGseaTable <- function(path) {
 }
 
 gseaSnapshot <- function(gsets, gsea_dir) {
-    
-    
-    
     enplots = dir(gsea_dir, pattern="enplot_")
     enplots0 = dir(gsea_dir, pattern="enplot_", full.names=TRUE)
     kk = match(gsets, gsub("enplot_|_[0-9]*.png$","",enplots))

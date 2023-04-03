@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
@@ -19,12 +19,15 @@ all.plotly.buttons = c(
 	"resetViewMapbox","zoomInMapbox","zoomOutMapbox"
 )
 
+DEFAULT_FONT = "Cubano"
+DEFAULT_FONT = "Lato"
+
 plotly_default <- function(e) {
   e %>%
     plotly::layout(
-      font = list(family = "Lato"),
+      font = list(family = DEFAULT_FONT),
       legend = list(
-        font = list(family = "Lato")
+        font = list(family = DEFAULT_FONT)
       )
     ) %>%
     ## plotly::config(displayModeBar = FALSE) %>%
@@ -38,9 +41,9 @@ plotly_default <- function(e) {
 plotly_modal_default <- function(e) {
   e %>%
     plotly::layout(
-      font = list(family = "Lato", size = 18),
+      font = list(family = DEFAULT_FONT, size = 18),
       legend = list(
-        font = list(family = "Lato", size = 18)
+        font = list(family = DEFAULT_FONT, size = 18)
       )
     ) %>%
     ## plotly::config(displayModeBar = FALSE) %>%

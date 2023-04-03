@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -53,7 +53,7 @@ expression_table_genetable_server <- function(id,
 
     ns <- session$ns
 
-    table.RENDER <- shiny::reactive({
+    table.RENDER <- function() {
       res <- res()
 
       if (is.null(res) || nrow(res) == 0) {
@@ -84,14 +84,14 @@ expression_table_genetable_server <- function(id,
         ## class = 'compact cell-border stripe hover',
         class = "compact hover",
         extensions = c("Scroller"),
-        selection = list(mode = "single", target = "row", selected = 1),
+        selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
           # paging = TRUE,
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -110,13 +110,13 @@ expression_table_genetable_server <- function(id,
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-    })
+    }
 
-    table.RENDER_modal <- shiny::reactive({
+    table.RENDER_modal <- function() {
       dt <- table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     genetable <- TableModuleServer(
       "datasets",

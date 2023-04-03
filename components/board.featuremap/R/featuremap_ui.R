@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 FeatureMapInputs <- function(id) {
@@ -55,31 +55,51 @@ FeatureMapUI <- function(id) {
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            featuremap_plot_gene_map_ui(ns("gene_map"))
+        shinyjqui::jqui_sortable(        
+        bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/2,
+            featuremap_plot_gene_map_ui(
+                ns("geneUMAP"),
+                height = c("50vh", 700)
+            ),
+            featuremap_plot_gene_sig_ui(
+                ns("geneSigPlots"),
+                height = c("50vh", 700)
+            )
           ),
-          div(
-            class = "col-md-6",
-            featuremap_plot_gene_sig_ui(ns("gene_sig"))
-          )
-        )
+          featuremap_table_gene_map_ui(
+              ns("geneUMAP"),
+              height = c(400, 700)
+          ),
+          br()
+        ))
       ),
       shiny::tabPanel(
         "Geneset",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            featuremap_plot_table_geneset_map_ui(ns("gsetUMAP"))
+        shinyjqui::jqui_sortable(                
+        bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/2,
+            featuremap_plot_geneset_map_ui(
+                ns("gsetUMAP"),
+                height = c("50vh", 700)                
+            ),                     
+            featuremap_plot_gset_sig_ui(
+                ns("gsetSigPlots"),
+                height = c("50vh", 700)
+            )
           ),
-          div(
-            class = "col-md-6",
-            featuremap_plot_gset_sig_ui(ns("gsetSigPlots"))
-          )
-        )
+          featuremap_table_geneset_map_ui(
+              ns("gsetUMAP"),
+              height = c(400, 700)
+          ),
+          br()
+        ))
       )
     )
   )

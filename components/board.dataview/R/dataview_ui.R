@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -15,8 +15,6 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    #      withTooltip( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
-    #          "Show more information about this module."),
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), "Gene:", choices = NULL),
       "Enter a gene of interest for the analysis.",
@@ -70,8 +68,67 @@ DataViewUI <- function(id) {
     id = ns("tabs"),
 
 
+    # Gene overview tab #####
+    shiny::tabPanel(
+      "Gene overview",
+      div(
+        class = "row",
+        div(
+          class = "col-md-2",
+          dataview_module_geneinfo_ui(
+            id = ns("geneinfo")
+          ),
+        ),
+        div(
+          class = "col-md-10",
+          div(
+            class = "row",
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_expression_ui(
+                id = ns("expressionplot"),
+                height = imgH,
+                label = "a"
+              )
+            ),
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_averagerank_ui(
+                ns("averagerankplot"),
+                height = imgH,
+                label = "b"
+              )
+            ),
+            div(
+              class = "col-lg-6 col-xxl-4 col-xxxl-3",
+              dataview_plot_tsne_ui(
+                ns("tsneplot"),
+                height = imgH,
+                label = "c"
+              )
+            ),
+            div(
+              class = "col-lg-9 col-xxl-7 col-xxxl-5",
+              dataview_plot_correlation_ui(
+                ns("correlationplot"),
+                height = imgH,
+                label = "d"
+              )
+            ),
+            div(
+              class = "col-lg-9 col-xxl-5 col-xxxl-3",
+              dataview_plot_tissue_ui(
+                ns("tissueplot"),
+                height = imgH,
+                label = "e"
+              )
+            )
+          )
+        )
+      )
+    ),
+    
     # QC tab #####
-
     shiny::tabPanel(
       "Sample QC",
       shinyjqui::jqui_sortable(
@@ -126,75 +183,6 @@ DataViewUI <- function(id) {
       )
     ),
 
-    # Gene overview tab #####
-    shiny::tabPanel(
-      "Gene overview",
-      div(
-        class = "row",
-        div(
-          class = "col-md-2",
-          dataview_module_geneinfo_ui(ns("geneinfo")),
-        ),
-        div(
-          class = "col-md-10",
-          div(
-            class = "row",
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_expression_ui(
-                ns("expressionplot"),
-                height = imgH,
-                label = "a"
-              )
-            ),
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_averagerank_ui(
-                ns("averagerankplot"),
-                height = imgH,
-                label = "b"
-              )
-            ),
-            div(
-              class = "col-lg-6 col-xxl-4 col-xxxl-3",
-              dataview_plot_tsne_ui(
-                ns("tsneplot"),
-                height = imgH,
-                label = "c"
-              )
-            ),
-#          ),
-#          div(
-#            class = "row",
-            div(
-              class = "col-lg-9 col-xxl-7 col-xxxl-5",
-              dataview_plot_correlation_ui(
-                ns("correlationplot"),
-                height = imgH,
-                label = "d"
-              )
-            ),
-            div(
-              class = "col-lg-9 col-xxl-5 col-xxxl-3",
-              dataview_plot_tissue_ui(
-                ns("tissueplot"),
-                height = imgH,
-                label = "e"
-              )
-            )
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases.
-            <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b>
-            Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by
-            expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher
-            expression of the gene. <b>(f)</b> Tissue expression of selected gene.")
-          )
-        )
-      )
-    ),
-
     # counts table tab #####
     shiny::tabPanel(
         "Counts table",
@@ -210,43 +198,29 @@ DataViewUI <- function(id) {
     # Sample information #####
     shiny::tabPanel(
       "Sample information",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          shiny::div(
-            dataview_plot_phenoheatmap_ui(
-              ns("phenoheatmap"),
-              height = imgH,
-              label = "a"
-            ),
-            style = "overflow-y: auto;"
-          )
-        ),
-        div(
-          class = "col-md-6",
+      bslib::layout_column_wrap(
+        width = 1,
+        bslib::layout_column_wrap(
+          width = 1/2,
+          heights_equal = "row",
+          dataview_plot_phenoheatmap_ui(
+            ns("phenoheatmap"),
+            height = imgH,
+            label = "a"
+          ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
             height = imgH,
             label = "b"
           )
-        )
-      ),
-      dataview_table_samples_ui(
-        ns("sampletable"),
-        height = c(280, TABLE_HEIGHT_MODAL),
-        width = c("auto", "100%")
-      ),
-      tags$div(
-        class = "caption",
-        HTML(
-          "<b>(a)</b> <b>Phenotype clustering.</b> Clustered heatmap of sample information
-            (i.e. phenotype data).", "<b>(b)</b> <b>Phenotype association matrix.</b> Clustered
-            heatmap of phenotype association. The values corresponds to the -log10(p) value of
-            the corresponding statistical test between two phenotype variables. A higher value
-            corresponds to stronger 'correlation'.", "<b>(c)</b> <b>Sample information table.
-            </b> Phenotype information about the samples. Phenotype variables starting with
-            a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
+        ),
+        bslib::layout_column_wrap(
+          width = 1,
+          dataview_table_samples_ui(
+            ns("sampletable"),
+            height = c(300, TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         )
       )
     ),
@@ -271,7 +245,6 @@ DataViewUI <- function(id) {
     ),
 
     # Resource info #####
-
     shiny::tabPanel(
       "Resource info",
       dataview_table_rescources_ui(ns("resources"))
@@ -279,7 +252,7 @@ DataViewUI <- function(id) {
   )
 
   div(
-    div(boardHeader(title = "Data View", info_link = ns("data_info")),
+    div(boardHeader(title = "Data View", info_link = ns("board_info")),
     ),
     tabs
   )

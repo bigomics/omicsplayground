@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Mechanism-of-action plot UI input function
@@ -14,7 +14,8 @@
 #' @export
 drugconnectivity_plot_moa_ui <- function(id,
                                          label = "",
-                                         rowH = 660) {
+                                         height = c(400, 700)
+                                         ) {
   ns <- shiny::NS(id)
   info_text <- strwrap("This plot visualizes the <strong>mechanism of
                        action</strong> (MOA) across the enriched drug profiles.
@@ -36,8 +37,8 @@ drugconnectivity_plot_moa_ui <- function(id,
     info.text = info_text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(0.54 * rowH, 700),
-    width = c("auto", 1400),
+    height = height,
+    width = c("auto", "100%"),
   )
 }
 
@@ -78,12 +79,12 @@ drugconnectivity_plot_moa_server <- function(id,
       plotTopBarplot <- function(ntop) {
         res <- plot_data()
         shiny::req(res)
-        ## ntop <- 16
+
         jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
-
-        pgx.barplot.PLOTLY(
+        
+        p <- pgx.barplot.PLOTLY(
           data = data.frame(
             x = factor(names(moa.top), levels = names(moa.top)),
             y = as.numeric(moa.top)
@@ -92,37 +93,23 @@ drugconnectivity_plot_moa_server <- function(id,
           y = "y",
           yaxistitle = "Enrichment score (NES)",
           xaxistitle = "",
-          plotRawValues = TRUE,
+          grouped = FALSE,  ## not really...
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
         )
+        
+        return(p)
       }
 
-      plot.RENDER <- shiny::reactive({
-        plotTopBarplot(16)         
-      })
+      plot.RENDER <- function() {
+        plotTopBarplot(12)         
+      }
 
-      plot.RENDER2 <- shiny::reactive({
-        plotTopBarplot(28) %>%
+      plot.RENDER2 <- function() {
+        plotTopBarplot(22) %>%
           plotly::layout(
             font = list( size = 18 )
           )
-      })
-      
-      # plot.RENDER2 <- shiny::reactive({
-      #   res <- plot_data()
-      #   shiny::req(res)
-      #
-      #   ntop <- 32
-      #   jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
-      #   moa.top <- res$NES[jj]
-      #   names(moa.top) <- res$pathway[jj]
-      #   par(mfrow = c(2, 1), mar = c(4, 3.5, 0.1, 0), mgp = c(1.7, 0.65, 0))
-      #   barplot(moa.top,
-      #           horiz = FALSE, las = 3,
-      #           ylab = "enrichment  (NES)",
-      #           cex.names = 1
-      #   )
-      # })
+      }
 
       PlotModuleServer(
         "plot",

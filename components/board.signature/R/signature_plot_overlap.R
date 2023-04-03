@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -12,9 +12,9 @@
 #' @param height
 #'
 #' @export
-signature_plot_overlap_ui <- function(id, height) {
+signature_plot_overlap_ui <- function(id, height, width) {
   ns <- shiny::NS(id)
-  info_text <- "Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test."
+  info_text <- "<b>Top overlapping gene sets with selected signature.</b> The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test."
 
   overlapScorePlot.opts <- shiny::tagList(
     withTooltip(
@@ -42,7 +42,8 @@ signature_plot_overlap_ui <- function(id, height) {
     options = overlapScorePlot.opts,
     info.text = info_text,
     download.fmt = c("png", "pdf"),
-    height = height
+    height = height,
+    width = width
   )
 }
 

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 WordCloudInputs <- function(id) {
@@ -47,7 +47,7 @@ WordCloudUI <- function(id) {
           wordcloud_table_enrichment_ui(
             ns("wordcloud_enrichmentTable"),
             height = c("35vh", TABLE_HEIGHT_MODAL),
-            width = c("100%", "90%")
+            width = c("100%", "100%")
           )
         ),
         div(
@@ -55,7 +55,7 @@ WordCloudUI <- function(id) {
           wordcloud_table_leading_edge_ui(
             ns("wordcloud_leadingEdgeTable"),
             height = c("35vh", TABLE_HEIGHT_MODAL),
-            width = c("100%", "90%")
+            width = c("100%", "100%")
           )
         )
       ),

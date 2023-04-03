@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -34,10 +34,10 @@ expression_plot_barplot_ui <- function(id,
     )
   )
 
-  info_text <- "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
+  info_text <- "<b>Expression</b> of the selected gene across samples or groups."
 
   PlotModuleUI(ns("pltmod"),
-    title = "Differential expression",
+    title = "Gene expression",
     label = label,
     info.text = info_text,
     plotlib = "plotly",
@@ -78,7 +78,9 @@ expression_plot_barplot_server <- function(id,
       showothers <- input$barplot_showothers
       sel <- sel()
       res <- res()
-      shiny::req(sel())
+
+      ##shiny::req(sel())
+      shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
 
       psel <- rownames(res)[sel]
       gene <- pgx$genes[1, "gene_name"]
@@ -122,7 +124,8 @@ expression_plot_barplot_server <- function(id,
         names = TRUE,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]],
-        xlab = "Groups"
+        xlab = "Groups",
+        plotlib = "plotly"        
       )
       fig
     }

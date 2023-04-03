@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -14,7 +14,7 @@
 clustering_table_clustannot_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  clustannot_table_info_text <- "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+  clustannot_table_info_text <- "<b>Average correlation values</b> of annotation terms, for each gene cluster. In this table, users can check mean correlation values of features in the clusters with respect to the annotation term of the references database selected in the settings."
 
   TableModuleUI(
     ns("datasets"),
@@ -64,13 +64,11 @@ clustering_table_clustannot_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip", buttons = c("copy", "csv", "pdf"),
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
-          scrollY = "23vh",
+          scrollX = TRUE,
+          scrollY = 140,
           scroller = TRUE,
           deferRender = TRUE
-        ) ## end of options.list
+        ) ## end of options
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })

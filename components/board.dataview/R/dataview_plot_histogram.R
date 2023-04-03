@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_histogram_ui <- function(id, label = "", height = c(600, 800)) {
@@ -25,7 +25,8 @@ dataview_plot_histogram_ui <- function(id, label = "", height = c(600, 800)) {
 
 dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    gx.hist <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
+
+    .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)
       h0 <- hist(as.vector(c(gx[jj], min(gx), max(gx))),
@@ -54,7 +55,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       shiny::req(res)
-      hh <- gx.hist(gx = res$log2counts, n = 2000, plot = FALSE)
+      hh <- .gx.histogram(gx = res$log2counts, n = 2000, plot = FALSE)
       pdata <- list(
         histogram = hh,
         log2counts = res$log2counts
@@ -66,7 +67,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
       res <- plot_data()
       shiny::req(res)
       par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
-      gx.hist(gx = res$log2counts, n = 2000, plot = TRUE) # , main="histogram")
+      .gx.histogram(gx = res$log2counts, n = 2000, plot = TRUE) # , main="histogram")
     }
 
     modal_plot.RENDER <- function() {

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -22,7 +22,7 @@ expression_plot_maplot_ui <- function(id,
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
+  info_text <- "<b>MA plot</b> showing mean signal intensity versus fold-change on the x and y axes, respectively. An application of a Bland-Altman (MA) plot for differential gene expression."
 
   PlotModuleUI(ns("pltmod"),
     title = "MA plot",
@@ -75,8 +75,11 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      shiny::req(pgx, sel1())
+      shiny::req(pgx)
 
+      dbg("[expression_plot_maplot.R] sel1 = ",sel1())
+      ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
+      
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
 
@@ -195,8 +198,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) %>%
-        plotly::layout(margin = list(b = 65))
+      )  ## %>% plotly::layout(margin = list(b = 65))
       plt
     }
 

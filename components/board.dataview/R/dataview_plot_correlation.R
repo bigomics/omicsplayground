@@ -1,11 +1,11 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_correlation_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
-  info_text <- "Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively."
+  info_text <- "<b>Top correlated genes</b>. Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively. Darker color corresponds to higher expression of the gene."
 
   PlotModuleUI(
     ns("pltsrv"),
@@ -94,38 +94,14 @@ dataview_plot_correlation_server <- function(id,
       pd
     })
 
-    plot.RENDER <- function() {
-      pd <- plot_data()
-      shiny::req(pd)
-
-      par(mar = c(4.3, 3.0, 1, 0), mgp = c(2.0, 0.6, 0))
-      barplot(pd$top.rho,
-        col = pd$klr1, ## horiz=TRUE,
-        las = 3,
-        main = paste(pd$gene),
-        ylab = "correlation (r)",
-        cex.names = 0.85, cex.main = 1, cex.axis = 0.9,
-        col.main = "#7f7f7f", border = NA
-      )
-      legend("topright",
-        legend = c("expr high", "expr low"),
-        fill = c("#3380CCCC", "#3380CC40"),
-        cex = 0.8, y.intersp = 0.85
-      )
-    }
-
-    plotly.RENDER <- function() {
+    plotly_render <- function() {
       pd <- plot_data()
       shiny::req(pd)
 
       df <- pd[[1]]
       df$genes <- factor(df$genes, levels = df$genes)
 
-      ## NOTE: a second y axis seems useful (even cooler would be a positive on the left and a negative on the right)
-      ## NOTE: because of the plotly bheavior, we need to increas the margfin manually (otherwise labels get cut off); also it is not possible to adjust the alignment of axis labels (how annoying...)
-      ## TODO: decide if dual axis should be kept; ask Carson for potential workaround to align labels to the right
       ay <- list(
-        # tickfont = list(color = "black"),
         overlaying = "y",
         side = "right",
         title = ""
@@ -155,16 +131,25 @@ dataview_plot_correlation_server <- function(id,
         plotly::layout(
           xaxis = list(title = FALSE),
           yaxis2 = ay,
-          font = list(family = "Lato"),
           showlegend = FALSE,
           bargap = .4,
           margin = list(l = 10, r = 30, b = 10, t = 10)
+        ) 
+    }
+
+    plotly.RENDER <- function() {
+      plotly_render() %>%
+        plotly::layout(
+          xaxis = list(tickfont = list(size=10))
         ) %>%
         plotly_default()
     }
 
     modal_plotly.RENDER <- function() {
-      plotly.RENDER() %>%
+      plotly_render() %>%
+        plotly::layout(
+          xaxis = list(tickfont = list(size=18))
+        ) %>%
         plotly_modal_default()
     }
 

@@ -1,14 +1,12 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
+featuremap_plot_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
 
   info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance."
-
-  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
 
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
@@ -24,8 +22,7 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
     )
   )
 
-  div(
-    PlotModuleUI(
+  PlotModuleUI(
       ns("gset_map"),
       title = "Geneset UMAP",
       label = "a",
@@ -33,18 +30,26 @@ featuremap_plot_table_geneset_map_ui <- function(id, label = "", height = c(600,
       plotlib2 = "plotly",
       info.text = info_text,
       options = plot.opts,
-      height = c(600, 700),
+      height = height,
       width = c("auto", "100%"),
       download.fmt = c("png", "pdf")
-    ),
-    TableModuleUI(
-      ns("datasets"),
+  )
+}
+
+featuremap_table_geneset_map_ui <- function(id, label = "",
+                                            height = c(400, TABLE_HEIGHT_MODAL),
+                                            width = c("auto", "100%")) {
+  ns <- shiny::NS(id)
+
+  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
+
+  TableModuleUI(
+      ns("gset_table"),
       info.text = info_text_table,
-      height = c(280, TABLE_HEIGHT_MODAL),
-      width = c("auto", "90%"),
+      height = height,
+      width = width,
       title = "Geneset table",
       label = "c"
-    )
   )
 }
 
@@ -67,37 +72,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gsets
     })
 
-    gsetUMAP.RENDER.SAVE <- shiny::reactive({
-
-      pos <- getGsetUMAP()
-      hilight <- NULL
-      colgamma <- as.numeric(input$gsmap_gamma)
-
-      F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
-      F <- scale(F, center = FALSE)
-      colorby <- input$gsmap_colorby
-      if (colorby == "sd.FC") {
-        fc <- (rowMeans(F**2))**0.2
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
-      } else {
-        cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
-        fc <- sqrt(rowMeans(cX**2))
-      }
-      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
-
-      ## filter on table
-      hilight <- selGsets()
-      nlabel <- as.integer(input$gsmap_nlabel)
-
-      par(mfrow = c(1, 1))
-      p <- plotUMAP(pos, fc, hilight,
-        nlabel = nlabel, title = colorby,
-        cex = 0.9, source = "", plotlib = "base"
-      )
-      p
-    })
-
     plot_data <- shiny::reactive({
       pos <- getGsetUMAP()
       colnames(pos) <- c("x","y")
@@ -109,18 +83,22 @@ featuremap_plot_table_geneset_map_server <- function(id,
       
       F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      if (colorby == "var.FC") {
+      if (colorby == "sd.FC") {
         fc <- (rowMeans(F**2))**0.5
-      } else if (colorby == "mean.FC") {
-        fc <- rowMeans(F)
       } else {
         cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
+      ## conform
+      gg <- intersect(rownames(pos), names(fc))
+      pos <- pos[gg,]
+      fc <- fc[gg]
+      
       pd <- list(
         df = data.frame(pos, fc=fc),
+        fc = fc,  
         hilight = hilight,
         colgamma = colgamma,
         nlabel = nlabel,
@@ -129,15 +107,15 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     })
     
-    render_gsetUMAP <- function() {
+    render_gsetUMAP <- function(cex.label=1) {
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
-      fc  <- pd$df[,c("fc")]
+      fc <- pd$fc
       hilight <- pd$hilight
       nlabel  <- pd$nlabel
       colorby <- pd$colorby
-      
+        
       ## filter on table
       p <- plotUMAP(
         pos,
@@ -146,6 +124,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         nlabel = nlabel,
         title = colorby,
         cex = 1.2,
+        cex.label = cex.label,
         source =  ns("geneset_filter"),
         plotlib = "plotly"
       ) %>%
@@ -154,7 +133,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     }
 
     gsetUMAP.RENDER <- function() {
-      p <- render_gsetUMAP() %>%
+      p <- render_gsetUMAP(cex.label=0.9) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -163,7 +142,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     }
 
     gsetUMAP.RENDER2 <- function() {
-      p <- render_gsetUMAP() %>%
+      p <- render_gsetUMAP(cex.label=1.3) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -237,7 +216,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
-          scrollY = "20vh",
+          scrollY = 240,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -252,7 +231,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     })
 
     TableModuleServer(
-      "datasets",
+      "gset_table",
       func = gsetTable.RENDER,
       func2 = gsetTable.RENDER_modal,
       selector = "none"

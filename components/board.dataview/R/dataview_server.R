@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## source("../../app/R/global.R",chdir=TRUE);load("../../../data/example-data.pgx")
@@ -56,7 +56,7 @@ DataViewBoard <- function(id, pgx) {
 
 
     ## ------- observe functions -----------
-    shiny::observeEvent(input$data_info, {
+    shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Data View Board</strong>"),
         shiny::HTML(data_infotext),

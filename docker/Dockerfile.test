@@ -27,10 +27,15 @@ ENV DEBIAN_FRONTEND noninteractive
 
 #RUN R -e "remotes::install_github('bigomics/bigdash')"
 # RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
-RUN R -e "BiocManager::install('KEGGgraph')"
-RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
+#RUN R -e "BiocManager::install('KEGGgraph')"
+#RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
 #RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
 # RUN pip3 install umap-learn
+
+
+RUN R -e "install.packages('reticulate');library(reticulate);install_miniconda(force=TRUE);conda_install('r-reticulate','python-kaleido');conda_install('r-reticulate','plotly',channel='plotly');use_miniconda('r-reticulate')"
+
+## RUN R -e "remotes::install_github('bigomics/bigdash')"
 
 #------------------------------------------------------------
 # Update from local code

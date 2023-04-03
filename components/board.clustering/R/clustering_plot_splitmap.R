@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Clustering plot UI input function
@@ -13,7 +13,7 @@
 #' @param width
 #'
 #' @export
-clustering_plot_hm_splitmap_ui <- function(id,
+clustering_plot_splitmap_ui <- function(id,
                                            label = "",
                                            height,
                                            width) {
@@ -21,7 +21,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
 
   topmodes <- c("sd", "pca", "specific")
 
-  hm_splitmap_opts <- shiny::tagList(
+  splitmap_opts <- shiny::tagList(
     # withTooltip( shiny::radioButtons(ns("hm_plottype"), "Plot type:",
     #                                  choices=c("ComplexHeatmap","iHeatmap"),
     #                                  selected="ComplexHeatmap", inline=TRUE, width='100%'),
@@ -100,7 +100,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
     label = label,
     plotlib = "plotly",
     info.text = info_text,
-    options = hm_splitmap_opts,
+    options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -117,7 +117,7 @@ clustering_plot_hm_splitmap_ui <- function(id,
 #'
 #'
 #' @export
-clustering_plot_hm_splitmap_server <- function(id,
+clustering_plot_splitmap_server <- function(id,
                                                pgx,
                                                getTopMatrix,
                                                hm_level,

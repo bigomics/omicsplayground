@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ##----------------------------------------------------------------------
@@ -457,8 +457,7 @@ pgx.makeTriSystemGraph <- function(data, Y, nfeat=25, numedge=100, posonly=FALSE
 ## Variable importance functions
 ##----------------------------------------------------------------------
 
-pgx.survivalVariableImportance <-
-    function(X, time, status,
+pgx.survivalVariableImportance <- function(X, time, status,
              methods=c("glmnet","randomforest","boruta","xgboost","pls"))
 {
     ##
@@ -600,8 +599,8 @@ pgx.survivalVariableImportance <-
     return(P)
 }
 
-pgx.multiclassVariableImportance <-
-    function(X, y, methods=c("glmnet","randomforest","boruta","xgboost","pls"))
+pgx.multiclassVariableImportance <- function(X, y,
+        methods=c("glmnet","randomforest","boruta","xgboost","pls"))
 {
     ##
     ## multi-class version
@@ -610,8 +609,6 @@ pgx.multiclassVariableImportance <-
     
     imp <- list()
     xnames <- rownames(X)
-
-    dbg("[pgx.multiclassVariableImportance] 0: dim.X = ",dim(X))
     
     if(nrow(X)==1) X <- rbind(X,X)
     sdx <- apply(X,1,sd)    
@@ -619,8 +616,6 @@ pgx.multiclassVariableImportance <-
     ## convert to factor
     y <- factor(y)
     table(y)
-
-    dbg("[pgx.multiclassVariableImportance] 1: dim.X = ",dim(X))
     
     ## resample to minimum size to balance groups
     if(1) {
@@ -636,9 +631,6 @@ pgx.multiclassVariableImportance <-
         X <- X[,jj]
         y <- y[jj]
     }
-
-
-    dbg("[pgx.multiclassVariableImportance] 2: dim.X = ",dim(X))
     
     if("glmnet" %in% methods) {
         require(glmnet)
@@ -738,8 +730,8 @@ pgx.multiclassVariableImportance <-
 
 ##methods=c("glmnet","randomforest","boruta","xgboost")
 ##methods=c("glmnet","randomforest","xgboost")
-pgx.variableImportance <-
-    function(X, y, methods=c("glmnet","randomforest","boruta","xgboost","pls"))
+pgx.variableImportance <- function(X, y,
+       methods=c("glmnet","randomforest","boruta","xgboost","pls"))
 
 {
     if(length(unique(y[!is.na(y)]))!=2) {

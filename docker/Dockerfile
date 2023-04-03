@@ -42,7 +42,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN R -e "remotes::install_github('bigomics/bigdash')"
+RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
 #RUN R -e "install.packages(c('RSpectra'))"
 # RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
 # RUN pip3 install umap-learn

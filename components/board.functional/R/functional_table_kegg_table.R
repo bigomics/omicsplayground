@@ -1,23 +1,13 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
 functional_table_kegg_table_ui <- function(id, label, width, height) {
   ns <- shiny::NS(id)
 
-  info_text <- strwrap("<strong>Enrichment table.</strong> The table is
-                         interactive; enabling user to sort on different
-                         variables and select a pathway by clicking on the row
-                         in the table. The scoring is performed by considering
-                         the total number of genes in the pathway (n), the
-                         number of genes in the pathway supported by the contrast
-                         profile (k), the ratio of k/n, and the ratio of
-                         |upregulated or downregulated genes|/k. Additionally,
-                         the table contains the list of the upregulated and
-                         downregulated genes for each pathway and a q value from
-                         the Fisher’s test for the overlap.")
+  info_text <- strwrap("<b>Enrichment table</b> reporting enrichment score for each pathway for the selected contrast profile. Scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.")
 
   TableModuleUI(
     ns("datasets"),
@@ -91,7 +81,9 @@ functional_table_kegg_table_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = "15vh", scroller = TRUE, deferRender = TRUE
+          scrollY = 180,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

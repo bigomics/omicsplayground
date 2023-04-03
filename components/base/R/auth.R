@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 GOOGLE_BASE_URL <- "https://firestore.googleapis.com/v1/projects"
@@ -16,14 +16,14 @@ google_base_url <- function(){
 google_user_get <- function(key, uid){
 	if(missing(key))
 		stop("Missing key")
-	
+
 	if(missing(uid))
 		stop("Missing uid")
 
 	url <- sprintf(
-		"%s/%s?key=%s", 
-		google_base_url(), 
-		URLencode(uid), 
+		"%s/%s?key=%s",
+		google_base_url(),
+		URLencode(uid),
 		key
 	)
 
@@ -34,10 +34,10 @@ google_user_get <- function(key, uid){
 google_user_create <- function(key, email, plan = "free"){
 	if(missing(key))
 		stop("Missing key")
-	
+
 	url <- sprintf(
-		"%s?documentId=%s&key=%s", 
-		google_base_url(), 
+		"%s?documentId=%s&key=%s",
+		google_base_url(),
 		URLencode(email),
 		key
 	)
@@ -51,10 +51,10 @@ google_user_create <- function(key, email, plan = "free"){
 	)
 
 	req <- httr::POST(
-		url, 
-		body = body, 
+		url,
+		body = body,
 		encode = "json",
 		httr::content_type_json()
 	)
-	httr::content(req)	
+	httr::content(req)
 }

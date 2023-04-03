@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Drug Connectivity plot UI input function
@@ -14,13 +14,10 @@
 #' @export
 drugconnectivity_plot_cmap_enplot_ui <- function(id,
                                                  label = "",
-                                                 height = c(305, 600)) {
+                                                 height = c(300, 600)) {
   ns <- shiny::NS(id)
-  info_text <- "<strong>Connectivity map.</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space."
+  info_text <- "<b>Enrichment plot.</b> Enrichment of the selected drug perturbation
+                profile with your selected signature."
 
   PlotModuleUI(ns("plot"),
     title = "Enrichment Plot",
@@ -28,8 +25,8 @@ drugconnectivity_plot_cmap_enplot_ui <- function(id,
     plotlib = "plotly",
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(305, 600),
-    width = c("auto", 1000),
+    height = height,
+    width = c("auto", "100%"),
   )
 }
 

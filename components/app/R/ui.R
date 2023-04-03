@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
 app_ui <- function() {
     #-------------------------------------------------------
     ## Build USERMENU
@@ -272,8 +277,6 @@ app_ui <- function() {
         )
         
         big_theme2 = bigdash::big_theme()
-        ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
-                ##big_theme2 <- bslib::bs_add_rules(big_theme2, "$grid_breakpoints: ( xxxl: 1600px )")
         big_theme2 <- bslib::bs_add_variables(big_theme2, 
           "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
           .where = "declarations"
@@ -585,8 +588,10 @@ app_ui <- function() {
         )
     }
 
+    info("[ui.R] >>> creating UI")
     ui <- createUI()
-
+    info("[ui.R] <<< finished UI!")
+    
     return(ui)
 }
 

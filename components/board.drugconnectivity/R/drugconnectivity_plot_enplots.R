@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Drug Connectivity plot UI input function
@@ -14,8 +14,8 @@
 #' @export
 drugconnectivity_plot_enplots_ui <- function(id,
                                              label = "",
-                                             height = c(600, 800),
-                                             rowH = 660) {
+                                             height = c(400, 700)
+                                             ) {
   ns <- shiny::NS(id)
   info_text <- strwrap("<strong>Drug connectivity</strong> correlates your
                        signature with known drug profiles from the L1000
@@ -31,8 +31,8 @@ drugconnectivity_plot_enplots_ui <- function(id,
     info.text = info_text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(0.54 * rowH, 750),
-    width = c("auto", 1280),
+    height = height,
+    width = c("auto", "100%"),
   )
 }
 

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -33,8 +33,7 @@ pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
     return(res)
 }
 
-pgx.plotPartialCorrelationGraph <-
-    function(res, gene, rho.min=0.1, nsize=-1, main="",
+pgx.plotPartialCorrelationGraph <- function(res, gene, rho.min=0.1, nsize=-1, main="",
              vsize=10, edge.width=10, label.cex=0.8,
              radius=-1, plot=TRUE, layout="fr")
 {    
@@ -79,7 +78,6 @@ pgx.plotPartialCorrelationGraph <-
     isolated = which(igraph::degree(G1)==0 & igraph::V(G)$name!=gene)
     G1 = igraph::delete.vertices(G1, isolated)
 
-    dbg("[pgx.plotPartialCorrelationGraph] len.VG = ",length(igraph::V(G1)))
     if(length(igraph::V(G1)) <= 1)  return()
 
     ## get only nodes within radius
@@ -116,8 +114,7 @@ PCOR.METHODS = c("cor","pcor","pcor.shrink", "glasso", "huge",
                "fastclime", "FastGGM", "SILGGM")
 
 ##gene="CD4";X=ngs$X;nmax=200;method=PCOR.FAST;nmax=100;fast=TRUE
-pgx.computePartialCorrelationAroundGene <-
-    function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
+pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
     rho <- stats::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
@@ -133,24 +130,6 @@ pgx.computePartialCorrelationAroundGene <-
 
 pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FALSE)
 {    
-    ##
-    
-    
-    
-    ##
-    
-    ##
-    ##
-    
-    
-    
-    ##
-    
-
-    if(0) {
-        tX <- t(Matrix::head(ngs$X,500))
-    }
-
     if(fast || ncol(tX)>1000) {
         method <- intersect(method, PCOR.FAST)
         method
@@ -320,11 +299,10 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
 
 ##rho.min=0.7;nsize=20;main="";what="graph";edge.width=5;layout="fr"
 
-pgx.plotPartialCorrelationAroundGene <-
-    function(res, gene, rho.min=0.8, pcor.min=0, 
-             nsize=-1, main="",
-             what=c("cor","pcor","graph"),
-             edge.width=10, layout="fr")
+pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.8, pcor.min=0, 
+                                                 nsize=-1, main="",
+                                                 what=c("cor","pcor","graph"),
+                                                 edge.width=10, layout="fr")
 {    
 
     rho <- res$rho    
@@ -446,22 +424,12 @@ pgx.plotPartialCorrelationAroundGene <-
         plot(gr2, layout=ly)
 
     }
-
-    ##P1 <- P * (abs(P)>0.1)
-    ##P1 <- 0.5*(P1 + t(P1))
-    ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
-    ##out <- list(graph=gr2)
-    ##return(out)
 }
 
 
 ##df=ngs$samples
 pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 {
-
-    
-    
-
     df <- type.convert(df)
     cl <- sapply(df,class)
     cvar <- which(cl %in% c("numeric","integer"))

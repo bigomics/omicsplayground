@@ -1,9 +1,17 @@
 html {
 
+  body {
+      a {
+	  color: $main;
+	  text-decoration: none;
+      }
+      font-size: 14px;
+/*    font-family: "Cubano"; */
+  }
+  
   .content {
     min-height: 800px;
   }
-
 
   h2 {
       font-size: 1.85em;
@@ -22,32 +30,12 @@ html {
     min-height: 100vh;
   }
 
-  [class*="col-lg-"],
-  [class*="col-md-"],
-  [class*="col-sm-"],
-  [class*="col-xs-"] {
-    padding: 4px !important;
-  }
-
   .control-label {
     margin-bottom: 0px;
     margin-top: 2px;
   }
 
   /* ---------------------------- template specfic -------------------------- */
-
-  body {
-      a {
-	  color: $main;
-	  text-decoration: none;
-      }
-      font-size: 14px;
-  }
-
-  /* space in innner tabpanes */
-  .tabbable .tab-content {
-//    padding: 15px 20px;
-  }
 
   .tabbable .nav-tabs {
     padding: 0px;
@@ -94,12 +82,9 @@ html {
     font-weight: 400;
   }
 
-  .gene-info-output {
+  .gene-info {
     font-size: 0.9em;
-    background-color: #dde6f0BB;
-    //padding: 20px 10px 10px 10px;
-    //overflow: hidden;
-    height: 1000px;
+    line-height: 1.1em;  
   }
   
   .bg-cover-image {
@@ -140,20 +125,19 @@ html {
   .caption {
     font-size: 13px;
     font-weight: 400;
-    line-height: 1.2em;
+    line-height: 1.1em;
     // padding: 0rem 0.3rem 0.3rem 0.6rem;
 
     // https://stackoverflow.com/questions/33058004/applying-an-ellipsis-to-multiline-text
     display: -webkit-box;
-//    max-width: 200px;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     
   }
 
   .caption2 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 400;
     line-height: 1.1em;
     padding: 2rem 0rem 0rem 0rem;

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 enrichment_plot_barplot_ui <- function(id, height, width) {
@@ -77,10 +77,17 @@ enrichment_plot_barplot_server <- function(id,
       if (!grouped && ncol(pgx$X) > 15) srt <- 60
       pgx.plotExpression(
         pgx, gset,
-        comp = comp0, logscale = TRUE, level = "geneset",
-        collapse.others = collapse.others, grouped = grouped,
-        cex = 1.1, srt = srt, main = "", ylab = "enrichment (avg logFC)",
-        xlab = breakstring(gset, 42, 80)
+        comp = comp0,
+        logscale = TRUE,
+        level = "geneset",
+        collapse.others = collapse.others,
+        grouped = grouped,
+        cex = 1.1,
+        srt = srt,
+        main = "",
+        ylab = "enrichment (avg logFC)",
+        xlab = breakstring(gset, 42, 80),
+        plotlib = "plotly"
       )
     }
 

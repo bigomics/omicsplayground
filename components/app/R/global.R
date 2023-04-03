@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -34,13 +34,14 @@ options(DT.options = list(
   scrollX = TRUE,
   fillContainer = FALSE
 ))
+
 # Set global modal height values for tables.
-  # - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
-  # this only defines the srollable part of the table, not the header height.
-  # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
-  # this will define how close the caption is to the table.
+# - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
+# this only defines the srollable part of the table, not the header height.
+# - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
+# this will define how close the caption is to the table.
 SCROLLY_MODAL <<- "55vh"
-TABLE_HEIGHT_MODAL <<- "75vh"
+TABLE_HEIGHT_MODAL <<- "70vh"
 
 reticulate::use_miniconda('r-reticulate')
 
@@ -88,6 +89,7 @@ message(">>>>> LOADING INITIAL LIBS")
 library(shiny)
 library(shinyBS)
 library(grid)
+library(magrittr)
 #library(ggplot2)
 #library(concaveman)
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -14,7 +14,7 @@
 expression_table_FDRtable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  FDRtable_text <- "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
+  FDRtable_text <- "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
 
   TableModuleUI(
     ns("datasets"),
@@ -80,14 +80,14 @@ expression_table_FDRtable_server <- function(id,
       DT::datatable(D,
         rownames = FALSE,
         #                      class = 'compact cell-border stripe hover',
-        class = "compact hover",
+        ##class = "compact hover",
         fillContainer = TRUE,
         extensions = c("Scroller"),
         options = list(
           dom = "lfrtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = 220,
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%

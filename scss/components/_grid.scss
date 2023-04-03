@@ -1,0 +1,14 @@
+html {
+    
+    .row {
+	--bs-gutter-x: 0.5rem;
+    }
+    
+    [class*="col-lg-"],
+    [class*="col-md-"],
+    [class*="col-sm-"],
+    [class*="col-xs-"] {
+	padding: 0px 4px !important;
+    }
+    
+}

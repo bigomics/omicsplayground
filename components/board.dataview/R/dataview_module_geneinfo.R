@@ -1,10 +1,10 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-dataview_module_geneinfo_ui <- function(id, label = "", height = c("auto", 1000)) {
+dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800), width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
 
@@ -12,7 +12,7 @@ dataview_module_geneinfo_ui <- function(id, label = "", height = c("auto", 1000)
   a_KEGG <- "<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
   a_GO <- "<a href='http://geneontology.org/'>Gene Ontology</a>"
 
-  info_text <- paste0("For more information about the the selected gene, follow the hyperlinks to public databases, including ", a_OMIM, ", ", a_KEGG, " and ", a_GO, ".")
+  info_text <- paste0("<b>Gene info.</b> Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.")
 
   PlotModuleUI(
     ns("mod"),
@@ -25,7 +25,7 @@ dataview_module_geneinfo_ui <- function(id, label = "", height = c("auto", 1000)
     caption2 = NULL,
     options = NULL,
     download.fmt = NULL,
-    width = c("auto", "1200"),
+    width = width,
     height = height
   )
 }
@@ -34,9 +34,8 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    dbg("[dataview_geneinfo_server] created!")
 
-    info_data <- shiny::reactive({
+    geneinfo_data <- shiny::reactive({
       require(org.Hs.eg.db)
       gene <- r.gene()
       req(gene)
@@ -78,12 +77,13 @@ dataview_module_geneinfo_server <- function(id,
 
 
     info.RENDER <- function() {
-      res <- info_data()
-      shiny::wellPanel(shiny::HTML(res))
+      res <- geneinfo_data()
+      div( shiny::HTML(res), class="gene-info")
     }
 
     modal_info.RENDER <- function() {
-      info.RENDER()
+      res <- geneinfo_data()
+      div(shiny::HTML(res), class="gene-info", style="font-size:1.3em;")
     }
 
     PlotModuleServer(
@@ -92,7 +92,7 @@ dataview_module_geneinfo_server <- function(id,
       plotlib2 = "generic",
       func = info.RENDER,
       func2 = modal_info.RENDER,
-      ## csvFunc = info_data,   ##  *** downloadable data as CSV
+      ## csvFunc = geneinfo_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderUI,
       renderFunc2 = shiny::renderUI
     )

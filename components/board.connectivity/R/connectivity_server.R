@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -425,7 +425,7 @@ ConnectivityBoard <- function(id, pgx) {
       "connectivityScoreTable",
       getConnectivityScores = getConnectivityScores,
       columns = c("pathway", "score", "rho", "NES", "padj"),
-      height = "170px"
+      height = "200px" ## scrollY height
     )
 
     ## ================================================================================

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 FunctionalInputs <- function(id) {
@@ -50,32 +50,27 @@ FunctionalUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          functional_plot_kegg_graph_ui(ns("kegg_graph"),
-            label = "a"
+          functional_plot_kegg_graph_ui(
+            ns("kegg_graph"),
+            label = "a",
+            height = c(400, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")            
           ),
           functional_table_kegg_table_ui(
             ns("kegg_table"),
             label = "b",
-            height = c(270, TABLE_HEIGHT_MODAL),
-            width = c("100%", "90%")
+            height = c(330, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           )
         ),
         div(
           class = "col-md-6",
           functional_plot_kegg_actmap_ui(
             ns("kegg_actmap"),
-            label = "c"
+            label = "c",
+            height = c(750, TABLE_HEIGHT_MODAL)            
           )
         )
-      ),
-      tags$div(
-        class = "caption",
-        HTML(strwrap("<b>(a)</b> <b>KEGG pathway map.</b> Genes are colored according to
-             their upregulation (red) or downregulation (blue) in the contrast
-             profile. <b>(b)</b> <b>Enrichment table</b> reporting enrichment
-             score for each pathway for the selected contrast profile.
-             <b>(c)</b> <b>Activation matrix</b> visualizing the activation
-             levels of pathways across contrasts."))
       )
     ),
     shiny::tabPanel(
@@ -85,29 +80,24 @@ FunctionalUI <- function(id) {
         div(
           class = "col-md-6",
           functional_plot_go_network_ui(
-            ns("GO_network"),
+            id = ns("GO_network"),
+            height = c(400, TABLE_HEIGHT_MODAL),            
             label = "a"
           ),
           functional_table_go_table_ui(
-            ns("GO_table"),
-            height = c("20vh", TABLE_HEIGHT_MODAL),
-            width = c("100%", "90%")
+            id = ns("GO_table"),
+            height = c(330, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           )
         ),
         div(
           class = "col-md-6",
-          functional_plot_go_actmap_ui(ns("GO_actmap"),
+          functional_plot_go_actmap_ui(
+            id = ns("GO_actmap"),
+            height = c(750, TABLE_HEIGHT_MODAL),           
             label = "c"
           )
         )
-      ),
-      tags$div(
-        HTML(strwrap("<b>(a)</b> <b>Gene Ontology graph.</b> The graph represents
-             the enrichment of the GO terms as a tree structure. <b>(b)</b><b> GO
-             score table.</b> The score of a GO term is the cumulative score of
-             all higher order terms. <b>(c)</b> <b>Activation matrix</b>
-             visualizing the enrichment of GO terms across multiple contrast
-             profiles."))
       )
     )
   )

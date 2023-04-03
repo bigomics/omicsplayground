@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -169,6 +169,7 @@ clustering_plot_clustpca_server <- function(id,
           )
         }
       } else {
+        
         ## 2D plot
         j0 <- 1:nrow(df)
         j1 <- NULL

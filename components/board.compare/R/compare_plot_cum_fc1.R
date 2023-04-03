@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -70,7 +70,7 @@ compare_plot_cum_fc1_server <- function(id,
         xaxistitle = "Genes",
         title = "Dataset 1",
         type = "bar",
-        plotRawValues = TRUE
+        grouped = FALSE
       )
 
       fig

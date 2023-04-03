@@ -1,16 +1,16 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
 
-  info_text <- paste0("Expression barplot of grouped samples (or cells) for the gene selected in the <code>Search gene</code> Samples (or cells) in the barplot can be ungrouped by setting the <code>grouped</code> under the main <i>Options</i>.")
+  info_text <- paste0("<b>Gene expression</b>. Expression barplot of grouped samples (or cells) for the gene selected gene. Samples (or cells) in the barplot can be grouped/ungrouped by setting the <code>grouped</code> under the main options.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Abundance/expression",
+    title = "Gene expression",
     label = label,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
