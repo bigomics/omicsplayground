@@ -7,8 +7,7 @@
 dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
   ns <- shiny::NS(id)
   info_text <- paste(
-    "<b>Tissue expression</b>. Top 20 tissues for the selected gene in the tissue expression ",
-    a_GTEx, " dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
+    "<b>Tissue expression</b>. Top expressing tissues for the selected gene in the tissue expression ", a_GTEx, " database. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
   )
 
   PlotModuleUI(
@@ -65,7 +64,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         color = tissue.klr
       )
       df <- df[with(df, order(-x)), ]
-      df <- df[1:15, ] # select top 15 tissues
+      df <- df[1:12, ] # select top 15 tissues
 
       return(
         list(
