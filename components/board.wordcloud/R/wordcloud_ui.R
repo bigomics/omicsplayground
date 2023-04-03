@@ -58,16 +58,6 @@ WordCloudUI <- function(id) {
             width = c("100%", "100%")
           )
         )
-      ),
-      tags$div(
-        class = "caption",
-        HTML("<b>(a)</b> <b>Word enrichment</b>  plots for the top most significant contrasts. Black vertical bars indicate
-                    the position of gene sets, in the ranked enrichment scores, that contains the *keyword*.
-                    The green curve corresponds to 'running statistics' of the keyword enrichment score.
-                    <b>(b)</b> <b>Word cloud.</b> The size of the words are relative to the normalized enrichment score
-                    (NES) from the GSEA computation. <b>(c)</b> <b>Word t-SNE</b> of keywords extracted from the titles/descriptions
-                    of the genesets. <b>(d)</b> <b>Enrichment table</b> of keywords for selected contrast. <b>(e)</b> <b>Leading edge terms</b>
-                    for selected keyword.")
       )
     )
   )
