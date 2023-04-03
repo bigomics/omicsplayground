@@ -1,24 +1,30 @@
+##
+## Make PGX file from CSV files
+##
+## (c) 2023 BigOmics Analytics 
+##
 
+# options to compute pgx script
 ---
-options:
-  samples: samples
-  counts: counts
-  contrasts: contrasts
-  batch_correct: false
-  prune_samples: true
+params:
+  samples: "samples.csv"
+  counts: "counts.csv"
+  contrasts: "contrasts.csv"
+  batch_correct: FALSE
+  prune_samples: TRUE
   filter_genes: filter.genes
   only_known: "!remove.unknown"
   only_proteincoding: only.proteincoding
   only_hugo: only.hugo
   convert_hugo: only.hugo
-  do_cluster: true
-  cluster_contrasts: false
+  do_cluster: TRUE
+  cluster_contrasts: FALSE
   max_genes: max.genes
   max_genesets: max.genesets
   gx_methods: gx.methods
   gset_methods: gset.methods
   extra_methods: extra.methods
-  use_design: use.design
+  use_design: TRUE
   lib_dir: FILES
   name: "gsub('[ ]','_',input$upload_name)"
   datatype: input$upload_datatype
