@@ -165,17 +165,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      par(mfrow = c(5, 5), mar = c(0.2, 0.2, 1.8, 0.2), oma = c(1, 1, 1, 1) * 0.8)
-      par(mfrow = c(5, 5), mar = c(0, 0.2, 0.5, 0.2), oma = c(1, 1, 6, 1) * 0.5)
-      if (ncol(pd[["score"]]) > 25) par(mfrow = c(6, 6), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-      if (pd[["lyo"]] == "4x4") {
-        par(mfrow = c(4, 4), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-        ntop <- 16
-      }
-      if (pd[["lyo"]] == "6x6") {
-        par(mfrow = c(6, 6), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-        ntop <- 36
-      }
+      if (pd[["lyo"]] == "4x4") ntop <- 16
+      if (pd[["lyo"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -193,19 +184,6 @@ singlecell_plot_icpplot_server <- function(id,
         ii <- order(gx)
         pos <- pd[["pos"]][ii,]
         tt <- colnames(pd[["score"]])[j]
-        
-        ## ii <- sample(nrow(pos))
-        ## base::plot(pd[["pos"]][ii, ],
-        ##   pch = 19, cex = 1 * cex1, col = klr0[ii],
-        ##   xlim = 1.2 * range(pd[["pos"]][, 1]), ylim = 1.2 * range(pd[["pos"]][, 2]),
-        ##   fg = gray(0.8), bty = "o", xaxt = "n", yaxt = "n",
-        ##   xlab = "", ylab = ""
-        ## )
-        ## legend("topleft",
-        ##   legend = colnames(pd[["score"]])[j], bg = "#AAAAAA88",
-        ##   cex = 1.2, text.font = 1, y.intersp = 0.8, bty = "n",
-        ##   inset = c(-0.05, -0.0)
-        ##   )
 
         ## ------- start plot ----------       
         p <- pgx.scatterPlotXY.PLOTLY(
@@ -223,16 +201,14 @@ singlecell_plot_icpplot_server <- function(id,
           title.y = 0.9,
 #         cex.clust = cex*0.8,
           label.clusters = FALSE,
-          legend = FALSE
+          legend = FALSE,
+          gridcolor = 'fff'
         ) %>% plotly::layout(
-          ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
         )
 
         plt[[i]] <- p
       }
-      ##refset <- input$refset
-      ##mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)
 
       return(plt)
     }

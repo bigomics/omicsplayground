@@ -143,11 +143,14 @@ singlecell_plot_phenoplot_server <- function(id,
           title.y = 0.9,
           cex.clust = 1.2,
           label.clusters = TRUE,
-          legend = FALSE
-        ) %>% plotly::layout(
-          ## showlegend = TRUE,
-          plot_bgcolor = "#f8f8f8"
-        )
+          legend = FALSE,
+          gridcolor = 'fff'
+        ) %>%
+          plotly::layout(
+            ## showlegend = TRUE,
+            plot_bgcolor = "#f8f8f8"
+          )
+
         plt[[i]] <- p
       }
       return(plt)

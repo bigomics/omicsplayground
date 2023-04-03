@@ -2997,7 +2997,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                                      opacity=1, label.clusters=FALSE,
                                      labels=NULL, label.type=NULL,
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
-                                     title="", title.y=1,
+                                     title="", title.y=1, gridcolor=NULL,
                                      source=NULL, key=NULL,
                                      displayModeBar=FALSE)
 {
@@ -3060,13 +3060,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         ylim0 <- cy + 0.5 * c(-1,1.05) * dy / zoom
     }
 
-    ax <- list(
-        title = "",
-        zeroline = FALSE,
-        showline = FALSE,
-        showticklabels = FALSE,
-        showgrid = FALSE
-    )
     if(is.null(xlab)) xlab <- colnames(pos)[1]
     if(is.null(ylab)) ylab <- colnames(pos)[2]
 
@@ -3142,8 +3135,14 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         }
 
         ## df <- data.frame( x=pos[,1], y=pos[,2], variable=z, text=tooltip1 )
-        df <- data.frame(x=pos[,1], y=pos[,2], name=rownames(pos),
-                         value=z, text=tooltip1, label=label1)
+        df <- data.frame(
+          x = pos[,1],
+          y = pos[,2],
+          name = rownames(pos),
+          value = z,
+          text = tooltip1,
+          label = label1
+        )
         rownames(df) <- rownames(pos)
 
         ## plot low values first
@@ -3179,7 +3178,11 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                 ##colors = ~value,
                 colors = cpal,
                 text = ~text, hoverinfo='text',
-                marker = list(size=7*cex, opacity=opacity, color='#DDDDDD44'),
+                marker = list(
+                  size = 7*cex,
+                  opacity = opacity,
+                  color = '#DDDDDD44'
+                ),
                 showlegend = FALSE,
                 key = ~label,
                 mode = "markers",
@@ -3192,9 +3195,18 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         plotly::add_markers(
             data = df[jj,,drop=FALSE],
             x = ~x, y = ~y,
-            color = ~value, colors = cpal,
-            text = ~text, hoverinfo='text',
-            marker = list(size=7*cex, opacity=opacity),
+            color = ~value,
+            colors = cpal,
+            text = ~text,
+            hoverinfo='text',
+            marker = list(
+              size = 7*cex,
+              opacity = opacity,
+              line = list(
+                color = '#444',
+                width = 0.5
+              )
+            ),
             showlegend = FALSE,
             key = ~label,
             mode = "markers",
@@ -3266,32 +3278,81 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
 
     if(legend && type=='numeric') {
         plt <- plt %>%
-            plotly::colorbar(limits = c(cmin, cmax), len=0.15, thickness=9,
-                     x=0.01, y=0.1, title='', tickfont = list(size=9) )
+          plotly::colorbar(
+            limits = c(cmin, cmax),
+            len = 0.15,
+            thickness = 9,
+            x = 0.01, y = 0.1,
+            title = '',
+            tickfont = list(
+              size=9
+            )
+          )
     }
-
+   
     ## add legend and title
     plt <- plt %>%
         plotly::layout(
             showlegend = legend,
-            xaxis = list(title=xlab, titlefont=list(size=12)),
-            yaxis = list(title=ylab, titlefont=list(size=12)),
+            xaxis = list(
+              title = xlab,
+              titlefont = list(size=12)
+            ),
+            yaxis = list(
+              title = ylab,
+              titlefont = list(
+                size = 12
+              )
+            ),
             margin = list(l=5, r=5, b=25, t=25, pad=3)
         )
-
+  
     if(!is.null(title) && title!="") {
         plt <- plt %>%
             plotly::layout(
-                annotations = list(text=title, font = list(size=14*cex.title),
-                                   xref="paper", yref="paper",
-                                   yanchor = "bottom", xanchor = "left",
-                                   align = "right", x=0, y=title.y , showarrow = FALSE )
+              annotations = list(
+                text=title,
+                font = list(
+                  size = 14*cex.title
+                ),
+                xref = "paper",
+                yref = "paper",
+                yanchor = "bottom",
+                xanchor = "left",
+                align = "right",
+                x = 0, y = title.y ,
+                showarrow = FALSE
+              )
             )
     }
 
     if(axis==FALSE) {
-        plt <- plt %>% plotly::layout(xaxis = ax, yaxis = ax)
+      ax <- list(
+        title = "",
+        zeroline = FALSE,
+        showline = FALSE,
+        showticklabels = FALSE
+      )
+      plt <- plt %>% plotly::layout(
+        xaxis = ax,
+        yaxis = ax
+      )
     }
+
+    if(!is.null(gridcolor)) {
+      plt <- plt %>%
+        plotly::layout(
+          xaxis = list(
+            showgrid = TRUE,
+            gridcolor = gridcolor
+          ),
+          yaxis = list(
+            showgrid = TRUE,            
+            gridcolor = gridcolor
+          )
+        )      
+    }
+
     plt
 }
 
@@ -3305,20 +3366,6 @@ pgx.scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
                                   tooltip=NULL, theme=NULL, set.par=TRUE,
                                   title=NULL, barscale=0.8 )
 {
-
-
-
-
-    if(0) {
-        type=NULL;col=NULL;cex=NULL
-        cex.lab=0.8;cex.title=1.2;cex.clust=1.5;cex.legend=1
-        zoom=1;legend=TRUE;bty='n';hilight=NULL
-        zlim=NULL;zlog=FALSE;softmax=FALSE
-        xlab = NULL;ylab=NULL
-        opacity=1;label.clusters=FALSE;labels=NULL
-        legend.ysp=0.85;legend.pos = "bottomleft"
-        title=NULL;barscale=0.8
-    }
     if(is.null(colnames(pos))) {
         colnames(pos) <- c("x","y")
     }
@@ -3348,7 +3395,6 @@ pgx.scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
     plt
 }
 
-file="tmp.pdf";width=height=8
 plotWidget.PLEASECHECK <- function(plt,file,width=8,height=8) {
     HTMLFILE <- paste0(tempfile(),"_plotwidget.html")
     HTMLFILE
@@ -3467,9 +3513,6 @@ myplot_ly <- function(..., theme="default") {
     return(p)
 }
 
-
-##lfc=1;psig=0.05;showlegend=FALSE;xlab=ylab="";group.names=c("group1","group2")
-##showlegend=TRUE;highlight=NULL;marker.size=5;label=NULL;marker.type="scatter";displayModeBar=TRUE
 plotlyMA <- function(x, y, names, source="plot1",
                      group.names=c("group1","group2"),
                      xlab = "average expression (log2.CPM)",
@@ -3487,8 +3530,6 @@ plotlyMA <- function(x, y, names, source="plot1",
 
     p <- plotly::plot_ly(
         type = marker.type, mode = 'markers'
-        ##type='scattergl', mode='markers',
-        ##source=source, key=1:length(x)
     )
 
     p <- p %>%

@@ -240,7 +240,8 @@ singlecell_plot_markersplot_server <- function(id,
           title.y = 0.85,
 #         cex.clust = cex*0.8,
           label.clusters = FALSE,
-          legend = FALSE
+          legend = FALSE,
+          gridcolor = 'fff'
         ) %>% plotly::layout(
           ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
