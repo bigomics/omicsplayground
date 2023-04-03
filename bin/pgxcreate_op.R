@@ -11,7 +11,13 @@ args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
 
-params  <- readRDS(file.path(temp_dir,"params.RData"))
+params_from_op <- file.path(temp_dir,"params.RData")
+
+if (file.exists(params_from_op)) {
+  params <- readRDS(params_from_op)
+} else {
+  yaml::yaml.load_file(file.path(temp_dir,"OPTIONS.yml"))
+}
 
 # Call create_pgx function
 pgx <- playbase::create_pgx(
