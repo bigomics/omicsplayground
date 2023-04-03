@@ -130,7 +130,7 @@ pkg.extra <- c(
   "RSpectra","SmartSVA","SILGGM","flashClust","ggrepel", "ComplexHeatmap",
   "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne", "seriation",
   'wordcloud2', 'optparse', 'docopt',"DT","plotly",
-  'kableExtra', 'shinythemes', 'rworldmap',"e1071",
+  'kableExtra', 'shinythemes', 'rworldmap',"e1071","mixOmics",
   "HiddenMarkov","coin","rjags","argparse",
   "RcppParallel", "KEGGgraph", 
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
