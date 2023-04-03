@@ -160,27 +160,36 @@ UploadBoard <- function(id,
         msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
       }
 
-      showModal(
-        modalDialog(
-          HTML(msg1),
-          title = NULL,
-          size = "s",
-          footer = tagList(
-            modalButton("Start!")
-          )
-        )
-      )
+      # showModal(
+      #   modalDialog(
+      #     HTML(msg1),
+      #     title = NULL,
+      #     size = "s",
+      #     footer = tagList(
+      #       modalButton("Start!")
+      #     )
+      #   )
+      # )
+
+      load_my_dataset <- function(){
+          r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        }
 
       if(r_global$loadedDataset > 0){
         # check if user already has a dataset loaded and have a different UX in that case
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        shinyalert::shinyalert(
+          paste("Dataset", pgx$name, "is ready!"),
+          "What do you want\nto do next?",
+          confirmButtonText = "Load dataset",
+          cancelButtonText = "Stay here",
+          showCancelButton = TRUE,
+          callbackR = load_my_dataset,
+          inputId = "confirmload"
+        )
       }else{
-        # what this does???
-        # shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
         bigdash.selectTab(session, selected = 'load-tab')
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         r_global$loadedDataset <- r_global$loadedDataset+1
-
       }
       
     })
