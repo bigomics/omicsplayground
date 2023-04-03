@@ -43,7 +43,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
         function(input, output, session) {
             ns <- session$ns
 
-
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                                  "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
@@ -247,10 +246,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             process_obj <- reactiveVal(NULL)
             computedPGX  <- shiny::reactiveVal(NULL)
             temp_dir <- reactiveVal(NULL)
-            timer_state <- reactiveVal("stopped")
+            process_counter <- reactiveVal(0)
             reactive_timer <- reactiveTimer(10000)  # Triggers every 10000 milliseconds (10 second)
-
-
+            MAX_PROCESS_COUNT <- 2
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -357,7 +355,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 excl.xy <- ("excl.xy"  %in% flt)
                 only.proteincoding <- ("only.proteincoding"  %in% flt)
                 filter.genes <- ("remove.notexpressed"  %in% flt)
-
                 use.design <- !("noLM.prune" %in% input$dev_options)
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
 
@@ -417,13 +414,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 bigdash.selectTab(session, selected = 'welcome-tab')
 
                 dbg("[compute PGX process] : starting process")
-                timer_state("running")
+                process_counter(process_counter() + 1)
                 process_obj(processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'))
 
             })
 
             check_process_status <- reactive({
-                 if (timer_state() == "stopped") {
+                 if (process_counter() == 0) {
                     return(NULL)
                     }
 
@@ -460,7 +457,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
 
-                timer_state("stopped") # stop the timer
+                process_counter(process_counter()-1) # stop the timer
                 result_path <- file.path(temp_dir, "my.pgx")
 
                 if (file.exists(result_path)) {
@@ -474,7 +471,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             }
 
             on_process_error <- function() {
-                timer_state("stopped") # stop the timer
+                process_counter(process_counter()-1) # stop the timer
                 message("Error: Process completed with an error")
                 stderr_output <- process_obj()$read_error_lines()
 
@@ -491,16 +488,20 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             observe(check_process_status())
 
             observe({
-                if (timer_state() == "stopped") {
-                    shinyjs::enable("compute")
-                    shiny::removeUI(selector = "#spinner-container")
-                } else {
-                    shinyjs::disable("compute")
+                if (process_counter() > 0){
                     shiny::insertUI(
                         selector = ".current-dataset",
                         where = "beforeEnd",
                         ui = loading_spinner("Computation in progress...")
                         )
+                } else if (process_counter() == 0){
+                    shiny::removeUI(selector = "#spinner-container")
+                }
+                
+                if (process_counter() < MAX_PROCESS_COUNT) {
+                    shinyjs::enable("compute")
+                } else {
+                    shinyjs::disable("compute")
                 }
                 })
 
