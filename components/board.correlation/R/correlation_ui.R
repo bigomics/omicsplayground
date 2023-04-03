@@ -71,13 +71,6 @@ CorrelationUI <- function(id) {
             width = c("auto", "100%")
           )
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b>
-                <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene.
-                <b>(b)</b> <b>Correlation table</b> of correlation and partial
-                correlation with respect to selected gene. <b>(c)</b> <b>Scatter plots</b> of gene
-                expression of top correlated genes.")
       )
     ),
     shiny::tabPanel(
@@ -92,11 +85,6 @@ CorrelationUI <- function(id) {
           class = "col-md-6",
           correlation_plot_correlation_UMAP_ui(ns("cor_umap"))
         )
-      ),
-      div(
-        HTML("Visualization of gene correlation as network or UMAP. <b>
-            (a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b>
-            <b>Correlation UMAP</b>. Clustering of genes  colored by correlation (or covariance).")
       )
     )
   )
