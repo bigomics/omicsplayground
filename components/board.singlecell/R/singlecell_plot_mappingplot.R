@@ -41,10 +41,10 @@ singlecell_plot_mappingplot_ui <- function(id,
     )
   )
 
-  mapping_info <- "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
-
-  PlotModuleUI(ns("plot"),
+  mapping_info <- "<b>(a) Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
+ 
+  PlotModuleUI(
+    id = ns("plot"),
     label = label,
     info.text = mapping_info,
     options = mapping.opts,
