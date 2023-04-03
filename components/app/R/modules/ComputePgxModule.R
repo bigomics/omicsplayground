@@ -419,23 +419,27 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 
 
                 if(is.null(process_obj())) {
-                    process_obj(list(list(
-                        process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
-                        dataset_name = gsub("[ ]","_",input$upload_name),
-                        temp_dir = temp_dir())))
-                } else {
-                    process_obj(list(
-                        process_obj(),
+                    process_obj(
                         list(
-                            process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
-                            dataset_name = gsub("[ ]","_",input$upload_name),
-                            temp_dir = temp_dir())))
+                            list(
+                                process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                                dataset_name = gsub("[ ]","_",input$upload_name),
+                                temp_dir = temp_dir())))
+                } else {
+                    process_obj(
+                        append(
+                            process_obj(),
+                            list(
+                                list(
+                                    process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                                    dataset_name = gsub("[ ]","_",input$upload_name),
+                                    temp_dir = temp_dir())
+                                ))
+                            )
                 }
             })
 
             check_process_status <- reactive({
-
-                browser()
                 if (process_counter() == 0) {
                     return(NULL)
                 }
@@ -443,9 +447,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 reactive_timer()
 
                 active_processes <- process_obj()
+
+                browser()
                 completed_indices <- c()
 
                 for (i in seq_along(active_processes)) {
+                    #i=1
                     current_process <- active_processes[[i]]$process
                     temp_dir <- active_processes[[i]]$temp_dir
 
