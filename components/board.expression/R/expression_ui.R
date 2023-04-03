@@ -76,6 +76,7 @@ ExpressionUI <- function(id) {
             id = ns("tabs1"),
             shiny::tabPanel(
               "Plot",
+              shinyjqui::jqui_sortable(              
               bslib::layout_column_wrap(
                 width = 1/4,
                 expression_plot_volcano_ui(ns("plots_volcano"),
@@ -101,7 +102,7 @@ ExpressionUI <- function(id) {
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
                 )
-              )
+              ))
             ),
             shiny::tabPanel(
               "Top genes",
