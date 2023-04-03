@@ -416,15 +416,20 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 dbg("[compute PGX process] : starting process")
                 process_counter(process_counter() + 1)
 
-                new_process <- list(
-                    process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
-                    dataset_name = gsub("[ ]","_",input$upload_name),
-                    temp_dir = temp_dir())
+                
 
                 if(is.null(process_obj())) {
-                    process_obj(list(new_process))
+                    process_obj(list(list(
+                        process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                        dataset_name = gsub("[ ]","_",input$upload_name),
+                        temp_dir = temp_dir())))
                 } else {
-                    process_obj(list(process_obj(),new_process))
+                    process_obj(list(
+                        process_obj(),
+                        list(
+                            process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                            dataset_name = gsub("[ ]","_",input$upload_name),
+                            temp_dir = temp_dir())))
                 }
             })
 
