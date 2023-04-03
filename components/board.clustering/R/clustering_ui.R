@@ -112,14 +112,6 @@ ClusteringUI <- function(id) {
             label = "",
             height = c(fullH, "70vh"),
             parent = ns
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
-                          samples as a scatterplot in reduced dimension (2D or 3D).
-                          Samples that are similar are clustered near to each other, while samples with different
-                          expression are positioned farther away. Groups of samples with similar profiles
-                          will appear as <i>clusters</i> in the plot.")
           )
         ),
         shiny::tabPanel(
