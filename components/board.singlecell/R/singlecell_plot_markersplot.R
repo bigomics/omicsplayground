@@ -164,7 +164,7 @@ singlecell_plot_markersplot_server <- function(id,
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
       NP <- 25
-      if (mrk_level == "gene") NP <- 36
+      if (mrk_level == "geneset") NP <- 16
       top.gx <- head(gx, NP) ## match number of plot below!
       if (mrk_sortby == "name") {
         top.gx <- top.gx[order(rownames(top.gx)), , drop = FALSE]
@@ -194,7 +194,7 @@ singlecell_plot_markersplot_server <- function(id,
 
       ## make smaller dots when more points
       cex1 <- 1.0
-      cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+      cex1 <- 0.85 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
       klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
@@ -237,7 +237,7 @@ p
           ylim = 1.2*range(pos[,2]),
           axis = FALSE,
           title = tt,
-          cex.title = 0.90,
+          cex.title = 0.95,
           ##title.y = 0.85,
           ##cex.clust = cex1*0.8,
           label.clusters = FALSE,
