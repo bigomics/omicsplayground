@@ -19,8 +19,8 @@ signature_table_enrich_by_contrasts_ui <- function(id, width, height) {
 }
 
 signature_table_enrich_by_contrasts_server <- function(id,
-                                                       sigCalculateGSEA,
-                                                       tabH) {
+                                                       sigCalculateGSEA
+                                                       ) {
   moduleServer(id, function(input, output, session) {
     enrichmentContrastTable.RENDER <- shiny::reactive({
       gsea <- sigCalculateGSEA()

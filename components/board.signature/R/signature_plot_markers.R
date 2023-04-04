@@ -35,7 +35,9 @@ signature_plot_markers_ui <- function(id, height) {
     ),
   )
 
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(
+    id = ns("plot"),
+    plotlib = "plotly",
     title = "Markers plot",
     options = markers.opts,
     info.text = info_text,
@@ -58,6 +60,7 @@ signature_plot_markers_server <- function(id,
                                           IMMCHECK.GENES,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    
     calcSingleSampleValues <- function(X, y, method = c("rho", "gsva")) {
       ##
       ## Calculates single-sample enrichment values for given matrix and
@@ -156,22 +159,23 @@ signature_plot_markers_server <- function(id,
       ss1 <- calcSingleSampleValues(X[, ], y, method = c("rho"))
       ss.bysample <- cbind(rho = ss1)
 
-      res <- list(by.sample = ss.bysample, by.group = ss.bygroup)
+      res <- list(
+        by.sample = ss.bysample,
+        by.group = ss.bygroup
+      )
       return(res)
     })
 
-    markers.RENDER <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+    get_plots <- function() {
 
-      markers <- pgx$families[[2]]
-      markers <- COLLECTIONS[[10]]
+      ## get markers
       markers <- getCurrentMarkers()
-      if (is.null(markers)) {
-        return(NULL)
-      }
+      shiny::req(markers)
 
+      ## get GSVA values
+      res <- getSingleSampleEnrichment()
+      shiny::req(res)
+      
       level <- "gene"
       xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
       jj <- match(toupper(markers), toupper(xgene))
@@ -191,12 +195,7 @@ signature_plot_markers_server <- function(id,
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
-      ## ---------------- get GSVA values
-      res <- getSingleSampleEnrichment()
-      if (is.null(res)) {
-        return(NULL)
-      }
-
+      ## get GSVA values and make some non-linear value fc1
       S <- res$by.sample
       if (NCOL(S) == 1) {
         fc <- S[, 1]
@@ -211,17 +210,10 @@ signature_plot_markers_server <- function(id,
       cex1 <- 1.2
       cex1 <- 0.7 * c(1.6, 1.2, 0.8, 0.5)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
       cex2 <- ifelse(level == "gene", 1, 0.8)
-      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
 
       nmax <- NULL
-      if (input$markers_layout == "6x6") {
-        nmax <- 35
-        par(mfrow = c(6, 6), mar = c(0, 0.2, 0.5, 0.2), oma = c(2, 1, 2, 1) * 0.8)
-      }
-      if (input$markers_layout == "4x4") {
-        nmax <- 15
-        par(mfrow = c(4, 4), mar = c(0, 0.2, 0.5, 0.2), oma = c(2, 1, 2, 1) * 0.8)
-      }
+      if (input$markers_layout == "6x6")  nmax <- 35
+      if (input$markers_layout == "4x4")  nmax <- 15
 
       top.gx <- head(gx, nmax)
       if (input$markers_sortby == "name") {
@@ -235,13 +227,18 @@ signature_plot_markers_server <- function(id,
         top.gx <- top.gx[order(-rho), , drop = FALSE]
       }
 
+      plt <- list()
+      i=0
       for (i in 0:min(nmax, nrow(top.gx))) {
         jj <- 1:ncol(top.gx)
         if (i == 0) {
-          klr1 <- BLUERED(16)[8 + round(7 * fc1)]
+          klrpal <- BLUERED(16)
+          colvar <- fc1
+          klr1 <- klrpal[8 + round(7 * fc1)]
           tt <- "INPUT SIGNATURE"
           jj <- order(abs(fc1))
         } else {
+          klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
           colvar <- pmax(top.gx[i, ], 0)
           colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
           klr1 <- klrpal[colvar]
@@ -251,24 +248,79 @@ signature_plot_markers_server <- function(id,
         }
         klr1 <- paste0(gplots::col2hex(klr1), "99")
 
-        base::plot(pos[jj, ],
-          pch = 19, cex = cex1, col = klr1[jj],
-          xlim = 1.2 * range(pos[, 1]), ylim = 1.2 * range(pos[, 2]),
-          fg = gray(ifelse(i == 0, 0.1, 0.8)), bty = "o",
-          xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
+        ## ------- start plot ----------       
+        ## base::plot(pos[jj, ],
+        ##   pch = 19, cex = cex1, col = klr1[jj],
+        ##   xlim = 1.2 * range(pos[, 1]), ylim = 1.2 * range(pos[, 2]),
+        ##   fg = gray(ifelse(i == 0, 0.1, 0.8)), bty = "o",
+        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
+        ## )
+        ## legend("topleft", tt,
+        ##   cex = cex2, col = "grey30", text.font = ifelse(i == 0, 2, 1),
+        ##   inset = c(-0.1, -0.05), bty = "n"
+        ## )
+        
+        p <- pgx.scatterPlotXY.PLOTLY(
+          pos[jj,],
+          var = colvar[jj],
+          col = klrpal,
+          cex = 1.0*cex1,
+          xlab = "",
+          ylab = "",
+          xlim = 1.2*range(pos[,1]),
+          ylim = 1.2*range(pos[,2]),
+          axis = FALSE,
+          title = tt,
+          cex.title = cex*0.85,
+          title.y = 0.86,
+#         cex.clust = cex*0.8,
+          label.clusters = FALSE,
+          legend = FALSE,
+          gridcolor = 'fff'
+        ) %>% plotly::layout(
+          ## showlegend = TRUE,
+          plot_bgcolor = "#f8f8f8"
         )
-        legend("topleft", tt,
-          cex = cex2, col = "grey30", text.font = ifelse(i == 0, 2, 1),
-          inset = c(-0.1, -0.05), bty = "n"
-        )
+        plt[[i+1]] <- p
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+      ##p <- grDevices::recordPlot()
+      return(plt)
+    }
 
+
+    plotly.RENDER <- function() {
+      plt <- get_plots()
+      shiny::req(plt)        
+      nr  <- ceiling(sqrt(length(plt)))
+
+      fig <- plotly::subplot(
+        plt,
+        nrows = nr,
+        margin = 0.01
+      ) %>%
+        plotly_default() %>%
+        plotly::layout(
+          title = list(text="genes in signature", size=12)
+        )
+##        margin = c(l=0,r=0,b=0,t=30) # lrbt
+      return(fig)
+    }
+
+    plotly.RENDER_MODAL <- function() {
+      fig <- plotly.RENDER() %>%
+        plotly_modal_default() %>%
+        plotly::layout(
+          margin = list(l=0,r=0,b=0,t=50), # lfbt  
+          title = list(size=18)
+        ) 
+      return(fig)
+    }
+    
     PlotModuleServer(
       "plot",
-      func = markers.RENDER,
+      func = plotly.RENDER,
+      func2 = plotly.RENDER_MODAL,
+      plotlib = "plotly",
       res = c(100, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

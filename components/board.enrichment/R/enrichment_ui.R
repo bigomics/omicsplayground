@@ -85,12 +85,6 @@ EnrichmentUI <- function(id) {
               width = c("auto", "100%")
             )
           )
-        ),
-        div(
-          HTML(
-            "<b>(a)</b> <b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score.",
-            "<b>(b)</b> <strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
-          )
         )
       ),
       shiny::tabPanel(
@@ -129,14 +123,6 @@ EnrichmentUI <- function(id) {
               width = c("auto", 900)
             )
           )
-        ),
-        shiny::br(),
-        tags$div(
-          HTML("<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>).
-                    <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively.
-                    Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups.
-                    <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression
-                    of the selected geneset and gene, on the y and x axes, respectively.")
         )
       ),
       shiny::tabPanel(
@@ -145,11 +131,6 @@ EnrichmentUI <- function(id) {
           ns("compare"),
           height = c(imgH, 450),
           width = c("auto", 1500)
-        ),
-        tags$div(
-          HTML("<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>)
-                    across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set
-                    across all other comparisons.")
         )
       ),
       shiny::tabPanel(
@@ -161,12 +142,6 @@ EnrichmentUI <- function(id) {
             ns("volcanoAll"),
             height = c(imgH, 450),
             width = c("auto", "100%")
-          ),
-          tags$div(
-            HTML("<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene
-                    set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus
-                    significance on the x and y axes, respectively. Experimental contrasts showing better statistical
-                    significance will show volcano plots with 'higher' wings.")
           )
         )
       ),
@@ -176,26 +151,13 @@ EnrichmentUI <- function(id) {
           ns("volcanoMethods"),
           height = c(imgH, 450),
           width = c("auto", "100%")
-        ),
-        tags$div(
-          HTML("<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene
-                    sets for different enrichment methods. Methods showing better statistical
-                    significance will show volcano plots with 'higher' wings.")
         )
       )
     ),
-    br(),
-    br(),
     shiny::tabsetPanel(
       id = ns("tabs2"),
       shiny::tabPanel(
         "Table",
-        tags$div(
-          HTML("<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene
-                    set enrichment analysis for selected contrast. The number of stars indicate how many methods
-                    identified the geneset significant. <b>(II)</b> Table showing the fold-change,
-                    statistics and correlation of the genes in the selected gene set.")
-        ),
         div(
           class = "row",
           div(
@@ -218,11 +180,6 @@ EnrichmentUI <- function(id) {
       ),
       shiny::tabPanel(
         "Foldchange (all)",
-        div(
-          shiny::HTML("<b>Enrichment for all contrasts.</b> Table summarizing the enrichment
-                      for all gene sets across all contrasts. The column `fc.var` corresponds
-                      to the variance of the gene set across all contrasts.")
-        ),
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
           height = c(295, TABLE_HEIGHT_MODAL),
@@ -231,11 +188,6 @@ EnrichmentUI <- function(id) {
       ),
       shiny::tabPanel(
         "FDR table",
-        div(
-          shiny::HTML("<b>FDR table.</b> Number of significant gene sets versus different
-                      FDR thresholds, for all contrasts and all methods. The blue color
-                      denote the number of downregulated genes, the red color for upregulated genes.")
-        ),
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
           height = c(295, TABLE_HEIGHT_MODAL),

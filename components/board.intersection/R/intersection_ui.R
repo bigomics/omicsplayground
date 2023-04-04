@@ -56,20 +56,18 @@ IntersectionUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-6",
-          intersection_scatterplot_pairs_ui(ns("scatterplot"))
+          class = "col-md-7",
+          intersection_scatterplot_pairs_ui(
+            id = ns("scatterplot"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)
+          )
         ),
         div(
-          class = "col-md-6",
-          intersection_plot_venn_diagram_ui(ns("venndiagram"))
+          class = "col-md-5",
+          intersection_plot_venn_diagram_ui(
+            id = ns("venndiagram")
+          )
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots
-                for two or more differential expression profiles for multiple selected contrasts.
-                Similar profiles will show high correlation with points close to the diagonal.
-                <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts.
-                <b>(c)</b> <b>Intersection.</b> Genes in the selected overlap region.")
       )
     ),
     shiny::tabPanel(
@@ -77,25 +75,30 @@ IntersectionUI <- function(id) {
       div(
         class = "row",
         div(
-          class = "col-md-6",
-          foldchange_heatmap_ui(ns("FoldchangeHeatmap"))
+          class = "col-md-7",
+          foldchange_heatmap_ui(
+            id = ns("FoldchangeHeatmap"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)            
+          )
         ),
         div(
-          class = "col-md-6",
-          contrast_correlation_ui(ns("ctcorrplot"))
+          class = "col-md-5",
+          contrast_correlation_ui(
+            id = ns("ctcorrplot"),
+            height = c("70vh", TABLE_HEIGHT_MODAL)            
+          )
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Signature heatmap.</b> Similarity of the
-                signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange
-                values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells
-                correspond to the Pearson correlation coefficient. Red corresponds to positive correlation
-                    and blue to negative correlation.")
       ),
     ),
   )
+
+
+  ## return this div
   div(
-    boardHeader(title = "Compare signatures", info_link = ns("info")),
+    boardHeader(
+      title = "Compare signatures",
+      info_link = ns("info")
+    ),
     tabs
   )
 }

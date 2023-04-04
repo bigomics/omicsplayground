@@ -127,10 +127,10 @@ pkg.used <- unique(renv.out$Package)
 pkg.extra <- c(
   "BioBase","SingleCellExperiment","preprocessCore",
   "liger","monocle3","bsutils","reshape","waiter","sever",
-  "RSpectra","SmartSVA","SILGGM","flashClust","sortable",
-  "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne",
+  "RSpectra","SmartSVA","SILGGM","flashClust","ggrepel", "ComplexHeatmap",
+  "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne", "seriation","sortable",
   'wordcloud2', 'optparse', 'docopt',"DT","plotly",
-  'kableExtra', 'shinythemes', 'rworldmap',
+  'kableExtra', 'shinythemes', 'rworldmap',"e1071","mixOmics",
   "HiddenMarkov","coin","rjags","argparse",
   "RcppParallel", "KEGGgraph", 
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
@@ -216,7 +216,7 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 ##---------------------------------------------------------------------
 
 install.pkg('reticulate')
-reticulate::install_miniconda()
+reticulate::install_miniconda(force=TRUE)
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
 reticulate::use_miniconda('r-reticulate')

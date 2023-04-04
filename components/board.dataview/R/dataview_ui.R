@@ -173,16 +173,7 @@ DataViewUI <- function(id) {
           )
         )
       )),
-      tags$div(
-        class = "caption",
-        HTML("<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across
-            the samples/groups.  <b>(a)</b> Total counts per sample or average per group.
-            <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to
-            the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b>
-            Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group.")
-      )
     ),
-
     # counts table tab #####
     shiny::tabPanel(
         "Counts table",
@@ -233,14 +224,6 @@ DataViewUI <- function(id) {
         ns("contrastTable"),
         height = c(500, TABLE_HEIGHT_MODAL),
         width = c("auto", "100%")
-      ),
-      tags$div(
-        class = "caption",
-        HTML(
-          "<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries
-          '+1' and '-1' correspond to the group of interest and control group, respectively. Zero
-          or empty entries denote samples not use for that comparison."
-        )
       )
     ),
 

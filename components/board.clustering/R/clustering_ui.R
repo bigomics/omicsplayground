@@ -112,14 +112,6 @@ ClusteringUI <- function(id) {
             label = "",
             height = c(fullH, "70vh"),
             parent = ns
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
-                          samples as a scatterplot in reduced dimension (2D or 3D).
-                          Samples that are similar are clustered near to each other, while samples with different
-                          expression are positioned farther away. Groups of samples with similar profiles
-                          will appear as <i>clusters</i> in the plot.")
           )
         ),
         shiny::tabPanel(
@@ -131,13 +123,13 @@ ClusteringUI <- function(id) {
                      id = ns("parcoord"),
                      label = "a",
                      width = c("100%", "100%"),
-                     height = c(rowH, 600)
+                     height = c(rowH, TABLE_HEIGHT_MODAL)
                  ),
                  clustering_table_parcoord_ui(
                      id = ns("parcoord"),
                      label = "a",
                      width = c("100%", "100%"),
-                     height = c(rowH, 600)
+                     height = c(rowH, TABLE_HEIGHT_MODAL)
                  )
               ) ## layout   
           ) ## sortable
@@ -152,7 +144,7 @@ ClusteringUI <- function(id) {
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
             label = "a",
-            height = c("45vh", 650),
+            height = c("45vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
@@ -166,7 +158,7 @@ ClusteringUI <- function(id) {
           clustering_plot_phenoplot_ui(
             id = ns("clust_phenoplot"),
             label = "",
-            height = c(fullH, 650)
+            height = c(fullH, TABLE_HEIGHT_MODAL)
           )
         ),
         shiny::tabPanel(
@@ -174,7 +166,7 @@ ClusteringUI <- function(id) {
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
             label = "",
-            height = c(fullH, 650),
+            height = c(fullH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         )

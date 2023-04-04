@@ -91,21 +91,22 @@ drugconnectivity_plot_moa_server <- function(id,
           ),
           x = "x",
           y = "y",
-          yaxistitle = "Enrichment score (NES)",
+          yaxistitle = "Enrichment (NES)",
           xaxistitle = "",
           grouped = FALSE,  ## not really...
-          yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top)))
+          yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top))),
+          xlen = 25
         )
         
         return(p)
       }
 
       plot.RENDER <- function() {
-        plotTopBarplot(12)         
+        plotTopBarplot(14)         
       }
 
       plot.RENDER2 <- function() {
-        plotTopBarplot(22) %>%
+        plotTopBarplot(24) %>%
           plotly::layout(
             font = list( size = 18 )
           )

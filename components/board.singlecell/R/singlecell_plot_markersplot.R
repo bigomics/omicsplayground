@@ -47,10 +47,12 @@ singlecell_plot_markersplot_ui <- function(id,
     )
   )
 
-  markersplot_info <- "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
+  markersplot_info <-
+    "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples.In the plotting options, users can also restrict the marker analysis by selecting a particular group in which genes are divided by biological function, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
 
-
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(
+    id = ns("plotmodule"),
+    plotlib = "plotly",      
     label = label,
     info.text = markersplot_info,
     title = "Expression of marker genes",
@@ -79,11 +81,11 @@ singlecell_plot_markersplot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    markers.plotFUNC <- shiny::reactive({
+    plot_data <- shiny::reactive({
       ## if(!input$tsne.all) return(NULL)
 
       shiny::req(pgx)
-
+      
       mrk_level <- mrk_level()
       mrk_features <- mrk_features()
       mrk_search <- mrk_search()
@@ -160,13 +162,6 @@ singlecell_plot_markersplot_server <- function(id,
       gx <- gx - min(gx, na.rm = TRUE) + 0.01 ## subtract background??
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
-      ## gx <- tanh(gx/sd(gx) ) ## softmax
-      cex1 <- 1.0
-      cex1 <- 0.8 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
-      klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
-      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66")
-
       NP <- 25
       if (mrk_level == "gene") NP <- 36
       top.gx <- head(gx, NP) ## match number of plot below!
@@ -178,53 +173,119 @@ singlecell_plot_markersplot_server <- function(id,
       top.gx <- pmax(top.gx, 0)
       ## top.gx <- tanh(top.gx/mean(top.gx))
 
-      plevel <- "gene"
-      plevel <- mrk_level
+      pd <- list(
+          top.gx = top.gx,
+          pos = pos,
+          mrk_level = mrk_level,
+          mrk_features = mrk_features
+      )
 
-      par(mfrow = c(1, 1) * sqrt(NP), mar = c(0, 0.2, 0.5, 0.2) * 0.6, oma = c(1, 1, 1, 1) * 0.5)
-      par(mfrow = c(1, 1) * sqrt(NP), mar = c(0, 0.2, 0.5, 0.2) * 0.6, oma = c(1, 1, 6, 1) * 0.5)
-      ## par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
+      return(pd)
+    })
+
+    get_plots <- function() {
+
+      pd <- plot_data()
+      shiny::req(pd)
+      top.gx <- pd$top.gx        
+      pos <- pd$pos
+      mrk_level <- pd$mrk_level
+
+      ## make smaller dots when more points
+      cex1 <- 1.0
+      cex1 <- 0.8 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+
+      ## grey to red colorpalette for absolute expression
+      klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
+      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
+      klrpal <- paste0(gplots::col2hex(klrpal), "66")
+
+      plt <- list()
       i <- 1
-      for (i in 1:min(NP, nrow(top.gx))) {
+      for (i in 1:nrow(top.gx)) {
         colvar <- pmax(top.gx[i, ], 0)
         colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
         klr0 <- klrpal[colvar]
-
-        ii <- order(colvar)
-        ## ii <- sample(nrow(pos))
-        base::plot(pos[ii, ],
-          pch = 19, cex = cex1, col = klr0[ii],
-          xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
-          fg = gray(0.8), bty = "o",
-          xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        )
-
-        if (plevel == "gene") {
-          gene <- sub(".*:", "", rownames(top.gx)[i])
-          ## title( gene, cex.main=1.0, line=0.3, col="grey40", font.main=1)
-          legend("topleft",
-            legend = gene, bg = "#AAAAAA88",
-            cex = 1.2, text.font = 1, y.intersp = 0.8,
-            bty = "n", inset = c(-0.05, -0.0)
-          )
+        
+        if (mrk_level == "gene") {
+          label <- sub(".*:", "", rownames(top.gx)[i])
         } else {
           gset <- sub(".*:", "", rownames(top.gx)[i])
-          gset1 <- breakstring(substring(gset, 1, 80), 24, force = TRUE)
-          gset1 <- tolower(gset1)
-          ## title( gset1, cex.main=0.9, line=0.4, col="grey40", font.main=1)
-          legend("topleft",
-            legend = gset1, cex = 0.95, bg = "#AAAAAA88",
-            text.font = 2, y.intersp = 0.8, bty = "n",
-            inset = c(-0.05, -0.0)
-          )
+          label <- breakstring(substring(gset, 1, 80), 24, force = TRUE)
+          label <- tolower(label)
         }
-      }
-      mtext(term, outer = TRUE, cex = 1.0, line = 0.6)
-    })
 
+        ## base::plot(pos[, ],
+        ##   pch = 19, cex = cex1, col = klr0,
+        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
+        ##   fg = gray(0.8), bty = "o",
+        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
+        ## )
+
+        tt <- rownames(top.gx)[i]
+        
+        ## ------- start plot ----------       
+        p <- pgx.scatterPlotXY.PLOTLY(
+          pos,
+          var = colvar,
+          col = klrpal,
+          cex = 0.5*cex1,
+          xlab = "",
+          ylab = "",
+          xlim = 1.2*range(pos[,1]),
+          ylim = 1.2*range(pos[,2]),
+          axis = FALSE,
+          title = tt,
+          cex.title = cex*0.85,
+          title.y = 0.85,
+#         cex.clust = cex*0.8,
+          label.clusters = FALSE,
+          legend = FALSE,
+          gridcolor = 'fff'
+        ) %>% plotly::layout(
+          ## showlegend = TRUE,
+          plot_bgcolor = "#f8f8f8"
+        )
+        plt[[i]] <- p
+      }
+      return(plt)
+    }
+
+    plotly.RENDER <- function() {
+      pd <- plot_data()
+      plt <- get_plots()
+      shiny::req(plt)        
+      nr  <- ceiling(sqrt(length(plt)))
+      title <- pd$mrk_features
+
+      fig <- plotly::subplot(
+        plt,
+        nrows = nr,
+        margin = 0.01
+      ) %>%
+        plotly_default() %>%
+        plotly::layout(
+          title = list(text=title, size=12)
+        )
+##        margin = c(l=0,r=0,b=0,t=30) # lrbt
+      return(fig)
+    }
+
+    plotly_modal.RENDER <- function() {
+      fig <- plotly.RENDER() %>%
+        plotly_modal_default() %>%
+        plotly::layout(
+          margin = list(l=0,r=0,b=0,t=50), # lfbt  
+          title = list(size=18)
+        ) 
+      return(fig)
+    }
+    
     PlotModuleServer(
-      "plot",
-      func = markers.plotFUNC,
+      "plotmodule",
+      func = plotly.RENDER,
+      func2 = plotly_modal.RENDER,
+      plotlib = "plotly",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,
       add.watermark = watermark

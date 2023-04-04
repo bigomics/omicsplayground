@@ -19,13 +19,14 @@ signature_table_genes_in_signature_ui <- function(id, width, height) {
 }
 
 signature_table_genes_in_signature_server <- function(id,
-                                                      getEnrichmentGeneTable,
-                                                      tabH) {
+                                                      getEnrichmentGeneTable
+                                                      ) {
   moduleServer(id, function(input, output, session) {
+
     enrichmentGeneTable.RENDER <- shiny::reactive({
       df <- getEnrichmentGeneTable()
       if (is.null(df)) {
-        shiny::validate(shiny::need(!is.null(df), "Select a signature."))
+        shiny::validate(shiny::need(!is.null(df), "Please select a contrast"))
         return(NULL)
       }
 
