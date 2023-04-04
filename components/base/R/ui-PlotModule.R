@@ -285,7 +285,7 @@ PlotModuleUI <- function(id,
       bslib::card_body(
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
-        div(class="caption", shiny::HTML(as.character(caption)))
+        div(class="caption", shiny::HTML(paste0("<b>", title, "</b>")))
       )
     ) # end of card
     ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
