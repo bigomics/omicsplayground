@@ -42,9 +42,9 @@ dataview_module_geneinfo_server <- function(id,
 
       gene <- toupper(sub(".*:", "", gene))
       eg <- "1017"
-      eg <- names(which(as.list(org.Hs.egSYMBOL) == gene))
-      eg <- mget(gene, envir = org.Hs.egSYMBOL2EG, ifnotfound = NA)[[1]]
-      if (is.na(eg)) eg <- mget(gene, envir = org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
+      eg <- names(which(as.list(org.Hs.eg.db::org.Hs.egSYMBOL) == gene))
+      eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG, ifnotfound = NA)[[1]]
+      if (is.na(eg)) eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
       eg
       eg <- eg[1]
       if (is.null(eg) || length(eg) == 0) {
