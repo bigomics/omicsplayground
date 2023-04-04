@@ -249,7 +249,7 @@ PlotModuleUI <- function(id,
     }
     if(any(class(caption)=="character")) {
         caption <- shiny::HTML(caption)
-        caption <- shiny::div(caption, class="caption")
+        caption <- shiny::span(caption)
     }
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
@@ -285,7 +285,10 @@ PlotModuleUI <- function(id,
       bslib::card_body(
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
-        div(class="caption", shiny::HTML(paste0("<b>", title,".", "</b>"," ", caption)))
+         div(
+          class = "caption",
+           shiny::HTML(paste0("<b>", as.character(title), "</b>", "&nbsp;", as.character(caption)))
+         )
       )
     ) # end of card
     ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
