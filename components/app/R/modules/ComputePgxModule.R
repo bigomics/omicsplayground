@@ -248,7 +248,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             temp_dir <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
-            MAX_PROCESS_COUNT <- 2
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -529,7 +528,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     shiny::removeUI(selector = ".current-dataset > #spinner-container")
                 }
                 
-                if (process_counter() < MAX_PROCESS_COUNT) {
+                if (process_counter() < opt$MAX_DS_PROCESS) {
                     shinyjs::enable("compute")
                 } else {
                     shinyjs::disable("compute")
