@@ -2975,7 +2975,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
                                      title="", title.y=1, gridcolor=NULL,
                                      source=NULL, key=NULL,
-                                     displayModeBar=FALSE, gridcolor=NULL)
+                                     displayModeBar=FALSE)
 {
 
     if(0) {
