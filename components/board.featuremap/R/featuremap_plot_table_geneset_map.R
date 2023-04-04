@@ -81,7 +81,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       nlabel <- as.integer(input$gsmap_nlabel)
       colorby <- input$gsmap_colorby
       
-      F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
       if (colorby == "sd.FC") {
         fc <- (rowMeans(F**2))**0.5
@@ -191,7 +191,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         }))
         is.fc <- FALSE
       } else {
-        F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
+        F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
         is.fc <- TRUE
       }
 

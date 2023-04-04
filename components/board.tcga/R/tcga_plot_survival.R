@@ -65,7 +65,7 @@ tcga_plot_survival_server <- function(id,
     ns <- session$ns
 
     tcga_tcgasurv_test <- reactive({
-      matrix_file <- search_path(c(FILES, FILESX), "tcga_matrix.h5")
+      matrix_file <- playbase::search_path(c(FILES, FILESX), "tcga_matrix.h5")
       if (is.null(matrix_file)) {
         showNotification("FATAL ERROR: could not find tcga_matrix.h5")
         return(NULL)
@@ -76,7 +76,7 @@ tcga_plot_survival_server <- function(id,
       if (sigtype() == "contrast") {
         req(contrast())
 
-        res <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+        res <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
         sig <- res$fc[, contrast()]
       } else if (sigtype() == "genelist") {
         req(genelist())
@@ -88,7 +88,7 @@ tcga_plot_survival_server <- function(id,
       }
 
       showNotification("Computing survival probabilities...")
-      pgx.testTCGAsurvival(
+      playbase::pgx.testTCGAsurvival(
         sig,
         matrix_file,
         lib.dir = FILES,

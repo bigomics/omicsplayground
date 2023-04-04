@@ -71,9 +71,9 @@ clustering_plot_featurerank_server <- function(id,
 
       ## ------------ Just to get current samples
       ## samples = colnames(X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
+      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X <- X[, samples]
-      cvar <- pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
+      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
       cvar <- grep("sample|patient|years|days|months|gender",
         cvar,
         invert = TRUE, value = TRUE
@@ -113,7 +113,7 @@ clustering_plot_featurerank_server <- function(id,
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
-            pp <- filterProbes(pgx$genes, features[[j]])
+            pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
           pp <- intersect(pp, rownames(X))
@@ -159,7 +159,7 @@ clustering_plot_featurerank_server <- function(id,
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
       rownames(S) <- substring(rownames(S), 1, 50)
       
-      pgx.stackedBarplot(
+      playbase::pgx.stackedBarplot(
         x = t(S),
         showlegend = TRUE,
         xlab = "Discriminant score",

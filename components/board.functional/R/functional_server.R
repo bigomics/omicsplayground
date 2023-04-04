@@ -68,7 +68,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       ## ----- get KEGG id
       xml.dir <- file.path(FILES, "kegg-xml")
       kegg.available <- gsub("hsa|.xml", "", dir(xml.dir, pattern = "*.xml"))
-      kegg.ids <- getKeggID(rownames(pgx$gsetX))
+      kegg.ids <- playbase::getKeggID(rownames(pgx$gsetX))
       ## sometimes no KEGG in genesets...
       if (length(kegg.ids) == 0) {
         shinyWidgets::sendSweetAlert(

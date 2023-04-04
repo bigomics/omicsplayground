@@ -127,7 +127,7 @@ expression_plot_volcanoAll_server <- function(id,
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
 
-          plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = pd[["comp"]][i],
             cex.title = 0.85,

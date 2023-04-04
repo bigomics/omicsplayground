@@ -63,8 +63,8 @@ compare_plot_fc_correlation_server <- function(id,
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
+      F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
       g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
       g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]

@@ -53,7 +53,7 @@ dataview_module_geneinfo_server <- function(id,
 
       res <- "(gene info not available)"
       if (length(eg) > 0 && !is.na(eg)) {
-        info <- getHSGeneInfo(eg) ## defined in pgx-functions.R
+        info <- playbase::getHSGeneInfo(eg) ## defined in pgx-functions.R
         info$summary <- "(no info available)"
         if (gene %in% names(GENE.SUMMARY)) {
           info$summary <- GENE.SUMMARY[gene]

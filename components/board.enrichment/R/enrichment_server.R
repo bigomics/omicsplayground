@@ -189,7 +189,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         fx[is.na(fx)] <- 0
 
         is.sig <- (qv <= fdr & abs(fx) >= lfc)
-        stars <- sapply(rowSums(is.sig, na.rm = TRUE), star.symbols, pch = "\u2605")
+        stars <- sapply(rowSums(is.sig, na.rm = TRUE), playbase::star.symbols, pch = "\u2605")
         names(stars) <- rownames(mx)
 
         ## ------------ calculate META parameters ----------------

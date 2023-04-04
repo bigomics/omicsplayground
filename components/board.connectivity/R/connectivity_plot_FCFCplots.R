@@ -114,7 +114,7 @@ connectivity_plot_FCFCplots_server <- function(id,
           gset.both <- c(gset.dn, gset.up)
           rnk <- fc
           pw <- colnames(F)[i]
-          gsea.enplot(abs(rnk), gset.both,
+          playbase::gsea.enplot(abs(rnk), gset.both,
             xlab = "",
             main = pw, cex.main = 0.8, len.main = 32
           )

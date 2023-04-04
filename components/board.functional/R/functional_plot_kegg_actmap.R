@@ -100,7 +100,7 @@ functional_plot_kegg_actmap_server <- function(id,
           ignore.case = TRUE
         ))
         rownames(score2) <- substring(rownames(score2), 1, 40)
-        colnames(score2) <- shortstring(colnames(score2), 30)
+        colnames(score2) <- playbase::shortstring(colnames(score2), 30)
         colnames(score2) <- paste0(colnames(score2), " ")
 
         bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3

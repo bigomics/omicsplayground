@@ -96,7 +96,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
       kk <- 1:nrow(scores)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
       scores <- scores[kk, , drop = FALSE]
       scores <- scores[, which(colSums(scores) > 0), drop = FALSE]
       scores[which(is.na(scores))] <- 0

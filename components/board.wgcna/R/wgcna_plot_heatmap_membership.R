@@ -41,7 +41,7 @@ wgcna_plot_heatmap_membership_server <- function(id,
       rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
       rho3[is.na(rho3) | is.infinite(rho3)] <- 0
 
-      gx.heatmap(rho3,
+      playbase::gx.heatmap(rho3,
         nmax = 50, mar = c(5, 10),
         keysize = 0.5, scale = "none", key = FALSE
       )

@@ -154,9 +154,9 @@ functional_plot_go_network_server <- function(id,
         gr$nodes$label[which(no.score)] <- NA
 
         gr$nodes$shape <- c("box", "circle")[1 + 1 * no.score]
-        gr$nodes$label <- sapply(gr$nodes$label, breakstring, n = 25, nmax = 95, force = TRUE, brk = "\n")
+        gr$nodes$label <- sapply(gr$nodes$label, playbase::breakstring, n = 25, nmax = 95, force = TRUE, brk = "\n")
 
-        gr.def <- sapply(gr$nodes$Definition, breakstring, n = 50, brk = "<br>")
+        gr.def <- sapply(gr$nodes$Definition, playbase::breakstring, n = 50, brk = "<br>")
         gr$nodes$title <- paste0(
           gr$nodes$Term, "  (", gr$nodes$id, ")<br>",
           "<small>", gr.def, "</small>"

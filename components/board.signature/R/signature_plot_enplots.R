@@ -79,10 +79,10 @@ signature_plot_enplots_server <- function(id,
       for (i in 1:min(20, ncol(F))) {
         f <- colnames(F)[i]
         tt <- sub(".*\\]", "", f)
-        tt <- breakstring(substring(tt, 1, 50), 28, force = TRUE)
+        tt <- playbase::breakstring(substring(tt, 1, 50), 28, force = TRUE)
         ylab <- ""
         if (i %% nc == 1) ylab <- "rank metric"
-        gsea.enplot(F[, i], gset,
+        playbase::gsea.enplot(F[, i], gset,
           main = tt, cex.main = cex.main,
           xlab = "", ylab = ylab
         )

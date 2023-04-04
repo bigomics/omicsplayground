@@ -35,9 +35,9 @@ drugconnectivity_table_dsea_server <- function(id,
 
     table.RENDER <- function() {
       res <- table_data()
-      res$moa <- shortstring(res$moa, 60)
-      res$target <- shortstring(res$target, 30)
-      res$drug <- shortstring(res$drug, 60)
+      res$moa <- playbase::shortstring(res$moa, 60)
+      res$target <- playbase::shortstring(res$target, 30)
+      res$drug <- playbase::shortstring(res$drug, 60)
 
       colnames(res) <- sub("moa", "MOA", colnames(res))
       DT::datatable(res,
@@ -63,7 +63,7 @@ drugconnectivity_table_dsea_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("NES",
-          background = color_from_middle(
+          background = playbase::color_from_middle(
             res[, "NES"],
             "lightblue",
             "#f5aeae"

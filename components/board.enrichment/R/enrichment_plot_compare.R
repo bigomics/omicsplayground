@@ -68,9 +68,9 @@ enrichment_plot_compare_server <- function(id,
           gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
-          gs1 <- breakstring(gset, 28, 50, force = FALSE)
+          gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          gsea.enplot(rnk0, genes,
+          playbase::gsea.enplot(rnk0, genes,
             names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
@@ -91,9 +91,9 @@ enrichment_plot_compare_server <- function(id,
           gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
-          gs1 <- breakstring(gset, 28, 50, force = FALSE)
+          gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          gsea.enplot(rnk0, genes,
+          playbase::gsea.enplot(rnk0, genes,
             names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72

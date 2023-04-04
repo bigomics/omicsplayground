@@ -93,7 +93,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         }
         F1 <- head(F, maxgenes)
         par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
-        gx.splitmap(t(F1),
+        playbase::gx.splitmap(t(F1),
           split = 1,
           ## cluster_columns = FALSE,
           cluster_columns = TRUE,

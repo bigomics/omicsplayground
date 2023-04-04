@@ -77,7 +77,7 @@ drugconnectivity_plot_cmap_enplot_server <- function(id,
         rnk <- dsea$stats
         dtype <- sub("[@_].*$", "", names(rnk))
         gmt <- names(rnk)[dtype == d]
-        p1 <- gsea.enplotly(rnk, gmt, main = d)
+        p1 <- playbase::gsea.enplotly(rnk, gmt, main = d)
         return(p1)
       })
 

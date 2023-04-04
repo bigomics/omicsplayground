@@ -75,7 +75,7 @@ enrichment_plot_barplot_server <- function(id,
       ngrp <- length(unique(pgx$samples$group))
       srt <- ifelse(!grouped || ngrp > 4, 30, 0)
       if (!grouped && ncol(pgx$X) > 15) srt <- 60
-      pgx.plotExpression(
+      playbase::pgx.plotExpression(
         pgx, gset,
         comp = comp0,
         logscale = TRUE,
@@ -86,7 +86,7 @@ enrichment_plot_barplot_server <- function(id,
         srt = srt,
         main = "",
         ylab = "enrichment (avg logFC)",
-        xlab = breakstring(gset, 42, 80),
+        xlab = playbase::breakstring(gset, 42, 80),
         plotlib = "plotly"
       )
     }

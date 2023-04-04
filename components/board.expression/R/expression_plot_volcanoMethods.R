@@ -119,7 +119,7 @@ expression_plot_volcanoMethods_server <- function(id,
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
           
-          plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = methods[i],
             cex.title = 0.85,

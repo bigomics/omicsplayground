@@ -85,7 +85,7 @@ biomarker_plot_heatmap_server <- function(id,
         X <- res$X
         splitx <- res$splitx
 
-        gx.splitmap(X,
+        playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
           dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names

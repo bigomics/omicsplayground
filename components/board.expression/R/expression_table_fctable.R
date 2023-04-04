@@ -110,13 +110,13 @@ expression_table_fctable_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 3) %>%
         DT::formatStyle("rms.FC",
           ## background = DT::styleColorBar(c(0,3), 'lightblue'),
-          background = color_from_middle(fc.rms, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(fc.rms, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(fc.cols,
           ## background = DT::styleColorBar(c(0,3), 'lightblue'),
-          background = color_from_middle(F, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(F, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

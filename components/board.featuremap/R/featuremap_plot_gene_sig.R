@@ -41,7 +41,7 @@ featuremap_plot_gene_sig_server <- function(id,
           rowMeans(X[, i, drop = FALSE])
         }))
       } else {
-        F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
+        F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
       }
       if (nrow(F) == 0) {
         return(NULL)

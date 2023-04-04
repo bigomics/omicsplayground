@@ -59,7 +59,7 @@ compare_plot_cum_fc2_server <- function(id,
       F1 <- F1[ii, , drop = FALSE]
       F2 <- F2[ii, , drop = FALSE]
 
-      fig <- pgx.barplot.PLOTLY(
+      fig <- playbase::pgx.barplot.PLOTLY(
         data = data.frame(
           x = factor(rownames(F2), levels = rownames(F2)),
           y = as.numeric(F2)

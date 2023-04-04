@@ -64,7 +64,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ft <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+        ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
       ## if(input$level=="gene") ft = sort(c("<custom>",ft))
@@ -159,12 +159,12 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         if (input$filter == "<custom>") {
           genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
           if (length(genes) > 0) {
-            sel.probes <- filterProbes(pgx$genes, genes)
+            sel.probes <- playbase::filterProbes(pgx$genes, genes)
           }
         } else if (input$filter != "<all>") {
           ## gset <- GSETS[[input$filter]]
           gset.genes <- unlist(getGSETS(input$filter))
-          sel.probes <- filterProbes(pgx$genes, gset.genes)
+          sel.probes <- playbase::filterProbes(pgx$genes, gset.genes)
         }
         sel.probes <- intersect(sel.probes, rownames(fc0))
         fc1 <- fc0[sel.probes, , drop = FALSE]
@@ -214,11 +214,11 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       } else {
         X1 <- pgx$X
         X1 <- (X1 - rowMeans(X1)) / mean(apply(X1, 1, sd, na.rm = TRUE))
-        pos <- pgx.clusterBigMatrix(
+        pos <- playbase::pgx.clusterBigMatrix(
           t(X1),
           methods = "umap", dims = 2, reduce.sd = -1
         )[[1]]
-        pos <- pos.compact(pos)
+        pos <- playbase::pos.compact(pos)
       }
 
       ## ------------ UMAP clustering (genesets) -----------------
@@ -228,17 +228,17 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       } else {
         X2 <- pgx$gsetX
         X2 <- (X2 - rowMeans(X2)) / mean(apply(X2, 1, sd, na.rm = TRUE))
-        gsea.pos <- pgx.clusterBigMatrix(
+        gsea.pos <- playbase::pgx.clusterBigMatrix(
           t(X2),
           methods = "umap", dims = 2, reduce.sd = -1
         )[[1]]
-        gsea.pos <- pos.compact(gsea.pos)
+        gsea.pos <- playbase::pos.compact(gsea.pos)
         dim(gsea.pos)
       }
 
       ## ------------ get signature matrices -----------------
-      F <- pgx.getMetaMatrix(pgx, level = "gene")
-      G <- pgx.getMetaMatrix(pgx, level = "geneset")
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")
+      G <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")
       ## f.score <- F$fc * -log10(F$qv)
       ## g.score <- G$fc * -log10(G$qv)
       f.score <- F$fc * (1 - F$qv)**4 ## q-weighted FC
@@ -337,7 +337,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         zsym <- ifelse(is.nmf, FALSE, TRUE)
         if (min(fc, na.rm = TRUE) >= 0) zsym <- FALSE
 
-        plt <- pgx.scatterPlotXY.BASE(
+        plt <- playbase::pgx.scatterPlotXY.BASE(
           pos,
           var = fc,
           lab.pos = lab.pos,
@@ -446,7 +446,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
         i <- 1
         for (i in 1:ngse) {
-          gsea.barplot(
+          playbase::gsea.barplot(
             gse.scores[[i]],
             names = names(gse.scores[[i]]),
             n = ntop, xlim = xlim,
@@ -482,7 +482,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
           opacity <- ifelse(length(hmarks) > 0, 0.15, 1)
           zsym <- ifelse(min(var, na.rm = TRUE) >= 0, FALSE, TRUE)
 
-          pgx.scatterPlotXY(
+          playbase::pgx.scatterPlotXY(
             pos,
             var = var,
             zsym = zsym, set.par = FALSE, softmax = 1,

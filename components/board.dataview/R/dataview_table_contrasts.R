@@ -94,7 +94,7 @@ dataview_table_contrasts_server <- function(id,
         ) %>%
         DT::formatStyle(
           columns = colnames(dt),
-          background = color_from_middle(c(-1, 1), omics_colors("orange"), omics_colors("brand_blue")),
+          background = playbase::color_from_middle(c(-1, 1), omics_colors("orange"), omics_colors("brand_blue")),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

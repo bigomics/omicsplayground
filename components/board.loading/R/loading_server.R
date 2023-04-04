@@ -255,7 +255,7 @@ LoadingBoard <- function(id,
       }
       info <- NULL
       pdir <- getPGXDIR()
-      info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
         names(aa) <- c(
@@ -276,7 +276,7 @@ LoadingBoard <- function(id,
       }
       info <- NULL
       pdir <- getPGXDIR_SHARED()
-      info <- pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       if (is.null(info)) {
         aa <- rep(NA, 9)
         names(aa) <- c(
@@ -467,7 +467,7 @@ LoadingBoard <- function(id,
         dir.create(tmp2)
 
         exp.matrix <- sign(pgx$model.parameters$exp.matrix)
-        exp.matrix <- contrastAsLabels(exp.matrix) ## new recommended style
+        exp.matrix <- playbase::contrastAsLabels(exp.matrix) ## new recommended style
         exp.matrix[is.na(exp.matrix)] <- ""
 
         write.csv(round(pgx$counts, digits = 2), file = file.path(tmp2, "counts.csv"))
@@ -597,7 +597,7 @@ LoadingBoard <- function(id,
 
       ## ----------------- update PGX object ---------------------------------
       dbg("[loading_server.R] initializing pgx object")
-      loaded_pgx <- pgx.initialize(loaded_pgx)
+      loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
       if (is.null(loaded_pgx)) {
         warning("[LoadingBoard@load_react] ERROR in object initialization\n")
@@ -666,7 +666,7 @@ LoadingBoard <- function(id,
         df$dataset <- gsub("[.]pgx$", " ", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
         df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-        df$description <- shortstring(as.character(df$description), 200)
+        df$description <- playbase::shortstring(as.character(df$description), 200)
         df$nsets <- NULL
         df$organism <- NULL
 
@@ -680,7 +680,7 @@ LoadingBoard <- function(id,
         df$dataset <- gsub("[.]pgx$", " ", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
         df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-        df$description <- shortstring(as.character(df$description), 200)
+        df$description <- playbase::shortstring(as.character(df$description), 200)
         df$nsets <- NULL
         df$organism <- NULL
         rl$pgxTableShared_data <- df

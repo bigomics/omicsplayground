@@ -130,11 +130,11 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
 
         rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
         rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
-        rownames(F) <- shortstring(rownames(F), 72)
+        rownames(F) <- playbase::shortstring(rownames(F), 72)
         maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
         xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
 
-        pgx.stackedBarplot(
+        playbase::pgx.stackedBarplot(
           x = data.frame(F),
           ylab = "cumulative enrichment",
           xlab = "",

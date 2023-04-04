@@ -138,7 +138,7 @@ clustering_plot_splitmap_server <- function(id,
         shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
       }
       if (input$hm_splitby == "phenotype") {
-        cvar <- sort(pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
+        cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
         sel <- cvar[1]
         cvar0 <- grep("^[.]", cvar, value = TRUE, invert = TRUE) ## no estimated vars
         sel <- head(c(
@@ -241,7 +241,7 @@ clustering_plot_splitmap_server <- function(id,
 
       shiny::showNotification("Rendering heatmap...")
       # plt <- grid::grid.grabExpr(
-      gx.splitmap(
+      playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
         scale = scale.mode, show_legend = show_legend,
@@ -303,18 +303,18 @@ clustering_plot_splitmap_server <- function(id,
             ## pgx$genes[g,"map"],". ",
             pgx$genes[g, "gene_title"], "."
           )
-          breakstring2(aa, 50, brk = "<br>")
+          playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
-        tooltips <- breakstring2(aa, 50, brk = "<br>")
+        tooltips <- playbase::breakstring2(aa, 50, brk = "<br>")
       }
       ## genetips = rownames(X)
 
       shiny::showNotification("Rendering iHeatmap...")
 
-      plt <- pgx.splitHeatmapFromMatrix(
+      plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X, annot = annotF, ytips = tooltips,
         idx = idx, splitx = splitx, scale = scale,
         row_annot_width = 0.03, rowcex = rowcex,

@@ -42,9 +42,9 @@ drugconnectivity_table_cmap_server <- function(id,
 
     table.RENDER <- function() {
       res <- table_data()
-      res$moa <- shortstring(res$moa, 30)
-      res$target <- shortstring(res$target, 80)
-      res$drug <- shortstring(res$drug, 60)
+      res$moa <- playbase::shortstring(res$moa, 30)
+      res$target <- playbase::shortstring(res$target, 80)
+      res$drug <- playbase::shortstring(res$drug, 60)
       res$pval <- NULL
       res$padj <- NULL
 
@@ -66,7 +66,7 @@ drugconnectivity_table_cmap_server <- function(id,
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("NES",
-          background = color_from_middle(res[, "NES"], "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(res[, "NES"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

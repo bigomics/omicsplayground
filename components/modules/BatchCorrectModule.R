@@ -344,7 +344,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         dbg("[event:outobj] mp = ",mp)
         dbg("[event:outobj] bp = ",bp)
 
-        out <- pgx.superBatchCorrect(
+        out <- playbase::pgx.superBatchCorrect(
           X = X0,
           pheno = pheno(),
           model.par = mp,

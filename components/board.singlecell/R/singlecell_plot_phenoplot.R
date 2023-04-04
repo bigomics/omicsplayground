@@ -107,7 +107,7 @@ singlecell_plot_phenoplot_server <- function(id,
         y[which(y %in% c(NA, "", " ", "NA", "na"))] <- NA
         if (sum(!is.na(y)) == 0) next
 
-        if (is.num(y)) {
+        if (playbase::is.num(y)) {
           klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
           y <- rank(as.numeric(y))
           ny <- round(1 + 15 * (y - min(y)) / (max(y) - min(y)))
@@ -127,7 +127,7 @@ singlecell_plot_phenoplot_server <- function(id,
         ## )
         ## title(, cex.main = 1.3, line = 0.5, col = "grey40")
         
-        p <- pgx.scatterPlotXY.PLOTLY(
+        p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = y,
           type = "factor", ## always factor?  
