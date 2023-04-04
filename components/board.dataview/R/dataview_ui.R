@@ -89,7 +89,8 @@ DataViewUI <- function(id) {
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
                 height = imgH,
-                label = "a"
+                label = "a",
+                caption = "teste teste teste teste teste teste teste teste"
               )
             ),
             div(

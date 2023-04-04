@@ -3,7 +3,11 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_expression_ui <- function(
+  id, 
+  label = "", 
+  height = c(600, 800),
+  caption) {
   ns <- shiny::NS(id)
 
   info_text <- paste0("<b>Gene expression</b>. Expression barplot of grouped samples (or cells) for the gene selected gene. Samples (or cells) in the barplot can be grouped/ungrouped by setting the <code>grouped</code> under the main options.")
@@ -12,6 +16,7 @@ dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     ns("pltmod"),
     title = "Gene expression",
     label = label,
+    caption = caption,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info_text,
