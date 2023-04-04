@@ -76,7 +76,7 @@ singlecell_plot_phenoplot_server <- function(id,
       ))
     })
 
-    get_plots <- function() {
+    get_plots <- function(cex=1) {
       ## if(!input$tsne.all) return(NULL)
       pd <- plot_data()
       shiny::req(pd)
@@ -132,23 +132,24 @@ singlecell_plot_phenoplot_server <- function(id,
           var = y,
           type = "factor", ## always factor?  
           col = klrpal,
-          cex = 0.5*cex1,
-          xlab = "",
-          ylab = "",
+          cex = 0.5*cex1*cex,
+          xlab = NA,
+          ylab = NA,
           xlim = 1.2*range(pos[,1]),
           ylim = 1.2*range(pos[,2]),
           axis = FALSE,
           title = tolower(pheno[i]),
-          cex.title = 1.2,
-          title.y = 0.9,
-          cex.clust = 1.2,
+          cex.title = 1.2*cex,
+          title.y = 1,
+          cex.clust = 1.2*cex,
           label.clusters = TRUE,
           legend = FALSE,
           gridcolor = 'fff'
         ) %>%
           plotly::layout(
             ## showlegend = TRUE,
-            plot_bgcolor = "#f8f8f8"
+            plot_bgcolor = "#f8f8f8",
+            margin = list(0,0,0,0)
           )
 
         plt[[i]] <- p
@@ -158,7 +159,8 @@ singlecell_plot_phenoplot_server <- function(id,
 
     plotly.RENDER <- function() {
       pd  <- plot_data()  
-      plt <- get_plots() 
+      plt <- get_plots(cex=0.9) 
+      shiny::req(plt)        
       ## layout
       nr = 2
       if (length(plt) > 4) nr = 3
@@ -167,14 +169,19 @@ singlecell_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = 0.01
-      ) %>% plotly_default()
+        ##   margin = 0.02
+        margin = c(0.01,0.01,0.01,0.045)
+      ) %>%
+        plotly_default() %>%
+        plotly::layout(
+          margin = list(l=10,r=10,b=10,t=20) # lrbt
+        ) 
       return(fig)
     }
 
     plotly_modal.RENDER <- function() {
       pd  <- plot_data()  
-      plt <- get_plots() 
+      plt <- get_plots(cex=1.3) 
       ## layout
       nc = 2
       if (length(plt) > 4) nc = 3
@@ -184,8 +191,13 @@ singlecell_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = 0.01
-      ) %>% plotly_modal_default()
+        margin = c(0.01,0.01,0.01,0.045)
+      ) %>% 
+        plotly_modal_default() %>%
+        plotly::layout(
+          margin = list(l=20,r=20,b=20,t=40) # lrbt
+        ) 
+      
       return(fig)
     }
     

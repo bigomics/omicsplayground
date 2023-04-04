@@ -233,7 +233,7 @@ SingleCellBoard <- function(id, pgx) {
       pfGetClusterPositions = pfGetClusterPositions,
       method = shiny::reactive(input$dcmethod),
       refset = shiny::reactive(input$refset),
-      lyo = shiny::reactive(input$layout),
+      layout = shiny::reactive(input$layout),
       sortby = shiny::reactive(input$sortby)
     )
 

@@ -76,7 +76,7 @@ singlecell_plot_icpplot_server <- function(id,
                                            pfGetClusterPositions,
                                            method, # input$dcmethod
                                            refset, # input$refset
-                                           lyo, # input$layout
+                                           layout, # input$layout
                                            sortby, # input$sortby
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -93,7 +93,7 @@ singlecell_plot_icpplot_server <- function(id,
         return(NULL)
       }
       refset <- refset() #
-      lyo <- lyo()
+      layout <- layout()
       sortby <- sortby()
 
       if (!("deconv" %in% names(pgx))) {
@@ -143,7 +143,7 @@ singlecell_plot_icpplot_server <- function(id,
       pd <- list(
           score = score,
           pos = pos,
-          lyo = lyo,
+          layout = layout,
           refset = refset,
           sortby = sortby
       )
@@ -161,8 +161,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      if (pd[["lyo"]] == "4x4") ntop <- 16
-      if (pd[["lyo"]] == "6x6") ntop <- 36
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -215,8 +215,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      if (pd[["lyo"]] == "4x4") ntop <- 16
-      if (pd[["lyo"]] == "6x6") ntop <- 36
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -239,19 +239,21 @@ singlecell_plot_icpplot_server <- function(id,
           pos,
           var = gx,
           col = klrpal,
-          cex = 0.8*cex1,
+          cex = 0.6*cex1,
           xlab = "",
           ylab = "",
           xlim = 1.2*range(pd[["pos"]][, 1]),
           ylim = 1.2*range(pd[["pos"]][, 2]),
-          ##axis = FALSE,
+          axis = FALSE,
           title = tt,
-          cex.title = cex*0.85,
-          ##title.y = 0.9,
+          cex.title = 0.90,
+          ##title.y = 0.85,
           ##cex.clust = cex*0.8,
           label.clusters = FALSE,
           legend = FALSE,
-          barscale = 0.3
+          gridcolor = "#ffffff",
+          bgcolor = "#f8f8f8",          
+          box = TRUE
         ) 
 
         plt[[i]] <- p
@@ -270,8 +272,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      if (pd[["lyo"]] == "4x4") ntop <- 16
-      if (pd[["lyo"]] == "6x6") ntop <- 36
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -306,12 +308,14 @@ singlecell_plot_icpplot_server <- function(id,
 #         cex.clust = cex1*0.8,
           label.clusters = FALSE,
           legend = FALSE,
-          gridcolor = "fff",
-          bgcolor = "#f8f8f8"          
-        ) %>% plotly::layout(
-          plot_bgcolor = "#f8f8f8"
+          box = TRUE,
+          gridcolor = "#ffffff",
+          bgcolor = "#f8f8f8",
+          tooltip = FALSE          
+        ) %>% plotly::style(
+          hoverinfo = 'none'
         )
-        
+
         plt[[i]] <- p
       }
       return(plt)
@@ -321,15 +325,15 @@ singlecell_plot_icpplot_server <- function(id,
       pd <- plot_data()  
       plt <- get_plotly()       
       nr <- 5
-      if (pd[["lyo"]] == "4x4") nr <- 4
-      if (pd[["lyo"]] == "6x6") nr <- 6      
+      if (pd[["layout"]] == "4x4") nr <- 4
+      if (pd[["layout"]] == "6x6") nr <- 6      
       fig <- plotly::subplot(
         plt,
         nrows = nr,
         margin = 0.01
       ) %>% plotly::layout(
-        title = list(text=pd$refset, size=14)
-##        margin = c(l=0,r=0,b=0,t=30) # lrbt
+        title = list(text=pd$refset, size=14),
+        margin = c(l=0,r=0,b=0,t=30) # lrbt
       ) ## %>% plotly_default()
       return(fig)
     }
@@ -347,12 +351,14 @@ singlecell_plot_icpplot_server <- function(id,
       pd <- plot_data()  
       plt <- get_ggplots()       
       nr <- 5
-      if (pd[["lyo"]] == "4x4") nr <- 4
-      if (pd[["lyo"]] == "6x6") nr <- 6      
+      if (pd[["layout"]] == "4x4") nr <- 4
+      if (pd[["layout"]] == "6x6") nr <- 6      
       fig <- gridExtra::grid.arrange(
         grobs = plt,
         nrow = nr,
-        ncol = nr
+        ncol = nr,
+        padding = unit(0.01,"line"),
+        top = textGrob(pd$refset,gp=gpar(fontsize=15))
       )
       return(fig)
     }
