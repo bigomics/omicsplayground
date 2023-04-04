@@ -177,11 +177,8 @@ singlecell_plot_icpplot_server <- function(id,
         gx <- pmax(pd[["score"]][, j], 0)
         gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
         klr0 <- klrpal[gx]
-        ii <- order(gx)
-        pos <- pd[["pos"]][ii,]
-        tt <- colnames(pd[["score"]])[j]
-<<<<<<< HEAD
-        
+        pos <- pd[["pos"]][,]
+        tt <- colnames(pd[["score"]])[j]        
         ii <- sample(nrow(pos))
         base::plot(
            pd[["pos"]][ii, ],
@@ -206,8 +203,6 @@ singlecell_plot_icpplot_server <- function(id,
       refset <- input$refset
       mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)     
     }
-=======
->>>>>>> a47ddeb464941be894fce7cfcd33cd10432a9147
 
     get_ggplots <- function() {
       pd <- plot_data()
