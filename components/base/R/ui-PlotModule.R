@@ -36,7 +36,7 @@ PlotModuleUI <- function(id,
                        options = NULL,
                        label="",
                        caption="",
-                       caption2=info.text, ## header=NULL,
+                       caption2=caption, ## header=NULL,
                        plotlib = "base",
                        plotlib2 = plotlib,
                        outputFunc = NULL,
@@ -175,9 +175,8 @@ PlotModuleUI <- function(id,
     }
 
     header <- shiny::fillRow(
-        flex = c(NA,1,NA,NA,NA,NA),
+        flex = c(1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
-        label,
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
             width = "250px",
@@ -286,7 +285,7 @@ PlotModuleUI <- function(id,
       bslib::card_body(
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
-        div(class="caption", shiny::HTML(info.text))
+        div(class="caption", shiny::HTML(as.character(caption)))
       )
     ) # end of card
     ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
