@@ -4,7 +4,11 @@
 ##
 
 
-dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800), width = c("auto", "100%")) {
+dataview_module_geneinfo_ui <- function(
+  id, label = "", 
+  height = c(600, 800), 
+  width = c("auto", "100%"),
+  caption) {
   ns <- shiny::NS(id)
 
 
@@ -21,7 +25,7 @@ dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800), wi
     outputFunc = htmlOutput,
     outputFunc2 = htmlOutput,
     info.text = info_text,
-    caption = NULL,
+    caption = caption,
     caption2 = NULL,
     options = NULL,
     download.fmt = NULL,

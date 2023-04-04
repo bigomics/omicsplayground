@@ -76,7 +76,8 @@ DataViewUI <- function(id) {
         div(
           class = "col-md-2",
           dataview_module_geneinfo_ui(
-            id = ns("geneinfo")
+            id = ns("geneinfo"),
+            caption = "test test test test test test test test test test test test test"
           ),
         ),
         div(
