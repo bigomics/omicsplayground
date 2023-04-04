@@ -193,7 +193,7 @@ singlecell_plot_markersplot_server <- function(id,
 
       ## make smaller dots when more points
       cex1 <- 1.0
-      cex1 <- 0.8 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+      cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
       klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
@@ -236,15 +236,14 @@ singlecell_plot_markersplot_server <- function(id,
           ylim = 1.2*range(pos[,2]),
           axis = FALSE,
           title = tt,
-          cex.title = cex*0.85,
+          cex.title = cex1*0.5,
           title.y = 0.85,
-#         cex.clust = cex*0.8,
+#         cex.clust = cex1*0.8,
           label.clusters = FALSE,
-          legend = FALSE
-        ) %>% plotly::layout(
-          ## showlegend = TRUE,
-          plot_bgcolor = "#f8f8f8"
-        )
+          legend = FALSE,
+          gridcolor = "fff",
+          bgcolor = "#f8f8f8"                    
+        ) 
         plt[[i]] <- p
       }
       ##mtext(term, outer = TRUE, cex = 1.0, line = 0.6)

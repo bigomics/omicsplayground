@@ -372,8 +372,6 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 ##counts=ngs$counts
 pgx.inferCellCyclePhase <- function(counts)
 {
-
-
     ## List of cell cycle markers, from Tirosh et al, 2015
     ##
     ##cc.genes <- readLines(con = "../opt/seurat/regev_lab_cell_cycle_genes.txt")
