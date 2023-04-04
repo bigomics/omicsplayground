@@ -154,8 +154,6 @@ EnrichmentUI <- function(id) {
         )
       )
     ),
-    br(),
-    br(),
     shiny::tabsetPanel(
       id = ns("tabs2"),
       shiny::tabPanel(

@@ -161,17 +161,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      par(mfrow = c(5, 5), mar = c(0.2, 0.2, 1.8, 0.2), oma = c(1, 1, 1, 1) * 0.8)
-      par(mfrow = c(5, 5), mar = c(0, 0.2, 0.5, 0.2), oma = c(1, 1, 6, 1) * 0.5)
-      if (ncol(pd[["score"]]) > 25) par(mfrow = c(6, 6), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-      if (pd[["lyo"]] == "4x4") {
-        par(mfrow = c(4, 4), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-        ntop <- 16
-      }
-      if (pd[["lyo"]] == "6x6") {
-        par(mfrow = c(6, 6), mar = c(0, 0.2, 0.5, 0.2) * 0.6)
-        ntop <- 36
-      }
+      if (pd[["lyo"]] == "4x4") ntop <- 16
+      if (pd[["lyo"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -189,6 +180,7 @@ singlecell_plot_icpplot_server <- function(id,
         ii <- order(gx)
         pos <- pd[["pos"]][ii,]
         tt <- colnames(pd[["score"]])[j]
+<<<<<<< HEAD
         
         ii <- sample(nrow(pos))
         base::plot(
@@ -214,6 +206,8 @@ singlecell_plot_icpplot_server <- function(id,
       refset <- input$refset
       mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)     
     }
+=======
+>>>>>>> a47ddeb464941be894fce7cfcd33cd10432a9147
 
     get_ggplots <- function() {
       pd <- plot_data()
@@ -320,7 +314,6 @@ singlecell_plot_icpplot_server <- function(id,
           gridcolor = "fff",
           bgcolor = "#f8f8f8"          
         ) %>% plotly::layout(
-          ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
         )
         
@@ -340,7 +333,7 @@ singlecell_plot_icpplot_server <- function(id,
         nrows = nr,
         margin = 0.01
       ) %>% plotly::layout(
-        title = list(text=pd$refset, size=16)
+        title = list(text=pd$refset, size=14)
 ##        margin = c(l=0,r=0,b=0,t=30) # lrbt
       ) ## %>% plotly_default()
       return(fig)

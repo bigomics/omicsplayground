@@ -34,7 +34,7 @@ foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
     info.text = info_text,
     options = FoldchangeHeatmap.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(750, 750),
+    height = height,
     width = c("auto", 1600)
   )
 }
