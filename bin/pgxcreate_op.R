@@ -16,7 +16,7 @@ params_from_op <- file.path(temp_dir,"params.RData")
 if (file.exists(params_from_op)) {
   params <- readRDS(params_from_op)
 } else {
-  yaml::yaml.load_file(file.path(temp_dir,"OPTIONS.yml"))
+  yaml::yaml.load_file(file.path(temp_dir,"PARAMS.yml"))
 }
 
 # Call create_pgx function
