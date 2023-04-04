@@ -3,7 +3,7 @@
 ##
 ## Make PGX file from CSV files
 ##
-## (c) 2023 BigOmics Analytics 
+## (c) 2023 BigOmics Analytics
 ##
 
 message("[compute PGX process] : starting process")
@@ -20,7 +20,7 @@ if (file.exists(params_from_op)) {
 }
 
 # Call create_pgx function
-pgx <- playbase::create_pgx(
+pgx <- playbase::pgx.createPGX(
   counts = params$counts,
   samples = params$samples,
   contrasts = params$contrasts,
@@ -36,8 +36,8 @@ pgx <- playbase::create_pgx(
   cluster.contrasts = params$cluster.contrasts
 )
 
-pgx <- playbase::compute_pgx(
-  pgx = pgx,	
+pgx <- playbase::pgx.computePGX(
+  pgx = pgx,
   max.genes = params$max.genes,
   max.genesets = params$max.genesets,
   gx.methods = params$gx.methods,
