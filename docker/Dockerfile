@@ -41,7 +41,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 
 ## tag docker version
 WORKDIR /omicsplayground
-RUN make version
+RUN make tag.version
 
 #------------------------------------------------------------
 # Install any extra (forgotten...) R packages since base
