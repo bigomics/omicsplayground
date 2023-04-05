@@ -10,7 +10,7 @@ functional_table_reactome_ui <- function(id, label, width, height) {
   info_text <- strwrap("<b>Enrichment table</b> reporting enrichment score for each pathway for the selected contrast profile. Scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.")
 
   TableModuleUI(
-    ns("datasets"),
+    ns("tablemodule"),
     info.text = info_text,
     width = width,
     height = height,
@@ -62,9 +62,9 @@ functional_table_reactome_server <- function(id,
         "https://reactome.org/content/detail/",
         df$reactome.id
       )
-      df$reactome.id <- paste0(
+      df[["reactome.id"]] <- paste0(
         "<a href='", url, "' target='_blank'>",
-        df$reactome.id, "</a>"
+        df[["reactome.id"]], "</a>"
       )
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
@@ -81,16 +81,20 @@ functional_table_reactome_server <- function(id,
         ),
         fillContainer = TRUE,
         options = list(
-          dom = "lfrtip",
+          ## dom = "lfrtip",
+          dom = "ft",          
           scrollX = FALSE,
           scrollY = 150,
           scroller = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          autoWidth = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
-        DT::formatStyle(0,
-          target = "row", fontSize = "11px",
+        DT::formatStyle(
+          0,
+          target = "row",
+          fontSize = "11px",
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("logFC",
@@ -112,7 +116,7 @@ functional_table_reactome_server <- function(id,
     })
 
     my_table <- TableModuleServer(
-      "datasets",
+      "tablemodule",
       func = table_RENDER,
       func2 = table_RENDER_modal,
       selector = "single"

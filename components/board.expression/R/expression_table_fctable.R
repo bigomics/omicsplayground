@@ -14,10 +14,10 @@
 expression_table_fctable_ui <- function(id, width, height) {
   ns <- shiny::NS(id)
 
-  fctable_text <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
+  info_text <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
 
-  fctable_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("fctable_showq"), "show q-values", TRUE),
+  table_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("showq"), "show q-values", FALSE),
       "Show q-values next to FC values.",
       placement = "right", options = list(container = "body")
     )
@@ -25,10 +25,10 @@ expression_table_fctable_ui <- function(id, width, height) {
 
   TableModuleUI(
     ns("datasets"),
-    info.text = fctable_text,
+    info.text = info_text,
     width = width,
     height = height,
-    options = fctable_opts,
+    options = table_opts,
     title = "Gene fold changes for all contrasts"
   )
 }
@@ -63,13 +63,15 @@ expression_table_fctable_server <- function(id,
       F <- metaFC()
       Q <- metaQ()
 
+      ## RMS (non-centered variance)
       fc.rms <- sqrt(F[, 1]**2)
       if (NCOL(F) > 1) {
-        fc.rms <- round(sqrt(rowMeans(F**2)), digits = 4)
+        fc.rms <- round(sqrt(rowMeans(F**2, na.rm = TRUE)), digits = 3)
       }
 
+      ## show q-values??
       show.q <- TRUE
-      show.q <- input$fctable_showq
+      show.q <- input$showq
       df <- NULL
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
@@ -86,7 +88,7 @@ expression_table_fctable_server <- function(id,
       df <- df[order(-df$rms.FC), ]
       colnames(df) <- gsub("_", " ", colnames(df)) ## so it allows wrap line
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
-      qv.cols <- grep("^q", colnames(F1))
+      qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
       ## if(length(qv.cols)==0) qv = 0
 
@@ -107,15 +109,15 @@ expression_table_fctable_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatSignif(columns = fc.cols, digits = 3) %>%
-        DT::formatStyle("rms.FC",
-          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
+        DT::formatSignif(columns = fc.cols, digits = 4) %>%
+        DT::formatStyle(
+          "rms.FC",
           background = color_from_middle(fc.rms, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
-        DT::formatStyle(fc.cols,
-          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
+        DT::formatStyle(
+          fc.cols,
           background = color_from_middle(F, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
@@ -123,15 +125,15 @@ expression_table_fctable_server <- function(id,
 
       if (length(qv.cols) > 0) {
         dt <- dt %>%
-          DT::formatSignif(columns = qv.cols, digits = 3)
+          DT::formatSignif(columns = qv.cols, digits = 4)
       }
-      dt
+      return(dt)
     })
 
     fctable.RENDER_modal <- shiny::reactive({
       dt <- fctable.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
-      dt
+      return(dt)
     })
 
     TableModuleServer(

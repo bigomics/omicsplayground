@@ -492,11 +492,11 @@ ExpressionBoard <- function(id, pgx) {
     )
 
     # reactive values to return to parent environment  #########
-
     metaQ <- shiny::reactive({
       req(pgx)
       methods <- selected_gxmethods()
-      metaQ <- sapply(pgx$gx.meta$meta, function(m) apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      metaQ <- sapply(pgx$gx.meta$meta, function(m)
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
       rownames(metaQ) <- rownames(pgx$gx.meta$meta[[1]])
       metaQ
     })
@@ -509,7 +509,6 @@ ExpressionBoard <- function(id, pgx) {
       rownames(metaFC) <- rownames(pgx$gx.meta$meta[[1]])
       metaFC
     })
-
 
     outx <- list(
       selected_gxmethods = selected_gxmethods
