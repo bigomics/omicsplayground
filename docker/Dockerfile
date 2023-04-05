@@ -48,8 +48,8 @@ RUN make version
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
-#RUN R -e "install.packages(c('RSpectra'))"
-RUN R -e "BiocManager::install(c('SBGNview'))"
+RUN R -e "BiocManager::install(c('SBGNview','org.Hs.eg.db'))"
+RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
