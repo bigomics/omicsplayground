@@ -24,7 +24,7 @@ dataview_plot_phenoassociation_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),
