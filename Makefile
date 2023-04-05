@@ -85,4 +85,4 @@ date = `date +%y%m%d|sed 's/ //g'`
 version = "v3.0-rc3".$(date).$(BRANCH)
 version:
 	@echo "new version ->" $(version)
-#	sed -i "1s/.*/$(version)/" VERSION
+	sed -i "1s/.*/$(version)/" VERSION

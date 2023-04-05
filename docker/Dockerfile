@@ -39,6 +39,10 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
     && chmod -R ugo+rwX /omicsplayground \
     && rm $BRANCH.zip   
 
+## tag docker version
+WORKDIR /omicsplayground
+RUN make version
+
 #------------------------------------------------------------
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
