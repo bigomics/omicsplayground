@@ -70,17 +70,19 @@ functional_table_reactome_server <- function(id,
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
       DT::datatable(df,
-        rownames = FALSE, escape = c(-1, -2),
-        class = "compact cell-border stripe hover",
+        rownames = FALSE,
+        escape = c(-1, -2),
+        ##class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(
-          mode = "single", target = "row",
+          mode = "single",
+          target = "row",
           selected = 1
         ),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE,
+          scrollX = FALSE,
           scrollY = 150,
           scroller = TRUE,
           deferRender = TRUE

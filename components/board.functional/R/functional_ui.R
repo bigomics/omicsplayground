@@ -55,7 +55,7 @@ FunctionalUI <- function(id) {
             label = "a",
             height = c("45vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")            
-          ),
+          ),          
           functional_plot_reactome_actmap_ui(
             ns("reactome_actmap"),
             label = "c",

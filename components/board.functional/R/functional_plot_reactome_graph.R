@@ -23,10 +23,15 @@ functional_plot_reactome_graph_ui <- function(id,
     Each pathway is scored for the selected contrast profile and reported in
     the table below.")
 
-  PlotModuleUI(ns("plot"),
-    title = "Reactome pathway map",
+  PlotModuleUI(
+    id = ns("plotmodule"),
+    title = "Reactome pathway",
     label = label,
-    plotlib = "image",
+    ##    plotlib = "image",
+    plotlib = "generic",
+    plotlib2 = "generic",
+    outputFunc = svgPanZoom::svgPanZoomOutput,
+    outputFunc2 = svgPanZoom::svgPanZoomOutput,
     info.text = info_text,
     info.width = "350px",
     options = NULL,
@@ -53,6 +58,7 @@ functional_plot_reactome_graph_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
 
+      require(SBGNview) ## preload... takes few seconds 
 
       ## plot_data <- shiny::reactive({
       plot_data <- function() {
@@ -166,11 +172,12 @@ functional_plot_reactome_graph_server <- function(id,
         dbg("[functional_plot_reactome_graph.R] head.fc = ",head(fc))
         dbg("[functional_plot_reactome_graph.R] head.names.fc = ",head(names(fc)))
 
-        require(SBGNview)
+        ##require(SBGNview)
         ##data("mapped.ids","pathways.info", "sbgn.xmls")
         ##data("sbgn.xmls", package="SBGNview.data",verbose=1)  ### THIS IS BIG 700MB!!! 
         ##object.size(sbgn.xmls)
-       
+
+        ## this is a trick. the original object in SBGNview.data was 700MB!!
         sbgn.xmls <- dir(sbgn.dir,".sbgn")
         names(sbgn.xmls) <- sbgn.xmls
         
@@ -195,6 +202,7 @@ functional_plot_reactome_graph_server <- function(id,
 
         imgfile="/tmp/hsa00010.png"
         imgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".png"))
+        svgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".svg"))
         file.exists(imgfile)
         dbg("[functional_plot_reactome_graph.R] img.file = ",imgfile)
         dbg("[functional_plot_reactome_graph.R] file.exists = ",file.exists(imgfile))
@@ -211,6 +219,7 @@ functional_plot_reactome_graph_server <- function(id,
 
         list(
           src = imgfile,
+          svg = svgfile,
           contentType = "image/png",
           #width = "100%", height = "100%", ## actual size: 1040x800
           width = img.dim[2], height = img.dim[1], ## actual size
@@ -249,11 +258,12 @@ functional_plot_reactome_graph_server <- function(id,
         client.pixelratio <- 1
         dbg("[functional_plot_reactome_graph.R] client.width=", client.width)
         dbg("[functional_plot_reactome_graph.R] client.height=", client.height)
-        dbg("[functional_plot_reactome_graph.R] client.pixelratio=", client.pixelratio)        
-
+        dbg("[functional_plot_reactome_graph.R] client.pixelratio=", client.pixelratio)
+          
         img <- getPathwayImage()
         shiny::req(img$width, img$height)
-
+        img.svg <- img$svg  
+          
         if(0) {
           res <- calcImageSize(img$height, img$width, client.height, client.width)        
           dbg("[functional_plot_reactome_graph.R] res.width=", res["width"])
@@ -264,18 +274,39 @@ functional_plot_reactome_graph_server <- function(id,
           img$width  <- "100%"
           img$height <- "100%"
         }
-        
-        return(img)
+
+        filename <- img$svg
+        in.svg <-  readChar(filename, nchars = file.info(filename)$size)
+        pz <- svgPanZoom::svgPanZoom(
+          in.svg,
+          controlIconsEnabled = TRUE,
+          zoomScaleSensitivity = 0.8,
+          maxZoom = 20
+        )
+          
+        return(pz)
       }
 
+      ## PlotModuleServer(
+      ##   "plot",
+      ##   plotlib = "image",
+      ##   func = plot_RENDER,
+      ##   func2 = plot_RENDER,
+      ##   csvFunc = plot_data,
+      ##   add.watermark = watermark
+      ## )
+
       PlotModuleServer(
-        "plot",
-        plotlib = "image",
+        "plotmodule",
+        plotlib = "generic",
         func = plot_RENDER,
         func2 = plot_RENDER,
+        renderFunc = svgPanZoom::renderSvgPanZoom,
+        renderFunc2 = svgPanZoom::renderSvgPanZoom,
         csvFunc = plot_data,
         add.watermark = watermark
       )
+
     } ## end of moduleServer
   )
 }

@@ -111,7 +111,7 @@ functional_plot_reactome_actmap_server <- function(id,
           is.corr = FALSE,
           cl.pos = "n",
           col = BLUERED(100),
-          tl.cex = 0.85,
+          tl.cex = 1.0,
           tl.col = "grey20",
           tl.srt = 90,
           mar = c(0, 0, 0.5, 0)
