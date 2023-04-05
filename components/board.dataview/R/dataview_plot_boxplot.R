@@ -4,18 +4,22 @@
 ##
 
 
-dataview_plot_boxplot_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_boxplot_ui <- function(
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text
+  ) {
   ns <- shiny::NS(id)
-
-  menu_grouped <- "<code>grouped</code>"
-  info_text <- paste0("Boxplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ", menu_grouped, " setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Counts distribution",
+    title = title,
     plotlib = "plotly",
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     height = height
   )

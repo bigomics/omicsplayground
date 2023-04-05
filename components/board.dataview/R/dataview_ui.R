@@ -162,14 +162,21 @@ DataViewUI <- function(id) {
           class = "col-lg-6 col-xxl-4 col-xxxl-3",
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
+            label = "a",
+            title = "Total counts",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            caption = "Barplot of the average number of counts (abundance) for each group.",
             height = imgH,
-            label = "a"
+            width =c("auto", "100%")
           )
         ),
         div(
           class = "col-lg-6 col-xxl-4 col-xxxl-3",
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
+            title = "Median counts distribution",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = imgH,
             label = "b"
           )
@@ -178,7 +185,11 @@ DataViewUI <- function(id) {
           class = "col-lg-6 col-xxl-4 col-xxxl-3",
           dataview_plot_histogram_ui(
             ns("counts_histplot"),
+            title = "Density distribution of counts",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            caption = "Density distribution of total counts per sample/group",
             height = imgH,
+            width = c("auto", "100%"),
             label = "c"
           )
         ),
@@ -186,7 +197,11 @@ DataViewUI <- function(id) {
           class = "col-lg-6 col-xxl-5 col-xxxl-3",
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
+            title = "Dataset abundance of major gene types",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
+            caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
             height = imgH,
+            width = c("auto", "100%"),
             label = "d"
           )
         ),
@@ -194,7 +209,12 @@ DataViewUI <- function(id) {
           class = "col-lg-9 col-xxl-7 col-xxxl-5",
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            height = imgH, label = "e"
+            title = "Abundance of major gene types per group",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
+            caption = "Barplot showing the group or sample relative abundance of counts in terms of major gene types.",
+            height = imgH,
+            label = "e",
+            width = c("auto", "100%")
           )
         )
       )),

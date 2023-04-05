@@ -3,23 +3,28 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_totalcounts_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_totalcounts_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  info.text,
+  caption,
+  title) {
   ns <- shiny::NS(id)
-
-  menu_grouped <- "<code>grouped</code>"
-  info_text <- paste("Barplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the", menu_grouped, "setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Total counts",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
