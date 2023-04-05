@@ -19,7 +19,8 @@ FROM bigomics/omicsplayground-base:ub2204
 ENV DEBIAN_FRONTEND noninteractive
 
 #RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-RUN apt update && apt install -y locales
+RUN apt update && apt install -y locales \
+    librsvg2-dev
 
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
