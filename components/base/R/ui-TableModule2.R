@@ -74,7 +74,7 @@ TableModuleUI <- function(id,
     shiny::div(class='tablemodule-title', title=title, title),
     label,
     DropdownMenu(
-      shiny::div(class='tablemodule-info', shiny::HTML(info.text)),
+      shiny::div(class='tablemodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
       width = "250px",      
       size = "xs",
       icon = shiny::icon("info"),
@@ -142,7 +142,7 @@ TableModuleUI <- function(id,
           class = "card-footer", # center the content horizontally and vertically
 ##          height = card_footer_height,
 ##          style = paste0("height:", card_footer_height, "; padding: 2px 0 0 2px;"), # add left and top margin of 2 pixels
-          div(class="caption", shiny::HTML(info.text))
+          div(class="caption", shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(caption))))
       )
   ) ## end of card
   e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
