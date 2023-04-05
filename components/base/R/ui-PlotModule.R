@@ -178,7 +178,7 @@ PlotModuleUI <- function(id,
         flex = c(1,NA,NA,NA,NA),
         shiny::div(class='plotmodule-title', title=title, title),
         DropdownMenu(
-            shiny::div(class='plotmodule-info', shiny::HTML(info.text)),
+            shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
             width = "250px",
             size = "xs",
             icon = shiny::icon("info"),
@@ -287,7 +287,7 @@ PlotModuleUI <- function(id,
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
          div(
           class = "caption",
-           shiny::HTML(paste0("<b>", as.character(title), "</b>", "&nbsp;", as.character(caption)))
+           shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(caption)))
          )
       )
     ) # end of card
