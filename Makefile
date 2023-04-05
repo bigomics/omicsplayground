@@ -38,10 +38,10 @@ docker.run2:
 	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(TAG)
 
 docker: FORCE
-	@echo building docker $(TAG)
-	docker build --no-cache --build-arg TAG=$(TAG) \
+	@echo building docker $(BRANCH)
+	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:$(TAG) .
+	  	-t bigomics/omicsplayground:$(BRANCH) .
 
 docker.base: FORCE
 	@echo building docker BASE
