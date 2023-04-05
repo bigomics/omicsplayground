@@ -1,0 +1,769 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="mitochondrial_matrix" if.within.compartment="">
+      <label text="mitochondrial matrix"/>
+      <bbox w="384.430969915544" h="363.526459553706" x="376.933647447428" y="360.571790374133"/>
+    </glyph>
+    <glyph class="compartment" id="mitochondrial_inner_membrane" if.within.compartment="">
+      <label text="mitochondrial inner membrane"/>
+      <bbox w="1025.69888554429" h="958.002319256703" x="105.5" y="221.5"/>
+    </glyph>
+    <glyph class="compartment" id="go_0005758" if.within.compartment="">
+      <label text="go:0005758"/>
+      <bbox w="92" h="62" x="920.970556080108" y="568.408418243112"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_89fd26055c167d8882e83712657a3950" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <label text="H+"/>
+      <bbox w="40" h="40" x="680.364617362972" y="371.571790374133"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <label text="H2O"/>
+      <bbox w="40" h="40" x="632.015568137763" y="603.279737413515"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_567ab6c2eb6e26572339681e45bf644b" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <label text="ATP"/>
+      <bbox w="40" h="40" x="661.539088387302" y="484.440685618563"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <label text="Pi"/>
+      <bbox w="40" h="40" x="387.933647447428" y="606.079507877312"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <label text="ADP"/>
+      <bbox w="40" h="40" x="554.789910583475" y="510.229322270671"/>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-164840_LEFT_TO_RIGHT" compartmentRef="mitochondrial_matrix" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="562.038975318276" y="686.431583261172"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29" compartmentRef="go_0005758" if.within.compartment="">
+      <label text="H+"/>
+      <bbox w="40" h="40" x="931.970556080108" y="579.408418243112"/>
+    </glyph>
+    <glyph class="complex" id="Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+      <label text="ATPase:ATP"/>
+      <bbox w="317.25" h="281.000000000001" x="716.072085475503" y="824.964218559302"/>
+      <glyph class="macromolecule" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5B"/>
+        <bbox w="70" h="40" x="800.322085475503" y="830.464218559302"/>
+        <glyph class="state variable" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[48 - 529]"/>
+          <bbox w="35" h="17.5" x="800.322085475503" y="821.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5S"/>
+        <bbox w="70" h="40" x="879.072085475503" y="830.464218559302"/>
+        <glyph class="state variable" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[41 - 215]"/>
+          <bbox w="35" h="17.5" x="879.072085475503" y="821.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5L"/>
+        <bbox w="70" h="40" x="957.822085475503" y="830.464218559302"/>
+        <glyph class="state variable" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 103]"/>
+          <bbox w="35" h="17.5" x="957.822085475503" y="821.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5O"/>
+        <bbox w="70" h="40" x="721.572085475503" y="830.464218559302"/>
+        <glyph class="state variable" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[24 - 213]"/>
+          <bbox w="35" h="17.5" x="721.572085475503" y="821.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5A1"/>
+        <bbox w="70" h="40" x="800.322085475503" y="887.964218559302"/>
+        <glyph class="state variable" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[44 - 553]"/>
+          <bbox w="35" h="17.5" x="800.322085475503" y="879.214218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5D"/>
+        <bbox w="70" h="40" x="879.072085475503" y="887.964218559302"/>
+        <glyph class="state variable" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[23 - 168]"/>
+          <bbox w="35" h="17.5" x="879.072085475503" y="879.214218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G2"/>
+        <bbox w="70" h="40" x="957.822085475503" y="887.964218559302"/>
+        <glyph class="state variable" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[67 - 141]"/>
+          <bbox w="35" h="17.5" x="957.822085475503" y="879.214218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="simple chemical" id="SmallMolecule_567ab6c2eb6e26572339681e45bf644b_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP"/>
+        <bbox w="40" h="40" x="721.572085475503" y="879.214218559302"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP8"/>
+        <bbox w="70" h="40" x="800.322085475503" y="945.464218559302"/>
+        <glyph class="state variable" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 68]"/>
+          <bbox w="35" h="17.5" x="800.322085475503" y="936.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5F1"/>
+        <bbox w="70" h="40" x="879.072085475503" y="945.464218559302"/>
+        <glyph class="state variable" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[43 - 256]"/>
+          <bbox w="35" h="17.5" x="879.072085475503" y="936.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G1"/>
+        <bbox w="70" h="40" x="957.822085475503" y="945.464218559302"/>
+        <glyph class="state variable" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[62 - 136]"/>
+          <bbox w="35" h="17.5" x="957.822085475503" y="936.714218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5E"/>
+        <bbox w="70" h="40" x="721.572085475503" y="936.714218559302"/>
+        <glyph class="state variable" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 51]"/>
+          <bbox w="35" h="17.5" x="721.572085475503" y="927.964218559302"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_6650d4565996185179bb70e832239c44_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5I"/>
+        <bbox w="70" h="40" x="800.322085475503" y="1002.9642185593"/>
+        <glyph class="state variable" id="Protein_6650d4565996185179bb70e832239c44_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 69]"/>
+          <bbox w="35" h="17.5" x="800.322085475503" y="994.2142185593"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5C1"/>
+        <bbox w="70" h="40" x="879.072085475503" y="1002.9642185593"/>
+        <glyph class="state variable" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[26 - 298]"/>
+          <bbox w="35" h="17.5" x="879.072085475503" y="994.2142185593"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G3"/>
+        <bbox w="70" h="40" x="957.822085475503" y="1002.9642185593"/>
+        <glyph class="state variable" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[68 - 142]"/>
+          <bbox w="35" h="17.5" x="957.822085475503" y="994.2142185593"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5H"/>
+        <bbox w="70" h="40" x="721.572085475503" y="994.214218559303"/>
+        <glyph class="state variable" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 161]"/>
+          <bbox w="35" h="17.5" x="721.572085475503" y="985.464218559303"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J"/>
+        <bbox w="70" h="40" x="800.322085475503" y="1060.4642185593"/>
+        <glyph class="state variable" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[33 - 108]"/>
+          <bbox w="35" h="17.5" x="800.322085475503" y="1051.7142185593"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J2"/>
+        <bbox w="70" h="40" x="879.072085475503" y="1060.4642185593"/>
+        <glyph class="state variable" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 94]"/>
+          <bbox w="35" h="17.5" x="879.072085475503" y="1051.7142185593"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_b9c9c2298d698a70013fd3468a0482a0" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP6"/>
+        <bbox w="70" h="40" x="957.822085475503" y="1060.4642185593"/>
+        <glyph class="state variable" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_b9c9c2298d698a70013fd3468a0482a0.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 226]"/>
+          <bbox w="35" h="17.5" x="957.822085475503" y="1051.7142185593"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+      <label text="ATPase:ADP:Pi"/>
+      <bbox w="317.25" h="280.999999999998" x="111" y="864.002319256705"/>
+      <glyph class="macromolecule" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5B"/>
+        <bbox w="70" h="40" x="195.25" y="869.502319256705"/>
+        <glyph class="state variable" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[48 - 529]"/>
+          <bbox w="35" h="17.5" x="195.25" y="860.752319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5S"/>
+        <bbox w="70" h="40" x="274" y="869.502319256705"/>
+        <glyph class="state variable" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[41 - 215]"/>
+          <bbox w="35" h="17.5" x="274" y="860.752319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5L"/>
+        <bbox w="70" h="40" x="352.75" y="869.502319256705"/>
+        <glyph class="state variable" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 103]"/>
+          <bbox w="35" h="17.5" x="352.75" y="860.752319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5O"/>
+        <bbox w="70" h="40" x="116.5" y="869.502319256705"/>
+        <glyph class="state variable" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[24 - 213]"/>
+          <bbox w="35" h="17.5" x="116.5" y="860.752319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5A1"/>
+        <bbox w="70" h="40" x="195.25" y="927.002319256705"/>
+        <glyph class="state variable" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[44 - 553]"/>
+          <bbox w="35" h="17.5" x="195.25" y="918.252319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5D"/>
+        <bbox w="70" h="40" x="274" y="927.002319256705"/>
+        <glyph class="state variable" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[23 - 168]"/>
+          <bbox w="35" h="17.5" x="274" y="918.252319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G2"/>
+        <bbox w="70" h="40" x="352.75" y="927.002319256705"/>
+        <glyph class="state variable" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[67 - 141]"/>
+          <bbox w="35" h="17.5" x="352.75" y="918.252319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP8"/>
+        <bbox w="70" h="40" x="116.5" y="927.002319256705"/>
+        <glyph class="state variable" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 68]"/>
+          <bbox w="35" h="17.5" x="116.5" y="918.252319256705"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5F1"/>
+        <bbox w="70" h="40" x="195.25" y="984.502319256703"/>
+        <glyph class="state variable" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[43 - 256]"/>
+          <bbox w="35" h="17.5" x="195.25" y="975.752319256703"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G1"/>
+        <bbox w="70" h="40" x="274" y="984.502319256703"/>
+        <glyph class="state variable" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[62 - 136]"/>
+          <bbox w="35" h="17.5" x="274" y="975.752319256703"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5E"/>
+        <bbox w="70" h="40" x="352.75" y="984.502319256703"/>
+        <glyph class="state variable" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 51]"/>
+          <bbox w="35" h="17.5" x="352.75" y="975.752319256703"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_6650d4565996185179bb70e832239c44_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5I"/>
+        <bbox w="70" h="40" x="116.5" y="984.502319256703"/>
+        <glyph class="state variable" id="Protein_6650d4565996185179bb70e832239c44_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 69]"/>
+          <bbox w="35" h="17.5" x="116.5" y="975.752319256703"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5C1"/>
+        <bbox w="70" h="40" x="195.25" y="1042.0023192567"/>
+        <glyph class="state variable" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[26 - 298]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1033.2523192567"/>
+        </glyph>
+      </glyph>
+      <glyph class="simple chemical" id="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="Pi"/>
+        <bbox w="40" h="40" x="274" y="1033.2523192567"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G3"/>
+        <bbox w="70" h="40" x="352.75" y="1042.0023192567"/>
+        <glyph class="state variable" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[68 - 142]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1033.2523192567"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5H"/>
+        <bbox w="70" h="40" x="116.5" y="1042.0023192567"/>
+        <glyph class="state variable" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 161]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1033.2523192567"/>
+        </glyph>
+      </glyph>
+      <glyph class="simple chemical" id="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ADP"/>
+        <bbox w="40" h="40" x="195.25" y="1090.7523192567"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J"/>
+        <bbox w="70" h="40" x="274" y="1090.7523192567"/>
+        <glyph class="state variable" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[33 - 108]"/>
+          <bbox w="35" h="17.5" x="274" y="1082.0023192567"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J2"/>
+        <bbox w="70" h="40" x="352.75" y="1099.5023192567"/>
+        <glyph class="state variable" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 94]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1090.7523192567"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_40080b5f1268ef3e3097909b4312533d" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP6"/>
+        <bbox w="70" h="40" x="116.5" y="1099.5023192567"/>
+        <glyph class="state variable" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_40080b5f1268ef3e3097909b4312533d.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 226]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1090.7523192567"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+      <label text="ATPase"/>
+      <bbox w="317.25" h="281" x="797.448885544288" y="227"/>
+      <glyph class="macromolecule" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5B"/>
+        <bbox w="70" h="40" x="881.698885544288" y="232.5"/>
+        <glyph class="state variable" id="Protein_2a75b19975b05ec82506f6b8e6694947_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[48 - 529]"/>
+          <bbox w="35" h="17.5" x="881.698885544288" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5S"/>
+        <bbox w="70" h="40" x="960.448885544288" y="232.5"/>
+        <glyph class="state variable" id="Protein_8e30ebddaa299cfc8523c581ed827412_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[41 - 215]"/>
+          <bbox w="35" h="17.5" x="960.448885544288" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5L"/>
+        <bbox w="70" h="40" x="1039.19888554429" y="232.5"/>
+        <glyph class="state variable" id="Protein_984f1dd05bc2b5dc7aa156a8f8b40b21_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 103]"/>
+          <bbox w="35" h="17.5" x="1039.19888554429" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5O"/>
+        <bbox w="70" h="40" x="802.948885544288" y="232.5"/>
+        <glyph class="state variable" id="Protein_b8a90717d9cf6c3e0e4939f59e589618_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[24 - 213]"/>
+          <bbox w="35" h="17.5" x="802.948885544288" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5A1"/>
+        <bbox w="70" h="40" x="881.698885544288" y="290"/>
+        <glyph class="state variable" id="Protein_f7a648dc9d750dcf2a6c021e0acfa7ce_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[44 - 553]"/>
+          <bbox w="35" h="17.5" x="881.698885544288" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5D"/>
+        <bbox w="70" h="40" x="960.448885544288" y="290"/>
+        <glyph class="state variable" id="Protein_c434a28307a85cb03edf81a625be2f34_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[23 - 168]"/>
+          <bbox w="35" h="17.5" x="960.448885544288" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G2"/>
+        <bbox w="70" h="40" x="1039.19888554429" y="290"/>
+        <glyph class="state variable" id="Protein_ccd08d47a6161d63ec75d5082f7a05b1_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[67 - 141]"/>
+          <bbox w="35" h="17.5" x="1039.19888554429" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP8"/>
+        <bbox w="70" h="40" x="802.948885544288" y="290"/>
+        <glyph class="state variable" id="Protein_ca3934ba1a7e9cae7702e2fe972d0285_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 68]"/>
+          <bbox w="35" h="17.5" x="802.948885544288" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5F1"/>
+        <bbox w="70" h="40" x="881.698885544288" y="347.5"/>
+        <glyph class="state variable" id="Protein_1ef2d3d041e07564fa62c78f1b5a9181_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[43 - 256]"/>
+          <bbox w="35" h="17.5" x="881.698885544288" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G1"/>
+        <bbox w="70" h="40" x="960.448885544288" y="347.5"/>
+        <glyph class="state variable" id="Protein_88592010425ac8e954d6c4e5010368d9_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[62 - 136]"/>
+          <bbox w="35" h="17.5" x="960.448885544288" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5E"/>
+        <bbox w="70" h="40" x="1039.19888554429" y="347.5"/>
+        <glyph class="state variable" id="Protein_1738c8b3bad20433620f4306cfe56719_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 51]"/>
+          <bbox w="35" h="17.5" x="1039.19888554429" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_6650d4565996185179bb70e832239c44_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5I"/>
+        <bbox w="70" h="40" x="802.948885544288" y="347.5"/>
+        <glyph class="state variable" id="Protein_6650d4565996185179bb70e832239c44_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 69]"/>
+          <bbox w="35" h="17.5" x="802.948885544288" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5C1"/>
+        <bbox w="70" h="40" x="881.698885544288" y="405"/>
+        <glyph class="state variable" id="Protein_7b486b44a5750dec9f00b2da5e8e6bc1_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[26 - 298]"/>
+          <bbox w="35" h="17.5" x="881.698885544288" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5G3"/>
+        <bbox w="70" h="40" x="960.448885544288" y="405"/>
+        <glyph class="state variable" id="Protein_d3e92a44130669dbda912ad7ccfeedd9_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[68 - 142]"/>
+          <bbox w="35" h="17.5" x="960.448885544288" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5H"/>
+        <bbox w="70" h="40" x="1039.19888554429" y="405"/>
+        <glyph class="state variable" id="Protein_3e64f7321f9b127e9f2af109dbc2de0e_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 161]"/>
+          <bbox w="35" h="17.5" x="1039.19888554429" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J"/>
+        <bbox w="70" h="40" x="802.948885544288" y="405"/>
+        <glyph class="state variable" id="Protein_e5b2b7b74cf2eb5646e890642ac21cdc_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[33 - 108]"/>
+          <bbox w="35" h="17.5" x="802.948885544288" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="ATP5J2"/>
+        <bbox w="70" h="40" x="881.698885544288" y="462.5"/>
+        <glyph class="state variable" id="Protein_cfda02c716ca5b943f74f9baaacb39a7_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[2 - 94]"/>
+          <bbox w="35" h="17.5" x="881.698885544288" y="453.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_34661185ec87a99967c242f94a81621a" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+        <label text="MT-ATP6"/>
+        <bbox w="70" h="40" x="960.448885544288" y="462.5"/>
+        <glyph class="state variable" id="Protein_be8ce3aba23d19d12e3aed71540d1073_Complex_34661185ec87a99967c242f94a81621a.info.1" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+          <state value="x[1 - 226]"/>
+          <bbox w="35" h="17.5" x="960.448885544288" y="453.75"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-164834_LEFT_TO_RIGHT" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="846.233855182322" y="584.517975864515"/>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-164832_LEFT_TO_RIGHT" compartmentRef="mitochondrial_inner_membrane" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="592.782640711907" y="814.168048724386"/>
+    </glyph>
+    <arc class="production" id="reactome_R-HSA-164834_LEFT_TO_RIGHT-output--to--Complex_34661185ec87a99967c242f94a81621a" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="Complex_34661185ec87a99967c242f94a81621a">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="Complex_34661185ec87a99967c242f94a81621a--to--reactome_R-HSA-164840_LEFT_TO_RIGHT-input" source="Complex_34661185ec87a99967c242f94a81621a" target="reactome_R-HSA-164840_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT-input" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-164834_LEFT_TO_RIGHT-output--to--SmallMolecule_567ab6c2eb6e26572339681e45bf644b" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_567ab6c2eb6e26572339681e45bf644b">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28--to--reactome_R-HSA-164840_LEFT_TO_RIGHT-input" source="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28" target="reactome_R-HSA-164840_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-164840_LEFT_TO_RIGHT-output--to--Complex_40080b5f1268ef3e3097909b4312533d" source="reactome_R-HSA-164840_LEFT_TO_RIGHT" target="Complex_40080b5f1268ef3e3097909b4312533d">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-164832_LEFT_TO_RIGHT-output--to--Complex_b9c9c2298d698a70013fd3468a0482a0" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="Complex_b9c9c2298d698a70013fd3468a0482a0">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-164832_LEFT_TO_RIGHT-output--to--SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT-input" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-164834_LEFT_TO_RIGHT-output--to--SmallMolecule_89fd26055c167d8882e83712657a3950" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_89fd26055c167d8882e83712657a3950">
+      <glyph class="cardinality" if.within.compartment="" x="0" y="0">
+        <label text="3"/>
+        <bbox w="20" h="20" x="745.5" y="450.5"/>
+        <bbox w="20" h="20" x="745.5" y="450.5"/>
+      </glyph>
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29--to--reactome_R-HSA-164834_LEFT_TO_RIGHT-input" source="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29" target="reactome_R-HSA-164834_LEFT_TO_RIGHT">
+      <glyph class="cardinality" if.within.compartment="" x="0" y="0">
+        <label text="3"/>
+        <bbox w="20" h="20" x="885.5" y="595.5"/>
+        <bbox w="20" h="20" x="885.5" y="595.5"/>
+      </glyph>
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da--to--reactome_R-HSA-164840_LEFT_TO_RIGHT-input" source="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da" target="reactome_R-HSA-164840_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="209.839777108858" h="23.3155307898731" x="20" y="1169.5023192567"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--Complex_34661185ec87a99967c242f94a81621a" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="Complex_34661185ec87a99967c242f94a81621a" class="production">
+      <source.arc start.x="872" start.y="568" end.x="865" end.y="584" class="consumption"/>
+      <spline s.x="897.000000" s.y="508.000000" c1.x="884.000000" c1.y="539.000000" c2.x="872.000000" c2.y="568.000000" e.x="865.000000" e.y="584.000000"/>
+      <target.arc start.x="884" start.y="539" end.x="897" end.y="508" class="production"/>
+    </arc.spline>
+    <arc.spline id="Complex_34661185ec87a99967c242f94a81621a--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="Complex_34661185ec87a99967c242f94a81621a" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="776" start.y="498" end.x="797" end.y="483" class="consumption"/>
+      <spline s.x="580.000000" s.y="686.000000" c1.x="588.000000" c1.y="665.000000" c2.x="604.000000" c2.y="626.000000" e.x="628.000000" e.y="600.000000"/>
+      <spline s.x="628.000000" s.y="600.000000" c1.x="666.000000" c1.y="557.000000" c2.x="688.000000" c2.y="560.000000" e.x="734.000000" e.y="527.000000"/>
+      <spline s.x="734.000000" s.y="527.000000" c1.x="755.000000" c1.y="513.000000" c2.x="776.000000" c2.y="498.000000" e.x="797.000000" e.y="483.000000"/>
+      <target.arc start.x="588" start.y="665" end.x="580" end.y="686" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="865" start.y="741" end.x="868" end.y="824" class="consumption"/>
+      <spline s.x="868.000000" s.y="824.000000" c1.x="865.000000" c1.y="741.000000" c2.x="861.000000" c2.y="646.000000" e.x="860.000000" e.y="611.000000"/>
+      <target.arc start.x="861" start.y="646" end.x="860" end.y="611" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--SmallMolecule_567ab6c2eb6e26572339681e45bf644b" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_567ab6c2eb6e26572339681e45bf644b" class="production">
+      <source.arc start.x="821" start.y="576" end.x="846" end.y="590" class="consumption"/>
+      <spline s.x="731.000000" s.y="524.000000" c1.x="767.000000" c1.y="545.000000" c2.x="821.000000" c2.y="576.000000" e.x="846.000000" e.y="590.000000"/>
+      <target.arc start.x="767" start.y="545" end.x="731" end.y="524" class="production"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="585" start.y="585" end.x="588" end.y="550" class="consumption"/>
+      <spline s.x="588.000000" s.y="550.000000" c1.x="585.000000" c1.y="585.000000" c2.x="579.000000" c2.y="656.000000" e.x="576.000000" e.y="686.000000"/>
+      <target.arc start.x="579" start.y="656" end.x="576" end.y="686" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-164840_LEFT_TO_RIGHT--to--Complex_40080b5f1268ef3e3097909b4312533d" source="reactome_R-HSA-164840_LEFT_TO_RIGHT" target="Complex_40080b5f1268ef3e3097909b4312533d" class="production">
+      <source.arc start.x="534" start.y="740" end.x="561" end.y="713" class="consumption"/>
+      <spline s.x="561.000000" s.y="713.000000" c1.x="534.000000" c1.y="740.000000" c2.x="471.000000" c2.y="803.000000" e.x="410.000000" e.y="863.000000"/>
+      <target.arc start.x="471" start.y="803" end.x="410" end.y="863" class="production"/>
+    </arc.spline>
+    <arc.spline id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="869" start.y="741" end.x="872" end.y="824" class="consumption"/>
+      <spline s.x="872.000000" s.y="824.000000" c1.x="869.000000" c1.y="741.000000" c2.x="865.000000" c2.y="646.000000" e.x="864.000000" e.y="611.000000"/>
+      <target.arc start.x="865" start.y="646" end.x="864" end.y="611" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-164832_LEFT_TO_RIGHT--to--Complex_b9c9c2298d698a70013fd3468a0482a0" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="Complex_b9c9c2298d698a70013fd3468a0482a0" class="production">
+      <source.arc start.x="638" start.y="844" end.x="619" end.y="834" class="consumption"/>
+      <spline s.x="716.000000" s.y="884.000000" c1.x="675.000000" c1.y="863.000000" c2.x="638.000000" c2.y="844.000000" e.x="619.000000" e.y="834.000000"/>
+      <target.arc start.x="675" start.y="863" end.x="716" end.y="884" class="production"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-164832_LEFT_TO_RIGHT--to--SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" class="production">
+      <source.arc start.x="620" start.y="778" end.x="610" end.y="813" class="consumption"/>
+      <spline s.x="660.000000" s.y="643.000000" c1.x="648.000000" c1.y="685.000000" c2.x="620.000000" c2.y="778.000000" e.x="610.000000" e.y="813.000000"/>
+      <target.arc start.x="648" start.y="685" end.x="660" end.y="643" class="production"/>
+    </arc.spline>
+    <arc.spline id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="495" start.y="885" end.x="428" end.y="921" class="consumption"/>
+      <spline s.x="428.000000" s.y="921.000000" c1.x="495.000000" c1.y="885.000000" c2.x="564.000000" c2.y="849.000000" e.x="592.000000" e.y="834.000000"/>
+      <target.arc start.x="564" start.y="849" end.x="592" end.y="834" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="495" start.y="889" end.x="428" end.y="925" class="consumption"/>
+      <spline s.x="428.000000" s.y="925.000000" c1.x="495.000000" c1.y="889.000000" c2.x="564.000000" c2.y="853.000000" e.x="592.000000" e.y="838.000000"/>
+      <target.arc start.x="564" start.y="853" end.x="592" end.y="838" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--SmallMolecule_89fd26055c167d8882e83712657a3950" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_89fd26055c167d8882e83712657a3950" class="production">
+      <source.arc start.x="835" start.y="567" end.x="848" end.y="584" class="consumption"/>
+      <spline s.x="728.000000" s.y="411.000000" c1.x="743.000000" c1.y="435.000000" c2.x="770.000000" c2.y="476.000000" e.x="794.000000" e.y="511.000000"/>
+      <spline s.x="794.000000" s.y="511.000000" c1.x="812.000000" c1.y="537.000000" c2.x="835.000000" c2.y="567.000000" e.x="848.000000" e.y="584.000000"/>
+      <target.arc start.x="743" start.y="435" end.x="728" end.y="411" class="production"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="911" start.y="598" end.x="931" end.y="598" class="consumption"/>
+      <spline s.x="931.000000" s.y="598.000000" c1.x="911.000000" c1.y="598.000000" c2.x="887.000000" c2.y="598.000000" e.x="873.000000" e.y="598.000000"/>
+      <target.arc start.x="887" start.y="598" end.x="873" end.y="598" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="491" start.y="659" end.x="458" end.y="643" class="consumption"/>
+      <spline s.x="458.000000" s.y="643.000000" c1.x="491.000000" c1.y="659.000000" c2.x="538.000000" c2.y="681.000000" e.x="561.000000" e.y="693.000000"/>
+      <target.arc start.x="538" start.y="681" end.x="561" end.y="693" class="consumption"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>mitochondrial_inner_membrane-compartment.layer.info-mitochondrial_matrix-compartment.layer.info-go_0005758</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--Complex_34661185ec87a99967c242f94a81621a" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="Complex_34661185ec87a99967c242f94a81621a" class="production">
+<source.arc start.x="872" start.y="568" end.x="865" end.y="584" class="consumption"/>
+
+
+<spline s.x="897.000000"  s.y="508.000000" c1.x="884.000000" c1.y="539.000000" c2.x="872.000000" c2.y="568.000000" e.x="865.000000"  e.y="584.000000" />
+<target.arc start.x="884" start.y="539" end.x="897" end.y="508" class="production"/>
+
+</arc.spline>
+<arc.spline id="Complex_34661185ec87a99967c242f94a81621a--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="Complex_34661185ec87a99967c242f94a81621a" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="784" start.y="555" end.x="830" end.y="508" class="consumption"/>
+
+
+<spline s.x="588.000000"  s.y="694.000000" c1.x="608.000000" c1.y="685.000000" c2.x="646.000000" c2.y="667.000000" e.x="675.000000"  e.y="646.000000" />
+<spline s.x="675.000000"  s.y="646.000000" c1.x="729.000000" c1.y="606.000000" c2.x="784.000000" c2.y="555.000000" e.x="830.000000"  e.y="508.000000" />
+<target.arc start.x="608" start.y="685" end.x="588" end.y="694" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="865" start.y="741" end.x="868" end.y="824" class="consumption"/>
+
+
+<spline s.x="868.000000"  s.y="824.000000" c1.x="865.000000" c1.y="741.000000" c2.x="861.000000" c2.y="646.000000" e.x="860.000000"  e.y="611.000000" />
+<target.arc start.x="861" start.y="646" end.x="860" end.y="611" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--SmallMolecule_567ab6c2eb6e26572339681e45bf644b" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_567ab6c2eb6e26572339681e45bf644b" class="production">
+<source.arc start.x="814" start.y="574" end.x="845" end.y="590" class="consumption"/>
+
+
+<spline s.x="701.000000"  s.y="514.000000" c1.x="738.000000" c1.y="534.000000" c2.x="814.000000" c2.y="574.000000" e.x="845.000000"  e.y="590.000000" />
+<target.arc start.x="738" start.y="534" end.x="701" end.y="514" class="production"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="SmallMolecule_ba397033c5b48a2d87a68867e4b3ed28" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="574" start.y="585" end.x="574" end.y="550" class="consumption"/>
+
+
+<spline s.x="574.000000"  s.y="550.000000" c1.x="574.000000" c1.y="585.000000" c2.x="575.000000" c2.y="656.000000" e.x="575.000000"  e.y="686.000000" />
+<target.arc start.x="575" start.y="656" end.x="575" end.y="686" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-164840_LEFT_TO_RIGHT--to--Complex_40080b5f1268ef3e3097909b4312533d" source="reactome_R-HSA-164840_LEFT_TO_RIGHT" target="Complex_40080b5f1268ef3e3097909b4312533d" class="production">
+<source.arc start.x="534" start.y="740" end.x="561" end.y="713" class="consumption"/>
+
+
+<spline s.x="561.000000"  s.y="713.000000" c1.x="534.000000" c1.y="740.000000" c2.x="471.000000" c2.y="803.000000" e.x="410.000000"  e.y="863.000000" />
+<target.arc start.x="471" start.y="803" end.x="410" end.y="863" class="production"/>
+
+</arc.spline>
+<arc.spline id="Complex_b9c9c2298d698a70013fd3468a0482a0--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="Complex_b9c9c2298d698a70013fd3468a0482a0" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="869" start.y="741" end.x="872" end.y="824" class="consumption"/>
+
+
+<spline s.x="872.000000"  s.y="824.000000" c1.x="869.000000" c1.y="741.000000" c2.x="865.000000" c2.y="646.000000" e.x="864.000000"  e.y="611.000000" />
+<target.arc start.x="865" start.y="646" end.x="864" end.y="611" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-164832_LEFT_TO_RIGHT--to--Complex_b9c9c2298d698a70013fd3468a0482a0" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="Complex_b9c9c2298d698a70013fd3468a0482a0" class="production">
+<source.arc start.x="638" start.y="844" end.x="619" end.y="834" class="consumption"/>
+
+
+<spline s.x="716.000000"  s.y="884.000000" c1.x="675.000000" c1.y="863.000000" c2.x="638.000000" c2.y="844.000000" e.x="619.000000"  e.y="834.000000" />
+<target.arc start.x="675" start.y="863" end.x="716" end.y="884" class="production"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-164832_LEFT_TO_RIGHT--to--SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" source="reactome_R-HSA-164832_LEFT_TO_RIGHT" target="SmallMolecule_57995819b7714ee7448fdfbb0e6ef6bc" class="production">
+<source.arc start.x="617" start.y="778" end.x="609" end.y="813" class="consumption"/>
+
+
+<spline s.x="647.000000"  s.y="643.000000" c1.x="638.000000" c1.y="685.000000" c2.x="617.000000" c2.y="778.000000" e.x="609.000000"  e.y="813.000000" />
+<target.arc start.x="638" start.y="685" end.x="647" end.y="643" class="production"/>
+
+</arc.spline>
+<arc.spline id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="495" start.y="885" end.x="428" end.y="921" class="consumption"/>
+
+
+<spline s.x="428.000000"  s.y="921.000000" c1.x="495.000000" c1.y="885.000000" c2.x="564.000000" c2.y="849.000000" e.x="592.000000"  e.y="834.000000" />
+<target.arc start.x="564" start.y="849" end.x="592" end.y="834" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="Complex_40080b5f1268ef3e3097909b4312533d--to--reactome_R-HSA-164832_LEFT_TO_RIGHT" source="Complex_40080b5f1268ef3e3097909b4312533d" target="reactome_R-HSA-164832_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="495" start.y="889" end.x="428" end.y="925" class="consumption"/>
+
+
+<spline s.x="428.000000"  s.y="925.000000" c1.x="495.000000" c1.y="889.000000" c2.x="564.000000" c2.y="853.000000" e.x="592.000000"  e.y="838.000000" />
+<target.arc start.x="564" start.y="853" end.x="592" end.y="838" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-164834_LEFT_TO_RIGHT--to--SmallMolecule_89fd26055c167d8882e83712657a3950" source="reactome_R-HSA-164834_LEFT_TO_RIGHT" target="SmallMolecule_89fd26055c167d8882e83712657a3950" class="production">
+<source.arc start.x="821" start.y="548" end.x="848" end.y="584" class="consumption"/>
+
+
+<spline s.x="715.000000"  s.y="411.000000" c1.x="748.000000" c1.y="453.000000" c2.x="821.000000" c2.y="548.000000" e.x="848.000000"  e.y="584.000000" />
+<target.arc start.x="748" start.y="453" end.x="715" end.y="411" class="production"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29--to--reactome_R-HSA-164834_LEFT_TO_RIGHT" source="SmallMolecule_6543fa2d3aa9919954c3a829a3fa7c29" target="reactome_R-HSA-164834_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="914" start.y="598" end.x="931" end.y="599" class="consumption"/>
+
+
+<spline s.x="931.000000"  s.y="599.000000" c1.x="914.000000" c1.y="598.000000" c2.x="888.000000" c2.y="598.000000" e.x="873.000000"  e.y="598.000000" />
+<target.arc start.x="888" start.y="598" end.x="873" end.y="598" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da--to--reactome_R-HSA-164840_LEFT_TO_RIGHT" source="SmallMolecule_947ea0cd0e4f662723ff538e9d1670da" target="reactome_R-HSA-164840_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="462" start.y="650" end.x="428" end.y="634" class="consumption"/>
+
+
+<spline s.x="428.000000"  s.y="634.000000" c1.x="462.000000" c1.y="650.000000" c2.x="531.000000" c2.y="680.000000" e.x="561.000000"  e.y="693.000000" />
+<target.arc start.x="531" start.y="680" end.x="561" end.y="693" class="consumption"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+
