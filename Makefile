@@ -80,3 +80,9 @@ push.latest:
 	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:latest
 	docker push bigomics/omicsplayground:$(VERSION)
+
+date = `date +%y%m%d|sed 's/ //g'`
+version = "v3.0-rc3".$(date).$(BRANCH)
+version:
+	@echo "new version ->" $(version)
+#	sed -i "1s/.*/$(version)/" VERSION
