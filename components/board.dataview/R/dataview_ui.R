@@ -244,13 +244,21 @@ DataViewUI <- function(id) {
           heights_equal = "row",
           dataview_plot_phenoheatmap_ui(
             ns("phenoheatmap"),
+            title = "Phenotype clustering",
+            info.text = "Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix.",
+            caption = "Clustered heatmap of sample information (i.e. phenotype data)",
             height = imgH,
+            width = c("auto", "100%"),
             label = "a"
           ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
             height = imgH,
-            label = "b"
+            width = c("auto", "100%"),
+            label = "b",
+            title = "Phenotype association",
+            info.text = "Phenotype association matrix. Clustered heatmap of phenotype association. The values correspond to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'.",
+            caption = "Clustered heatmap of phenotype association."
           )
         ),
         bslib::layout_column_wrap(
@@ -258,12 +266,14 @@ DataViewUI <- function(id) {
           dataview_table_samples_ui(
             ns("sampletable"),
             height = c(300, TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
+            width = c("auto", "100%"),
+            title = "Sample information",
+            info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
+            caption = "Phenotype information about the samples." 
           )
         )
       )
     ),
-
 
     # contrasts tab #####
     shiny::tabPanel(

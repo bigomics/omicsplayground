@@ -4,18 +4,22 @@
 ##
 
 
-dataview_table_samples_ui <- function(id, width, height) {
+dataview_table_samples_ui <- function(
+  id,
+  width,
+  height,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables
-                 starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
     width = width,
     height = height,
-    title = "Sample information",
+    title = title,
+    info.text = info.text,
+    caption = caption,
     label = "c"
   )
 }

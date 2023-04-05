@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_phenoassociation_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_phenoassociation_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Phenotype association matrix.</b> Clustered heatmap of phenotype association. The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger correlation/association. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continuous pairs, Pearson's correlation test is used."
 
   opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("phenoclustsamples"), "cluster samples", TRUE),
@@ -17,12 +22,13 @@ dataview_plot_phenoassociation_ui <- function(id, label = "", height = c(600, 80
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Phenotype association",
+    title = title,
     label = label,
     info.text = info_text,
+    caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
