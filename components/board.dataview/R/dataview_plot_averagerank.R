@@ -3,9 +3,13 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_averagerank_ui <- function(id, label = "", height = c(350, 600)) {
+dataview_plot_averagerank_ui <- function(
+  id, 
+  label = "",
+  height = c(350, 600),
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-  info_text <- paste0("Ranking of the selected gene by decreasing average expression.")
 
   PlotModuleUI(
     ns("pltsrv"),
@@ -13,8 +17,9 @@ dataview_plot_averagerank_ui <- function(id, label = "", height = c(350, 600)) {
     label = label,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = c("auto", "100%"),
     height = height

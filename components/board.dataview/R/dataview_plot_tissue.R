@@ -4,11 +4,13 @@
 ##
 
 
-dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_tissue_ui <- function(
+  id,
+  label = "",
+  height = c(600, 800),
+  caption, 
+  info.text) {
   ns <- shiny::NS(id)
-  info_text <- paste(
-    "<b>Tissue expression</b>. Top expressing tissues for the selected gene in the tissue expression ", a_GTEx, " database. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
-  )
 
   PlotModuleUI(
     ns("pltmod"),
@@ -17,7 +19,8 @@ dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = c("auto", "100%"),

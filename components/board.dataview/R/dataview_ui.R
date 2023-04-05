@@ -77,7 +77,9 @@ DataViewUI <- function(id) {
           class = "col-md-2",
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
-            caption = "test test test test test test test test test test test test test"
+            info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
+            caption = "Information about the selected gene and its function from public databases."
+            
           ),
         ),
         div(
@@ -90,7 +92,8 @@ DataViewUI <- function(id) {
                 id = ns("expressionplot"),
                 height = imgH,
                 label = "a",
-                caption = "teste teste teste teste teste teste teste teste"
+                info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
+                caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene."
               )
             ),
             div(
@@ -98,7 +101,10 @@ DataViewUI <- function(id) {
               dataview_plot_averagerank_ui(
                 ns("averagerankplot"),
                 height = imgH,
-                label = "b"
+                label = "b",
+                info.text = "Select the gene or feature of interest under the main Options.",
+                caption = "Ranking of the selected gene by decreasing average expression."
+
               )
             ),
             div(
@@ -106,7 +112,9 @@ DataViewUI <- function(id) {
               dataview_plot_tsne_ui(
                 ns("tsneplot"),
                 height = imgH,
-                label = "c"
+                label = "c",
+                info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
+                caption = "t-SNE of samples colored by expression of selected gene."
               )
             ),
             div(
@@ -114,7 +122,9 @@ DataViewUI <- function(id) {
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 height = imgH,
-                label = "d"
+                label = "d",
+                info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+                caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene."
               )
             ),
             div(
@@ -122,7 +132,9 @@ DataViewUI <- function(id) {
               dataview_plot_tissue_ui(
                 ns("tissueplot"),
                 height = imgH,
-                label = "e"
+                label = "e",
+                info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
+                caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
               )
             )
           )

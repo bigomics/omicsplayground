@@ -5,26 +5,27 @@
 
 
 dataview_module_geneinfo_ui <- function(
-  id, label = "", 
-  height = c(600, 800), 
+  id,
+  label = "", 
+  height = c(600, 800),
   width = c("auto", "100%"),
-  caption) {
+  caption,
+  info.text
+  ) {
   ns <- shiny::NS(id)
 
 
   a_OMIM <- "<a href='https://www.ncbi.nlm.nih.gov/omim/'> OMIM</a>"
   a_KEGG <- "<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
   a_GO <- "<a href='http://geneontology.org/'>Gene Ontology</a>"
-
-  info_text <- paste0("<b>Gene info.</b> Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.")
-
+  
   PlotModuleUI(
     ns("mod"),
     title = "Gene information",
     label = label,
     outputFunc = htmlOutput,
     outputFunc2 = htmlOutput,
-    info.text = info_text,
+    info.text = info.text,
     caption = caption,
     caption2 = NULL,
     options = NULL,

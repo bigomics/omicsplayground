@@ -4,13 +4,12 @@
 ##
 
 dataview_plot_expression_ui <- function(
-  id, 
-  label = "", 
+  id,
+  label = "",
   height = c(600, 800),
-  caption) {
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("<b>Gene expression</b>. Expression barplot of grouped samples (or cells) for the gene selected gene. Samples (or cells) in the barplot can be grouped/ungrouped by setting the <code>grouped</code> under the main options.")
 
   PlotModuleUI(
     ns("pltmod"),
@@ -19,7 +18,7 @@ dataview_plot_expression_ui <- function(
     caption = caption,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     ## width = c("auto","100%"),
     height = height
