@@ -77,9 +77,11 @@ DataViewUI <- function(id) {
           class = "col-md-2",
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
+            title = "Gene information",
             info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
-            caption = "Information about the selected gene and its function from public databases."
-            
+            caption = "Information about the selected gene and its function from public databases.",
+            height = c(600, 800),
+            width = c("auto", "100%")
           ),
         ),
         div(
@@ -92,6 +94,7 @@ DataViewUI <- function(id) {
                 id = ns("expressionplot"),
                 height = imgH,
                 label = "a",
+                title = "Gene expression",
                 info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene."
               )
@@ -102,9 +105,10 @@ DataViewUI <- function(id) {
                 ns("averagerankplot"),
                 height = imgH,
                 label = "b",
+                title = "Average rank",
                 info.text = "Select the gene or feature of interest under the main Options.",
-                caption = "Ranking of the selected gene by decreasing average expression."
-
+                caption = "Ranking of the selected gene by decreasing average expression.",
+                width = c("auto", "100%")
               )
             ),
             div(
@@ -113,8 +117,10 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 height = imgH,
                 label = "c",
+                title = "t-SNE clustering",
                 info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
-                caption = "t-SNE of samples colored by expression of selected gene."
+                caption = "t-SNE of samples colored by expression of selected gene.",
+                width = c("auto", "100%")
               )
             ),
             div(
@@ -123,8 +129,10 @@ DataViewUI <- function(id) {
                 ns("correlationplot"),
                 height = imgH,
                 label = "d",
+                title = "Top correlated genes",
                 info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
-                caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene."
+                caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
+                width = c("auto", "100%")
               )
             ),
             div(
@@ -132,7 +140,9 @@ DataViewUI <- function(id) {
               dataview_plot_tissue_ui(
                 ns("tissueplot"),
                 height = imgH,
+                width = c("auto", "100%"),
                 label = "e",
+                title = "Tissue expression (GTEX)",
                 info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
                 caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
               )
@@ -176,7 +186,8 @@ DataViewUI <- function(id) {
           class = "col-lg-6 col-xxl-5 col-xxxl-3",
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            height = imgH, label = "d"
+            height = imgH,
+            label = "d"
           )
         ),
         div(

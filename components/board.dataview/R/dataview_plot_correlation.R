@@ -6,14 +6,16 @@
 dataview_plot_correlation_ui <- function(
   id, 
   label = "",
-  height = c(600, 800),
+  title,
+  height,
+  width,
   caption,
   info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltsrv"),
-    title = "Top correlated genes",
+    title = title,
     label = label,
     plotlib = "plotly",
     caption = caption,
@@ -22,7 +24,7 @@ dataview_plot_correlation_ui <- function(
     info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

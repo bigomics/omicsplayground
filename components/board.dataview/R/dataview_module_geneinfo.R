@@ -6,9 +6,10 @@
 
 dataview_module_geneinfo_ui <- function(
   id,
-  label = "", 
-  height = c(600, 800),
-  width = c("auto", "100%"),
+  label = "",
+  title,
+  height,
+  width,
   caption,
   info.text
   ) {
@@ -21,7 +22,7 @@ dataview_module_geneinfo_ui <- function(
   
   PlotModuleUI(
     ns("mod"),
-    title = "Gene information",
+    title = title,
     label = label,
     outputFunc = htmlOutput,
     outputFunc2 = htmlOutput,

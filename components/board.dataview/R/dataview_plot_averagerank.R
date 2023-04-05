@@ -6,14 +6,16 @@
 dataview_plot_averagerank_ui <- function(
   id, 
   label = "",
-  height = c(350, 600),
+  height,
+  width,
+  title,
   info.text,
   caption) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltsrv"),
-    title = "Average rank",
+    title = title,
     label = label,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
@@ -21,7 +23,7 @@ dataview_plot_averagerank_ui <- function(
     options = NULL,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

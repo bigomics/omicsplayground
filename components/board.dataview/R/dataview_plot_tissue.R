@@ -7,14 +7,16 @@
 dataview_plot_tissue_ui <- function(
   id,
   label = "",
-  height = c(600, 800),
-  caption, 
+  title,
+  height,
+  width,
+  caption,
   info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Tissue expression (GTEX)",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
@@ -23,7 +25,7 @@ dataview_plot_tissue_ui <- function(
     caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

@@ -6,7 +6,9 @@
 dataview_plot_tsne_ui <- function(
   id,
   label = "",
-  height = c(350, 600),
+  title,
+  height,
+  width,
   caption,
   info.text) {
   ns <- shiny::NS(id)
@@ -16,11 +18,11 @@ dataview_plot_tsne_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height,
     label = label,
     caption = caption,
-    title = "t-SNE clustering"
+    title = title
   )
 }
 

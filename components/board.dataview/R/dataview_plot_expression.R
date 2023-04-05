@@ -6,14 +6,15 @@
 dataview_plot_expression_ui <- function(
   id,
   label = "",
-  height = c(600, 800),
+  height,
+  title,
   caption,
   info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Gene expression",
+    title = title,
     label = label,
     caption = caption,
     outputFunc = plotly::plotlyOutput,
