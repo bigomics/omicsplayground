@@ -19,6 +19,7 @@ dataview_plot_boxplot_ui <- function(
     title = title,
     plotlib = "plotly",
     label = label,
+    caption = caption,
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     height = height
