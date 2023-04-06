@@ -90,7 +90,7 @@ enrichment_plot_volcanoall_server <- function(id,
           sig.gs <- rownames(mx)[which(is.sig)]
           if (!is.null(sel.gsets)) sig.gs <- intersect(sel.gsets, sig.gs)
 
-          gx.volcanoPlot.XY(
+          playbase::gx.volcanoPlot.XY(
             x = mx[, "fc"], pv = mx[, "qv"],
             use.fdr = TRUE, p.sig = fdr, lfc = lfc,
             gene = rownames(mx),

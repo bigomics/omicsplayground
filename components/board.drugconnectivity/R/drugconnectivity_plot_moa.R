@@ -84,7 +84,7 @@ drugconnectivity_plot_moa_server <- function(id,
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
         
-        p <- pgx.barplot.PLOTLY(
+        p <- playbase::pgx.barplot.PLOTLY(
           data = data.frame(
             x = factor(names(moa.top), levels = names(moa.top)),
             y = as.numeric(moa.top)

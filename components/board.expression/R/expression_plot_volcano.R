@@ -166,7 +166,7 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      plt <- plotlyVolcano(
+      plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd[["fc.genes"]],

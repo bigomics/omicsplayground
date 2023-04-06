@@ -42,7 +42,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       }
 
       if (!("GS" %in% colnames(rpt))) rpt <- cbind(GS = rownames(rpt), rpt)
-      if ("GS" %in% colnames(rpt)) rpt$GS <- shortstring(rpt$GS, 72)
+      if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 72)
       if ("size" %in% colnames(rpt)) rpt$size <- as.integer(rpt$size)
 
       fx <- NULL
@@ -52,14 +52,14 @@ enrichment_table_enrichment_analysis_server <- function(id,
       jj <- which(sapply(rpt, is.numeric))
       if (length(jj) > 0) rpt[, jj] <- round(rpt[, jj], digits = 4)
       jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
-      if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, shortstring, 100)
+      if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 100)
 
       if (!input$gs_showqvalues) {
         rpt <- rpt[, grep("^q[.]|^q$", colnames(rpt), invert = TRUE)]
       }
 
       ## wrap genesets names with known links.
-      rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))
+      rpt$GS <- playbase::wrapHyperLink(rpt$GS, rownames(rpt))
       selectmode <- "single"
 
       is.numcol <- sapply(rpt, is.numeric)
@@ -92,7 +92,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         DT::formatSignif(numcols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(fx.col,
-          background = color_from_middle(fx, "lightblue", "#f5aeae")
+          background = playbase::color_from_middle(fx, "lightblue", "#f5aeae")
         )
     })
 

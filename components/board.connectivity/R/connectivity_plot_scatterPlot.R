@@ -158,7 +158,7 @@ connectivity_plot_scatterPlot_server <- function(id,
 
         ## Labels for top 50
         label.text0 <- head(rownames(df)[which(is.sel)], 50)
-        label.text <- shortstring(label.text0, 30)
+        label.text <- playbase::shortstring(label.text0, 30)
         if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
         ## reorder so the selected genes don't get overlapped
@@ -171,7 +171,7 @@ connectivity_plot_scatterPlot_server <- function(id,
         gg <- rownames(df)
         tt <- paste0("<b>", gg, "</b> ", pgx$genes[gg, "gene_title"])
         tt <- gsub("_", " ", tt)
-        tt <- sapply(tt, breakstring2, 50, brk = "<br>")
+        tt <- sapply(tt, playbase::breakstring2, 50, brk = "<br>")
 
         ## plotly
         ##

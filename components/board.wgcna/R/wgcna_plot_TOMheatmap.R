@@ -101,7 +101,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
         col.annot <- ann
         symm <- TRUE
         scale <- "none"
-        gx.heatmap(D,
+        playbase::gx.heatmap(D,
           symm = TRUE, scale = "none",
           dist.method = "euclidean",
           col.dist.method = "euclidean",
@@ -111,7 +111,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
         )
 
 
-        gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
+        playbase::gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
       }
 
       ## add color legend

@@ -80,7 +80,7 @@ foldchange_heatmap_server <- function(id,
 
       plt <- grid::grid.grabExpr({
         frame()
-        heatmapWithAnnot(
+        playbase::heatmapWithAnnot(
           F1,
           anno.type = at,
           bar.height = bh, map.height = mh,

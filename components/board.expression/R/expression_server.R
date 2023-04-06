@@ -52,7 +52,7 @@ ExpressionBoard <- function(id, pgx) {
 
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
-      fam <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
@@ -218,7 +218,7 @@ ExpressionBoard <- function(id, pgx) {
       if (gx_features != "<all>") {
         ## gset <- GSETS[[gx_features]]
         gset <- unlist(getGSETS(gx_features))
-        psel <- filterProbes(pgx$genes, gset)
+        psel <- playbase::filterProbes(pgx$genes, gset)
       }
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]
       dim(res)
@@ -256,7 +256,7 @@ ExpressionBoard <- function(id, pgx) {
       ## just show significant genes
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(input$gx_statmethod)
-        sel <- which(res$stars == star.symbols(n))
+        sel <- which(res$stars == playbase::star.symbols(n))
         res <- res[sel, , drop = FALSE]
       }
 
@@ -492,11 +492,11 @@ ExpressionBoard <- function(id, pgx) {
     )
 
     # reactive values to return to parent environment  #########
-
     metaQ <- shiny::reactive({
       req(pgx)
       methods <- selected_gxmethods()
-      metaQ <- sapply(pgx$gx.meta$meta, function(m) apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      metaQ <- sapply(pgx$gx.meta$meta, function(m)
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
       rownames(metaQ) <- rownames(pgx$gx.meta$meta[[1]])
       metaQ
     })
@@ -509,7 +509,6 @@ ExpressionBoard <- function(id, pgx) {
       rownames(metaFC) <- rownames(pgx$gx.meta$meta[[1]])
       metaFC
     })
-
 
     outx <- list(
       selected_gxmethods = selected_gxmethods

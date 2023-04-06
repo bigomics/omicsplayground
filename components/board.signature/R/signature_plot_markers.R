@@ -243,7 +243,7 @@ signature_plot_markers_server <- function(id,
           colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
           klr1 <- klrpal[colvar]
           gene <- substring(sub(".*:", "", rownames(top.gx)[i]), 1, 80)
-          tt <- breakstring(gene, n = 20, force = TRUE)
+          tt <- playbase::breakstring(gene, n = 20, force = TRUE)
           jj <- order(abs(top.gx[i, ]))
         }
         klr1 <- paste0(gplots::col2hex(klr1), "99")
@@ -260,7 +260,7 @@ signature_plot_markers_server <- function(id,
         ##   inset = c(-0.1, -0.05), bty = "n"
         ## )
         
-        p <- pgx.scatterPlotXY.PLOTLY(
+        p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos[jj,],
           var = colvar[jj],
           col = klrpal,

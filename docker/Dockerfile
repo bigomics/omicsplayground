@@ -19,7 +19,8 @@ FROM bigomics/omicsplayground-base:ub2204
 ENV DEBIAN_FRONTEND noninteractive
 
 #RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-RUN apt update && apt install -y locales
+RUN apt update && apt install -y locales \
+    librsvg2-dev
 
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -38,13 +39,17 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
     && chmod -R ugo+rwX /omicsplayground \
     && rm $BRANCH.zip   
 
+## tag docker version
+WORKDIR /omicsplayground
+RUN make tag.version
+
 #------------------------------------------------------------
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
-#RUN R -e "install.packages(c('RSpectra'))"
-# RUN R -e "BiocManager::install(c('org.Rn.eg.db'))"
+RUN R -e "BiocManager::install(c('SBGNview','org.Hs.eg.db'))"
+RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------

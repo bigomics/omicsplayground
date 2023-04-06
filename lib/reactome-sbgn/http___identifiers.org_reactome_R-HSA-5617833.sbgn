@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="cytosol" if.within.compartment="">
+      <label text="cytosol"/>
+      <bbox w="478.189975071328" h="623.689617180101" x="105.5" y="198"/>
+    </glyph>
+    <glyph class="macromolecule" id="Protein_2ee17bc350709ec2b4ffcdce244ba404" compartmentRef="cytosol" if.within.compartment="">
+      <label text="ATAT1"/>
+      <bbox w="70" h="40" x="164.654294560738" y="688.917328624497"/>
+      <glyph class="state variable" id="Protein_2ee17bc350709ec2b4ffcdce244ba404.info.1" if.within.compartment="">
+        <state value="x[1 - 421]"/>
+        <bbox w="35" h="17.5" x="164.654294560738" y="680.167328624497"/>
+      </glyph>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" compartmentRef="cytosol" if.within.compartment="">
+      <label text="Ac-CoA"/>
+      <bbox w="40" h="40" x="305.421587541876" y="209"/>
+    </glyph>
+    <glyph class="complex" id="Complex_8d698f4c877dd3f7ff543faf18e6f4f1" compartmentRef="cytosol" if.within.compartment="">
+      <label text="acetylated microtubule"/>
+      <bbox w="81" h="65" x="273.348203661845" y="752.689617180101"/>
+      <glyph class="unspecified entity" id="PhysicalEntity_50c012cd82b7cafd1465cdf53eb2e208_Complex_8d698f4c877dd3f7ff543faf18e6f4f1" compartmentRef="cytosol" if.within.compartment="">
+        <label text="acetylated microtubule protofilament"/>
+        <bbox w="70" h="40" x="278.848203661845" y="758.189617180101"/>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_25e635b8c9e1fe72350db64e63bdc928" compartmentRef="cytosol" if.within.compartment="">
+      <label text="Microtubule"/>
+      <bbox w="81" h="65" x="111" y="350.562534838791"/>
+      <glyph class="unspecified entity" id="PhysicalEntity_8d33bd22528079e0dc004055103d49cd_Complex_25e635b8c9e1fe72350db64e63bdc928" compartmentRef="cytosol" if.within.compartment="">
+        <label text="Microtubule protofilament"/>
+        <bbox w="70" h="40" x="116.5" y="356.062534838791"/>
+      </glyph>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_51d352a1bc463cba394ef942b51812a0" compartmentRef="cytosol" if.within.compartment="">
+      <label text="CoA-SH"/>
+      <bbox w="40" h="40" x="245.654294560738" y="545.735694715703"/>
+    </glyph>
+    <glyph class="macromolecule" id="Protein_5e05a03ec05930c23333b24bc5e9f28e" compartmentRef="cytosol" if.within.compartment="">
+      <label text="HDAC6"/>
+      <bbox w="70" h="40" x="497.189975071328" y="746.328706277325"/>
+      <glyph class="state variable" id="Protein_5e05a03ec05930c23333b24bc5e9f28e.info.1" if.within.compartment="">
+        <state value="x[1 - 1215]"/>
+        <bbox w="35" h="17.5" x="497.189975071328" y="737.578706277325"/>
+      </glyph>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-5618331_LEFT_TO_RIGHT" compartmentRef="cytosol" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="399.45709318632" y="502.83578937379"/>
+    </glyph>
+    <arc class="production" id="reactome_R-HSA-5618331_LEFT_TO_RIGHT-output--to--Complex_25e635b8c9e1fe72350db64e63bdc928" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="Complex_25e635b8c9e1fe72350db64e63bdc928">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Protein_5e05a03ec05930c23333b24bc5e9f28e--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_5e05a03ec05930c23333b24bc5e9f28e" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="Complex_8d698f4c877dd3f7ff543faf18e6f4f1--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT-input" source="Complex_8d698f4c877dd3f7ff543faf18e6f4f1" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Protein_2ee17bc350709ec2b4ffcdce244ba404--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_2ee17bc350709ec2b4ffcdce244ba404" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-5618331_LEFT_TO_RIGHT-output--to--SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_51d352a1bc463cba394ef942b51812a0--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT-input" source="SmallMolecule_51d352a1bc463cba394ef942b51812a0" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="101.437995014266" h="11.2708883349184" x="20" y="828.189617180101"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="reactome_R-HSA-5618331_LEFT_TO_RIGHT--to--Complex_25e635b8c9e1fe72350db64e63bdc928" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="Complex_25e635b8c9e1fe72350db64e63bdc928" class="production">
+      <source.arc start.x="361" start.y="488" end.x="399" end.y="509" class="consumption"/>
+      <spline s.x="192.000000" s.y="397.000000" c1.x="252.000000" c1.y="430.000000" c2.x="361.000000" c2.y="488.000000" e.x="399.000000" e.y="509.000000"/>
+      <target.arc start.x="252" start.y="430" end.x="192" end.y="397" class="production"/>
+    </arc.spline>
+    <arc.spline id="Protein_5e05a03ec05930c23333b24bc5e9f28e--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_5e05a03ec05930c23333b24bc5e9f28e" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="499" start.y="697" end.x="522" end.y="746" class="consumption"/>
+      <spline s.x="522.000000" s.y="746.000000" c1.x="499.000000" c1.y="697.000000" c2.x="439.000000" c2.y="571.000000" e.x="419.000000" e.y="529.000000"/>
+      <target.arc start.x="439" start.y="571" end.x="419" end.y="529" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="Complex_8d698f4c877dd3f7ff543faf18e6f4f1--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Complex_8d698f4c877dd3f7ff543faf18e6f4f1" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="347" start.y="687" end.x="326" end.y="745" class="consumption"/>
+      <spline s.x="326.000000" s.y="745.000000" c1.x="347.000000" c1.y="687.000000" c2.x="392.000000" c2.y="569.000000" e.x="407.000000" e.y="529.000000"/>
+      <target.arc start.x="392" start.y="569" end.x="407" end.y="529" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="Protein_2ee17bc350709ec2b4ffcdce244ba404--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_2ee17bc350709ec2b4ffcdce244ba404" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="266" start.y="648" end.x="222" end.y="688" class="consumption"/>
+      <spline s.x="222.000000" s.y="688.000000" c1.x="266.000000" c1.y="648.000000" c2.x="363.000000" c2.y="560.000000" e.x="399.000000" e.y="528.000000"/>
+      <target.arc start.x="363" start.y="560" end.x="399" end.y="528" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-5618331_LEFT_TO_RIGHT--to--SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" class="production">
+      <source.arc start.x="397" start.y="455" end.x="409" end.y="502" class="consumption"/>
+      <spline s.x="345.000000" s.y="249.000000" c1.x="359.000000" c1.y="304.000000" c2.x="397.000000" c2.y="455.000000" e.x="409.000000" e.y="502.000000"/>
+      <target.arc start.x="359" start.y="304" end.x="345" end.y="249" class="production"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_51d352a1bc463cba394ef942b51812a0--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="SmallMolecule_51d352a1bc463cba394ef942b51812a0" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="343" start.y="542" end.x="315" end.y="552" class="consumption"/>
+      <spline s.x="315.000000" s.y="552.000000" c1.x="343.000000" c1.y="542.000000" c2.x="380.000000" c2.y="528.000000" e.x="399.000000" e.y="521.000000"/>
+      <target.arc start.x="380" start.y="528" end.x="399" end.y="521" class="consumption"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>cytosol-compartment.layer.info-cytosol-compartment.layer.info-Protein_2ee17bc350709ec2b4ffcdce244ba404-compartment.layer.info-SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa-compartment.layer.info-Complex_8d698f4c877dd3f7ff543faf18e6f4f1-compartment.layer.info-PhysicalEntity_50c012cd82b7cafd1465cdf53eb2e208_Complex_8d698f4c877dd3f7ff543faf18e6f4f1-compartment.layer.info-Complex_25e635b8c9e1fe72350db64e63bdc928-compartment.layer.info-PhysicalEntity_8d33bd22528079e0dc004055103d49cd_Complex_25e635b8c9e1fe72350db64e63bdc928-compartment.layer.info-SmallMolecule_51d352a1bc463cba394ef942b51812a0-compartment.layer.info-Protein_5e05a03ec05930c23333b24bc5e9f28e-compartment.layer.info-reactome_R-HSA-5618331_LEFT_TO_RIGHT</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="reactome_R-HSA-5618331_LEFT_TO_RIGHT--to--Complex_25e635b8c9e1fe72350db64e63bdc928" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="Complex_25e635b8c9e1fe72350db64e63bdc928" class="production">
+<source.arc start.x="361" start.y="490" end.x="399" end.y="509" class="consumption"/>
+
+
+<spline s.x="192.000000"  s.y="403.000000" c1.x="252.000000" c1.y="434.000000" c2.x="361.000000" c2.y="490.000000" e.x="399.000000"  e.y="509.000000" />
+<target.arc start.x="252" start.y="434" end.x="192" end.y="403" class="production"/>
+
+</arc.spline>
+<arc.spline id="Protein_5e05a03ec05930c23333b24bc5e9f28e--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_5e05a03ec05930c23333b24bc5e9f28e" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="499" start.y="697" end.x="522" end.y="746" class="consumption"/>
+
+
+<spline s.x="522.000000"  s.y="746.000000" c1.x="499.000000" c1.y="697.000000" c2.x="439.000000" c2.y="571.000000" e.x="419.000000"  e.y="529.000000" />
+<target.arc start.x="439" start.y="571" end.x="419" end.y="529" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="Complex_8d698f4c877dd3f7ff543faf18e6f4f1--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Complex_8d698f4c877dd3f7ff543faf18e6f4f1" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="347" start.y="693" end.x="325" end.y="752" class="consumption"/>
+
+
+<spline s.x="325.000000"  s.y="752.000000" c1.x="347.000000" c1.y="693.000000" c2.x="392.000000" c2.y="570.000000" e.x="407.000000"  e.y="529.000000" />
+<target.arc start.x="392" start.y="570" end.x="407" end.y="529" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="Protein_2ee17bc350709ec2b4ffcdce244ba404--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="Protein_2ee17bc350709ec2b4ffcdce244ba404" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="266" start.y="648" end.x="222" end.y="688" class="consumption"/>
+
+
+<spline s.x="222.000000"  s.y="688.000000" c1.x="266.000000" c1.y="648.000000" c2.x="363.000000" c2.y="560.000000" e.x="399.000000"  e.y="528.000000" />
+<target.arc start.x="363" start.y="560" end.x="399" end.y="528" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-5618331_LEFT_TO_RIGHT--to--SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" source="reactome_R-HSA-5618331_LEFT_TO_RIGHT" target="SmallMolecule_9dbd8409c85ce35970b7dc24e52fcffa" class="production">
+<source.arc start.x="394" start.y="455" end.x="408" end.y="502" class="consumption"/>
+
+
+<spline s.x="331.000000"  s.y="249.000000" c1.x="348.000000" c1.y="304.000000" c2.x="394.000000" c2.y="455.000000" e.x="408.000000"  e.y="502.000000" />
+<target.arc start.x="348" start.y="304" end.x="331" end.y="249" class="production"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_51d352a1bc463cba394ef942b51812a0--to--reactome_R-HSA-5618331_LEFT_TO_RIGHT" source="SmallMolecule_51d352a1bc463cba394ef942b51812a0" target="reactome_R-HSA-5618331_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="316" start.y="548" end.x="285" end.y="558" class="consumption"/>
+
+
+<spline s.x="285.000000"  s.y="558.000000" c1.x="316.000000" c1.y="548.000000" c2.x="373.000000" c2.y="529.000000" e.x="399.000000"  e.y="520.000000" />
+<target.arc start.x="373" start.y="529" end.x="399" end.y="520" class="consumption"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+

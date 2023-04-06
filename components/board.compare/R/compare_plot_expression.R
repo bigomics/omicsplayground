@@ -71,8 +71,8 @@ compare_plot_expression_server <- function(id,
       for (gene in genes) {
         x1 <- pgx1$X[gene, ]
         x2 <- pgx2$X[gene, ]
-        e1 <- contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
-        e2 <- contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
+        e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
+        e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
         m1 <- lapply(e1, function(y) tapply(x1, y, mean))
         m2 <- lapply(e2, function(y) tapply(x2, y, mean))
 
@@ -92,7 +92,7 @@ compare_plot_expression_server <- function(id,
         mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
         mm.group <- c(rep(1, length(m1)), rep(2, length(m2)))
 
-        gx.barplot(mm,
+        playbase::gx.barplot(mm,
           srt = srt, main = gene, cex.main = 1.0,
           group = mm.group, cex.names = 0.85,
           group.names = grp.names,

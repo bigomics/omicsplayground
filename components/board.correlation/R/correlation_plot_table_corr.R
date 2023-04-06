@@ -122,7 +122,7 @@ correlation_plot_table_corr_server <- function(id,
         pd_plot <- pd_plot[order(total_sum_cor, decreasing = TRUE), ]
       }
 
-      pgx.stackedBarplot(
+      playbase::pgx.stackedBarplot(
         x = pd_plot,
         ylab = "Correlation",
         showlegend = FALSE
@@ -170,7 +170,7 @@ correlation_plot_table_corr_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("cor",
-          background = color_from_middle(
+          background = playbase::color_from_middle(
             df[, "cor"], "lightblue", "#f5aeae"
           ),
           backgroundSize = "98% 88%",

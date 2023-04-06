@@ -78,7 +78,7 @@ enrichment_plot_volcano_server <- function(id,
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
-      gx.volcanoPlot.XY(
+      playbase::gx.volcanoPlot.XY(
         x = fx, pv = qval, gene = fc.genes,
         render = "canvas", n = 5000, nlab = 10,
         xlim = xlim, ylim = ylim, ## hi.col="#222222",
@@ -89,7 +89,7 @@ enrichment_plot_volcano_server <- function(id,
         ylab = "significance (log10q)",
         highlight = sel.genes
       )
-      gs <- breakstring(gs, 50)
+      gs <- playbase::breakstring(gs, 50)
       title(gs, cex.main = 0.85)
       p <- grDevices::recordPlot()
       p
@@ -154,7 +154,7 @@ enrichment_plot_volcano_server <- function(id,
         head(sel.genes[order(-impt(sel.genes))], 10)
       )
 
-      plotlyVolcano(
+      playbase::plotlyVolcano(
         x = fx, y = y, names = fc.genes,
         source = "plot1", marker.type = "scattergl",
         highlight = sel.genes, label = lab.genes,

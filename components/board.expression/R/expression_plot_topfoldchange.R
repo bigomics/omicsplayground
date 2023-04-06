@@ -105,7 +105,7 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      pgx.barplot.PLOTLY(
+      playbase::pgx.barplot.PLOTLY(
         data = data.frame(
           x = names(pd[["fc.top"]]),
           y = as.numeric(pd[["fc.top"]])
