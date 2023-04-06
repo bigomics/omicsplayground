@@ -128,12 +128,18 @@ ClusteringUI <- function(id) {
                  width = 1,                 
                  clustering_plot_parcoord_ui(
                      id = ns("parcoord"),
+                     title = "Parallel coordinates",
+                     info.text = "The Parallel Coordinates panel displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. The plot is interactive.",
+                     caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
                      label = "a",
                      width = c("100%", "100%"),
                      height = c(rowH, TABLE_HEIGHT_MODAL)
                  ),
                  clustering_table_parcoord_ui(
                      id = ns("parcoord"),
+                     title = "Selected genes",
+                    info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+                    caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                      label = "a",
                      width = c("100%", "100%"),
                      height = c(rowH, TABLE_HEIGHT_MODAL)
@@ -150,12 +156,18 @@ ClusteringUI <- function(id) {
           "Annotate clusters",
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
+            title = "Functional annotation of clusters",
+            info.text =  "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
+            caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
             label = "a",
             height = c("45vh", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
+            title = "Annotation scores",
+            info.text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings.",
+            caption = "Average correlation values of annotation terms, for each gene cluster.",
             height = c(280, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )

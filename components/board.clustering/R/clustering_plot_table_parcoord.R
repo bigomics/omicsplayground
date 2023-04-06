@@ -7,14 +7,15 @@
 
 ## Annotate clusters ############
 
-clustering_plot_parcoord_ui <- function(id,
-                                        label = "",
-                                        height = c(350, TABLE_HEIGHT_MODAL),
-                                        width  = c("auto", "100%")) {
+clustering_plot_parcoord_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "The <strong>Parallel Coordinates</strong> panel
-displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap."
 
   parcoord_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
@@ -25,10 +26,11 @@ displays the expression levels of selected genes across all conditions in the an
 
   PlotModuleUI(
       ns("pltmod"),
-      title = "Parallel coordinates",
+      title = title,
       label = label,
       plotlib = "plotly",
-      info.text = info_text,
+      info.text = info.text,
+      caption = caption,
       options = parcoord_opts,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
@@ -37,22 +39,25 @@ displays the expression levels of selected genes across all conditions in the an
   
 }
 
-clustering_table_parcoord_ui <- function(id,
-                                         label = "",
-                                         height = c(350, TABLE_HEIGHT_MODAL),
-                                         width  = c("auto", "100%")) {
-  ns <- shiny::NS(id)
-
-  parcoord_table_info <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
-
-  TableModuleUI(
-      ns("datasets"),
-      info.text = parcoord_table_info,
-      height = height,
-      width = width,
-      title = "Selected genes",
-      label = "b"
-  )
+clustering_table_parcoord_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
+    ns <- shiny::NS(id)
+  
+    TableModuleUI(
+        ns("datasets"),
+        info.text = info.text,
+        height = height,
+        caption = caption,
+        width = width,
+        title = title,
+        label = "b"
+    )
   
 }
 
