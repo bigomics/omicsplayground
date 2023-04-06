@@ -122,6 +122,9 @@ ExpressionUI <- function(id) {
                 width = 1,
                 expression_plot_topgenes_ui(
                     id = ns("topgenes"),
+                    title = "Expression of top differentially expressed genes",
+                    info.text = "Under the plot Settings, users can scale the abundance levels (counts) or ungroup the samples in the plot from the log scale and ungroup samples settings, respectively.",
+                    caption = "Expression barplots of the top most differentially expressed genes for the selected contrast.",
                     label = "a",
                     height = c(imgH, TABLE_HEIGHT_MODAL),
                     width = c("auto", "100%")
@@ -134,6 +137,9 @@ ExpressionUI <- function(id) {
                 width = 1,
                 expression_plot_volcanoAll_ui(
                   id = ns("volcanoAll"),
+                  title = "Volcano plots for all contrasts",
+                  info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong.",
+                  caption = "Simultaneous visualisation of volcano plots of genes for all contrasts.",
                   label = "a",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
@@ -146,6 +152,9 @@ ExpressionUI <- function(id) {
                 width = 1,
                 expression_plot_volcanoMethods_ui(
                   id = ns("volcanoMethods"),
+                  title = "Volcano plots for all methods",
+                  info.text = "These plots provide users an overview of the statistics of all methods at the same time. Methods showing better statistical significance will show volcano plots with 'higher wings'.",
+                  caption = "Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. ",
                   label = "a",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")

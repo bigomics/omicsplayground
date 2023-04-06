@@ -12,19 +12,22 @@
 #' @param height
 #'
 #' @export
-expression_plot_volcanoAll_ui <- function(id,
-                                          label = "",
-                                          height,
-                                          width) {
+expression_plot_volcanoAll_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
-
   PlotModuleUI(ns("pltmod"),
-    title = "Volcano plots for all contrasts",
+    title = title,
     label = label,
     plotlib = "grid",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

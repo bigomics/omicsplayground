@@ -13,13 +13,15 @@
 #' @param width
 #'
 #' @export
-expression_plot_topgenes_ui <- function(id,
-                                        label = "",
-                                        height,
-                                        width) {
+expression_plot_topgenes_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or group the samples in the plot from the <code>log scale</code> and <code>group samples</code> settings, respectively."
 
   topgenes_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gx_logscale"), "log scale", TRUE),
@@ -37,10 +39,11 @@ expression_plot_topgenes_ui <- function(id,
   )
 
   PlotModuleUI(ns("pltmod"),
-    title = "Expression of top differentially expressed genes",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
