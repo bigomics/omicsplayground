@@ -4,27 +4,31 @@
 ##
 
 
-clustering_plot_phenoplot_ui <- function(id,
-                                         label = "",
-                                         height) {
+clustering_plot_phenoplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info <- tagsub("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.")
-
+  
   phenoplot.opts <- shiny::tagList(
     shiny::checkboxInput(ns("showlabels"), "Show group labels", TRUE)
   )
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Phenotype distribution",
+    title = title,
     label = label,
     #    plotlib = "base",
     plotlib = "plotly",
     info.text = info,
+    caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

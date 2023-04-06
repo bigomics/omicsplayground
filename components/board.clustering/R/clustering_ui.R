@@ -138,8 +138,8 @@ ClusteringUI <- function(id) {
                  clustering_table_parcoord_ui(
                      id = ns("parcoord"),
                      title = "Selected genes",
-                    info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
-                    caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
+                     info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+                     caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                      label = "a",
                      width = c("100%", "100%"),
                      height = c(rowH, TABLE_HEIGHT_MODAL)
@@ -176,14 +176,21 @@ ClusteringUI <- function(id) {
           "Phenotypes",
           clustering_plot_phenoplot_ui(
             id = ns("clust_phenoplot"),
+            title = "Phenotype distribution",
+            info.text = "This figure visualizes the distribution of the available phenotype data. The plots show the distribution of the phenotypes superposed on the t-SNE clustering. You can choose to put the group labels in the figure or as separate legend in the plot settings",
+            caption = "t-SNE clustering plot of phenotype distribution for the current samples.",
             label = "",
-            height = c(fullH, TABLE_HEIGHT_MODAL)
+            height = c(fullH, TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         shiny::tabPanel(
           "Feature ranking",
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
+            title = "Feature-set ranking",
+            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
+            caption = "Ranked discriminant score for top feature sets.",
             label = "",
             height = c(fullH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
