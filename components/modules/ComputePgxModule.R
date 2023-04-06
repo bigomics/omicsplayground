@@ -3,21 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-if(0) {
-
-    source("~/Playground/omicsplayground/R/pgx-include.R")
-    load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-
-    PgxComputeGadget(X=ngs$X, pheno=ngs$samples)
-
-    out <- gadgetize2(
-        ComputePgxUI, ComputePgxServer,
-        title = "UploadGadget", height=640, size="l",
-        X = ngs$X, pheno=ngs$samples )
-    names(out)
-
-}
-
 ComputePgxGadget <- function(counts, samples, contrasts, height=720) {
     gadgetize(
         ComputePgxUI, ComputePgxServer,
