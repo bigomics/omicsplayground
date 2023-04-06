@@ -63,16 +63,28 @@ FeatureMapUI <- function(id) {
             width = 1/2,
             featuremap_plot_gene_map_ui(
                 ns("geneUMAP"),
-                height = c("50vh", 700)
+                title = "Gene UMAP",
+                info.text = "UMAP clustering of genes colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the gene expression. Genes that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
+                caption = "Gene UMAP coloured by level of variance. Shades of red indicate high variance.",
+                height = c("50vh", 700),
+                width = c("auto", "100%")
             ),
             featuremap_plot_gene_sig_ui(
                 ns("geneSigPlots"),
-                height = c("50vh", 700)
+                title = "Gene Signatures",
+                info.text = "UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance.",
+                caption = "Gene signature maps coloured by differential expression.",
+                height = c("50vh", 700),
+                width =  c("auto", "100%") 
             )
           ),
           featuremap_table_gene_map_ui(
               ns("geneUMAP"),
-              height = c(400, 700)
+              title = "Gene table",
+              info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Gene map plot.",
+              caption = "",
+              height = c(400, 700),
+              width = c("auto", "100%")
           ),
           br()
         ))
@@ -87,16 +99,28 @@ FeatureMapUI <- function(id) {
             width = 1/2,
             featuremap_plot_geneset_map_ui(
                 ns("gsetUMAP"),
-                height = c("50vh", 700)                
+                title = "Geneset UMAP",
+                info.text = "UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance. The colour intensity threshold can be set with the Settings icon.",
+                caption = "Geneset UMAP coloured by level of variance. Shades of red indicate high variance.",
+                height = c("50vh", 700),
+                width = c("auto", "100%")
             ),                     
             featuremap_plot_gset_sig_ui(
                 ns("gsetSigPlots"),
-                height = c("50vh", 700)
+                title = "Geneset Signatures",
+                info.text = "UMAP clustering of genesets colored by relative log-expression of the phenotype group. The distance metric is covariance. Genesets that are clustered nearby have high covariance.",
+                caption = "Geneset signature maps coloured by differential expression.",
+                height = c("50vh", 700),
+                width = c("auto", "100%")
             )
           ),
           featuremap_table_geneset_map_ui(
               ns("gsetUMAP"),
-              height = c(400, 700)
+              title = "Geneset table",
+              info.text = "The contents of this table can be subsetted by selecting an area (by click&drag) on the Geneset map plot.",
+              caption = "",
+              height = c(400, 700),
+              width = c("auto", "100%")
           ),
           br()
         ))

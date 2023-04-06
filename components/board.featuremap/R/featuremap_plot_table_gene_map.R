@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
+featuremap_plot_gene_map_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation of log-expression (sd.X) or fold-change  (sd.FC). The distance metric is covariance between gene expression. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
 
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
@@ -25,31 +30,36 @@ featuremap_plot_gene_map_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
       ns("gene_map"),
-      title = "Gene UMAP",
+      title = title,
       label = "a",
       plotlib = "plotly",
       plotlib2 = "plotly",
-      info.text = info_text,
+      info.text = info.text,
+      caption = caption,
       options = plot.opts,
       height = height,
-      width = c("auto", "100%"),
+      width = width,
       download.fmt = c("png", "pdf")
   )
 }
 
-featuremap_table_gene_map_ui <- function(id, label = "",
-                                         height = c(400, TABLE_HEIGHT_MODAL),
-                                         width = c("auto", "100%")) {
+featuremap_table_gene_map_ui <- function(
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text_table <- "<b>Gene table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Gene map</b> plot."
 
   TableModuleUI(
       ns("gene_table"),
-      info.text = info_text_table,
+      info.text = info.text,
       height = height,
       width = width,
-      title = "Gene table",
+      caption = caption,
+      title = title,
       label = "c"
   )
 }

@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-featuremap_plot_geneset_map_ui <- function(id, label = "", height = c(600, 800)) {
+featuremap_plot_geneset_map_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance."
 
   plot.opts <- shiny::tagList(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
@@ -24,31 +29,37 @@ featuremap_plot_geneset_map_ui <- function(id, label = "", height = c(600, 800))
 
   PlotModuleUI(
       ns("gset_map"),
-      title = "Geneset UMAP",
+      title = title,
       label = "a",
       plotlib = "plotly",
       plotlib2 = "plotly",
-      info.text = info_text,
+      info.text = info.text,
+      caption = caption,
       options = plot.opts,
       height = height,
-      width = c("auto", "100%"),
+      width = width,
       download.fmt = c("png", "pdf")
   )
 }
 
-featuremap_table_geneset_map_ui <- function(id, label = "",
-                                            height = c(400, TABLE_HEIGHT_MODAL),
-                                            width = c("auto", "100%")) {
+featuremap_table_geneset_map_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text_table <- "<b>Geneset table.</b> The contents of this table can be subsetted by selecting (by click&drag) on the <b>Geneset map</b> plot."
 
   TableModuleUI(
       ns("gset_table"),
-      info.text = info_text_table,
+      info.text = info.text,
       height = height,
+      caption = caption,
       width = width,
-      title = "Geneset table",
+      title = title,
+  
       label = "c"
   )
 }
