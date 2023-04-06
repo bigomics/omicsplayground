@@ -229,7 +229,7 @@ DataViewUI <- function(id) {
                 title = "Gene expression table",
                 info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
                 caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
-                height = c("75vh", TABLE_HEIGHT_MODAL),
+                height = c("calc(100vh - 250px)", TABLE_HEIGHT_MODAL),
                 width = c("100%", "100%")
             )
         )

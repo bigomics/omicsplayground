@@ -255,7 +255,8 @@ DataViewBoard <- function(id, pgx) {
       r.gene = reactive(input$search_gene),
       r.data_type = reactive(input$data_type),
       r.samples = selected_samples,
-      r.groupby = reactive(input$data_groupby)
+      r.groupby = reactive(input$data_groupby),
+      scrollY = "calc(100vh - 390px)"
     )
 
     dataview_table_samples_server(

@@ -116,36 +116,26 @@ TableModuleUI <- function(id,
           height = height.1,
           div(header, class="tablemodule-header"),
           ##          DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
-          DT::DTOutput(ns("datatable")) %>%
-              shinycssloaders::withSpinner(),
-#          div(
-#           class = "footer",
-#           shiny::HTML(caption)
-#         ),
-         shiny::div(class="popup-modal",
-                    modalUI(
-                      id = ns("datatablePopup"),
-                      title = div(class="popup-table-title", title),
-                      size = "fullscreen",
-                      footer = NULL,
-                      popupdatatableUI()
-                    )
+          DT::DTOutput(ns("datatable")), ## %>% shinycssloaders::withSpinner(),
+          shiny::div(class="popup-modal",
+              modalUI(
+                  id = ns("datatablePopup"),
+                  title = div(class="popup-table-title", title),
+                  size = "fullscreen",
+                  footer = NULL,
+                  popupdatatableUI()
+              )
          ),
          shiny::tagList(
-#           shiny::tags$head(shiny::tags$style(modaldialog.style)), ## remove?
-#           shiny::tags$head(shiny::tags$style(modalbody.style)),   ## remove?
-#           shiny::tags$head(shiny::tags$style(modalcontent.style)),  ## remove?
            shiny::tags$head(shiny::tags$style(modalfooter.none))
          )
       ),
       bslib::card_body(
           class = "card-footer", # center the content horizontally and vertically
-##          height = card_footer_height,
-##          style = paste0("height:", card_footer_height, "; padding: 2px 0 0 2px;"), # add left and top margin of 2 pixels
           div(class="caption", shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(caption))))
       )
   ) ## end of card
-  e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
+#  e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
   return(e)
 }
 

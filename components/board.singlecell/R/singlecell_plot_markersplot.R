@@ -226,7 +226,7 @@ p
         tt <- rownames(top.gx)[i]
         
         ## ------- start plot ----------       
-        p <- pgx.scatterPlotXY.GGPLOT(
+        p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
           var = colvar,
           col = klrpal,

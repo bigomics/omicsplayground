@@ -18,10 +18,22 @@ ComputePgxUI <- function(id) {
     shiny::uiOutput(ns("UI"))
 }
 
-ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, metaRT,
-                             FILES, pgx.dirRT, enable_button = TRUE, alertready = TRUE,
-                             max.genes = 20000, max.genesets = 10000,
-                             max.datasets = 100, height = 720, r_global)
+ComputePgxServer <- function(
+    id,
+    countsRT,
+    samplesRT,
+    contrastsRT,
+    batchRT,
+    metaRT,
+    lib.dir,
+    pgx.dirRT,
+    enable_button = TRUE,
+    alertready = TRUE,
+    max.genes = 20000,
+    max.genesets = 10000,
+    max.datasets = 100,
+    height = 720,
+    r_global)
 {
     shiny::moduleServer(
         id,
@@ -375,7 +387,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     use.design = use.design,        ## no.design+prune are combined
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
-                    lib.dir = FILES,
+                    lib.dir = lib.dir,
                     name = gsub("[ ]","_",input$upload_name),
                     datatype = input$upload_datatype,
                     description = input$upload_description,

@@ -102,7 +102,7 @@ UploadBoard <- function(id,
 
     uploaded_pgx <- UploadModuleServer(
       id = "upload_panel",
-      FILES = FILES,
+      lib.dir = FILES,
       pgx.dirRT = shiny::reactive(getPGXDIR()),
       height = 720,
       limits = limits
@@ -904,7 +904,6 @@ UploadBoard <- function(id,
       correctedX()$B
     })
 
-    ## computed_pgx <- ComputePgxServer(
     computed_pgx <- ComputePgxServer(
       id = "compute",
       ## countsRT = shiny::reactive(uploaded$counts.csv),
@@ -915,7 +914,7 @@ UploadBoard <- function(id,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
       alertready = FALSE,
-      FILES = FILES,
+      lib.dir = FILES,
       pgx.dirRT = shiny::reactive(getPGXDIR()),
       max.genes = as.integer(limits["genes"]),
       max.genesets = as.integer(limits["genesets"]),
