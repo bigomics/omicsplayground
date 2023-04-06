@@ -227,12 +227,12 @@ sever_screen0 <- function(error = NULL) {
           if(!is.null(error)){
             tags$button("Show error",
                         id = "showModalBtn",
-                        onClick = "document.getElementById('myModal').style.display = 'block';",
+                        onClick = "document.getElementById('crashModal').style.display = 'block';",
                         class = "btn btn-danger")
           }
         ),
         tags$div(
-          id = "myModal",
+          id = "crashModal",
           class = "modal",
           style = "
                       display: none;
@@ -255,9 +255,11 @@ sever_screen0 <- function(error = NULL) {
               width: 45%;
               color: black;
               text-align: left;
+              height: 70vh;
+              overflow-y: auto;
             ",
             tags$button(class = "btn btn-info", HTML("&times;"),
-                        onClick = "document.getElementById('myModal').style.display = 'none';",
+                        onClick = "document.getElementById('crashModal').style.display = 'none';",
                         style = "
                                   position: absolute;
                                   top: 5px;

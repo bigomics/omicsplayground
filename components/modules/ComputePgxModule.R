@@ -36,13 +36,12 @@ ComputePgxUI <- function(id) {
 ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, metaRT,
                              FILES, pgx.dirRT, enable_button = TRUE, alertready = TRUE,
                              max.genes = 20000, max.genesets = 10000,
-                             max.datasets = 100, height = 720 )
+                             max.datasets = 100, height = 720, r_global)
 {
     shiny::moduleServer(
         id,
         function(input, output, session) {
             ns <- session$ns
-
 
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
@@ -242,7 +241,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             ## After confirmation is received, start computing the PGX
             ## object from the uploaded files
             ## ------------------------------------------------------------------
+
+            # Define a reactive value to store the process object
+            process_obj  <- reactiveVal(NULL)
             computedPGX  <- shiny::reactiveVal(NULL)
+            temp_dir     <- reactiveVal(NULL)
+            process_counter <- reactiveVal(0)
+            reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -288,8 +293,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
 
-                dbg("[ComputePgxServer:@enable] ct1 = ", contrasts[,1])
-
                 ## contrasts[is.na(contrasts)] <- 0
                 ## contrasts[is.na(contrasts)] <- ""
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
@@ -334,12 +337,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
 
-                start_time <- Sys.time()
+                # start_time <- Sys.time()
                 ## Create a Progress object
-                progress <- shiny::Progress$new()
-                on.exit(progress$close())
-                progress$set(message = "Processing", value = 0)
-                pgx.showCartoonModal("Computation may take 5-20 minutes...")
+                # progress <- shiny::Progress$new()
+                # progress$set(message = "Processing", value = 0)
+                # pgx.showCartoonModal("Computation may take 5-20 minutes...")
 
                 flt="";use.design=TRUE;prune.samples=FALSE
                 flt <- input$filter_methods
@@ -350,169 +352,218 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 excl.xy <- ("excl.xy"  %in% flt)
                 only.proteincoding <- ("only.proteincoding"  %in% flt)
                 filter.genes <- ("remove.notexpressed"  %in% flt)
-
                 use.design <- !("noLM.prune" %in% input$dev_options)
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
 
+                # create folder with random name to store the csv files
 
-                message("[ComputePgxServer:@compute] creating PGX object")
-                progress$inc(0.1, detail = "creating PGX object")
+                # Generate random name for temporary folder
 
-                USE_FUTURES=1
-                USE_FUTURES=0
-
-                if(USE_FUTURES) {
-
-                    ## !!!TRYING TO USE FUTURES. BUT SEEMS STILL TO BLOCK
-                    ## OTHER SESSIONS!!!!
-                    ##
-                    ## IK 10.11.2021
-
-                    message("[ComputePgxServer:@compute] using futures ")
-                    f <- future::future({
-                        playbase::pgx.createPGX(
-                            counts, samples, contrasts, ## genes,
-                            X = NULL,   ## should we pass the pre-normalized expresson X ????
-                            batch.correct = FALSE, ## done in UI
-                            prune.samples = TRUE,  ## always prune
-                            filter.genes = filter.genes,
-                            ##only.chrom = FALSE,
-                            ##rik.orf = !excl.rikorf,
-                            only.known = !remove.unknown,
-                            only.proteincoding = only.proteincoding,
-                            only.hugo = only.hugo,
-                            convert.hugo = only.hugo,
-                            do.cluster = TRUE,
-                            cluster.contrasts = FALSE
-                        )
-                    })
-                    ## wait until done...
-                    while (!future::resolved(f)) {
-                        ##cat(count, "\n")
-                        message(".",appendLF = FALSE)
-                        Sys.sleep(15)  ## every 15s
-                    }
-                    message("done!\n")
-                    ##value(f)
-                    ngs <- future::value(f)
-                    names(ngs)
-
-                } else {
-
-                    ngs <- playbase::pgx.createPGX(
-                        counts, samples, contrasts, ## genes,
-                        X = NULL,   ## should we pass the pre-normalized expresson X ????
-                        batch.correct = FALSE, ## done in UI
-                        prune.samples = TRUE,  ## always prune
-                        filter.genes = filter.genes,
-                        ##only.chrom = FALSE,
-                        ##rik.orf = !excl.rikorf,
-                        only.known = !remove.unknown,
-                        only.proteincoding = only.proteincoding,
-                        only.hugo = only.hugo,
-                        convert.hugo = only.hugo,
-                        do.cluster = TRUE,
-                        cluster.contrasts = FALSE
-                    )
-                }
-
-                names(ngs)
-                message("[ComputePgxServer:@compute] computing PGX object")
-                progress$inc(0.2, detail = "computing PGX object")
-
-                if(USE_FUTURES) {
-
-                    message("[ComputePgxServer:@compute] using futures ")
-                    f <- future::future({
-                        playbase::pgx.computePGX(
-                            ngs,
-                            max.genes = max.genes,
-                            max.genesets = max.genesets,
-                            gx.methods = gx.methods,
-                            gset.methods = gset.methods,
-                            extra.methods = extra.methods,
-                            use.design = use.design,        ## no.design+prune are combined
-                            prune.samples = prune.samples,  ##
-                            do.cluster = TRUE,
-                            progress = progress,
-                            lib.dir = FILES
-                        )
-                    })
-                    ## wait until done...
-                    while (!future::resolved(f)) {
-                        ##cat(count, "\n")
-                        message(".",appendLF = FALSE)
-                        Sys.sleep(15)  ## every 15s
-                    }
-                    message("done!\n")
-                    ##value(f)
-                    ngs <- future::value(f)
-                    names(ngs)
-
-                } else {
-
-                    ngs <- playbase::pgx.computePGX(
-                        ngs,
-                        max.genes = max.genes,
-                        max.genesets = max.genesets,
-                        gx.methods = gx.methods,
-                        gset.methods = gset.methods,
-                        extra.methods = extra.methods,
-                        use.design = use.design,        ## no.design+prune are combined
-                        prune.samples = prune.samples,  ##
-                        do.cluster = TRUE,
-                        progress = progress,
-                        lib.dir = FILES
-                    )
-                }
-
-                end_time <- Sys.time()
-                run_time  = end_time - start_time
-                run_time
-
-                message("[ComputePgxServer:@compute] total processing time of ",run_time," secs")
-
-                ##----------------------------------------------------------------------
-                ## annotate object
-                ##----------------------------------------------------------------------
-                names(ngs)
-                head(ngs$samples)
-                ngs$datatype = ""
-                ##ngs$datatype = input$upload_datatype
-                ##ngs$name = "(uploaded)"
-                ngs$name = gsub("[ ]","_",input$upload_name)
-                ngs$datatype    = input$upload_datatype
-                ngs$description = input$upload_description
-                ngs$creator <- "user"
+                # Create temporary folder
+                temp_dir(tempfile(pattern = "pgx_"))
+                dir.create(temp_dir())
+                dbg("[compute PGX process] : tempFile", temp_dir())
 
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-                ##ngs$date = date()
-                ngs$date = this.date
 
-                message("[ComputePgxServer:@compute] initialize object")
+                path_to_params <- file.path(temp_dir(), "params.RData")
 
-                ## initialize and update global PGX object
-                ## ngs <- playbase::pgx.initialize(ngs)  ## here or later???
-                ##uploaded$pgx <- ngs
-                computedPGX(ngs)
+                # Define create_pgx function arguments
+                params <- list(
+                    samples = samples,
+                    counts = counts,
+                    contrasts = contrasts,
+                    batch.correct = FALSE,
+                    prune.samples = TRUE,
+                    filter.genes = filter.genes,
+                    only.known = !remove.unknown,
+                    only.proteincoding = only.proteincoding,
+                    only.hugo = only.hugo,
+                    convert.hugo = only.hugo,
+                    do.cluster = TRUE,
+                    cluster.contrasts = FALSE,
+                    max.genes = max.genes,
+                    max.genesets = max.genesets,
+                    gx.methods = gx.methods,
+                    gset.methods = gset.methods,
+                    extra.methods = extra.methods,
+                    use.design = use.design,        ## no.design+prune are combined
+                    prune.samples = prune.samples,  ##
+                    do.cluster = TRUE,
+                    lib.dir = FILES,
+                    name = gsub("[ ]","_",input$upload_name),
+                    datatype = input$upload_datatype,
+                    description = input$upload_description,
+                    creator = "user",
+                    this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+                    date = this.date
+                )
+                
+                saveRDS(params, file=path_to_params)
 
-                ##----------------------------------------------------------------------
-                ## Remove modal and show we are ready
-                ##----------------------------------------------------------------------
-                ##removeModal()
-                if(alertready) {
-                    ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-                    beepr::beep(2)  ## short beep
-                    shinyalert::shinyalert("Ready!","We wish you lots of discoveries!")
+                # Normalize paths
+                script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
+                cmd <- normalizePath(temp_dir())
+
+                # Start the process and store it in the reactive value
+                shinyalert::shinyalert(
+                    "Computing!",
+                    "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                bigdash.selectTab(
+                    session,
+                    selected = 'load-tab'
+                )
+
+                dbg("[compute PGX process] : starting process")
+                process_counter(process_counter() + 1)
+
+                if(is.null(process_obj())) {
+                    process_obj(
+                        list(
+                            list(
+                                process = processx::process$new(
+                                     "Rscript",
+                                     args = c(script_path, cmd),
+                                     supervise = TRUE,
+                                     stderr = '|',
+                                     stdout = '|'
+                                ),
+                                dataset_name = gsub("[ ]","_",input$upload_name),
+                                temp_dir = temp_dir())))
+                } else {
+                    process_obj(
+                        append(
+                            process_obj(),
+                            list(
+                                list(
+                                    process = processx::process$new(
+                                        "Rscript",
+                                        args = c(script_path, cmd),
+                                        supervise = TRUE,
+                                        stderr = '|',
+                                        stdout = '|'
+                                    ),
+                                    dataset_name = gsub("[ ]","_",input$upload_name),
+                                    temp_dir = temp_dir())
+                                ))
+                            )
                 }
-
-                ##for(s in names(uploaded)) uploaded[[s]] <- NULL
-                ##uploaded[["pgx"]] <- NULL
-                message("[ComputePgxServer:@compute] finished")
-
             })
 
-            return(computedPGX)  ## pointing to reactive
+            check_process_status <- reactive({
+                if (process_counter() == 0) {
+                    return(NULL)
+                }
+                
+                dbg("[compute PGX process] check_process_status reacted!")
+                
+                reactive_timer()
+
+                active_processes <- process_obj()
+
+                completed_indices <- c()
+
+                for (i in seq_along(active_processes)) {
+                    #i=1
+                    current_process <- active_processes[[i]]$process
+                    temp_dir <- active_processes[[i]]$temp_dir
+
+                    process_status <- current_process$get_exit_status()
+                    process_alive <- current_process$is_alive()
+
+                    dbg("[compute PGX process] process: ", active_processes[[i]]$dataset_name)
+                    dbg("[compute PGX process] : file Location:", temp_dir)
+
+                    if (!is.null(process_status) && process_status == 0) {
+                        # Process completed successfully
+                        dbg("[compute PGX process] : process completed")
+                        on_process_completed(temp_dir = temp_dir)
+                        completed_indices <- c(completed_indices, i)
+                    } else if (!is.null(process_status) && process_status != 0) {
+                        on_process_error()
+                        completed_indices <- c(completed_indices, i)
+                    } else {
+                        # Process is still running, do nothing
+                        dbg("[compute PGX process] : process still running")
+                    }
+                }
+
+                # Remove completed processes from the list
+                if (length(completed_indices) > 0) {
+                    active_processes <- active_processes[-completed_indices]
+                    process_obj(active_processes)
+                }
+
+                return(NULL)
+            })
+
+            # Function to execute when the process is completed successfully
+            on_process_completed <- function(temp_dir) {
+
+                dbg("[compute PGX process] on_process_completed() called!")                
+                process_counter(process_counter()-1) # stop the timer
+                result_path <- file.path(temp_dir, "my.pgx")
+
+                if (file.exists(result_path)) {
+                    load(result_path)
+                    computedPGX(pgx)
+                } else {
+                    message("[compute PGX process] : Error: Result file not found")
+                }
+                unlink(temp_dir, recursive = TRUE)
+            }
+
+            on_process_error <- function() {
+                dbg("[compute PGX process] on_process_error() called!")                
+                process_counter(process_counter()-1) # stop the timer
+                message("Error: Process completed with an error")
+
+                dbg("[ComputePgxModule.R] is.null(process_obj()) = ",is.null(process_obj()))
+                dbg("[ComputePgxModule.R] length(process_obj()) = ",length(process_obj()))
+                dbg("[ComputePgxModule.R] class(process_obj()) = ",class(process_obj()))
+                dbg("[ComputePgxModule.R] names(process_obj()) = ",names(process_obj()))                
+                dbg("[ComputePgxModule.R] class(process_obj()[[1]]) = ",class(process_obj()[[1]]))
+                dbg("[ComputePgxModule.R] names(process_obj()[[1]]) = ",names(process_obj()[[1]]))
+
+                proc <-process_obj()[[1]]$process
+                dbg("[ComputePgxModule.R] class(proc) = ",class(proc))
+                dbg("[ComputePgxModule.R] names(proc) = ",names(proc))                
+                ##                stderr_output <- process_obj()$read_error_lines()
+                stderr_output <- proc$read_error_lines()                
+                dbg("[ComputePgxModule.R] stderr_output = ",stderr_output)
+                
+                if (length(stderr_output) > 0) {
+                    message("Standard error output from the process:")
+                    for (line in stderr_output) {
+                        message(line)
+                    }
+                } else {
+                    message("No standard error output available from the process")
+                }
+            }
+
+            ## what does this do???
+            observe(check_process_status())  
+
+            observe({
+                if (process_counter() > 0){
+                    shiny::insertUI(
+                        selector = ".current-dataset",
+                        where = "beforeEnd",
+                        ui = loading_spinner("Computation in progress...")
+                        )
+                } else if (process_counter() == 0) {
+                    shiny::removeUI(selector = ".current-dataset > #spinner-container")
+                }
+                
+                if (process_counter() < opt$MAX_DS_PROCESS) {
+                    shinyjs::enable("compute")
+                } else {
+                    shinyjs::disable("compute")
+                }
+                })
+
+            return(computedPGX)
         } ## end-of-server
     )
 }

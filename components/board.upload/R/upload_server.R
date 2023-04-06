@@ -110,6 +110,7 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+
       new_pgx <- uploaded_pgx()
 
       dbg("[observe::uploaded_pgx] initializing PGX object")
@@ -159,22 +160,38 @@ UploadBoard <- function(id,
         msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
       }
 
-      showModal(
-        modalDialog(
-          HTML(msg1),
-          title = NULL,
-          size = "s",
-          footer = tagList(
-            modalButton("Start!")
-          )
+      # showModal(
+      #   modalDialog(
+      #     HTML(msg1),
+      #     title = NULL,
+      #     size = "s",
+      #     footer = tagList(
+      #       modalButton("Start!")
+      #     )
+      #   )
+      # )
+
+      load_my_dataset <- function(){
+          r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        }
+
+      if(r_global$loadedDataset > 0){
+        # check if user already has a dataset loaded and have a different UX in that case
+        shinyalert::shinyalert(
+          paste("Dataset", pgx$name, "is ready!"),
+          "What do you want\nto do next?",
+          confirmButtonText = "Load dataset",
+          cancelButtonText = "Stay here",
+          showCancelButton = TRUE,
+          callbackR = load_my_dataset,
+          inputId = "confirmload"
         )
-      )
-
-      ## where does this go???
-      shinyjs::runjs("$('.tab-sidebar:eq(1)').trigger('click');")
-
-      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-      r_global$loadedDataset <- r_global$loadedDataset+1
+      }else{
+        bigdash.selectTab(session, selected = 'load-tab')
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        r_global$loadedDataset <- r_global$loadedDataset+1
+      }
+      
     })
 
     # Some 'global' reactive variables used in this file
@@ -903,7 +920,8 @@ UploadBoard <- function(id,
       max.genes = as.integer(limits["genes"]),
       max.genesets = as.integer(limits["genesets"]),
       max.datasets = as.integer(limits["datasets"]),
-      height = height
+      height = height,
+      r_global = r_global
     )
 
     uploaded_pgx <- shiny::reactive({

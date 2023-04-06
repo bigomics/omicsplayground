@@ -128,7 +128,7 @@ pkg.extra <- c(
   "BioBase","SingleCellExperiment","preprocessCore",
   "liger","monocle3","bsutils","reshape","waiter","sever",
   "RSpectra","SmartSVA","SILGGM","flashClust","ggrepel", "ComplexHeatmap",
-  "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne", "seriation",
+  "TCGAbiolinks","TCGAutils","GEOmetadb","Rtsne", "seriation","sortable",
   'wordcloud2', 'optparse', 'docopt',"DT","plotly",
   'kableExtra', 'shinythemes', 'rworldmap',"e1071","mixOmics",
   "HiddenMarkov","coin","rjags","argparse",
