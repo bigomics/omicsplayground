@@ -280,6 +280,9 @@ DataViewUI <- function(id) {
       "Contrasts",
       dataview_table_contrasts_ui(
         ns("contrastTable"),
+        title = "Contrast table",
+        info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.", 
+        caption = "Table summarizing the contrasts of all comparisons.",
         height = c(500, TABLE_HEIGHT_MODAL),
         width = c("auto", "100%")
       )
