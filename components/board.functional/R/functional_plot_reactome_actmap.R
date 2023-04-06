@@ -54,9 +54,10 @@ functional_plot_reactome_actmap_server <- function(id,
                                                getReactomeTable,
                                                watermark = FALSE) {
   moduleServer(
-    id, function(input, output, session) {
+      id, function(input, output, session) {
+          
       plotREACTOMEactmap <- function(meta, df,
-                                 normalize = 1, nterms = 40, nfc = 10) {
+                                 normalize = 1, nterms = 40, nfc = 10, tl.cex=1) {
         fx <- sapply(meta, function(x) x$meta.fx)
         qv <- sapply(meta, function(x) x$meta.q)
         rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
@@ -100,7 +101,7 @@ functional_plot_reactome_actmap_server <- function(id,
           ignore.case = TRUE
         ))
         rownames(score2) <- substring(rownames(score2), 1, 60)
-        colnames(score2) <- shortstring(colnames(score2), 30)
+        colnames(score2) <- playbase::shortstring(colnames(score2), 30)
         colnames(score2) <- paste0(colnames(score2), " ")
 
         bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
@@ -111,7 +112,7 @@ functional_plot_reactome_actmap_server <- function(id,
           is.corr = FALSE,
           cl.pos = "n",
           col = BLUERED(100),
-          tl.cex = 1.0,
+          tl.cex = 1.0*tl.cex,
           tl.col = "grey20",
           tl.srt = 90,
           mar = c(0, 0, 0.5, 0)
@@ -136,10 +137,12 @@ functional_plot_reactome_actmap_server <- function(id,
           return(NULL)
         }
         meta <- pgx$gset.meta$meta
-        plotREACTOMEactmap(meta, df,
-          normalize = input$reactome_normalize,
-          nterms = 25,
-          nfc = 25
+        plotREACTOMEactmap(
+            meta, df,
+            normalize = input$reactome_normalize,
+            nterms = 25,
+            nfc = 25,
+            tl.cex = 0.9
         )
       }
 
@@ -152,10 +155,12 @@ functional_plot_reactome_actmap_server <- function(id,
           return(NULL)
         }
         meta <- pgx$gset.meta$meta
-        plotREACTOMEactmap(meta, df,
-          normalize = input$reactome_normalize,
-          nterms = 25,
-          nfc = 100
+        plotREACTOMEactmap(
+            meta, df,
+            normalize = input$reactome_normalize,
+            nterms = 25,
+            nfc = 100,
+            tl.cex = 1
         )
       }
 
