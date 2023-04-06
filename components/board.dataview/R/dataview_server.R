@@ -69,10 +69,10 @@ DataViewBoard <- function(id, pgx) {
       shiny::req(pgx$Y, pgx$samples)
 
       ## levels for sample filter
-      levels <- getLevels(pgx$Y)
+      levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "data_samplefilter", choices = levels)
 
-      grps <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
+      grps <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
       grps <- sort(grps)
       grps <- c(grep("^[.]", grps, value = TRUE, invert = TRUE), grep("^[.]", grps, value = TRUE))
       selgrp <- grps[1]
@@ -100,7 +100,7 @@ DataViewBoard <- function(id, pgx) {
         }
         ## gene filter.
         genes <- sort(pgx$genes[pp, ]$gene_name)
-        fc2 <- rowMeans(pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
+        fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
         genes <- intersect(names(sort(-fc2)), genes) ## most var gene??
         selgene <- genes[1]
         genes1 <- unique(c(selgene, sort(genes)))
@@ -141,7 +141,7 @@ DataViewBoard <- function(id, pgx) {
     selected_samples <- reactive({
       samples <- colnames(pgx$X)
       if (!is.null(input$data_samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       }
       samples
     })
@@ -283,7 +283,7 @@ DataViewBoard <- function(id, pgx) {
       subtt <- NULL
 
       samples <- colnames(pgx$X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       nsamples <- length(samples)
       if ("counts" %in% names(pgx)) {
         counts <- pgx$counts[, samples, drop = FALSE]

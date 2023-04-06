@@ -44,7 +44,7 @@ FeatureMapBoard <- function(id, pgx) {
         selected = "H"
       )
 
-      cvar <- pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
       cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
       shiny::updateSelectInput(session, "sigvar",
         choices = cvar,
@@ -83,7 +83,7 @@ FeatureMapBoard <- function(id, pgx) {
       ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
         
-      p <- pgx.scatterPlotXY(
+      p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
         plotlib = plotlib,
@@ -152,7 +152,7 @@ FeatureMapBoard <- function(id, pgx) {
           xaxs <- FALSE
         }
 
-        pgx.scatterPlotXY.BASE(
+        playbase::pgx.scatterPlotXY.BASE(
           pos[jj, ],
           var = var[jj],
           zsym = zsym, zlim = zlim, set.par = FALSE, softmax = 1,
@@ -177,10 +177,10 @@ FeatureMapBoard <- function(id, pgx) {
       ## buffered reactive
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
+          F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
           F <- scale(F, center = FALSE)
-          pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
-          pos <- pos.compact(pos)
+          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP",
         value = 0.5
@@ -202,10 +202,10 @@ FeatureMapBoard <- function(id, pgx) {
       ## buffered reactive
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(pgx, level = "geneset")$fc
+          F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
           F <- scale(F, center = FALSE)
-          pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
-          pos <- pos.compact(pos)
+          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP (genesets)",
         value = 0.5

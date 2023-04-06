@@ -83,7 +83,7 @@ featuremap_plot_gene_map_server <- function(id,
       nlabel <- as.integer(input$umap_nlabel)
 
       ## select on table filter
-      F <- pgx.getMetaMatrix(pgx)$fc
+      F <- playbase::pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
       if (colorby == "sd.FC") {
         fc <- (rowMeans(F**2))**0.5
@@ -192,7 +192,7 @@ featuremap_plot_gene_map_server <- function(id,
         }))
         is.fc <- FALSE
       } else {
-        F <- pgx.getMetaMatrix(pgx, level = "gene")$fc
+        F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         is.fc <- TRUE
       }
 
@@ -202,7 +202,7 @@ featuremap_plot_gene_map_server <- function(id,
       }
       F <- F[order(-rowMeans(F**2)), ]
 
-      tt <- shortstring(pgx$genes[rownames(F), "gene_title"], 60)
+      tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"

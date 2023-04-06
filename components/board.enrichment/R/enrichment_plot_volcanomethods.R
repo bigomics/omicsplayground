@@ -63,7 +63,7 @@ enrichment_plot_volcanomethods_server <- function(id,
           sig.gs <- intersect(sel.gsets, sig.gs)
 
           method <- colnames(fx)[i]
-          gx.volcanoPlot.XY(
+          playbase::gx.volcanoPlot.XY(
             x = fx[, i], pv = qv[, i],
             use.fdr = TRUE, p.sig = fdr, lfc = lfc,
             gene = rownames(mx),

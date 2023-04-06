@@ -178,7 +178,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       }
 
       ## get all logFC of this dataset
-      meta <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       F <- meta$fc
       rownames(F) <- toupper(rownames(F))
 
@@ -237,7 +237,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         i <- 1
         fx <- 1 * (rownames(F) %in% gmt[[1]])
         rho <- cor(apply(F, 2, rank, na.last = "keep"), fx, use = "pairwise")[, 1]
-        pv <- cor.pvalue(rho, nrow(F))
+        pv <- playbase::cor.pvalue(rho, nrow(F))
         qv <- p.adjust(pv, method = "fdr")
         res1 <- data.frame(pval = pv, padj = qv, rho = rho, NES = NA)
         rownames(res1) <- names(pv)
@@ -376,7 +376,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         return(NULL)
       }
 
-      meta <- pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
       rownames(fc) <- toupper(rownames(fc))

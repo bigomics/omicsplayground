@@ -56,7 +56,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
       ## TODO: Color palettes should be unique, not the same for condition and time
       ## NOTE: the package doesnt allow to change the typeface, the position of the legend, the label placement, ...
       ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
-      plt <- pgx.plotPhenotypeMatrix0(
+      plt <- playbase::pgx.plotPhenotypeMatrix0(
         annot = res$annot,
         annot.ht = annot.ht,
         cluster.samples = res$do.clust

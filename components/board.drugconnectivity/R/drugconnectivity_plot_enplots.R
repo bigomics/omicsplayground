@@ -137,7 +137,7 @@ drugconnectivity_plot_enplots_server <- function(id,
           par(cex.axis = 0.001)
           if (i %% nc == 1) par(cex.axis = 0.98)
           suppressWarnings(
-            gsea.enplot(rnk, gmtdx,
+            playbase::gsea.enplot(rnk, gmtdx,
               main = dx1, cex.main = 1.2,
               xlab = xlab, ylab = ylab
             )

@@ -32,7 +32,7 @@ viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1,
     hlist <- list()
     for(i in 1:length(xlist)) {
         hlist[[i]] <- grid::grid.grabExpr(
-            gx.splitmap(
+            playbase::gx.splitmap(
                 xlist[[i]], main=main[i],
                 col.annot=pheno, softmax=TRUE,
                 show_legend=FALSE, scale="row", split=NULL,
@@ -83,7 +83,7 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
         ct <- names(pgx$gx.meta$meta)
     }
 
-    out <- pgx.getMetaFoldChangeMatrix(pgx)
+    out <- playbase::pgx.getMetaFoldChangeMatrix(pgx)
     F <- out$fc
     Q <- out$qv
 
@@ -132,7 +132,7 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
 
     ph1 <- as.character(pgx$samples[,pheno1])
     lg1 <- legend[1]
-    p1 <- pgx.scatterPlotXY(
+    p1 <- playbase::pgx.scatterPlotXY(
         posx, var=ph1, label.clusters=!lg1, legend=lg1,
         cex.clust=1.1, title=pheno1, plotlib="ggplot")
     if(!is.null(theme)) { p1 <- p1 + theme }
@@ -140,7 +140,7 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
     if(!is.null(pheno2)) {
         ph2 <- pgx$samples[,pheno2]
         lg2 <- legend[2]
-        p2 <- pgx.scatterPlotXY(
+        p2 <- playbase::pgx.scatterPlotXY(
             posx, var=ph2, plotlib="ggplot",
             label.clusters=!lg2, legend=lg2,
             title=pheno2, cex.clust=1.1)
@@ -153,7 +153,7 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
     sel <- tapply(1:ncol(X), ph1, function(i) Matrix::head(sample(i),subsample))
     sel <- unlist(sel)
     p3 <- grid::grid.grabExpr(
-        gx.markermap(
+        playbase::gx.markermap(
             X[,sel], splitx=ph1[sel], n=n,
             scale=scale, softmax=TRUE, title_cex=1,
             show_rownames=100, cexRow=0.8)
@@ -192,7 +192,7 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
     plt <- list()
     for(ph in phenotypes) {
         y <- pgx$samples[,ph]
-        p <- pgx.scatterPlotXY(
+        p <- playbase::pgx.scatterPlotXY(
             posx, var=y, title=ph, cex=cex, legend.pos=legend.pos,
             hilight2 = hilight2,
             plotlib="ggplot", theme=theme)
@@ -331,7 +331,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
     x <- pgx$samples[,by.pheno]
     p <- phenotypes[1]
     Y <- data.frame(pgx$samples[,phenotypes,drop=FALSE])
-    Y <- tidy.dataframe(Y)
+    Y <- playbase::tidy.dataframe(Y)
 
     ptype <- sapply(Y, class)
     names(ptype) <- phenotypes
@@ -444,7 +444,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     ## get cluster markers (only works if vs_others is defined!!)
 
     if(is.null(genes) && !is.null(contrast)) {
-        px.markers <- pgx.getMarkerGenes(pgx, n=ngenes, dir=0)
+        px.markers <- playbase::pgx.getMarkerGenes(pgx, n=ngenes, dir=0)
         genes <- px.markers[[contrast]]
     } else if(!is.null(genes) && is.null(contrast)) {
         genes <- Matrix::head(genes, ngenes)
@@ -498,7 +498,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     ## zlim <- NULL
     for(i in 1:length(genes)) {
         ##m1 <- pgx.plotSampleProjection (
-        m1 <- pgx.scatterPlot(
+        m1 <- playbase::pgx.scatterPlot(
             pgx, gene=genes[i], title=genes[i],
             ##label.clusters=TRUE, ## labels=markers,
             cex=cex, cex.clust=1, cex.title=0.9,
@@ -539,7 +539,7 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
 {
 
     if(!is.null(genesets)) {
-        F <- pgx.getMarkerGenes(pgx, n=ntop, dir=0, sym=TRUE)
+        F <- playbase::pgx.getMarkerGenes(pgx, n=ntop, dir=0, sym=TRUE)
         markers  <- F[[contrast]]
         gs.genes <- lapply(apply(pgx$GMT[,genesets]!=0,2,which),names)
         top.genes <- gs.genes
@@ -547,7 +547,7 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
             top.genes[[i]] <- intersect(markers, gs.genes[[i]])
         }
     } else {
-        out <- pgx.getTopGeneSets(pgx, n=15, ng=ntop, dir=0, sym=TRUE)
+        out <- playbase::pgx.getTopGeneSets(pgx, n=15, ng=ntop, dir=0, sym=TRUE)
         gs.genes  <- out$genes[[contrast]]
         top.genes <- out$top.genes[[contrast]]
         names(top.genes)
@@ -578,9 +578,9 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
         tt <- names(top.genes)[i]
         if(!is.null(strip)) tt <- gsub(strip,"",tt)
         if(type=="enplot") {
-            p1 <- ggenplot(fc, gs.genes[[i]], main=tt )
+            p1 <- playbase::ggenplot(fc, gs.genes[[i]], main=tt )
         } else {
-            p1 <- pgx.scatterPlotXY(
+            p1 <- playbase::pgx.scatterPlotXY(
                 pos=pos1, var=fill,
                 cex=1, cex.title=0.8,
                 hilight = gs.genes[[i]],
@@ -654,7 +654,7 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
     fc.max <- NULL
     qv.min <- NULL
     if(fixed.axis) {
-        meta <- pgx.getMetaMatrix(pgx)
+        meta <- playbase::pgx.getMetaMatrix(pgx)
         fc.max <- max(abs(meta$fc[,contrasts]),na.rm=TRUE)
         qv.min <- min(abs(meta$qv[,contrasts]),na.rm=TRUE)
         fc.max <- quantile(abs(meta$fc[,contrasts]),probs=0.999,na.rm=TRUE)
@@ -672,12 +672,12 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
         ct = contrasts[i]
         labels=gg=NULL
         if(level=="gene") {
-            gg <- pgx.getMarkerGenes(
+            gg <- playbase::pgx.getMarkerGenes(
                 pgx, dir=dir, n=ntop, filt=filt)[[ct]]
             labels <- rownames(pgx$X)
         }
         if(level=="geneset") {
-            out <- pgx.getTopGeneSets(
+            out <- playbase::pgx.getTopGeneSets(
                 pgx, dir=dir, n=ntop, filt=filt)
             gg <- out$gsets[[ct]]
             labels <- rownames(pgx$gsetX)
@@ -688,7 +688,7 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
             grpy <- gsub(".*:|_vs_.*","",ct)
             ylab1 <- paste0("expression ",grpy," (logCPM)")
             xlab1 <- paste0("expression ",grpx," (logCPM)")
-            p1 <- pgx.plotContrast(
+            p1 <- playbase::pgx.plotContrast(
                 pgx, ct, plotlib="ggplot", level=level,
                 psig = psig, fc = fc,
                 cex = cex , cex.lab = cex.lab,
@@ -697,21 +697,21 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
 
         } else if(type=="custom") {
             labels <- rownames(pos)
-            p1 <- pgx.scatterPlot(
+            p1 <- playbase::pgx.scatterPlot(
                 pgx, pos=pos, contrast=ct,
                 hilight=gg, hilight2=gg,
                 level=level, cex.lab=cex.lab, cex=cex,
                 labels=labels, label.type=label.type,
                 title=NULL, plotlib="ggplot")
         } else if(type=="MA") {
-            p1 <- pgx.plotMA(
+            p1 <- playbase::pgx.plotMA(
                 pgx, ct, cex=cex, cex.lab=cex.lab,
                 ntop=ntop, level=level,
                 psig=psig, fc=fc,
                 hilight=gg, plotlib="ggplot")
         } else {
             ## if(type=="volcano") {
-            p1 <- pgx.Volcano(
+            p1 <- playbase::pgx.Volcano(
                 pgx, ct, ntop=ntop, level=level,
                 methods = methods,
                 psig = psig, fc = fc,
@@ -759,7 +759,7 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
         comparisons <- Matrix::head(comparisons, 24)
     }
 
-    out <- pgx.getMetaFoldChangeMatrix(pgx)
+    out <- playbase::pgx.getMetaFoldChangeMatrix(pgx)
     F <- out$fc
     Q <- out$qv
 
@@ -777,7 +777,7 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
         sig <- c("","top")[1 + 1*(rownames(pos) %in% top.gg)]
         sig <- c("","sig1","sig2")[1 + rowSums(qq < 0.05)]
         cpal <- c("grey70","darkorange","red2")
-        p2 <- pgx.scatterPlotXY(
+        p2 <- playbase::pgx.scatterPlotXY(
             pos, var=sig, plotlib="ggplot", cex=1.0*cex,
             hilight=top.gg, legend=FALSE) +
             ggplot2::scale_fill_manual(values=cpal) +
@@ -911,7 +911,7 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
         methods <- NORMALIZATION.METHODS
     methods <- intersect(methods, NORMALIZATION.METHODS)
     for(m in methods) {
-        xlist[[m]] <- pgx.countNormalization(counts, m)
+        xlist[[m]] <- playbase::pgx.countNormalization(counts, m)
     }
 
     if(post.qn) {
@@ -955,7 +955,7 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
 
     grep("^IG",rownames(pgx$counts),value=TRUE,ignore.case=TRUE)
     X <- pgx$counts
-    ##X <- logCPM(pgx$counts, total=NULL)
+    ##X <- playbase::logCPM(pgx$counts, total=NULL)
     X <- X[grep("^IG",rownames(X)),]
 
     ## subtract background
@@ -1014,23 +1014,23 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     T2 <- Matrix::head(VH.avg,ng)
 
     H1 <- grid::grid.grabExpr(
-        gx.splitmap(t(T1), split=NULL, cexCol=0.85, scale="none",
+        playbase::gx.splitmap(t(T1), split=NULL, cexCol=0.85, scale="none",
                     main=paste("VL usage by",by.pheno))
     )
     H2 <- grid::grid.grabExpr(
-        gx.splitmap(t(T2), split=NULL, cexCol=0.85,
+        playbase::gx.splitmap(t(T2), split=NULL, cexCol=0.85,
                     main=paste("VH usage by",by.pheno))
     )
 
     if(1) {
-        mm <- pgx.phenoMatrix(pgx, by.pheno)
+        mm <- playbase::pgx.phenoMatrix(pgx, by.pheno)
         matlist <- list(VL, VH, mm)
-        S1 <- pgx.SankeyFromMatrixList.PLOTLY(matlist)
-        ##S1 <- pgx.SankeyFromPhenotypes.GGPLOT(
+        S1 <- playbase::pgx.SankeyFromMatrixList.PLOTLY(matlist)
+        ##S1 <- playbase::pgx.SankeyFromPhenotypes.GGPLOT(
         ##    pgx, phenotypes=c(by.pheno,"VL","VH"), fill=by.pheno,
         ##    nmin=nmin, title="VH/VL pairing")
         S1.grob <- NULL
-        S1.grob <- plotly2ggplot(S1, width=600, height=800, scale=0.97)
+        S1.grob <- playbase::plotly2ggplot(S1, width=600, height=800, scale=0.97)
         class(S1.grob)
     }
 
@@ -1220,13 +1220,13 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     pos[[2]] <- pos1
     pos[[3]] <- pos2
     if(is.null(pos0)) {
-        pos[[1]] <- pgx.clusterBigMatrix(xlist[[1]], method="tsne", dims=2)[[1]]
+        pos[[1]] <- playbase::pgx.clusterBigMatrix(xlist[[1]], method="tsne", dims=2)[[1]]
     }
     if(is.null(pos1) && !is.null(cX)) {
-        pos[[2]] <- pgx.clusterBigMatrix(xlist[[2]], method="tsne", dims=2)[[1]]
+        pos[[2]] <- playbase::pgx.clusterBigMatrix(xlist[[2]], method="tsne", dims=2)[[1]]
     }
     if(is.null(pos2) && !is.null(cX2)) {
-        pos[[3]] <- pgx.clusterBigMatrix(xlist[[3]], method="tsne", dims=2)[[1]]
+        pos[[3]] <- playbase::pgx.clusterBigMatrix(xlist[[3]], method="tsne", dims=2)[[1]]
     }
     pos <- pos[!sapply(xlist,is.null)]
     xlist <- xlist[!sapply(xlist,is.null)]
@@ -1240,7 +1240,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         for(i in 1:length(xlist)) {
             hlist[[i]] <- grid::grid.grabExpr(
                 ##gx.splitmap(
-                gx.PCAheatmap(
+                playbase::gx.PCAheatmap(
                     X=xlist[[i]], main=main[i],
                     nv=5, ngenes=10, ## split=NULL,
                     col.annot=pheno, softmax=TRUE,
@@ -1257,7 +1257,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     } else {
         for(i in 1:length(xlist)) {
             hlist[[i]] <- grid::grid.grabExpr(
-                gx.splitmap(
+                playbase::gx.splitmap(
                     xlist[[i]], main=main[i],
                     col.annot=pheno, softmax=TRUE,
                     show_legend=FALSE, scale="row", split=NULL,
@@ -1279,7 +1279,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     pheno1 <- pheno[,order(colnames(pheno)),drop=FALSE]
     i=1
     for(i in 1:length(xlist)) {
-        f1 <- pgx.PC_correlation(
+        f1 <- playbase::pgx.PC_correlation(
             xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
             main = paste0("PC variance (",main[i],")"))
         f1 <- f1 +
@@ -1341,9 +1341,9 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
 {
 
     ## determine clusters
-    cl1 <- pgx.FindClusters(t(umap), method="kmeans")[[1]][,"kmeans.10"]
-    cl2 <- pgx.FindClusters(t(gs.umap), method="kmeans")[[1]][,"kmeans.5"]
-    ##cl3 <- pgx.FindClusters(t(pgx$tsne2d), method="kmeans")[[1]][,"kmeans.4"]
+    cl1 <- playbase::pgx.FindClusters(t(umap), method="kmeans")[[1]][,"kmeans.10"]
+    cl2 <- playbase::pgx.FindClusters(t(gs.umap), method="kmeans")[[1]][,"kmeans.5"]
+    ##cl3 <- playbase::pgx.FindClusters(t(pgx$tsne2d), method="kmeans")[[1]][,"kmeans.4"]
     cl1 <- paste0("G",cl1)
     cl2 <- paste0("S",cl2)
     ##cl3 <- paste0("C",cl3)
@@ -1353,13 +1353,13 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     plotlib="ggplot"
     cluster.plots <- function(contrast, plotlib="ggplot") {
 
-        p1 <- pgx.scatterPlotXY(
+        p1 <- playbase::pgx.scatterPlotXY(
             umap, var=factor(cl1), label.clusters=TRUE, legend=FALSE,
             cex=1, cex.clust=0.85, plotlib=plotlib, title="gene clusters")
-        p2 <- pgx.scatterPlotXY(
+        p2 <- playbase::pgx.scatterPlotXY(
             gs.umap, var=factor(cl2), label.clusters=TRUE, legend=FALSE,
             cex=1, cex.clust=0.85, plotlib=plotlib, title="geneset clusters")
-        p3 <- pgx.scatterPlotXY(
+        p3 <- playbase::pgx.scatterPlotXY(
             pgx$tsne2d, var=factor(cl3), label.clusters=TRUE, legend=FALSE,
             cex=1, cex.clust=0.85, plotlib=plotlib, title="sample clusters")
 
@@ -1367,14 +1367,14 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
         ##p5 <- viz.Contrasts(pgx, contrasts=contrast, level="geneset",
         ##                    filt="HALLMARK", strip=".*HALLMARK_",
         ##                    ntop=5, plots.only=TRUE, pos=gs.umap)[[1]]
-        ##p6 <- pgx.scatterPlot(pgx, pheno="celltype", cex.legend=0.7,
+        ##p6 <- playbase::pgx.scatterPlot(pgx, pheno="celltype", cex.legend=0.7,
         ##                      plotlib=plotlib, title="celltype")
-        p4 <- pgx.scatterPlot(
+        p4 <- playbase::pgx.scatterPlot(
             pgx, contrast=contrast, pos=umap, plotlib=plotlib, title="gene")
-        p5 <- pgx.scatterPlot(
+        p5 <- playbase::pgx.scatterPlot(
             pgx, contrast=contrast, pos=gs.umap, level="geneset",
             plotlib=plotlib, title="geneset")
-        p6 <- pgx.scatterPlot(
+        p6 <- playbase::pgx.scatterPlot(
             pgx, contrast=contrast, plotlib=plotlib, title="sample")
 
         cowplot::plot_grid(p1, p2, p3, p4, p5, p6, nrow=2)
@@ -1389,8 +1389,8 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     X1 <- X1 / apply(X1,1,sd) ## scale SD -> 1
     X2 <- X2 / apply(X2,1,sd) ## scale SD -> 1
 
-    M1 <- matGroupMeans(X1, group=cl1, dir=2)
-    M2 <- matGroupMeans(X2, group=cl2, dir=2)
+    M1 <- playbase::matGroupMeans(X1, group=cl1, dir=2)
+    M2 <- playbase::matGroupMeans(X2, group=cl2, dir=2)
     M1 <- M1 - rowMeans(M1)
     M2 <- M2 - rowMeans(M2)
     M1 <- M1 / apply(M1,1,sd)
@@ -1502,7 +1502,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
             ww <- ww / max(ww)  ## normalize??
             F[[i]] <- ww
         }
-        pgx.SankeyFromMRF.PLOTLY(
+        playbase::pgx.SankeyFromMRF.PLOTLY(
             M=M, R=R, F=F, fill=fill, labels=toplist)
     }
 

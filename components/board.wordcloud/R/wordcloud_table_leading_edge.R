@@ -42,7 +42,7 @@ wordcloud_table_leading_edge_server <- function(id,
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
-      df$leading.edge <- wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
+      df$leading.edge <- playbase::wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
 
       tbl <- DT::datatable(df,
         rownames = FALSE, escape = c(-1, -2),
@@ -59,7 +59,7 @@ wordcloud_table_leading_edge_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("fx",
-          background = color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

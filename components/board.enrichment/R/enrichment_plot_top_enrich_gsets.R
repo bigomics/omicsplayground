@@ -64,13 +64,13 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
           ylab <- ""
           if (i %% rowcol[2] == 1) ylab <- "Rank metric"
           xlab <- ""
-          gs1 <- breakstring(gs, 28, 50, force = FALSE)
+          gs1 <- playbase::breakstring(gs, 28, 50, force = FALSE)
           if (ntop == 1) {
-            gs1 <- breakstring(gs, 100, 200, force = FALSE)
+            gs1 <- playbase::breakstring(gs, 100, 200, force = FALSE)
             xlab <- "Rank in ordered dataset"
             ylab <- "Rank metric"
           }
-          gsea.enplot(rnk0, genes,
+          playbase::gsea.enplot(rnk0, genes,
             names = NULL, ## main=gs,
             main = gs1, xlab = xlab, ylab = ylab,
             lab.line = c(0, 1.8), cex.lab = 0.75,

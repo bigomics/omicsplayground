@@ -212,7 +212,7 @@ singlecell_plot_markersplot_server <- function(id,
           label <- sub(".*:", "", rownames(top.gx)[i])
         } else {
           gset <- sub(".*:", "", rownames(top.gx)[i])
-          label <- breakstring(substring(gset, 1, 80), 24, force = TRUE)
+          label <- playbase::breakstring(substring(gset, 1, 80), 24, force = TRUE)
           label <- tolower(label)
         }
 
@@ -295,7 +295,7 @@ p
         tt <- rownames(top.gx)[i]
         
         ## ------- start plot ----------       
-        p <- pgx.scatterPlotXY.PLOTLY(
+        p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = colvar,
           col = klrpal,

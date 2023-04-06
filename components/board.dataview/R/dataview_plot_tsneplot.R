@@ -106,8 +106,8 @@ dataview_plot_tsne_server <- function(id,
           labels = function(x) sprintf("%1.2f", x),
           name = "Expression"
         ) +
-        guide_continuous(aes = "color", type = "steps", width = .4) +
-        theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .4) +
+        playbase::theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
 
       plot_dl$base <- fig_base
 
@@ -160,8 +160,8 @@ dataview_plot_tsne_server <- function(id,
 
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() +
-        guide_continuous(aes = "color", type = "steps", width = .7) +
-        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .7) +
+        playbase::theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
       ## plotly::ggplotly(fig)
       fig
     }

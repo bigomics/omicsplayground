@@ -114,7 +114,7 @@ expression_plot_barplot_server <- function(id,
         return(NULL)
       }
 
-      fig <- pgx.plotExpression(
+      fig <- playbase::pgx.plotExpression(
         pd[["pgx"]],
         pd[["gene"]],
         comp = pd[["comp"]],

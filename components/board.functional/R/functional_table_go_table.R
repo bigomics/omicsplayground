@@ -75,7 +75,7 @@ functional_table_go_table_server <- function(id,
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
       dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
-      dt$id <- wrapHyperLink(as.character(dt$id), id2) ## add link
+      dt$id <- playbase::wrapHyperLink(as.character(dt$id), id2) ## add link
 
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
@@ -96,7 +96,7 @@ functional_table_go_table_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = color_from_middle(
+          background = playbase::color_from_middle(
             dt1[, "score"],
             "lightblue",
             "#f5aeae"

@@ -71,7 +71,7 @@ correlation_plot_cor_graph_server <- function(id,
 
       radius <- as.integer(input$cor_graph_radius)
 
-      gr <- pgx.plotPartialCorrelationGraph(
+      gr <- playbase::pgx.plotPartialCorrelationGraph(
         res, gene, ## what="graph", ## degree=deg,
         plot = FALSE,
         rho.min = rho.min, nsize = -1,

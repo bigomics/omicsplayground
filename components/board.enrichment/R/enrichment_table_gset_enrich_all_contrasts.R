@@ -100,13 +100,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.ES",
-          background = color_from_middle(fc.rms, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(fc.rms, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = color_from_middle(F[, ], "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(F[, ], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

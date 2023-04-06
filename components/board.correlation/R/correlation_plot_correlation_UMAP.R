@@ -96,7 +96,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
       higenes <- unique(names(c(head(sort(rho1), 10), tail(sort(rho1), 10))))
       cexlab <- ifelse(length(higenes) == 1, 2.2, 1.3)
 
-      p <- pgx.plotGeneUMAP(
+      p <- playbase::pgx.plotGeneUMAP(
         pgx,
         pos = pos, ## contrast=ct,
         value = rho0, title = "",

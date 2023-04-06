@@ -86,7 +86,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
           gsets <- getGSETS(rownames(F))
           gsets <- gsets[sapply(gsets, length) >= 5]
           bg <- unique(unlist(gsets))
-          ft <- gset.fisher(le.genes, gsets,
+          ft <- playbase::gset.fisher(le.genes, gsets,
             fdr = 1.0,
             min.genes = 3, max.genes = 99999,
             background = bg

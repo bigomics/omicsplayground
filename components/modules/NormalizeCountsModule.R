@@ -132,7 +132,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     norm.counts <- pgx$counts  ## no-normalization
                 } else {
                     message("[normalized_counts] >>> normalizing counts with ", method)
-                    norm.counts <- pgx.countNormalization(pgx$counts, method)
+                    norm.counts <- playbase::pgx.countNormalization(pgx$counts, method)
                 }
                 norm.counts
             })

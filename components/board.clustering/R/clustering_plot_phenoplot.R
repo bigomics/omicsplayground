@@ -106,7 +106,7 @@ clustering_plot_phenoplot_server <- function(id,
         tt <- tolower(pheno[i])
 
         ## ------- start plot        
-        p <- pgx.scatterPlotXY.PLOTLY(
+        p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = colvar,
           col = klrpal,

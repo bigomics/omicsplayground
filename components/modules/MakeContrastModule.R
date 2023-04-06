@@ -318,7 +318,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
 
         ctx <- NULL
         if (strata.var == "<none>") {
-          ct <- pgx.makeAutoContrasts(
+          ct <- playbase::pgx.makeAutoContrasts(
             df,
             mingrp = 3, slen = 20, ref = NULL, fix.degenerate = FALSE
           )
@@ -327,7 +327,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
             rownames(ctx) <- rownames(df)
           }
         } else {
-          ctx <- pgx.makeAutoContrastsStratified(
+          ctx <- playbase::pgx.makeAutoContrastsStratified(
             df,
             strata = strata.var,
             mingrp = 3, slen = 20, ref = NULL, fix.degenerate = FALSE
@@ -338,7 +338,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
         }
 
         ## update reactive value
-        ctx2 <- contrastAsLabels(ctx)
+        ctx2 <- playbase::contrastAsLabels(ctx)
         if (!is.null(rv$contr)) {
           rv$contr <- cbind(rv$contr, ctx2)
         } else {
@@ -368,7 +368,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
               paste(x, collapse = " ")
             }
 
-            ct1 <- makeContrastsFromLabelMatrix(ct)
+            ct1 <- playbase::makeContrastsFromLabelMatrix(ct)
             ct1[is.na(ct1)] <- 0
 
             if (NCOL(ct) == 1) {
@@ -447,7 +447,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
 
         method <- input$pcaplot.method
         X <- log2(1 + counts)
-        clust <- pgx.clusterMatrix(X, dims = 2, method = method)
+        clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
         names(clust)
 
         cond <- sel.conditions()
@@ -455,7 +455,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
           return(NULL)
         }
         ## par(mar=c(4,1,1,1))
-        pgx.scatterPlotXY(
+        playbase::pgx.scatterPlotXY(
           clust$pos2d,
           var = cond, plotlib = "plotly",
           legend = FALSE ## , labels=TRUE

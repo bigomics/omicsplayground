@@ -370,7 +370,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                     message("[ComputePgxServer:@compute] using futures ")
                     f <- future::future({
-                        pgx.createPGX(
+                        playbase::pgx.createPGX(
                             counts, samples, contrasts, ## genes,
                             X = NULL,   ## should we pass the pre-normalized expresson X ????
                             batch.correct = FALSE, ## done in UI
@@ -399,7 +399,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 } else {
 
-                    ngs <- pgx.createPGX(
+                    ngs <- playbase::pgx.createPGX(
                         counts, samples, contrasts, ## genes,
                         X = NULL,   ## should we pass the pre-normalized expresson X ????
                         batch.correct = FALSE, ## done in UI
@@ -424,7 +424,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                     message("[ComputePgxServer:@compute] using futures ")
                     f <- future::future({
-                        pgx.computePGX(
+                        playbase::pgx.computePGX(
                             ngs,
                             max.genes = max.genes,
                             max.genesets = max.genesets,
@@ -451,7 +451,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                 } else {
 
-                    ngs <- pgx.computePGX(
+                    ngs <- playbase::pgx.computePGX(
                         ngs,
                         max.genes = max.genes,
                         max.genesets = max.genesets,
@@ -492,7 +492,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 message("[ComputePgxServer:@compute] initialize object")
 
                 ## initialize and update global PGX object
-                ## ngs <- pgx.initialize(ngs)  ## here or later???
+                ## ngs <- playbase::pgx.initialize(ngs)  ## here or later???
                 ##uploaded$pgx <- ngs
                 computedPGX(ngs)
 
