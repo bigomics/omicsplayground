@@ -158,41 +158,37 @@ expression_plot_volcanoAll_server <- function(id,
 
 
     plot.RENDER <- function() {
-
       plt <- render_plots(cex=0.5, base_size=11)
       nplots <- length(plt)
-      
       ## plot layout #####
       ## layout
       nr = 1
-      nc = 6
+      nc = max(4,nplots)
       if(nplots > 6) {
         nr = 2
-        nc = 6
+        nc = ceiling(nplots/nr)
       }
       if (nplots > 12) {
         nr = 3
-        nc = 8
+        nc = ceiling(nplots/nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
 
     modal_plot.RENDER <- function() {      
-
-      plt <- render_plots(cex=0.9, base_size=16)
+      plt <- render_plots(cex=0.9, base_size=15)
       nplots <- length(plt)
-      
       ## layout
       nr = 1
-      nc = 2
+      nc = max(2,nplots)
       if(nplots > 3) {
         nr = 2
-        nc = 4
+        nc = ceiling(nplots/nr)
       }
       if (nplots > 8) {
         nr = 3
-        nc = 6
+        nc = ceiling(nplots/nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }

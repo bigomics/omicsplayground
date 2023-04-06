@@ -52,7 +52,8 @@ singlecell_plot_markersplot_ui <- function(id,
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    plotlib = "plotly",      
+    #    plotlib = "plotly",
+    plotlib = "ggplot",          
     label = label,
     info.text = markersplot_info,
     title = "Expression of marker genes",
@@ -163,7 +164,7 @@ singlecell_plot_markersplot_server <- function(id,
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
       NP <- 25
-      if (mrk_level == "gene") NP <- 36
+      if (mrk_level == "geneset") NP <- 16
       top.gx <- head(gx, NP) ## match number of plot below!
       if (mrk_sortby == "name") {
         top.gx <- top.gx[order(rownames(top.gx)), , drop = FALSE]
@@ -182,8 +183,8 @@ singlecell_plot_markersplot_server <- function(id,
 
       return(pd)
     })
-
-    get_plots <- function() {
+    
+    get_ggplots <- function() {
 
       pd <- plot_data()
       shiny::req(pd)
@@ -193,7 +194,7 @@ singlecell_plot_markersplot_server <- function(id,
 
       ## make smaller dots when more points
       cex1 <- 1.0
-      cex1 <- 0.8 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+      cex1 <- 0.85 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
       klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
@@ -221,7 +222,76 @@ singlecell_plot_markersplot_server <- function(id,
         ##   fg = gray(0.8), bty = "o",
         ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
         ## )
+p
+        tt <- rownames(top.gx)[i]
+        
+        ## ------- start plot ----------       
+        p <- pgx.scatterPlotXY.GGPLOT(
+          pos,
+          var = colvar,
+          col = klrpal,
+          cex = 0.5*cex1,
+          xlab = "",
+          ylab = "",
+          xlim = 1.2*range(pos[,1]),
+          ylim = 1.2*range(pos[,2]),
+          axis = FALSE,
+          title = tt,
+          cex.title = 0.95,
+          ##title.y = 0.85,
+          ##cex.clust = cex1*0.8,
+          label.clusters = FALSE,
+          legend = FALSE,
+          gridcolor = "#ffffff",
+          bgcolor = "#f8f8f8",          
+          box = TRUE
+        ) 
 
+        plt[[i]] <- p
+      }
+      return(plt)
+    }
+
+    
+    get_plotly_plots <- function() {
+
+      pd <- plot_data()
+      shiny::req(pd)
+      top.gx <- pd$top.gx        
+      pos <- pd$pos
+      mrk_level <- pd$mrk_level
+
+      ## make smaller dots when more points
+      cex1 <- 1.0
+      cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+
+      ## grey to red colorpalette for absolute expression
+      klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
+      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
+      klrpal <- paste0(gplots::col2hex(klrpal), "66")
+
+      plt <- list()
+      i <- 1
+      for (i in 1:nrow(top.gx)) {
+        colvar <- pmax(top.gx[i, ], 0)
+        colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
+        klr0 <- klrpal[colvar]
+        
+        if (mrk_level == "gene") {
+          label <- sub(".*:", "", rownames(top.gx)[i])
+        } else {
+          gset <- sub(".*:", "", rownames(top.gx)[i])
+          label <- breakstring(substring(gset, 1, 80), 24, force = TRUE)
+          label <- tolower(label)
+        }
+
+        ## base::plot(pos[, ],
+        ##   pch = 19, cex = cex1, col = klr0,
+        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
+        ##   fg = gray(0.8), bty = "o",
+        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
+        ## )
+p
         tt <- rownames(top.gx)[i]
         
         ## ------- start plot ----------       
@@ -236,28 +306,31 @@ singlecell_plot_markersplot_server <- function(id,
           ylim = 1.2*range(pos[,2]),
           axis = FALSE,
           title = tt,
-          cex.title = cex*0.85,
+          cex.title = 0.85,
           title.y = 0.85,
-#         cex.clust = cex*0.8,
+#         cex.clust = cex1*0.8,
           label.clusters = FALSE,
           legend = FALSE,
-          gridcolor = 'fff'
-        ) %>% plotly::layout(
-          ## showlegend = TRUE,
-          plot_bgcolor = "#f8f8f8"
-        )
+          gridcolor = "fff",
+          bgcolor = "#f8f8f8",
+          tooltip = FALSE
+        ) %>%
+          plotly::style(
+            hoverinfo = 'none'
+          )
+
         plt[[i]] <- p
       }
       return(plt)
     }
-
+    
+    
     plotly.RENDER <- function() {
       pd <- plot_data()
-      plt <- get_plots()
+      plt <- get_plotly_plots()
       shiny::req(plt)        
       nr  <- ceiling(sqrt(length(plt)))
       title <- pd$mrk_features
-
       fig <- plotly::subplot(
         plt,
         nrows = nr,
@@ -265,9 +338,10 @@ singlecell_plot_markersplot_server <- function(id,
       ) %>%
         plotly_default() %>%
         plotly::layout(
-          title = list(text=title, size=12)
+          title = list(text=title, size=12),
+          margin = list(l=0,r=0,b=0,t=30) # lfbt            
         )
-##        margin = c(l=0,r=0,b=0,t=30) # lrbt
+      
       return(fig)
     }
 
@@ -280,12 +354,29 @@ singlecell_plot_markersplot_server <- function(id,
         ) 
       return(fig)
     }
+
+    ggplot.RENDER <- function() {
+      pd <- plot_data()  
+      plt <- get_ggplots()
+      shiny::req(plt)              
+      nr  <- ceiling(sqrt(length(plt)))
+      title <- pd$mrk_features
+      fig <- gridExtra::grid.arrange(
+        grobs = plt,
+        nrow = nr,
+        ncol = nr,
+        padding = unit(0.01,"line"),
+        top = textGrob(title,gp=gpar(fontsize=15))
+      )
+      return(fig)
+    }
     
     PlotModuleServer(
       "plotmodule",
-      func = plotly.RENDER,
-      func2 = plotly_modal.RENDER,
-      plotlib = "plotly",
+      func = ggplot.RENDER,
+      #      func = plotly.RENDER,
+      #      func2 = plotly_modal.RENDER,
+      plotlib = "ggplot",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,
       add.watermark = watermark

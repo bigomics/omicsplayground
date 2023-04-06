@@ -52,7 +52,8 @@ singlecell_plot_icpplot_ui <- function(id,
 
   PlotModuleUI(
     id = ns("plot"),
-    plotlib = "plotly",      
+    ##    plotlib = "plotly",
+    plotlib = "ggplot",      
     label = label,
     info.text = icp_info,
     title = "Cell type profiling",
@@ -75,7 +76,7 @@ singlecell_plot_icpplot_server <- function(id,
                                            pfGetClusterPositions,
                                            method, # input$dcmethod
                                            refset, # input$refset
-                                           lyo, # input$layout
+                                           layout, # input$layout
                                            sortby, # input$sortby
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -92,7 +93,7 @@ singlecell_plot_icpplot_server <- function(id,
         return(NULL)
       }
       refset <- refset() #
-      lyo <- lyo()
+      layout <- layout()
       sortby <- sortby()
 
       if (!("deconv" %in% names(pgx))) {
@@ -101,10 +102,6 @@ singlecell_plot_icpplot_server <- function(id,
       results <- pgx$deconv[[refset]][[method]]
       ## threshold everything (because DCQ can be negative!!!)
       results <- pmax(results, 0)
-
-      ## limit to  top50??
-      ## ii <- head(order(-colSums(results)),100))
-      ## results <- results[,ii,drop=FALSE]
 
       clust.pos <- pfGetClusterPositions()
 
@@ -125,8 +122,6 @@ singlecell_plot_icpplot_server <- function(id,
       score <- score[rownames(pos), , drop = FALSE]
       score[is.na(score)] <- 0
       score <- pmax(score, 0)
-      ## score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
-      ## score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
       score <- score / (1e-20 + rowSums(score))
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
@@ -145,16 +140,17 @@ singlecell_plot_icpplot_server <- function(id,
       pos <- pos[rownames(score), ]
       b0 <- 1 + 0.85 * pmax(30 - ncol(score), 0)
 
-      return(list(
-        score = score,
-        pos = pos,
-        lyo = lyo,
-        refset = refset,
-        sortby = sortby
-      ))
+      pd <- list(
+          score = score,
+          pos = pos,
+          layout = layout,
+          refset = refset,
+          sortby = sortby
+      )
+      return(pd)
     })
     
-    get_plots <- function() {
+    base.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
       
@@ -165,8 +161,119 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       ntop <- 25
-      if (pd[["lyo"]] == "4x4") ntop <- 16
-      if (pd[["lyo"]] == "6x6") ntop <- 36
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
+
+      i <- 1
+      sel <- NULL
+      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
+      if (pd[["sortby"]] == "name") {
+        sel <- sel[order(colnames(pd[["score"]])[sel])]
+      }
+      plt <- list()
+      
+      for (i in 1:length(sel)) {
+        j <- sel[i]  
+        gx <- pmax(pd[["score"]][, j], 0)
+        gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
+        klr0 <- klrpal[gx]
+        pos <- pd[["pos"]][,]
+        tt <- colnames(pd[["score"]])[j]        
+        ii <- sample(nrow(pos))
+        base::plot(
+           pd[["pos"]][ii, ],
+           pch = 19,
+           cex = 1 * cex1,
+           col = klr0[ii],
+           xlim = 1.2 * range(pd[["pos"]][, 1]),
+           ylim = 1.2 * range(pd[["pos"]][, 2]),
+           fg = gray(0.8),
+           bty = "o",
+           xaxt = "n",
+           yaxt = "n",
+           xlab = "",
+           ylab = ""
+        )
+        legend("topleft",
+          legend = colnames(pd[["score"]])[j], bg = "#AAAAAA88",
+          cex = 1.2, text.font = 1, y.intersp = 0.8, bty = "n",
+          inset = c(-0.05, -0.0)
+          )
+      }
+      refset <- input$refset
+      mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)     
+    }
+
+    get_ggplots <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+      
+      cex1 <- 1.2
+      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
+      cex1 <- 0.9 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
+      klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
+      klrpal <- paste0(gplots::col2hex(klrpal), "66")
+
+      ntop <- 25
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
+
+      i <- 1
+      sel <- NULL
+      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
+      if (pd[["sortby"]] == "name") {
+        sel <- sel[order(colnames(pd[["score"]])[sel])]
+      }
+      
+      plt <- list()      
+      for (i in 1:length(sel)) {
+        j <- sel[i]  
+        gx <- pmax(pd[["score"]][, j], 0)
+        gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
+        klr0 <- klrpal[gx]
+        ii <- order(gx)
+        pos <- pd[["pos"]][ii,]
+        tt <- colnames(pd[["score"]])[j]
+        ## ------- start plot ----------       
+        p <- pgx.scatterPlotXY.GGPLOT(
+          pos,
+          var = gx,
+          col = klrpal,
+          cex = 0.6*cex1,
+          xlab = "",
+          ylab = "",
+          xlim = 1.2*range(pd[["pos"]][, 1]),
+          ylim = 1.2*range(pd[["pos"]][, 2]),
+          axis = FALSE,
+          title = tt,
+          cex.title = 0.95,
+          ##title.y = 0.85,
+          ##cex.clust = cex*0.8,
+          label.clusters = FALSE,
+          legend = FALSE,
+          gridcolor = "#ffffff",
+          bgcolor = "#f8f8f8",          
+          box = TRUE
+        ) 
+
+        plt[[i]] <- p
+      }
+      return(plt)
+    }
+
+    get_plotly <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+      
+      cex1 <- 1.2
+      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
+      cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
+      klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
+      klrpal <- paste0(gplots::col2hex(klrpal), "66")
+
+      ntop <- 25
+      if (pd[["layout"]] == "4x4") ntop <- 16
+      if (pd[["layout"]] == "6x6") ntop <- 36
 
       i <- 1
       sel <- NULL
@@ -184,50 +291,50 @@ singlecell_plot_icpplot_server <- function(id,
         ii <- order(gx)
         pos <- pd[["pos"]][ii,]
         tt <- colnames(pd[["score"]])[j]
-
         ## ------- start plot ----------       
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = gx,
           col = klrpal,
-          cex = 0.5*cex1,
+          cex = 0.6*cex1,
           xlab = "",
           ylab = "",
           xlim = 1.2*range(pd[["pos"]][, 1]),
           ylim = 1.2*range(pd[["pos"]][, 2]),
           axis = FALSE,
           title = tt,
-          cex.title = cex*0.85,
+          cex.title = cex1*0.5,
           title.y = 0.9,
-#         cex.clust = cex*0.8,
+#         cex.clust = cex1*0.8,
           label.clusters = FALSE,
           legend = FALSE,
-          gridcolor = 'fff'
-        ) %>% plotly::layout(
-          plot_bgcolor = "#f8f8f8"
+          box = TRUE,
+          gridcolor = "#ffffff",
+          bgcolor = "#f8f8f8",
+          tooltip = FALSE          
+        ) %>% plotly::style(
+          hoverinfo = 'none'
         )
 
         plt[[i]] <- p
       }
-
       return(plt)
     }
-
+    
     plotly.RENDER <- function() {
       pd <- plot_data()  
-      plt <- get_plots()       
+      plt <- get_plotly()       
       nr <- 5
-      if (pd[["lyo"]] == "4x4") nr <- 4
-      if (pd[["lyo"]] == "6x6") nr <- 6      
+      if (pd[["layout"]] == "4x4") nr <- 4
+      if (pd[["layout"]] == "6x6") nr <- 6      
       fig <- plotly::subplot(
         plt,
         nrows = nr,
         margin = 0.01
       ) %>% plotly::layout(
-        title = list(text=pd$refset, size=14)
-##        margin = c(l=0,r=0,b=0,t=30) # lrbt
-      ) %>%    
-        plotly_default()
+        title = list(text=pd$refset, size=14),
+        margin = c(l=0,r=0,b=0,t=30) # lrbt
+      ) ## %>% plotly_default()
       return(fig)
     }
 
@@ -240,28 +347,32 @@ singlecell_plot_icpplot_server <- function(id,
       return(fig)
     }
 
+    ggplot.RENDER <- function() {
+      pd <- plot_data()  
+      plt <- get_ggplots()       
+      nr <- 5
+      if (pd[["layout"]] == "4x4") nr <- 4
+      if (pd[["layout"]] == "6x6") nr <- 6      
+      fig <- gridExtra::grid.arrange(
+        grobs = plt,
+        nrow = nr,
+        ncol = nr,
+        padding = unit(0.01,"line"),
+        top = textGrob(pd$refset,gp=gpar(fontsize=15))
+      )
+      return(fig)
+    }
+    
     PlotModuleServer(
       id = "plot",        
-      func = plotly.RENDER,
-      func2 = plotly_modal.RENDER,
-      plotlib = "plotly",
+      func = ggplot.RENDER,
+      ##func = plotly.RENDER,
+      ##func2 = plotly_modal.RENDER,
+      ##plotlib = "plotly",
+      plotlib = "ggplot",      
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
       add.watermark = watermark
     )
-
-    # shiny::callModule(
-    #   plotModule,
-    #   id = "icpplot",
-    #   func = icp.plotFUNC,
-    #   func2 = icp.plotFUNC,
-    #   ##title = "Cell type profiling (deconvolution)",
-    #   options = icp.opts,
-    #   info.text = icp_info,
-    #   caption2 = icp_info,
-    #   pdf.width=12, pdf.height=6,
-    #   height = c(fullH-80,700), width = c("100%",1400),
-    #   res = c(85,95),
-    #   add.watermark = WATERMARK
   }) ## end of moduleServer
 }

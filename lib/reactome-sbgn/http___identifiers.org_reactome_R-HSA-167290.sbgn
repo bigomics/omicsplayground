@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="nucleoplasm" if.within.compartment="">
+      <label text="nucleoplasm"/>
+      <bbox w="597.775833962086" h="1647.98104140065" x="105.5" y="221.5"/>
+    </glyph>
+    <glyph class="complex" id="Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+      <label text="HIV-1 processive elongation complex"/>
+      <bbox w="396" h="396" x="111" y="1438.98104140065"/>
+      <glyph class="macromolecule" id="Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2F"/>
+        <bbox w="70" h="40" x="195.25" y="1444.48104140065"/>
+        <glyph class="state variable" id="Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 127]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1435.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2J"/>
+        <bbox w="70" h="40" x="274" y="1444.48104140065"/>
+        <glyph class="state variable" id="Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 117]"/>
+          <bbox w="35" h="17.5" x="274" y="1435.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_01bcc27feb8ca1398b687259f83b73b8_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CCNT1,CCNT2,CCNK"/>
+        <bbox w="70" h="40" x="352.75" y="1444.48104140065"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_e541f628c83d6c515f147dd058ad5245_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT4H1"/>
+        <bbox w="70" h="40" x="431.5" y="1444.48104140065"/>
+        <glyph class="state variable" id="Protein_e541f628c83d6c515f147dd058ad5245_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 117]"/>
+          <bbox w="35" h="17.5" x="431.5" y="1435.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_6d2102671e8ced142b173694891b744f_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2C"/>
+        <bbox w="70" h="40" x="116.5" y="1444.48104140065"/>
+        <glyph class="state variable" id="Protein_6d2102671e8ced142b173694891b744f_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 275]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1435.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ef79376911b145f347f0839b111c9c1f_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT16H"/>
+        <bbox w="70" h="40" x="195.25" y="1501.98104140065"/>
+        <glyph class="state variable" id="Protein_ef79376911b145f347f0839b111c9c1f_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 1047]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1493.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_4477bcab422f807853de3f45d8b34b7f_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFE"/>
+        <bbox w="70" h="40" x="274" y="1501.98104140065"/>
+        <glyph class="state variable" id="Protein_4477bcab422f807853de3f45d8b34b7f_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 380]"/>
+          <bbox w="35" h="17.5" x="274" y="1493.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2G"/>
+        <bbox w="70" h="40" x="352.75" y="1501.98104140065"/>
+        <glyph class="state variable" id="Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 172]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1493.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SSRP1"/>
+        <bbox w="70" h="40" x="431.5" y="1501.98104140065"/>
+        <glyph class="state variable" id="Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 709]"/>
+          <bbox w="35" h="17.5" x="431.5" y="1493.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELOC"/>
+        <bbox w="70" h="40" x="116.5" y="1501.98104140065"/>
+        <glyph class="state variable" id="Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 112]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1493.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_cb883ab839bf9009afe98491857b8dad_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELL"/>
+        <bbox w="70" h="40" x="195.25" y="1559.48104140065"/>
+        <glyph class="state variable" id="Protein_cb883ab839bf9009afe98491857b8dad_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 621]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1550.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2L"/>
+        <bbox w="70" h="40" x="274" y="1559.48104140065"/>
+        <glyph class="state variable" id="Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 67]"/>
+          <bbox w="35" h="17.5" x="274" y="1550.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2E"/>
+        <bbox w="70" h="40" x="352.75" y="1559.48104140065"/>
+        <glyph class="state variable" id="Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 210]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1550.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="TCEA1"/>
+        <bbox w="70" h="40" x="431.5" y="1559.48104140065"/>
+        <glyph class="state variable" id="Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 301]"/>
+          <bbox w="35" h="17.5" x="431.5" y="1550.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_22faca6c8e68347c45e4b352b299e339_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2H"/>
+        <bbox w="70" h="40" x="116.5" y="1559.48104140065"/>
+        <glyph class="state variable" id="Protein_22faca6c8e68347c45e4b352b299e339_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 150]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1550.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_5813f0694f2868aea7f7f8a16519b076_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="GTF2F2"/>
+        <bbox w="70" h="40" x="195.25" y="1616.98104140065"/>
+        <glyph class="state variable" id="Protein_5813f0694f2868aea7f7f8a16519b076_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 249]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1608.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFCD"/>
+        <bbox w="70" h="40" x="274" y="1616.98104140065"/>
+        <glyph class="state variable" id="Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 590]"/>
+          <bbox w="35" h="17.5" x="274" y="1608.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f9725d404b4083c833e672e27ee19598_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELOB"/>
+        <bbox w="70" h="40" x="352.75" y="1616.98104140065"/>
+        <glyph class="state variable" id="Protein_f9725d404b4083c833e672e27ee19598_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 118]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1608.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8f3ab7e41e78a02af7ee8c65cbf20361_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="Elongin A"/>
+        <bbox w="70" h="40" x="431.5" y="1608.23104140065"/>
+      </glyph>
+      <glyph class="unspecified entity" id="PhysicalEntity_82e44f6f20ea4f7d217cf164f44cf0e3_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="Elongating HIV-1 transcript in processive Pol II mediated elongation"/>
+        <bbox w="70" h="40" x="116.5" y="1615.23104140065"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2B"/>
+        <bbox w="70" h="40" x="195.25" y="1674.48104140065"/>
+        <glyph class="state variable" id="Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1174]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1665.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_191b4392ab0af1173af4ace9a4665314_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CDK9"/>
+        <bbox w="70" h="40" x="274" y="1674.48104140065"/>
+        <glyph class="state variable" id="Protein_191b4392ab0af1173af4ace9a4665314_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 372]"/>
+          <bbox w="35" h="17.5" x="274" y="1665.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="simple chemical" id="SmallMolecule_bc30f874894637fc46a875e06802b810_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NTP"/>
+        <bbox w="40" h="40" x="352.75" y="1665.73104140065"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFA"/>
+        <bbox w="70" h="40" x="431.5" y="1665.73104140065"/>
+        <glyph class="state variable" id="Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 528]"/>
+          <bbox w="35" h="17.5" x="431.5" y="1656.98104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2D"/>
+        <bbox w="70" h="40" x="116.5" y="1679.73104140065"/>
+        <glyph class="state variable" id="Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 142]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1670.98104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_447d510b110e9e9323618c9d2ec31090_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2K"/>
+        <bbox w="70" h="40" x="195.25" y="1731.98104140065"/>
+        <glyph class="state variable" id="Protein_447d510b110e9e9323618c9d2ec31090_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 58]"/>
+          <bbox w="35" h="17.5" x="195.25" y="1723.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFB"/>
+        <bbox w="70" h="40" x="274" y="1731.98104140065"/>
+        <glyph class="state variable" id="Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 580]"/>
+          <bbox w="35" h="17.5" x="274" y="1723.23104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT5H"/>
+        <bbox w="70" h="40" x="352.75" y="1723.23104140065"/>
+        <glyph class="state variable" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1087]"/>
+          <bbox w="35" h="17.5" x="352.75" y="1714.48104140065"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_da08dbf85ff22aded6388b0c20a88595.state.2" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="phosres"/>
+          <bbox w="35" h="17.5" x="352.75" y="1754.48104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CTDP1"/>
+        <bbox w="70" h="40" x="431.5" y="1723.23104140065"/>
+        <glyph class="state variable" id="Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 961]"/>
+          <bbox w="35" h="17.5" x="431.5" y="1714.48104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2I"/>
+        <bbox w="70" h="40" x="116.5" y="1737.23104140065"/>
+        <glyph class="state variable" id="Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 125]"/>
+          <bbox w="35" h="17.5" x="116.5" y="1728.48104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2A"/>
+        <bbox w="70" h="40" x="195.25" y="1789.48104140065"/>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="P" variable="S2"/>
+          <bbox w="35" h="17.5" x="195.25" y="1780.73104140065"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_da08dbf85ff22aded6388b0c20a88595.state.2" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="P" variable="S5"/>
+          <bbox w="35" h="17.5" x="195.25" y="1820.73104140065"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_da08dbf85ff22aded6388b0c20a88595.info.3" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1970]"/>
+          <bbox w="35" h="17.5" x="230.25" y="1820.73104140065"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_fedc130e065396a76146619fc5b3ff5b_Complex_da08dbf85ff22aded6388b0c20a88595" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="GTF2F1"/>
+        <bbox w="70" h="40" x="274" y="1789.48104140065"/>
+        <glyph class="state variable" id="Protein_fedc130e065396a76146619fc5b3ff5b_Complex_da08dbf85ff22aded6388b0c20a88595.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 517]"/>
+          <bbox w="35" h="17.5" x="274" y="1780.73104140065"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+      <label text="HIV-1 paused processive elongation complex"/>
+      <bbox w="396" h="396" x="290.775833962086" y="227"/>
+      <glyph class="macromolecule" id="Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2F"/>
+        <bbox w="70" h="40" x="375.025833962086" y="232.5"/>
+        <glyph class="state variable" id="Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 127]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2J"/>
+        <bbox w="70" h="40" x="453.775833962086" y="232.5"/>
+        <glyph class="state variable" id="Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 117]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_01bcc27feb8ca1398b687259f83b73b8_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CCNT1,CCNT2,CCNK"/>
+        <bbox w="70" h="40" x="532.525833962086" y="232.5"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_e541f628c83d6c515f147dd058ad5245_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT4H1"/>
+        <bbox w="70" h="40" x="611.275833962086" y="232.5"/>
+        <glyph class="state variable" id="Protein_e541f628c83d6c515f147dd058ad5245_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 117]"/>
+          <bbox w="35" h="17.5" x="611.275833962086" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_6d2102671e8ced142b173694891b744f_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2C"/>
+        <bbox w="70" h="40" x="296.275833962086" y="232.5"/>
+        <glyph class="state variable" id="Protein_6d2102671e8ced142b173694891b744f_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 275]"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ef79376911b145f347f0839b111c9c1f_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT16H"/>
+        <bbox w="70" h="40" x="375.025833962086" y="290"/>
+        <glyph class="state variable" id="Protein_ef79376911b145f347f0839b111c9c1f_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 1047]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_4477bcab422f807853de3f45d8b34b7f_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFE"/>
+        <bbox w="70" h="40" x="453.775833962086" y="290"/>
+        <glyph class="state variable" id="Protein_4477bcab422f807853de3f45d8b34b7f_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 380]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2G"/>
+        <bbox w="70" h="40" x="532.525833962086" y="290"/>
+        <glyph class="state variable" id="Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 172]"/>
+          <bbox w="35" h="17.5" x="532.525833962086" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SSRP1"/>
+        <bbox w="70" h="40" x="611.275833962086" y="290"/>
+        <glyph class="state variable" id="Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 709]"/>
+          <bbox w="35" h="17.5" x="611.275833962086" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELOC"/>
+        <bbox w="70" h="40" x="296.275833962086" y="290"/>
+        <glyph class="state variable" id="Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 112]"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="281.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_cb883ab839bf9009afe98491857b8dad_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELL"/>
+        <bbox w="70" h="40" x="375.025833962086" y="347.5"/>
+        <glyph class="state variable" id="Protein_cb883ab839bf9009afe98491857b8dad_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 621]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2L"/>
+        <bbox w="70" h="40" x="453.775833962086" y="347.5"/>
+        <glyph class="state variable" id="Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 67]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2E"/>
+        <bbox w="70" h="40" x="532.525833962086" y="347.5"/>
+        <glyph class="state variable" id="Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 210]"/>
+          <bbox w="35" h="17.5" x="532.525833962086" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="TCEA1"/>
+        <bbox w="70" h="40" x="611.275833962086" y="347.5"/>
+        <glyph class="state variable" id="Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 301]"/>
+          <bbox w="35" h="17.5" x="611.275833962086" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_22faca6c8e68347c45e4b352b299e339_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2H"/>
+        <bbox w="70" h="40" x="296.275833962086" y="347.5"/>
+        <glyph class="state variable" id="Protein_22faca6c8e68347c45e4b352b299e339_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 150]"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="338.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_5813f0694f2868aea7f7f8a16519b076_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="GTF2F2"/>
+        <bbox w="70" h="40" x="375.025833962086" y="405"/>
+        <glyph class="state variable" id="Protein_5813f0694f2868aea7f7f8a16519b076_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 249]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFCD"/>
+        <bbox w="70" h="40" x="453.775833962086" y="405"/>
+        <glyph class="state variable" id="Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 590]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f9725d404b4083c833e672e27ee19598_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="ELOB"/>
+        <bbox w="70" h="40" x="532.525833962086" y="405"/>
+        <glyph class="state variable" id="Protein_f9725d404b4083c833e672e27ee19598_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 118]"/>
+          <bbox w="35" h="17.5" x="532.525833962086" y="396.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_8f3ab7e41e78a02af7ee8c65cbf20361_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="Elongin A"/>
+        <bbox w="70" h="40" x="611.275833962086" y="396.25"/>
+      </glyph>
+      <glyph class="unspecified entity" id="PhysicalEntity_82e44f6f20ea4f7d217cf164f44cf0e3_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="Elongating HIV-1 transcript in processive Pol II mediated elongation"/>
+        <bbox w="70" h="40" x="296.275833962086" y="403.25"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2B"/>
+        <bbox w="70" h="40" x="375.025833962086" y="462.5"/>
+        <glyph class="state variable" id="Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1174]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="453.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_191b4392ab0af1173af4ace9a4665314_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CDK9"/>
+        <bbox w="70" h="40" x="453.775833962086" y="462.5"/>
+        <glyph class="state variable" id="Protein_191b4392ab0af1173af4ace9a4665314_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 372]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="453.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFA"/>
+        <bbox w="70" h="40" x="532.525833962086" y="462.5"/>
+        <glyph class="state variable" id="Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 528]"/>
+          <bbox w="35" h="17.5" x="532.525833962086" y="453.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2D"/>
+        <bbox w="70" h="40" x="611.275833962086" y="453.75"/>
+        <glyph class="state variable" id="Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 142]"/>
+          <bbox w="35" h="17.5" x="611.275833962086" y="445"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_447d510b110e9e9323618c9d2ec31090_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2K"/>
+        <bbox w="70" h="40" x="296.275833962086" y="467.75"/>
+        <glyph class="state variable" id="Protein_447d510b110e9e9323618c9d2ec31090_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 58]"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="459"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="NELFB"/>
+        <bbox w="70" h="40" x="375.025833962086" y="520"/>
+        <glyph class="state variable" id="Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 580]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="511.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="SUPT5H"/>
+        <bbox w="70" h="40" x="453.775833962086" y="520"/>
+        <glyph class="state variable" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1087]"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="511.25"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_34d4e5f26d856e58aeaa72056e6b9fac.state.2" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="phosres"/>
+          <bbox w="35" h="17.5" x="453.775833962086" y="551.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="CTDP1"/>
+        <bbox w="70" h="40" x="532.525833962086" y="520"/>
+        <glyph class="state variable" id="Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 961]"/>
+          <bbox w="35" h="17.5" x="532.525833962086" y="511.25"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2I"/>
+        <bbox w="70" h="40" x="611.275833962086" y="511.25"/>
+        <glyph class="state variable" id="Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 125]"/>
+          <bbox w="35" h="17.5" x="611.275833962086" y="502.5"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="POLR2A"/>
+        <bbox w="70" h="40" x="296.275833962086" y="525.25"/>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="P" variable="S2"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="516.5"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_34d4e5f26d856e58aeaa72056e6b9fac.state.2" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="P" variable="S5"/>
+          <bbox w="35" h="17.5" x="296.275833962086" y="556.5"/>
+        </glyph>
+        <glyph class="state variable" id="Protein_0250a601b5430a99693f009b6ef1ea26_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.3" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[1 - 1970]"/>
+          <bbox w="35" h="17.5" x="331.275833962086" y="556.5"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_fedc130e065396a76146619fc5b3ff5b_Complex_34d4e5f26d856e58aeaa72056e6b9fac" compartmentRef="nucleoplasm" if.within.compartment="">
+        <label text="GTF2F1"/>
+        <bbox w="70" h="40" x="375.025833962086" y="577.5"/>
+        <glyph class="state variable" id="Protein_fedc130e065396a76146619fc5b3ff5b_Complex_34d4e5f26d856e58aeaa72056e6b9fac.info.1" compartmentRef="nucleoplasm" if.within.compartment="">
+          <state value="x[2 - 517]"/>
+          <bbox w="35" h="17.5" x="375.025833962086" y="568.75"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-167282_LEFT_TO_RIGHT" compartmentRef="nucleoplasm" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="427.536451348718" y="962.669342235729"/>
+    </glyph>
+    <arc class="production" id="reactome_R-HSA-167282_LEFT_TO_RIGHT-output--to--Complex_34d4e5f26d856e58aeaa72056e6b9fac" source="reactome_R-HSA-167282_LEFT_TO_RIGHT" target="Complex_34d4e5f26d856e58aeaa72056e6b9fac">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="Complex_da08dbf85ff22aded6388b0c20a88595--to--reactome_R-HSA-167282_LEFT_TO_RIGHT-input" source="Complex_da08dbf85ff22aded6388b0c20a88595" target="reactome_R-HSA-167282_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="124.255166792417" h="13.8061296436019" x="20" y="1890.73104140065"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="reactome_R-HSA-167282_LEFT_TO_RIGHT--to--Complex_34d4e5f26d856e58aeaa72056e6b9fac" source="reactome_R-HSA-167282_LEFT_TO_RIGHT" target="Complex_34d4e5f26d856e58aeaa72056e6b9fac" class="production">
+      <source.arc start.x="446" start.y="915" end.x="442" end.y="962" class="consumption"/>
+      <spline s.x="471.000000" s.y="623.000000" c1.x="459.000000" c1.y="756.000000" c2.x="446.000000" c2.y="915.000000" e.x="442.000000" e.y="962.000000"/>
+      <target.arc start.x="459" start.y="756" end.x="471" end.y="623" class="production"/>
+    </arc.spline>
+    <arc.spline id="Complex_da08dbf85ff22aded6388b0c20a88595--to--reactome_R-HSA-167282_LEFT_TO_RIGHT" source="Complex_da08dbf85ff22aded6388b0c20a88595" target="reactome_R-HSA-167282_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="382" start.y="1270" end.x="348" end.y="1438" class="consumption"/>
+      <spline s.x="348.000000" s.y="1438.000000" c1.x="382.000000" c1.y="1270.000000" c2.x="426.000000" c2.y="1046.000000" e.x="438.000000" e.y="989.000000"/>
+      <target.arc start.x="426" start.y="1046" end.x="438" end.y="989" class="consumption"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>nucleoplasm-compartment.layer.info-nucleoplasm-compartment.layer.info-Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_01bcc27feb8ca1398b687259f83b73b8_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_e541f628c83d6c515f147dd058ad5245_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_6d2102671e8ced142b173694891b744f_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_ef79376911b145f347f0839b111c9c1f_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_4477bcab422f807853de3f45d8b34b7f_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_cb883ab839bf9009afe98491857b8dad_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_22faca6c8e68347c45e4b352b299e339_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_5813f0694f2868aea7f7f8a16519b076_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_f9725d404b4083c833e672e27ee19598_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_8f3ab7e41e78a02af7ee8c65cbf20361_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-PhysicalEntity_82e44f6f20ea4f7d217cf164f44cf0e3_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_191b4392ab0af1173af4ace9a4665314_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-SmallMolecule_bc30f874894637fc46a875e06802b810_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_447d510b110e9e9323618c9d2ec31090_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_0250a601b5430a99693f009b6ef1ea26_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Protein_fedc130e065396a76146619fc5b3ff5b_Complex_da08dbf85ff22aded6388b0c20a88595-compartment.layer.info-Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_45839cb5d102a11de4c64e0feb5fef0f_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_9746e01e6019a8ed5edb1fcdd5b35133_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_01bcc27feb8ca1398b687259f83b73b8_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_e541f628c83d6c515f147dd058ad5245_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_6d2102671e8ced142b173694891b744f_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_ef79376911b145f347f0839b111c9c1f_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_4477bcab422f807853de3f45d8b34b7f_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_b5a11c52c2c25cae83df1c4777447cc6_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_ba48ee79f50f1c101a6ec8c41152d24d_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_8bdaabf304f9984ee256c4388c9903a7_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_cb883ab839bf9009afe98491857b8dad_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_2b91245fc3bee1d3c36108e2605fee04_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_83ab3683c37c6c21d3db9ecdcf5c2c91_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_17baa43b4a4e18c814643dbbfbfaca08_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_22faca6c8e68347c45e4b352b299e339_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_5813f0694f2868aea7f7f8a16519b076_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_9b7c467cb4b6bb387f2aef4987964f9d_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_f9725d404b4083c833e672e27ee19598_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_8f3ab7e41e78a02af7ee8c65cbf20361_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-PhysicalEntity_82e44f6f20ea4f7d217cf164f44cf0e3_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_31981dca2b5be69eba659ed05ad94d3f_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_191b4392ab0af1173af4ace9a4665314_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_76936c43944a511dd5e6b162c88d0b8c_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_4fbf2b0321cee67feb084d310ea2bc89_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_447d510b110e9e9323618c9d2ec31090_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_ae0c2a5f7f7d5e4d96b19bca27d11a9e_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_62cd1d072cc187f2911a8f3f788883ee_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_2a9a5ada559dd645df5a43d78afc10cd_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_1c40ff086cf59acb93a4c10f36d5ff91_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_0250a601b5430a99693f009b6ef1ea26_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-Protein_fedc130e065396a76146619fc5b3ff5b_Complex_34d4e5f26d856e58aeaa72056e6b9fac-compartment.layer.info-reactome_R-HSA-167282_LEFT_TO_RIGHT</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="reactome_R-HSA-167282_LEFT_TO_RIGHT--to--Complex_34d4e5f26d856e58aeaa72056e6b9fac" source="reactome_R-HSA-167282_LEFT_TO_RIGHT" target="Complex_34d4e5f26d856e58aeaa72056e6b9fac" class="production">
+<source.arc start.x="446" start.y="915" end.x="442" end.y="962" class="consumption"/>
+
+
+<spline s.x="471.000000"  s.y="623.000000" c1.x="459.000000" c1.y="756.000000" c2.x="446.000000" c2.y="915.000000" e.x="442.000000"  e.y="962.000000" />
+<target.arc start.x="459" start.y="756" end.x="471" end.y="623" class="production"/>
+
+</arc.spline>
+<arc.spline id="Complex_da08dbf85ff22aded6388b0c20a88595--to--reactome_R-HSA-167282_LEFT_TO_RIGHT" source="Complex_da08dbf85ff22aded6388b0c20a88595" target="reactome_R-HSA-167282_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="382" start.y="1270" end.x="348" end.y="1438" class="consumption"/>
+
+
+<spline s.x="348.000000"  s.y="1438.000000" c1.x="382.000000" c1.y="1270.000000" c2.x="426.000000" c2.y="1046.000000" e.x="438.000000"  e.y="989.000000" />
+<target.arc start.x="426" start.y="1046" end.x="438" end.y="989" class="consumption"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+

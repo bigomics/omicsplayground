@@ -45,6 +45,32 @@ FunctionalUI <- function(id) {
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
     shiny::tabPanel(
+      "Reactome",
+      bslib::layout_column_wrap(
+        width = 1,
+        bslib::layout_column_wrap(
+          width = 1/2,
+          functional_plot_reactome_graph_ui(
+            ns("reactome_graph"),
+            label = "a",
+            height = c("45vh", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")            
+          ),          
+          functional_plot_reactome_actmap_ui(
+            ns("reactome_actmap"),
+            label = "c",
+            height = c("45vh", TABLE_HEIGHT_MODAL)            
+          )
+        ),
+        functional_table_reactome_ui(
+          ns("reactome_table"),
+          label = "b",
+          height = c(300, TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    ),
+    shiny::tabPanel(
       "KEGG",
       div(
         class = "row",

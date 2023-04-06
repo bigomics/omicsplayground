@@ -298,6 +298,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
       ## just show top 10
       if (input$gs_top10 && nrow(res) > 10 && length(input$gs_top10)) {
+        ## get the meta-score column
         fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(res), value = TRUE)[1]
         fx <- as.numeric(res[, fx.col])
         names(fx) <- rownames(res)
@@ -319,12 +320,24 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       return(res)
     })
 
-    ## ----------------------------------------------------------------------
-    ## 0: Volcano plot in gene space
-    ## ----------------------------------------------------------------------
-    subplot.MAR <- c(3, 3.5, 1.5, 0.5)
-    subplot.MAR <- c(2.8, 4, 4, 0.8)
 
+    metaQ <- shiny::reactive({
+      req(pgx)
+      methods <- selected_gsetmethods()
+      metaQ <- sapply(pgx$gset.meta$meta, function(m)
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      rownames(metaQ) <- rownames(pgx$gset.meta$meta[[1]])
+      metaQ
+    })
+
+    metaFC <- shiny::reactive({
+      req(pgx)
+      ##methods <- selected_gsetmethods()
+      metaFC <- sapply(pgx$gset.meta$meta, function(m) m$meta.fx)
+      rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
+      metaFC
+    })
+    
     ## ================================================================================
     ## Enrichment table
     ## ================================================================================
@@ -415,6 +428,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     WATERMARK <- FALSE
+    subplot.MAR <- c(3, 3.5, 1.5, 0.5)
+    subplot.MAR <- c(2.8, 4, 4, 0.8)
 
     # Top enriched gene sets
 
@@ -539,7 +554,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     enrichment_table_gset_enrich_all_contrasts_server(
       "fctable",
       pgx = pgx,
-      getFilteredGeneSetTable = getFilteredGeneSetTable
+      getFilteredGeneSetTable = getFilteredGeneSetTable,
+      metaFC = metaFC,
+      metaQ = metaQ
     )
 
     # Number of significant gene sets

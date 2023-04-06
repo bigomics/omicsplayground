@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="extracellular" if.within.compartment="">
+      <label text="extracellular"/>
+      <bbox w="234.311333986767" h="137.716535212596" x="286.15313194209" y="726.154151376052"/>
+    </glyph>
+    <glyph class="compartment" id="cytosol" if.within.compartment="">
+      <label text="cytosol"/>
+      <bbox w="92" h="62" x="336.250974336769" y="590.714958873354"/>
+    </glyph>
+    <glyph class="compartment" id="cell_membrane" if.within.compartment="">
+      <label text="cell membrane"/>
+      <bbox w="446.179616846812" h="453.139465119247" x="105.5" y="221.5"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba" compartmentRef="extracellular" if.within.compartment="">
+      <label text="Ca2+"/>
+      <bbox w="40" h="40" x="297.15313194209" y="812.870686588648"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63" compartmentRef="extracellular" if.within.compartment="">
+      <label text="K+"/>
+      <bbox w="40" h="40" x="439.464465928857" y="799.781178412903"/>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-265645_LEFT_TO_RIGHT" compartmentRef="extracellular" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="375.610830075999" y="737.154151376052"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" compartmentRef="cytosol" if.within.compartment="">
+      <label text="Ca2+"/>
+      <bbox w="40" h="40" x="347.250974336769" y="601.714958873354"/>
+    </glyph>
+    <glyph class="complex" id="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+      <label text="calcium channel multimer of N type VGCC"/>
+      <bbox w="159.75" h="108.5" x="111" y="531.639465119247"/>
+      <glyph class="macromolecule" id="Protein_544db77e6082833f3cb34f85091045bf_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNB3"/>
+        <bbox w="70" h="40" x="195.25" y="537.139465119247"/>
+        <glyph class="state variable" id="Protein_544db77e6082833f3cb34f85091045bf_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 484]"/>
+          <bbox w="35" h="17.5" x="195.25" y="528.389465119247"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b43983d68eaa88f0d67b6ce9c854ee69_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNG2"/>
+        <bbox w="70" h="40" x="116.5" y="537.139465119247"/>
+        <glyph class="state variable" id="Protein_b43983d68eaa88f0d67b6ce9c854ee69_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 323]"/>
+          <bbox w="35" h="17.5" x="116.5" y="528.389465119247"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_96a4fb56aea0ad6c3f153612b1cbb0bf_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="Alpha 2 delta subunits of VGCC"/>
+        <bbox w="70" h="40" x="195.25" y="585.889465119247"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_0fd4fdb027d46057d7caba8569858c28_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNA1B"/>
+        <bbox w="70" h="40" x="116.5" y="594.639465119247"/>
+        <glyph class="state variable" id="Protein_0fd4fdb027d46057d7caba8569858c28_Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 2339]"/>
+          <bbox w="35" h="17.5" x="116.5" y="585.889465119247"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_c1810c8f3862caf204d8f12a423501ab" compartmentRef="cell_membrane" if.within.compartment="">
+      <label text="CACFD1 dimer"/>
+      <bbox w="81" h="51" x="454.179616846812" y="482.746319504527"/>
+      <glyph class="macromolecule" id="Protein_7816db4c426dbaee1a892576e3848519_Complex_c1810c8f3862caf204d8f12a423501ab" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACFD1"/>
+        <bbox w="70" h="40" x="459.679616846812" y="488.246319504527"/>
+        <glyph class="state variable" id="Protein_7816db4c426dbaee1a892576e3848519_Complex_c1810c8f3862caf204d8f12a423501ab.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 172]"/>
+          <bbox w="35" h="17.5" x="459.679616846812" y="479.496319504527"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="complex" id="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+      <label text="calcium channel multimer of P/Q type VGCC"/>
+      <bbox w="159.75" h="108.5" x="142.857377084213" y="314.334467200134"/>
+      <glyph class="macromolecule" id="Protein_c6d5ce0d47312d91ed0e02ba3c16d102_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNA1A"/>
+        <bbox w="70" h="40" x="227.107377084213" y="319.834467200134"/>
+        <glyph class="state variable" id="Protein_c6d5ce0d47312d91ed0e02ba3c16d102_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 2505]"/>
+          <bbox w="35" h="17.5" x="227.107377084213" y="311.084467200134"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_b43983d68eaa88f0d67b6ce9c854ee69_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNG2"/>
+        <bbox w="70" h="40" x="148.357377084213" y="319.834467200134"/>
+        <glyph class="state variable" id="Protein_b43983d68eaa88f0d67b6ce9c854ee69_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 323]"/>
+          <bbox w="35" h="17.5" x="148.357377084213" y="311.084467200134"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_96a4fb56aea0ad6c3f153612b1cbb0bf_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="Alpha 2 delta subunits of VGCC"/>
+        <bbox w="70" h="40" x="227.107377084213" y="368.584467200134"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_f2962a1a87cd2adcb34e09b2571bd2ed_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNB4"/>
+        <bbox w="70" h="40" x="148.357377084213" y="377.334467200134"/>
+        <glyph class="state variable" id="Protein_f2962a1a87cd2adcb34e09b2571bd2ed_Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 520]"/>
+          <bbox w="35" h="17.5" x="148.357377084213" y="368.584467200134"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <glyph class="or" id="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+      <label text="Voltage Gated Ca2+ Channel"/>
+      <bbox w="26.6666666666667" h="26.6666666666667" x="399.268891252975" y="421.49009904789"/>
+    </glyph>
+    <glyph class="complex" id="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+      <label text="calcium channel multimer of R type VGCC"/>
+      <bbox w="159.75" h="122.5" x="330.021579993538" y="227"/>
+      <glyph class="macromolecule" id="Protein_61bc9b649ee516d3bd1f4b68d759b27d_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNG4"/>
+        <bbox w="70" h="40" x="414.271579993538" y="232.5"/>
+        <glyph class="state variable" id="Protein_61bc9b649ee516d3bd1f4b68d759b27d_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 327]"/>
+          <bbox w="35" h="17.5" x="414.271579993538" y="223.75"/>
+        </glyph>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_00430b9cf551db9c1dff0613a6e53a97_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="beta subunit of VGCC"/>
+        <bbox w="70" h="40" x="335.521579993538" y="239.5"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_96a4fb56aea0ad6c3f153612b1cbb0bf_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="Alpha 2 delta subunits of VGCC"/>
+        <bbox w="70" h="40" x="414.271579993538" y="281.25"/>
+      </glyph>
+      <glyph class="macromolecule" id="Protein_86d1b5b3f6d38170a1c84e5da49cce14_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" compartmentRef="cell_membrane" if.within.compartment="">
+        <label text="CACNA1E"/>
+        <bbox w="70" h="40" x="335.521579993538" y="304"/>
+        <glyph class="state variable" id="Protein_86d1b5b3f6d38170a1c84e5da49cce14_Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2.info.1" compartmentRef="cell_membrane" if.within.compartment="">
+          <state value="x[1 - 2313]"/>
+          <bbox w="35" h="17.5" x="335.521579993538" y="295.25"/>
+        </glyph>
+      </glyph>
+    </glyph>
+    <arc class="logic arc" id="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-265645_LEFT_TO_RIGHT-output--to--SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" source="reactome_R-HSA-265645_LEFT_TO_RIGHT" target="SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="logic arc" id="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba--to--reactome_R-HSA-265645_LEFT_TO_RIGHT-input" source="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba" target="reactome_R-HSA-265645_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="reactome_R-HSA-265645_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="logic arc" id="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="catalysis" id="Complex_c1810c8f3862caf204d8f12a423501ab--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_c1810c8f3862caf204d8f12a423501ab" target="reactome_R-HSA-265645_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="inhibition" id="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63" target="reactome_R-HSA-265645_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="93.9359233693624" h="10.437324818818" x="20" y="882.870686588648"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+      <source.arc start.x="339" start.y="409" end.x="302" end.y="396" class="consumption"/>
+      <spline s.x="302.000000" s.y="396.000000" c1.x="339.000000" c1.y="409.000000" c2.x="379.000000" c2.y="423.000000" e.x="399.000000" e.y="430.000000"/>
+      <target.arc start.x="379" start.y="423" end.x="399" end.y="430" class="logic_arc"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-265645_LEFT_TO_RIGHT--to--SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" source="reactome_R-HSA-265645_LEFT_TO_RIGHT" target="SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" class="production">
+      <source.arc start.x="387" start.y="713" end.x="388" end.y="736" class="consumption"/>
+      <spline s.x="388.000000" s.y="736.000000" c1.x="387.000000" c1.y="713.000000" c2.x="384.000000" c2.y="668.000000" e.x="383.000000" e.y="642.000000"/>
+      <target.arc start.x="384" start.y="668" end.x="383" end.y="642" class="production"/>
+    </arc.spline>
+    <arc.spline id="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+      <source.arc start.x="318" start.y="499" end.x="270" end.y="531" class="consumption"/>
+      <spline s.x="270.000000" s.y="531.000000" c1.x="318.000000" c1.y="499.000000" c2.x="374.000000" c2.y="460.000000" e.x="399.000000" e.y="443.000000"/>
+      <target.arc start.x="374" start.y="460" end.x="399" end.y="443" class="logic_arc"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="356" start.y="797" end.x="346" end.y="812" class="consumption"/>
+      <spline s.x="346.000000" s.y="812.000000" c1.x="356.000000" c1.y="797.000000" c2.x="370.000000" c2.y="777.000000" e.x="379.000000" e.y="764.000000"/>
+      <target.arc start.x="370" start.y="777" end.x="379" end.y="764" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="419" start.y="482" end.x="414" end.y="448" class="consumption"/>
+      <spline s.x="394.000000" s.y="736.000000" c1.x="402.000000" c1.y="716.000000" c2.x="415.000000" c2.y="678.000000" e.x="420.000000" e.y="644.000000"/>
+      <spline s.x="420.000000" s.y="644.000000" c1.x="431.000000" c1.y="571.000000" c2.x="419.000000" c2.y="482.000000" e.x="414.000000" e.y="448.000000"/>
+      <target.arc start.x="402" start.y="716" end.x="394" end.y="736" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+      <source.arc start.x="411" start.y="376" end.x="411" end.y="350" class="consumption"/>
+      <spline s.x="412.000000" s.y="421.000000" c1.x="412.000000" c1.y="404.000000" c2.x="411.000000" c2.y="376.000000" e.x="411.000000" e.y="350.000000"/>
+      <target.arc start.x="412" start.y="404" end.x="412" end.y="421" class="logic_arc"/>
+    </arc.spline>
+    <arc.spline id="Complex_c1810c8f3862caf204d8f12a423501ab--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_c1810c8f3862caf204d8f12a423501ab" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="catalysis">
+      <source.arc start.x="461" start.y="584" end.x="483" end.y="533" class="consumption"/>
+      <spline s.x="394.000000" s.y="736.000000" c1.x="412.000000" c1.y="697.000000" c2.x="461.000000" c2.y="584.000000" e.x="483.000000" e.y="533.000000"/>
+      <target.arc start.x="412" start.y="697" end.x="394" end.y="736" class="catalysis"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="inhibition">
+      <source.arc start.x="434" start.y="787" end.x="449" end.y="799" class="consumption"/>
+      <spline s.x="449.000000" s.y="799.000000" c1.x="434.000000" c1.y="787.000000" c2.x="415.000000" c2.y="771.000000" e.x="402.000000" e.y="761.000000"/>
+      <target.arc start.x="415" start.y="771" end.x="402" end.y="761" class="inhibition"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>extracellular-compartment.layer.info-cell_membrane-compartment.layer.info-cytosol</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_a0ca6eb32e0c70ec9f6c9790c47f467e_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+<source.arc start.x="339" start.y="409" end.x="302" end.y="396" class="consumption"/>
+
+
+<spline s.x="302.000000"  s.y="396.000000" c1.x="339.000000" c1.y="409.000000" c2.x="379.000000" c2.y="423.000000" e.x="399.000000"  e.y="430.000000" />
+<target.arc start.x="379" start.y="423" end.x="399" end.y="430" class="logic_arc"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-265645_LEFT_TO_RIGHT--to--SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" source="reactome_R-HSA-265645_LEFT_TO_RIGHT" target="SmallMolecule_d9adfc1905dc61f17abd5ee70c0a6a21" class="production">
+<source.arc start.x="382" start.y="713" end.x="386" end.y="736" class="consumption"/>
+
+
+<spline s.x="386.000000"  s.y="736.000000" c1.x="382.000000" c1.y="713.000000" c2.x="375.000000" c2.y="668.000000" e.x="370.000000"  e.y="642.000000" />
+<target.arc start.x="375" start.y="668" end.x="370" end.y="642" class="production"/>
+
+</arc.spline>
+<arc.spline id="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_7840256ffa426d5f268e249d45396857_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+<source.arc start.x="318" start.y="499" end.x="270" end.y="531" class="consumption"/>
+
+
+<spline s.x="270.000000"  s.y="531.000000" c1.x="318.000000" c1.y="499.000000" c2.x="374.000000" c2.y="460.000000" e.x="399.000000"  e.y="443.000000" />
+<target.arc start.x="374" start.y="460" end.x="399" end.y="443" class="logic_arc"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="SmallMolecule_48e8aacb119fc77d6da243d6ee1192ba" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="348" start.y="797" end.x="334" end.y="812" class="consumption"/>
+
+
+<spline s.x="334.000000"  s.y="812.000000" c1.x="348.000000" c1.y="797.000000" c2.x="365.000000" c2.y="777.000000" e.x="377.000000"  e.y="764.000000" />
+<target.arc start.x="365" start.y="777" end.x="377" end.y="764" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="407" start.y="500" end.x="411" end.y="448" class="consumption"/>
+
+
+<spline s.x="389.000000"  s.y="736.000000" c1.x="393.000000" c1.y="685.000000" c2.x="407.000000" c2.y="500.000000" e.x="411.000000"  e.y="448.000000" />
+<target.arc start.x="393" start.y="685" end.x="389" end.y="736" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2--to--Complex_aff4fb934b5f3ac6dedb74f52c247dc2" source="Complex_8dda1a398d7883422d85f9cad7663b13_member_of_Complex_aff4fb934b5f3ac6dedb74f52c247dc2" target="Complex_aff4fb934b5f3ac6dedb74f52c247dc2" class="logic_arc">
+<source.arc start.x="411" start.y="376" end.x="411" end.y="350" class="consumption"/>
+
+
+<spline s.x="412.000000"  s.y="421.000000" c1.x="412.000000" c1.y="404.000000" c2.x="411.000000" c2.y="376.000000" e.x="411.000000"  e.y="350.000000" />
+<target.arc start.x="412" start.y="404" end.x="412" end.y="421" class="logic_arc"/>
+
+</arc.spline>
+<arc.spline id="Complex_c1810c8f3862caf204d8f12a423501ab--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="Complex_c1810c8f3862caf204d8f12a423501ab" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="catalysis">
+<source.arc start.x="461" start.y="584" end.x="483" end.y="533" class="consumption"/>
+
+
+<spline s.x="394.000000"  s.y="736.000000" c1.x="412.000000" c1.y="697.000000" c2.x="461.000000" c2.y="584.000000" e.x="483.000000"  e.y="533.000000" />
+<target.arc start.x="412" start.y="697" end.x="394" end.y="736" class="catalysis"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63--to--reactome_R-HSA-265645_LEFT_TO_RIGHT" source="SmallMolecule_0a8ac9225734ecc718d94139e1b6ce63" target="reactome_R-HSA-265645_LEFT_TO_RIGHT" class="inhibition">
+<source.arc start.x="427" start.y="788" end.x="439" end.y="800" class="consumption"/>
+
+
+<spline s.x="439.000000"  s.y="800.000000" c1.x="427.000000" c1.y="788.000000" c2.x="412.000000" c2.y="773.000000" e.x="402.000000"  e.y="763.000000" />
+<target.arc start.x="412" start.y="773" end.x="402" end.y="763" class="inhibition"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+

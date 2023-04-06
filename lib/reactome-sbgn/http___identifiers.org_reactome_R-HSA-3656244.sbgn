@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="golgi_lumen" if.within.compartment="">
+      <label text="golgi lumen"/>
+      <bbox w="339.5" h="347.788383248865" x="100" y="198"/>
+    </glyph>
+    <glyph class="simple chemical" id="SmallMolecule_d4093c76357707383f66530944de2dd8" compartmentRef="golgi_lumen" if.within.compartment="">
+      <label text="UDP-Gal"/>
+      <bbox w="40" h="40" x="111" y="494.788383248865"/>
+    </glyph>
+    <glyph class="unspecified entity" id="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01" compartmentRef="golgi_lumen" if.within.compartment="">
+      <label text="B4GALT1 substrates"/>
+      <bbox w="70" h="40" x="358.5" y="358.894191624432"/>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-3656230_LEFT_TO_RIGHT" compartmentRef="golgi_lumen" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="111" y="209"/>
+    </glyph>
+    <arc class="consumption" id="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT-input" source="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="consumption" id="SmallMolecule_d4093c76357707383f66530944de2dd8--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT-input" source="SmallMolecule_d4093c76357707383f66530944de2dd8" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="73.7" h="8.18888888888889" x="20" y="564.788383248865"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT" source="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="298" start.y="323" end.x="358" end.y="358" class="consumption"/>
+      <spline s.x="358.000000" s.y="358.000000" c1.x="298.000000" c1.y="323.000000" c2.x="177.000000" c2.y="253.000000" e.x="137.000000" e.y="230.000000"/>
+      <target.arc start.x="177" start.y="253" end.x="137" end.y="230" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="SmallMolecule_d4093c76357707383f66530944de2dd8--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT" source="SmallMolecule_d4093c76357707383f66530944de2dd8" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="140" start.y="438" end.x="144" end.y="494" class="consumption"/>
+      <spline s.x="144.000000" s.y="494.000000" c1.x="140.000000" c1.y="438.000000" c2.x="128.000000" c2.y="283.000000" e.x="125.000000" e.y="236.000000"/>
+      <target.arc start.x="128" start.y="283" end.x="125" end.y="236" class="consumption"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>golgi_lumen-compartment.layer.info-golgi_lumen-compartment.layer.info-SmallMolecule_d4093c76357707383f66530944de2dd8-compartment.layer.info-PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01-compartment.layer.info-reactome_R-HSA-3656230_LEFT_TO_RIGHT</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT" source="PhysicalEntity_02e66ff0410dc8db2ef634b69a0a0c01" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="298" start.y="323" end.x="358" end.y="358" class="consumption"/>
+
+
+<spline s.x="358.000000"  s.y="358.000000" c1.x="298.000000" c1.y="323.000000" c2.x="177.000000" c2.y="253.000000" e.x="137.000000"  e.y="230.000000" />
+<target.arc start.x="177" start.y="253" end.x="137" end.y="230" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="SmallMolecule_d4093c76357707383f66530944de2dd8--to--reactome_R-HSA-3656230_LEFT_TO_RIGHT" source="SmallMolecule_d4093c76357707383f66530944de2dd8" target="reactome_R-HSA-3656230_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="129" start.y="438" end.x="130" end.y="494" class="consumption"/>
+
+
+<spline s.x="130.000000"  s.y="494.000000" c1.x="129.000000" c1.y="438.000000" c2.x="125.000000" c2.y="283.000000" e.x="124.000000"  e.y="236.000000" />
+<target.arc start.x="125" start.y="283" end.x="124" end.y="236" class="consumption"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+
