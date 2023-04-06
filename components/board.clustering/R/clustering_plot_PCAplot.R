@@ -7,13 +7,16 @@
 
 ## Annotate clusters ############
 
-clustering_plot_clustpca_ui <- function(id,
-                                        label = "",
-                                        height = c(600, 800),
-                                        parent) {
+clustering_plot_clustpca_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption,
+  parent) {
   ns <- shiny::NS(id)
-
-  info_text <- tagsub(paste0(" The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (", a_PCA, ") or t-distributed stochastic embedding (", a_tSNE, ") algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other."))
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -42,13 +45,14 @@ clustering_plot_clustpca_ui <- function(id,
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "PCA/tSNE plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

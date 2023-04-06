@@ -101,6 +101,9 @@ ClusteringUI <- function(id) {
           clustering_plot_splitmap_ui(
             id = ns("splitmap"),
             label = "a",
+            title = "Clustered Heatmap",
+            caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
+            info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
             height = c(fullH,"80vh"),
             width = "100%"
           )
@@ -109,8 +112,12 @@ ClusteringUI <- function(id) {
           "PCA/tSNE",
           clustering_plot_clustpca_ui(
             ns("PCAplot"),
+            title = "PCA/tSNE plot",
+            info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis ( PCA), t-distributed stochastic embedding ( tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
+            caption = "Clustering plot of the dataset samples.",
             label = "",
             height = c(fullH, "70vh"),
+            width = c("auto", "100%"),
             parent = ns
           )
         ),
