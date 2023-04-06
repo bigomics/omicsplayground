@@ -42,7 +42,7 @@ WordCloudBoard <- function(id, pgx) {
       } else {
         dbg("**** CALCULATING WORDCLOUD ****\n")
         progress <- shiny::Progress$new()
-        res <- pgx.calculateWordCloud(pgx, progress = progress, pg.unit = 1)
+        res <- playbase::pgx.calculateWordCloud(pgx, progress = progress, pg.unit = 1)
         on.exit(progress$close())
 
         ## save in object??

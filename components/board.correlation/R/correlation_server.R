@@ -47,10 +47,10 @@ CorrelationBoard <- function(id, pgx) {
 
       genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
       sel <- genes[1] ## most var gene
-      sel <- names(head(sort(-rowMeans(pgx.getMetaMatrix(pgx)$fc**2)), 1))
+      sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
       shiny::updateSelectizeInput(session, "cor_gene", choices = genes, selected = sel, server = TRUE)
 
-      fam <- pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       fam <- sort(c("<custom>", fam))
       shiny::updateSelectInput(session, "cor_features", choices = fam)
 
@@ -81,12 +81,12 @@ CorrelationBoard <- function(id, pgx) {
           gg1 <- unique(c(gg1, unlist(gg2)))
         }
         gg1 <- gg1[which(toupper(gg1) %in% toupper(pgx$genes$gene_name))]
-        psel <- filterProbes(pgx$genes, c(gg1, gene))
+        psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
       } else if (ft != "<all>" && ft %in% names(iGSETS)) {
         ft <- input$cor_features
-        psel <- filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
+        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
         ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -108,9 +108,9 @@ CorrelationBoard <- function(id, pgx) {
       # shiny::showNotification(paste("Computing correlation...\n"))
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
-      ## res <- pgx.computePartialCorrelationAroundGene(
+      ## res <- playbase::pgx.computePartialCorrelationAroundGene(
       ##    X, gene, method=methods, nmax=NTOP, fast=FALSE)
-      res <- pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
+      res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
       res$meta.pcor <- res$pcor
 
       j <- which(rownames(res$pcor) == gene)
@@ -156,7 +156,7 @@ CorrelationBoard <- function(id, pgx) {
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
-      R <- pgx.getGeneCorrelation(gene0, xref = xref)
+      R <- playbase::pgx.getGeneCorrelation(gene0, xref = xref)
       if (is.null(R)) {
         return(NULL)
       }
@@ -199,7 +199,7 @@ CorrelationBoard <- function(id, pgx) {
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
-      R <- pgx.getGeneCorrelation(gene0, xref = xref)
+      R <- playbase::pgx.getGeneCorrelation(gene0, xref = xref)
       if (is.null(R)) {
         return(NULL)
       }

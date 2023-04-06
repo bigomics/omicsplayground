@@ -82,7 +82,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
       colnames(long.df) <- c("gene", "sample", "value")
 
       ## boxplot
-      fig <- pgx.boxplot.PLOTLY(
+      fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
         y = "value",

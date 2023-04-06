@@ -86,12 +86,12 @@ singlecell_plot_cytoplot_server <- function(id,
         return(NULL)
       }
 
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
       gene1 <- cytovar1
       gene2 <- cytovar2
       ## if(gene1 == gene2) return(NULL)
       par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
-      pgx.cytoPlot(pgx, gene1, gene2,
+      playbase::pgx.cytoPlot(pgx, gene1, gene2,
         samples = kk, cex = 0.8,
         col = "grey60", cex.names = 1, lab.unit = "(log2CPM)"
       )

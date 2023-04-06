@@ -168,7 +168,7 @@ clustering_plot_clusterannot_server <- function(id,
             xref = "paper",
             yref = "y",
             xanchor = "left",
-            text = shortstring(y, slen),
+            text = playbase::shortstring(y, slen),
             font = list(size = fontsize),
             showarrow = FALSE,
             align = "right"

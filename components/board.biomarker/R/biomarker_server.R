@@ -73,7 +73,7 @@ BiomarkerBoard <- function(id, pgx) {
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ## ft <- pgx.getFamilies(pgx,nmin=10,extended=FALSE)
+        ## ft <- playbase::pgx.getFamilies(pgx,nmin=10,extended=FALSE)
         ft <- names(pgx$families)
       }
       ft <- sort(ft)
@@ -155,10 +155,10 @@ BiomarkerBoard <- function(id, pgx) {
         pp <- rownames(X)
         if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
-          pp <- filterProbes(pgx$genes, gg)
+          pp <- playbase::filterProbes(pgx$genes, gg)
         } else if (ft %in% names(iGSETS)) {
           gg <- unlist(getGSETS(ft))
-          pp <- filterProbes(pgx$genes, gg)
+          pp <- playbase::filterProbes(pgx$genes, gg)
         }
         pp <- intersect(pp, rownames(X))
         X <- X[pp, , drop = FALSE]
@@ -178,7 +178,7 @@ BiomarkerBoard <- function(id, pgx) {
         time <- abs(y)
         status <- (y > 0) ## dead is positive time
         methods <- c("glmnet", "randomforest", "xgboost", "pls")
-        P <- pgx.survivalVariableImportance(
+        P <- playbase::pgx.survivalVariableImportance(
           X,
           time = time, status = status, methods = methods
         )
@@ -187,7 +187,7 @@ BiomarkerBoard <- function(id, pgx) {
         X1 <- X
         y1 <- y
         names(y1) <- colnames(X1) <- paste0("x", 1:ncol(X))
-        P <- pgx.multiclassVariableImportance(X1, y1, methods = methods)
+        P <- playbase::pgx.multiclassVariableImportance(X1, y1, methods = methods)
       }
       P <- abs(P)
 

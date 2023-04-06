@@ -97,7 +97,7 @@ compare_plot_gene_corr_server <- function(id,
       dset2 <- paste0("2: expression")
 
       if (0) {
-        F <- pgx.getMetaMatrix(pgx1)$fc
+        F <- playbase::pgx.getMetaMatrix(pgx1)$fc
         higenes <- names(head(sort(-rowMeans(F**2)), 16))
         higenes <- hilightgenes()
         higenes <- intersect(higenes, rownames(X1))
@@ -132,7 +132,7 @@ compare_plot_gene_corr_server <- function(id,
         grp <- factor(Y1[, colorby])
         klr1 <- klrpal[as.integer(grp)]
       } else {
-        grp <- pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
+        grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
         grp <- grp[colnames(X1)]
         klr1 <- klrpal[as.integer(grp)]
       }

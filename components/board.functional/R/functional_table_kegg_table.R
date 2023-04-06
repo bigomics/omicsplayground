@@ -92,7 +92,7 @@ functional_table_kegg_table_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("logFC",
-          background = color_from_middle(
+          background = playbase::color_from_middle(
             df[, "logFC"],
             "lightblue",
             "#f5aeae"

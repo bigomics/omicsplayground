@@ -126,7 +126,7 @@ plot_clustpca_server <- function(id,
         }
         perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
         perplexity
-        res <- pgx.clusterMatrix(
+        res <- playbase::pgx.clusterMatrix(
           zx,
           dims = pdim, perplexity = perplexity,
           ntop = 999999, prefix = "C",

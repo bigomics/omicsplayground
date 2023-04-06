@@ -52,13 +52,13 @@ clustering_table_clustannot_server <- function(
         return(NULL)
       }
 
-      ## rownames(rho) = shortstring(rownames(rho),50)
-      rho.name <- shortstring(sub(".*:", "", rownames(rho)), 60)
+      ## rownames(rho) = playbase::shortstring(rownames(rho),50)
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       ## rho = data.frame(cbind( name=rho.name, rho))
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
       rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
-        df$feature <- wrapHyperLink(df$feature, rownames(df))
+        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
       }
 
       DT::datatable(

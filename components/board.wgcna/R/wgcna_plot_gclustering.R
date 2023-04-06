@@ -38,7 +38,7 @@ wgcna_plot_gclustering_server <- function(id,
       me1 <- paste0("ME", out$net$colors)
       pos <- out$clust[[method]]
 
-      pgx.scatterPlotXY.BASE(pos, var = me1, col = out$me.colors)
+      playbase::pgx.scatterPlotXY.BASE(pos, var = me1, col = out$me.colors)
       p <- grDevices::recordPlot()
       p
     })

@@ -49,7 +49,7 @@ dataview_plot_correlation_server <- function(id,
       if (pp %in% rownames(pgx$X)) {
         rho <- cor(t(pgx$X[, samples]), pgx$X[pp, samples], use = "pairwise")[, 1]
       } else if (pp %in% rownames(pgx$counts)) {
-        x0 <- logCPM(pgx$counts[, samples])
+        x0 <- playbase::logCPM(pgx$counts[, samples])
         x1 <- x0[pp, ]
         rho <- cor(t(x0), x1, use = "pairwise")[, 1]
       } else {

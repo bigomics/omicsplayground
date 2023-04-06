@@ -127,7 +127,7 @@ contrast_correlation_server <- function(id,
 #     shiny::req(pgx)
 #     shiny::req(input$comparisons)
 #
-#     ## res <- pgx.getMetaFoldChangeMatrix(pgx, what="meta")
+#     ## res <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what="meta")
 #     res <- getFoldChangeMatrix()
 #
 #     if(is.null(res)) return(NULL)

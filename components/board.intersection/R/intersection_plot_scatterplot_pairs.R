@@ -92,7 +92,7 @@ intersection_scatterplot_pairs_server <- function(id,
       ## Labels for top 50
       label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
       label.text <- sub(".*[:]", "", label.text) ## strip prefix??
-      label.text <- shortstring(label.text, 30)
+      label.text <- playbase::shortstring(label.text, 30)
       if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
       ## reorder so the selected genes don't get overlapped
@@ -110,7 +110,7 @@ intersection_scatterplot_pairs_server <- function(id,
         tt <- paste0("<b>", g, "</b> ", pgx$genes[g, "gene_title"])
       }
       tt <- gsub("_", " ", tt)
-      tt <- sapply(tt, breakstring2, 50, brk = "<br>")
+      tt <- sapply(tt, playbase::breakstring2, 50, brk = "<br>")
 
       ## plotly
       ##

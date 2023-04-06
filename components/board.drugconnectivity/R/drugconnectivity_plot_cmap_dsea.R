@@ -181,7 +181,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
           }
           wcex[is.na(wcex)] <- 1
 
-          pgx.scatterPlotXY.BASE(
+          playbase::pgx.scatterPlotXY.BASE(
             xpos,
             var = xvar, title = title,
             xlab = "UMAP-x", ylab = "UMAP-y",
@@ -193,7 +193,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
             softmax = softmax, opacity = opacity
           )
         } else {
-          plt <- pgx.scatterPlotXY(
+          plt <- playbase::pgx.scatterPlotXY(
             xpos,
             var = xvar, plotlib = plotlib, title = title,
             xlab = "UMAP-x", ylab = "UMAP-y",

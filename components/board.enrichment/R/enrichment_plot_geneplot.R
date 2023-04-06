@@ -68,7 +68,7 @@ enrichment_plot_geneplot_server <- function(id,
         grouped <- !input$gs_ungroup2
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
-        pgx.plotExpression(
+        playbase::pgx.plotExpression(
           pgx,
           probe,
           comp = comp0,

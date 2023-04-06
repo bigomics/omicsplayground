@@ -72,8 +72,8 @@ CompareBoard <- function(id, pgx) {
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
+      F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
       g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
@@ -118,8 +118,8 @@ CompareBoard <- function(id, pgx) {
         return(NULL)
       }
 
-      F1 <- pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
+      F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       F1 <- F1[match(gg, rownames(F1)), , drop = FALSE]
@@ -187,7 +187,7 @@ CompareBoard <- function(id, pgx) {
         ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
         rownames(pos) <- rownames(pgx$X)[ii]
 
-        p <- pgx.plotGeneUMAP(
+        p <- playbase::pgx.plotGeneUMAP(
           pgx,
           contrast = ct, pos = pos,
           cex = 0.9, cex.lab = cex.lab,
@@ -201,7 +201,7 @@ CompareBoard <- function(id, pgx) {
           jj <- match(gg, toupper(rownames(pgx$X)))
           X1 <- pgx$X[jj, , drop = FALSE]
           Y1 <- pgx$samples
-          gx.splitmap(X1,
+          playbase::gx.splitmap(X1,
             nmax = 40, col.annot = Y1,
             softmax = TRUE, show_legend = FALSE
           )
@@ -210,7 +210,7 @@ CompareBoard <- function(id, pgx) {
         genes1 <- rownames(pgx$X)
         gg <- intersect(toupper(higenes), toupper(genes1))
         higenes1 <- genes1[match(gg, toupper(genes1))]
-        p <- pgx.plotContrast(
+        p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct, hilight = higenes1,
           ntop = ntop, cex.lab = cex.lab, ## dlim=0.06,

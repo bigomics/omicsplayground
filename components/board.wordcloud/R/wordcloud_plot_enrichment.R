@@ -67,7 +67,7 @@ wordcloud_plot_enrichment_server <- function(id,
           frame()
         } else {
           a <- top[i]
-          gsea.enplot(S[, a], targets,
+          playbase::gsea.enplot(S[, a], targets,
             names = NULL, ## main=gs,
             main = paste0("#", toupper(keyword), "\n@", a),
             cex.main = 0.9, len.main = 80, xlab = ""
