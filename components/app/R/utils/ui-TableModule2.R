@@ -132,7 +132,8 @@ TableModuleUI <- function(id,
       ),
       bslib::card_body(
           class = "card-footer", # center the content horizontally and vertically
-          div(class="caption", shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(caption))))
+          div(class="caption", shiny::HTML(paste0("<b>", as.character(title),".</b>",
+                                                  "&nbsp;", as.character(caption))))
       )
   ) ## end of card
 #  e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
