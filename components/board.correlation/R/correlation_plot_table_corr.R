@@ -12,12 +12,19 @@
 #' @param height
 #'
 #' @export
-correlation_plot_table_corr_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width) {
+correlation_plot_table_corr_ui <- function(
+  id,
+  title_plot,
+  title_table,
+  info.text_plot,
+  info.text_table,
+  caption_plot,
+  caption_table,
+  label = "",
+  height,
+  height_table,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -35,25 +42,25 @@ correlation_plot_table_corr_ui <- function(id,
     )
   )
 
-  cor_table.info <- "<b>Correlation table</b> of correlation and partial correlation with respect to selected gene."
-
   div(
     PlotModuleUI(ns("plot"),
-      title = "Top correlated genes",
+      title = title_plot,
       label = label,
       plotlib = "plotly",
+      caption = caption_plot,
       options = plot_opts,
-      info.text = info_text,
+      info.text = info.text_plot,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
       height = height
     ),
     TableModuleUI(
       ns("datasets"),
-      info.text = cor_table.info,
-      height = c(360, TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
-      title = "Correlation table",
+      info.text = info.text_table,
+      height = height_table,
+      width = width,
+      title = title_table,
+      caption = caption_table,
       label = "b"
     )
   )

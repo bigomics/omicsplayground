@@ -12,23 +12,29 @@
 #' @param height
 #'
 #' @export
-correlation_plot_correlation_UMAP_ui <- function(id,
-                                                    height = c(600, 800)) {
+correlation_plot_correlation_UMAP_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Correlation UMAP.</b> UMAP clustering of genes using covariance as distance metric and colored by correlation (or covariance). Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative."
+  
   cor_umap.opts <- shiny::tagList(
     shiny::radioButtons(ns("umap_param"), "color by:", choices = c("cor", "cov"), inline = TRUE)
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Correlation UMAP",
+    title = title,
+    caption = caption,
     plotlib = "plotly",
     label = "b",
-    info.text = info_text,
+    info.text = info.text,
     options = cor_umap.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(700, 750),
-    width = c("auto", "100%")
+    height = height,
+    width = width
   )
 }
 

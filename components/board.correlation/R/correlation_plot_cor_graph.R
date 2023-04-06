@@ -12,10 +12,15 @@
 #' @param height
 #'
 #' @export
-correlation_plot_cor_graph_ui <- function(id,
-                                          height = c(600, 800)) {
+correlation_plot_cor_graph_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Partial correlation network.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
+
   GRAPH.LAYOUTS <- c(
     "Fruchterman-Reingold" = "fr", "Kamada-Kawai" = "kk",
     "graphopt" = "graphopt", "tree layout" = "tree"
@@ -26,14 +31,16 @@ correlation_plot_cor_graph_ui <- function(id,
     shiny::selectInput(ns("cor_graph_layout"), "layout:", choices = GRAPH.LAYOUTS)
   )
 
-  PlotModuleUI(ns("plot"),
-    title = "Partial correlation network",
+  PlotModuleUI(
+    ns("plot"),
+    title = title,
     plotlib = "visnetwork",
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = cor_graph.opts,
-    width = c(700, "100%"),
-    height = c(700, 700),
+    width = width,
+    height = height,
     download.fmt = c("png", "pdf", "csv"),
   )
 }
@@ -46,10 +53,11 @@ correlation_plot_cor_graph_ui <- function(id,
 #'
 #' @return
 #' @export
-correlation_plot_cor_graph_server <- function(id,
-                                              cor_gene,
-                                              getPartialCorrelationMatrix,
-                                              watermark = FALSE) {
+correlation_plot_cor_graph_server <- function(
+  id,
+  cor_gene,
+  getPartialCorrelationMatrix,
+  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
