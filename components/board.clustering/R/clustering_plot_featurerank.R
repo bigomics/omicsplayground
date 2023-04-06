@@ -4,14 +4,15 @@
 ##
 
 
-clustering_plot_featurerank_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width) {
+clustering_plot_featurerank_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  clust_featureRank_info <- "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.  The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
-
 
   clust_featureRank.opts <- shiny::tagList(
     withTooltip(
@@ -30,8 +31,9 @@ clustering_plot_featurerank_ui <- function(id,
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-    title = "Feature-set ranking",
-    info.text = clust_featureRank_info,
+    title = title,
+    caption = caption,	
+    info.text = info.text,
     options = clust_featureRank.opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -71,9 +73,9 @@ clustering_plot_featurerank_server <- function(id,
 
       ## ------------ Just to get current samples
       ## samples = colnames(X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
+      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X <- X[, samples]
-      cvar <- pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
+      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
       cvar <- grep("sample|patient|years|days|months|gender",
         cvar,
         invert = TRUE, value = TRUE
@@ -113,7 +115,7 @@ clustering_plot_featurerank_server <- function(id,
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
-            pp <- filterProbes(pgx$genes, features[[j]])
+            pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
           pp <- intersect(pp, rownames(X))
@@ -159,7 +161,7 @@ clustering_plot_featurerank_server <- function(id,
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
       rownames(S) <- substring(rownames(S), 1, 50)
       
-      pgx.stackedBarplot(
+      playbase::pgx.stackedBarplot(
         x = t(S),
         showlegend = TRUE,
         xlab = "Discriminant score",

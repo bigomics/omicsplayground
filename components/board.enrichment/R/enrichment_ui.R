@@ -179,7 +179,7 @@ EnrichmentUI <- function(id) {
         )
       ),
       shiny::tabPanel(
-        "Foldchange (all)",
+        "Enrichment (all)",
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
           height = c(295, TABLE_HEIGHT_MODAL),

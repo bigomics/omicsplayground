@@ -3,21 +3,28 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_correlation_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_correlation_ui <- function(
+  id, 
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Top correlated genes</b>. Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively. Darker color corresponds to higher expression of the gene."
 
   PlotModuleUI(
     ns("pltsrv"),
-    title = "Top correlated genes",
+    title = title,
     label = label,
     plotlib = "plotly",
+    caption = caption,
     ## outputFunc = plotly::plotlyOutput,
     ## outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -42,7 +49,7 @@ dataview_plot_correlation_server <- function(id,
       if (pp %in% rownames(pgx$X)) {
         rho <- cor(t(pgx$X[, samples]), pgx$X[pp, samples], use = "pairwise")[, 1]
       } else if (pp %in% rownames(pgx$counts)) {
-        x0 <- logCPM(pgx$counts[, samples])
+        x0 <- playbase::logCPM(pgx$counts[, samples])
         x1 <- x0[pp, ]
         rho <- cor(t(x0), x1, use = "pairwise")[, 1]
       } else {

@@ -109,7 +109,7 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
         }
 
-        pgx.stackedBarplot(
+        playbase::pgx.stackedBarplot(
           x = data.frame(F1, check.names=FALSE),
           ylab = "cumulative logFC", xlab="",
           showlegend = FALSE

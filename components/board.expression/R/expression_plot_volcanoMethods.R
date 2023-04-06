@@ -119,7 +119,7 @@ expression_plot_volcanoMethods_server <- function(id,
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
           
-          plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = methods[i],
             cex.title = 0.85,
@@ -151,36 +151,33 @@ expression_plot_volcanoMethods_server <- function(id,
     plot.RENDER <- function() {      
       plt <- render_plots(cex=0.45, base_size=11)
       nplots <- length(plt)
-      
       ## layout
       nr = 1
-      nc = 5
+      nc = max(4,nplots)
       if(nplots > 5) {
         nr = 2
-        nc = 6
+        nc = ceiling(nplots/nr)
       }
       if (nplots > 12) {
         nr = 3
-        nc = 8
+        nc = ceiling(nplots/nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     modal_plot.RENDER <- function() {      
-
       plt <- render_plots(cex=1, base_size=16)
       nplots <- length(plt)
-      
       ## layout
       nr = 1
-      nc = 2
+      nc = max(2,nplots)
       if(nplots > 3) {
         nr = 2
-        nc = 4
+        nc = ceiling(nplots/nr)
       }
       if (nplots > 8) {
         nr = 3
-        nc = 6
+        nc = ceiling(nplots/nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }

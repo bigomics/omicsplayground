@@ -34,7 +34,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         jj <- which(sapply(rpt, is.numeric))
         rpt[, jj] <- round(rpt[, jj], digits = 4)
         jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
-        if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, shortstring, 60)
+        if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 60)
       } else {
         rpt <- data.frame("", 0, 0, 0)[0, ]
         colnames(rpt) <- c("gene_name", "fc", "p", "q")
@@ -69,7 +69,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fx <- rpt[, "fc"]
         tbl <- tbl %>%
           DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-          DT::formatStyle("fc", background = color_from_middle(fx, "lightblue", "#f5aeae"))
+          DT::formatStyle("fc", background = playbase::color_from_middle(fx, "lightblue", "#f5aeae"))
       }
       tbl
     })

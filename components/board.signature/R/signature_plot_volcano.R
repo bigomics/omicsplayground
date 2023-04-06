@@ -64,7 +64,7 @@ signature_plot_volcano_server <- function(id,
       ct <- rownames(gsea$output)[ii]
 
       mm <- selected_gxmethods()
-      meta <- pgx.getMetaMatrix(pgx, methods = mm)
+      meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
       F <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
       score <- abs(F) * -log(qv)
@@ -100,7 +100,7 @@ signature_plot_volcano_server <- function(id,
           cex2 <- 1.3
         }
         xy <- cbind(fc = F[, i, drop = FALSE], z = -log10(qv[, i, drop = FALSE]))
-        pgx.scatterPlotXY.BASE(
+        playbase::pgx.scatterPlotXY.BASE(
           xy,
           var = NULL, type = "factor", title = "",
           xlab = "differential expression (log2FC)",

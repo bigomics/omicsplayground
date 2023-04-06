@@ -52,7 +52,7 @@ upload_plot_pcaplot_server <- function(id,
 
       method <- input$pcaplot.method
       X <- log2(1 + counts)
-      clust <- pgx.clusterMatrix(X, dims = 2, method = method)
+      clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
       names(clust)
 
       cond <- sel.conditions()
@@ -60,7 +60,7 @@ upload_plot_pcaplot_server <- function(id,
         return(NULL)
       }
       ## par(mar=c(4,1,1,1))
-      pgx.scatterPlotXY(
+      playbase::pgx.scatterPlotXY(
         clust$pos2d,
         var = cond, plotlib = "plotly",
         legend = FALSE ## , labels=TRUE

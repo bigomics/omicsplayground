@@ -40,7 +40,7 @@ SingleCellBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx)
       ## levels for sample filter
-      levels <- getLevels(pgx$Y)
+      levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "samplefilter", choices = levels)
 
       ## update cluster methods if available in object
@@ -93,7 +93,7 @@ SingleCellBoard <- function(id, pgx) {
       ## if(is.null(input$crosstaboptions)) return(NULL)
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
@@ -125,7 +125,7 @@ SingleCellBoard <- function(id, pgx) {
       genes <- NULL
       g1 <- g2 <- NULL
 
-      F <- pgx.getMetaFoldChangeMatrix(pgx)$fc
+      F <- playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc
       F <- F[order(-apply(F, 1, sd)), ]
       genes <- rownames(F)
       g1 <- rownames(F)[1]
@@ -148,7 +148,7 @@ SingleCellBoard <- function(id, pgx) {
       ## zx <- filtered_matrix1()
       zx <- pgx$X
       kk <- colnames(zx)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
       if (length(kk) == 0) {
         return(NULL)
       }
@@ -233,7 +233,7 @@ SingleCellBoard <- function(id, pgx) {
       pfGetClusterPositions = pfGetClusterPositions,
       method = shiny::reactive(input$dcmethod),
       refset = shiny::reactive(input$refset),
-      lyo = shiny::reactive(input$layout),
+      layout = shiny::reactive(input$layout),
       sortby = shiny::reactive(input$sortby)
     )
 
@@ -300,7 +300,7 @@ SingleCellBoard <- function(id, pgx) {
     #
     #     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
     #     shiny::withProgress( message='calculating CNV (sma40)...', value=0.33, {
-    #         res <- pgx.CNAfromExpression(pgx, nsmooth=40)
+    #         res <- playbase::pgx.CNAfromExpression(pgx, nsmooth=40)
     #     })
     #     return(res)
     # })
@@ -312,7 +312,7 @@ SingleCellBoard <- function(id, pgx) {
     #
     #
     #     shiny::withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
-    #         res <- pgx.inferCNV(pgx, refgroup=NULL)
+    #         res <- playbase::pgx.inferCNV(pgx, refgroup=NULL)
     #     })
     #     return(res)
     # })
@@ -335,7 +335,7 @@ SingleCellBoard <- function(id, pgx) {
     #         annotvar <- input$cna_annotvar
     #         if(annotvar=="<none>") annotvar <- NULL
     #         order.by <- input$cna_orderby
-    #         pgx.plotCNAHeatmap(
+    #         playbase::pgx.plotCNAHeatmap(
     #             pgx, res, annot=annotvar, order.by=order.by,
     #             downsample=10 )
     #     }
@@ -502,7 +502,7 @@ SingleCellBoard <- function(id, pgx) {
     #         rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
 
     #         par(oma=c(3,2,3,0))
-    #         gx.heatmap(gx0, scale="none", mar=c(15,8),
+    #         playbase::gx.heatmap(gx0, scale="none", mar=c(15,8),
     #                    cexRow=1, cexCol=1.3, col=BLUERED(64),
     #                    key=FALSE, keysize=0.6)
     #     })

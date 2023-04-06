@@ -1683,8 +1683,6 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
                              scale="row.center", ntop=50, colors=NULL,
                              rowcex=rowcex, colcex=colcex)
 {
-
-
     X0 <- log2(1+ngs$counts)
     X0[is.na(X0)] <- 0
 
@@ -1753,9 +1751,6 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 ##=================================================================================
 
 plot.gghist <- function(x) {
-
-
-
     dplyr::as_tibble(x) %>%
         tidyr::pivot_longer(
             cols=everything(),
@@ -1769,9 +1764,6 @@ plot.gghist <- function(x) {
 
 plotly2ggplot <- function (plot, width=NULL, height=NULL, scale=1, hjust=0, vjust=0)
 {
-
-
-
     tmpfile <- tempfile()
     tmpfile <- "tmp.png"
     unlink(tmpfile)
@@ -2653,7 +2645,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
 }
 
 pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
-                                     cex.lab=0.8, cex.title=1.2, cex.clust=1.5, cex.legend=1,
+                                     cex.lab=0.8, cex.title=1.2, cex.clust=1.5,
+                                     cex.legend=1, cex.axis=1, gridcolor=NULL, bgcolor=NULL,
                                      zoom=1, legend=TRUE, bty='n', hilight=NULL,
                                      zlim=NULL, zlog=FALSE, softmax=FALSE, zsym=FALSE,
                                      xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL,
@@ -2663,7 +2656,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      legend.ysp=0.85, legend.pos = "bottomleft",
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
                                      label.type=c("text","box"), base_size=11, 
-                                     title=NULL, barscale=0.8 )
+                                     title=NULL, barscale=0.8, axis=TRUE, box=TRUE )
 {
     require(ggplot2)
 
@@ -2752,7 +2745,6 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
     plt <- NULL
     ## Plot the discrete variables
     if(type=="factor") {
-
         z1 <- var
         if(class(z1)!='factor') z1 <- factor(as.character(z1))
         nz <- length(levels(z1))
@@ -2760,10 +2752,6 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         if(!is.null(col)) {
             col1 <- col
         } else if(nz==2) {
-            #col1 <- rev(grey.colors(2, end=0.8))
-            #col1 <- c("#AAAAAA55","#555555FF")
-            #col1 <- c("#00008855","#AA0000FF")
-            #col1 <- c("#CCCCCC55","#AA0000FF")
             col1 <- omics_colors("light_grey", "red")
         } else if(nz==1) {
             col1 <- omics_colors("super_dark_grey")
@@ -2795,26 +2783,38 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         df <- df[jj,]
         pt.col <- pt.col[jj]
         plt <- ggplot(df, aes(x,y), legend=legend) +
-            geom_point( shape=20, alpha=opacity, size=1.8*cex, col=pt.col ) +
-            scale_color_manual( values=col1, name=title, na.value="#DDDDDD44")
-
+            geom_point(
+                shape = 21,
+                alpha = opacity,
+                size = 1.8*cex,
+                fill = pt.col,
+                color = "#444444",
+                stroke = 0.2                
+            ) +
+            scale_color_manual(
+                values = col1,
+                name = title,
+                na.value = "#DDDDDD44"
+            )
+        
+        if(!is.null(theme)) {
+            plt <- plt + theme
+        } else {
+            plt <- plt + theme_bw(
+              base_size = base_size              
+            ) 
+        }
+        
         ## label cluster
         if(label.clusters) {
-
+            ## Put a cluster label at the median position of the group
             mpos <- apply(pos,2,function(x) tapply(x,z1,median))
-            ## text(med.pos, labels=rownames(med.pos),cex=1.6)
             mlab <- rownames(mpos)
-            ##if(!is.null(labels)) mlab <- labels[rownames(mpos)]
-            ## plt <- plt + annotate(
-            ##                  geom="text",x=mpos[,1],  y=mpos[,2],
-            ##                  label=mlab, size=4.5*cex.clust,
-            ##                  lineheight=0.7)
             df1 <- data.frame( x=mpos[,1], y=mpos[,2], name=rownames(mpos))
             if(label.type=="text")  labelFUN <- ggrepel::geom_text_repel
             if(label.type=="box") labelFUN <- ggrepel::geom_label_repel
             plt <- plt +
                 labelFUN(
-                ##geom_label_repel(
                     data = df1,
                     aes(x=x, y=y, label=name),
                     size = 3.0 * cex.clust,
@@ -2827,9 +2827,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                     box.padding = grid::unit(0.4, "lines"),
                     point.padding = grid::unit(0.0, "lines")
                 )
-            ##plt
         }
-
 
         nlev <- length(levels(z1))
         if(legend && nlev <= 10) {
@@ -2859,22 +2857,11 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
     ## Plot the continous variables
     if(type=="numeric") {
         z <- as.numeric(var)
-        z1 <- NULL
-        ## if(!is.null(zlim)) {
-        ##     z1 <- (z - min(zlim)) / diff(zlim)
-        ##     z1 <- pmin(pmax(z1,0),1) ## clip
-        ## } else {
-        ##     if(zsym) {
-        ##         dz <- max(abs(z),na.rm=TRUE)
-        ##         z1 <- (z + dz) / (2*dz)
-        ##     } else {
-        ##         z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
-        ##     }
-        ## }
-        ## ## z1 is [0:1] scaled variable
-        ## if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         cpal <- rev(viridis::viridis(11))
-        cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
+        cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))  ## default
+        if(!is.null(col)) {
+            cpal <- col
+        }
         if(opacity<1) {
             cpal <- add_opacity(cpal, opacity**0.33)
         }
@@ -2889,16 +2876,25 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                          variable=z, text=tooltip, label=label1 )
         df <- df[order(abs(z),na.last=FALSE),] ## strongest last??
 
+        ## determine range for colorbar
         zr <- range(z)
         if(!is.null(zlim)) zr <- zlim
         if(zsym && min(zr,na.rm=TRUE)<0 ) zr <- c(-1,1)*max(abs(zr),na.rm=TRUE)
         zz <- round(c(zr[1], zr[2]),digits=2)
 
-        plt <- ggplot(df, aes(x, y, color=variable)) +
-            geom_point(shape=20, alpha=opacity, size=1.8*cex ) +
-            scale_color_gradientn(colors=cpal, breaks=zz,
-                                  labels=c(zz[1],zz[2]),
-                                  na.value="#DDDDDD44") +
+        plt <- ggplot(df, aes(x, y, fill=variable)) +
+            geom_point(
+                shape = 21,
+                alpha = opacity,
+                size = 1.8 * cex,
+                color = "#444444",
+                stroke = 0.2
+            ) +
+            scale_fill_gradientn(
+                colors = cpal,
+                breaks = zz,
+                labels = c(zz[1],zz[2]),
+                na.value = "#DDDDDD44") +
             expand_limits(color = zr + c(-0.01,0.01))
 
         ## colorscale bar
@@ -2907,25 +2903,22 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
             xmin <- round(min(z,na.rm=TRUE),2)
             plt <- plt +
                 guides(colour = guide_colourbar(
-                           barwidth= 0.5*barscale, barheight= 2.2*barscale )) +
+                  barwidth  = 0.5*barscale,
+                  barheight = 2.2*barscale
+                )) +
                 theme(legend.title = element_blank(),
                       legend.text = element_text(size=9*cex.legend),
                       legend.justification = legend.justification,
                       legend.position = legend.position,
-                      ##legend.justification = c(0,0),
-                      ##legend.position = c(0.22, 0.02),
-                      ##legend.background = element_rect(fill=scales::alpha("white",0.5)),
                       legend.background = element_blank(),
                       legend.key = element_blank())
-            ##legend("bottomleft", cex=0.8, ## text.width=2,
-            ##       y.intersp=0.25, x.intersp=0.5, border=NA, bty=bty,
-            ##       fill=rev(cpal), legend=c(xmax,rep(NA,9),xmin), )
         } else {
             plt <- plt + theme(legend.position="none")
         }
     }
 
     if(!is.null(hilight)) {
+        ## this hilights some points (with color and size)  at certain positions
         sel <- which(df$name %in% hilight)
         if(is.null(hilight.col)) hilight.col <- 'transparent'
         plt <- plt +
@@ -2937,13 +2930,13 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                 shape = 21,
                 stroke = 0.5 * hilight.lwd,
                 fill = hilight.col,
-                color = 'black'
+                color = 'grey20'
             )
 
     }
 
     if(!is.null(hilight2)) {
-
+        ## this put text labels at certain positions
         if(label.type=="text")  labelFUN <- ggrepel::geom_text_repel
         if(label.type=="box") labelFUN <- ggrepel::geom_label_repel
         ##geom_text_repel(
@@ -2955,18 +2948,38 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                          label.size = 0.08,
                          max.overlaps = 99,
                          fill = scales::alpha(c("white"),0.6),
-                         segment.color = "grey30",
+                         segment.color = "grey20",
                          segment.size = 0.5,
                          box.padding = grid::unit(0.25, "lines"),
                          point.padding = grid::unit(0.2, "lines")
                      )
     }
+    
 
+    if(!is.null(bgcolor)) {
+      plt <- plt + theme(
+        panel.background = element_rect(fill=bgcolor)
+      )
+    }
+    
+    if(!is.null(gridcolor)) {
+      plt <- plt + theme(
+        panel.grid.major = element_line(
+          size = 0.4,
+          linetype = 'solid',
+          colour = gridcolor), 
+        panel.grid.minor = element_line(
+          size = 0.15,
+          linetype = 'solid',
+          colour = gridcolor)
+      )
+    }
 
-    if(!is.null(theme)) {
-        plt <- plt + theme
-    } else {
-        plt <- plt + theme_bw(base_size=base_size)
+    if(box) {
+      plt <- plt +
+        theme(
+          panel.border = element_rect(fill=NA, color="grey20", size=0.15)          
+        )
     }
 
     ## additional theme
@@ -2975,27 +2988,40 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         ylim(ylim[1], ylim[2]) +
         xlab(xlab) +  ylab(ylab) + ggtitle(title) +
         theme(
-            plot.title = element_text(size=11*cex.title, hjust=0, vjust=+0),
-            axis.text.x = element_text(size=7),
-            axis.text.y = element_text(size=7),
-            axis.title.x = element_text(size=9, vjust=+2),
-            axis.title.y = element_text(size=9, vjust=+0),
-            panel.border = element_rect(fill=NA, color="grey20", size=0.15)
+            plot.title = element_text(size=11*cex.title, hjust=0, vjust=-1),
+            axis.text.x = element_text(size=7*cex.axis),
+            axis.text.y = element_text(size=7*cex.axis),
+            axis.title.x = element_text(size=9*cex.axis, vjust=+2),
+            axis.title.y = element_text(size=9*cex.axis, vjust=+0),
+            plot.margin = margin(1,1,1,1, "mm")  ##??
         )
+
+    if(axis==FALSE) {
+          plt <- plt +
+            theme(
+              axis.title.x = element_blank(),
+              axis.text.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.title.y = element_blank(),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank()
+            )
+    }
+    
     plt
 }
 
 pgx.scatterPlotXY.PLOTLY <- function(pos,
                                      var=NULL, type=NULL, col=NULL,
                                      cex=NULL, cex.lab=0.8, cex.title=1.2,
-                                     cex.clust=1.5, cex.legend = 1,
+                                     cex.clust=1.5, cex.legend = 1, cex.axis=1,
                                      xlab = NULL, ylab = NULL, xlim=NULL, ylim=NULL,
                                      axis=TRUE, zoom=1, legend=TRUE, bty='n',
                                      hilight=NULL, hilight2=hilight, hilight.col=NULL,
                                      hilight.cex=NULL, hilight.lwd=0.8,
                                      zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE,
-                                     opacity=1, label.clusters=FALSE,
-                                     labels=NULL, label.type=NULL,
+                                     opacity=1, bgcolor=NULL, box=TRUE,
+                                     label.clusters=FALSE, labels=NULL, label.type=NULL,
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
                                      title="", title.y=1, gridcolor=NULL,
                                      source=NULL, key=NULL,
@@ -3059,23 +3085,24 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         xlim0 <- cx + 0.5 * c(-1,1.05) * dx / zoom
         ylim0 <- cy + 0.5 * c(-1,1.05) * dy / zoom
     }
-
     if(is.null(xlab)) xlab <- colnames(pos)[1]
     if(is.null(ylab)) ylab <- colnames(pos)[2]
 
-    ##tooltip <- paste0(pgx$genes$gene_name,"<br>",pgx$genes$gene_name)
-    ##gg.title <- pgx$genes[rownames(pos),"gene_title"]
-    ##tooltip <- paste(rownames(pos),"<br>", title,"=",z1,"<br>",gg.title)
     if(type=='numeric') var <- round(var, digits=4)
-    tooltip1=NULL
+    hoverinfo = "text"
     tooltip1 <- paste0(
-        rownames(pos),
-        "<br>value = ",var,
-        "<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2)
+      rownames(pos),
+      "<br>value = ",var,
+      "<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2)
     )
-    if(!is.null(tooltip)) {
-        tooltip1 <- paste0(tooltip1,"<br>",tooltip)
+    if(!is.null(tooltip) && length(tooltip)==length(var)) {
+      tooltip1 <- paste0(tooltip1,"<br>",tooltip)
+    } 
+    if(!is.null(tooltip) && tooltip==FALSE) {
+      tooltip1 = NA
+      hoverinfo = "none"
     }
+  
     label1 <- rownames(pos)
     if(!is.null(labels) && labels[1]!=FALSE) label1 <- labels
     label1 <- gsub('[)(]','',label1)  ## HTML labels do not like it...
@@ -3085,7 +3112,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
     plt <- NULL
     ## Plot the discrete variables
     if(type=="factor") {
-
         z1 <- factor(var)
         nz <- length(levels(z1))
         cpal <- NULL
@@ -3177,7 +3203,8 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                 x = ~x, y = ~y,
                 ##colors = ~value,
                 colors = cpal,
-                text = ~text, hoverinfo='text',
+                text = ~text,
+                hoverinfo = hoverinfo,
                 marker = list(
                   size = 7*cex,
                   opacity = opacity,
@@ -3198,13 +3225,13 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
             color = ~value,
             colors = cpal,
             text = ~text,
-            hoverinfo='text',
+            hoverinfo = hoverinfo,
             marker = list(
               size = 7*cex,
               opacity = opacity,
               line = list(
-                color = '#444',
-                width = 0.5
+                color = '#444444',
+                width = 0.2
               )
             ),
             showlegend = FALSE,
@@ -3213,11 +3240,9 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
             type = "scattergl")
     
     if(!is.null(hilight)) {
-
         jj <- which(rownames(df) %in% hilight)
         col1 = 'transparent'
         if(!is.null(hilight.col)) col1 <- hilight.col
-        
         plt <- plt %>%
             ##add_trace(
             plotly::add_markers(
@@ -3227,7 +3252,8 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                 color = NULL,
                 key = ~name,
                 mode = 'markers', type = 'scattergl', ## color=NULL,
-                text = ~text, hoverinfo='text',
+                text = ~text,
+                hoverinfo = hoverinfo,
                 ## showlegend = FALSE,
                 marker = list(
                     color = col1,
@@ -3239,7 +3265,6 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
                         width = 1.0*hilight.lwd)
                 )
             )
-
     }
 
     if(!is.null(hilight2)) {
@@ -3278,81 +3303,107 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
 
     if(legend && type=='numeric') {
         plt <- plt %>%
-          plotly::colorbar(
-            limits = c(cmin, cmax),
-            len = 0.15,
-            thickness = 9,
-            x = 0.01, y = 0.1,
-            title = '',
-            tickfont = list(
-              size=9
+            plotly::colorbar(
+               limits = c(cmin, cmax),
+               len = 0.15,
+               thickness = 9,
+               x = 0.01,
+               y= 0.1,
+               title='',
+               tickfont = list(size=9)
+               )
+    }
+
+    if(axis==FALSE) {
+        no.axis <- list(
+            title = "",
+            zeroline = FALSE,
+            showline = FALSE,
+            showticklabels = FALSE
+        )
+        plt <- plt %>% plotly::layout(
+            xaxis = no.axis,
+            yaxis = no.axis
+        )
+    }
+
+    if(!is.null(gridcolor)) {
+        plt <- plt %>% plotly::layout(
+            xaxis = list(gridcolor = gridcolor),
+            yaxis = list(gridcolor = gridcolor)
+        )        
+    }
+
+    if(!is.null(bgcolor)) {
+        plt <- plt %>% plotly::layout(
+            plot_bgcolor = bgcolor
+        )        
+    }
+  
+    if(box==TRUE) {
+        plt <- plt %>%
+          plotly::layout(    
+            shapes = list(
+              list(
+                type = "rect",
+                ##fillcolor = "red",
+                line = list(
+                  color = "#888",
+                  width = 0.1
+                ),
+                xref = "paper",
+                yref = "paper",        
+                y0 = -0.0, y1 = 1.0,
+                x0 = -0.0, x1 = 1.0
+              )
             )
           )
     }
-   
+
+  
     ## add legend and title
     plt <- plt %>%
         plotly::layout(
             showlegend = legend,
             xaxis = list(
-              title = xlab,
-              titlefont = list(size=12)
+                title = xlab,
+                titlefont = list(size = 12*cex.axis)
             ),
             yaxis = list(
-              title = ylab,
-              titlefont = list(
-                size = 12
-              )
-            ),
-            margin = list(l=5, r=5, b=25, t=25, pad=3)
+                title = ylab,
+                titlefont = list(size = 12*cex.axis)
+            )
         )
   
     if(!is.null(title) && title!="") {
         plt <- plt %>%
             plotly::layout(
-              annotations = list(
-                text=title,
-                font = list(
-                  size = 14*cex.title
-                ),
-                xref = "paper",
-                yref = "paper",
-                yanchor = "bottom",
-                xanchor = "left",
-                align = "right",
-                x = 0, y = title.y ,
-                showarrow = FALSE
-              )
+                annotations = list(
+                    text = title,
+                    font = list(size=14*cex.title),
+                    xref="paper",
+                    yref="paper",
+                    yanchor = "bottom",
+                    xanchor = "left",
+                    align = "right",
+                    x = 0,
+                    y = title.y,
+                    showarrow = FALSE),
+                ## add top margin??
+                margin = list(
+                  l = 10,
+                  r = 10,
+                  b = 10,
+                  t = ifelse(title.y>=1, 80, 10)
+                )
             )
+    } else {
+        ## symmetric margin
+        plt <- plt %>%
+          plotly::layout(
+            margin = list(l=10, r=10, b=10, t=10)
+        )
     }
-
-    if(axis==FALSE) {
-      ax <- list(
-        title = "",
-        zeroline = FALSE,
-        showline = FALSE,
-        showticklabels = FALSE
-      )
-      plt <- plt %>% plotly::layout(
-        xaxis = ax,
-        yaxis = ax
-      )
-    }
-
-    if(!is.null(gridcolor)) {
-      plt <- plt %>%
-        plotly::layout(
-          xaxis = list(
-            showgrid = TRUE,
-            gridcolor = gridcolor
-          ),
-          yaxis = list(
-            showgrid = TRUE,            
-            gridcolor = gridcolor
-          )
-        )      
-    }
-
     plt
 }
 

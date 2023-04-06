@@ -3,22 +3,28 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_histogram_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_histogram_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("Histogram of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the <code>grouped</code> setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Counts histogram",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

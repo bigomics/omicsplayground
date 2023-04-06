@@ -68,7 +68,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       ## ----- get KEGG id
       xml.dir <- file.path(FILES, "kegg-xml")
       kegg.available <- gsub("hsa|.xml", "", dir(xml.dir, pattern = "*.xml"))
-      kegg.ids <- getKeggID(rownames(pgx$gsetX))
+      kegg.ids <- playbase::getKeggID(rownames(pgx$gsetX))
       ## sometimes no KEGG in genesets...
       if (length(kegg.ids) == 0) {
         shinyWidgets::sendSweetAlert(
@@ -244,10 +244,11 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     assignInNamespace("geneannot.map", my.geneannot.map, ns = "pathview", as.environment("package:pathview"))
     assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
     lockBinding("geneannot.map", as.environment("package:pathview"))
+    
+    ## ================================================================================
+    ## KEGG module servers
+    ## ================================================================================
 
-    ##############
-    ## KEGG TAB ##
-    ##############
     functional_plot_kegg_graph_server(
       "kegg_graph",
       pgx,
@@ -270,8 +271,99 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       tabH
     )
 
+    ## =========================================================================
+    ## Get Reactome table
+    ## =========================================================================
+    getReactomeTable <- shiny::reactive({
+      shiny::req(pgx, input$fa_contrast)
+
+      ## ----- get comparison
+      comparison <- input$fa_contrast
+      if (!(comparison %in% names(pgx$gset.meta$meta))) {
+        return(NULL)
+      }
+
+      ## ----- get REACTOME id
+      sbgn.dir <- file.path(FILES, "reactome-sbgn")
+      reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
+      reactome.gsets <- grep("R-HSA",rownames(pgx$gsetX),value=TRUE)
+      reactome.ids <- gsub(".*R-HSA","R-HSA",reactome.gsets)
+      ## sometimes no REACTOME in genesets...
+      if (length(reactome.ids) == 0) {
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "No REACTOME terms in enrichment results",
+          text = "",
+          type = "warning"
+        )
+        df <- data.frame()
+        return(df)
+      }
+
+      ## select those of which we have SGBN files
+      jj <- which(!is.na(reactome.ids) &
+        !duplicated(reactome.ids) &
+        reactome.ids %in% reactome.available)
+      reactome.gsets <- reactome.gsets[jj]
+      reactome.ids <- reactome.ids[jj]
+
+      meta <- pgx$gset.meta$meta[[comparison]]
+      meta <- meta[reactome.gsets, ]
+      mm = "fgsea"
+      mm <- selected_gsetmethods()
+      mm <- intersect(mm, colnames(meta$q))
+      meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
+
+      df <- data.frame(
+        reactome.id = reactome.ids,
+        pathway = reactome.gsets,
+        logFC = meta$meta.fx,
+        meta.q = meta.q,
+        check.names = FALSE
+      )
+      df <- df[!duplicated(df$reactome.id), ] ## take out duplicated gene sets...
+      df <- df[order(-abs(df$logFC)), ]
+      return(df)
+    })
+
+    getFilteredReactomeTable <- shiny::reactive({
+      df <- getReactomeTable()
+      do.filter <- FALSE
+      do.filter <- input$fa_filtertable
+      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      return(df)
+    })
+
+
     ## ================================================================================
-    ## GO Tab
+    ## Reactome module servers
+    ## ================================================================================
+    
+    
+    functional_plot_reactome_graph_server(
+      "reactome_graph",
+      pgx,
+      getFilteredReactomeTable,
+      reactome_table,
+      reactive(input$fa_contrast)
+    )
+
+    functional_plot_reactome_actmap_server(
+      "reactome_actmap",
+      pgx,
+      getReactomeTable
+    )
+
+    reactome_table <- functional_table_reactome_server(
+      "reactome_table",
+      pgx,
+      getFilteredReactomeTable,
+      reactive(input$fa_contrast),
+      tabH
+    )
+    
+    ## ================================================================================
+    ## GO module servers
     ## ================================================================================
 
     functional_plot_go_network_server(

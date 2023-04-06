@@ -3,18 +3,23 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_expression_ui <- function(
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("<b>Gene expression</b>. Expression barplot of grouped samples (or cells) for the gene selected gene. Samples (or cells) in the barplot can be grouped/ungrouped by setting the <code>grouped</code> under the main options.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Gene expression",
+    title = title,
     label = label,
+    caption = caption,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     ## width = c("auto","100%"),
     height = height
@@ -103,7 +108,7 @@ dataview_plot_expression_server <- function(id,
         cx1 <- ifelse(ngrp < 10, 1, 0.8)
         cx1 <- ifelse(ngrp > 20, 0.6, cx1)
         if (pd$geneplot_type == "bar") {
-          gx.b3plot(
+          playbase::gx.b3plot(
             df$x,
             df$group,
             las = 3,
@@ -123,7 +128,7 @@ dataview_plot_expression_server <- function(id,
             col = rgb(0.4, 0.6, 0.85, 0.85)
           )
         } else if (pd$geneplot_type == "violin") {
-          pgx.violinPlot(
+          playbase::pgx.violinPlot(
             df$x,
             df$group,
             main = pd$gene,

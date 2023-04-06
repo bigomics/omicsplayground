@@ -13,10 +13,14 @@
 #' @param width
 #'
 #' @export
-clustering_plot_splitmap_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width) {
+clustering_plot_splitmap_ui <- function(
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
 
   topmodes <- c("sd", "pca", "specific")
@@ -92,14 +96,13 @@ clustering_plot_splitmap_ui <- function(id,
     shiny::br()
   )
 
-  info_text <- "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene.  At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels."
-
   PlotModuleUI(
     ns("pltmod"),
-    title = "Clustered Heatmap",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption,
     options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -138,7 +141,7 @@ clustering_plot_splitmap_server <- function(id,
         shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
       }
       if (input$hm_splitby == "phenotype") {
-        cvar <- sort(pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
+        cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
         sel <- cvar[1]
         cvar0 <- grep("^[.]", cvar, value = TRUE, invert = TRUE) ## no estimated vars
         sel <- head(c(
@@ -241,7 +244,7 @@ clustering_plot_splitmap_server <- function(id,
 
       shiny::showNotification("Rendering heatmap...")
       # plt <- grid::grid.grabExpr(
-      gx.splitmap(
+      playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
         scale = scale.mode, show_legend = show_legend,
@@ -303,18 +306,18 @@ clustering_plot_splitmap_server <- function(id,
             ## pgx$genes[g,"map"],". ",
             pgx$genes[g, "gene_title"], "."
           )
-          breakstring2(aa, 50, brk = "<br>")
+          playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
-        tooltips <- breakstring2(aa, 50, brk = "<br>")
+        tooltips <- playbase::breakstring2(aa, 50, brk = "<br>")
       }
       ## genetips = rownames(X)
 
       shiny::showNotification("Rendering iHeatmap...")
 
-      plt <- pgx.splitHeatmapFromMatrix(
+      plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X, annot = annotF, ytips = tooltips,
         idx = idx, splitx = splitx, scale = scale,
         row_annot_width = 0.03, rowcex = rowcex,

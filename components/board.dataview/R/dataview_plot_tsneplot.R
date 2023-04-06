@@ -3,20 +3,26 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_tsne_ui <- function(id, label = "", height = c(350, 600)) {
+dataview_plot_tsne_ui <- function(
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the <code>search_gene</code> dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).")
 
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height,
     label = label,
-    title = "t-SNE clustering"
+    caption = caption,
+    title = title
   )
 }
 
@@ -106,8 +112,8 @@ dataview_plot_tsne_server <- function(id,
           labels = function(x) sprintf("%1.2f", x),
           name = "Expression"
         ) +
-        guide_continuous(aes = "color", type = "steps", width = .4) +
-        theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .4) +
+        playbase::theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
 
       plot_dl$base <- fig_base
 
@@ -160,8 +166,8 @@ dataview_plot_tsne_server <- function(id,
 
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() +
-        guide_continuous(aes = "color", type = "steps", width = .7) +
-        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .7) +
+        playbase::theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
       ## plotly::ggplotly(fig)
       fig
     }

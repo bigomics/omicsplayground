@@ -4,24 +4,30 @@
 ##
 
 
-dataview_module_geneinfo_ui <- function(id, label = "", height = c(600, 800), width = c("auto", "100%")) {
+dataview_module_geneinfo_ui <- function(
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text
+  ) {
   ns <- shiny::NS(id)
 
 
   a_OMIM <- "<a href='https://www.ncbi.nlm.nih.gov/omim/'> OMIM</a>"
   a_KEGG <- "<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
   a_GO <- "<a href='http://geneontology.org/'>Gene Ontology</a>"
-
-  info_text <- paste0("<b>Gene info.</b> Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.")
-
+  
   PlotModuleUI(
     ns("mod"),
-    title = "Gene information",
+    title = title,
     label = label,
     outputFunc = htmlOutput,
     outputFunc2 = htmlOutput,
-    info.text = info_text,
-    caption = NULL,
+    info.text = info.text,
+    caption = caption,
     caption2 = NULL,
     options = NULL,
     download.fmt = NULL,
@@ -42,9 +48,9 @@ dataview_module_geneinfo_server <- function(id,
 
       gene <- toupper(sub(".*:", "", gene))
       eg <- "1017"
-      eg <- names(which(as.list(org.Hs.egSYMBOL) == gene))
-      eg <- mget(gene, envir = org.Hs.egSYMBOL2EG, ifnotfound = NA)[[1]]
-      if (is.na(eg)) eg <- mget(gene, envir = org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
+      eg <- names(which(as.list(org.Hs.eg.db::org.Hs.egSYMBOL) == gene))
+      eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG, ifnotfound = NA)[[1]]
+      if (is.na(eg)) eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
       eg
       eg <- eg[1]
       if (is.null(eg) || length(eg) == 0) {
@@ -53,7 +59,7 @@ dataview_module_geneinfo_server <- function(id,
 
       res <- "(gene info not available)"
       if (length(eg) > 0 && !is.na(eg)) {
-        info <- getHSGeneInfo(eg) ## defined in pgx-functions.R
+        info <- playbase::getHSGeneInfo(eg) ## defined in pgx-functions.R
         info$summary <- "(no info available)"
         if (gene %in% names(GENE.SUMMARY)) {
           info$summary <- GENE.SUMMARY[gene]

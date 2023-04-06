@@ -242,7 +242,7 @@ UploadModuleServer <- function(id,
               df <- NULL
               if (grepl("count", fn1, ignore.case = TRUE)) {
                 ## allows duplicated rownames
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
                   ndup <- sum(duplicated(rownames(df0)))
                   shinyWidgets::sendSweetAlert(
@@ -261,7 +261,7 @@ UploadModuleServer <- function(id,
                 }
               } else if (grepl("expression", fn1, ignore.case = TRUE)) {
                 ## allows duplicated rownames
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
                   ndup <- sum(duplicated(rownames(df0)))
                   shinyWidgets::sendSweetAlert(
@@ -279,7 +279,7 @@ UploadModuleServer <- function(id,
                   matname <- "counts.csv"
                 }
               } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                   msg <- paste(
@@ -300,7 +300,7 @@ UploadModuleServer <- function(id,
                   matname <- "samples.csv"
                 }
               } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                   msg <- paste(
@@ -332,7 +332,7 @@ UploadModuleServer <- function(id,
           ## Convert to gene names (need for biological effects)
           X0 <- matlist[["counts.csv"]]
           pp <- rownames(X0)
-          rownames(X0) <- probe2symbol(pp)
+          rownames(X0) <- playbase::probe2symbol(pp)
           sel <- !(rownames(X0) %in% c(NA, "", "NA"))
           X0 <- X0[sel, ]
           xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
@@ -614,7 +614,7 @@ UploadModuleServer <- function(id,
       uploaded_pgx <- shiny::reactive({
         if (!is.null(uploaded$pgx)) {
           pgx <- uploaded$pgx
-          ## pgx <- pgx.initialize(pgx)
+          ## pgx <- playbase::pgx.initialize(pgx)
         } else {
           pgx <- computed_pgx()
         }
@@ -743,7 +743,7 @@ UploadModuleServer <- function(id,
         dbg("[output$contrastStats] 3 : ")
 
         ## contrasts <- sign(contrasts)
-        ## df <- contrastAsLabels(contrasts)
+        ## df <- playbase::contrastAsLabels(contrasts)
         df <- contrasts
         px <- head(colnames(df), 20) ## maximum to show??
         df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
@@ -857,7 +857,7 @@ UploadModuleServer <- function(id,
               message("[UploadModule] WARNING: converting old1 style contrast to new format")
               new.contrasts <- samples1[, 0]
               if (NCOL(contrasts1) > 0) {
-                new.contrasts <- contrastAsLabels(contrasts1)
+                new.contrasts <- playbase::contrastAsLabels(contrasts1)
                 grp <- as.character(samples1[, group.col])
                 new.contrasts <- new.contrasts[grp, , drop = FALSE]
                 rownames(new.contrasts) <- rownames(samples1)
@@ -873,7 +873,7 @@ UploadModuleServer <- function(id,
               message("[UploadModule] WARNING: converting old2 style contrast to new format")
               new.contrasts <- samples1[, 0]
               if (NCOL(contrasts1) > 0) {
-                new.contrasts <- contrastAsLabels(contrasts1)
+                new.contrasts <- playbase::contrastAsLabels(contrasts1)
                 rownames(new.contrasts) <- rownames(samples1)
               }
               contrasts1 <- new.contrasts

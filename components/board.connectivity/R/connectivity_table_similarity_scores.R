@@ -33,7 +33,7 @@ connectivity_table_similarity_scores_server <- function(id,
       df <- df[, kk]
       df <- df[abs(df$score) > 0, , drop = FALSE]
 
-      df$pathway <- shortstring(df$pathway, 100)
+      df$pathway <- playbase::shortstring(df$pathway, 100)
 
       colnames(df) <- sub("pathway", "dataset/contrast", colnames(df))
       score.col <- which(colnames(df) == "score")
@@ -57,7 +57,7 @@ connectivity_table_similarity_scores_server <- function(id,
         DT::formatSignif(numcols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = color_from_middle(
+          background = playbase::color_from_middle(
             df[, "score"], "lightblue", "#f5aeae"
           ),
           backgroundSize = "98% 88%",

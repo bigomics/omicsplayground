@@ -11,17 +11,22 @@
 #' @param width
 #'
 #' @export
-clustering_table_clustannot_ui <- function(id, width, height) {
+clustering_table_clustannot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  clustannot_table_info_text <- "<b>Average correlation values</b> of annotation terms, for each gene cluster. In this table, users can check mean correlation values of features in the clusters with respect to the annotation term of the references database selected in the settings."
 
   TableModuleUI(
     ns("datasets"),
     width = width,
     height = height,
-    info.text = clustannot_table_info_text,
-    title = "Annotation scores",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     label = "b"
   )
 }
@@ -32,10 +37,11 @@ clustering_table_clustannot_ui <- function(id, width, height) {
 #' @param watermark
 #'
 #' @export
-clustering_table_clustannot_server <- function(id,
-                                               getClustAnnotCorrelation,
-                                               xann_level,
-                                               watermark = FALSE) {
+clustering_table_clustannot_server <- function(
+  id,
+  getClustAnnotCorrelation,
+  xann_level,
+  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -46,13 +52,13 @@ clustering_table_clustannot_server <- function(id,
         return(NULL)
       }
 
-      ## rownames(rho) = shortstring(rownames(rho),50)
-      rho.name <- shortstring(sub(".*:", "", rownames(rho)), 60)
+      ## rownames(rho) = playbase::shortstring(rownames(rho),50)
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       ## rho = data.frame(cbind( name=rho.name, rho))
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
       rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
-        df$feature <- wrapHyperLink(df$feature, rownames(df))
+        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
       }
 
       DT::datatable(

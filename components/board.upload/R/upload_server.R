@@ -114,7 +114,7 @@ UploadBoard <- function(id,
       new_pgx <- uploaded_pgx()
 
       dbg("[observe::uploaded_pgx] initializing PGX object")
-      new_pgx <- pgx.initialize(new_pgx)
+      new_pgx <- playbase::pgx.initialize(new_pgx)
 
       ## update Session PGX
       dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
@@ -144,7 +144,7 @@ UploadBoard <- function(id,
         remove(ngs)
         remove(new_pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
-        pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+        playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
         ## reload_pgxdir(reload_pgxdir()+1)
       }
 
@@ -309,7 +309,7 @@ UploadBoard <- function(id,
             if (grepl("count", fn1, ignore.case = TRUE)) {
               dbg("[upload_files] counts.csv : fn1 = ", fn1)
               ## allows duplicated rownames
-              df0 <- read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyWidgets::sendSweetAlert(
@@ -333,7 +333,7 @@ UploadBoard <- function(id,
             } else if (grepl("expression", fn1, ignore.case = TRUE)) {
               dbg("[upload_files] expression.csv : fn1 = ", fn1)
               ## allows duplicated rownames
-              df0 <- read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyWidgets::sendSweetAlert(
@@ -353,7 +353,7 @@ UploadBoard <- function(id,
               }
             } else if (grepl("sample", fn1, ignore.case = TRUE)) {
               dbg("[upload_files] samples.csv : fn1 = ", fn1)
-              df0 <- read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2)
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -375,7 +375,7 @@ UploadBoard <- function(id,
               }
             } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
               dbg("[upload_files] contrasts.csv : fn1 = ", fn1)
-              df0 <- read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2)
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -408,7 +408,7 @@ UploadBoard <- function(id,
         dbg("[upload_files] converting probe names to symbols")
         X0 <- matlist[["counts.csv"]]
         pp <- rownames(X0)
-        rownames(X0) <- probe2symbol(pp)
+        rownames(X0) <- playbase::probe2symbol(pp)
         sel <- !(rownames(X0) %in% c(NA, "", "NA"))
         X0 <- X0[sel, ]
         xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
@@ -690,7 +690,7 @@ UploadBoard <- function(id,
             message("[UploadModule] WARNING: converting old1 style contrast to new format")
             new.contrasts <- samples1[, 0]
             if (NCOL(contrasts1) > 0) {
-              new.contrasts <- contrastAsLabels(contrasts1)
+              new.contrasts <- playbase::contrastAsLabels(contrasts1)
               grp <- as.character(samples1[, group.col])
               new.contrasts <- new.contrasts[grp, , drop = FALSE]
               rownames(new.contrasts) <- rownames(samples1)
@@ -706,7 +706,7 @@ UploadBoard <- function(id,
             message("[UploadModule] WARNING: converting old2 style contrast to new format")
             new.contrasts <- samples1[, 0]
             if (NCOL(contrasts1) > 0) {
-              new.contrasts <- contrastAsLabels(contrasts1)
+              new.contrasts <- playbase::contrastAsLabels(contrasts1)
               rownames(new.contrasts) <- rownames(samples1)
             }
             contrasts1 <- new.contrasts
@@ -927,7 +927,7 @@ UploadBoard <- function(id,
     uploaded_pgx <- shiny::reactive({
       if (!is.null(uploaded$pgx)) {
         pgx <- uploaded$pgx
-        ## pgx <- pgx.initialize(pgx)
+        ## pgx <- playbase::pgx.initialize(pgx)
       } else {
         pgx <- computed_pgx()
       }
@@ -1051,7 +1051,7 @@ UploadBoard <- function(id,
       dbg("[output$contrastStats] 3 : ")
 
       ## contrasts <- sign(contrasts)
-      ## df <- contrastAsLabels(contrasts)
+      ## df <- playbase::contrastAsLabels(contrasts)
       df <- contrasts
       px <- head(colnames(df), 20) ## maximum to show??
       df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)

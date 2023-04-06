@@ -204,8 +204,8 @@ ConnectivityBoard <- function(id, pgx) {
         h5.file <- file.path(db.dir, sigdb)
         cn <- rhdf5::h5read(h5.file, "data/colnames")
 
-        has.gs <- h5exists(h5.file, "enrichment/genesets")
-        has.gsea <- h5exists(h5.file, "enrichment/GSEA")
+        has.gs <- playbase::h5exists(h5.file, "enrichment/genesets")
+        has.gsea <- playbase::h5exists(h5.file, "enrichment/GSEA")
         if (!has.gs && has.gsea) {
           return(NULL)
         }

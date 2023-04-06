@@ -4,17 +4,22 @@
 ##
 
 
-dataview_table_rawdata_ui <- function(id, width, height) {
+dataview_table_rawdata_ui <- function(
+  id,
+  width,
+  height,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
   
-  info_text <- "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."
-
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Gene expression table"
+    title = title
   )
 }
 
@@ -188,7 +193,7 @@ dataview_table_rawdata_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(numcols,
           background = DT::styleColorBar(data = c(0, dt$x99), color = unname(omics_colors("light_blue"))),
-          ## background = color_from_middle(x99, 'lightblue', '#f5aeae'),
+          ## background = playbase::color_from_middle(x99, 'lightblue', '#f5aeae'),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

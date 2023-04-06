@@ -292,7 +292,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           Y <- t(getEnrichmentMatrix(sigdb, nc = 15))
           Y <- Y[match(rownames(df), rownames(Y)), ]
           colorvar <- colnames(Y)[max.col(Y)]
-          colorvar <- shortstring(colorvar, 40) ## too long!!!
+          colorvar <- playbase::shortstring(colorvar, 40) ## too long!!!
           marker.col <- list()
           colorpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
         } else if (colorby == "score") {
@@ -400,7 +400,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           plotly::event_register("plotly_selected")
 
         if ("dark" %in% input$plotoptions) {
-          plt <- darkmode(plt, dim = ncol(pos))
+          plt <- playbase::darkmode(plt, dim = ncol(pos))
         }
 
         return(plt)

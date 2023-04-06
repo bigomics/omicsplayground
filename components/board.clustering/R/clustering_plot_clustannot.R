@@ -4,13 +4,15 @@
 ##
 
 
-clustering_plot_clusterannot_ui <- function(id,
-                                            label = "",
-                                            height,
-                                            width) {
+clustering_plot_clusterannot_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  clustannot_plots_text <- paste0("<b>Cluster annotation.</b> Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap. For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.")
 
   clustannot_plots.opts <- shiny::tagList(
     withTooltip(
@@ -39,8 +41,9 @@ clustering_plot_clusterannot_ui <- function(id,
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-    title = "Functional annotation of clusters",
-    info.text = clustannot_plots_text,
+    title = title,
+    info.text = info.text,
+    caption,
     options = clustannot_plots.opts,
     download.fmt = c("png", "pdf"),
     width = width,
@@ -165,7 +168,7 @@ clustering_plot_clusterannot_server <- function(id,
             xref = "paper",
             yref = "y",
             xanchor = "left",
-            text = shortstring(y, slen),
+            text = playbase::shortstring(y, slen),
             font = list(size = fontsize),
             showarrow = FALSE,
             align = "right"

@@ -128,7 +128,7 @@ WgcnaBoard <- function(id, pgx) {
 
         tr1 <- datTraits[, 0]
         if (length(sel1)) {
-          tr1 <- expandPhenoMatrix(datTraits[, sel1, drop = FALSE], drop.ref = FALSE)
+          tr1 <- playbase::expandPhenoMatrix(datTraits[, sel1, drop = FALSE], drop.ref = FALSE)
         }
         ## keeping numeric phenotypes
         tr2 <- datTraits[, sel2, drop = FALSE]
@@ -153,9 +153,9 @@ WgcnaBoard <- function(id, pgx) {
           ## dissTOM <- 1 - abs(cor(datExpr))**6
           dissTOM <- 1 - WGCNA::TOMsimilarityFromExpr(datExpr, power = power)
           rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)
-          clust <- pgx.clusterBigMatrix(dissTOM, methods = c("umap", "tsne", "pca"), dims = c(2))
-          ## pos <- pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
-          ## pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
+          clust <- playbase::pgx.clusterBigMatrix(dissTOM, methods = c("umap", "tsne", "pca"), dims = c(2))
+          ## pos <- playbase::pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
+          ## pos <- playbase::pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
           names(clust)
           if ("cluster.genes" %in% names(pgx)) {
             clust[["umap2d"]] <- pgx$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
@@ -174,7 +174,7 @@ WgcnaBoard <- function(id, pgx) {
           i <- 1
           for (i in 1:length(me.genes)) {
             gg <- toupper(me.genes[[i]])
-            rr <- gset.fisher(gg, gmt, background = bg, fdr = 1)
+            rr <- playbase::gset.fisher(gg, gmt, background = bg, fdr = 1)
             rr <- cbind(
               module = names(me.genes)[i],
               geneset = rownames(rr), rr
@@ -321,7 +321,7 @@ WgcnaBoard <- function(id, pgx) {
       ii <- unique(as.vector(t(ii)))
       ii <- head(ii, 70)
 
-      gx.heatmap(t(rho[, ii]),
+      playbase::gx.heatmap(t(rho[, ii]),
         keysize = 0.2, mar = c(4, 5), key = FALSE,
         cexRow = 0.85, cexCol = 1, scale = "none"
       )

@@ -58,8 +58,8 @@ if(0) {
                     "../logs","/var/log/httpd","/var/log/nginx")
     access.dirs <- access.dirs[dir.exists(access.dirs)]
     access.dirs
-    ##ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
-    ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get="playground")
+    ##ACCESS.LOG <- playbase::pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
+    ACCESS.LOG <- playbase::pgx.parseAccessLogs(access.dirs[], filter.get="playground")
     names(ACCESS.LOG)
     sum(ACCESS.LOG$visitors$count)
 }
@@ -110,7 +110,7 @@ tabRequire <- function(pgx, session, tabname, slot) {
 }
 
 fileRequire <- function(file, tabname, subtab) {
-	file1 <- search_path(c(FILES,FILESX),file)
+	file1 <- playbase::search_path(c(FILES,FILESX),file)
 	has.file <- !is.null(file1) && file.exists(file1)
 	if(!has.file) {
 		message(paste("[MAIN] file ",file," not found. Hiding",subtab,"\n"))
@@ -136,7 +136,7 @@ tabView <- function(title, tab.inputs, tab.ui, id=title) {
 
 toggleTab <- function(inputId, target, do.show, req.file=NULL, session=session ) {
     if(!is.null(req.file)) {
-        file1 <- search_path(c(FILES,FILESX),req.file)
+        file1 <- playbase::search_path(c(FILES,FILESX),req.file)
         has.file <- !is.null(file1[1])
         do.show <- do.show && has.file
     }

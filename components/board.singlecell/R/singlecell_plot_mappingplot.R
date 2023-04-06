@@ -139,7 +139,7 @@ singlecell_plot_mappingplot_server <- function(id,
       b0 <- 0.1 + 0.70 * pmax(30 - ncol(pd[["score"]]), 0)
 
       if (pd[["view"]] == "dotmap") {
-        ## gx.heatmap(pd[["score"]])
+        ## playbase::gx.heatmap(pd[["score"]])
         par(mfrow = c(1, 1), mar = c(0, 0, 8, 1), oma = c(1, 1, 1, 1) * 0.25)
         score3 <- pd[["score"]]**1.5
         rownames(score3) <- paste("", rownames(score3), "  ")
@@ -199,14 +199,14 @@ singlecell_plot_mappingplot_server <- function(id,
             if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score1) <- rep("", nrow(score1))
             score1 <- score1 / (1e-8 + rowSums(score1))
             if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(score1))
-            gx.imagemap(t(score1**1), cex = 0.85, main = "", clust = FALSE)
+            playbase::gx.imagemap(t(score1**1), cex = 0.85, main = "", clust = FALSE)
             title(main = names(all.scores)[k], cex.main = 1.1, line = 0.4, font.main = 1)
           }
         } else {
           score1 <- pd[["score"]]
           score1 <- score1 / (1e-8 + rowSums(score1))
           if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(pd[["score"]]))
-          gx.heatmap(t(score1**2),
+          playbase::gx.heatmap(t(score1**2),
             scale = "none",
             cexRow = 1, cexCol = 0.6, col = heat.colors(16),
             mar = c(b0, 15), key = FALSE, keysize = 0.5

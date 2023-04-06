@@ -27,7 +27,7 @@ signature_table_overlap_server <- function(id,
       df <- getOverlapTable()
       shiny::req(df)
 
-      df$geneset <- wrapHyperLink(df$geneset, df$geneset)
+      df$geneset <- playbase::wrapHyperLink(df$geneset, df$geneset)
 
       numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
@@ -46,7 +46,7 @@ signature_table_overlap_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(df$score, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

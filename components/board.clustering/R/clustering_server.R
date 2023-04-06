@@ -50,17 +50,17 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     ## update filter choices upon change of data set
     shiny::observe({
       shiny::req(pgx$Y)
-      levels <- getLevels(pgx$Y)
+      levels <- playbase::getLevels(pgx$Y)
 
       shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
 
       ## update defaults??
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
-      ## groupings <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
+      ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
       groupings <- c("<ungrouped>", sort(groupings))
       shiny::updateSelectInput(session, "hm_group", choices = groupings)
-      contrasts <- pgx.getContrasts(pgx)
+      contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
 
@@ -120,7 +120,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           ct <- input$hm_contrast
           shiny::req(ct)
           shiny::req(splitmap$hm_ntop())
-          fc <- names(sort(pgx.getMetaMatrix(pgx)$fc[, ct]))
+          fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
           n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
         } else if (ft %in% names(pgx$families)) {
@@ -176,7 +176,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
 
       dim(zx)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]
 
       if (input$hm_level == "gene" &&
@@ -474,7 +474,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ref <- pgx$gsetX[ss, ]
       }
       if (ann.level == "phenotype") {
-        ref <- t(expandAnnotationMatrix(pgx$Y))
+        ref <- t(playbase::expandAnnotationMatrix(pgx$Y))
       }
       if (is.null(ref)) {
         cat("<clustering:getClustAnnotCorrelation> WARNING:: ref error\n")
@@ -521,7 +521,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         P <- c()
         for (i in 1:ncol(rho)) {
           k <- colnames(rho)[i]
-          res <- gset.fisher(
+          res <- playbase::gset.fisher(
             grp[[k]], gmt,
             fdr = 1, min.genes = 0, max.genes = Inf,
             background = bg.genes
@@ -550,7 +550,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       ## take full matrix
       # flt <- getFilteredMatrix()
       # zx <- flt$zx
-      sel.samples <- selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
 
       clustmethod <- "tsne"
       pdim <- 2
@@ -592,7 +592,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
         perplexity
-        res <- pgx.clusterMatrix(
+        res <- playbase::pgx.clusterMatrix(
           zx,
           dims = pdim, perplexity = perplexity,
           ntop = 999999, prefix = "C",

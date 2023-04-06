@@ -94,13 +94,13 @@ functional_plot_kegg_actmap_server <- function(id,
 
         score2 <- score
         if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
-        score2 <- sign(score2) * abs(score2 / max(abs(score2)))**3 ## fudging
+        score2 <- sign(score2) * abs(score2 / max(abs(score2)))**1 ## fudging
         rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$", "",
           rownames(score2),
           ignore.case = TRUE
         ))
         rownames(score2) <- substring(rownames(score2), 1, 40)
-        colnames(score2) <- shortstring(colnames(score2), 30)
+        colnames(score2) <- playbase::shortstring(colnames(score2), 30)
         colnames(score2) <- paste0(colnames(score2), " ")
 
         bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3

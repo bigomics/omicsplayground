@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_phenoheatmap_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_phenoheatmap_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
 
   opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("clustsamples"), "cluster samples", TRUE),
@@ -17,12 +22,13 @@ dataview_plot_phenoheatmap_ui <- function(id, label = "", height = c(600, 800)) 
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Phenotype clustering",
+    title = title,
     label = label,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -56,7 +62,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
       ## TODO: Color palettes should be unique, not the same for condition and time
       ## NOTE: the package doesnt allow to change the typeface, the position of the legend, the label placement, ...
       ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
-      plt <- pgx.plotPhenotypeMatrix0(
+      plt <- playbase::pgx.plotPhenotypeMatrix0(
         annot = res$annot,
         annot.ht = annot.ht,
         cluster.samples = res$do.clust

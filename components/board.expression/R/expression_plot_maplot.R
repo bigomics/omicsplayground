@@ -186,7 +186,7 @@ expression_plot_maplot_server <- function(id,
 
       par(mfrow = c(1, 1), mar = c(4, 3, 1, 1.5), mgp = c(2, 0.8, 0), oma = c(0, 0, 0, 0))
 
-      plt <- plotlyMA(
+      plt <- playbase::plotlyMA(
         x = pd[["x"]], y = pd[["y"]], names = pd[["fc.genes"]],
         source = "plot1", marker.type = "scattergl",
         highlight = pd[["sel.genes"]],

@@ -3,7 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_abundance_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_abundance_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption
+  ) {
   ns <- shiny::NS(id)
 
   menu_grouped <- "<code>grouped</code>"
@@ -11,13 +19,14 @@ dataview_plot_abundance_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Abundance of major gene types",
+    title = title,
     label = label,
+    caption = caption,
     plotlib = "plotly",
     info.text = info_text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
