@@ -13,6 +13,8 @@ params:
     input: filepath
   - contrasts: "contrasts.csv"
     input: filepath
+  - lib_dir: "lib/"
+    input: filepath
   - batch_correct: FALSE
     input: boolean
   - prune_samples: TRUE

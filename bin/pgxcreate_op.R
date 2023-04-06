@@ -46,6 +46,7 @@ pgx <- playbase::pgx.computePGX(
   use.design = params$use.design,        ## no.design+prune are combined
   prune.samples = params$prune.samples,  ##
   do.cluster = params$do.cluster,
+  lib.dir = params$lib.dir
   )
 
 # annotate pgx
