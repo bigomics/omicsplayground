@@ -455,12 +455,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     return(NULL)
                 }
                 
-                dbg("[compute PGX process] check_process_status reacted!")
-                
                 reactive_timer()
-
                 active_processes <- process_obj()
-
                 completed_indices <- c()
 
                 for (i in seq_along(active_processes)) {
@@ -470,9 +466,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
                     process_status <- current_process$get_exit_status()
                     process_alive <- current_process$is_alive()
-
-                    dbg("[compute PGX process] process: ", active_processes[[i]]$dataset_name)
-                    dbg("[compute PGX process] : file Location:", temp_dir)
 
                     if (!is.null(process_status) && process_status == 0) {
                         # Process completed successfully
@@ -499,13 +492,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
 
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
-
                 dbg("[compute PGX process] on_process_completed() called!")                
                 process_counter(process_counter()-1) # stop the timer
-                result_path <- file.path(temp_dir, "my.pgx")
-
+                result_pgx <- file.path(temp_dir, "my.pgx")
                 if (file.exists(result_path)) {
-                    load(result_path)
+                    load(result_pgx)
                     computedPGX(pgx)
                 } else {
                     message("[compute PGX process] : Error: Result file not found")
@@ -518,19 +509,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 process_counter(process_counter()-1) # stop the timer
                 message("Error: Process completed with an error")
 
-                dbg("[ComputePgxModule.R] is.null(process_obj()) = ",is.null(process_obj()))
-                dbg("[ComputePgxModule.R] length(process_obj()) = ",length(process_obj()))
-                dbg("[ComputePgxModule.R] class(process_obj()) = ",class(process_obj()))
-                dbg("[ComputePgxModule.R] names(process_obj()) = ",names(process_obj()))                
-                dbg("[ComputePgxModule.R] class(process_obj()[[1]]) = ",class(process_obj()[[1]]))
-                dbg("[ComputePgxModule.R] names(process_obj()[[1]]) = ",names(process_obj()[[1]]))
-
                 proc <-process_obj()[[1]]$process
-                dbg("[ComputePgxModule.R] class(proc) = ",class(proc))
-                dbg("[ComputePgxModule.R] names(proc) = ",names(proc))                
-                ##                stderr_output <- process_obj()$read_error_lines()
                 stderr_output <- proc$read_error_lines()                
-                dbg("[ComputePgxModule.R] stderr_output = ",stderr_output)
                 
                 if (length(stderr_output) > 0) {
                     message("Standard error output from the process:")
