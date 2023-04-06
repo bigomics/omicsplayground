@@ -11,11 +11,11 @@ withTooltip <- function(
   options = NULL
 ) {
   if(!is.null(trigger)) {
-    warning("`trigger` is ignored, used to be in shinyBS::tippify")
+#    warning("`trigger` is ignored, used to be in shinyBS::tippify")
   }
   
   if(!is.null(options)) {
-    warning("`options` is ignored, used to be in shinyBS::tippify")
+#    warning("`options` is ignored, used to be in shinyBS::tippify")
   }
   
   htmltools::tagAppendAttributes(
