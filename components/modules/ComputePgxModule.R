@@ -243,11 +243,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             ## ------------------------------------------------------------------
 
             # Define a reactive value to store the process object
-            process_obj <- reactiveVal(NULL)
+            process_obj  <- reactiveVal(NULL)
             computedPGX  <- shiny::reactiveVal(NULL)
-            temp_dir <- reactiveVal(NULL)
+            temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
-            reactive_timer <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
+            reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -292,8 +292,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 samples   <- samplesRT()
                 samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
-
-                dbg("[ComputePgxServer:@enable] ct1 = ", contrasts[,1])
 
                 ## contrasts[is.na(contrasts)] <- 0
                 ## contrasts[is.na(contrasts)] <- ""
@@ -408,8 +406,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 cmd <- normalizePath(temp_dir())
 
                 # Start the process and store it in the reactive value
-                shinyalert::shinyalert("Computing!", "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
-                bigdash.selectTab(session, selected = 'welcome-tab')
+                shinyalert::shinyalert(
+                    "Computing!",
+                    "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                bigdash.selectTab(
+                    session,
+                    selected = 'load-tab'
+                )
 
                 dbg("[compute PGX process] : starting process")
                 process_counter(process_counter() + 1)
@@ -418,7 +421,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     process_obj(
                         list(
                             list(
-                                process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                                process = processx::process$new(
+                                     "Rscript",
+                                     args = c(script_path, cmd),
+                                     supervise = TRUE,
+                                     stderr = '|',
+                                     stdout = '|'
+                                ),
                                 dataset_name = gsub("[ ]","_",input$upload_name),
                                 temp_dir = temp_dir())))
                 } else {
@@ -427,7 +436,13 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                             process_obj(),
                             list(
                                 list(
-                                    process = processx::process$new("Rscript", args = c(script_path, cmd), supervise = TRUE, stderr = '|', stdout = '|'),
+                                    process = processx::process$new(
+                                        "Rscript",
+                                        args = c(script_path, cmd),
+                                        supervise = TRUE,
+                                        stderr = '|',
+                                        stdout = '|'
+                                    ),
                                     dataset_name = gsub("[ ]","_",input$upload_name),
                                     temp_dir = temp_dir())
                                 ))
@@ -439,7 +454,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 if (process_counter() == 0) {
                     return(NULL)
                 }
-
+                
+                dbg("[compute PGX process] check_process_status reacted!")
+                
                 reactive_timer()
 
                 active_processes <- process_obj()
@@ -483,12 +500,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
 
+                dbg("[compute PGX process] on_process_completed() called!")                
                 process_counter(process_counter()-1) # stop the timer
                 result_path <- file.path(temp_dir, "my.pgx")
 
                 if (file.exists(result_path)) {
                     load(result_path)
-
                     computedPGX(pgx)
                 } else {
                     message("[compute PGX process] : Error: Result file not found")
@@ -497,21 +514,36 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
             }
 
             on_process_error <- function() {
+                dbg("[compute PGX process] on_process_error() called!")                
                 process_counter(process_counter()-1) # stop the timer
                 message("Error: Process completed with an error")
-                stderr_output <- process_obj()$read_error_lines()
 
+                dbg("[ComputePgxModule.R] is.null(process_obj()) = ",is.null(process_obj()))
+                dbg("[ComputePgxModule.R] length(process_obj()) = ",length(process_obj()))
+                dbg("[ComputePgxModule.R] class(process_obj()) = ",class(process_obj()))
+                dbg("[ComputePgxModule.R] names(process_obj()) = ",names(process_obj()))                
+                dbg("[ComputePgxModule.R] class(process_obj()[[1]]) = ",class(process_obj()[[1]]))
+                dbg("[ComputePgxModule.R] names(process_obj()[[1]]) = ",names(process_obj()[[1]]))
+
+                proc <-process_obj()[[1]]$process
+                dbg("[ComputePgxModule.R] class(proc) = ",class(proc))
+                dbg("[ComputePgxModule.R] names(proc) = ",names(proc))                
+                ##                stderr_output <- process_obj()$read_error_lines()
+                stderr_output <- proc$read_error_lines()                
+                dbg("[ComputePgxModule.R] stderr_output = ",stderr_output)
+                
                 if (length(stderr_output) > 0) {
                     message("Standard error output from the process:")
                     for (line in stderr_output) {
-                    message(line)
+                        message(line)
                     }
                 } else {
                     message("No standard error output available from the process")
                 }
             }
 
-            observe(check_process_status())
+            ## what does this do???
+            observe(check_process_status())  
 
             observe({
                 if (process_counter() > 0){
@@ -520,8 +552,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                         where = "beforeEnd",
                         ui = loading_spinner("Computation in progress...")
                         )
-                } else if (process_counter() == 0)
-                {
+                } else if (process_counter() == 0) {
                     shiny::removeUI(selector = ".current-dataset > #spinner-container")
                 }
                 
