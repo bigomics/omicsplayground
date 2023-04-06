@@ -13,22 +13,25 @@
 #' @param width
 #'
 #' @export
-expression_plot_maplot_ui <- function(id,
-                                      label = "",
-                                      height,
-                                      width) {
+expression_plot_maplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
   options <- tagList(
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "<b>MA plot</b> showing mean signal intensity versus fold-change on the x and y axes, respectively. An application of a Bland-Altman (MA) plot for differential gene expression."
-
   PlotModuleUI(ns("pltmod"),
-    title = "MA plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,

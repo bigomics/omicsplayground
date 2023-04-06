@@ -81,23 +81,35 @@ ExpressionUI <- function(id) {
                 width = 1/4,
                 expression_plot_volcano_ui(ns("plots_volcano"),
                   label = "a",
+                  title = "Volcano plot",
+                  info.text = "A volcano plot of genes for the selected comparison under the Contrast settings plotting fold-change versus significance on the x and y axes, respectively.",
+                  caption = "Volcano-plot displaying fold-change versus significance.",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
                 ),
                 expression_plot_maplot_ui(
                   id = ns("plots_maplot"),
+                  title = "Bland-Altman (MA) plot",
+                  info.text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the Contrast settings plotting mean intensity versus fold-change on the x and y axes, respectively.",
+                  caption = "MA-plot displaying signal intensity versus fold-change.",
                   label = "b",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
                 ),
                 expression_plot_barplot_ui(
                   id = ns("plots_barplot"),
+                  title = "Differential expression",
+                  info.text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the Contrast settings.",
+                  caption = "Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast.",
                   label = "c",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
                 ),
                 expression_plot_topfoldchange_ui(
                   id = ns("plots_topfoldchange"),
+                  title = "Gene in contrasts",
+                  info.text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the Table section.",
+                  caption = "Sorted barplot of the differential expression of the selected gene across all contrasts.",
                   label = "d",
                   height = c(imgH, TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")

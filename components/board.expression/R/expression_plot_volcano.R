@@ -15,6 +15,9 @@
 #' @export
 expression_plot_volcano_ui <- function(id,
                                        label = "",
+                                       title,
+                                       info.text,
+                                       caption,
                                        height,
                                        width) {
   ns <- shiny::NS(id)
@@ -22,16 +25,16 @@ expression_plot_volcano_ui <- function(id,
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "<b>Volcano-plot</b> showing fold-change (logFC) versus significance (-log10q) on the x and y axes, respectively. "
-
-  PlotModuleUI(ns("pltmod"),
-    title = "Volcano plot",
+  PlotModuleUI(
+    ns("pltmod"),
     label = label,
     plotlib = "plotly",
     ## outputFunc = plotly::plotlyOutput,
     ## outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
+    title = title,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
