@@ -4,17 +4,23 @@
 ##
 
 
-functional_table_kegg_table_ui <- function(id, label, width, height) {
+functional_table_kegg_table_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- strwrap("<b>Enrichment table</b> reporting enrichment score for each pathway for the selected contrast profile. Scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.")
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Enrichment table",
+    title = title,
+    caption = caption,
     label = label
   )
 }

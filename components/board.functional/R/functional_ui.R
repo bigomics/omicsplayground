@@ -89,11 +89,18 @@ FunctionalUI <- function(id) {
           functional_plot_kegg_graph_ui(
             ns("kegg_graph"),
             label = "a",
+            title = "Kegg pathway map",
+            info.width = "350px",
+            info.text = "Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below.",
+            caption = "Visualisation of the selected Reactome pathway with highlighted up- and down-regulated genes.",
             height = c(400, TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")            
           ),
           functional_table_kegg_table_ui(
             ns("kegg_table"),
+            title = "Enrichment table",
+            info.text = "Visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+            caption = "The KEGG scores table provides statistical information on the relevance of correlated KEGG pathways ",
             label = "b",
             height = c(330, TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
@@ -103,8 +110,12 @@ FunctionalUI <- function(id) {
           class = "col-md-6",
           functional_plot_kegg_actmap_ui(
             ns("kegg_actmap"),
+            title = "Activation matrix" ,
+            info.text = "The activation matrix facilitates the rapid perusal and detection of the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+            caption = "The matrix allow visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles.",
             label = "c",
-            height = c(750, TABLE_HEIGHT_MODAL)            
+            height = c(750, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           )
         )
       )
@@ -117,11 +128,17 @@ FunctionalUI <- function(id) {
           class = "col-md-6",
           functional_plot_go_network_ui(
             id = ns("GO_network"),
+            title,
+            info.text = "",
+            caption = "",
             height = c(400, TABLE_HEIGHT_MODAL),            
             label = "a"
           ),
           functional_table_go_table_ui(
             id = ns("GO_table"),
+            title,
+            info.text = "",
+            caption = "",
             height = c(330, TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
           )
@@ -130,6 +147,9 @@ FunctionalUI <- function(id) {
           class = "col-md-6",
           functional_plot_go_actmap_ui(
             id = ns("GO_actmap"),
+            title,
+            info.text = "",
+            caption = "",
             height = c(750, TABLE_HEIGHT_MODAL),           
             label = "c"
           )
