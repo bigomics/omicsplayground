@@ -134,7 +134,7 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_scatter_ui(
               ns("subplot_scatter"),
-              title = "Comparison of enrichment and expression",
+              title = "Enrichment vs. expression",
               info.text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table I and the gene selected from the genes Table II.",
               caption = "Scatter plot of the selected gene set enrichment scores versus the selected gene expression values by sample.",
               height = c(imgH, 700),
@@ -147,6 +147,9 @@ EnrichmentUI <- function(id) {
         "Compare",
         enrichment_plot_compare_ui(
           ns("compare"),
+          title "Enrichment of geneset across multiple contrasts",
+          info.text = "Under the Compare tab, enrichment profiles of the selected geneset in enrichment Table I can be visualised against all available contrasts.",
+          caption = "Enrichment plots for the selected gene set (in Table I) across multiple contrasts.",
           height = c(imgH, 450),
           width = c("auto", 1500)
         )

@@ -28,7 +28,7 @@ enrichment_plot_barplot_ui <- function(
     title = title,
     label = "b",
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     caption = caption,
     options = options,
     height = height,
