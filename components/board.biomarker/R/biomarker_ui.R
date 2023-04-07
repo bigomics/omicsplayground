@@ -67,19 +67,47 @@ BiomarkerUI <- function(id) {
         class = "row row-cols-1 row-cols-md-2 row-cols-xxxl-4",
         div(
           class = "col",
-          biomarker_plot_importance_ui(ns("pdx_importance"), height = imgH1, label = "a")
+          biomarker_plot_importance_ui(
+            ns("pdx_importance"),
+            title = "Variable importance",
+            info.text = "An importance score for each variable is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
+            caption = "Barchart indicating the cumulative weight of a proposed biomarker based on six machine learning algorithms.",
+            height = imgH1,
+            width = c("auto", "100%"),
+            label = "a")
         ),
         div(
           class = "col",
-          biomarker_plot_boxplots_ui(ns("pdx_boxplots"), height = imgH1, label = "b")
+          biomarker_plot_boxplots_ui(
+            ns("pdx_boxplots"),
+            title = "Biomarker expression",
+            info.text = "These boxplots shows the expression of genes/samples of the identified features.",
+            caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
+            height = imgH1,
+            width = c("auto", "100%"),
+            label = "b")
         ),
         div(
           class = "col",
-          biomarker_plot_heatmap_ui(ns("pdx_heatmap"), height = imgH2, label = "c")
+          biomarker_plot_heatmap_ui(
+            ns("pdx_heatmap"),
+            title = "Heatmap",
+            info.text = "Expression heatmap of top gene features according to their variable importance.",
+            caption = "Heatmap indicating the expression pattern across selected phenotypic groups for the most likely biomarkers.",
+            height = imgH2,
+            width = c("auto", "100%"),
+            label = "c")
         ),
         div(
           class = "col",
-          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"), height = imgH2, label = "d")
+          biomarker_plot_decisiontree_ui(
+            ns("pdx_decisiontree"),
+            title = "Decision tree",
+            info.text = "The decision tree shows a tree solution for classification based on the top most important features. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
+            caption = "Decision tree indicating expression-based biomarkers that distinguish the selected phenotypic groups.",
+            height = imgH2,
+            width = c("auto", "100%"),
+            label = "d")
         )
       )
     )

@@ -12,22 +12,24 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_decisiontree_ui <- function(id,
-                                           label = "",
-                                           height = c(600, 800)) {
+biomarker_plot_decisiontree_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("The decision tree shows a tree solution
-                      for classification based on the top most
-                      important features.")
 
   PlotModuleUI(ns("plot"),
-    title = "Decision tree",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
