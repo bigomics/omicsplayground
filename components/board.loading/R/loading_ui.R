@@ -51,6 +51,9 @@ LoadingUI <- function(id) {
             
             loading_table_datasets_ui(
               ns("pgxtable"),
+              title = "Available datasets",
+              info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
+              caption = "Table of datasets available in the platform.",
               height = c("calc(100vh - (240px + 70px))", 700),
               width = c("100%", "100%")
             ),
@@ -80,8 +83,12 @@ LoadingUI <- function(id) {
           div(
             class = "col-md-5",
             style = "height: 100%;",
-            loading_tsne_ui(ns("tsne"),
-              height = c("calc(100vh - (240px + 70px))", "70vh"),                            
+            loading_tsne_ui(
+              ns("tsne"),
+              title = "Dataset explorer",
+              info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+              caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
+              height = c("calc(100vh - (240px + 70px))", "70vh"),                           
               width = c("auto",  "100%")
             )
           )
@@ -96,6 +103,9 @@ LoadingUI <- function(id) {
             class = "col-md-7",
             loading_table_datasets_shared_ui(
               ns("pgxtable_shared"),
+              title = "Shared datasets",
+              info.text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
+              caption = "Table with public datasets available in the platform.",
               height = c("65vh", 700),
               width = c("100%", "100%")
             ),
@@ -110,7 +120,11 @@ LoadingUI <- function(id) {
           ),
           div(
             class = "col-md-5",
-            loading_tsne_ui(ns("tsne_shared"),
+            loading_tsne_ui(
+              ns("tsne_shared"),
+              title = "Dataset explorer",
+              info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+              caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
               height = c("65vh", "70vh"),
               width = c("auto",  "100%")
             )

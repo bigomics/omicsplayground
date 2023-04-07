@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 800)) {
+intersection_scatterplot_pairs_ui <- function(
+  id,
+  title,
+  label = "",
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
   scatterplot_pairs.opts <- shiny::tagList(
     withTooltip(
@@ -18,13 +23,14 @@ intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 80
   PlotModuleUI(
     ns("scatterplot"),
     plotlib = "plotly",
-    title = "Scatterplot pairs",
+    title = title,
     label = "a",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     options = scatterplot_pairs.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = c("100%", "100%")
+    width = width
   )
 }
 

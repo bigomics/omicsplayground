@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
+foldchange_heatmap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
 
   FoldchangeHeatmap.opts <- shiny::tagList(
     withTooltip(
@@ -28,14 +33,15 @@ foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
     ns("FoldchangeHeatmap"),
-    title = "Folchange heatmap",
+    title = title,
     label = "a",
     plotlib = "grid",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = FoldchangeHeatmap.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = c("auto", 1600)
+    width = width
   )
 }
 
