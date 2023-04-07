@@ -3,18 +3,24 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_volcano_ui <- function(id, height, width) {
+enrichment_plot_volcano_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>Volcano plot.</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
-
+  
   PlotModuleUI(
     ns("plot"),
-    title = "Volcano plot",
+    title = title,
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
     height = height,
     width = width,
+    caption = caption,
     plotlib = "base",
     plotlib2 = "plotly",
     download.fmt = c("png", "pdf")

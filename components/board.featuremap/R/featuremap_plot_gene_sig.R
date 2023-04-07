@@ -3,18 +3,24 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-featuremap_plot_gene_sig_ui <- function(id, label = "", height = c(600, 800)) {
+featuremap_plot_gene_sig_ui <- function(
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Gene signature maps.</b> UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance."
 
   PlotModuleUI(
     ns("gene_sig"),
-    title = "Gene Signatures",
+    title = title,
     label = "b",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     height = height, 
-    width = c("auto", "100%"),
+    width = width,
     download.fmt = c("png", "pdf")
   )
 }

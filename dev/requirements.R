@@ -132,7 +132,7 @@ pkg.extra <- c(
   'wordcloud2', 'optparse', 'docopt',"DT","plotly",
   'kableExtra', 'shinythemes', 'rworldmap',"e1071","mixOmics",
   "HiddenMarkov","coin","rjags","argparse",
-  "RcppParallel", "KEGGgraph", 
+  "RcppParallel", "KEGGgraph", "svgPanZoom",
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer'

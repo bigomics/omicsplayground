@@ -11,17 +11,22 @@
 #' @param width
 #'
 #' @export
-expression_table_gsettable_ui <- function(id, width, height) {
+expression_table_gsettable_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  gsettable_text <- "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = gsettable_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Gene sets with gene",
+    caption = caption,
+    title = title,
     label = "II"
   )
 }

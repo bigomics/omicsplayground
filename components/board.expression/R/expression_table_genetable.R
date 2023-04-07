@@ -11,7 +11,13 @@
 #' @param width
 #'
 #' @export
-expression_table_genetable_ui <- function(id, width, height) {
+expression_table_genetable_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
@@ -25,16 +31,14 @@ expression_table_genetable_ui <- function(id, width, height) {
     )
   )
 
-  genetable_text <- "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results.
-<br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
-
   TableModuleUI(
     ns("datasets"),
-    info.text = genetable_text,
+    info.text = info.text,
     width = width,
+    caption = caption,
     height = height,
     options = genetable_opts,
-    title = "Differential expression analysis",
+    title = title,
     label = "I"
   )
 }

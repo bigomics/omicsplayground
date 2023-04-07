@@ -3,10 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
+enrichment_plot_freq_top_gsets_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
 
   topEnrichedFreq.opts <- shiny::tagList(
     withTooltip(
@@ -34,10 +38,11 @@ enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Frequency in top gene sets",
+    title = title,
     label = "b",
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = topEnrichedFreq.opts,
     height = height,
     width = width,

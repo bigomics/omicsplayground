@@ -12,25 +12,25 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_importance_ui <- function(id,
-                                         label = "",
-                                         height = c(600, 800)) {
+biomarker_plot_importance_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Variable importance.</b>. An importance score for each
-  variable is calculated using multiple machine learning algorithms, including
-  LASSO, elastic nets, random forests, and extreme gradient boosting. By
-  combining several methods, the platform aims to select the best possible
-  biomarkers. The top features are plotted according to cumulative ranking by
-  the algorithms.")
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Variable importance",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

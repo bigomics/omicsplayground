@@ -11,17 +11,22 @@
 #' @param width
 #'
 #' @export
-expression_table_FDRtable_ui <- function(id, width, height) {
+expression_table_FDRtable_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  FDRtable_text <- "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = FDRtable_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Number of significant genes"
+    title = title
   )
 }
 

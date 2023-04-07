@@ -12,11 +12,15 @@
 #' @param height
 #'
 #' @export
-correlation_plot_scattercorr_ui <- function(id,
-                                            height,
-                                            width) {
+correlation_plot_scattercorr_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Correlation scatter plots.</b> Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit."
+  
   cor_scatter.opts <- shiny::tagList(
     withTooltip(shiny::selectInput(ns("cor_group"), "Color by:", choices = NULL, multiple = FALSE),
       "Variable to split and color by groups.",
@@ -26,10 +30,11 @@ correlation_plot_scattercorr_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Correlation scatter plots",
+    title = title,
     plotlib = "base",
     label = "c",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = cor_scatter.opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,

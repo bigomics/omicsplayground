@@ -12,16 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_connectivityMap_ui <- function(id,
-                                                 label = "",
-                                                 fullH = 750) {
+connectivity_plot_connectivityMap_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>The Connectivity Map</b> shows the similarity of the contrasts profiles
-    as a t-SNE plot. Contrasts that are similar will be clustered close together,
-    contrasts that are different are placed farther away."
-  )
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::radioButtons(
@@ -63,13 +63,15 @@ connectivity_plot_connectivityMap_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Connectivity map",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
+    caption = caption,
     download.fmt = c("pdf", "png", "html"),
-    height = c(fullH - 100, 750), width = c("auto", 1000)
+    height = height,
+    width = width
   )
 }
 

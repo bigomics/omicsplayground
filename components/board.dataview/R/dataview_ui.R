@@ -92,11 +92,12 @@ DataViewUI <- function(id) {
               class = "col-lg-6 col-xxl-4 col-xxxl-3",
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
-                height = imgH,
-                label = "a",
                 title = "Gene expression",
                 info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
-                caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene."
+                caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
+                height = imgH,
+                label = "a"
+                
               )
             ),
             div(

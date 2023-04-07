@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_icpplot_ui <- function(id,
-                                       label = "",
-                                       height,
-                                       width,
-                                       parent) {
+singlecell_plot_icpplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   icp.opts <- shiny::tagList(
@@ -48,15 +52,14 @@ singlecell_plot_icpplot_ui <- function(id,
     )
   )
 
-  icp_info <- "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
   PlotModuleUI(
     id = ns("plot"),
     ##    plotlib = "plotly",
     plotlib = "ggplot",      
     label = label,
-    info.text = icp_info,
-    title = "Cell type profiling",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     options = icp.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

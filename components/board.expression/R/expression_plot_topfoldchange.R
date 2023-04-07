@@ -13,18 +13,22 @@
 #' @param width
 #'
 #' @export
-expression_plot_topfoldchange_ui <- function(id,
-                                             label = "",
-                                             height,
-                                             width) {
+expression_plot_topfoldchange_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
   PlotModuleUI(ns("pltmod"),
-    title = "Gene in contrasts",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height

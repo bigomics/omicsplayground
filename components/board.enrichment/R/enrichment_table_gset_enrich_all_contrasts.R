@@ -3,10 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_table_gset_enrich_all_contrasts_ui <- function(id, width, height) {
+enrichment_table_gset_enrich_all_contrasts_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "The <strong>Enrichment (all)</strong> panel reports the gene set enrichment for all contrasts in the selected dataset."
 
   fctable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("showq"), "show q-values", FALSE),
@@ -17,11 +21,12 @@ enrichment_table_gset_enrich_all_contrasts_ui <- function(id, width, height) {
   
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
     options = fctable_opts,
-    title = "Gene set enrichment for all contrasts"
+    title = title,
+    caption = caption
   )
 }
 

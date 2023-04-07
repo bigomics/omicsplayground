@@ -12,28 +12,29 @@
 #' @param height
 #'
 #' @export
-functional_plot_reactome_graph_ui <- function(id,
-                                          label = "",
-                                          height = c(400,700),
-                                          width = c("auto","100%")
-                                          ) {
+functional_plot_reactome_graph_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  info.width,
+  height,
+  width
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>REACTOME pathway.</strong> Genes are colored according
-    to their upregulation (red) or downregulation (blue) in the contrast profile.
-    Each pathway is scored for the selected contrast profile and reported in
-    the table below.")
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    title = "Reactome pathway",
+    title = title,
     label = label,
     ##    plotlib = "image",
     plotlib = "generic",
     plotlib2 = "generic",
     outputFunc = svgPanZoom::svgPanZoomOutput,
     outputFunc2 = svgPanZoom::svgPanZoomOutput,
-    info.text = info_text,
-    info.width = "350px",
+    info.text = info.text,
+    info.width = info.width,
     options = NULL,
     download.fmt = NULL,
     # download.fmt = c("png","csv"),    

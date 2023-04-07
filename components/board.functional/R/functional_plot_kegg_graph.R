@@ -12,23 +12,25 @@
 #' @param height
 #'
 #' @export
-functional_plot_kegg_graph_ui <- function(id,
-                                          label = "",
-                                          height = c(400,700),
-                                          width = c("auto","100%")
-                                          ) {
+functional_plot_kegg_graph_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  info.width
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>KEGG pathway.</strong> Genes are colored according
-    to their upregulation (red) or downregulation (blue) in the contrast profile.
-    Each pathway is scored for the selected contrast profile and reported in
-    the table below.")
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Kegg pathway map",
+    title = title,
     label = label,
     plotlib = "image",
-    info.text = info_text,
-    info.width = "350px",
+    info.text = info.text,
+    caption = caption,
+    info.width,
     options = NULL,
     download.fmt = c("png","csv"),
     height = height,

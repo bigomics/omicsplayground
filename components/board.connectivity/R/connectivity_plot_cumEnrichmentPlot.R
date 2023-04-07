@@ -12,18 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_cumEnrichmentPlot_ui <- function(id,
-                                                   label = "",
-                                                   height,
-                                                   width) {
+connectivity_plot_cumEnrichmentPlot_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment
-    of the top-10 most similar profiles. Gene sets that are frequently shared
-    with high enrichment will show a higher cumulative scores. You can choose
-    between signed or absolute enrichment in the options."
-  )
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumgsea_absfc"), "Absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
@@ -41,10 +39,11 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Cumulative enrichment",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     height = height,
     width = width

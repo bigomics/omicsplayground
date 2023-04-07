@@ -3,16 +3,21 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_top_enrich_gsets_ui <- function(id, height, width) {
+enrichment_plot_top_enrich_gsets_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Top enriched gene sets",
+    title = title,
+    caption = caption,
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

@@ -12,12 +12,15 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_cmap_dsea_ui <- function(id,
-                                               label = "",
-                                               height = c(700, "80vh")
-                                               ) {
+drugconnectivity_plot_cmap_dsea_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Connectivity map.</b> Plot showing the top signatures as UMAP. Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast.")
 
   plot_opts <- shiny::tagList(
     tipifyL(
@@ -42,10 +45,11 @@ drugconnectivity_plot_cmap_dsea_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Connectivity Map",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

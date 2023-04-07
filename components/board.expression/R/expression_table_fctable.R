@@ -11,10 +11,14 @@
 #' @param width
 #'
 #' @export
-expression_table_fctable_ui <- function(id, width, height) {
+expression_table_fctable_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
 
   table_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("showq"), "show q-values", FALSE),
@@ -25,11 +29,12 @@ expression_table_fctable_ui <- function(id, width, height) {
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
     options = table_opts,
-    title = "Gene fold changes for all contrasts"
+    title = title,
   )
 }
 
