@@ -45,6 +45,7 @@ signature_plot_overlap_ui <- function(
     label = "a",
     plotlib = "plotly",
     options = overlapScorePlot.opts,
+    caption = caption,
     info.text = info.text,
     download.fmt = c("png", "pdf"),
     height = height,
