@@ -28,6 +28,7 @@ biomarker_plot_decisiontree_ui <- function(
     plotlib = "base",
     info.text = info.text,
     options = NULL,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
