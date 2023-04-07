@@ -73,6 +73,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-6",
             enrichment_plot_top_enrich_gsets_ui(
               ns("topEnriched"),
+              title = "Top enriched gene sets",
+              info.text = "This plot shows the top enriched gene sets for the selected comparison in the Contrast settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group.",
+              caption = "Gene set enrichment plots of the top differentially enriched gene sets. ",
               height = c(imgH, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -81,6 +84,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-6",
             enrichment_plot_freq_top_gsets_ui(
               ns("topEnrichedFreq"),
+              title = "Frequency in top gene sets",
+              info.text = "The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
+              caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
               height = c(imgH, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -95,6 +101,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_volcano_ui(
               ns("subplot_volcano"),
+              title = "Volcano plot",
+              info.text = "Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis Table I are highlighted in blue.",
+              caption = "Volcano-plot showing significance versus fold-change with genes from the selected gene set highlighted.",
               height = c(imgH, 700),
               width = c("auto", "100%")
             )
@@ -103,6 +112,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_barplot_ui(
               ns("subplot_barplot"),
+              title = "Enrichment barplot",
+              info.text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table I. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+              caption = "Barplot of the selected gene set in the phenotypic groups. ",
               height = c(imgH, 700),
               width = c("auto", 900)
             )
@@ -111,6 +123,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_geneplot_ui(
               ns("subplot_geneplot"),
+              title = "Expression geneplot",
+              info.text = "An expression barplot per sample group for the gene that is selected from the genes Table II. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+              caption = "Barplot of the selected gene in the phenotypic groups. ",
               height = c(imgH, 700),
               width = c("auto", 900)
             )
@@ -119,6 +134,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-3",
             enrichment_plot_scatter_ui(
               ns("subplot_scatter"),
+              title = "Comparison of enrichment and expression",
+              info.text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table I and the gene selected from the genes Table II.",
+              caption = "Scatter plot of the selected gene set enrichment scores versus the selected gene expression values by sample.",
               height = c(imgH, 700),
               width = c("auto", 900)
             )

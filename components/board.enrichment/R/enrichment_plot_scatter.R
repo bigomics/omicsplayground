@@ -3,16 +3,21 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_scatter_ui <- function(id, height, width) {
+enrichment_plot_scatter_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Enrichment vs. expression",
+    title = title,
     label = "d",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")
