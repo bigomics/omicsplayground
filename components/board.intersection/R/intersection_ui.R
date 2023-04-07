@@ -59,13 +59,26 @@ IntersectionUI <- function(id) {
           class = "col-md-7",
           intersection_scatterplot_pairs_ui(
             id = ns("scatterplot"),
-            height = c("70vh", TABLE_HEIGHT_MODAL)
+            title = "Scatterplot pairs",
+            info.text = "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as selection.",
+            caption = "Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts.",
+            height = c("70vh", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           )
         ),
         div(
           class = "col-md-5",
           intersection_plot_venn_diagram_ui(
-            id = ns("venndiagram")
+            id = ns("venndiagram"),
+            title_plot = "Venn diagram",
+            title_table = "Leading-edge table",
+            info.text_plot = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
+            info.text_table = "Venn diagram areas can be selected via the settings menu and are represented by corresponding letters (e.g. 'ABC' represents the intersection of contrasts A, B and C). Contrast letter identifiers are provided in the Venn Diagram.",
+            caption_plot = "Venn diagram showing the intersections between the expression profiles of selected contrasts.",
+            caption_table = "Table of genes in a selected intersection.",
+            height_plot = c(400, TABLE_HEIGHT_MODAL),
+            height_table = c(260, TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           )
         )
       )
@@ -78,14 +91,22 @@ IntersectionUI <- function(id) {
           class = "col-md-7",
           foldchange_heatmap_ui(
             id = ns("FoldchangeHeatmap"),
-            height = c("70vh", TABLE_HEIGHT_MODAL)            
+            title = "Folchange heatmap",
+            info.text = "The Connectivity Heatmap shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together.",
+            caption = "Signature heatmap visualizing the similarity of all available contrasts with each other for the top most differentially expressed genes.",
+            height = c("70vh", TABLE_HEIGHT_MODAL),
+            width = c("auto", 1600)
           )
         ),
         div(
           class = "col-md-5",
           contrast_correlation_ui(
             id = ns("ctcorrplot"),
-            height = c("70vh", TABLE_HEIGHT_MODAL)            
+            title = "Contrast correlation",
+            info.text = "Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation.",
+            caption = "Circle heatmap showing the correlation between all available contrasts.",
+            height = c("70vh", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         )
       ),

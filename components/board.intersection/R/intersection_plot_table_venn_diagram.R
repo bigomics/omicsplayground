@@ -3,10 +3,19 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 800)) {
+intersection_plot_venn_diagram_ui <- function(
+  id,
+  title_plot,
+  title_table,
+  caption_plot,
+  caption_table,
+  info.text_plot,
+  info.text_table,
+  label = "",
+  height_plot,
+  height_table,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis."
 
   FDR.VALUES2 <- c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1)
 
@@ -31,7 +40,6 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
     shiny::radioButtons(ns("include"), "Counting:", choices = c("both", "up/down"), inline = TRUE)
   )
 
-  info_text.table <- "Table of genes in selected intersection."
   venntable_opts <- shiny::tagList(
     shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
   )
@@ -39,21 +47,23 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
   div(
     PlotModuleUI(
       ns("vennplot"),
-      title = "Venn diagram",
+      title = title_plot,
       label = "b",
-      info.text = info_text,
+      info.text = info.text_plot,
       options = venndiagram.opts,
+      caption = caption_plot,
       download.fmt = c("png", "pdf", "csv"),
-      height = c(400, TABLE_HEIGHT_MODAL),
-      width = c("100%", "100%")
+      height = height_plot,
+      width = width
     ),
     TableModuleUI(
       ns("datasets"),
-      info.text = info_text.table,
+      info.text = info.text_table,
       options = venntable_opts,
-      height = c(260, TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
-      title = "Leading-edge table",
+      caption = caption_table,
+      height = height_table,
+      width = width,
+      title = title_table,
       label = "e"
     )
   )
