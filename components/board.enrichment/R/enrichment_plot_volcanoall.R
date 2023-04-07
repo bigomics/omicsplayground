@@ -3,15 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_volcanoall_ui <- function(id, height, width) {
+enrichment_plot_volcanoall_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Volcano plots for all contrasts",
-    info.text = info_text,
+    title = title,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

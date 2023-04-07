@@ -3,15 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_volcanomethods_ui <- function(id, height, width) {
+enrichment_plot_volcanomethods_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "The <strong>Volcano (methods)</strong> panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Volcano plots for all methods",
-    info.text = info_text,
+    title = title,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

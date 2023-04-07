@@ -147,7 +147,7 @@ EnrichmentUI <- function(id) {
         "Compare",
         enrichment_plot_compare_ui(
           ns("compare"),
-          title "Enrichment of geneset across multiple contrasts",
+          title = "Enrichment of geneset across multiple contrasts",
           info.text = "Under the Compare tab, enrichment profiles of the selected geneset in enrichment Table I can be visualised against all available contrasts.",
           caption = "Enrichment plots for the selected gene set (in Table I) across multiple contrasts.",
           height = c(imgH, 450),
@@ -161,6 +161,9 @@ EnrichmentUI <- function(id) {
           flex = c(1, NA),
           enrichment_plot_volcanoall_ui(
             ns("volcanoAll"),
+            title = "Volcano plots for all contrasts",
+            info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong based on the 'height' of the 'wings'.",
+            caption = "Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts.",
             height = c(imgH, 450),
             width = c("auto", "100%")
           )
@@ -170,6 +173,9 @@ EnrichmentUI <- function(id) {
         "Volcano (methods)",
         enrichment_plot_volcanomethods_ui(
           ns("volcanoMethods"),
+          title = "Volcano plots for all methods",
+          info.text = "The Volcano (methods) panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings.",
+          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods.",
           height = c(imgH, 450),
           width = c("auto", "100%")
         )
