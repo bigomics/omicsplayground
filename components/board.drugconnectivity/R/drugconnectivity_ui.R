@@ -46,7 +46,11 @@ DrugConnectivityUI <- function(id) {
                 class = "col-md-6",
                 drugconnectivity_plot_enplots_ui(
                   id = ns("dsea_enplots"),
+                  title = "Drug connectivity",
+                  info.text = "Not available for this plot",
+                  caption = "Drug connectivity correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
                   height = c(350, TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%"),
                   label = "a"
                 )
               ),
@@ -54,6 +58,9 @@ DrugConnectivityUI <- function(id) {
                 class = "col-md-6",
                 drugconnectivity_plot_moa_ui(
                   id = ns("dsea_moaplot"),
+                  title = "Mechanism of action",
+                  info.text = "This plot visualizes the mechanism of action (MOA) across the enriched drug profiles. On the vertical axis, the GSEA normalized enrichment score of the MOA class or gene target is plotted. You can switch to visualize between MOA class or target gene.",
+                  caption = "Mechanism of action (MOA) plot indicating the most correlated drug MOAs for a selected contrast.",
                   height = c(350, TABLE_HEIGHT_MODAL),                  
                   label = "c"
                 )
@@ -61,6 +68,9 @@ DrugConnectivityUI <- function(id) {
             ),
             drugconnectivity_table_dsea_ui(
               ns("dsea_table"),
+              title = "Enrichment table",
+              info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots.",
+              caption = "GSEA-like plots showing the correlation of various drug or single gene alteration expression profiles with the selected contrast signature.",
               height = c(300, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             )
@@ -96,7 +106,11 @@ DrugConnectivityUI <- function(id) {
             class = "col-md-7",
             drugconnectivity_plot_cmap_dsea_ui(
               id = ns("cmap_dsea"),
-              label = "c"
+              title = "Connectivity Map",
+              info.text = "Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast.",
+              caption = "Plot showing the top signatures as UMAP.",
+              label = "c",
+              height = c(700, "80vh")
             )
           )
         ) ## end of row

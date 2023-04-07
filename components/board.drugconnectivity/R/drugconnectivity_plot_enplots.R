@@ -12,27 +12,29 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_enplots_ui <- function(id,
-                                             label = "",
-                                             height = c(400, 700)
+drugconnectivity_plot_enplots_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
                                              ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>Drug connectivity</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space.")
+  
   plot_opts <- shiny::tagList()
 
   PlotModuleUI(ns("plot"),
-    title = "Drug connectivity",
+    title = title,
     label = label,
+    caption = caption,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = c("auto", "100%"),
+    width = width,
   )
 }
 
