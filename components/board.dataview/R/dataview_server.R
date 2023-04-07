@@ -256,7 +256,7 @@ DataViewBoard <- function(id, pgx) {
       r.data_type = reactive(input$data_type),
       r.samples = selected_samples,
       r.groupby = reactive(input$data_groupby),
-      scrollY = "calc(100vh - 390px)"
+      scrollY = "calc(100vh - (250px + 140px))"
     )
 
     dataview_table_samples_server(
