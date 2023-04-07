@@ -191,6 +191,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-7",
             enrichment_table_enrichment_analysis_ui(
               ns("gseatable"),
+              title = "Enrichment analysis",
+              info.text = "Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including Spearman rank correlation , GSVA , ssGSEA , Fisher exact test , GSEA , camera and fry . The combined result from the methods is displayed in this table, where for each geneset the meta.q corresponds to the highest q val. The number of stars indicates how many methods detected a significant correlation.",
+              caption = "Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. ",
               width = c("100%", "100%"),
               height = c(285, TABLE_HEIGHT_MODAL)
             )
@@ -199,6 +202,9 @@ EnrichmentUI <- function(id) {
             class = "col-md-5",
             enrichment_table_genes_in_geneset_ui(
               ns("genetable"),
+              title = "Genes in gene set",
+              info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
+              caption = "Table showing the fold-change, statistics and correlation of the genes in the selected gene set.",
               height = c(285, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             )
@@ -209,6 +215,9 @@ EnrichmentUI <- function(id) {
         "Enrichment (all)",
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
+          title = "Gene set enrichment for all contrasts",
+          info.text = "The column `fc.var` corresponds to the variance of the gene set across all contrasts.",
+          caption = "The Enrichment (all) panel reports the gene set enrichment for all contrasts in the selected dataset.",
           height = c(295, TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         )
@@ -217,6 +226,9 @@ EnrichmentUI <- function(id) {
         "FDR table",
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
+          title = "Number of significant gene sets",
+          info.text = "Using the table the user can determine which statistical methods perform better for a particular contrast.",
+          caption = "The FDR table panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. ",
           height = c(295, TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         )
