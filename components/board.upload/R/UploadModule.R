@@ -78,7 +78,7 @@ UploadModuleUI <- function(id) {
 }
 
 UploadModuleServer <- function(id,
-                               FILES,
+                               lib.dir,
                                pgx.dirRT,
                                height = 720,
                                limits = c(
@@ -99,7 +99,7 @@ UploadModuleServer <- function(id,
       output$downloadExampleData <- shiny::downloadHandler(
         filename = "exampledata.zip",
         content = function(file) {
-          zip <- file.path(FILES, "exampledata.zip")
+          zip <- file.path(lib.dir, "exampledata.zip")
           file.copy(zip, file)
         }
       )
@@ -370,7 +370,7 @@ UploadModuleServer <- function(id,
       ## ------------------------------------------------------------------
       shiny::observeEvent(input$load_example, {
         if (input$load_example) {
-          zipfile <- file.path(FILES, "exampledata.zip")
+          zipfile <- file.path(lib.dir, "exampledata.zip")
           readfromzip1 <- function(file) {
             read.csv(unz(zipfile, file),
               check.names = FALSE, stringsAsFactors = FALSE,
@@ -601,10 +601,10 @@ UploadModuleServer <- function(id,
         contrastsRT = shiny::reactive(uploaded$contrasts.csv),
         batchRT = batch_vectors,
         metaRT = shiny::reactive(uploaded$meta),
+        lib.dir = lib.dir,
+        pgx.dirRT = shiny::reactive(getPGXDIR()),
         enable_button = upload_ok,
         alertready = FALSE,
-        FILES = FILES,
-        pgx.dirRT = shiny::reactive(getPGXDIR()),
         max.genes = as.integer(limits["genes"]),
         max.genesets = as.integer(limits["genesets"]),
         max.datasets = as.integer(limits["datasets"]),

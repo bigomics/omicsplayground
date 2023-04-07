@@ -39,7 +39,8 @@ dataview_table_contrasts_ui <- function(
 
 dataview_table_contrasts_server <- function(id,
                                             pgx,
-                                            r.samples = reactive("")) {
+                                            r.samples = reactive(""),
+                                            scrollY) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -86,7 +87,7 @@ dataview_table_contrasts_server <- function(id,
           dom = "lfrtip",
           scroller = TRUE,
           scrollX = TRUE,
-          scrollY = 350,
+          scrollY = scrollY,
           deferRender = TRUE,
           autoWidth = TRUE
         )
@@ -108,7 +109,7 @@ dataview_table_contrasts_server <- function(id,
 
     table.RENDER_modal <- shiny::reactive({
       dt <- table.RENDER()
-      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt$x$options$scrollY <- SCROLLY_MODAL ## nice!
       dt
     })
 

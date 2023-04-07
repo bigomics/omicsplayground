@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
 clustering_plot_clusterannot_ui <- function(
   id,
   label = "",
@@ -11,7 +10,8 @@ clustering_plot_clusterannot_ui <- function(
   info.text,
   caption,
   height,
-  width) {
+  width)
+{
   ns <- shiny::NS(id)
 
   clustannot_plots.opts <- shiny::tagList(

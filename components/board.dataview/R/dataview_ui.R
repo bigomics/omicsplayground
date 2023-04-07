@@ -77,10 +77,10 @@ DataViewUI <- function(id) {
           class = "col-md-2",
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
-            title = "Gene information",
+            title = "Gene info",
             info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
             caption = "Information about the selected gene and its function from public databases.",
-            height = c(600, 800),
+            height = c("calc(70vh + 19px)", 800),
             width = c("auto", "100%")
           ),
         ),
@@ -230,7 +230,7 @@ DataViewUI <- function(id) {
                 title = "Gene expression table",
                 info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
                 caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
-                height = c("75vh", TABLE_HEIGHT_MODAL),
+                height = c("calc(100vh - 240px)", TABLE_HEIGHT_MODAL),
                 width = c("100%", "100%")
             )
         )
@@ -248,13 +248,13 @@ DataViewUI <- function(id) {
             title = "Phenotype clustering",
             info.text = "Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix.",
             caption = "Clustered heatmap of sample information (i.e. phenotype data)",
-            height = imgH,
+            height = c("35vh", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "a"
           ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
-            height = imgH,
+            height = c("35vh", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "b",
             title = "Phenotype association",
@@ -266,7 +266,7 @@ DataViewUI <- function(id) {
           width = 1,
           dataview_table_samples_ui(
             ns("sampletable"),
-            height = c(300, TABLE_HEIGHT_MODAL),
+            height = c("35vh", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             title = "Sample information",
             info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
@@ -284,7 +284,7 @@ DataViewUI <- function(id) {
         title = "Contrast table",
         info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.", 
         caption = "Table summarizing the contrasts of all comparisons.",
-        height = c(500, TABLE_HEIGHT_MODAL),
+        height = c("calc(100vh - 240px)", TABLE_HEIGHT_MODAL),
         width = c("auto", "100%")
       )
     ),

@@ -54,7 +54,7 @@ LoadingUI <- function(id) {
               title = "Available datasets",
               info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
               caption = "Table of datasets available in the platform.",
-              height = c("65vh", 700),
+              height = c("calc(100vh - (240px + 70px))", 700),
               width = c("100%", "100%")
             ),
             div(
@@ -88,7 +88,7 @@ LoadingUI <- function(id) {
               title = "Dataset explorer",
               info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
               caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-              height = c("65vh", "70vh"),
+              height = c("calc(100vh - (240px + 70px))", "70vh"),                           
               width = c("auto",  "100%")
             )
           )

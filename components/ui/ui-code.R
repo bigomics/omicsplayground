@@ -115,27 +115,45 @@ fileInput2 <- function(inputId, label, multiple = FALSE, accept = NULL, width = 
     if (!is.null(capture)) {
         inputTag$attribs$capture <- capture
     }
-    div(class = "form-group shiny-input-container", 
+    shiny::tags$div(class = "form-group shiny-input-container", 
       style = htmltools::css(width = htmltools::validateCssUnit(width)), 
         shiny:::shinyInputLabel(inputId, label), div(class = "input-group", 
-            tags$label(class = "input-group-btn input-group-prepend", 
+            shiny::tags$label(class = "input-group-btn input-group-prepend", 
                 span(class = "btn btn-default btn-outline-primary", buttonLabel, 
                   inputTag)), tags$input(type = "text", class = "form-control", 
                 placeholder = placeholder, readonly = "readonly")), 
-        tags$div(id = paste(inputId, "_progress", sep = ""), 
+        shiny::tags$div(id = paste(inputId, "_progress", sep = ""), 
             class = "progress active shiny-file-input-progress", 
-            tags$div(class = "progress-bar")))
+            shiny::tags$div(class = "progress-bar")))
 }
 
-selector_default <- function(class = NULL, label = "Text to appear in Switch") {
-  tags$div(
+selector_switch <- function(class = NULL, label = "Text to appear in Switch",
+                            is.checked = TRUE ) {
+  input.tag <- shiny::tags$input(
+    class = paste("form-check-input", class),
+    type = "checkbox",
+    role = "switch"
+  )
+  input.tag$attribs$checked <- NULL
+  if (is.checked) 
+      input.tag$attribs$checked <- "checked"
+  shiny::tags$div(
     class = "form-check form-switch",
-    tags$input(
-      class = paste("form-check-input", class),
-      type = "checkbox",
-      role = "switch",
-      checked = TRUE,
-    ),
-    tags$label(label)
+    input.tag,
+    shiny::tags$label(label)
+  )
+}
+
+loading_spinner <- function(text = "Loading...") {
+  shiny::tags$div(
+    id = "spinner-container", # Add an ID to the spinner container
+    class = "spinner-container",
+    shiny::tags$div( # Wrap the spinner and text in an additional div
+      class = "spinner-wrapper",
+      shiny::tags$div(class = "spinner-border text-primary", role = "status",
+                      shiny::tags$span(class = "visually-hidden", "Loading...")
+      ),
+      shiny::tags$p(class = "spinner-text", text) # Add a class to the text element
     )
+  )
 }

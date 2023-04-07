@@ -104,7 +104,7 @@ ClusteringUI <- function(id) {
             title = "Clustered Heatmap",
             caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
             info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
-            height = c(fullH,"80vh"),
+            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
             width = "100%"
           )
         ),
@@ -116,7 +116,7 @@ ClusteringUI <- function(id) {
             info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis ( PCA), t-distributed stochastic embedding ( tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
             caption = "Clustering plot of the dataset samples.",
             label = "",
-            height = c(fullH, "70vh"),
+            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             parent = ns
           )
@@ -133,7 +133,7 @@ ClusteringUI <- function(id) {
                      caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
                      label = "a",
                      width = c("100%", "100%"),
-                     height = c(rowH, TABLE_HEIGHT_MODAL)
+                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)
                  ),
                  clustering_table_parcoord_ui(
                      id = ns("parcoord"),
@@ -142,7 +142,7 @@ ClusteringUI <- function(id) {
                      caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                      label = "a",
                      width = c("100%", "100%"),
-                     height = c(rowH, TABLE_HEIGHT_MODAL)
+                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)                     
                  )
               ) ## layout   
           ) ## sortable
@@ -160,7 +160,7 @@ ClusteringUI <- function(id) {
             info.text =  "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
             caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
             label = "a",
-            height = c("45vh", TABLE_HEIGHT_MODAL),
+            height = c("calc(60vh - 100px)", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
@@ -168,7 +168,7 @@ ClusteringUI <- function(id) {
             title = "Annotation scores",
             info.text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings.",
             caption = "Average correlation values of annotation terms, for each gene cluster.",
-            height = c(280, TABLE_HEIGHT_MODAL),
+            height = c("calc(40vh - 100px)", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         ),

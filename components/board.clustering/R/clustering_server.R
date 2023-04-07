@@ -668,11 +668,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     )
 
     # tables ##########
-
     clustering_table_clustannot_server(
       id = "tables_clustannot",
       getClustAnnotCorrelation = getClustAnnotCorrelation,
       xann_level = clusterannot$xann_level,
+      scrollY = "calc(40vh - 236px)",
       watermark = FALSE
     )
 

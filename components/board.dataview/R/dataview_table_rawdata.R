@@ -28,7 +28,9 @@ dataview_table_rawdata_server <- function(id,
                                           r.gene = reactive(""),
                                           r.data_type = reactive("counts"),
                                           r.samples = reactive(""),
-                                          r.groupby = reactive("")) {
+                                          r.groupby = reactive(""),
+                                          scrollY = "auto"
+                                          ) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       ## get current view of raw_counts
@@ -184,9 +186,8 @@ dataview_table_rawdata_server <- function(id,
           dom = "frtip",
           pageLength = 100,
           lengthMenu = c(25, 40, 100, 250, 1000),
-          ## scroller = FALSE, scrollY = FALSE,
           scroller = TRUE,
-          scrollY = "58vh",
+          scrollY = scrollY,
           deferRender = TRUE
         ) ## end of options.list
       ) %>%

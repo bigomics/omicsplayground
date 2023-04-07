@@ -238,7 +238,7 @@ singlecell_plot_icpplot_server <- function(id,
         pos <- pd[["pos"]][ii,]
         tt <- colnames(pd[["score"]])[j]
         ## ------- start plot ----------       
-        p <- pgx.scatterPlotXY.GGPLOT(
+        p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
           var = gx,
           col = klrpal,
