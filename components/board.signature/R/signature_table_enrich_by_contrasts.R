@@ -3,17 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-signature_table_enrich_by_contrasts_ui <- function(id, width, height) {
+signature_table_enrich_by_contrasts_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Enrichment by contrasts",
+    title = title,
     label = "a"
   )
 }

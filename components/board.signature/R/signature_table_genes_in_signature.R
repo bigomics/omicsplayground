@@ -3,17 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-signature_table_genes_in_signature_ui <- function(id, width, height) {
+signature_table_genes_in_signature_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Genes in signature",
+    title = title,
+    caption, caption,
     label = "b"
   )
 }

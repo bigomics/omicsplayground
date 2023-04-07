@@ -12,13 +12,20 @@
 #' @param height
 #'
 #' @export
-signature_plot_enplots_ui <- function(id, height, width) {
+signature_plot_enplots_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
   info_text <- "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
   PlotModuleUI(ns("plot"),
     title = "Enrichment plots",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf"),
     height = height,
     width = width
