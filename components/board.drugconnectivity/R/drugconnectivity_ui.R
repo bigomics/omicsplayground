@@ -100,7 +100,9 @@ DrugConnectivityUI <- function(id) {
               title = "Enrichment plot",
               info.text = "Not available for this plot.",
               caption = "Enrichment of the selected drug perturbation profile with your selected signature.",
-              label = "a"
+              label = "a",
+              height = c(300, 600),
+              width = c("auto", "100%")
             ),
             drugconnectivity_table_cmap_ui(
               id = ns("cmap_table"),
@@ -116,8 +118,8 @@ DrugConnectivityUI <- function(id) {
             drugconnectivity_plot_cmap_dsea_ui(
               id = ns("cmap_dsea"),
               title = "Connectivity Map",
-              info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots.",
-              caption = "GSEA-like plots showing the correlation of various drug or single gene alteration expression profiles with the selected contrast signature.",
+              info.text = " The platform correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space. The color corresponds to the rank correlation between the drug signatures and your selected contrast.",
+              caption = "Plot showing the top signatures as UMAP. Each point is one L1000 experiment.",
               label = "c",
               height = c(700, "80vh")
             )

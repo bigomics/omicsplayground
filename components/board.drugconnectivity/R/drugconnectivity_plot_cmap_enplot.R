@@ -12,21 +12,25 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_cmap_enplot_ui <- function(id,
-                                                 label = "",
-                                                 height = c(300, 600)) {
+drugconnectivity_plot_cmap_enplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Enrichment plot.</b> Enrichment of the selected drug perturbation
-                profile with your selected signature."
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Enrichment Plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = c("auto", "100%"),
+    width = width,
   )
 }
 
