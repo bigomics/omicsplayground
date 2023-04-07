@@ -4,17 +4,22 @@
 ##
 
 
-functional_table_go_table_ui <- function(id, width, height) {
+functional_table_go_table_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- strwrap("<strong>GO score table.</strong> The score of a GO term is the cumulative score of all higher order terms, i.e. of all terms from that term to the root node. That means that high scoring GO terms are supported by other higher level enriched terms.")
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "GO score table",
+    title = title,
+    caption = caption,
     label = "b"
   )
 }

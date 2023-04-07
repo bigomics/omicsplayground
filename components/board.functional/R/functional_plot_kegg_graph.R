@@ -20,7 +20,7 @@ functional_plot_kegg_graph_ui <- function(
   label = "",
   height,
   width,
-  info.width,
+  info.width
   ) {
   ns <- shiny::NS(id)
   
