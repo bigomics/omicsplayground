@@ -61,7 +61,7 @@ correlation_plot_cor_graph_server <- function(
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    getCorGraph <- shiny::reactive({
+    plot_data <- shiny::reactive({
       shiny::req(cor_gene)
 
       res <- getPartialCorrelationMatrix()
@@ -89,12 +89,7 @@ correlation_plot_cor_graph_server <- function(
       gr
     })
 
-    # reactive function listeninng for changes in input
-    plot_data <- shiny::reactive({
-      getCorGraph()
-    })
-
-    cor_graph.VISNETWORK <- shiny::reactive({
+    cor_graph.VISNETWORK <- function() {
       gr <- plot_data()
       if (is.null(gr)) {
         return(NULL)
@@ -112,13 +107,13 @@ correlation_plot_cor_graph_server <- function(
         visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
         visNetwork::visIgraphLayout(layout = "layout_nicely")
       graph
-    })
+    }
 
     PlotModuleServer(
       "plot",
       plotlib = "visnetwork",
       func = cor_graph.VISNETWORK,
-      csvFunc = plot_data,
+#      csvFunc = plot_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

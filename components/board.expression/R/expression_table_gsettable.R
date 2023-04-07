@@ -17,7 +17,8 @@ expression_table_gsettable_ui <- function(
   caption,
   info.text,
   width,
-  height) {
+  height
+  ) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -41,6 +42,7 @@ expression_table_gsettable_server <- function(id,
                                               gx_related_genesets,
                                               height,
                                               width,
+                                              scrollY,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -62,7 +64,7 @@ expression_table_gsettable_server <- function(id,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
-          scrollY = 240,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(

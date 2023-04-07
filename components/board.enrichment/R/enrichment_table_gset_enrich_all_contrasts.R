@@ -83,7 +83,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
       ## if(length(qv.cols)==0) qv = 0
-      df$geneset <- wrapHyperLink(df$geneset, rownames(df))
+      df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
       
       dt <- DT::datatable(
         df,

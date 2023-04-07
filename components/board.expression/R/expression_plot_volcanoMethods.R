@@ -142,7 +142,7 @@ expression_plot_volcanoMethods_server <- function(id,
             cex = cex,
             cex.lab = 1.7*cex,
             base_size = base_size
-          ) + theme_bw(base_size = base_size)
+          ) + ggplot2::theme_bw(base_size = base_size)
 
           if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }

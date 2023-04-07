@@ -12,17 +12,13 @@
 #' @param height
 #'
 #' @export
-correlation_plot_table_corr_ui <- function(
+correlation_plot_corr_ui <- function(
   id,
-  title_plot,
-  title_table,
-  info.text_plot,
-  info.text_table,
-  caption_plot,
-  caption_table,
+  title,
+  info.text,
+  caption,
   label = "",
   height,
-  height_table,
   width) {
   ns <- shiny::NS(id)
 
@@ -42,27 +38,55 @@ correlation_plot_table_corr_ui <- function(
     )
   )
 
-  div(
-    PlotModuleUI(ns("plot"),
-      title = title_plot,
+  PlotModuleUI(
+      id = ns("plot"),
+      title = title,
       label = label,
       plotlib = "plotly",
-      caption = caption_plot,
+      caption = caption,
       options = plot_opts,
-      info.text = info.text_plot,
+      info.text = info.text,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
       height = height
-    ),
-    TableModuleUI(
-      ns("datasets"),
-      info.text = info.text_table,
-      height = height_table,
-      width = width,
-      title = title_table,
-      caption = caption_table,
-      label = "b"
+  )
+}
+
+#' @export
+correlation_table_corr_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
+  ns <- shiny::NS(id)
+
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::selectInput(ns("order_opt"), "Order by:",
+        choices = c(
+          "Both",
+          "Correlation",
+          "Partial Correlation"
+        ),
+        multiple = FALSE,
+        selected = "Both"
+      ),
+      "Sort order of groups based on correlation.",
+      placement = "top"
     )
+  )
+
+  TableModuleUI(
+      ns("datasets"),
+      info.text = info.text,
+      height = height,
+      width = width,
+      title = title,
+      caption = caption,
+      label = label
   )
 }
 
@@ -80,6 +104,7 @@ correlation_plot_table_corr_server <- function(id,
                                                cor_table,
                                                pgx,
                                                pcor_ntop,
+                                               scrollY,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
@@ -160,16 +185,14 @@ correlation_plot_table_corr_server <- function(id,
         df,
         rownames = FALSE, ## escape = c(-1),
         extensions = c("Buttons", "Scroller"),
-        ## selection=list(mode='multiple', target='row', selected=c(1)),
         selection = list(mode = "single", target = "row", selected = c(1)),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
-          scrollY = "30vh",
+          scrollX = FALSE,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

@@ -55,7 +55,6 @@ FeatureMapUI <- function(id) {
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene",
-        shinyjqui::jqui_sortable(        
         bslib::layout_column_wrap(
           width = 1,
           heights_equal = "row",
@@ -87,11 +86,10 @@ FeatureMapUI <- function(id) {
               width = c("auto", "100%")
           ),
           br()
-        ))
+        )
       ),
       shiny::tabPanel(
         "Geneset",
-        shinyjqui::jqui_sortable(                
         bslib::layout_column_wrap(
           width = 1,
           heights_equal = "row",
@@ -123,7 +121,7 @@ FeatureMapUI <- function(id) {
               width = c("auto", "100%")
           ),
           br()
-        ))
+        )
       )
     )
   )

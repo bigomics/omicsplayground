@@ -118,7 +118,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     })
     
-    render_gsetUMAP <- function(cex.label=1) {
+    render_gsetUMAP <- function(cex=1, cex.label=1) {
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
@@ -134,17 +134,20 @@ featuremap_plot_table_geneset_map_server <- function(id,
         hilight,
         nlabel = nlabel,
         title = colorby,
-        cex = 1.2,
+        cex = cex,
         cex.label = cex.label,
         source =  ns("geneset_filter"),
         plotlib = "plotly"
       ) %>%
-        plotly::layout(dragmode = "select")
+        plotly::layout(
+          dragmode = "select",
+          margin = list(l = 5, r = 5, b = 5, t = 20)                    
+        )
       p
     }
 
     gsetUMAP.RENDER <- function() {
-      p <- render_gsetUMAP(cex.label=0.9) %>%
+      p <- render_gsetUMAP(cex=1, cex.label=0.9) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -153,7 +156,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     }
 
     gsetUMAP.RENDER2 <- function() {
-      p <- render_gsetUMAP(cex.label=1.3) %>%
+      p <- render_gsetUMAP(cex=1.2, cex.label=1.3) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%

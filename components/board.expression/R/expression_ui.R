@@ -180,7 +180,7 @@ ExpressionUI <- function(id) {
                     info.text = "The table shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison under the Contrast setting, the results of the selected methods are combined and reported under the table, where meta.q for a gene represents the highest q value among the methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the top 10 genes from the table Settings.",
                     caption = "Table showing the significant results of the differential expression analysis on the selected contrast.",
                     width = c("100%", "100%"),
-                    height = c("400px", TABLE_HEIGHT_MODAL)
+                    height = c("350px", TABLE_HEIGHT_MODAL)
                   )
                 ),
                 div(
@@ -191,7 +191,7 @@ ExpressionUI <- function(id) {
                     info.text = "By clicking on a gene in the Table I, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the Gene in contrasts plot under the Plots tab.",
                     caption = "Table indicating all the gene sets that contain the gene highlighted in the differential expression table.",
                     width = c("100%", "100%"),
-                    height = c("400px", TABLE_HEIGHT_MODAL)
+                    height = c("350px", TABLE_HEIGHT_MODAL)
                   )
                 )
               )
@@ -206,7 +206,7 @@ ExpressionUI <- function(id) {
                   info.text = "Differential expression (fold-change) across all contrasts. The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts.",
                   caption = "The Foldchange (all) table reports the gene fold changes for all contrasts in the selected dataset.",
                   width = c("100%", "100%"),
-                  height = c("400px", TABLE_HEIGHT_MODAL)
+                  height = c("350px", TABLE_HEIGHT_MODAL)
                 )
               )
             ),
@@ -220,7 +220,7 @@ ExpressionUI <- function(id) {
                   info.text = "Use this table to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes.",
                   caption = "This table reports the number of significant genes at different FDR thresholds for all contrasts and methods.",
                   width = c("100%", "100%"),
-                  height = c("400px", TABLE_HEIGHT_MODAL)
+                  height = c("350px", TABLE_HEIGHT_MODAL)
                 )
               )
             )

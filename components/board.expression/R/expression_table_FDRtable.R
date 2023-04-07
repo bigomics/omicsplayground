@@ -39,8 +39,8 @@ expression_table_FDRtable_ui <- function(
 expression_table_FDRtable_server <- function(id,
                                              pgx,
                                              methods, # input$gx_statmethod
-                                             tabV,
                                              height, # c(tabH, 700)
+                                             scrollY,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -92,7 +92,7 @@ expression_table_FDRtable_server <- function(id,
           dom = "lfrtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 220,
+          scrollY = scrollY,
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%

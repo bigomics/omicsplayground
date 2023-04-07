@@ -119,7 +119,7 @@ featuremap_plot_gene_map_server <- function(id,
       
     })
     
-    render_geneUMAP <- function(cex.label=1) {
+    render_geneUMAP <- function(cex=1, cex.label=1) {
 
       pd  <- plot_data()
       pos <- pd$df[,c("x","y")]
@@ -134,17 +134,20 @@ featuremap_plot_gene_map_server <- function(id,
         hilight,
         nlabel = nlabel,
         title = colorby,
-        cex = 1.2,
+        cex = cex,
         cex.label = cex.label,
         plotlib = "plotly",
         source = ns("gene_filter")
       ) %>%
-        plotly::layout(dragmode = "select")
+        plotly::layout(
+          dragmode = "select",
+          margin = list(l = 5, r = 5, b = 5, t = 20)
+        )
       p
     }
 
     geneUMAP.RENDER <- function() {
-      p <- render_geneUMAP(cex.label=1) %>%
+      p <- render_geneUMAP(cex=1, cex.label=1) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -153,7 +156,7 @@ featuremap_plot_gene_map_server <- function(id,
     }
 
     geneUMAP.RENDER2 <- function() {
-      p <- render_geneUMAP(cex.label=1.5) %>%
+      p <- render_geneUMAP(cex=1.2, cex.label=1.5) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%

@@ -58,19 +58,24 @@ CorrelationUI <- function(id) {
         class = "row",
         div(
           class = "col-md-6",
-          correlation_plot_table_corr_ui(
-            ns("cor_barplot"),
-            title_plot = "Top correlated genes",
-            title_table = "Correlation table",
-            info.text_plot = "Top correlated genes. Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
-            info.text_table = "Statistical results from the DGCA computation for differentially correlated gene pairs.",
-            caption_plot = "Barplot showing the highest correlated genes with respect to the selected gene.",
-            caption_table = "Correlation table of correlation and partial correlation with respect to the selected gene. ",
-            label = "a",
-            height = c("30vh", "70vh"),
-            height_table = c(360, TABLE_HEIGHT_MODAL),
+          correlation_plot_corr_ui(
+            id = ns("cor_barplot"),
+            title = "Top correlated genes",
+            info.text = "Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
+            caption = "Barplot showing the highest correlated genes with respect to the selected gene.",
+            label = "",
+            height = c("calc(65vh - 240px)", "70vh"),
             width = c("auto", "100%")
           ),
+          correlation_table_corr_ui(
+            id = ns("cor_barplot"),
+            title = "Correlation table",
+            info.text = "Statistical results from correlated gene pairs.",
+            caption = "Correlation table of correlation and partial correlation with respect to the selected gene. ",
+            label = "",
+            height = c("35vh", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         ),
         div(
           class = "col-md-6",
@@ -79,7 +84,7 @@ CorrelationUI <- function(id) {
             title = "Correlation scatter plots",
             info.text = "Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit.",
             caption = "Scatter plots of gene expression of top correlated genes.",
-            height = c(fullH - 50, 700),
+            height = c("calc(100vh - 223px)", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         )
@@ -96,7 +101,7 @@ CorrelationUI <- function(id) {
             title = "Partial correlation network",
             info.text = "Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair.",
             caption = "Partial correlation network around the selected gene.",
-            height = c(700, 700),
+            height = c("calc(100vh - 223px)", TABLE_HEIGHT_MODAL),
             width = c(700, "100%"))
         ),
         div(
@@ -106,7 +111,7 @@ CorrelationUI <- function(id) {
             title = "Correlation UMAP",
             info.text = "Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative.",
             caption = "UMAP clustering of genes using covariance as distance metric and colored by correlation (or covariance). ",
-            height = c(700, 750),
+            height = c("calc(100vh - 223px)", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         )

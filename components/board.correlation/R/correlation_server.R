@@ -483,6 +483,7 @@ CorrelationBoard <- function(id, pgx) {
       cor_table             = cor_table,
       pgx             = pgx,
       pcor_ntop             = input$pcor_ntop,
+      scrollY               = "calc(35vh - 140px)",
       watermark             = WATERMARK
     )
 

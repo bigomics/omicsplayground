@@ -460,7 +460,8 @@ ExpressionBoard <- function(id, pgx) {
     genetable <- expression_table_genetable_server(
       id = "genetable",
       res = filteredDiffExprTable,
-      height = c(tabH - 10, 700)
+      height = c(tabH - 10, 700),
+      scrollY = "200px"      
     )
 
     gsettable <- expression_table_gsettable_server(
@@ -468,6 +469,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_related_genesets = gx_related_genesets,
       height = c(tabH - 10, 700),
       width = c("100%", 800),
+      scrollY = "200px",
       watermark = FALSE
     )
 
@@ -478,7 +480,7 @@ ExpressionBoard <- function(id, pgx) {
       metaFC = metaFC,
       metaQ = metaQ,
       height = c(tabH, 700),
-      tabV = tabV,
+      scrollY = "200px",
       watermark = FALSE
     )
 
@@ -486,8 +488,8 @@ ExpressionBoard <- function(id, pgx) {
       id = "FDRtable",
       pgx = pgx,
       methods = shiny::reactive(input$gx_statmethod),
-      tabV = tabV,
       height = c(tabH, 700),
+      scrollY = "200px",
       watermark = FALSE
     )
 

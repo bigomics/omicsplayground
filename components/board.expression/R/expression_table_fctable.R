@@ -50,7 +50,7 @@ expression_table_fctable_server <- function(id,
                                             metaFC,
                                             metaQ,
                                             height,
-                                            tabV,
+                                            scrollY,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -108,7 +108,7 @@ expression_table_fctable_server <- function(id,
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 220,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

@@ -17,7 +17,8 @@ expression_table_genetable_ui <- function(
   info.text,
   caption,
   width,
-  height) {
+  height)
+{
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
@@ -52,6 +53,7 @@ expression_table_genetable_ui <- function(
 expression_table_genetable_server <- function(id,
                                               res, # filteredDiffExprTable
                                               height,
+                                              scrollY,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -95,7 +97,7 @@ expression_table_genetable_server <- function(id,
           # paging = TRUE,
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = 240,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
