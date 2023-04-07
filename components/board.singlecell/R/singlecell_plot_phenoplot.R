@@ -34,7 +34,7 @@ singlecell_plot_phenoplot_ui <- function(
     id = ns("plotmodule"),
     plotlib = "plotly",      
     label = label,
-    info.text = phenoModule_info,
+    info.text = info.text,
     title = title,
     caption = caption,
     options = phenoplot.opts,
