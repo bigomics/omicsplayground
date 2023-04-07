@@ -79,6 +79,9 @@ DrugConnectivityUI <- function(id) {
             class = "col-md-3",
             drugconnectivity_plot_actmap_ui(
               ns("dsea_actmap"),
+              title = "Activation matrix",
+              info.text = "The Activation Matrix visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+              caption = "Activation Matrix visualising drug or single gene alteration profile correlations in all the available contrasts.",
               height = c(700, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%"),              
               label = "d"
@@ -94,10 +97,16 @@ DrugConnectivityUI <- function(id) {
             class = "col-md-5",
             drugconnectivity_plot_cmap_enplot_ui(
               id = ns("cmap_enplot"),
+              title = "Enrichment plot",
+              info.text = "Not available for this plot.",
+              caption = "Enrichment of the selected drug perturbation profile with your selected signature.",
               label = "a"
             ),
             drugconnectivity_table_cmap_ui(
               id = ns("cmap_table"),
+              title = "Connectivity table",
+              info.text "Enrichment is calculated by correlating your signature with known drug or single gene alteration profiles from teh selected database. Because the databases have multiple perturbation experiments for a single drug or gene, drugs or genes are scored by running the GSEA algorithm on the contrast-drug/gene profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug or gene alteration.",
+              caption = "Enrichment table showing the normalised enrichment score and p-values of a selected contrast signature against drug or gene alteration profiles.",
               height = c(380, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             )
@@ -107,7 +116,8 @@ DrugConnectivityUI <- function(id) {
             drugconnectivity_plot_cmap_dsea_ui(
               id = ns("cmap_dsea"),
               title = "Connectivity Map",
-              info.text = "Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast.",
+              info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots."
+              caption = "GSEA-like plots showing the correlation of various drug or single gene alteration expression profiles with the selected contrast signature.",
               caption = "Plot showing the top signatures as UMAP.",
               label = "c",
               height = c(700, "80vh")
