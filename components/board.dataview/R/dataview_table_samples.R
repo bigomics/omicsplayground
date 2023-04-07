@@ -26,7 +26,8 @@ dataview_table_samples_ui <- function(
 
 dataview_table_samples_server <- function(id,
                                           pgx,
-                                          r.samples = reactive("")) {
+                                          r.samples = reactive(""),
+                                          scrollY ) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       shiny::req(pgx$Y, pgx$samples, r.samples())
@@ -45,7 +46,9 @@ dataview_table_samples_server <- function(id,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = 150,
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = scrollY,
           deferRender = TRUE
         )
       ) %>%
@@ -62,7 +65,9 @@ dataview_table_samples_server <- function(id,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = SCROLLY_MODAL,
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = SCROLLY_MODAL,
           deferRender = TRUE
         )
       ) %>%

@@ -68,15 +68,24 @@ WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
   div(
     id = "welcome-page",
-    br(),
-    br(),
-    div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
-    h2("What would you like to do today?"),
-    br(),
-    br(),
-    br(),
     div(
       class = "row",
+      style = "min-height:540px;height:60vh;",
+      id = "welcome-content",      
+      div(
+        class = "col-md-12",
+        br(),
+        br(),
+        div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
+        h2("What would you like to do today?"),
+        br(),
+        br(),
+        br()
+      )
+    ),
+    div(
+      class = "row",
+      style = "max-height:35vh;padding:20px 0 20px 0;vertical-align:bottom;",
       id = "welcome-buttons",
       div(
         class = "col-md-5",

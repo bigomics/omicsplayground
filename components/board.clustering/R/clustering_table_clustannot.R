@@ -41,7 +41,9 @@ clustering_table_clustannot_server <- function(
   id,
   getClustAnnotCorrelation,
   xann_level,
-  watermark = FALSE) {
+  watermark,
+  scrollY )
+{
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -71,7 +73,7 @@ clustering_table_clustannot_server <- function(
         options = list(
           dom = "lfrtip", buttons = c("copy", "csv", "pdf"),
           scrollX = TRUE,
-          scrollY = 140,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options

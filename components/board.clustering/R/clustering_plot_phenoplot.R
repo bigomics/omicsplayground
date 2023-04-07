@@ -144,7 +144,7 @@ clustering_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = 0.05
+        margin = 0.04
       ) %>% plotly_default()
 
       return(fig)
@@ -164,7 +164,7 @@ clustering_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = 0.05
+        margin = 0.06
       ) %>% plotly_modal_default()
       
       return(fig)

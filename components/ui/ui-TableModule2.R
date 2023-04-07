@@ -109,14 +109,14 @@ TableModuleUI <- function(id,
   modalfooter.none <- paste0("#",ns("datatablePopup")," .modal-footer{display:none;}")
 
   # Div construction
-  e =   bslib::card(
+  e = bslib::card(
       class="tablemodule",      
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       bslib::card_body_fill(
           height = height.1,
           div(header, class="tablemodule-header"),
-          ##          DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
-          DT::DTOutput(ns("datatable")), ## %>% shinycssloaders::withSpinner(),
+          ##  DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
+          DT::DTOutput(ns("datatable"),height="100%") %>% shinycssloaders::withSpinner(),
           shiny::div(class="popup-modal",
               modalUI(
                   id = ns("datatablePopup"),

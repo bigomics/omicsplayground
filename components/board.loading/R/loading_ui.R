@@ -51,7 +51,7 @@ LoadingUI <- function(id) {
             
             loading_table_datasets_ui(
               ns("pgxtable"),
-              height = c("65vh", 700),
+              height = c("calc(100vh - (240px + 70px))", 700),
               width = c("100%", "100%")
             ),
             div(
@@ -81,7 +81,7 @@ LoadingUI <- function(id) {
             class = "col-md-5",
             style = "height: 100%;",
             loading_tsne_ui(ns("tsne"),
-              height = c("65vh", "70vh"),
+              height = c("calc(100vh - (240px + 70px))", "70vh"),                            
               width = c("auto",  "100%")
             )
           )

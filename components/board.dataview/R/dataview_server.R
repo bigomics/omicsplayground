@@ -256,12 +256,13 @@ DataViewBoard <- function(id, pgx) {
       r.data_type = reactive(input$data_type),
       r.samples = selected_samples,
       r.groupby = reactive(input$data_groupby),
-      scrollY = "calc(100vh - (250px + 140px))"
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
     dataview_table_samples_server(
       "sampletable", pgx,
-      r.samples = selected_samples
+      r.samples = selected_samples,
+      scrollY = "calc(35vh - 140px)"
     )
 
     dataview_table_resources_server(
@@ -270,7 +271,8 @@ DataViewBoard <- function(id, pgx) {
 
     dataview_table_contrasts_server(
       "contrastTable", pgx,
-      r.samples = selected_samples
+      r.samples = selected_samples,
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
     ## ================================================================================

@@ -20,9 +20,11 @@ boardHeader <- function(title, info_link) {
                 "Show information and tutorial about this board"
             )
         ),
-        div(class = "card-selector-header", 
-            selector_default(
+        div(class = "card-footer-switch", 
+            selector_switch(
                 class = 'card-footer-checked', 
-                label = "Show captions"))
+                label = "show captions"),
+                is.checked = FALSE
+            )
     )
 }
