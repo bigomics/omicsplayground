@@ -12,17 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_scatterPlot_ui <- function(id,
-                                               label = "",
-                                               fullH = 750) {
+connectivity_plot_scatterPlot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "The <strong>FC-FC scatter plot</strong> provides a pairwise scatterplot of
-    logFC fold-change profiles for the selected contrasts. The main
-    purpose of this panel is to identify similarity or dissimilarity between
-    selected contrasts. The scatter plot is interactive and shows information of
-    each gene with a mouse hover-over."
-  )
+  
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::selectInput(
@@ -37,14 +36,15 @@ connectivity_plot_scatterPlot_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-    title = "FC-FC scatterplot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     options = plot_opts,
     download.fmt = c("html"),
-    height = c(fullH - 80, 700),
-    width = c("auto", 1000),
+    height = height,
+    width = width,
   )
 }
 

@@ -12,18 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_FCFCplots_ui <- function(id,
-                                                height,
-                                                width, 
-                                                label = "",
-                                                rowH = 660) {
+connectivity_plot_FCFCplots_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width, 
+  label = ""
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange
-    values between two contrasts. Foldchanges that are similar show high
-    correlation, i.e. are close to the diagonal. You can switch to enrichment
-    type plots in the plot settings."
-  )
 
   plot_opts <- shiny::tagList(
     shiny::radioButtons(
@@ -36,10 +34,11 @@ connectivity_plot_FCFCplots_ui <- function(id,
 
   PlotModuleUI(
     ns("plot"),
-    title = "FC scatter plots",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
     height = height,
     width = width

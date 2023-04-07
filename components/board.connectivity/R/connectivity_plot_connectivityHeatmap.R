@@ -12,14 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_connectivityHeatmap_ui <- function(id,
-                                                     label = "",
-                                                     rowH = 660) {
+connectivity_plot_connectivityHeatmap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap.
-    Contrasts that are similar will be clustered close together."
-  )
+  
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
@@ -36,13 +38,14 @@ connectivity_plot_connectivityHeatmap_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-    title = "Connectivity Heatmap",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
-    height = c(420, 650),
-    width = c("auto", 1400)
+    height = height,
+    width = width,
+    caption = caption
   )
 }
 

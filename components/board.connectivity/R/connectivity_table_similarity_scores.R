@@ -3,18 +3,23 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-connectivity_table_similarity_scores_ui <- function(id, width, height, label="") {
+connectivity_table_similarity_scores_ui <- function(
+  id,
+  title, 
+  info.text,
+  caption,
+  width,
+  height,
+  label="") {
   ns <- shiny::NS(id)
-
-  info <-
-  "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. "
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info,
+    info.text = info.text,
     width = width,
+    caption = caption,
     height = height,
-    title = "Similarity scores",
+    title = title,
     label = label
   )
 }
