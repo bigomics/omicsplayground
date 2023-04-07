@@ -105,7 +105,7 @@ DrugConnectivityUI <- function(id) {
             drugconnectivity_table_cmap_ui(
               id = ns("cmap_table"),
               title = "Connectivity table",
-              info.text "Enrichment is calculated by correlating your signature with known drug or single gene alteration profiles from teh selected database. Because the databases have multiple perturbation experiments for a single drug or gene, drugs or genes are scored by running the GSEA algorithm on the contrast-drug/gene profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug or gene alteration.",
+              info.text = "Enrichment is calculated by correlating your signature with known drug or single gene alteration profiles from teh selected database. Because the databases have multiple perturbation experiments for a single drug or gene, drugs or genes are scored by running the GSEA algorithm on the contrast-drug/gene profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug or gene alteration.",
               caption = "Enrichment table showing the normalised enrichment score and p-values of a selected contrast signature against drug or gene alteration profiles.",
               height = c(380, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
@@ -116,9 +116,8 @@ DrugConnectivityUI <- function(id) {
             drugconnectivity_plot_cmap_dsea_ui(
               id = ns("cmap_dsea"),
               title = "Connectivity Map",
-              info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots."
+              info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots.",
               caption = "GSEA-like plots showing the correlation of various drug or single gene alteration expression profiles with the selected contrast signature.",
-              caption = "Plot showing the top signatures as UMAP.",
               label = "c",
               height = c(700, "80vh")
             )
