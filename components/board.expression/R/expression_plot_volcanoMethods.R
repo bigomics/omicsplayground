@@ -13,19 +13,22 @@
 #' @param width
 #'
 #' @export
-expression_plot_volcanoMethods_ui <- function(id,
-                                              label = "",
-                                              height,
-                                              width) {
+expression_plot_volcanoMethods_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings. This provides a comparative overview of the relative statistical power between all methods."
 
   PlotModuleUI(ns("pltmod"),
     title = "Volcano plots for all methods",
     label = label,
     plotlib = "ggplot",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

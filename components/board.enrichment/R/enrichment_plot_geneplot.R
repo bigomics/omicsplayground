@@ -3,10 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_geneplot_ui <- function(id, height, width) {
+enrichment_plot_geneplot_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
 
   options <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gs_ungroup2"), "ungroup samples", FALSE),
@@ -18,10 +22,11 @@ enrichment_plot_geneplot_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Expression geneplot",
+    title = title,
     label = "c",
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = options,
     height = height,
     width = width,

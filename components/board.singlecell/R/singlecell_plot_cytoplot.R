@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_cytoplot_ui <- function(id,
-                                        label = "",
-                                        height,
-                                        width,
-                                        parent) {
+singlecell_plot_cytoplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   cyto.opts <- shiny::tagList(
@@ -31,13 +35,12 @@ singlecell_plot_cytoplot_ui <- function(id,
     )
   )
 
-  cytoModule_info <- "<b>Cytometry plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
-
   PlotModuleUI(
     id = ns("plot"),
     label = label,
-    info.text = cytoModule_info,
-    title = "Cytometry plot",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     options = cyto.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

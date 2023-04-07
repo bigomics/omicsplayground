@@ -3,17 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-signature_table_overlap_ui <- function(id, width, height) {
+signature_table_overlap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Overlap/Similarity table.</b><b>(a)</b> Table summarizing the results of the Fishers's test for overlap. The column \'common genes\' reports the shared gene in order of largest fold-change. The table reports the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Overlap with other signatures",
+    title = title,
+    caption = caption,
     label = "b"
   )
 }

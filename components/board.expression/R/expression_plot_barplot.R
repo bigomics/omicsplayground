@@ -13,10 +13,14 @@
 #' @param width
 #'
 #' @export
-expression_plot_barplot_ui <- function(id,
-                                       label = "",
-                                       height,
-                                       width) {
+expression_plot_barplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
 
   plots_barplot_opts <- shiny::tagList(
@@ -34,13 +38,12 @@ expression_plot_barplot_ui <- function(id,
     )
   )
 
-  info_text <- "<b>Expression</b> of the selected gene across samples or groups."
-
   PlotModuleUI(ns("pltmod"),
-    title = "Gene expression",
+    title = title,
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     plotlib = "plotly",
+    caption = caption,
     options = plots_barplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,

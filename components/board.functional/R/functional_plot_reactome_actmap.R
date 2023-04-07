@@ -12,13 +12,16 @@
 #' @param height
 #'
 #' @export
-functional_plot_reactome_actmap_ui <- function(id,
-                                           label = "",
-                                           height = c(660, 750)
-                                           ) {
+functional_plot_reactome_actmap_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>REACTOME activation matrix</strong> visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.")
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
@@ -31,10 +34,11 @@ functional_plot_reactome_actmap_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Activation matrix",
+    title = title,
     label = label,
+    caption = caption,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     height = height,
     width = c("100%", "100%")

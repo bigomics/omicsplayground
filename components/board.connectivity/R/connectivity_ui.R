@@ -59,12 +59,19 @@ ConnectivityUI <- function(id) {
           div(
             class = "col-md-6",
             connectivity_plot_FCFCplots_ui(
-              ns("FCFCplots"), label = "a",
+              ns("FCFCplots"),
+              label = "a",
+              title = "FC scatter plots",
+              info.text = "The FC-FC scatter plot provides a pairwise scatterplot of logFC fold-change profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The scatter plot is interactive and shows information of each gene by hovering over it with the mouse.",
+              caption = "Foldchange scatterplot of the selected contrast against a selected pairwise comparison from the public database.",
               height = c(350, 600),
               width = c("auto", "100%")
             ),
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable"),
+              title = "Similarity scores",
+              info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. Highlighting a specific dataset will change the FC-FC scatterplot accordingly.",
+              caption = "Table displaying the most correlated gene expression profiles from public datasets to the selected contrast. Select a profile to visualise the corresponding scatter plot.",
               height = c(350, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%"),
               label = "b"
@@ -74,26 +81,15 @@ ConnectivityUI <- function(id) {
             class = "col-md-6",
             connectivity_plot_scatterPlot_ui(
               ns("scatterPlot"),
-              label = "c")
+              title = "FC-FC scatterplot",
+              info.text = "Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings.",
+              caption = "Scatter plots displaying the public profiles most correlated to the selected contrast by fold-change.",
+              label = "c",
+              height = c(750 - 80, 700),
+              width = c("auto", 1000)
+              )
             )
-        ),
-        tags$div(
-          class = "caption",
-
-          HTML(paste(
-            "<b>(a)</b> <b>FC-FC scatter plots.</b> Scatter plots of fold-changes values between two contrasts.
-            Fold-changes that are similar show high correlation, i.e. are close to the diagonal.",
-            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores
-            (NES) and Pearson correlation (rho) of reference profiles with respect
-            to the currently selected contrast. The top 100 up/down genes are
-            considered for the calculation of rho or NES. The score is calculated
-            as rho^2*NES.",
-            "<b>(c)</b> <b>Interactive FC-FC scatter plot.</b> Scatterplots of two
-            logFC differential expression profiles for selected contrasts. Similar
-            profiles will show high correlation with points close to the diagonal."
-          ))
-
-        )
+            )
       ),
       shiny::tabPanel(
         "FC heatmap",
@@ -104,6 +100,9 @@ ConnectivityUI <- function(id) {
             class = "col-md-7",
             connectivity_plot_cumFCplot_ui(
               id = ns("cumFCplot"),
+              title = "Cumulative foldchange",
+              info.text = "The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options.",
+              caption = "Barplot visualising the most dysregulated genes across the 10 most similar gene expression profiles to the queried contrast.",
               label = "a",
               height = c(300, 600),
               width = c("auto", "100%")
@@ -113,6 +112,9 @@ ConnectivityUI <- function(id) {
             class = "col-md-5",
             connectivity_plot_cumEnrichmentPlot_ui(
               id = ns("cumEnrichmentPlot"),
+              title = "Cumulative enrichment",
+              info.text = "Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options.",
+              caption = "The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
               label = "b",
               height = c(300, 600),
               width = c("auto", "100%")
@@ -122,7 +124,12 @@ ConnectivityUI <- function(id) {
             class = "col-md-12",
             connectivity_plot_connectivityHeatmap_ui(
               id = ns("connectivityHeatmap"),
-              label = "c"
+              title = "Connectivity Heatmap",
+              info.text = "Contrasts that are similar will be clustered close together.",
+              caption = "Heatmap displaying the similarity of the selected contrast with gene expression profiles from public datasets",
+              label = "c",
+              height = c(420, 650),
+              width = c("auto", 1400)
             )
           )
         ))
@@ -136,23 +143,26 @@ ConnectivityUI <- function(id) {
             class = "col-md-6",
             connectivity_plot_leadingEdgeGraph_ui(
               id = ns("leadingEdgeGraph"),
-              label = "a"
+              title = "Leading-edge graph",
+              info.text = "The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes. ",
+              caption = "Network of shared leading-edge genes between top-N most similar signatures.",
+              label = "a",
+              height = c(680, 720),
+              width = c("auto", 1300)
             )
           ),
           div(
             class = "col-md-6",
             connectivity_plot_enrichmentGraph_ui(
               id = ns("enrichmentGraph"),
-              label = "b"
+              title = "Enrichment graph",
+              info.text = "The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets. In the plot options you can set the threshold the edges.",
+              caption = "Network of shared enriched genesets between top-N most similar signatures.",
+              label = "b",
+              height = c(680, 720),
+              width = c("auto", 1200)
             )
           )
-        ),
-        tags$div(
-          class = "caption",
-          HTML(paste(
-            "<b>(a)</b> <b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes.",
-            "<b>(b)</b> <b>Enrichment graph.</b> Network of shared enrichmed genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets."
-          ))
         )
       ),
       shiny::tabPanel(
@@ -161,23 +171,27 @@ ConnectivityUI <- function(id) {
           class = "row",
           div(
             class = "col-md-6",
-            connectivity_plot_connectivityMap_ui(ns("connectivityMap"), label = "a")
+            connectivity_plot_connectivityMap_ui(
+              ns("connectivityMap"),
+              title = "Connectivity map",
+              info.text = "The Connectivity Map shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
+              caption = "Connectivity map placing a selected pairwise comparison expression profile in the context of  collected public datasets.",
+              label = "a",
+              height = c(750 - 100, 750),
+              width = c("auto", 1000)
+              )
           ),
           div(
             class = "col-md-6",
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable2"),
+              title = "Similarity scores",
+              info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES.",
+              caption = "Table showing the similarity scores of the gene expression profile of the selected contrast with those obtained from public reference datasets.",
               height = c(660, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )
-        ),
-        tags$div(
-          class = "caption",
-          HTML(paste(
-            "<b>(a)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
-            "<b>(b)</b> <b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. "
-          ))
         )
       )
     )

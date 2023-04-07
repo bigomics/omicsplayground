@@ -3,11 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_table_enrichment_analysis_ui <- function(id, width, height) {
+enrichment_table_enrichment_analysis_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including", a_Spearman, ", ", a_GSVA, ", ", a_ssGSEA, ", ", a_Fisher, ", ", a_GSEA, ", ", a_camera, " and ", a_fry, ".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
-
 
   gseatable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gs_showqvalues"), "show indivivual q-values", FALSE),
@@ -18,11 +21,12 @@ enrichment_table_enrichment_analysis_ui <- function(id, width, height) {
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
+    caption = caption,
     height = height,
     options = gseatable_opts,
-    title = "Enrichment analysis",
+    title = title,
     label = "I"
   )
 }

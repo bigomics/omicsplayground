@@ -12,13 +12,19 @@
 #' @param height
 #'
 #' @export
-signature_plot_volcano_ui <- function(id, height, width) {
+signature_plot_volcano_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts. For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left."
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Volcano plots",
-    info.text = info_text,
+    title = title,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf"),
     height = height,
     width = width

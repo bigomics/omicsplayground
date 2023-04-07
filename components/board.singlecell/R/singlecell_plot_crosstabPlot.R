@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_crosstabPlot_ui <- function(id,
-                                            label = "",
-                                            height,
-                                            width,
-                                            parent) {
+singlecell_plot_crosstabPlot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   crosstab.opts <- shiny::tagList(
@@ -38,13 +42,11 @@ singlecell_plot_crosstabPlot_ui <- function(id,
     ## br(), cellArgs=list(width='80px')
   )
 
-  crosstabModule_info <-
-    "<b>(b) Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
-
   PlotModuleUI(ns("plot"),
     label = label,
-    info.text = crosstabModule_info,
-    title = "Proportions",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     options = crosstab.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

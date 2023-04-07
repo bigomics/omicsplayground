@@ -12,22 +12,25 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_heatmap_ui <- function(id,
-                                      label = "",
-                                      height = c(600, 800)) {
+biomarker_plot_heatmap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Biomarker heatmap.</b> Expression heatmap
-                      of top gene features according to their variable
-                      importance.")
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Heatmap",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }

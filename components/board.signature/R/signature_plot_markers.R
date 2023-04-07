@@ -12,9 +12,13 @@
 #' @param height
 #'
 #' @export
-signature_plot_markers_ui <- function(id, height) {
+signature_plot_markers_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene. After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
 
   markers.opts <- shiny::tagList(
     withTooltip(
@@ -38,9 +42,10 @@ signature_plot_markers_ui <- function(id, height) {
   PlotModuleUI(
     id = ns("plot"),
     plotlib = "plotly",
-    title = "Markers plot",
+    title = title,
+    caption = caption,
     options = markers.opts,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf"),
     height = height
   )

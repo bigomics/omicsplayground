@@ -12,17 +12,15 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_moa_ui <- function(id,
-                                         label = "",
-                                         height = c(400, 700)
+drugconnectivity_plot_moa_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height
                                          ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("This plot visualizes the <strong>mechanism of
-                       action</strong> (MOA) across the enriched drug profiles.
-                       On the vertical axis, the GSEA normalized enrichment
-                       score of the MOA class or gene target is plotted. You
-                       can switch to visualize between MOA class or target
-                       gene.")
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -31,10 +29,11 @@ drugconnectivity_plot_moa_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-    title = "Mechanism of action",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

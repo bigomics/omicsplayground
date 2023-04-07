@@ -3,15 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_compare_ui <- function(id, height, width) {
+enrichment_plot_compare_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "Under the <strong>Compare</strong> tab, enrichment profiles of the selected geneset in enrichment Table <code>I</code> can be visualised against all available contrasts."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Enrichment of geneset across multiple contrasts",
-    info.text = info_text,
+    title = title,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

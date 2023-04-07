@@ -13,10 +13,14 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_phenoplot_ui <- function(id,
-                                         label = "",
-                                         height,
-                                         width) {
+singlecell_plot_phenoplot_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(
@@ -26,15 +30,13 @@ singlecell_plot_phenoplot_ui <- function(id,
     )
   )
 
-  phenoModule_info <- "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-
-
   PlotModuleUI(
     id = ns("plotmodule"),
     plotlib = "plotly",      
     label = label,
-    info.text = phenoModule_info,
-    title = "Phenotypes",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
