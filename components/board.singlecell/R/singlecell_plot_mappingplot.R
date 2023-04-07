@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_mappingplot_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width,
-                                           parent) {
+singlecell_plot_mappingplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   VIEWTYPES2 <- c("dotmap" = "dotmap", "heatmap (by method)" = "heatmap")
@@ -41,14 +45,13 @@ singlecell_plot_mappingplot_ui <- function(id,
     )
   )
 
-  mapping_info <- "<b>(a) Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
- 
   PlotModuleUI(
     id = ns("plot"),
     label = label,
-    info.text = mapping_info,
+    info.text = info.text,
     options = mapping.opts,
-    title = "Cell type mapping",
+    title = title,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width

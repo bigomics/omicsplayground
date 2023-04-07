@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_markersplot_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width,
-                                           parent) {
+singlecell_plot_markersplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   markersplot.opts <- shiny::tagList(
@@ -47,16 +51,14 @@ singlecell_plot_markersplot_ui <- function(id,
     )
   )
 
-  markersplot_info <-
-    "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples.In the plotting options, users can also restrict the marker analysis by selecting a particular group in which genes are divided by biological function, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
-
   PlotModuleUI(
     id = ns("plotmodule"),
     #    plotlib = "plotly",
     plotlib = "ggplot",          
     label = label,
-    info.text = markersplot_info,
-    title = "Expression of marker genes",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     options = markersplot.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
