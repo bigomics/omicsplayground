@@ -3,17 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wordcloud_table_leading_edge_ui <- function(id, width, height) {
+wordcloud_table_leading_edge_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "Keyword leading edge table."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Leading-edge table",
+    title = title,
+    caption = caption,
     label = "e"
   )
 }
