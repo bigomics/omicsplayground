@@ -37,6 +37,7 @@ enrichment_plot_volcano_server <- function(id,
                                            subplot.MAR,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     subplot_volcano.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)

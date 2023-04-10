@@ -80,7 +80,7 @@ DataViewUI <- function(id) {
             title = "Gene info",
             info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
             caption = "Information about the selected gene and its function from public databases.",
-            height = c("calc(70vh + 19px)", 800),
+            height = c("calc(70vh + 18px)", 800),
             width = c("auto", "100%")
           ),
         ),

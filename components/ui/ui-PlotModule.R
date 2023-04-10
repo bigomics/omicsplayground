@@ -210,13 +210,17 @@ PlotModuleUI <- function(id,
             h <- img.dim[1]*r
             w <- img.dim[2]*r
         }
+
+        ## render caption2 (for modal)
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
-        if(any(class(caption2)=="character")) {
-            caption2 <- shiny::HTML(caption2)
-            caption2 <- shiny::div(caption2, class="caption2 popup-plot-caption")
-        }
+        caption2 <- shiny::div(
+          class="caption2 popup-plot-caption",
+          shiny::HTML(paste0("<b>", as.character(title),".</b>&nbsp;&nbsp;",
+            as.character(caption2)))
+        )
+
         ##        shiny::tagList(
         shiny::div(
           class = "popup-plot-body",
@@ -247,10 +251,10 @@ PlotModuleUI <- function(id,
     if(any(class(caption)=="reactive")) {
         caption <- caption()
     }
-    if(any(class(caption)=="character")) {
-        caption <- shiny::HTML(caption)
-        caption <- shiny::span(caption)
-    }
+#    if(any(class(caption)=="character")) {
+#        caption <- shiny::HTML(caption)
+#        caption <- shiny::span(caption)
+#    }
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       bslib::card_body_fill(
@@ -287,7 +291,8 @@ PlotModuleUI <- function(id,
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
          div(
           class = "caption",
-           shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(caption)))
+          shiny::HTML(paste0("<b>", as.character(title),".</b>&nbsp;",
+            as.character(caption)))
          )
       )
     ) # end of card

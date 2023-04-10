@@ -84,7 +84,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
           paging = TRUE,
           pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = "calc(45vh - 260px)",
           scroller = TRUE,
           deferRender = TRUE,
           search = list(

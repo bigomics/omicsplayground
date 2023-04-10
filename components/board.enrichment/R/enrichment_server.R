@@ -532,6 +532,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       pgx = pgx,
       gs_features = shiny::reactive(input$gs_features),
       gs_contrast = shiny::reactive(input$gs_contrast),
+      gs_fdr = shiny::reactive(input$gs_fdr),
+      gs_lfc = shiny::reactive(input$gs_lfc),      
       watermark = WATERMARK
     )
 

@@ -13,16 +13,18 @@
 #'
 #' @export
 expression_plot_volcanoAll_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  label = "",
-  height,
-  width) {
+      id,
+      title,
+      caption,
+      info.text,
+      label = "",
+      height,
+      width) {
+
   ns <- shiny::NS(id)
 
-  PlotModuleUI(ns("pltmod"),
+  PlotModuleUI(
+    id = ns("pltmod"),
     title = title,
     label = label,
     plotlib = "grid",
@@ -63,7 +65,6 @@ expression_plot_volcanoAll_server <- function(id,
       ct <- getAllContrasts()
       F <- ct$F
       Q <- ct$Q
-
       
       ## comp = names(pgx$gx.meta$meta)
       comp <- names(F)
@@ -105,7 +106,7 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    render_plots <- function(cex=0.45, base_size=11) {
+    get_plots <- function(cex=0.45, base_size=11) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -113,13 +114,14 @@ expression_plot_volcanoAll_server <- function(id,
       nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
       ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
       xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
-      
-      plt <- list()
 
+      ## maximum 24!!!
+      nplots <- min(24,length(pd$Q))
+      plt <- list()
+      
       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
         i <- 1
-        for (i in 1:length(pd[["comp"]])) {
-
+        for (i in 1:nplots) {
           qval <- pd[["Q"]][[i]]
           fx <- pd[["F"]][[i]]
           fc.genes <- names(qval)
@@ -161,10 +163,8 @@ expression_plot_volcanoAll_server <- function(id,
 
 
     plot.RENDER <- function() {
-      plt <- render_plots(cex=0.5, base_size=11)
+      plt <- get_plots(cex=0.5, base_size=11)
       nplots <- length(plt)
-      ## plot layout #####
-      ## layout
       nr = 1
       nc = max(4,nplots)
       if(nplots > 6) {
@@ -178,9 +178,8 @@ expression_plot_volcanoAll_server <- function(id,
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
-
     modal_plot.RENDER <- function() {      
-      plt <- render_plots(cex=0.9, base_size=15)
+      plt <- get_plots(cex=0.9, base_size=15)
       nplots <- length(plt)
       ## layout
       nr = 1
