@@ -161,6 +161,7 @@ TableModuleServer <- function(id,
         content = function(file) {
           if(!is.null(csvFunc)) {
             dt <- csvFunc()
+            if(is.list(dt)) dt <- dt[[1]]
           } else {
             dt <- func()$x$data
           }

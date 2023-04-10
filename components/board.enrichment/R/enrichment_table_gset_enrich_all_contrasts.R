@@ -38,7 +38,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
   moduleServer(id, function(input, output, session) {
     tabH <- 340 ## row height of panels
 
-    fctable.RENDER <- shiny::reactive({
+    table_data <- shiny::reactive({
 
       ## get enrichment for all contrasts
       ##F <- sapply(pgx$gset.meta$meta, function(x) x[, "meta.fx"])
@@ -83,6 +83,24 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
       ## if(length(qv.cols)==0) qv = 0
+
+      list(
+        df = df,
+        qv.cols = qv.cols,
+        fc.cols = fc.cols,
+        F = F
+      )
+    })
+    
+    fctable.RENDER <- function() {
+
+      td <- table_data()
+      df <- td$df
+      qv.cols <- td$qv.cols
+      fc.cols <- td$fc.cols
+      F <- td$F
+      
+      ## wrap with hyperlink
       df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
       
       dt <- DT::datatable(
@@ -105,13 +123,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.ES",
-          background = playbase::color_from_middle(fc.rms, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle( df$rms.ES, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = playbase::color_from_middle(F[, ], "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle( F[, ], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
@@ -121,18 +139,19 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
           DT::formatSignif(columns = qv.cols, digits = 4)
       }
       return(dt)
-    })
+    }
 
-    fctable.RENDER_modal <- shiny::reactive({
+    fctable.RENDER_modal <- function() {
       dt <- fctable.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       return(dt)
-    })
+    }
 
     TableModuleServer(
       "datasets",
       func = fctable.RENDER,
       func2 = fctable.RENDER_modal,
+      csvFunc = table_data,
       selector = "none"
     )
   })

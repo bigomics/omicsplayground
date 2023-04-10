@@ -209,24 +209,30 @@ EnrichmentUI <- function(id) {
       ),
       shiny::tabPanel(
         "Enrichment (all)",
-        enrichment_table_gset_enrich_all_contrasts_ui(
-          ns("fctable"),
-          title = "Gene set enrichment for all contrasts",
-          info.text = "The column `fc.var` corresponds to the variance of the gene set across all contrasts.",
-          caption = "The Enrichment (all) panel reports the gene set enrichment for all contrasts in the selected dataset.",
-          height = c("calc(45vh - 120px)", TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+        bslib::layout_column_wrap(
+          width = 1,
+          enrichment_table_gset_enrich_all_contrasts_ui(
+            ns("fctable"),
+            title = "Gene set enrichment for all contrasts",
+            info.text = "The column `fc.var` corresponds to the variance of the gene set across all contrasts.",
+            caption = "The Enrichment (all) panel reports the gene set enrichment for all contrasts in the selected dataset.",
+            height = c("calc(45vh - 120px)", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
         )
       ),
       shiny::tabPanel(
         "FDR table",
-        enrichment_table_n_sig_gsets_ui(
-          ns("FDRtable"),
-          title = "Number of significant gene sets",
-          info.text = "Using the table the user can determine which statistical methods perform better for a particular contrast.",
-          caption = "The FDR table panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. ",
-          height = c("calc(45vh - 120px)", TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+        bslib::layout_column_wrap(
+          width = 1,
+          enrichment_table_n_sig_gsets_ui(
+            ns("FDRtable"),
+            title = "Number of significant gene sets",
+            info.text = "Using the table the user can determine which statistical methods perform better for a particular contrast.",
+            caption = "The FDR table panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. ",
+            height = c("calc(45vh - 120px)", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
         )
       )
     )

@@ -36,8 +36,14 @@ enrichment_table_enrichment_analysis_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    gseatable.RENDER <- shiny::reactive({
+    table_data <- shiny::reactive({
       rpt <- getFilteredGeneSetTable()
+      rpt
+    })
+
+    gseatable.RENDER <- function() {
+      rpt <- table_data()
+      
       if (is.null(rpt)) {
         return(NULL)
       }
@@ -57,7 +63,6 @@ enrichment_table_enrichment_analysis_server <- function(id,
       if (length(jj) > 0) rpt[, jj] <- round(rpt[, jj], digits = 4)
       jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
       if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 100)
-
       if (!input$gs_showqvalues) {
         rpt <- rpt[, grep("^q[.]|^q$", colnames(rpt), invert = TRUE)]
       }
@@ -98,7 +103,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         DT::formatStyle(fx.col,
           background = playbase::color_from_middle(fx, "lightblue", "#f5aeae")
         )
-    })
+    }
 
     gseatable.RENDER_modal <- shiny::reactive({
       dt <- gseatable.RENDER()
@@ -110,6 +115,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       "datasets",
       func = gseatable.RENDER,
       func2 = gseatable.RENDER_modal,
+      csvFunc = table_data,
       selector = "single"
     )
 
