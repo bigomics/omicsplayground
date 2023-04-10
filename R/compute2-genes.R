@@ -82,7 +82,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     if(!("X" %in% names(pgx))) {
         stop("[compute.testGenesSingleOmics] FATAL: cannot find normalized expression X in pgx object")
     }
-    
+  
     ##is.expmatrix <- all(rownames(contr.matrix)==rownames(pgx$samples))
     is.expmatrix <- all(rownames(contr.matrix) %in% rownames(pgx$samples))
     is.expmatrix
@@ -210,7 +210,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     if(is.null(names(stat.group))) {
         stop("[compute.testGenesSingleOmics] FATAL2:: stat.group must have names")
     }
-    
+
     ## notice original counts will not be affected
     ss <- names(stat.group)
     gg <- rownames(pgx$counts)
@@ -218,7 +218,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     counts  = pgx$counts[gg,ss,drop=FALSE]  
     genes   = pgx$genes[gg,]
     samples = pgx$samples[ss,]
-    
+
     ## Rescale if too low. Often EdgeR/DeSeq can give errors of total counts
     ## are too low. Happens often with single-cell (10x?). We rescale
     ## to a minimum of 1 million counts (CPM)
@@ -254,7 +254,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         cat("filtering out",sum(!keep),"low-expressed genes\n")
         cat("keeping",sum(keep),"expressed genes\n")
     }
-    
+
     ##-----------------------------------------------------------------------------
     ## Shrink number of genes before testing (highest SD/var)
     ##-----------------------------------------------------------------------------
@@ -282,7 +282,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     Matrix::head(genes)
     genes  = genes[,c("gene_name","gene_title")]
     dim(counts)
-    
+
     ##-----------------------------------------------------------------------------
     ## Do the fitting
     ##-----------------------------------------------------------------------------
@@ -297,7 +297,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##X <- X[rownames(counts),colnames(counts)]
     dim(X)
 
-    message("[compute.testGenesSingleOmics] 12 : start fitting... ")
+    message("[compute.testGenesSingleOmics] start fitting... ")
     
     ## quantile.normalize=TRUE;remove.batch=FALSE;conform.output=TRUE;do.filter=FALSE;custom=NULL;custom.name=NULL
 
@@ -319,7 +319,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         custom = NULL, custom.name = NULL
     )
 
-    message("[compute.testGenesSingleOmics] 13 : fitting done!")
+    message("[compute.testGenesSingleOmics] fitting done!")
     
     names(gx.meta)
     names(gx.meta$outputs)
@@ -344,7 +344,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     if(remove.outputs) {
         pgx$gx.meta$outputs <- NULL
     }
-
+  
     message("[compute.testGenesSingleOmics] done!")
     
     return(pgx)

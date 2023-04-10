@@ -129,7 +129,6 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
-
     dbg("[MAIN.logHandler] >>>>> called! <<<<<")
     ##dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
     dbg("[MAIN.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)

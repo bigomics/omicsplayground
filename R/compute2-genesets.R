@@ -73,7 +73,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ss <- rownames(pgx$model.parameters$exp.matrix)
     X <- X[,ss,drop=FALSE]
     dim(X)
-    
+  
     ##-----------------------------------------------------------
     ## create the GENESETxGENE matrix
     ##-----------------------------------------------------------
@@ -105,8 +105,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
         ## very fast sparse rank-correlation for approximate single sample
         ## geneset activation.
         cX <- X - rowMeans(X, na.rm=TRUE)  ## center!
-        dim(cX)
-        gsetX = qlcMatrix::corSparse( G[,], apply( cX[,],2,rank) )
+        gsetX = qlcMatrix::corSparse( G[,], apply( cX[,],2,rank) ) 
         ## gsetX = limma::normalizeQuantiles(gsetX) ##???
         ##grp <- pgx$samples$group
         grp <- pgx$model.parameters$group
@@ -116,13 +115,12 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
             sdx <- apply(gsetX.bygroup,1,sd)
         } else {
             sdx <- apply(gsetX,1,sd)
-        }
+        }        
         names(sdx) <- colnames(G)
         jj = Matrix::head(order(-sdx), max.features) 
         must.include <- "hallmark|kegg|^go|^celltype"
         jj = unique( c(jj, grep(must.include,colnames(G),ignore.case=TRUE)))
         jj = jj[order(colnames(G)[jj])]
-        length(jj)
         G = G[,jj,drop=FALSE]
         remove(gsetX)
         remove(gsetX.bygroup)

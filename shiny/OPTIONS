@@ -10,7 +10,7 @@ ENABLE_SAVE     = TRUE
 ENABLE_DELETE   = TRUE
 MAX_DATASETS    = 100
 MAX_SAMPLES     = 2000
-MAX_COMPARISONS = 100
+MAX_COMPARISONS = 25
 MAX_GENES       = 20000
 MAX_GENESETS    = 5000
 WATERMARK       = TRUE
@@ -20,7 +20,5 @@ TIMEOUT         = 0
 HONCHO_URL      = http://localhost:8000
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
-#BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp,view
-BOARDS_DISABLED = corsa,multi,system
-#BOARDS_DISABLED = view
+#BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp
 

@@ -10,7 +10,7 @@
 # Start from lastest image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:v2
+FROM bigomics/omicsplayground:latest-v2
 
 #------------------------------------------------------------
 # Update from local code
@@ -23,4 +23,7 @@ COPY bin/ bin/
 
 WORKDIR /omicsplayground
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('shiny', port=3838, host='0.0.0.0', launch.browser=0)"]
+#CMD ["R", "-e", "shiny::runApp('shiny', port=3838, host='0.0.0.0', launch.browser=0)"]
+CMD exec R -e "shiny::runApp('shiny', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
+
+

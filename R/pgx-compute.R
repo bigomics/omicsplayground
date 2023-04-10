@@ -382,7 +382,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## Filter genes?
     ##-------------------------------------------------------------------
 
-    cap.fraction <- mean(grepl("^[A-Z][a-z]*",rownames(ngs$counts)),na.rm=TRUE)
+    cap.fraction <- mean(grepl("^[A-Z][a-z]+",rownames(ngs$counts)),na.rm=TRUE)
     dbg("[createPGX: filter genes] rownames.ngs.counts = ",head(rownames(ngs$counts)))
     dbg("[createPGX: filter genes] cap.frac = ",cap.fraction)
 
