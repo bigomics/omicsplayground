@@ -171,7 +171,6 @@ CompareBoard <- function(input, output, session, env)
     shiny::observe({
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
-        ## message("DBG*** [CompareBoard::observer] updating genelist...")        
         ntop <- as.integer(input$ntop)
         higenes <- rownames(df)[order(df$score,decreasing=TRUE)]        
         higenes <- head(higenes, ntop)
@@ -209,8 +208,6 @@ CompareBoard <- function(input, output, session, env)
         shiny::req(ngs1)
         shiny::req(ngs2)
 
-        dbg("[getOmicsScoreTable] 1")
-        
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
         ct1 <- input.contrast1()
@@ -219,8 +216,6 @@ CompareBoard <- function(input, output, session, env)
         shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
-
-        dbg("[getOmicsScoreTable] 2")
         
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
@@ -235,8 +230,6 @@ CompareBoard <- function(input, output, session, env)
         colnames(F2) <- paste0("2:",colnames(F2))
         rho = NA
 
-        dbg("[getOmicsScoreTable] 3")        
-
         kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
         if(length(kk) >= 10) {
             g1 <- rownames(F1)
@@ -246,16 +239,13 @@ CompareBoard <- function(input, output, session, env)
             rho <- colSums(X1 * X2) / (nrow(X1)-1) ## fast correlation
         }
 
-        dbg("[getOmicsScoreTable] 4")        
-
         fc1 <- sqrt(rowMeans(F1**2))
         fc2 <- sqrt(rowMeans(F2**2))        
         score <- fc1 * fc2
         if(!is.na(rho[1])) {
             score <- rho * score
         }
-
-        dbg("[getOmicsScoreTable] 5")                
+        
         g1 <- rownames(F1)
         title <- ngs1$genes[g1,"gene_title"]
         title <- substring(title,1,60)
@@ -579,13 +569,9 @@ CompareBoard <- function(input, output, session, env)
         shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)        
-
-        dbg("[genecorr.RENDER] 1:")
         
         gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
         kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
-
-        dbg("[genecorr.RENDER] 2:")
         
         if(length(kk)==0) {
             par(mfrow=c(1,1))
@@ -602,16 +588,12 @@ CompareBoard <- function(input, output, session, env)
             text(0.5,0.5, "For gene correlation we need at least 10 common samples", col='red3')
             return()
         }
-
-        dbg("[genecorr.RENDER] 3:")
         
         ## conform matrices
         X1 <- ngs1$X[gg,kk]
         X2 <- ngs2$X[gg,kk]        
         Y1 <- ngs1$samples[kk,]
         Y2 <- ngs2$samples[kk,]    
-        
-        dbg("[genecorr.RENDER] 4:")
 
         dset1 <- paste0("[dataset1]  expression")
         dset2 <- paste0("[dataset2]  expression")
@@ -626,8 +608,6 @@ CompareBoard <- function(input, output, session, env)
             higenes <- intersect(higenes,rownames(X1))
             higenes <- head(higenes, 16)
         }
-
-        dbg("[genecorr.RENDER] 5:")
         
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
@@ -637,13 +617,9 @@ CompareBoard <- function(input, output, session, env)
         shiny::req(sel)
         if(is.null(sel)) return(NULL)        
 
-        dbg("[genecorr.RENDER] 6: dim.df = ",dim(df))
-        
         higenes <- head(rownames(df)[sel],16)        
         if(length(higenes)==0) return(NULL)
 
-        dbg("[genecorr.RENDER] 7: higenes = ",higenes)
-        
         ## Set color for points
         ##C1 <- ngs1$model.parameters$exp.matrix
         ##klr1 <- 2+as.integer(C1[,ct1[1]])
