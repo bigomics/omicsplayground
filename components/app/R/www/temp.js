@@ -1,5 +1,6 @@
 let db;
 let pricing;
+let user;
 
 $(document).ready(function() {
     $(document).on('change', '.card-footer-checked', function(e) {	
@@ -22,7 +23,8 @@ $(document).ready(function() {
   });
   
 Shiny.addCustomMessageHandler('set-user', (msg) => {
-	$('#authentication-user').text(msg.user);
+        $('#authentication-user').text(msg.user);
+        user = msg.user;
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
 		// $('#authentication-upgrade').hide();  // really?
@@ -399,4 +401,27 @@ Shiny.addCustomMessageHandler('bigdash-hide-tab', (msg) => {
 
 Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
     $(`.big-tab[data-name=${msg.value}]`).show();
+});
+
+
+$(document).ready(function() {
+
+    /* Default installation */
+    /* From https://stackoverflow.com/questions/74643167 */
+    /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
+    $(".tab-trigger").on("click", function(e) {
+	var tabId = $(e.target).data("target");
+	let hasHsq = (typeof window._hsq !== 'undefined' && window._hsq !== null)
+ 	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
+	if(hasHsq && user !== '' && user !== 'undefined') {
+	    var _hsq = window._hsq = window._hsq || [];
+	    var orginalTitle = document.title;
+	    document.title = orginalTitle + ' > ' + tabId ;
+	    _hsq.push(["identify", { email: user }]);  // set to current user	
+	    _hsq.push(['setPath', '#' + tabId]);	
+	    _hsq.push(['trackPageView']);
+	    document.title = orginalTitle;
+	}
+    });
+    
 });

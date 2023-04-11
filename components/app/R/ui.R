@@ -35,12 +35,12 @@ app_ui <- function() {
         header = shiny::tagList(
             shiny::tags$head(shiny::tags$script(src="temp.js")),
             shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
+            shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
             gtag2,   ## Google Tags???
             shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
             shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
             shinyjs::useShinyjs(),
             sever::useSever(),
-            # shinylogs::use_tracking(),
             firebase::useFirebase(firestore = TRUE, analytics = TRUE),
             ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
@@ -284,6 +284,7 @@ app_ui <- function() {
         
         bigdash::bigPage(
             header,
+            title = "Omics Playground v3",
             theme = big_theme2,
             sidebar = sidebar,
             navbar = bigdash::navbar(

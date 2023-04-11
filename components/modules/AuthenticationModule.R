@@ -245,7 +245,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             with.password = FALSE,
             with.register = FALSE,
             with.firebase = TRUE,
-            alt=h5("Ready to explore your data?",style="color:white;"),
+            alt = h5("Ready to explore your data?",style="color:white;"),
             login.text = "Sure I am!"
         )
 
