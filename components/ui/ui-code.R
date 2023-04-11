@@ -127,21 +127,20 @@ fileInput2 <- function(inputId, label, multiple = FALSE, accept = NULL, width = 
             shiny::tags$div(class = "progress-bar")))
 }
 
-selector_switch <- function(class = NULL, label = "Text to appear in Switch",
-                            is.checked = TRUE ) {
-  input.tag <- shiny::tags$input(
-    class = paste("form-check-input", class),
-    type = "checkbox",
-    role = "switch"
-  )
-  input.tag$attribs$checked <- NULL
-  if (is.checked) 
-      input.tag$attribs$checked <- "checked"
-  shiny::tags$div(
+selector_switch <- function(
+  class = NULL,
+  label = "Text to appear in Switch",
+  is.checked) {
+    tags$div(
     class = "form-check form-switch",
-    input.tag,
-    shiny::tags$label(label)
-  )
+    tags$input(
+      class = paste("form-check-input", class),
+      type = "checkbox",
+      id = ifelse(is.checked ,"flexSwitchCheckChecked","flexSwitchCheckDefault"),
+      role = "switch"
+    ),
+    tags$label(label)
+    )
 }
 
 loading_spinner <- function(text = "Loading...") {

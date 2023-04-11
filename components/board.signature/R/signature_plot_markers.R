@@ -62,7 +62,6 @@ signature_plot_markers_ui <- function(
 signature_plot_markers_server <- function(id,
                                           pgx,
                                           getCurrentMarkers,
-                                          IMMCHECK.GENES,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
@@ -131,17 +130,16 @@ signature_plot_markers_server <- function(id,
       ## group (for currentmarkers)
       ##
       ##
-      if (is.null(pgx)) {
+      if(is.null(pgx$X)) {
         return(NULL)
       }
 
       ## select samples
       X <- pgx$X
-      sel <- colnames(X)
-      X <- X[, sel]
+##      sel <- colnames(X)  ##???
+##      X <- X[, sel]
 
       ## get the signature
-      gset <- strsplit(IMMCHECK.GENES, split = " ")[[1]]
       gset <- getCurrentMarkers()
       if (is.null(gset)) {
         return(NULL)
@@ -166,7 +164,7 @@ signature_plot_markers_server <- function(id,
 
       res <- list(
         by.sample = ss.bysample,
-        by.group = ss.bygroup
+        by.group  = ss.bygroup
       )
       return(res)
     })
@@ -194,10 +192,10 @@ signature_plot_markers_server <- function(id,
 
       ## get t-SNE positions of samples
       pos <- pgx$tsne2d[colnames(gx), ]
-      gx <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
+      gx  <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
       grp <- pgx$model.parameters$group
-      zx <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
-      gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
+      zx  <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
+      gx  <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
       ## get GSVA values and make some non-linear value fc1
@@ -276,9 +274,9 @@ signature_plot_markers_server <- function(id,
           ylim = 1.2*range(pos[,2]),
           axis = FALSE,
           title = tt,
-          cex.title = cex*0.85,
+          cex.title = 0.85,
           title.y = 0.86,
-#         cex.clust = cex*0.8,
+#         cex.clust = 0.8,
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = 'fff'
@@ -305,9 +303,9 @@ signature_plot_markers_server <- function(id,
       ) %>%
         plotly_default() %>%
         plotly::layout(
-          title = list(text="genes in signature", size=12)
-        )
-##        margin = c(l=0,r=0,b=0,t=30) # lrbt
+          title = list(text="genes in signature", size=12),
+          margin = list(l=0,r=0,b=0,t=30) # lrbt
+        ) 
       return(fig)
     }
 
@@ -315,7 +313,7 @@ signature_plot_markers_server <- function(id,
       fig <- plotly.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          margin = list(l=0,r=0,b=0,t=50), # lfbt  
+          margin = list(l=0,r=0,b=0,t=40), # lfbt  
           title = list(size=18)
         ) 
       return(fig)

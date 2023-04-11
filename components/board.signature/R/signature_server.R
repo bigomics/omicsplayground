@@ -457,7 +457,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       "markers",
       pgx = pgx,
       getCurrentMarkers = getCurrentMarkers,
-      IMMCHECK.GENES = IMMCHECK.GENES,
       watermark = WATERMARK
     )
 

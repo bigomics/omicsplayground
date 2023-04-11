@@ -23,8 +23,9 @@ boardHeader <- function(title, info_link) {
         div(class = "card-footer-switch", 
             selector_switch(
                 class = 'card-footer-checked', 
-                label = "show captions"),
+                label = "show captions",
                 is.checked = FALSE
+                )
             )
     )
 }

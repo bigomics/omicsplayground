@@ -18,7 +18,7 @@ SingleCellInputs <- function(id) {
           shiny::selectInput(ns("clustmethod"), "Layout", c("default", "pca"),
             selected = "default"
           ),
-          "Specify a layout for the figures: t-SNE or PCA-based layout.",
+          "Specify a layout for the figures: t-SNE, UMAP or PCA-based layout.",
           placement = "top", options = list(container = "body")
         )
   )
