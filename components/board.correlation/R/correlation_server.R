@@ -41,9 +41,7 @@ CorrelationBoard <- function(id, pgx) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      req(pgx$X)
 
       genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
       sel <- genes[1] ## most var gene
