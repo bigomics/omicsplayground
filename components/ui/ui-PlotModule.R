@@ -257,7 +257,7 @@ PlotModuleUI <- function(id,
 #    }
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
-      bslib::card_body_fill(
+      bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
         style = paste0("height: ",height.1,";"),
         div(header, class="plotmodule-header"),
         outputFunc(ns("renderfigure")), #  %>% shinycssloaders::withSpinner(),
@@ -286,7 +286,7 @@ PlotModuleUI <- function(id,
                     shiny::tags$head(shiny::tags$style(modalfooter.none))
                     )
       ),
-      bslib::card_body(
+      bslib::card_body( #TODO probably want to set fillable and fill to FALSE 
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
          div(
