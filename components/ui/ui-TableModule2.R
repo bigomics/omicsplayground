@@ -71,6 +71,7 @@ TableModuleUI <- function(id,
 
   header <- shiny::fillRow(
     flex = c(NA,1,NA,NA,NA,NA),
+    class="tablemodule-header",
     shiny::div(class='tablemodule-title', title=title, title),
     label,
     DropdownMenu(
@@ -112,9 +113,12 @@ TableModuleUI <- function(id,
   e = bslib::card(
       class="tablemodule",      
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
-      bslib::card_body_fill(
+      style = "overflow: visible;",
+       bslib::as.card_item( 
+        div(header)
+       ),
+      bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
           height = height.1,
-          div(header, class="tablemodule-header"),
           ##  DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
           DT::DTOutput(ns("datatable"),height="100%") %>% shinycssloaders::withSpinner(),
           shiny::div(class="popup-modal",
