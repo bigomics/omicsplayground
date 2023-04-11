@@ -208,7 +208,9 @@ functional_plot_reactome_graph_server <- function(id,
           img.svg,
           controlIconsEnabled = TRUE,
           zoomScaleSensitivity = 0.4,
-          maxZoom = 25
+          minZoom = 1,
+          maxZoom = 25,          
+          viewBox = FALSE
         )
         return(pz)
       }

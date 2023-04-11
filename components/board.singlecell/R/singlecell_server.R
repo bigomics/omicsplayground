@@ -38,7 +38,7 @@ SingleCellBoard <- function(id, pgx) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx, pgx$Y)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "samplefilter", choices = levels)

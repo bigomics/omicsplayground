@@ -196,7 +196,7 @@ singlecell_plot_markersplot_server <- function(id,
 
       ## make smaller dots when more points
       cex1 <- 1.0
-      cex1 <- 0.85 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
+      cex1 <- 0.95 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
       klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
@@ -301,7 +301,7 @@ p
           pos,
           var = colvar,
           col = klrpal,
-          cex = 0.5*cex1,
+          cex = 0.6*cex1,
           xlab = "",
           ylab = "",
           xlim = 1.2*range(pos[,1]),

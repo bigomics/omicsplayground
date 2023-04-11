@@ -213,7 +213,7 @@ singlecell_plot_icpplot_server <- function(id,
       
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- 0.9 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
+      cex1 <- 1.0 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
       klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
@@ -299,7 +299,7 @@ singlecell_plot_icpplot_server <- function(id,
           pos,
           var = gx,
           col = klrpal,
-          cex = 0.6*cex1,
+          cex = 0.7*cex1,
           xlab = "",
           ylab = "",
           xlim = 1.2*range(pd[["pos"]][, 1]),

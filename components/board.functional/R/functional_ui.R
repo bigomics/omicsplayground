@@ -77,7 +77,7 @@ FunctionalUI <- function(id) {
           info.text = "Scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.",
           caption = "Reporting enrichment score for each pathway for the selected contrast profile.",
           label = "b",
-          height = c("calc(25vh - 120px)", TABLE_HEIGHT_MODAL),
+          height = c("calc(35vh - 100px)", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         )
       )
