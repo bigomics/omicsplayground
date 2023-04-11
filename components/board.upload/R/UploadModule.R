@@ -7,7 +7,7 @@
 ## Upload data Module
 ## ================================================================================
 
-UploadModuleUI <- function(id) {
+UploadModuleUI.NOTUSED <- function(id) {
   ns <- shiny::NS(id)
   height <- 720
 
@@ -206,15 +206,11 @@ UploadModuleServer <- function(id,
         if (pgx.uploaded) {
           message("[upload_files] PGX upload detected")
 
-          ## If the user uploaded a PGX file, we extract the matrix
-          ## dimensions from the given PGX/NGS object. Really?
-          ##
+          ## user uploaded a PGX file
           i <- grep("[.]pgx$", input$upload_files$name)
-          load(input$upload_files$datapath[i]) ## load NGS/PGX
-          ## matlist[["counts.csv"]] <- ngs$counts
-          ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
-          ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
-          uploaded[["pgx"]] <- ngs
+          ##load(input$upload_files$datapath[i]) ## load NGS/PGX
+          pgxfile <- input$upload_files$datapath[i]
+          uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0)))
         } else {
           ## If the user uploaded CSV files, we read in the data
           ## from the files.
@@ -501,10 +497,9 @@ UploadModuleServer <- function(id,
             FUN.readPGX <- function() {
               dbg("[UploadModule:parseQueryString] *** loading PGX file = ", pgx_file, "***")
 
-              load(pgx_file) ## load NGS/PGX
-              uploaded$pgx <- ngs
-              remove(ngs)
-
+              ##load(pgx_file) ## load NGS/PGX
+              uploaded$pgx <- local(get(load(pgx_file, verbose = 0)))
+              ##remove(ngs)
               uploaded$meta <- NULL
             }
 

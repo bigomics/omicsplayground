@@ -70,16 +70,6 @@ clustering_plot_phenoplot_server <- function(id,
         )
       )
     })
-
-
-    if(0) {
-      load("~/Playground/pgx/example-data.pgx")
-      source("~/Playground/omicsplayground/components/00SourceAll.R",chdir=TRUE)
-      Y <- ngs$samples
-      pos <- ngs$tsne2d
-      pheno <- colnames(Y)
-      COLORS <- rainbow(16)
-    }
     
     render_plotly <- function(pd, pheno, cex=1) {
 

@@ -492,8 +492,8 @@ ComputePgxServer <- function(
                 dbg("[compute PGX process] on_process_completed() called!")                
                 process_counter(process_counter()-1) # stop the timer
                 result_pgx <- file.path(temp_dir, "my.pgx")
-                if (file.exists(result_path)) {
-                    load(result_pgx)
+                if (file.exists(result_pgx)) {
+                    load(result_pgx)  ## always pgx
                     computedPGX(pgx)
                 } else {
                     message("[compute PGX process] : Error: Result file not found")

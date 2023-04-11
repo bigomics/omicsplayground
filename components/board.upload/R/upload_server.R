@@ -135,13 +135,12 @@ UploadBoard <- function(id,
         fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
 
         ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## Note: Currently we use 'ngs' as object name but want to go
-        ## towards 'pgx' as standard name. Actually saving as RDS
+        ## 'pgx' as standard name. Actually saving as RDS
         ## should be better.
-        ngs <- new_pgx
-        save(ngs, file = fn)
+        pgx <- new_pgx
+        save(pgx, file = fn)
 
-        remove(ngs)
+        remove(pgx)
         remove(new_pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
@@ -159,17 +158,6 @@ UploadBoard <- function(id,
       } else {
         msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
       }
-
-      # showModal(
-      #   modalDialog(
-      #     HTML(msg1),
-      #     title = NULL,
-      #     size = "s",
-      #     footer = tagList(
-      #       modalButton("Start!")
-      #     )
-      #   )
-      # )
 
       load_my_dataset <- function(){
           r_global$reload_pgxdir <- r_global$reload_pgxdir+1
@@ -271,16 +259,8 @@ UploadBoard <- function(id,
         ## dimensions from the given PGX/NGS object. Really?
         ##
         i <- grep("[.]pgx$", input$upload_files$name)
-
-        # load(input$upload_files$datapath[i], ngs <- new.env(), verbose = TRUE) ## load NGS/PGX
-
-        ngs <- local(get(load(input$upload_files$datapath[i], verbose = 0))) ## override any name
-
-
-        ## matlist[["counts.csv"]] <- ngs$counts
-        ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
-        ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
-        uploaded[["pgx"]] <- ngs
+        pgxfile <- input$upload_files$datapath[i]
+        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0))) ## override any name
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
@@ -577,11 +557,9 @@ UploadBoard <- function(id,
 
           FUN.readPGX <- function() {
             dbg("[UploadModule:parseQueryString] *** loading PGX file = ", pgx_file, "***")
-
-            load(pgx_file) ## load NGS/PGX
-            uploaded$pgx <- ngs
-            remove(ngs)
-
+            ##load(pgx_file) ## load NGS/PGX
+            uploaded$pgx <- local(get(load(pgx_file, verbose=0))) ## override any name
+            ##remove(ngs)
             uploaded$meta <- NULL
           }
 

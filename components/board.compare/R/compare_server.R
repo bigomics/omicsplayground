@@ -91,7 +91,9 @@ CompareBoard <- function(id, pgx) {
       if (input$dataset2 == "<this>") {
         pgx <- pgx
       } else {
-        load(file.path(OPG, "data", input$dataset2))
+        ##load(file.path(OPG, "data", input$dataset2))
+        file2 <- file.path(OPG, "data", input$dataset2)
+        pgx <- local(get(load(file2, verbose=0)))
       }
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)

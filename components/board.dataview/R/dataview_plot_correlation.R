@@ -35,8 +35,6 @@ dataview_plot_correlation_server <- function(id,
                                              r.samples = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## source("../../app/R/global.R",chdir=TRUE)
-    ## load("../../../data/example-data.pgx")
 
     getTopCorrelatedGenes <- function(pgx, gene, n = 30, samples = NULL) {
       ## precompute

@@ -10,15 +10,12 @@
 
 if(0) {
     load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")    
-
     NormalizeCountsGadget(X=ngs$X, pheno=ngs$samples)
-
     out <- gadgetize2(
         NormalizeCountsUI, NormalizeCountsServer,
         title = "UploadGadget", height=640, size="l", 
         X = ngs$X, pheno=ngs$samples )
     names(out)
-    
 }
 
 NormalizeCountsGadget <- function(X, pheno, height=720) {
