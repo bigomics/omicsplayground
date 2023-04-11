@@ -17,7 +17,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     gs_infotext <- paste("Similar to the differential gene expression analysis, users can perform differential
         expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis.
         The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections
-        such as ", a_Hallmark, ", ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". Users have to specify which comparison they want to
+        such as ", a_Hallmark, ", ", a_MSigDB, " and ", a_GO, ". Users have to specify which comparison they want to
         visually analyze employing a certain geneset collection.<br><br>
         To ensure the statistical reliability, the platform performs Enrichment Analyses using multiple methods.
         The result from the statistical methods is displayed in <strong>Enrichment table</strong> panel.
