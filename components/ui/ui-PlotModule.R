@@ -285,7 +285,7 @@ PlotModuleUI <- function(id,
                     shiny::tags$head(shiny::tags$style(modalcontent.style)),
                     shiny::tags$head(shiny::tags$style(modalfooter.none))
                     )
-                ),
+      ),
       bslib::card_body(
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
