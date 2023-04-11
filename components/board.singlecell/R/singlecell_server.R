@@ -54,7 +54,7 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       refsets <- "LM22"
       refsets <- sort(names(pgx$deconv))
       refsel <- unique(c(grep("LM22", refsets, value = TRUE), refsets))[1]
@@ -74,6 +74,8 @@ SingleCellBoard <- function(id, pgx) {
 
     shiny::observeEvent(input$refset, {
       shiny::req(input$refset)
+      shiny::req(pgx$X)
+
       dcmethods <- names(pgx$deconv[[input$refset]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod", choices = dcmethods, selected = dcsel)
@@ -87,8 +89,7 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       ## if(is.null(input$crosstaboptions)) return(NULL)
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
@@ -120,7 +121,7 @@ SingleCellBoard <- function(id, pgx) {
 
     shiny::observe({
       ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
       g1 <- g2 <- NULL

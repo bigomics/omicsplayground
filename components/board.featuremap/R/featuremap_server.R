@@ -30,7 +30,7 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       families <- names(FAMILIES)
       shiny::updateSelectInput(session, "filter_genes",
@@ -61,11 +61,11 @@ FeatureMapBoard <- function(id, pgx) {
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
 
       if (!is.null(hilight)) {
-          
+
           hilight <- intersect(hilight, rownames(pos))
           hilight <- intersect(hilight, names(var))
           hilight <- hilight[order(-var[hilight])]
-          
+
           if (min(var, na.rm = TRUE) < 0) {
               hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
               hilight2 <- unique(hilight2)
@@ -73,7 +73,7 @@ FeatureMapBoard <- function(id, pgx) {
                 hilight2 <- head(hilight, nlabel)
           }
       }
-      
+
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
 
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
@@ -82,7 +82,7 @@ FeatureMapBoard <- function(id, pgx) {
       ## cex = 0.9
       ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
-        
+
       p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
