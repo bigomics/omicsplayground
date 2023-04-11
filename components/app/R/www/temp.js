@@ -3,23 +3,21 @@ let pricing;
 let user;
 
 $(document).ready(function() {
-    $(document).on('change', '.card-footer-checked', function(e) {	
-	// Set the "checked" property for all the card-footer-checked elements
-	//var isChecked = $(this).prop("checked");
-        //$(".card-footer-checked").prop("checked", isChecked);
-        //$(".card-footer-checked").prop("checked", false);
-	$(".card-footer-checked").attr("value", false);	
-	
-	if ($(this).prop("checked") === true) {
-	    $(".card-footer").show().animate({height: "4rem"}, 200);
+	$(document).on('change', '.card-footer-checked', function(e) {	
+		// Set the "checked" property for all the card-footer-checked elements
+		var isChecked = $(this).prop("checked");
+        $(".card-footer-checked").prop("checked", isChecked);
+
+		if ($(this).prop("checked") === true) {
+		$(".card-footer").show().animate({height: "4rem"}, 200);
 	};
-	
-	if ($(this).prop("checked") === false) {
-	    $(".card-footer").animate({height: '0px'}, 200, function() {
-		$(this).hide();
-	    });
-	};
-    });
+
+	  if ($(this).prop("checked") === false) {
+		$(".card-footer").animate({height: '0px'}, 200, function() {
+		  $(this).hide();
+		});
+	  };
+	});
   });
   
 Shiny.addCustomMessageHandler('set-user', (msg) => {
