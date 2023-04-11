@@ -176,6 +176,7 @@ PlotModuleUI <- function(id,
 
     header <- shiny::fillRow(
         flex = c(1,NA,NA,NA,NA),
+        class="plotmodule-header",
         shiny::div(class='plotmodule-title', title=title, title),
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
@@ -257,9 +258,12 @@ PlotModuleUI <- function(id,
 #    }
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
+       style = "overflow: visible;",
+       bslib::as.card_item(
+        div(header)
+       ),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
         style = paste0("height: ",height.1,";"),
-        div(header, class="plotmodule-header"),
         outputFunc(ns("renderfigure")), #  %>% shinycssloaders::withSpinner(),
         shiny::div(class="popup-modal",
                     modalUI(
