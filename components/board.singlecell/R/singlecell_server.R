@@ -46,6 +46,7 @@ SingleCellBoard <- function(id, pgx) {
       ## update cluster methods if available in object
       if ("cluster" %in% names(pgx)) {
         clustmethods <- names(pgx$cluster$pos)
+        clustmethods <- grep("3d",clustmethods,value=TRUE,invert=TRUE,ignore.case=TRUE) ## no 3D
         clustmethods <- c("default", clustmethods)
         shiny::updateSelectInput(session, "clustmethod",
           choices = clustmethods
@@ -175,8 +176,7 @@ SingleCellBoard <- function(id, pgx) {
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-
-
+      
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
       # dbg("[pfGetClusterPositions2] computing distances and clusters...")
