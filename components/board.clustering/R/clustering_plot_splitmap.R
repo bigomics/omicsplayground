@@ -295,8 +295,7 @@ clustering_plot_splitmap_server <- function(id,
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
       rownames(annotF) <- rownames(annot)
-      annotF <- annotF[,selected_features()]
-
+      annotF <- annotF[,selected_features(), drop=FALSE]
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
 
