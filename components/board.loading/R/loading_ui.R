@@ -45,10 +45,8 @@ LoadingUI <- function(id) {
         'User',
         div(
           class = "row",
-          div(
-            
-            class = "col-md-7",
-            
+          div(            
+            class = "col-md-7",            
             loading_table_datasets_ui(
               ns("pgxtable"),
               title = "Available datasets",

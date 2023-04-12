@@ -196,6 +196,7 @@ if(!file.exists('00SourceAll.R')) {
   source('modules/TimerModule.R',encoding='UTF-8')
   source('modules/UsersMapModule.R',encoding='UTF-8')
   source('modules/WelcomeBoard.R',encoding='UTF-8')
+  source('ui/bs-components.R',encoding='UTF-8')
   source('ui/ui-bigdashplus.R',encoding='UTF-8')
   source('ui/ui-boardHeader.R',encoding='UTF-8')
   source('ui/ui-code.R',encoding='UTF-8')
