@@ -130,7 +130,6 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     has.orca.export
     export.ok <- FALSE
     
-    message("[plotlyExport] class(p) = ",class(p)[1])
     if(class(p)[1] != "plotly") {
         message("[plotlyExport] ERROR : not a plotly object")
         return(NULL)
@@ -149,14 +148,18 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 
     ## See if Kaleido is available
     if(1 && !export.ok) {
+        message("[plotlyExport] trying with kaleido...")
+        ## https://stackoverflow.com/questions/73604954
+        reticulate::py_run_string("import sys")
         err <- try( plotly::save_image(p, file=file, width=width, height=height) )
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
-        export.ok <- TRUE
+       ## export.ok <- TRUE
     }
     
     ## See if any ORCA server is responding (docker or already local)
     if(1 && !export.ok) {
+        message("[plotlyExport] trying with ORCA...")                        
         global.srv  <- exists("ORCA") && class(ORCA)[1]=="character"
         global.srv
         if(is.null(server) && !global.srv) {
@@ -195,12 +198,14 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     ## }
     
     if(1 && has.orca.export && !export.ok) {
+        message("[plotlyExport] trying with ORCA$export()...")        
         err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with ORCA$export()")
     }
     
     if(1 && !export.ok) {
+        message("[plotlyExport] trying with plotly::export()...")                
         ## works only for non-GL plots
         err <- try(plotly::export(p, file, width=width, height=height))
         export.ok <- class(err)!="try-error"
@@ -214,7 +219,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         if(export.ok) message("[plotlyExport] --> exported with webshot::webshot()")
     }
     if(!export.ok) {
-        message("[plotlyExport] WARNING: export failed!")
+        message("[plotlyExport] WARNING: all export methods failed!")
         if(format=="png") png(file)
         if(format=="pdf") pdf(file)
         par(mfrow=c(1,1));frame()

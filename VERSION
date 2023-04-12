@@ -1,3 +1,6 @@
+v2.8.19
+- correct kaleido bug for plotly export
+
 v2.8.18
 - correct cap.fraction 
 
