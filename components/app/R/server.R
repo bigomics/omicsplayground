@@ -310,15 +310,8 @@ app_server <- function(input, output, session) {
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         name <- gsub(".*\\/|[.]pgx$","",PGX$name)
-
         if(length(name)==0) name = paste("Omics Playground",VERSION)
         name
-    })
-
-    output$current_section <- shiny::renderText({
-        cdata <- session$clientData
-        section <- sub("section-","",cdata[["url_hash"]])
-        section
     })
 
     ##--------------------------------------------------------------------------

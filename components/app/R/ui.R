@@ -293,7 +293,6 @@ app_ui <- function() {
                     src = "assets/img/bigomics.png",
                     width = "110",
                 ),
-                shiny::div(shiny::textOutput("current_section"), class='current-section'),
                 shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
                 bigdash::navbarDropdown(
                     "Support",

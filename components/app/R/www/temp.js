@@ -72,20 +72,6 @@ $(function(){
 		// on mouseover this does not work anymore, substitute by lock button option
 	        //$('.settings-label').click()
 	}, 250);
-
-/*
-// now handled by WelcomeBoard using traditional Shiny
-
-	$('#init-load-data').on('click', (e) => {
-	 	$(".tab-sidebar:eq(1)").trigger('click');
-		$('.sidebar-label').trigger('click');
-	});
-
-	$('#init-upload-data').on('click', (e) => {
-	 	$(".tab-sidebar:eq(2)").trigger('click');
-		$('.sidebar-label').trigger('click');
-	 });
-*/
     
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
