@@ -516,7 +516,6 @@ ConnectivityBoard <- function(id, pgx) {
     connectivity_plot_scatterPlot_server(
       "scatterPlot",
       pgx,
-      reactive(input$contrast),
       reactive(input$sigdb),
       getConnectivityContrasts,
       getCurrentContrast,

@@ -54,12 +54,12 @@ connectivity_plot_FCFCplots_ui <- function(
 #' @return
 #' @export
 connectivity_plot_FCFCplots_server <- function(id,
-                                                    pgx,
-                                                    contrast,
-                                                    getCurrentContrast,
-                                                    getTopProfiles,
-                                                    getConnectivityScores,
-                                                    watermark = FALSE) {
+                                               pgx,
+                                               contrast,
+                                               getCurrentContrast,
+                                               getTopProfiles,
+                                               getConnectivityScores,
+                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
 
@@ -100,7 +100,6 @@ connectivity_plot_FCFCplots_server <- function(id,
       }
 
       FCFCenplot <- function(fc, F, mfplots, ylab, res) {
-        mfplots <- c(4, 5)
         names(fc) <- toupper(names(fc))
         nplots <- mfplots[1] * mfplots[2]
         i <- 1
@@ -129,27 +128,32 @@ connectivity_plot_FCFCplots_server <- function(id,
       }
 
       plot_data <- shiny::reactive({
+
+        res1 <- getCurrentContrast()
+        F <- getTopProfiles()
+        shiny::req(res1, F)
+        
         res <- list(
-          pgx = pgx,
-          contrast = contrast()
+          F = F,          
+          contrast = contrast(),
+          fc = res1$fc,
+          ct = res1$name
         )
         return(res)
       })
 
-      plot_RENDER <- shiny::reactive({
-        res <- plot_data()
-        pgx <- res$pgx
-        contrast <- res$contrast
-        shiny::req(pgx, contrast)
+      plot_RENDER <- function() {
 
-        res1 <- getCurrentContrast()
-        fc <- res1$fc
-        ct <- res1$name
-        F <- getTopProfiles()
+        res <- plot_data()
+        contrast <- res$contrast
+        fc <- res$fc
+        ct <- res$ct
+        F <- res$F
+
         if (NCOL(F) == 0) {
           return(NULL)
         }
-        F <- F[, 1:min(ncol(F), 10), drop = FALSE]
+        F <- F[, 1:min(ncol(F), 12), drop = FALSE]
 
         if (input$fcfc_plottype == "scatter") {
           mfplots <- c(2, 5)
@@ -159,18 +163,18 @@ connectivity_plot_FCFCplots_server <- function(id,
           df <- getConnectivityScores()
           FCFCenplot(fc, F, mfplots, ylab, df)
         }
-        p <- grDevices::recordPlot()
-        p
-      })
+        
+      }
 
       PlotModuleServer(
         "plot",
         plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER,
-        csvFunc = plot_data,
-        res = c(90, 110),
-        pdf.height = 4.5, pdf.width = 10,
+##      csvFunc = plot_data,
+        res = c(90, 130),
+        pdf.height = 4.5,
+        pdf.width = 10,
         add.watermark = watermark
       )
     } ## end of moduleServer

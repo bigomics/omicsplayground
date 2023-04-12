@@ -258,12 +258,10 @@ PlotModuleUI <- function(id,
 #    }
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
-       style = "overflow: visible;",
-       bslib::as.card_item(
-        div(header)
-       ),
+      style = paste0("height:",height.1,";overflow: visible;"),
+      bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
-        style = paste0("height: ",height.1,";"),
+##      style = paste0("height: ",height.1,";"),
         outputFunc(ns("renderfigure")), #  %>% shinycssloaders::withSpinner(),
         shiny::div(class="popup-modal",
                     modalUI(

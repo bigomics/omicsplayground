@@ -65,6 +65,10 @@ TcgaInputs <- function(id) {
   )
 }
 
+
+
+tcga_info <- "This analysis module computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
+
 TcgaUI <- function(id) {
   ns <- NS(id)
 
@@ -75,20 +79,18 @@ TcgaUI <- function(id) {
     id = ns("tabs1"),
     tabPanel(
       "TCGA survival",
-      fillCol(
-        height = 800,
-        flex = c(NA, 0.02, 1),
+      bslib::layout_column_wrap(
+        width = 1,
         tcga_plot_survival_ui(
           ns("tcga_tcgasurv"),
-          height = c(fullH, 750),
-          width = c("auto", 1400)
-        ),
-        div(
-          class = "caption",
-          tags$strong("TCGA survival analysis."),
-          "Survival probability of cancer patients in 32 TCGA cancer types.",
-          "Each cohort is dichotomized into positively and negatively correlated with your signature.",
-          "The survival probabilities are computed and tested using the Kaplan-Meier method."
+          caption = paste(
+              "TCGA survival analysis",
+              "Survival probability of cancer patients in 32 TCGA cancer types.",
+              "Each cohort is dichotomized into positively and negatively correlated with your signature.",
+              "The survival probabilities are computed and tested using the Kaplan-Meier method."),
+          info.text = tcga_info,
+          height = c("calc(100vh - 280px)", 750),
+          width = c("auto", "100%")
         )
       )
     )

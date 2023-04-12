@@ -70,7 +70,7 @@ biomarker_plot_heatmap_server <- function(id,
         do.survival <- grepl("survival", ct, ignore.case = TRUE)
 
         splitx <- pgx$Y[colnames(X), ct]
-        if (!is.categorical(splitx) || do.survival) {
+        if (!playbase::is.categorical(splitx) || do.survival) {
           splitx <- NULL
         }
 
@@ -81,7 +81,7 @@ biomarker_plot_heatmap_server <- function(id,
         res <- list(X = X, splitx = splitx)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         shiny::req(res)
 
@@ -93,11 +93,14 @@ biomarker_plot_heatmap_server <- function(id,
           dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
-          key.offset = c(0.05, 1.03),
+          #  key.offset = c(0.05, 1.03),
+          key.offset = c(0.05, 0.98),
           show_rownames = 99,
-          lab.len = 50, cexRow = 0.88, mar = c(2, 8)
+          lab.len = 50,
+          cexRow = 0.88,
+          mar = c(2, 8)
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -105,8 +108,9 @@ biomarker_plot_heatmap_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 435),
-        pdf.width = 10, pdf.height = 10,
+        res = c(72, 110),
+        pdf.width = 10,
+        pdf.height = 10,
         add.watermark = watermark
       )
     } ## end of moduleServer

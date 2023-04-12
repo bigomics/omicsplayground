@@ -42,7 +42,7 @@ connectivity_plot_scatterPlot_ui <- function(
     caption = caption,
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("html"),
+    download.fmt = c("pdf","png"),
     height = height,
     width = width,
   )
@@ -58,7 +58,6 @@ connectivity_plot_scatterPlot_ui <- function(
 #' @export
 connectivity_plot_scatterPlot_server <- function(id,
                                                pgx,
-                                               r_contrast,
                                                r_sigdb,
                                                getConnectivityContrasts,
                                                getCurrentContrast,
@@ -68,34 +67,80 @@ connectivity_plot_scatterPlot_server <- function(id,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
+      ## this returns data to plot. all reactivity should be resolved
+      ## and isolated here before doing the plotting
       plot_data <- shiny::reactive({
+        
+        sigdb <- r_sigdb()
+        logfc <- as.numeric(input$logFC)
+
+        shiny::req(pgx)
+        shiny::req(sigdb)
+        shiny::req(logfc)       
+
+        all.ct <- getConnectivityContrasts(sigdb)
+        fc1 <- getCurrentContrast()$fc
+        ct1 <- getCurrentContrast()$name
+        sel.row <- connectivityScoreTable$rows_selected()
+
+        df <- sel.genes <- NULL
+        if(!is.null(sel.row)) {
+        
+          df <- getConnectivityScores()
+          df <- df[abs(df$score) > 0, , drop = FALSE]
+          ct2 <- rownames(df)[sel.row]
+          fc2 <- getConnectivityMatrix(sigdb, select = ct2)[, 1]
+                
+          ## match with selection filter
+          gg <- unique(c(names(fc1), names(fc2))) ## union or intersection??
+          fc1 <- fc1[match(gg, names(fc1))]
+          fc2 <- fc2[match(gg, names(fc2))]
+          df <- data.frame(fc2, fc1)
+          rownames(df) <- gg
+          colnames(df) <- c(ct2, ct1)
+          df[is.na(df)] <- 0 ## missing as zero???
+          df <- df[order(-rowMeans(abs(df**2), na.rm = TRUE)), ]
+          
+          ## Number of selected genes
+          sel.genes <- rownames(df)[rowSums(abs(df) > logfc) >= 1] ## minimum FC
+        
+          not.sel <- setdiff(rownames(df), sel.genes)
+          if (length(not.sel) > 0) {
+            nr <- 1000
+            ii <- c(sel.genes, sample(not.sel, nr, replace = TRUE))
+            df <- df[unique(ii), , drop = FALSE]
+          }
+          
+          ## remove NA genes from selection
+          na.fc <- rownames(df)[rowSums(is.na(df)) > 0] ## probably was missing
+          na.zero <- rownames(df)[rowSums(df == 0) > 0] ## probably was missing
+          sel.genes <- setdiff(sel.genes, c(na.fc, na.zero))
+        }
+
+        ## Result object. Remember the first element of the list must
+        ## be a dataframe for CSV download from the plotmodule UI.
         res <- list(
-          pgx = pgx,
-          contrast = r_contrast(),
-          sigdb = r_sigdb()
+          df = df,
+          sel.row = sel.row,
+          sel.genes = sel.genes,
+          pgx = pgx
         )
         return(res)
       })
 
-      plot_RENDER <- shiny::reactive({
+
+      ## Plots get data from plot_data. This should be a simple
+      ## function, not reactive. Any slow pre-plotting should be in
+      ## plot_data()
+      plot_RENDER <- function() {
+
         res <- plot_data()
         pgx <- res$pgx
-        contrast <- res$contrast
-        sigdb <- res$sigdb
+        sel.row <- res$sel.row
+        sel.genes <- res$sel.genes
+        df <- res$df
         
-        shiny::req(pgx, contrast)
-        shiny::req(sigdb)
-
-        all.ct <- getConnectivityContrasts(sigdb)
-        ct1 <- all.ct[1]
-        fc1 <- pgx$gx.meta$meta[[1]]$meta.fx
-        names(fc1) <- rownames(pgx$gx.meta$meta[[1]])
-
-        fc1 <- getCurrentContrast()$fc
-        ct1 <- getCurrentContrast()$name
-
-        ct2 <- all.ct[1]
-        sel.row <- connectivityScoreTable$rows_selected()
         if (is.null(sel.row)) {
           return(
             plotly::plotly_empty(type = "scatter", mode = "markers") %>%
@@ -103,7 +148,7 @@ connectivity_plot_scatterPlot_server <- function(id,
                 displayModeBar = FALSE
               ) %>%
               plotly::layout(
-                title = list(
+                title = list( 
                   text = "Select dataset/contrast",
                   yref = "paper",
                   y = 0.5
@@ -111,39 +156,7 @@ connectivity_plot_scatterPlot_server <- function(id,
               )
           )
         }
-        df <- getConnectivityScores()
-        df <- df[abs(df$score) > 0, , drop = FALSE]
-        ct2 <- rownames(df)[sel.row]
-        fc2 <- getConnectivityMatrix(sigdb, select = ct2)[, 1]
-                
-        ## match with selection filter
-        gg <- unique(c(names(fc1), names(fc2))) ## union or intersection??
-        fc1 <- fc1[match(gg, names(fc1))]
-        fc2 <- fc2[match(gg, names(fc2))]
-        df <- data.frame(fc2, fc1)
-        rownames(df) <- gg
-        colnames(df) <- c(ct2, ct1)
-        df[is.na(df)] <- 0 ## missing as zero???
-        df <- df[order(-rowMeans(abs(df**2), na.rm = TRUE)), ]
-
-        ## Number of selected genes
-        sel.genes <- grep("^CD", rownames(df), value = TRUE)
-        logfc <- as.numeric(input$logFC)
-        shiny::req(logfc)
-        sel.genes <- rownames(df)[rowSums(abs(df) > logfc) >= 1] ## minimum FC
         
-        not.sel <- setdiff(rownames(df), sel.genes)
-        if (length(not.sel) > 0) {
-          nr <- 1000
-          ii <- c(sel.genes, sample(not.sel, nr, replace = TRUE))
-          df <- df[unique(ii), , drop = FALSE]
-        }
-
-        ## remove NA genes from selection
-        na.fc <- rownames(df)[rowSums(is.na(df)) > 0] ## probably was missing
-        na.zero <- rownames(df)[rowSums(df == 0) > 0] ## probably was missing
-        sel.genes <- setdiff(sel.genes, c(na.fc, na.zero))
-
         ## resort selection so that selected genes are drawn last to avoid
         ## covering them up.
         is.sel <- (rownames(df) %in% sel.genes)
@@ -183,9 +196,13 @@ connectivity_plot_scatterPlot_server <- function(id,
         )
 
         p <- plotly::plot_ly(
-          data = df[, 1:2], x = df[, 1], y = df[, 2],
-          type = "scattergl", mode = "markers",
-          source = "cmapSPLOM", key = rownames(df),
+          data = df[, 1:2],
+          x = df[, 1],
+          y = df[, 2],
+          type = "scattergl",
+          mode = "markers",
+          source = "cmapSPLOM",
+          key = rownames(df),
           text = tt,
           hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
           marker = list(
@@ -240,15 +257,15 @@ connectivity_plot_scatterPlot_server <- function(id,
           plotly::event_register("plotly_selected")
 
         p
-      })
-
+      }
 
       PlotModuleServer(
         "plot",
         plotlib = "plotly",
         func = plot_RENDER,
         csvFunc = plot_data,
-        pdf.width = 8, pdf.height = 8,
+        pdf.width = 8,
+        pdf.height = 8,
         res = 95,
         add.watermark = watermark
       )

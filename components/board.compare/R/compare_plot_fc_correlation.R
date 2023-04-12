@@ -82,7 +82,7 @@ compare_plot_fc_correlation_server <- function(id,
       indexes <- substr(colnames(F), 1, 1)
       F1 <- F[, indexes == 1, drop = FALSE]
       F2 <- F[, indexes == 2, drop = FALSE]
-      plot.SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
+      playbase::plot_SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
       p
     }
 

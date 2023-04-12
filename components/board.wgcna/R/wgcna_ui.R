@@ -61,6 +61,8 @@ WgcnaUI <- function(id) {
             class = "col-md-6",
             wgcna_plot_gdendogram_ui(
               ns("geneDendro"),
+              caption = "WGCNA gene dendrogram and gene modules",
+              info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
               height = c(rowH1, 650),
               width = c("auto", 1000)
             )

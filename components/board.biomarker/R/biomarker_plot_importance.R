@@ -67,7 +67,7 @@ biomarker_plot_importance_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         
         if(is.null(res) || length(res) == 0){
@@ -92,7 +92,7 @@ biomarker_plot_importance_server <- function(id,
           legend = rev(colnames(R)), fill = rev(klr),
           cex = 0.8, y.intersp = 0.8
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -100,7 +100,7 @@ biomarker_plot_importance_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(78, 235),
+        res = c(70, 140),
         pdf.width = 10, pdf.height = 5,
         add.watermark = watermark
       )

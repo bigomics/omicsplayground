@@ -58,7 +58,7 @@ biomarker_plot_boxplots_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         shiny::req(res)
         res <- res$res
@@ -122,7 +122,7 @@ biomarker_plot_boxplots_server <- function(id,
             )
           }
         }
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -130,7 +130,7 @@ biomarker_plot_boxplots_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(90, 320),
+        res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
         add.watermark = watermark
       )

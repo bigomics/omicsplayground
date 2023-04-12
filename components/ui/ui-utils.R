@@ -140,7 +140,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     shiny::showModal(shiny::modalDialog(
         #title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
         ##title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
-        title = div( h2(toon$slogan), h4("with Omics Playground"), style="text-align:center;"),
+        title = shiny::div( shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style="text-align:center;"),
         #title = div(h2(toon$slogan), style="text-align:center;width:100%;"),
         shiny::img(src = toon$img2, class = "img-fluid"),
         ##footer = div(msg, style="text-align:center;"),

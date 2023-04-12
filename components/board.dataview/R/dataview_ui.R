@@ -62,17 +62,16 @@ DataViewUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
-  imgH <- c("35vh", "70vh") ## heights for small and fullscreen image
+  imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
-
-
     # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
       div(
         class = "row",
+        style = "height: calc(100vh - 200px);",
         div(
           class = "col-md-2",
           dataview_module_geneinfo_ui(
@@ -80,7 +79,7 @@ DataViewUI <- function(id) {
             title = "Gene info",
             info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
             caption = "Information about the selected gene and its function from public databases.",
-            height = c("calc(70vh + 18px)", 800),
+            height = c("calc(80vh + 16px)", 800),
             width = c("auto", "100%")
           ),
         ),
@@ -97,7 +96,6 @@ DataViewUI <- function(id) {
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = imgH,
                 label = "a"
-                
               )
             ),
             div(

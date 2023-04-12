@@ -2,33 +2,50 @@ let db;
 let pricing;
 let user;
 
-$(document).ready(function() {
-	$(document).on('change', '.card-footer-checked', function(e) {	
-		// Set the "checked" property for all the card-footer-checked elements
-		var isChecked = $(this).prop("checked");
+//$(document).ready(function() {
+$(document).on('shiny:connected', function() {
+
+    $(document).on('change', '.card-footer-checked', function(e) {	
+	// Set the "checked" property for all the card-footer-checked elements
+	var isChecked = $(this).prop("checked");
         $(".card-footer-checked").prop("checked", isChecked);
-
-		if ($(this).prop("checked") === true) {
-		$(".card-footer").show().animate({height: "4rem"}, 200);
+	
+	if ($(this).prop("checked") === true) {
+	    $(".card-footer").show().animate({height: '4rem'}, 200, function() {
+		$(window).resize();  // yikes...
+		console.log('window.resize!');
+	    });
 	};
+	
+	if ($(this).prop("checked") === false) {
+	    console.log('window.resize...');			
+	    $(".card-footer").animate({height: '0px'}, 200, function() {
+		$(this).hide();
+		$(window).resize();  // yikes...
+		console.log('window.resize!');			
+	    });
+	};
+	
+    });
 
-	  if ($(this).prop("checked") === false) {
-		$(".card-footer").animate({height: '0px'}, 200, function() {
-		  $(this).hide();
-		});
-	  };
-	});
-  });
-  
-Shiny.addCustomMessageHandler('set-user', (msg) => {
+// call with: session$sendCustomMessage("window_resize", list(resize = TRUE))
+    Shiny.addCustomMessageHandler('window_resize', function(message) {
+        // console.log('hit', message.resize);
+        if (message.resize) $(window).resize();
+    })
+
+    Shiny.addCustomMessageHandler('set-user', (msg) => {
         $('#authentication-user').text(msg.user);
         user = msg.user;
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
-		// $('#authentication-upgrade').hide();  // really?
+	    // $('#authentication-upgrade').hide();  // really?
 	}
-});
+    });
 
+});  // end of on.shiny.connected
+
+    
 const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
@@ -57,8 +74,11 @@ const sidebarOpen = () => {
 		$('.sidebar-label').trigger('click');
 }
 
-$(function(){
+$(() => {
+	unloadSidebar();
+});
 
+$(function(){
         // init sequence: close sidebar, goto Welcome page and hide it's tab item
 	setTimeout(() => {
 		$('.sidebar-label').trigger('click');
@@ -338,10 +358,6 @@ Shiny.addCustomMessageHandler('referral-global-error', (msg) => {
 	}, 5000);
 });
 
-$(() => {
-	unloadSidebar();
-});
-
 Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	setTimeout(() => {
 		$('.sidebar-content')
@@ -389,7 +405,7 @@ Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
 
 
 $(document).ready(function() {
-
+    console.log('*** setting up HSQ ***');
     /* Default installation */
     /* From https://stackoverflow.com/questions/74643167 */
     /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
@@ -397,6 +413,7 @@ $(document).ready(function() {
 	var tabId = $(e.target).data("target");
 	let hasHsq = (typeof window._hsq !== 'undefined' && window._hsq !== null)
  	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
+	console.log('[tab-trigger:click] tabId =' + tabId);
 	if(hasHsq && user !== '' && user !== 'undefined') {
 	    var _hsq = window._hsq = window._hsq || [];
 	    var orginalTitle = document.title;
@@ -409,3 +426,7 @@ $(document).ready(function() {
     });
     
 });
+
+
+
+

@@ -95,7 +95,7 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
                   cluster_rows = TRUE,
                   cluster_columns = FALSE)
 
-    p1 <- plot.ggbarplot( t(F1), las=3,
+    p1 <- playbase::plot_ggbarplot( t(F1), las=3,
                     legend.pos=c(1.2,1.05), legend.cex=0.9,
                     xlab="", ylab="cumulative fold-change") +
         ggplot2::theme(
@@ -357,7 +357,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 xlab0 <- "percentage  (%)"
             }
             rownames(F) <- paste0(" ",rownames(F)," ")
-            plt <- plot.ggbarplot((F), base_size=12,
+            plt <- playbase::plot_ggbarplot((F), base_size=12,
                              legend.pos = "right",
                              ylab = "counts  (N)", srt=srt,
                              xlab = "")
@@ -385,7 +385,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 )
             } else if(ctype=="violin") {
                 suppressWarnings(
-                    plt <- plot.ggviolin(
+                    plt <- playbase::plot_ggviolin(
                         df$x, df$y, group=df$group, base_size=13,
                         srt=srt, pdodge=0.6, cex=cex, main=title) +
                         ggplot2::xlab("") + ggplot2::ylab(p)
@@ -459,7 +459,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     pos <- pgx$tsne2d
     df <- data.frame( x=pos[,1], y=pos[,2],
                      pheno = pgx$samples[,pheno] )
-    p1 <- plot.ggscatter(df, "x", "y", color="pheno", size=1.2*cex ) +
+    p1 <- playbase::plot_ggscatter(df, "x", "y", color="pheno", size=1.2*cex ) +
         ggplot2::xlab(colnames(pos)[1]) + ggplot2::ylab(colnames(pos)[2]) +
         ggplot2::theme(legend.title = ggplot2::element_blank())
     ##p1
@@ -476,7 +476,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
         cpal <-  rep(RColorBrewer::brewer.pal(12,"Set3"),99)[1:np]
         cpal <-  rep(RColorBrewer::brewer.pal(8,"Dark2"),99)[1:np]
     }
-    p2 <- plot.ggbarplot(
+    p2 <- playbase::plot_ggbarplot(
                       df, x = "Var1", y = "value", fill = "pheno",
                       add = "mean_sd", palette = cpal,
                       position = ggplot2::position_dodge(width=0.8)) +
@@ -823,21 +823,21 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     percent.ribo <- Matrix::colSums(pgx$counts[sel.ribo,]) / nCounts_RNA * 100
 
     y <- pgx$samples[,group]
-    v1 <- plot.ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
+    v1 <- playbase::plot_ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
                    main="ncounts", ylab="counts")
-    v2 <- plot.ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
+    v2 <- playbase::plot_ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
                    main="nfeature", ylab="number")
-    v3 <- plot.ggviolin(y, percent.mito, group=NULL, srt=srt,
+    v3 <- playbase::plot_ggviolin(y, percent.mito, group=NULL, srt=srt,
                    main="percent.mito", ylab="percentage")
-    v4 <- plot.ggviolin(y, percent.ribo, group=NULL, srt=srt,
+    v4 <- playbase::plot_ggviolin(y, percent.ribo, group=NULL, srt=srt,
                    main="percent.ribo", ylab="percentage")
     vv <- patchwork::wrap_plots(v1, v2, v3, v4, nrow=1)
 
     x <- pgx$tsne2d
-    s1 <- plot.ggscatterFILL(x, col=nCounts_RNA, barscale=0.5,  main="ncounts", gamma=0.7)
-    s2 <- plot.ggscatterFILL(x, col=nFeature_RNA, barscale=0.5, main="nfeature", gamma=0.7)
-    s3 <- plot.ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
-    s4 <- plot.ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
+    s1 <- playbase::plot_ggscatterFILL(x, col=nCounts_RNA, barscale=0.5,  main="ncounts", gamma=0.7)
+    s2 <- playbase::plot_ggscatterFILL(x, col=nFeature_RNA, barscale=0.5, main="nfeature", gamma=0.7)
+    s3 <- playbase::plot_ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
+    s4 <- playbase::plot_ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
     ss <- patchwork::wrap_plots(s1, s2, s3 ,s4, nrow=1)
     ##ss <- ss & ggplot2::theme_minimal()
 
@@ -986,11 +986,11 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))),]
     VL.avg <- VL.avg[order(-rowSums(abs(VL.avg))),]
 
-    B1 <- plot.ggbarplot( t(Matrix::head(VH.avg,ng)),
+    B1 <- playbase::plot_ggbarplot( t(Matrix::head(VH.avg,ng)),
                     col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VH usage by",by.pheno))
-    B2 <- plot.ggbarplot( t(Matrix::head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
+    B2 <- playbase::plot_ggbarplot( t(Matrix::head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VL usage by",by.pheno))
 
@@ -1115,7 +1115,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     xbreaks
 
     if(nlev<=5) {
-        plt <- plot.ggbarplot(
+        plt <- playbase::plot_ggbarplot(
                           df, x = "gene family", y = "value", fill = "pheno",
                           add = "mean_se", ## palette = c("#00AFBB", "#E7B800"),
                           position = ggplot2::position_dodge(width=0.8)) +
@@ -1142,7 +1142,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
             plt <- plt + ggplot2::theme(legend.position = 'none')
         }
     } else {
-        plt <- plot.ggbarplot(
+        plt <- playbase::plot_ggbarplot(
                            df,
                            x = "pheno", y = "value", fill = "gene family",
                            add = "mean",
@@ -1299,7 +1299,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     for(i in 1:length(xlist)) {
         lg = 'right'
         if(length(unique(y1))>20) lg = 'none'
-        plist[[i]] <- plot.ggscatter(
+        plist[[i]] <- playbase::plot_ggscatter(
             pos[[i]], col=y1, shape=y2,
             cex=0.7*cex) +
             ## ggplot2::theme(legend.position="top") +
@@ -1450,10 +1450,10 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
             i3 <- Matrix::head(order(-xdir*fc3),20)
             i4 <- Matrix::head(order(-xdir*fc4),20)
         }
-        f1 <- plot.ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="")
-        f2 <- plot.ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="")
-        f3 <- plot.ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="")
-        f4 <- plot.ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="")
+        f1 <- playbase::plot_ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="")
+        f2 <- playbase::plot_ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="")
+        f3 <- playbase::plot_ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="")
+        f4 <- playbase::plot_ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="")
 
         fc.plots <- f1 + f2 + f3 + f4 + patchwork::plot_layout(ncol=4) &
             ggplot2::coord_flip() & ## ggplot2::xlab("") & ggplot2::ylab("logFC") &
@@ -1932,7 +1932,6 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
 
 viz._showGGplot <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 {
-
     class(fig)
     if(class(fig)[1]=="list" && "ggplot" %in% class(fig[[1]]) ) {
         fig <- patchwork::wrap_plots(fig)
@@ -1949,19 +1948,11 @@ viz._showGGplot <- function(fig, title="", subtitle="", caption="", tag=FALSE)
                              size=18, face='bold', color="royalblue4")
                      ))
     fig <- fig & ggplot2::theme(plot.tag = ggplot2::element_text(face='bold'))
-    if(0) {
-        logo <- magick::image_read("~/Playground/logo/bigomics-logo-blue.png")
-        grid::grid.raster(logo, x = 0.99, y = 0.99, just = c('right', 'top'),
-                          width = grid::unit(1.2, 'cm'))
-    }
     fig
 }
 
 viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 {
-
-
-
     if(class(fig)=="list" &&
        ( "ggplot" %in% class(fig[[1]]) ||
          "plotly" %in% class(fig[[1]]) ))

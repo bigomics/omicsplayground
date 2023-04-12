@@ -69,7 +69,7 @@ compare_plot_cum_fc1_server <- function(id,
         yaxistitle = "Cumulative foldchange",
         xaxistitle = "Genes",
         title = "Dataset 1",
-        type = "bar",
+#        type = "bar",
         grouped = FALSE
       )
 

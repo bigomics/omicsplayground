@@ -3,16 +3,17 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_gdendogram_ui <- function(id, height, width) {
+wgcna_plot_gdendogram_ui <- function(id, info.text, caption, height, width) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>WGCNA gene dendrogram and gene modules.</b>"
+##  info_text <- "<b>WGCNA gene dendrogram and gene modules.</b>"
 
   PlotModuleUI(
     ns("plot"),
     title = "Gene dendrogram and gene modules",
     label = "a",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

@@ -64,6 +64,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+      
       cumulativeFCtable <- shiny::reactive({
         F <- getTopProfiles()
         F[is.na(F)] <- 0
@@ -105,8 +106,9 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           ## zsym = TRUE,
           symm.scale = TRUE,
           mar = c(15, 0, 0, 110),
-          key.offset = c(0.90, 0.2),
-          cexRow = 0.9, cexCol = 0.75
+          key.offset = c(0.85, 0.15),
+          cexRow = 0.9,
+          cexCol = 0.75
         )
       }
 

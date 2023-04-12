@@ -58,9 +58,9 @@ biomarker_plot_decisiontree_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
-        shiny::req(res)
+        shiny::req(res$res)
 
         res <- res$res
 
@@ -74,7 +74,7 @@ biomarker_plot_decisiontree_server <- function(id,
           rpart.plot::rpart.plot(res$rf)
           title("Classification tree", cex = 1.2, line = 3, adj = 0.35)
         }
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -82,7 +82,7 @@ biomarker_plot_decisiontree_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 315),
+        res = c(72, 120),
         pdf.width = 10, pdf.height = 6,
         add.watermark = watermark
       )

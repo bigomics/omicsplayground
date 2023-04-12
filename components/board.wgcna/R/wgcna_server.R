@@ -117,7 +117,7 @@ WgcnaBoard <- function(id, pgx) {
         ## clean up traits matrix
         datTraits <- pgx$samples
         ## no dates please...
-        isdate <- apply(datTraits, 2, is.Date)
+        isdate <- apply(datTraits, 2, playbase::is.Date)
         datTraits <- datTraits[, !isdate, drop = FALSE]
 
         ## Expand multi-class discrete phenotypes into binary vectors
