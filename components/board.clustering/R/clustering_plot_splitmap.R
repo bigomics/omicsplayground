@@ -101,7 +101,7 @@ clustering_plot_splitmap_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info.text,
+    info.text,
     caption,
     options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -123,6 +123,7 @@ clustering_plot_splitmap_ui <- function(
 clustering_plot_splitmap_server <- function(id,
                                                pgx,
                                                getTopMatrix,
+                                               selected_features,
                                                hm_level,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -294,6 +295,7 @@ clustering_plot_splitmap_server <- function(id,
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
       rownames(annotF) <- rownames(annot)
+      annotF <- annotF[,selected_features()]
 
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)

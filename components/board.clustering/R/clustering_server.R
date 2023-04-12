@@ -45,6 +45,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       if ("group" %in% var.types) grp <- "group"
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
+      shiny::updateSelectInput(session, "selected_features", choices = var.types, selected = head(var.types, 6))
     })
 
     ## update filter choices upon change of data set
@@ -58,8 +59,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
       ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
-      groupings <- c("<ungrouped>", sort(groupings))
-      shiny::updateSelectInput(session, "hm_group", choices = groupings)
+
+      groupings <- sort(groupings)
+
+      shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
@@ -624,6 +627,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
+      selected_features = shiny::reactive(input$selected_features),
       hm_level = shiny::reactive(input$hm_level),
       watermark = FALSE
     )
