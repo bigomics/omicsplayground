@@ -194,6 +194,7 @@ if(!file.exists('00SourceAll.R')) {
   source('modules/SendReferralModule.R',encoding='UTF-8')
   source('modules/SocialMediaModule.R',encoding='UTF-8')
   source('modules/TimerModule.R',encoding='UTF-8')
+  source('modules/UsersMapModule.R',encoding='UTF-8')
   source('modules/WelcomeBoard.R',encoding='UTF-8')
   source('ui/ui-bigdashplus.R',encoding='UTF-8')
   source('ui/ui-boardHeader.R',encoding='UTF-8')

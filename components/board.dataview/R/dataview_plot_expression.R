@@ -278,18 +278,6 @@ dataview_plot_expression_server <- function(id,
         ## fig
       }
 
-      ## DEBUG
-      if (0) {
-        message("[DEBUG] saving fig.rda ...")
-        y <- array(c(1, 2, 3, 4, 5, 6), dimnames = list(letters[1:6]))
-        ## fig2 <- plotly::plot_ly(x = names(y), y = y, type = "bar")
-        # fig2 <- plotly::plot_ly(pd$df,  x = ~samples, y = ~x, type = "bar")
-        ## fig2 <- plotly::plot_ly(x = pd$df$samples, y = pd$df$x, type = "bar")
-        fig2 <- plotly::plot_ly(x = df$samples, y = df$x, type = "bar")
-        saveRDS(fig2, file = "/tmp/figplotexpression-render-debug.rds")
-        message("[DEBUG] done saving!")
-      }
-
       fig <- fig %>%
         plotly::layout(
           xaxis = list(title = pd$groupby, fixedrange = TRUE),
