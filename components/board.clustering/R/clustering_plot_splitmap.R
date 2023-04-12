@@ -123,7 +123,7 @@ clustering_plot_splitmap_ui <- function(
 clustering_plot_splitmap_server <- function(id,
                                                pgx,
                                                getTopMatrix,
-                                               selected_features,
+                                               selected_phenotypes,
                                                hm_level,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -296,10 +296,10 @@ clustering_plot_splitmap_server <- function(id,
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
       
       rownames(annotF) <- rownames(annot)
-      if (length(selected_features()) == 0) {
+      if (length(selected_phenotypes()) == 0) {
         annotF = NULL
       } else {
-        annotF <- annotF[,selected_features(), drop=FALSE]
+        annotF <- annotF[,selected_phenotypes(), drop=FALSE]
       }
       
       colcex <- as.numeric(input$hm_cexCol)

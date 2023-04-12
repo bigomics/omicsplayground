@@ -7,11 +7,11 @@ ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     withTooltip(shiny::selectInput(ns("hm_features"), "Gene family:", choices = NULL, multiple = FALSE),
-      "Select a functional family.",
+      "Select a gene family.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("selected_features"), "Phenotypes:", choices = NULL, multiple = TRUE),
-      "Select a feature to group.",
+    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Phenotypes:", choices = NULL, multiple = TRUE),
+      "Select a phenotype to group.",
       placement = "top"
     ),
     withTooltip(
