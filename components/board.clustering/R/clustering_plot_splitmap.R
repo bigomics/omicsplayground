@@ -296,7 +296,7 @@ clustering_plot_splitmap_server <- function(id,
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
       
       rownames(annotF) <- rownames(annot)
-      if (length(selected_features() == 0)) {
+      if (length(selected_features()) == 0) {
         annotF = NULL
       } else {
         annotF <- annotF[,selected_features(), drop=FALSE]
