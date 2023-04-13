@@ -49,7 +49,7 @@ install.pkg <- function(pkg, force=FALSE) {
     }
     if(require(pkg, character.only=TRUE)) {
         INSTALLED.PKGS <<- unique(c(INSTALLED.PKGS, pkg))
-    } 
+    }
 }
 install.pkgs <- function(pkgs, force=FALSE) {
     pkgs <- sort(unique(pkgs))
@@ -72,11 +72,11 @@ install.github <- function(repo, force=FALSE) {
     if(!require(pkg, character.only=TRUE) || force) {
       devtools::install_github(repo, upgrad="never", build_vignettes=FALSE, force=TRUE)
     } else {
-        cat("package",repo,"already installed\n")      
+        cat("package",repo,"already installed\n")
     }
     if(require(pkg, character.only=TRUE)) {
         INSTALLED.PKGS <<- unique(c(INSTALLED.PKGS, pkg))
-    } 
+    }
 }
 autoscan.pkgs <- function() {
     rfiles1 <- system("find components -name \\*.r", intern=TRUE)
@@ -185,6 +185,7 @@ install.github('wt2015-github/FastGGM', force=TRUE)
 install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
 install_github('bigomics/bigdash', force=TRUE)
+install_github('bigomics/bigLoaders')
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
@@ -253,6 +254,6 @@ if(1) {
     lisc.text <- apply(lisc2, 1, function(s) paste0(s,collapse=''))
     write(lisc.text, "RPackageLicenses.txt")
 ##  lisc2[grep("LGPL|AGPL|GPL-3",lisc2[,"License"]),]
-  
-  
+
+
 }
