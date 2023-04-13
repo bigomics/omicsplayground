@@ -69,8 +69,8 @@ PlotModuleUI <- function(id,
     height.2 <- ifnotchar.int(height[2])
 
     ## OVERRIDE WIDTH: for fullscreen modal always 100%
-    width.2 = "100%"   
-    
+    width.2 = "100%"
+
     getOutputFunc <- function(plotlib)
     {
         FUN <- switch(
@@ -262,7 +262,7 @@ PlotModuleUI <- function(id,
       bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
 ##      style = paste0("height: ",height.1,";"),
-        outputFunc(ns("renderfigure")), #  %>% shinycssloaders::withSpinner(),
+        outputFunc(ns("renderfigure")) %>% bigLoaders::useSpinner(),
         shiny::div(class="popup-modal",
                     modalUI(
                           id = ns("plotPopup"),
@@ -288,7 +288,7 @@ PlotModuleUI <- function(id,
                     shiny::tags$head(shiny::tags$style(modalfooter.none))
                     )
       ),
-      bslib::card_body( #TODO probably want to set fillable and fill to FALSE 
+      bslib::card_body( #TODO probably want to set fillable and fill to FALSE
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
          div(
