@@ -438,7 +438,7 @@ PlotModuleServer <- function(
                     htmlwidgets::saveWidget(p, HTMLFILE)
                     webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                   } else if(plotlib %in% c("ggplot","ggplot2")) {
-                    ggsave(PNGFILE, plot = func(), dpi=300)
+                    ggplot2::ggsave(PNGFILE, plot = func(), dpi=300)
                   } else if(plotlib=="grid") {
                     p <- func()
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
