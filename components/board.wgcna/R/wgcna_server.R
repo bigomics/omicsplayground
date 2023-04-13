@@ -80,7 +80,7 @@ WgcnaBoard <- function(id, pgx) {
           dim(X)
         }
 
-        playbase::pgx.WGCNA(
+        out <- playbase::pgx.wgcna(
           pgx = pgx,
           ngenes = input$ngenes,
           minmodsize = as.integer(input$minmodsize),
@@ -93,8 +93,6 @@ WgcnaBoard <- function(id, pgx) {
 
         beepr::beep(2) ## short beep
         shiny::removeModal()
-
-
 
         out
       }
@@ -118,27 +116,6 @@ WgcnaBoard <- function(id, pgx) {
     ## ================================================================================
     ## ======================= PLOTTING FUNCTIONS =====================================
     ## ================================================================================
-
-    ## ----------------------------------------
-    ## ------------ samples dendro ------------
-    ## ----------------------------------------
-
-    labels2rainbow <- function(net) {
-      hc <- net$dendrograms[[1]]
-      nc <- length(unique(net$colors))
-      n <- length(net$colors)
-      ii <- hc$order
-      col1 <- labels2colors(net$colors)
-      col.rnk <- rank(tapply(1:n, col1[ii], mean))
-      new.col <- rainbow(nc)[col.rnk]
-      ## new.col <- heat.colors(nc)[col.rnk]
-      names(new.col) <- names(col.rnk)
-      new.col["grey"] <- "#AAAAAA"
-      new.col
-      new.col <- new.col[col1]
-      names(new.col) <- net$colors
-      new.col
-    }
 
     ## ----------------------------------------
     ## ------------ samples dendro ------------
@@ -272,7 +249,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
@@ -289,7 +266,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       power = shiny::reactive(input$power),
       watermark = WATERMARK
     )
@@ -307,7 +284,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_module_graph_server(
       "moduleGraph",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
@@ -316,7 +293,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_MTrelationships_server(
       "moduleTrait",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
