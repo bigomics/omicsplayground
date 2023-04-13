@@ -63,15 +63,35 @@ const unloadSidebar = () => {
 }
 
 const sidebarClose = () => {
-	if(!$('#sidebar-container').hasClass('sidebar-collapsed'))
+	if($('#sidebar-container').hasClass('sidebar-expanded'))
 		$('.sidebar-label').trigger('click');
 }
-
-
 
 const sidebarOpen = () => {
 	if($('#sidebar-container').hasClass('sidebar-collapsed'))
 		$('.sidebar-label').trigger('click');
+}
+
+const settingsClose = () => {
+	if($('#settings-container').hasClass('settings-expanded'))
+		$('.setting-label').trigger('click');
+}
+
+const settingsOpen = () => {
+	if($('#settings-container').hasClass('sidebar-collapsed'))
+		$('.settings-label').trigger('click');
+}
+
+const settingsLock = () => {
+	if($('#settings-container').hasClass('settings-unlocked'))
+		$('.settings-lock').trigger('click');
+	if(!$('#settings-container').hasClass('settings-locked'))
+		$('.settings-lock').trigger('click');
+}
+
+const settingsUnlock = () => {
+	if($('#settings-container').hasClass('settings-locked'))
+		$('.settings-lock').trigger('click');
 }
 
 $(() => {

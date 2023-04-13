@@ -42,7 +42,8 @@ html {
     
     //---------------- sidebar ---------------------
     .sidebar-expanded {
-//        min-width: 12rem;
+        width: 12rem;
+        min-width: 12rem;	
     }
 
     #sidebar-help-title {
@@ -102,5 +103,12 @@ html {
 	line-height: 1.1rem;
 	padding: 0.65rem 0rem 0.65rem 0.7rem;	
     }
+
+    //---------------- sidebar ---------------------
+    .settings-expanded {
+        width: 12rem;
+        min-width: 12rem;	
+    }
+
     
 }

@@ -142,10 +142,12 @@ LoadingBoard <- function(id,
       } else {
 
         # close the right sidebar
-        shinyjs::runjs("$('#settings-container').trigger('click');")
-        shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
-
-        # open the left sidebar
+        #shinyjs::runjs("$('#settings-container').trigger('click');")
+        #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
+        
+        # open the left & right sidebar
+        bigdash.openSettings(lock=TRUE)
+        shinyjs::runjs("$('#settings-container').trigger('mouseenter');")        
         bigdash.openSidebar()
 
         # go to dataview

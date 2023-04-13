@@ -34,6 +34,21 @@ bigdash.toggleSidebar <- function(state) {
   if(!state) bigdash.closeSidebar()
 }
 
+## ------------------- settingsBar ---------------------------
+bigdash.openSettings <- function(lock=TRUE) {
+  shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js
+  shinyjs::runjs("settingsOpen()")  ## in app/R/www/temp.js
+  if(lock) {
+    Sys.sleep(0.1)
+    shinyjs::runjs("settingsLock()")  ## in app/R/www/temp.js
+  }
+}
+
+bigdash.closeSettings <- function() {
+  shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js  
+  shinyjs::runjs("settingsClose()")  ## in app/R/www/temp.js
+}
+
 ## --------------------menuItem --------------------------
 bigdash.showMenuItem <- function(session, item) {
   shiny:::validate_session_object(session)
