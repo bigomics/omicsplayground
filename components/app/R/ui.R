@@ -41,6 +41,7 @@ app_ui <- function() {
             shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
             shinyjs::useShinyjs(),
             sever::useSever(),
+            bigLoaders::addBigLoaderDeps(),
             firebase::useFirebase(firestore = TRUE, analytics = TRUE),
             ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
@@ -73,14 +74,14 @@ app_ui <- function() {
             )
         }
 
-        
+
         menu_tree = list(
           ## "Home" = c("load"),
           "Load" = c(
             welcome = "Welcome",
             load    = "Load dataset",
-            upload  = "Upload data"                        
-          ),          
+            upload  = "Upload data"
+          ),
           "DataView" = c(
             dataview = "DataView"
           ),
@@ -119,7 +120,7 @@ app_ui <- function() {
         dbg("[ui.R] sum.enabled = ",sum(ENABLED))
         dbg("[ui.R] names.enabled = ",names(ENABLED))
         menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
-        
+
         populateSidebar <- function(menu_tree) {
 
           sidebar_item <- function(title, name) {
@@ -132,12 +133,12 @@ app_ui <- function() {
             ee <- list()
             for(i in 1:length(tabs)) {
               tab.name  <- names(tabs)[i]
-              tab.title <- tabs[i]              
+              tab.title <- tabs[i]
               ee[[i]] <- sidebar_menu_item(tab.title, tab.name)
             }
             bigdash::sidebarMenu(title, !!!ee)
           }
-          
+
           ## This creates the menu from a menu_tree
           menu <- list()
           i=3
@@ -146,8 +147,8 @@ app_ui <- function() {
             tab.titles <- menu_tree[[i]]
             menu.id <- names(menu_tree)[i]
             if(length(tab.names)==0) {
-              ## 
-            } else if(length(tab.names)==1) {              
+              ##
+            } else if(length(tab.names)==1) {
               menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
             } else {
               menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
@@ -156,13 +157,13 @@ app_ui <- function() {
           ##lapply(menu,cat)
           return(menu)
         }
-        
+
         info("[ui.R] creating sidebar menu")
         mm <- populateSidebar(menu_tree)
         mm <- lapply(mm, as.character)
         mm <- HTML(unlist(mm))
         sidebar <- bigdash::sidebar("Menu", mm)
-        
+
         sidebar.save = bigdash::sidebar(
           "Menu",
           bigdash::sidebarMenu(
@@ -179,7 +180,7 @@ app_ui <- function() {
               "This panel shows the available datasets within the platform. These data sets
               have been pre-computed and are ready to be used. Select a dataset in the table
               and load the data set by clicking the 'load' button.",
-              placement = "top"             
+              placement = "top"
             ),
             bigdash::sidebarMenuItem(
               "Upload data",
@@ -275,13 +276,13 @@ app_ui <- function() {
                  )
              )
         )
-        
+
         big_theme2 = bigdash::big_theme()
-        big_theme2 <- bslib::bs_add_variables(big_theme2, 
+        big_theme2 <- bslib::bs_add_variables(big_theme2,
           "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
           .where = "declarations"
         )
-        
+
         bigdash::bigPage(
             header,
             title = "Omics Playground v3",
@@ -591,7 +592,7 @@ app_ui <- function() {
     info("[ui.R] >>> creating UI")
     ui <- createUI()
     info("[ui.R] <<< finished UI!")
-    
+
     return(ui)
 }
 
