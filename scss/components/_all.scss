@@ -127,10 +127,11 @@ html {
     font-weight: 400;
     line-height: 1.1em;
     // padding: 0rem 0.3rem 0.3rem 0.6rem;
-
+    margin: 6px 4px 3px 6px;
+    
     // https://stackoverflow.com/questions/33058004/applying-an-ellipsis-to-multiline-text
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     

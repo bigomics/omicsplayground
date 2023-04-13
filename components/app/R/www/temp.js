@@ -11,7 +11,7 @@ $(document).on('shiny:connected', function() {
         $(".card-footer-checked").prop("checked", isChecked);
 	
 	if ($(this).prop("checked") === true) {
-	    $(".card-footer").show().animate({height: '4rem'}, 200, function() {
+	    $(".card-footer").show().animate({height: '3rem'}, 200, function() {
 		$(window).resize();  // yikes...
 		console.log('window.resize!');
 	    });
