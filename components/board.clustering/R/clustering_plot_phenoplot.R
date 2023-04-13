@@ -135,7 +135,11 @@ clustering_plot_phenoplot_server <- function(id,
         plt,
         nrows = nr,
         margin = 0.04
-      ) %>% plotly_default()
+        ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            margin = list(l=0,r=0,b=0,t=30) # lrbt
+          )
 
       return(fig)
     }
@@ -155,8 +159,11 @@ clustering_plot_phenoplot_server <- function(id,
         plt,
         nrows = nr,
         margin = 0.06
-      ) %>% plotly_modal_default()
-      
+      ) %>% plotly_modal_default() %>% 
+          plotly::layout(
+            margin = list(l=0,r=0,b=0,t=30) # lrbt
+          )
+
       return(fig)
     }
     

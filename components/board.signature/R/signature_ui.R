@@ -71,8 +71,8 @@ SignatureUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- 700 ## full height of page
-  fullH <- "70vh" ## full height of page
-  halfH <- "35vh" ## full height of page
+  fullH <- "80vh" ## full height of page
+  halfH <- "40vh" ## full height of page
 
   tabs <- div(
     class = "row",

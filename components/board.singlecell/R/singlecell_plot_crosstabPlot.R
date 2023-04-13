@@ -307,8 +307,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
     PlotModuleServer(
       "plot",
       func = plot.render,
-      res = c(110, 110),
-      pdf.width = 12, pdf.height = 8,
+      res = c(110, 160),
+      pdf.width = 12,
+      pdf.height = 8,
       add.watermark = watermark
     )
   }) ## end of moduleServer

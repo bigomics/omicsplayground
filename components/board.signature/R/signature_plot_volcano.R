@@ -48,7 +48,9 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    volcanoPlots.RENDER <- shiny::reactive({
+        
+    ##    volcanoPlots.RENDER <- shiny::reactive({
+    volcanoPlots.RENDER <- function() {
       alertDataLoaded(session, pgx)
       if (is.null(pgx)) {
         return(NULL)
@@ -118,15 +120,16 @@ signature_plot_volcano_server <- function(id,
         )
         title(ct[i], cex.main = cex.main, line = 0.3)
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+#      p <- grDevices::recordPlot()
+#      p
+    }#)
 
     PlotModuleServer(
       "plot",
       func = volcanoPlots.RENDER,
-      res = c(90, 100), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 6,
+      pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer
