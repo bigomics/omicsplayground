@@ -50,6 +50,7 @@ WgcnaBoard <- function(id, pgx) {
         1
       },
       {
+        require(WGCNA)
 
         if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")

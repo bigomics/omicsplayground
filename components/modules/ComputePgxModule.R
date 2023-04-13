@@ -54,7 +54,7 @@ ComputePgxServer <- function(
             ## batch correction and extrs methods
             EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity", "wgcna")
             EXTRA.NAMES = c("celltype deconvolution", "drugs connectivity",
-                            "wordcloud","experiment similarity")
+                            "wordcloud","experiment similarity", "WGCNA")
             EXTRA.SELECTED = c("deconv","drugs","wordcloud","connectivity","wgcna")
 
             DEV.METHODS = c("noLM.prune")
@@ -304,7 +304,7 @@ ComputePgxServer <- function(
                 extra.methods = ""
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("deconv","wordcloud","connectivity")
+                extra.methods = c("deconv","wordcloud","connectivity", "wgcna")
 
                 max.genes    = as.integer(max.genes)
                 max.genesets = as.integer(max.genesets)
