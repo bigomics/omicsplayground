@@ -59,7 +59,19 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plotGOactmap <- function(score, go, normalize, maxterm, maxfc) {
+          
+
+      plot_data <- shiny::reactive({
+        shiny::req(pgx)
+        res <- list(
+          pgx = pgx
+        )
+        return(res)
+      })
+
+        plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
+                                 tl.cex=0.85)
+        {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
         ## avoid errors!!!
@@ -102,21 +114,17 @@ functional_plot_go_actmap_server <- function(id,
         bmar <- 0 + pmax((50 - nrow(score)) * 0.25, 0)
         par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
 
-        corrplot::corrplot(score,
-          is.corr = FALSE, cl.pos = "n", col = BLUERED(100),
-          tl.cex = 0.85, tl.col = "grey20", tl.srt = 90,
+        corrplot::corrplot(
+          score,
+          is.corr = FALSE,
+          cl.pos = "n",
+          col = BLUERED(100),
+          tl.cex = tl.cex,
+          tl.col = "grey20",
+          tl.srt = 90,
           mar = c(bmar, 0, 0, 0)
         )
       }
-
-      plot_data <- shiny::reactive({
-        shiny::req(pgx)
-
-        res <- list(
-          pgx = pgx
-        )
-        return(res)
-      })
 
       plot_RENDER <- function() {
         res <- plot_data()
@@ -130,10 +138,12 @@ functional_plot_go_actmap_server <- function(id,
         go <- pgx$meta.go$graph
 
         plotGOactmap(
+        ##plotActivationMatrix(        
           score = score, go = go,
           normalize = input$go_normalize,
           maxterm = 50,
-          maxfc = 25
+          maxfc = 25,
+          tl.cex = 0.9
         )
       }
 
@@ -152,7 +162,8 @@ functional_plot_go_actmap_server <- function(id,
           score = score, go = go,
           normalize = input$go_normalize,
           maxterm = 50,
-          maxfc = 100
+          maxfc = 100,
+          tl.cex = 0.85          
         )
       }
 

@@ -25,20 +25,18 @@ functional_table_reactome_ui <- function(
   )
 }
 
-
 functional_table_reactome_server <- function(id,
-                                               pgx,
-                                               getFilteredReactomeTable,
-                                               fa_contrast,
-                                               scrollY ) {
+                                             getFilteredReactomeTable,
+                                             fa_contrast,
+                                             scrollY ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      shiny::req(pgx)
+      df = getFilteredReactomeTable()      
+      shiny::req(df, fa_contrast())
       res <- list(
-        pgx = pgx,
-        df = getFilteredReactomeTable(),
+        df = df,
         fa_contrast = fa_contrast
       )
       return(res)
@@ -46,28 +44,11 @@ functional_table_reactome_server <- function(id,
 
     table_RENDER <- function() {
       res <- table_data()
-      pgx <- res$pgx
       df <- res$df
       comparison <- res$fa_contrast
 
-      if (is.null(pgx$meta.go)) {
-        return(NULL)
-      }
-      if (is.null(comparison)) {
-        return(NULL)
-      }
-      if (is.null(df)) {
-        return(NULL)
-      }
-      if (nrow(df) == 0) {
-        return(NULL)
-      }
-
       ## add hyperlink
-      url <- paste0(
-        "https://reactome.org/content/detail/",
-        df$reactome.id
-      )
+      url <- paste0("https://reactome.org/content/detail/", df$reactome.id)
       df[["reactome.id"]] <- paste0(
         "<a href='", url, "' target='_blank'>",
         df[["reactome.id"]], "</a>"
@@ -115,11 +96,11 @@ functional_table_reactome_server <- function(id,
         )
     }
 
-    table_RENDER_modal <- shiny::reactive({
+    table_RENDER_modal <- function() {
       dt <- table_RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     my_table <- TableModuleServer(
       "tablemodule",

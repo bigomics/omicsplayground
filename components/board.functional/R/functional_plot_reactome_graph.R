@@ -85,24 +85,26 @@ functional_plot_reactome_graph_server <- function(id,
         shiny::req(res, res$df)
         
         df <- res$df
-        fa_contrast <- res$fa_contrast
+        comparison <- res$fa_contrast
         reactome_table <- res$reactome_table
         sbgn.dir <- res$sbgn.dir
 
         ###############
-
+        shiny::req(df, comparison, pgx$X)
+        
         NULL.IMG <- list(src = "", contentType = "image/png")
-        if (is.null(pgx)) {
-          return(NULL.IMG)
-        }
-
-        comparison <- fa_contrast
-        if (is.null(comparison) || length(comparison) == 0) {
-          return(NULL.IMG)
-        }
-        if (comparison == "") {
-          return(NULL.IMG)
-        }
+        ## if (is.null(pgx)) {
+        ##   return(NULL.IMG)
+        ## }
+        ## if (is.null(comparison) || length(comparison) == 0) {
+        ##   return(NULL.IMG)
+        ## }
+        ## if (comparison == "") {
+        ##   return(NULL.IMG)
+        ## }
+        ## if (is.null(df)) {
+        ##   return(NULL.IMG)
+        ## }
 
         ## get fold-change vector
         fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
@@ -116,27 +118,15 @@ functional_plot_reactome_graph_server <- function(id,
         fc <- fc[order(-abs(fc))]
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
 
-        if (is.null(df)) {
-          return(NULL.IMG)
-        }
-
         sel.row <- reactome_table$rows_selected()
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
         }
-        sel.row <- as.integer(sel.row)
         
-        pathway.id <- "R-HSA-109704"
-        pathway.name <- pw.genes <- "x"
-        if (is.null(sel.row) || length(sel.row) == 0) {
-          return(NULL.IMG)
-        }
-
-        if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id   <- df[sel.row, "reactome.id"]
-          pathway.name <- df[sel.row, "pathway"]
-          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
-        }
+        sel.row <- as.integer(sel.row)        
+        pathway.id   <- df[sel.row, "reactome.id"]
+        pathway.name <- df[sel.row, "pathway"]
+        pw.genes <- unlist(getGSETS(as.character(pathway.name)))
 
         ## We temporarily switch the working directory to always readable
         ## TMP folder

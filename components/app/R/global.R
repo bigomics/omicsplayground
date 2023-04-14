@@ -41,7 +41,7 @@ options(DT.options = list(
 # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
 # this will define how close the caption is to the table.
 SCROLLY_MODAL <<- "55vh"
-TABLE_HEIGHT_MODAL <<- "70vh"
+TABLE_HEIGHT_MODAL <<- "75vh"
 
 reticulate::use_miniconda('r-reticulate')
 
