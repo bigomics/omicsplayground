@@ -13,6 +13,19 @@ dataview_plot_tsne_ui <- function(
   info.text) {
   ns <- shiny::NS(id)
 
+   plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::radioButtons(
+        ns("show_legend"),
+        label = "Show legend:",
+        choiceValues = list("Yes","No"),
+        choiceNames = list("yes","no"),
+         inline = TRUE
+      ),
+      "Show legend of grouping option."
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
@@ -94,7 +107,11 @@ dataview_plot_tsne_server <- function(id,
         data$group <- grp
       }
 
-      return(list(data = data, gene = gene))
+      return(
+        list(
+          data = data,
+          gene = gene,
+          show_legend  = input$show_legend()))
     })
 
     plot.RENDER <- function() {
@@ -255,8 +272,8 @@ dataview_plot_tsne_server <- function(id,
               orientation = 'h',
               x = NA,
               y = NA
-              ),
-            colorbar = list(visible = FALSE)
+              )
+            # colorbar = list(visible = FALSE)
             )
       fig
     }
