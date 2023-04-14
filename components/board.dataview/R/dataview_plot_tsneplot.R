@@ -194,10 +194,10 @@ dataview_plot_tsne_server <- function(id,
             color = ~expression,
             colors = omics_pal_c(palette = "brand_blue")(100),
             marker = list(
-              size = 10,
+              # size = 10,
               line = list(
-                color = omics_colors("super_dark_grey"),
-                width = 1.2
+                color = omics_colors("super_dark_grey")
+                # width = 1.2
               )
             ),
             hovertemplate = ~ paste(
@@ -235,24 +235,28 @@ dataview_plot_tsne_server <- function(id,
       }
       fig %>%
         plotly::layout(
-          xaxis = list(title = "tSNE-x"),
-          yaxis = list(title = "tSNE-y"),
-          margin = list(l = 10, r = 10, b = 10, t = 10)
+          showlegend = FALSE
+          # xaxis = list(title = "tSNE-x"),
+          # yaxis = list(title = "tSNE-y")
+          #margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
         plotly::colorbar(
           title = "<b>Expression:</b>",
           width = .001,
-          ticklen = 6
+          ticklen = 6,
+          visible = FALSE
         ) %>%
         plotly_default() ## %>% toWebGL()
     }
 
     plotly.RENDER <- function() {
       fig <- plotly.RENDER0()  %>%
-          plotly::layout(legend = list(
-            orientation = 'h',
-            x = NA,
-            y = NA))
+          plotly::layout(
+            legend = list(
+              orientation = 'h',
+              x = NA,
+              y = NA
+              ))
       fig
     }
 
