@@ -652,6 +652,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",
       pgx = pgx,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
       watermark = FALSE
     )

@@ -35,6 +35,7 @@ clustering_plot_phenoplot_ui <- function(
 
 clustering_plot_phenoplot_server <- function(id,
                                              pgx,
+                                             selected_phenotypes,
                                              hm_getClusterPositions,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
