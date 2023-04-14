@@ -28,12 +28,12 @@ expression_plot_topgenes_ui <- function(
       "Logarithmic scale the counts (abundance levels).",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("gx_grouped"), "group samples", FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_grouped"), "group samples",   TRUE),
       "Group samples by phenotype",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show others", FALSE),
-      "Show the 'others' class (if any)",
+    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show other groups", FALSE),
+      "Show the 'others' groups (if any)",
       placement = "right", options = list(container = "body")
     )
   )
