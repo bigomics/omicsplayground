@@ -248,14 +248,18 @@ dataview_plot_tsne_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() # %>%
-      #    plotly::hide_colorbar()
+      fig <- plotly.RENDER0()  %>%
+          plotly::layout(legend = list(
+            orientation = 'h',
+            x = NA,
+            y = NA))
       fig
     }
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
         plotly_modal_default() %>%
+        plotly::layout(legend = list(orientation = 'h', x = NA, y = NA)) %>%
         plotly::style(
           marker.size = 20
         )
