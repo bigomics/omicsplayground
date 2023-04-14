@@ -661,6 +661,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "clust_featureRank",
       pgx = pgx,
       hm_level = shiny::reactive(input$hm_level),
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
       watermark = FALSE
     )

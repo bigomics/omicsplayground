@@ -44,6 +44,7 @@ clustering_plot_featurerank_ui <- function(
 clustering_plot_featurerank_server <- function(id,
                                                pgx,
                                                hm_level,
+                                               selected_phenotypes,
                                                hm_samplefilter,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
