@@ -18,8 +18,8 @@ dataview_plot_tsne_ui <- function(
       shiny::radioButtons(
         ns("show_legend"),
         label = "Show legend:",
-        choiceValues = list("Yes","No"),
-        choiceNames = list("yes","no"),
+        choiceValues = list("No", "Yes"),
+        choiceNames = list("no","yes"),
          inline = TRUE
       ),
       "Show legend of grouping option."
@@ -32,6 +32,7 @@ dataview_plot_tsne_ui <- function(
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
+    options = plot_opts,
     height = height,
     label = label,
     caption = caption,
@@ -111,7 +112,7 @@ dataview_plot_tsne_server <- function(id,
         list(
           data = data,
           gene = gene,
-          show_legend  = input$show_legend()))
+          show_legend  = input$show_legend))
     })
 
     plot.RENDER <- function() {
@@ -192,9 +193,10 @@ dataview_plot_tsne_server <- function(id,
     plotly.RENDER0 <- function() {
       data <- plot_data()
       shiny::req(data)
-
+      
       df <- data[[1]]
       gene <- data[[2]]
+      show_legend <- data[[3]]
       symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
         "star-diamond", "square-cross", "diamond-wide")
 
@@ -252,7 +254,7 @@ dataview_plot_tsne_server <- function(id,
       }
       fig %>%
         plotly::layout(
-          showlegend = TRUE,
+          showlegend = show_legend,
           xaxis = list(title = ""),
           yaxis = list(title = "")
           # margin = list(l = 10, r = 10, b = 10, t = 10)
