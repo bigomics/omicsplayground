@@ -179,7 +179,7 @@ clustering_plot_featurerank_server <- function(id,
 
     clust_featureRank.RENDER <- function() {
       render_featureRank() %>%
-        plotly_default()
+        plotly_default() %>% plotly::layout(legend = list(orientation = 'h'))
     }
 
     clust_featureRank.RENDER2 <- function() {
