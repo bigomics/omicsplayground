@@ -162,7 +162,7 @@ clustering_plot_featurerank_server <- function(id,
 
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
-      rownames(S) <- substring(rownames(S), 1, 50)
+      rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
       
       playbase::pgx.stackedBarplot(
         x = t(S),
@@ -179,7 +179,10 @@ clustering_plot_featurerank_server <- function(id,
 
     clust_featureRank.RENDER <- function() {
       render_featureRank() %>%
-        plotly_default() %>% plotly::layout(legend = list(orientation = 'h'))
+        plotly_default() %>%
+        plotly::layout(
+          legend = list(orientation = 'h')
+        )
     }
 
     clust_featureRank.RENDER2 <- function() {
