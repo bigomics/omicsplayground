@@ -265,15 +265,16 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
 
     kegg_table <- functional_table_kegg_table_server(
       "kegg_table",
-      pgx,
-      getFilteredKeggTable,
-      reactive(input$fa_contrast),
-      tabH
+      pgx = pgx,
+      getFilteredKeggTable = getFilteredKeggTable,
+      fa_contrast = reactive(input$fa_contrast),
+      scrollY = 180
     )
 
     ## =========================================================================
     ## Get Reactome table
     ## =========================================================================
+
     getReactomeTable <- shiny::reactive({
       shiny::req(pgx, input$fa_contrast)
 
@@ -333,12 +334,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       if (do.filter) df <- df[which(df$meta.q < 0.999), ]
       return(df)
     })
-
-
-    ## ================================================================================
-    ## Reactome module servers
-    ## ================================================================================
-    
     
     functional_plot_reactome_graph_server(
       "reactome_graph",
@@ -359,7 +354,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       pgx,
       getFilteredReactomeTable,
       reactive(input$fa_contrast),
-      tabH
+      scrollY = 180
     )
     
     ## ================================================================================
@@ -379,10 +374,97 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
 
     functional_table_go_table_server(
       "GO_table",
-      pgx,
-      reactive(input$fa_contrast),
-      tabH,
-      selected_gsetmethods
+      pgx = pgx,
+      fa_contrast = reactive(input$fa_contrast),
+      scrollY = 180,
+      selected_gsetmethods = selected_gsetmethods
     )
+
+    ## ================================================================================
+    ## WikiPathway module servers
+    ## ================================================================================
+
+    getWikiPathwayTable <- shiny::reactive({
+      shiny::req(pgx, input$fa_contrast)
+
+      ## ----- get comparison
+      comparison <- input$fa_contrast
+      if (!(comparison %in% names(pgx$gset.meta$meta))) {
+        return(NULL)
+      }
+
+      ## ----- get WIKIPATHWAY id
+      sbgn.dir <- file.path(FILES, "WikiPathway-sbgn")
+      WikiPathway.available <- gsub("^.*WikiPathway_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
+      WikiPathway.gsets <- grep("R-HSA",rownames(pgx$gsetX),value=TRUE)
+      WikiPathway.ids <- gsub(".*R-HSA","R-HSA",WikiPathway.gsets)
+      ## sometimes no WIKIPATHWAY in genesets...
+      if (length(WikiPathway.ids) == 0) {
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "No WIKIPATHWAY terms in enrichment results",
+          text = "",
+          type = "warning"
+        )
+        df <- data.frame()
+        return(df)
+      }
+
+      ## select those of which we have SGBN files
+      jj <- which(!is.na(WikiPathway.ids) &
+        !duplicated(WikiPathway.ids) &
+        WikiPathway.ids %in% WikiPathway.available)
+      WikiPathway.gsets <- WikiPathway.gsets[jj]
+      WikiPathway.ids <- WikiPathway.ids[jj]
+
+      meta <- pgx$gset.meta$meta[[comparison]]
+      meta <- meta[WikiPathway.gsets, ]
+      mm = "fgsea"
+      mm <- selected_gsetmethods()
+      mm <- intersect(mm, colnames(meta$q))
+      meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
+
+      df <- data.frame(
+        WikiPathway.id = WikiPathway.ids,
+        pathway = WikiPathway.gsets,
+        logFC = meta$meta.fx,
+        meta.q = meta.q,
+        check.names = FALSE
+      )
+      df <- df[!duplicated(df$WikiPathway.id), ] ## take out duplicated gene sets...
+      df <- df[order(-abs(df$logFC)), ]
+      return(df)
+    })
+
+    getFilteredWikiPathwayTable <- shiny::reactive({
+      df <- getWikiPathwayTable()
+      do.filter <- FALSE
+      do.filter <- input$fa_filtertable
+      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      return(df)
+    })
+    
+    functional_plot_WikiPathway_graph_server(
+      "WikiPathway_graph",
+      pgx,
+      getFilteredWikiPathwayTable,
+      WikiPathway_table,
+      reactive(input$fa_contrast)
+    )
+
+    functional_plot_WikiPathway_actmap_server(
+      "WikiPathway_actmap",
+      pgx,
+      getWikiPathwayTable
+    )
+
+    WikiPathway_table <- functional_table_WikiPathway_server(
+      "WikiPathway_table",
+      pgx,
+      getFilteredWikiPathwayTable,
+      reactive(input$fa_contrast),
+      scrollY = 180
+    )
+    
   }) ## end-of-moduleServer
 }

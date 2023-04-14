@@ -30,7 +30,7 @@ functional_table_kegg_table_server <- function(id,
                                                pgx,
                                                getFilteredKeggTable,
                                                fa_contrast,
-                                               tabH) {
+                                               scrollY ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -87,7 +87,7 @@ functional_table_kegg_table_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = 180,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

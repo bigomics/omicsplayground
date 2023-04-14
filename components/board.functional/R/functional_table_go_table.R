@@ -24,11 +24,10 @@ functional_table_go_table_ui <- function(
   )
 }
 
-
 functional_table_go_table_server <- function(id,
                                              pgx,
                                              fa_contrast,
-                                             tabH,
+                                             scrollY,
                                              selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -93,7 +92,7 @@ functional_table_go_table_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = 180,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

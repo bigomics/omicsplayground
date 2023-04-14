@@ -144,8 +144,8 @@ functional_plot_reactome_actmap_server <- function(id,
         plotREACTOMEactmap(
             meta, df,
             normalize = input$reactome_normalize,
-            nterms = 25,
-            nfc = 25,
+            nterms = 50,
+            nfc = 20,
             tl.cex = 0.9
         )
       }
@@ -162,7 +162,7 @@ functional_plot_reactome_actmap_server <- function(id,
         plotREACTOMEactmap(
             meta, df,
             normalize = input$reactome_normalize,
-            nterms = 25,
+            nterms = 50,
             nfc = 100,
             tl.cex = 1
         )
@@ -175,7 +175,8 @@ functional_plot_reactome_actmap_server <- function(id,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
         res = 72,
-        pdf.height = 9, pdf.width = 9,
+        pdf.height = 11,
+        pdf.width = 6,
         add.watermark = watermark
       )
     } ## end of moduleServer

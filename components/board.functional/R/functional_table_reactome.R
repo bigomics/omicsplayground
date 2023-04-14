@@ -30,7 +30,7 @@ functional_table_reactome_server <- function(id,
                                                pgx,
                                                getFilteredReactomeTable,
                                                fa_contrast,
-                                               tabH) {
+                                               scrollY ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -87,10 +87,10 @@ functional_table_reactome_server <- function(id,
         ),
         fillContainer = TRUE,
         options = list(
-          ## dom = "lfrtip",
-          dom = "ft",          
+          dom = "lfrtip",
+          ## dom = "ft",          
           scrollX = FALSE,
-          scrollY = 150,
+          scrollY = scrollY,
           scroller = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE
