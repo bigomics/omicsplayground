@@ -50,6 +50,8 @@ clustering_plot_phenoplot_server <- function(id,
       ## pos = pgx$tsne2d
       pos <- clust$pos
       colnames(pos) <- c("x","y")
+
+      browser()
       
       Y <- pgx$Y[rownames(pos), , drop = FALSE]
       pheno <- selected_phenotypes()
@@ -60,10 +62,11 @@ clustering_plot_phenoplot_server <- function(id,
       # pheno <- grep("batch|sample|donor|repl|surv", pheno,
       #   invert = TRUE, ignore.case = TRUE, value = TRUE
       # )
-      Y <- Y[,pheno] 
+
+      Y <- Y[,pheno, drop =FALSE] 
       
       ## complete dataframe for downloading
-      df <- data.frame( pos, Y)
+      df <- data.frame( pos, Y, drop = FALSE)
       
       return(
         list(
