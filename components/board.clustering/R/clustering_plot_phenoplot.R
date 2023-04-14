@@ -52,12 +52,14 @@ clustering_plot_phenoplot_server <- function(id,
       colnames(pos) <- c("x","y")
       
       Y <- pgx$Y[rownames(pos), , drop = FALSE]
-      pheno <- colnames(Y)
+      pheno <- selected_phenotypes()
 
-      ## don't show these...
-      pheno <- grep("batch|sample|donor|repl|surv", pheno,
-        invert = TRUE, ignore.case = TRUE, value = TRUE
-      )
+      # ## don't show these...
+      # removed the code below because it was removing the batch and sample, overwritting user wishes
+      # on selected_phenotypes
+      # pheno <- grep("batch|sample|donor|repl|surv", pheno,
+      #   invert = TRUE, ignore.case = TRUE, value = TRUE
+      # )
       Y <- Y[,pheno] 
       
       ## complete dataframe for downloading
