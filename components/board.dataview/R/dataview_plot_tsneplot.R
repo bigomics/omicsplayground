@@ -48,6 +48,9 @@ dataview_plot_tsne_server <- function(id,
                                       r.groupby = reactive(""),
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    
+    ns <- session$ns
+
     plot_dl <- reactiveValues()
 
     plot_data <- shiny::reactive({
@@ -198,6 +201,7 @@ dataview_plot_tsne_server <- function(id,
       df <- data[[1]]
       gene <- data[[2]]
       show_legend <- data[[3]]
+
       symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
         "star-diamond", "square-cross", "diamond-wide")
 
@@ -255,7 +259,7 @@ dataview_plot_tsne_server <- function(id,
       }
       fig %>%
         plotly::layout(
-          showlegend = show_legend,
+          showlegend = as.logical(show_legend),
           xaxis = list(title = ""),
           yaxis = list(title = "")
           # margin = list(l = 10, r = 10, b = 10, t = 10)
