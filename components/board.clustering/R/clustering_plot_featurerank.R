@@ -76,6 +76,7 @@ clustering_plot_featurerank_server <- function(id,
       ## samples = colnames(X)
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X <- X[, samples]
+      cvar = selected_phenotypes()
       cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
       cvar <- grep("sample|patient|years|days|months|gender",
         cvar,
