@@ -24,7 +24,7 @@ clustering_plot_phenoplot_ui <- function(
     label = label,
     #    plotlib = "base",
     plotlib = "plotly",
-    info.text = info,
+    info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
