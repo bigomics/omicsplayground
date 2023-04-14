@@ -50,8 +50,6 @@ clustering_plot_phenoplot_server <- function(id,
       ## pos = pgx$tsne2d
       pos <- clust$pos
       colnames(pos) <- c("x","y")
-
-      browser()
       
       Y <- pgx$Y[rownames(pos), , drop = FALSE]
       pheno <- selected_phenotypes()
@@ -66,7 +64,7 @@ clustering_plot_phenoplot_server <- function(id,
       Y <- Y[,pheno, drop =FALSE] 
       
       ## complete dataframe for downloading
-      df <- data.frame( pos, Y, drop = FALSE)
+      df <- data.frame( pos, Y)
       
       return(
         list(
@@ -80,7 +78,7 @@ clustering_plot_phenoplot_server <- function(id,
     render_plotly <- function(pd, pheno, cex=1) {
 
       pheno <- pd[["pheno"]]
-      Y <- pd[["df"]][,pheno]
+      Y <- pd[["df"]][,pheno, drop =FALSE]
       showlabels <- pd[["showlabels"]]
       pos <- pd[["df"]][,c("x","y")]
 
@@ -91,7 +89,6 @@ clustering_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
       plt <- list()
-      i=1
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
         colvar <- factor(Y[, 1])
