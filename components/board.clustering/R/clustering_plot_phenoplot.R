@@ -24,7 +24,7 @@ clustering_plot_phenoplot_ui <- function(
     label = label,
     #    plotlib = "base",
     plotlib = "plotly",
-    info.text = info,
+    info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -35,6 +35,7 @@ clustering_plot_phenoplot_ui <- function(
 
 clustering_plot_phenoplot_server <- function(id,
                                              pgx,
+                                             selected_phenotypes,
                                              hm_getClusterPositions,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -51,13 +52,16 @@ clustering_plot_phenoplot_server <- function(id,
       colnames(pos) <- c("x","y")
       
       Y <- pgx$Y[rownames(pos), , drop = FALSE]
-      pheno <- colnames(Y)
+      pheno <- selected_phenotypes()
 
-      ## don't show these...
-      pheno <- grep("batch|sample|donor|repl|surv", pheno,
-        invert = TRUE, ignore.case = TRUE, value = TRUE
-      )
-      Y <- Y[,pheno] 
+      # ## don't show these...
+      # removed the code below because it was removing the batch and sample, overwritting user wishes
+      # on selected_phenotypes
+      # pheno <- grep("batch|sample|donor|repl|surv", pheno,
+      #   invert = TRUE, ignore.case = TRUE, value = TRUE
+      # )
+
+      Y <- Y[,pheno, drop =FALSE] 
       
       ## complete dataframe for downloading
       df <- data.frame( pos, Y)
@@ -74,7 +78,7 @@ clustering_plot_phenoplot_server <- function(id,
     render_plotly <- function(pd, pheno, cex=1) {
 
       pheno <- pd[["pheno"]]
-      Y <- pd[["df"]][,pheno]
+      Y <- pd[["df"]][,pheno, drop =FALSE]
       showlabels <- pd[["showlabels"]]
       pos <- pd[["df"]][,c("x","y")]
 
@@ -85,7 +89,6 @@ clustering_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
       plt <- list()
-      i=1
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
         colvar <- factor(Y[, 1])
