@@ -71,6 +71,10 @@ WgcnaUI <- function(id) {
             class = "col-md-6",
             wgcna_plot_s_independence_ui(
               ns("topologyPlots"),
+              title = ,
+              info.text = "",
+              caption = "Scale independence and mean connectivity plots to determine the soft threshold.",
+              label = "b",
               height = c(rowH1, 600),
               width = c("auto", 1200)
             )
@@ -82,6 +86,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_TOMheatmap_ui(
               ns("TOMplot"),
+              title = ,
+              info.text = "",
+              caption = "Topological overlap matrix visualized as heatmap.",
+              label = "c",
               height = c(rowH2, 650),
               width = c("auto", 1000)
             )
@@ -90,6 +98,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_gclustering_ui(
               ns("umap"),
+              title = ,
+              info.text = "",
+              caption = "Dimensionality reduction maps colored by WGCNA module.",
+              label = "d",
               height = c(rowH2, 650),
               width = c("auto", 650)
             )
@@ -98,6 +110,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_module_graph_ui(
               ns("moduleGraph"),
+              title = ,
+              info.text = "",
+              caption = "Graph network of WGCNA modules.",
+              label = "e",
               height = c(rowH2, 650),
               width = c("auto", 1000)
             )
