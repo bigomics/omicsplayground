@@ -18,11 +18,11 @@ dataview_plot_tsne_ui <- function(
       shiny::radioButtons(
         ns("show_legend"),
         label = "Show legend:",
-        choiceValues = list("No", "Yes"),
-        choiceNames = list("no","yes"),
+        choiceValues = list(FALSE, TRUE),
+        choiceNames = list("No","Yes"),
          inline = TRUE
       ),
-      "Show legend of grouping option."
+      "Hide or show legend."
     )
   )
 
@@ -112,7 +112,8 @@ dataview_plot_tsne_server <- function(id,
         list(
           data = data,
           gene = gene,
-          show_legend  = input$show_legend))
+          show_legend  = input$show_legend)
+          )
     })
 
     plot.RENDER <- function() {
