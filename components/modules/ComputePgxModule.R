@@ -405,7 +405,8 @@ ComputePgxServer <- function(
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
                     "Computing!",
-                    "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                    "Your dataset will be computed in the background. You can continue to analyze
+                     a different dataset or play with example data in the meantime.")
                 bigdash.selectTab(
                     session,
                     selected = 'load-tab'
@@ -475,7 +476,16 @@ ComputePgxServer <- function(
                     } else {
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")
+
+                        ## write error log
+                        stderr_output <- current_process$read_error_lines()
+                        logfile <- file.path(temp_dir,"process.log")
+                        dbg("[compute PGX process] : writing stderr to ", logfile)
+                        writeLines(stderr_output, logfile)
+                        stderr_output <- paste0("  processx.",i,": ",stderr_output)
+                        writeLines(tail(stderr_output,5))
                     }
+                        
                 }
 
                 # Remove completed processes from the list
