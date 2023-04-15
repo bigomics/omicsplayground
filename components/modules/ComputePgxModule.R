@@ -477,11 +477,12 @@ ComputePgxServer <- function(
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")
 
-                        ## write error log
+                        ## write error to console and temp file
                         stderr_output <- current_process$read_error_lines()
                         logfile <- file.path(temp_dir,"process.log")
                         dbg("[compute PGX process] : writing stderr to ", logfile)
                         writeLines(stderr_output, logfile)
+                        stderr_output <- stderr_output[nchar(stderr_output)>0]
                         stderr_output <- paste0("  processx.",i,": ",stderr_output)
                         writeLines(tail(stderr_output,5))
                     }
@@ -521,9 +522,8 @@ ComputePgxServer <- function(
                 
                 if (length(stderr_output) > 0) {
                     message("Standard error output from the process:")
-                    for (line in stderr_output) {
-                        message(line)
-                    }
+                    ##for (line in stderr_output) { message(line) }
+                    writeLines(stderr_output, con=stderr())
                 } else {
                     message("No standard error output available from the process")
                 }
