@@ -67,7 +67,7 @@ functional_plot_reactome_graph_server <- function(id,
       ## plot_data <- shiny::reactive({
       plot_data <- function() {
         ## folder with predownloaded SBGN files
-        sbgn.dir <- file.path(FILES, "reactome-sbgn")
+        sbgn.dir <- pgx.system.file("sbgn/", package="pathway")
         sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         res <- list(
           df = getFilteredReactomeTable(),

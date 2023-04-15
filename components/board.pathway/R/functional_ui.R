@@ -58,7 +58,7 @@ FunctionalUI <- function(id) {
             caption = "Visualisation of the selected WikiPathway with highlighted up- and down-regulated genes.",
             info.width = "350px",
             label = "a",
-            height = c(450, TABLE_HEIGHT_MODAL),
+            height = c(435, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")            
           ),
           functional_table_wikipathway_ui(
@@ -79,7 +79,7 @@ FunctionalUI <- function(id) {
             info.text = "The activation matrix facilitates the rapid perusal and detection of the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
             caption = "The matrix allow visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles.",
             label = "c",
-            height = c(805, TABLE_HEIGHT_MODAL)
+            height = c(790, TABLE_HEIGHT_MODAL)
           )
         )
       )
@@ -98,7 +98,7 @@ FunctionalUI <- function(id) {
             caption = "Visualisation of the selected Reactome pathway with highlighted up- and down-regulated genes.",
             info.width = "350px",
             label = "a",
-            height = c(450, TABLE_HEIGHT_MODAL),
+            height = c(435, TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")            
           ),
           functional_table_reactome_ui(
@@ -119,7 +119,7 @@ FunctionalUI <- function(id) {
             info.text = "The activation matrix facilitates the rapid perusal and detection of the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
             caption = "The matrix allow visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles.",
             label = "c",
-            height = c(805, TABLE_HEIGHT_MODAL)
+            height = c(790, TABLE_HEIGHT_MODAL)
           )
         )
       )
@@ -177,7 +177,7 @@ FunctionalUI <- function(id) {
             title = "Gene Ontology graph",
             info.text = "Gene Ontology (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with 'child' terms being more specialized than their 'parent' terms. The graph is interactive. You can move the graph and zoom in using the mouse.",
             caption = "The GO graph represents the enrichment of the GO terms as a tree structure.",
-            height = c(450, TABLE_HEIGHT_MODAL),
+            height = c(435, TABLE_HEIGHT_MODAL),
             width = c("100%", "100%"),
             label = "a"
           ),
@@ -197,7 +197,7 @@ FunctionalUI <- function(id) {
             title = "Activation matrix",
             info.text = "From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
             caption = "The GO activation matrix visualizes the activation of GO terms across contrast profiles. ",
-            height = c(805, TABLE_HEIGHT_MODAL),
+            height = c(790, TABLE_HEIGHT_MODAL),
             width =  c("100%", "100%"),        
             label = "c"
           )

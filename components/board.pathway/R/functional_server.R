@@ -354,7 +354,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       }
 
       ## ----- get REACTOME id
-      sbgn.dir <- file.path(FILES, "reactome-sbgn")
+      sbgn.dir <- pgx.system.file("sbgn/",package="pathway")
       reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
       reactome.gsets <- grep("R-HSA",rownames(pgx$gsetX),value=TRUE)
       reactome.ids <- gsub(".*R-HSA","R-HSA",reactome.gsets)
@@ -463,7 +463,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       }
 
       ## ----- get WIKIPATHWAY id
-      svg.dir <- file.path(FILES, "wikipathway-svg")
+      svg.dir <- pgx.system.file("svg/",package="board.pathway")
       wp.available <- sub("_[0-9]+.svg","",gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
       wp.gsets <- grep("_WP",rownames(pgx$gsetX),value=TRUE)
       wp.ids <- gsub(".*_WP","WP",wp.gsets)

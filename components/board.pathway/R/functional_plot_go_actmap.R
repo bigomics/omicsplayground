@@ -26,7 +26,7 @@ functional_plot_go_actmap_ui <- function(
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
-        ns("go_normalize"),
+        ns("normalize"),
         "normalize activation matrix",
         FALSE
       ),
@@ -60,16 +60,7 @@ functional_plot_go_actmap_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
           
-
-      plot_data <- shiny::reactive({
-        shiny::req(pgx)
-        res <- list(
-          pgx = pgx
-        )
-        return(res)
-      })
-
-        plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
+      plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
                                  tl.cex=0.85)
         {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
@@ -126,41 +117,43 @@ functional_plot_go_actmap_server <- function(id,
         )
       }
 
+      plot_data <- shiny::reactive({
+        shiny::req(pgx$meta.go)
+        pathscore = pgx$meta.go$pathscore
+        graph = pgx$meta.go$graph
+        res <- list(
+            pathscore = pathscore,
+            graph = graph
+        )
+      })
+
       plot_RENDER <- function() {
         res <- plot_data()
-        pgx <- res$pgx
-
-        if (is.null(pgx$meta.go)) {
-          return(NULL)
-        }
-
-        score <- pgx$meta.go$pathscore
-        go <- pgx$meta.go$graph
+        shiny::req(res)
+        pathscore <- res$pathscore
+        graph <- res$graph
 
         plotGOactmap(
-        ##plotActivationMatrix(        
-          score = score, go = go,
-          normalize = input$go_normalize,
+          score = pathscore,
+          go = graph,
+          normalize = input$normalize,
           maxterm = 50,
           maxfc = 25,
-          tl.cex = 0.9
+          tl.cex = 0.95
         )
       }
 
       plot_RENDER2 <- function() {
         res <- plot_data()
-        pgx <- res$pgx
+        shiny::req(res)
 
-        if (is.null(pgx$meta.go)) {
-          return(NULL)
-        }
-
-        score <- pgx$meta.go$pathscore
-        go <- pgx$meta.go$graph
+        pathscore <- res$pathscore
+        graph <- res$graph
 
         plotGOactmap(
-          score = score, go = go,
-          normalize = input$go_normalize,
+          score = pathscore,
+          go = graph,
+          normalize = input$normalize,
           maxterm = 50,
           maxfc = 100,
           tl.cex = 0.85          
