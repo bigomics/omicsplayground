@@ -44,6 +44,7 @@ clustering_plot_featurerank_ui <- function(
 clustering_plot_featurerank_server <- function(id,
                                                pgx,
                                                hm_level,
+                                               selected_phenotypes,
                                                hm_samplefilter,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -75,12 +76,14 @@ clustering_plot_featurerank_server <- function(id,
       ## samples = colnames(X)
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X <- X[, samples]
-      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
-      cvar <- grep("sample|patient|years|days|months|gender",
-        cvar,
-        invert = TRUE, value = TRUE
-      ) ## no sample IDs
-      cvar
+      cvar = selected_phenotypes()
+      # the code below overwrittes user input, and should be removed
+      # cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
+      # cvar <- grep("sample|patient|years|days|months|gender",
+      #   cvar,
+      #   invert = TRUE, value = TRUE
+      # ) ## no sample IDs
+      # cvar
       Y <- pgx$Y[colnames(X), cvar, drop = FALSE]
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
       Y <- Y[, kk, drop = FALSE]
@@ -159,7 +162,7 @@ clustering_plot_featurerank_server <- function(id,
 
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
-      rownames(S) <- substring(rownames(S), 1, 50)
+      rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
       
       playbase::pgx.stackedBarplot(
         x = t(S),
@@ -176,7 +179,10 @@ clustering_plot_featurerank_server <- function(id,
 
     clust_featureRank.RENDER <- function() {
       render_featureRank() %>%
-        plotly_default()
+        plotly_default() %>%
+        plotly::layout(
+          legend = list(orientation = 'h')
+        )
     }
 
     clust_featureRank.RENDER2 <- function() {

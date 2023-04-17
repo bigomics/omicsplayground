@@ -37,11 +37,12 @@ RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
-# Install fresh bigdash
+# Install bigomics stuff
 #------------------------------------------------------------
 
 WORKDIR /omicsplayground
 RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
+RUN R -e "devtools::install_github('bigomics/bigLoaders')"
 
 #------------------------------------------------------------
 # Install fresh playbase

@@ -45,6 +45,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       if ("group" %in% var.types) grp <- "group"
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
     })
 
     ## update filter choices upon change of data set
@@ -58,8 +59,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
       ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
-      groupings <- c("<ungrouped>", sort(groupings))
-      shiny::updateSelectInput(session, "hm_group", choices = groupings)
+
+      groupings <- sort(groupings)
+
+      shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
@@ -624,6 +627,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       watermark = FALSE
     )
@@ -648,6 +652,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",
       pgx = pgx,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
       watermark = FALSE
     )
@@ -656,6 +661,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "clust_featureRank",
       pgx = pgx,
       hm_level = shiny::reactive(input$hm_level),
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
       watermark = FALSE
     )

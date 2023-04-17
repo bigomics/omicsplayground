@@ -6,13 +6,17 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(shiny::selectInput(ns("hm_features"), "Features:", choices = NULL, multiple = FALSE),
-      "Select a family of features.",
+    withTooltip(shiny::selectInput(ns("hm_features"), "Gene family:", choices = NULL, multiple = FALSE),
+      "Select a gene family.",
+      placement = "top"
+    ),
+    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Phenotypes:", choices = NULL, multiple = TRUE),
+      "Select a phenotype to group.",
       placement = "top"
     ),
     withTooltip(
       shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-        c("default", "tsne", "pca", "umap"),
+        c("tsne", "pca", "umap"),
         inline = TRUE
       ),
       "Choose the layout method for clustering to visualise.",

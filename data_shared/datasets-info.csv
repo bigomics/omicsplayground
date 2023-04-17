@@ -1,3 +1,4 @@
 "","dataset","datatype","description","organism","nsamples","ngenes","nsets","conditions","date"
 "1","GSE157905-lenvatinib-bc","RNA-seq","GSE157905. RNA Sequencing of HCC cells after lenvatinib, gefitinib, and combination treatment (Jin et al., Nature 2021). Batchcorrected: combat+nnm+sva","human","16","10000","7240","nr cell.line treatment","2021-07-25"
 "2","example-data","LC/MS proteomics","Proteome profiles of activated  vs resting human naive T cells at different times (Geiger et al., Cell 2016).","human","18","6987","6829","condition time activated","2021-09-30"
+"3","GSE88808-prostate","mRNA array","GSE88808 data set. Gleason-score matched tumor and adjacent normal samples were collected to compare gene expression differences in early-onset versus late-onset prostate cancer patients (Ding, PLOS Genet 2016).","human","98","8000","11152","age ethnicity gleason psa race Stage tissue age.group group","2021-07-23"

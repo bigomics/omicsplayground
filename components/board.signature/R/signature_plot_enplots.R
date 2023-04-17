@@ -46,7 +46,9 @@ signature_plot_enplots_server <- function(id,
                                           enrichmentContrastTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    enplots.RENDER <- shiny::reactive({
+        
+      ##    enplots.RENDER <- shiny::reactive({
+    enplots.RENDER <- function() {
       alertDataLoaded(session, pgx)
       if (is.null(pgx)) {
         return(NULL)
@@ -100,15 +102,16 @@ signature_plot_enplots_server <- function(id,
           legend("topleft", db, cex = 0.9, bty = "n", adj = 0)
         }
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+##      p <- grDevices::recordPlot()
+##      p
+    } ##)
 
     PlotModuleServer(
       "plot",
       func = enplots.RENDER,
-      res = c(90, 90), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 8,
+      pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer
