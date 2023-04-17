@@ -22,6 +22,7 @@ wgcna_plot_gclustering_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    caption = caption,
     options = umap.opts,
     height = height,
     width = width,
