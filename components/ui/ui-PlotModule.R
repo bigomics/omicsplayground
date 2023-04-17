@@ -421,27 +421,27 @@ PlotModuleServer <- function(
                   ## unlink(PNGFILE) ## do not remove!
                   if(plotlib=="plotly") {
                     p <- func()
-                    p$width = pdf.width * 160
-                    p$height = pdf.height * 160
+                    p$width = pdf.width * 80
+                    p$height = pdf.height * 80
                     plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                   } else if(plotlib=="iheatmapr") {
                     p <- func()
-                    iheatmapr::save_iheatmap(p, vwidth=pdf.width*160,vheight=pdf.height*160,PNGFILE)
+                    iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
                   } else if(plotlib=="visnetwork") {
                     p <- func()
                     dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
                     visNetwork::visSave(p, HTMLFILE)
                     dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ",PNGFILE)
-                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                   } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                     p <- func()
                     htmlwidgets::saveWidget(p, HTMLFILE)
-                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                   } else if(plotlib %in% c("ggplot","ggplot2")) {
                     ggplot2::ggsave(PNGFILE, plot = func(), dpi=300)
                   } else if(plotlib=="grid") {
                     p <- func()
-                    png(PNGFILE, width=pdf.width*200*resx, height=pdf.height*200*resx,
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     grid::grid.draw(p)
                     dev.off()
@@ -453,7 +453,7 @@ PlotModuleServer <- function(
                     ## generic function should produce PNG inside plot func()
                     ##
                   } else if(plotlib=="base") {
-                    png(PNGFILE, width=pdf.width*200*resx, height=pdf.height*200*resx,
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     func()
                     dev.off()  ## important!!
@@ -487,25 +487,25 @@ PlotModuleServer <- function(
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
                       p <- func()
-                      p$width = pdf.width * 160
-                      p$height = pdf.height * 160
+                      p$width = pdf.width * 80
+                      p$height = pdf.height * 80
                       ##err <- try(plotly::export(p, PDFFILE))  ## deprecated
                       ##err <- try(plotly::orca(p, PDFFILE))
                       ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
                       plotlyExport(p, PDFFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                       p <- func()
-                      iheatmapr::save_iheatmap(p, vwidth=pdf.width*160,vheight=pdf.height*160,PDFFILE)
+                      iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                       p <- func()
                       dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=",HTMLFILE)
                       visNetwork::visSave(p, HTMLFILE)
                       dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=",PDFFILE)
-                      webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                      webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                       p <- func()
                       htmlwidgets::saveWidget(p, HTMLFILE)
-                      webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*200,vheight=pdf.height*200)
+                      webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                       p <- func()
                       pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
