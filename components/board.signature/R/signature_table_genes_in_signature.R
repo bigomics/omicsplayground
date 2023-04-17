@@ -44,11 +44,15 @@ signature_table_genes_in_signature_server <- function(id,
         class = "compact cell-border stripe",
         rownames = FALSE,
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lrftip",
-          scrollX = TRUE, scrollY = "30vh", scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = "30vh",
+          scrollResize = TRUE,
+          scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list

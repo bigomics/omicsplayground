@@ -176,7 +176,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
     )
 
     # Table
-
     gsetTable.RENDER <- shiny::reactive({
       shiny::req(pgx)
       if (is.null(pgx$drugs)) {
@@ -225,12 +224,14 @@ featuremap_plot_table_geneset_map_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
           scrollY = 240,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

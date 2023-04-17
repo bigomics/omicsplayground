@@ -41,11 +41,15 @@ signature_table_overlap_server <- function(id,
 ##      class = "compact cell-border stripe",
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = "none",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          scrollX = TRUE, scrollY = "25vh", scroller = TRUE
+          scrollX = TRUE,
+          scrollY = "25vh",
+          scrollResize = TRUE,
+          scroller = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

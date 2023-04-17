@@ -109,12 +109,14 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         escape = -1,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
           scrollY = "20vh",
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

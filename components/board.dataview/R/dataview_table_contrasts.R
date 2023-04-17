@@ -78,6 +78,7 @@ dataview_table_contrasts_server <- function(id,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(
           mode = "single",
           target = "row",
@@ -88,6 +89,7 @@ dataview_table_contrasts_server <- function(id,
           scroller = TRUE,
           scrollX = TRUE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE
         )

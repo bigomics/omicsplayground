@@ -4,17 +4,13 @@
 ##
 
 intersection_plot_venn_diagram_ui <- function(
-  id,
-  title_plot,
-  title_table,
-  caption_plot,
-  caption_table,
-  info.text_plot,
-  info.text_table,
-  label = "",
-  height_plot,
-  height_table,
-  width) {
+                                              id,
+                                              title,
+                                              caption,
+                                              info.text,
+                                              label = "",
+                                              height,
+                                              width) {
   ns <- shiny::NS(id)
 
   FDR.VALUES2 <- c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1)
@@ -40,32 +36,41 @@ intersection_plot_venn_diagram_ui <- function(
     shiny::radioButtons(ns("include"), "Counting:", choices = c("both", "up/down"), inline = TRUE)
   )
 
+  PlotModuleUI(
+    ns("vennplot"),
+    title = title,
+    label = "b",
+    info.text = info.text,
+    options = venndiagram.opts,
+    caption = caption,
+    download.fmt = c("png", "pdf", "csv"),
+    height = height,
+    width = width
+  )
+}
+
+intersection_table_venn_diagram_ui <- function(
+                                               id,
+                                               title,
+                                               caption,
+                                               info.text,
+                                               label = "",
+                                               height,
+                                               width) {
+  ns <- shiny::NS(id)
+
   venntable_opts <- shiny::tagList(
     shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
   )
-
-  div(
-    PlotModuleUI(
-      ns("vennplot"),
-      title = title_plot,
-      label = "b",
-      info.text = info.text_plot,
-      options = venndiagram.opts,
-      caption = caption_plot,
-      download.fmt = c("png", "pdf", "csv"),
-      height = height_plot,
-      width = width
-    ),
-    TableModuleUI(
-      ns("datasets"),
-      info.text = info.text_table,
-      options = venntable_opts,
-      caption = caption_table,
-      height = height_table,
-      width = width,
-      title = title_table,
-      label = "e"
-    )
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info.text,
+    options = venntable_opts,
+    caption = caption,
+    height = height,
+    width = width,
+    title = title,
+    label = "e"
   )
 }
 
@@ -365,7 +370,9 @@ intersection_plot_venn_diagram_server <- function(id,
       DT::datatable(df,
         class = "compact cell-border stripe",
         rownames = FALSE,
-        extensions = c("Scroller"), selection = "none",
+        extensions = c("Scroller"),
+        plugins = "scrollResize",
+        selection = "none",
         options = list(
           ## dom = 'lfrtip',
           dom = "tip",
@@ -374,6 +381,7 @@ intersection_plot_venn_diagram_server <- function(id,
           ## columnDefs = list(list(targets=nsc, searchable = FALSE)),
           scrollX = TRUE,
           scrollY = 215,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
