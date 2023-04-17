@@ -557,7 +557,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       clustmethod <- "tsne"
       pdim <- 2
-      do3d <- ("3D" %in% input$hmpca_options)
+      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`)
       pdim <- c(2, 3)[1 + 1 * do3d]
 
       pos <- NULL
@@ -590,7 +590,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           ## zx = head(zx,ntop)  ## OK?
           zx <- zx[1:ntop, , drop = FALSE] ## OK?
         }
-        if ("normalize" %in% input$hmpca_options) {
+        if ("normalize" %in% input$`PCAplot-hmpca_options`) {
           zx <- scale(t(scale(t(zx))))
         }
         perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
