@@ -137,6 +137,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_MTrelationships_ui(
               ns("moduleTrait"),
+              title = ,
+              info.text = "WGCNA module and trait relationship.",
+              caption = "Module-trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits.",
+              label = "a", 
               height = c(420, 650),
               width = c("auto", 1000)
             )
@@ -145,6 +149,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_correlation_network_ui(
               ns("corGraph"),
+              label = "c",
+              title = "Correlation network",
+              info.text = "Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection.",
+              caption = "Module enrichment plot of top most enriched genesets.",
               height = c(420, 650),
               width = c("auto", 1000)
             )
@@ -153,8 +161,12 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_plot_correlation_network_ui(
               ns("enrichPlot"),
+              label = "c",
+              title = "Correlation network",
+              info.text = "Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection.",
+              caption = "Module enrichment plot of top most enriched genesets.",
               height = c(420, 650),
-              width = c("auto", 800)
+              width = c("auto", 800),
             )
           )
         ),
@@ -164,6 +176,10 @@ WgcnaUI <- function(id) {
             class = "col-md-4",
             wgcna_table_genes_ui(
               ns("geneTable"),
+              label = "d",
+              title = "Module genes",
+              info.text = "Genes in the selected WGCNA module.",
+              caption = "Table of genes in the selected module.",
               height = c(250, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -172,6 +188,10 @@ WgcnaUI <- function(id) {
             class = "col-md-8",
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
+              label = "e",
+              title = "Module enrichment",
+              info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+              caption = "Functional enrichment of the module calculated using Fisher's exact test.",
               height = c(250, TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
