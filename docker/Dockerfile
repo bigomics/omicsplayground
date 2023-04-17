@@ -31,6 +31,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 #RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
+RUN R -e "devtools::install_github('m-jahn/fluctuator')"
 RUN R -e "BiocManager::install(c('SBGNview','org.Hs.eg.db','DeMixT'))"
 RUN R -e "install.packages(c('svgPanZoom'))"
 RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"

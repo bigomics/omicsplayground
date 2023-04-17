@@ -145,6 +145,7 @@ ExpressionUI <- function(id) {
       "Volcano (methods)",
       bslib::layout_column_wrap(
         width = 1,
+        style = halfH,                
         expression_plot_volcanoMethods_ui(
           id = ns("volcanoMethods"),
           title = "Volcano plots for all methods",
