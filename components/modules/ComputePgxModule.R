@@ -362,9 +362,9 @@ ComputePgxServer <- function(
                 dbg("[compute PGX process] : tempFile", temp_dir())
 
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-
                 path_to_params <- file.path(temp_dir(), "params.RData")
-
+                dataset_name <- gsub("[ ]","_",input$upload_name)
+                
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
@@ -388,7 +388,7 @@ ComputePgxServer <- function(
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
                     lib.dir = lib.dir,
-                    name = gsub("[ ]","_",input$upload_name),
+                    name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
                     creator = "user",
@@ -404,9 +404,9 @@ ComputePgxServer <- function(
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
-                    "Computing!",
-                    "Your dataset will be computed in the background. You can continue to analyze
-                     a different dataset or play with example data in the meantime.")
+                    "Sit back and relax!",
+                    paste0("Your dataset will be computed in the background. You can continue to play with a different dataset or get some coffee in the meantime. When it is ready, it will appear in your dataset table as '",dataset_name,"'.")
+                )
                 bigdash.selectTab(
                     session,
                     selected = 'load-tab'
@@ -479,7 +479,8 @@ ComputePgxServer <- function(
 
                         ## write error to console and temp file
                         stderr_output <- current_process$read_error_lines()
-                        logfile <- file.path(temp_dir,"process.log")
+                        ##logfile <- file.path(temp_dir,"process.log")
+                        logfile <- normalizePath(file.path(OPG,"processx.log"))
                         dbg("[compute PGX process] : writing stderr to ", logfile)
                         writeLines(stderr_output, logfile)
                         stderr_output <- stderr_output[nchar(stderr_output)>0]
