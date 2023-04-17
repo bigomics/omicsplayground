@@ -89,10 +89,12 @@ functional_table_go_table_server <- function(id,
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
+        plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

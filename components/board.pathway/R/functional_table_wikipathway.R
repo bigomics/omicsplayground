@@ -81,11 +81,14 @@ functional_table_wikipathway_server <- function(id,
           selected = 1
         ),
         fillContainer = TRUE,
+        plugins = 'scrollResize',  ## resizes scrollable area
         options = list(
           dom = "lfrtip",
           ## dom = "ft",          
           scrollX = FALSE,
-          scrollY = scrollY,
+          ##          scrollY = scrollY,
+          scrollY = 800,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE

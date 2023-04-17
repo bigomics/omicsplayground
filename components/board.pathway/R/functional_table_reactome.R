@@ -67,11 +67,13 @@ functional_table_reactome_server <- function(id,
           selected = 1
         ),
         fillContainer = TRUE,
+        plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
           ## dom = "ft",          
           scrollX = FALSE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE
