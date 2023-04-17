@@ -356,7 +356,8 @@ app_server <- function(input, output, session) {
         ##bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
-        
+        toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
+
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
         tabRequire(PGX, session, "cmap-tab", "connectivity")

@@ -203,8 +203,27 @@ FunctionalUI <- function(id) {
           )
         )
       )
-    )
-  )
+    ), ## end of GO tabpanel
+    ##----------------------------- Enrichment Map  -------------------------------
+    shiny::tabPanel(
+      "Enrichment Map (beta)",
+      bslib::layout_column_wrap(
+        width = 1,
+        style = "height: calc(100vh - 180px);",
+        functional_plot_enrichmap_ui(
+          id = ns("enrichment_map"),
+          title = "Enrichment Map",
+          info.text = "The Enrichment Map visualizes enrichments of pathways as an enrichment map, a network representing overlaps among enriched pathways. Nodes represent gene-sets and edges represent mutual overlap; in this way, highly redundant gene-sets are grouped together as clusters, dramatically improving the capability to navigate and interpret enrichment results. Reference: 'Enrichment Map: A Network-Based Method for Gene-Set Enrichment Visualization and Interpretation' Merico D et.al, PLoS One, 2010.",
+          caption = "The Enrichment Map visualizes enrichments of pathways as an enrichment map, a network representing overlaps among enriched pathways. Nodes represent gene-sets and edges represent mutual overlap.",
+          # height = c("70vh", TABLE_HEIGHT_MODAL),
+          height = c("100%", TABLE_HEIGHT_MODAL),            
+          width = c("100%", "100%"),
+          label = "a"
+        )
+      )
+    ) ## Enrichment map tabpanel
+
+  ) ## end of tabset panel
 
   page_ui <- div(
     boardHeader(title = "Pathway Analysis", info_link = ns("fa_info")),

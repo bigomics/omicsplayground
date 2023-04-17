@@ -426,6 +426,12 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       scrollY = 180
     )
     
+    functional_plot_enrichmap_server(
+      "enrichment_map",
+      pgx,
+      reactive(input$fa_contrast)
+    )
+    
     ## ================================================================================
     ## GO module servers
     ## ================================================================================
