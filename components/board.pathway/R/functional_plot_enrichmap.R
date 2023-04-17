@@ -33,7 +33,7 @@ functional_plot_enrichmap_ui <- function(
     caption = caption,
     info.width = info.width,
     options = NULL,
-    download.fmt = NULL,
+    download.fmt = c("png","pdf"),    
     # download.fmt = c("png","csv"),    
     height = height,
     width = width
