@@ -248,8 +248,8 @@ dataview_plot_tsne_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() # %>%
-      #    plotly::hide_colorbar()
+      fig <- plotly.RENDER0() %>%
+        plotly::hide_colorbar()
       fig
     }
 
