@@ -98,8 +98,8 @@ FunctionalUI <- function(id) {
           functional_plot_reactome_graph_ui(
             ns("reactome_graph"),
             title = "Reactome pathway",
-            info.text = "Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below.",
-            caption = "Visualisation of the selected Reactome pathway with highlighted up- and down-regulated genes.",
+            info.text = "Reactome (http://reactome.org) is a free, open-source, curated and peer-reviewed knowledge-base of biomolecular pathways. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below.",
+            caption = "Visualisation of the selected Reactome pathway with highlighted up (red) and down (blue) regulated genes.",
             info.width = "350px",
             label = "a",
             height = c("60%", TABLE_HEIGHT_MODAL),
