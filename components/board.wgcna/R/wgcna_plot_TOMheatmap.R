@@ -3,16 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_TOMheatmap_ui <- function(id, height, width) {
+wgcna_plot_TOMheatmap_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA Topological Overlap Matrix (TOM) heatmap.</b>"
 
   PlotModuleUI(
     ns("plot"),
-    title = "TOM heatmap",
-    label = "c",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")
