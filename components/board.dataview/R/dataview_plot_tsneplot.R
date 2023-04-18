@@ -13,12 +13,26 @@ dataview_plot_tsne_ui <- function(
   info.text) {
   ns <- shiny::NS(id)
 
+   plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::radioButtons(
+        ns("show_legend"),
+        label = "Show legend:",
+        choiceValues = list(FALSE, TRUE),
+        choiceNames = list("No","Yes"),
+         inline = TRUE
+      ),
+      "Hide or show legend."
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
+    options = plot_opts,
     height = height,
     label = label,
     caption = caption,
@@ -34,6 +48,9 @@ dataview_plot_tsne_server <- function(id,
                                       r.groupby = reactive(""),
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    
+    ns <- session$ns
+
     plot_dl <- reactiveValues()
 
     plot_data <- shiny::reactive({
@@ -94,7 +111,12 @@ dataview_plot_tsne_server <- function(id,
         data$group <- grp
       }
 
-      return(list(data = data, gene = gene))
+      return(
+        list(
+          data = data,
+          gene = gene,
+          show_legend  = input$show_legend)
+          )
     })
 
     plot.RENDER <- function() {
@@ -175,9 +197,11 @@ dataview_plot_tsne_server <- function(id,
     plotly.RENDER0 <- function() {
       data <- plot_data()
       shiny::req(data)
-
+      
       df <- data[[1]]
       gene <- data[[2]]
+      show_legend <- data[[3]]
+
       symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
         "star-diamond", "square-cross", "diamond-wide")
 
@@ -194,10 +218,10 @@ dataview_plot_tsne_server <- function(id,
             color = ~expression,
             colors = omics_pal_c(palette = "brand_blue")(100),
             marker = list(
-              size = 10,
+              # size = 10,
               line = list(
-                color = omics_colors("super_dark_grey"),
-                width = 1.2
+                color = omics_colors("super_dark_grey")
+                # width = 1.2
               )
             ),
             hovertemplate = ~ paste(
@@ -235,9 +259,10 @@ dataview_plot_tsne_server <- function(id,
       }
       fig %>%
         plotly::layout(
-          xaxis = list(title = "tSNE-x"),
-          yaxis = list(title = "tSNE-y"),
-          margin = list(l = 10, r = 10, b = 10, t = 10)
+          showlegend = as.logical(show_legend),
+          xaxis = list(title = ""),
+          yaxis = list(title = "")
+          # margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
         plotly::colorbar(
           title = "<b>Expression:</b>",
@@ -248,14 +273,22 @@ dataview_plot_tsne_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() %>%
-        plotly::hide_colorbar()
+      fig <- plotly.RENDER0()  %>%
+          plotly::layout(
+            legend = list(
+              orientation = 'h',
+              x = NA,
+              y = NA
+              )
+            # colorbar = list(visible = FALSE)
+            )
       fig
     }
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
         plotly_modal_default() %>%
+        plotly::layout(legend = list(orientation = 'h', x = NA, y = NA)) %>%
         plotly::style(
           marker.size = 20
         )
