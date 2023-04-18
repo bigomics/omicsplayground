@@ -6,6 +6,7 @@ if(!file.exists('00SourceAll.R')) {
 } else {
   message('Note: sourcing all code...')
   source('app/R/utils/auth.R',encoding='UTF-8')
+  source('app/R/utils/open_url.R',encoding='UTF-8')
   source('app/R/utils/utils.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_boxplots.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_decisiontree.R',encoding='UTF-8')
@@ -113,10 +114,6 @@ if(!file.exists('00SourceAll.R')) {
   source('board.featuremap/R/featuremap_plot_table_geneset_map.R',encoding='UTF-8')
   source('board.featuremap/R/featuremap_server.R',encoding='UTF-8')
   source('board.featuremap/R/featuremap_ui.R',encoding='UTF-8')
-  source('board.functional/R/fun_wikipathview.R',encoding='UTF-8')
-  source('board.functional/R/functional_plot_wikipathway_actmap.R',encoding='UTF-8')
-  source('board.functional/R/functional_plot_wikipathway_graph.R',encoding='UTF-8')
-  source('board.functional/R/functional_table_wikipathway.R',encoding='UTF-8')
   source('board.intersection/R/intersection_plot_contrast_correlation.R',encoding='UTF-8')
   source('board.intersection/R/intersection_plot_foldchange_heatmap.R',encoding='UTF-8')
   source('board.intersection/R/intersection_plot_scatterplot_pairs.R',encoding='UTF-8')

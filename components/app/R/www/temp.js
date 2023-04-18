@@ -60,26 +60,29 @@ const unloadSidebar = () => {
 
 			$(el).hide();
 		});
+        $('#sidebar-help-container').hide();    
 }
 
 const sidebarClose = () => {
 	if($('#sidebar-container').hasClass('sidebar-expanded'))
 		$('.sidebar-label').trigger('click');
+        $('#sidebar-help-container').hide();    
 }
 
 const sidebarOpen = () => {
 	if($('#sidebar-container').hasClass('sidebar-collapsed'))
 		$('.sidebar-label').trigger('click');
+        $('#sidebar-help-container').show();    
 }
 
 const settingsClose = () => {
 	if($('#settings-container').hasClass('settings-expanded'))
-		$('.setting-label').trigger('click');
+	    $('.setting-label').trigger('click');
 }
 
 const settingsOpen = () => {
 	if($('#settings-container').hasClass('sidebar-collapsed'))
-		$('.settings-label').trigger('click');
+	    $('.settings-label').trigger('click');
 }
 
 const settingsLock = () => {
