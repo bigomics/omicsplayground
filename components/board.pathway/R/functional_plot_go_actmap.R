@@ -139,7 +139,7 @@ functional_plot_go_actmap_server <- function(id,
           normalize = input$normalize,
           maxterm = 50,
           maxfc = 25,
-          tl.cex = 0.95
+          tl.cex = 1.1
         )
       }
 
@@ -167,7 +167,8 @@ functional_plot_go_actmap_server <- function(id,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
         res = 72,
-        pdf.width = 9, pdf.height = 9,
+        pdf.width = 9,
+        pdf.height = 9,
         add.watermark = watermark
       )
     } ## end of moduleServer

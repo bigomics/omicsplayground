@@ -71,7 +71,7 @@ DataViewUI <- function(id) {
       "Gene overview",
       div(
         class = "row",
-        style = "height: calc(100vh - 200px);",
+        style = "height: calc(100vh - 180px);",
         div(
           class = "col-md-2",
           dataview_module_geneinfo_ui(
@@ -157,6 +157,7 @@ DataViewUI <- function(id) {
       shinyjqui::jqui_sortable(
       div(
         class = "row",
+        style = "height: calc(100vh - 180px);",        
         div(
           class = "col-lg-6 col-xxl-4 col-xxxl-3",
           dataview_plot_totalcounts_ui(

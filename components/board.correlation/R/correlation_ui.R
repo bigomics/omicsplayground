@@ -54,17 +54,18 @@ CorrelationUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Correlation",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
+      bslib::layout_column_wrap(
+        width = 1/2,
+        height = "calc(100vh - 180px)",
+        bslib::layout_column_wrap(
+          width = 1,
           correlation_plot_corr_ui(
             id = ns("cor_barplot"),
             title = "Top correlated genes",
             info.text = "Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
             caption = "Barplot showing the highest correlated genes with respect to the selected gene.",
             label = "",
-            height = c("calc(65vh - 217px)", "70vh"),
+            height = c("50%", "70vh"),
             width = c("auto", "100%")
           ),
           correlation_table_corr_ui(
@@ -73,51 +74,46 @@ CorrelationUI <- function(id) {
             info.text = "Statistical results from correlated gene pairs.",
             caption = "Correlation table of correlation and partial correlation with respect to the selected gene. ",
             label = "",
-            height = c("35vh", TABLE_HEIGHT_MODAL),
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
         ),
-        div(
-          class = "col-md-6",
-          correlation_plot_scattercorr_ui(
-            ns("cor_scatter"),
-            title = "Correlation scatter plots",
-            info.text = "Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit.",
-            caption = "Scatter plots of gene expression of top correlated genes.",
-            height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
+        correlation_plot_scattercorr_ui(
+          ns("cor_scatter"),
+          title = "Correlation scatter plots",
+          info.text = "Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit.",
+          caption = "Scatter plots of gene expression of top correlated genes.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     ),
     shiny::tabPanel(
       "Graph",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          correlation_plot_cor_graph_ui(
-            ns("cor_graph"),
-            title = "Partial correlation network",
-            info.text = "Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair.",
-            caption = "Partial correlation network around the selected gene.",
-            height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL),
-            width = c(700, "100%"))
+      bslib::layout_column_wrap(
+        width = 1/2,
+        height = "calc(100vh - 180px)",
+        correlation_plot_cor_graph_ui(
+          ns("cor_graph"),
+          title = "Partial correlation network",
+          info.text = "Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair.",
+          caption = "Partial correlation network around the selected gene.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         ),
-        div(
-          class = "col-md-6",
-          correlation_plot_correlation_UMAP_ui(
-            ns("cor_umap"),
-            title = "Correlation UMAP",
-            info.text = "Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative.",
-            caption = "UMAP clustering of genes using covariance as distance metric and colored by correlation (or covariance). ",
-            height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
+        correlation_plot_correlation_UMAP_ui(
+          ns("cor_umap"),
+          title = "Correlation UMAP",
+          info.text = "Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative.",
+          caption = "UMAP clustering of genes using covariance as distance metric and colored by correlation (or covariance). ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     )
   )
+
+  ## full page
   div(
     boardHeader(title = "Correlation analysis", info_link = ns("data_info")),
     tabs

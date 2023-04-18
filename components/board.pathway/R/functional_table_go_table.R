@@ -84,7 +84,8 @@ functional_table_go_table_server <- function(id,
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = FALSE,
+        escape = c(-1, -2),
         ## class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
@@ -96,7 +97,15 @@ functional_table_go_table_server <- function(id,
           scrollY = scrollY,
           scrollResize = TRUE,
           scroller = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs = list(list(
+            targets = 1, ## with no rownames column 1 is column 2
+            render = DT::JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 50 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+              "}")
+          ))          
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
@@ -107,7 +116,8 @@ functional_table_go_table_server <- function(id,
             "lightblue",
             "#f5aeae"
           ),
-          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundSize = "98% 88%",
+          backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
     }

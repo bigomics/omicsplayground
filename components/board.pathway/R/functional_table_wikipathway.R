@@ -91,7 +91,15 @@ functional_table_wikipathway_server <- function(id,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
-          autoWidth = TRUE
+          autoWidth = TRUE,
+          columnDefs = list(list(
+            targets = 1, ## with no rownames column 1 is column 2
+            render = DT::JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 50 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+              "}")
+          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

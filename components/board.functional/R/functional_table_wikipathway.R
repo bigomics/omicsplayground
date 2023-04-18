@@ -4,7 +4,7 @@
 ##
 
 
-functional_table_reactome_ui <- function(
+functional_table_wikipathway_ui <- function(
   id,
   title,
   info.text,
@@ -25,18 +25,19 @@ functional_table_reactome_ui <- function(
   )
 }
 
-functional_table_reactome_server <- function(id,
-                                             getFilteredReactomeTable,
-                                             fa_contrast,
-                                             scrollY ) {
+functional_table_wikipathway_server <- function(id,
+                                               pgx,
+                                               getFilteredWikipathwayTable,
+                                               fa_contrast,
+                                               scrollY ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      df = getFilteredReactomeTable()      
-      shiny::req(df, fa_contrast())
+      shiny::req(pgx)
       res <- list(
-        df = df,
+        pgx = pgx,
+        df = getFilteredWikipathwayTable(),
         fa_contrast = fa_contrast
       )
       return(res)
@@ -44,14 +45,31 @@ functional_table_reactome_server <- function(id,
 
     table_RENDER <- function() {
       res <- table_data()
+      pgx <- res$pgx
       df <- res$df
       comparison <- res$fa_contrast
 
+      if (is.null(pgx$meta.go)) {
+        return(NULL)
+      }
+      if (is.null(comparison)) {
+        return(NULL)
+      }
+      if (is.null(df)) {
+        return(NULL)
+      }
+      if (nrow(df) == 0) {
+        return(NULL)
+      }
+
       ## add hyperlink
-      url <- paste0("https://reactome.org/content/detail/", df$reactome.id)
-      df[["reactome.id"]] <- paste0(
+      url <- paste0(
+        "https://wikipathway.org/content/detail/",
+        df$wikipathway.id
+      )
+      df[["wikipathway.id"]] <- paste0(
         "<a href='", url, "' target='_blank'>",
-        df[["reactome.id"]], "</a>"
+        df[["wikipathway.id"]], "</a>"
       )
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
@@ -67,25 +85,15 @@ functional_table_reactome_server <- function(id,
           selected = 1
         ),
         fillContainer = TRUE,
-        plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
           ## dom = "ft",          
           scrollX = FALSE,
           scrollY = scrollY,
-          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
-          autoWidth = TRUE,
-          columnDefs = list(list(
-            targets = 1, ## with no rownames column 1 is column 2
-            render = DT::JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 50 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
-              "}")
-          ))
-          ) ## end of options.list
+          autoWidth = TRUE
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(
@@ -106,11 +114,11 @@ functional_table_reactome_server <- function(id,
         )
     }
 
-    table_RENDER_modal <- function() {
+    table_RENDER_modal <- shiny::reactive({
       dt <- table_RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    }
+    })
 
     my_table <- TableModuleServer(
       "tablemodule",
