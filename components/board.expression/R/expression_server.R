@@ -52,7 +52,7 @@ ExpressionBoard <- function(id, pgx) {
 
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
-      fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      fam <- playbase::pgx.getFamilies(pgx, lib.dir = FILES, nmin = 10, extended = FALSE)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
