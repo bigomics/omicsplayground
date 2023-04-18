@@ -180,6 +180,7 @@ dataview_table_rawdata_server <- function(id,
         ## class = 'compact cell-border stripe hover',
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           # dom = 'lfrtip',
@@ -188,6 +189,7 @@ dataview_table_rawdata_server <- function(id,
           lengthMenu = c(25, 40, 100, 250, 1000),
           scroller = TRUE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           deferRender = TRUE
         ) ## end of options.list
       ) %>%

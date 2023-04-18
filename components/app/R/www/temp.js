@@ -399,7 +399,7 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 		return;
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
-	$('#sidebar-help-container').hide();
+	$('#sidebar-help-container').show();
 	}, 1000);
 });
 

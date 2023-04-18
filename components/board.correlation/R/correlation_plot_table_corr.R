@@ -187,12 +187,14 @@ correlation_plot_table_corr_server <- function(id,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = c(1)),
         class = "compact cell-border stripe hover",
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = FALSE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

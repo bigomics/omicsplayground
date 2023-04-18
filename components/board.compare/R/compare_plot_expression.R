@@ -13,8 +13,8 @@ compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     title = "Expression",
     label = "a",
     info.text = info_text,
-    height = c(440, 700),
-    width = c("auto", 1280),
+    height = height,
+    width = c("auto", "100%"),
     download.fmt = c("png", "pdf")
   )
 }

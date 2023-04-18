@@ -81,11 +81,11 @@ biomarker_plot_importance_server <- function(id,
         R <- pmax(R, 0.05)
 
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 4, 0, 4))
+        par(mar = c(5, 3, 0, 1))
         R.top <- head(R, 40)
         barplot(t(R.top),
           las = 3, horiz = FALSE,
-          cex.names = 0.75, ylab = "cumulative importance"
+          cex.names = 0.85, ylab = "cumulative importance"
         )
         klr <- grey.colors(ncol(R))
         legend("topright",

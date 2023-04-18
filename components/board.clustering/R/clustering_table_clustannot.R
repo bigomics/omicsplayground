@@ -67,6 +67,7 @@ clustering_table_clustannot_server <- function(
         df,
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = c(1)),
         class = "compact hover",
         fillContainer = TRUE,
@@ -75,6 +76,7 @@ clustering_table_clustannot_server <- function(
           scrollX = TRUE,
           scrollY = scrollY,
           scroller = TRUE,
+          scrollResize = TRUE,
           deferRender = TRUE
         ) ## end of options
       ) %>%

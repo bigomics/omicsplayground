@@ -49,11 +49,15 @@ signature_table_enrich_by_contrasts_server <- function(id,
         class = "compact cell-border stripe",
         rownames = FALSE,
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = "single",
         fillContainer = TRUE,
         options = list(
           dom = "lrtip",
-          scrollX = TRUE, scrollY = "20vh", scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = "20vh",
+          scrollResize = TRUE,
+          scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list

@@ -213,6 +213,7 @@ clustering_plot_table_parcoord_server <- function(id,
         df,
         rownames = TRUE, ## escape = c(-1,-2),
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',        
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact hover",
         fillContainer = TRUE,
@@ -222,7 +223,9 @@ clustering_plot_table_parcoord_server <- function(id,
           scrollX = TRUE, ## scrollY = TRUE,
           ## scrollY = 170,
           scrollY = "23vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollResize = TRUE,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%

@@ -50,6 +50,7 @@ drugconnectivity_table_dsea_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(
           mode = "single",
           target = "row",
@@ -61,6 +62,7 @@ drugconnectivity_table_dsea_server <- function(id,
           scroller = TRUE,
           scrollX = TRUE,
           scrollY = 160,  ## card is 300
+          scrollResize = TRUE,
           deferRender = TRUE
         )
       ) %>%

@@ -43,12 +43,14 @@ dataview_table_samples_server <- function(id,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
           scroller = TRUE,
           scrollX = TRUE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           deferRender = TRUE
         )
       ) %>%

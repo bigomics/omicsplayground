@@ -74,11 +74,15 @@ clustering_plot_clustpca_server <- function(id,
 
     plot_data <- shiny::reactive({
       clust <- hm_getClusterPositions()
-      ## data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
 
+      if("3D" %in% input$hmpca_options){
+        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2], z = clust$pos[, 3])
+      } else {
+        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2])
+      }
       return(
         list(
-          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
+          df = df,
           hmpca_options = input$hmpca_options,
           hmpca.colvar = hmpca.colvar(),
           hmpca.shapevar = hmpca.shapevar(),
@@ -175,7 +179,7 @@ clustering_plot_clustpca_server <- function(id,
           )
         }
       } else {
-        
+
         ## 2D plot
         j0 <- 1:nrow(df)
         j1 <- NULL

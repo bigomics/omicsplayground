@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-## 
+##
 ##
 ##
 
@@ -22,35 +22,35 @@ SocialMediaModule <- function(id, r.show = reactive(0))
   moduleServer(id, function(input, output, session)
   {
     ns <- session$ns
-    
+
     msg <- "Hi. I always thought omics analysis was so difficult, but now I am using BigOmics Playground to analyze my own omics data. No coding required. It's so easy and fun! You should really try it! It's open source and there is even a free version. Go and visit BigOmics at www.bigomics.ch\n\n"
-    
+
     urls <- GetSocialMediaSiteLinks_WithShareLinks(
       url = "http://www.bigomics.ch",
       title = "Analyze omics data yourself! ",
       desc = msg
     )
-      
+
     social.buttons <- fillRow(
       actionButton(ns("twitter"),"", icon=icon("twitter"), class="btn-social"),
-      actionButton(ns("linkedin"),"", icon=icon("linkedin"), class="btn-social"),                
+      actionButton(ns("linkedin"),"", icon=icon("linkedin"), class="btn-social"),
       actionButton(ns("facebook"),"", icon=icon("facebook"), class="btn-social"),
-      actionButton(ns("whatsapp"),"", icon=icon("whatsapp"), class="btn-social"),                
-      actionButton(ns("email"),"", icon=icon("envelope"), class="btn-social"),                
-      actionButton(ns("telegram"),"", icon=icon("telegram"), class="btn-social"),                
+      actionButton(ns("whatsapp"),"", icon=icon("whatsapp"), class="btn-social"),
+      actionButton(ns("email"),"", icon=icon("envelope"), class="btn-social"),
+      actionButton(ns("telegram"),"", icon=icon("telegram"), class="btn-social"),
       actionButton(ns("reddit"),"", icon=icon("reddit"), class="btn-social"),
-      actionButton(ns("pinterest"),"", icon=icon("pinterest"), class="btn-social"),                
+      actionButton(ns("pinterest"),"", icon=icon("pinterest"), class="btn-social"),
       actionButton(ns("yahoo"),"", icon=icon("yahoo"), class="btn-social"),
       actionButton(ns("skype"),"", icon=icon("skype"), class="btn-social"),
-      actionButton(ns("xing"),"", icon=icon("xing"), class="btn-social")                
-      ##tags$a(href=urls["line.me"], NULL, icon("line"), style="font-size:30px;", target="_blank")        
+      actionButton(ns("xing"),"", icon=icon("xing"), class="btn-social")
+      ##tags$a(href=urls["line.me"], NULL, icon("line"), style="font-size:30px;", target="_blank")
     )
-    
+
     modalButton2 <- function(label, icon=NULL) {
-      tags$button(type = "button", class = "btn btn-primary", `data-dismiss` = "modal", 
+      tags$button(type = "button", class = "btn btn-primary", `data-dismiss` = "modal",
                   `data-bs-dismiss` = "modal", icon, label)
     }
-    
+
     submit.buttons <- fillRow(
       height = 30,
       flex = c(NA,1,NA),
@@ -58,18 +58,18 @@ SocialMediaModule <- function(id, r.show = reactive(0))
       br(),
       actionButton(ns("sure"),"Yes, for sure! I just did!", class="btn-primary")
       ##modalButton2(""Yes, sure! I just did!"")
-    )  
-    
+    )
+
     output$modal <- renderUI({
 
       do.show <- r.show()
       message("do.show = ", do.show)
       if(do.show==0) return(NULL)
-      
+
       showModal( modalDialog(
         div(HTML("<center><h2>Sorry, time's up mate!</h2></center>"),style="margin-top:0px;"),
         br(),
-        HTML("Your FREE session has expired. 
+        HTML("Your FREE session has expired.
          Did you enjoy using BigOmics Playground? You can extend
          your FREE session by referring BigOmics to your friends!"),
         br(),br(),
@@ -86,86 +86,86 @@ SocialMediaModule <- function(id, r.show = reactive(0))
 
     ## counter for number of referred
     nreferred = 0
-    
+
     ## observe social buttons ------------------------------------
 
     observeEvent( input$twitter, {
       nreferred <<- nreferred + 1
-      browseURL( urls["twitter"] )
+      open_url_js(urls["twitter"])
       Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$linkedin, {
       nreferred <<- nreferred + 1
-      browseURL( urls["linkedin"] )
-      Sys.sleep(5); shinyjs::enable("sure")      
+      open_url_js(urls["linkedin"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$facebook, {
       nreferred <<- nreferred + 1
-      browseURL( urls["facebook"] )
-      Sys.sleep(5); shinyjs::enable("sure")            
+      open_url_js(urls["facebook"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$whatsapp, {
       nreferred <<- nreferred + 1
-      browseURL( urls["whatsapp"] )
-      Sys.sleep(5); shinyjs::enable("sure")                  
+      open_url_js(urls["whatsapp"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$email, {
       nreferred <<- nreferred + 1
-      browseURL( urls["email"] )
-      Sys.sleep(5); shinyjs::enable("sure")                        
+      open_url_js(urls["email"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$telegram, {
       nreferred <<- nreferred + 1
-      browseURL( urls["telegram.me"] )
-      Sys.sleep(5); shinyjs::enable("sure")      
+      open_url_js(urls["telegram.me"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$reddit, {
       nreferred <<- nreferred + 1
-      browseURL( urls["reddit"] )
-      Sys.sleep(5); shinyjs::enable("sure")            
+      open_url_js(urls["reddit"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$pinterest, {
       nreferred <<- nreferred + 1
-      browseURL( urls["pinterest"] )
-      Sys.sleep(5); shinyjs::enable("sure")      
+      open_url_js(urls["pinterest"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$yahoo, {
       nreferred <<- nreferred + 1
-      browseURL( urls["yahoo"] )
-      Sys.sleep(5); shinyjs::enable("sure")            
+      open_url_js(urls["yahoo"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$skype, {
       nreferred <<- nreferred + 1
-      browseURL( urls["skype"] )
-      Sys.sleep(5); shinyjs::enable("sure")            
+      open_url_js(urls["skype"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
 
     observeEvent( input$xing, {
       nreferred <<- nreferred + 1
-      browseURL( urls["xing"] )
-      Sys.sleep(5); shinyjs::enable("sure")            
+      open_url_js(urls["xing"])
+      Sys.sleep(5); shinyjs::enable("sure")
     })
-    
+
 
     ## observe submit buttons ------------------------------------
     rv <- reactiveValues(
         success = 1
     )
 
-    observeEvent( input$later, {      
+    observeEvent( input$later, {
       rv$success <- 0
       removeModal()
     })
-    
+
     observeEvent( input$sure, {
       if(nreferred==0) return()
       rv$success <- rv$success + 1
@@ -176,16 +176,16 @@ SocialMediaModule <- function(id, r.show = reactive(0))
     list(
         success = reactive({ rv$success })
     )
-    
+
   })  ## moduleServer
 }
 
 
 if(FALSE) {
-    
+
     require(shiny)
     shinyApp(
-        ui = fluidPage(                   
+        ui = fluidPage(
             actionButton("show","show")
             ##SocialMediaModuleUI("social")
         ),
@@ -196,7 +196,7 @@ if(FALSE) {
             )
         }
     )
-    
+
 
 }
 
@@ -243,7 +243,7 @@ GetSocialMediaSites_NiceNames <- function() {
     'xing'='Xing',
     'yahoo'='Yahoo'
   )
-  return(nice_names)  
+  return(nice_names)
 }
 
 GetSocialMediaSites_WithShareLinks_OrderedByPopularity <- function()
@@ -292,7 +292,7 @@ GetSocialMediaSites_WithShareLinks_OrderedByAlphabet <- function() {
   sites <- GetSocialMediaSites_WithShareLinks_OrderedByPopularity()
   return(sort(sites))
 }
-    
+
 GetSocialMediaSiteLinks_WithShareLinks <- function(
    url="",
    title="",
@@ -311,11 +311,11 @@ GetSocialMediaSiteLinks_WithShareLinks <- function(
    cc_email_address="",
    bcc_email_address=""
    )
-{      
-  
-  text <- title        
+{
+
+  text <- title
   text <- paste(text, desc)
-  
+
   urls <- c(
     'add.this' = paste0('http://www.addthis.com/bookmark.php?url=',url),
     'blogger' = paste0('https://www.blogger.com/blog-this.g?u=',url,'&n=',title,'&t=',desc),
@@ -327,7 +327,7 @@ GetSocialMediaSiteLinks_WithShareLinks <- function(
     'getpocket' = paste0('https://getpocket.com/edit?url=',url),
     'facebook' = paste0('http://www.facebook.com/sharer.php?u=',url),
     'flattr' = paste0('https://flattr.com/submit/auto?user_id=',user_id,'&url=',url,'&title=',title,'&description=',text,'&language=',language,'&tags=',hash_tags,'&hidden=HIDDEN&category=',category),
-    'flipboard' = paste0('https://share.flipboard.com/bookmarklet/popout?v=2&title=',text,'&url=',url), 
+    'flipboard' = paste0('https://share.flipboard.com/bookmarklet/popout?v=2&title=',text,'&url=',url),
     'gmail' = paste0('https://mail.google.com/mail/?view=cm&to=',email_address,'&su=',title,'&body=',url,'&bcc=',bcc_email_address,'&cc=',cc_email_address),
     'google.bookmarks' = paste0('https://www.google.com/bookmarks/mark?op=edit&bkmk=',url,'&title=',title,'&annotation=',text,'&labels=',hash_tags,''),
     'instapaper' = paste0('http://www.instapaper.com/edit?url=',url,'&title=',title,'&description=',desc),
@@ -362,7 +362,7 @@ GetSocialMediaSiteLinks_WithShareLinks <- function(
 
 
 if(FALSE) {
-  
+
   socialmediasites = GetSocialMediaSites_WithShareLinks_OrderedByAlphabet()
   head(socialmediasites)
 
@@ -374,7 +374,7 @@ if(FALSE) {
     title = 'EarthFluent'
   )
   head(socialmediaurls)
-  
+
   for (socialmediasite in socialmediasites) {
     cat(socialmediasite,":", socialmediaurls[socialmediasite],"\n")
   }

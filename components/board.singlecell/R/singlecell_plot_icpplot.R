@@ -207,13 +207,13 @@ singlecell_plot_icpplot_server <- function(id,
       mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)     
     }
 
-    get_ggplots <- function() {
+    get_ggplots <- function(cex=1) {
       pd <- plot_data()
       shiny::req(pd)
       
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- 1.0 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
+      cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
       klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
@@ -352,7 +352,23 @@ singlecell_plot_icpplot_server <- function(id,
 
     ggplot.RENDER <- function() {
       pd <- plot_data()  
-      plt <- get_ggplots()       
+      plt <- get_ggplots(cex=1.1)       
+      nr <- 5
+      if (pd[["layout"]] == "4x4") nr <- 4
+      if (pd[["layout"]] == "6x6") nr <- 6      
+      fig <- gridExtra::grid.arrange(
+        grobs = plt,
+        nrow = nr,
+        ncol = nr,
+        padding = unit(0.01,"line"),
+        top = textGrob(pd$refset,gp=gpar(fontsize=15))
+      )
+      return(fig)
+    }
+
+    ggplot.RENDER2 <- function() {
+      pd <- plot_data()  
+      plt <- get_ggplots(cex=1.4)       
       nr <- 5
       if (pd[["layout"]] == "4x4") nr <- 4
       if (pd[["layout"]] == "6x6") nr <- 6      
@@ -369,6 +385,7 @@ singlecell_plot_icpplot_server <- function(id,
     PlotModuleServer(
       id = "plot",        
       func = ggplot.RENDER,
+      func2 = ggplot.RENDER2,
       ##func = plotly.RENDER,
       ##func2 = plotly_modal.RENDER,
       ##plotlib = "plotly",

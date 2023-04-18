@@ -59,7 +59,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     if(1 && !export.ok) {
         ## https://github.com/plotly/plotly.R/issues/2179
         reticulate::py_run_string("import sys")
-        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height)))
+        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height, scale=4)))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
         export.ok <- TRUE

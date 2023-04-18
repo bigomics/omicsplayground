@@ -38,12 +38,16 @@ wordcloud_table_enrichment_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
-        fillContainer = TRUE,
+        fillContainer = TRUE,        
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = "25vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollX = TRUE,
+          scrollY = "25vh",
+          scrollResize = TRUE,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
