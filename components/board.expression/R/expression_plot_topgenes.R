@@ -28,11 +28,11 @@ expression_plot_topgenes_ui <- function(
       "Logarithmic scale the counts (abundance levels).",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("gx_grouped"), "group samples", FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_grouped"), "group samples", TRUE),
       "Group samples by phenotype",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show others", FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show others", TRUE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
@@ -229,7 +229,8 @@ expression_plot_topgenes_server <- function(id,
       plotlib = "plotly",
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 105), ## resolution of plots
-      pdf.width = 14, pdf.height = 3.5,
+      pdf.width = 14,
+      pdf.height = 3.5,
       add.watermark = watermark
     )
   }) ## end of moduleServer

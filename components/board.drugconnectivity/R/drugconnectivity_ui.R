@@ -30,39 +30,35 @@ DrugConnectivityInputs <- function(id) {
 DrugConnectivityUI <- function(id) {
   ns <- shiny::NS(id)
 
-  fullH <- "calc(100vh - 200px)"
-  halfH <- "calc(50vh  - 108px)"
+  fullH <- "calc(100vh - 180px)"
+  halfH <- "calc(50vh  - 98px)"
   
   panel1 <- shiny::tabPanel(
     "Drug enrichment",
-    div(
-      class = "row",
-      div(
-        class = "col-md-9",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            drugconnectivity_plot_enplots_ui(
-              id = ns("dsea_enplots"),
-              title = "Drug connectivity",
-              info.text = "Not available for this plot",
-              caption = "Drug connectivity correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
-              height = c(halfH, TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "a"
-            )
+    bslib::layout_column_wrap(
+      width = 1,
+      height = fullH,
+      style = htmltools::css(grid_template_columns = "9fr 3fr"),
+      bslib::layout_column_wrap(
+        width = 1,
+        bslib::layout_column_wrap(
+          width = 1/2,
+          drugconnectivity_plot_enplots_ui(
+            id = ns("dsea_enplots"),
+            title = "Drug connectivity",
+            info.text = "Not available for this plot",
+            caption = "Drug connectivity correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%"),
+            label = "a"
           ),
-          div(
-            class = "col-md-6",
-            drugconnectivity_plot_moa_ui(
-              id = ns("dsea_moaplot"),
-              title = "Mechanism of action",
-              info.text = "This plot visualizes the mechanism of action (MOA) across the enriched drug profiles. On the vertical axis, the GSEA normalized enrichment score of the MOA class or gene target is plotted. You can switch to visualize between MOA class or target gene.",
-              caption = "Mechanism of action (MOA) plot indicating the most correlated drug MOAs for a selected contrast.",
-              height = c(halfH, TABLE_HEIGHT_MODAL),                  
-              label = "c"
-            )
+          drugconnectivity_plot_moa_ui(
+            id = ns("dsea_moaplot"),
+            title = "Mechanism of action",
+            info.text = "This plot visualizes the mechanism of action (MOA) across the enriched drug profiles. On the vertical axis, the GSEA normalized enrichment score of the MOA class or gene target is plotted. You can switch to visualize between MOA class or target gene.",
+            caption = "Mechanism of action (MOA) plot indicating the most correlated drug MOAs for a selected contrast.",
+            height = c("100%", TABLE_HEIGHT_MODAL),                  
+            label = "c"
           )
         ),
         drugconnectivity_table_dsea_ui(
@@ -70,24 +66,21 @@ DrugConnectivityUI <- function(id) {
           title = "Enrichment table",
           info.text = "The platform correlates your signature with known drug or single gene alteration profiles from the selected database, and shows similar and opposite profiles by running the GSEA algorithm on the drug or gene alteration profile correlation space. Interpretation of the correlation is similar to standard GSEA plots.",
           caption = "GSEA-like plots showing the correlation of various drug or single gene alteration expression profiles with the selected contrast signature.",
-          height = c(halfH, TABLE_HEIGHT_MODAL),
+          height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         )
       ),
-      div(
-        class = "col-md-3",
-        drugconnectivity_plot_actmap_ui(
-          ns("dsea_actmap"),
-          title = "Activation matrix",
-          info.text = "The Activation Matrix visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
-          caption = "Activation Matrix visualising drug or single gene alteration profile correlations in all the available contrasts.",
-          height = c(fullH, TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%"),              
-          label = "d"
-        )
+      drugconnectivity_plot_actmap_ui(
+        ns("dsea_actmap"),
+        title = "Activation matrix",
+        info.text = "The Activation Matrix visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+        caption = "Activation Matrix visualising drug or single gene alteration profile correlations in all the available contrasts.",
+        height = c("100%", TABLE_HEIGHT_MODAL),
+        width = c("100%", "100%"),              
+        label = "d"
       )
     )
-  )
+  ) ## end of tabPanel
   
   panel2 <- shiny::tabPanel(
     "Connectivity map (beta)",

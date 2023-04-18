@@ -61,9 +61,8 @@ ExpressionInputs <- function(id) {
 ExpressionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 130px)"  ## full height of page (minus header)
-  halfH <- "height: calc(50vh - 130px);" ## half height of page
-  ##halfH <- "height: calc(100% - 180px);"
+  fullH <- "calc(100vh - 120px)"  ## full height of page (minus header)
+  halfH <- "height: calc(50vh - 120px);" ## half height of page
   
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
