@@ -82,6 +82,7 @@ WgcnaBoard <- function(id, pgx) {
 
         out <- playbase::pgx.wgcna(
           pgx = pgx,
+          lib.dir = FILES,
           ngenes = input$ngenes,
           minmodsize = as.integer(input$minmodsize),
           power = as.numeric(input$power),
