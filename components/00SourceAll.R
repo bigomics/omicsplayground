@@ -24,7 +24,6 @@ if(!file.exists('00SourceAll.R')) {
   source('board.clustering/R/clustering_table_clustannot.R',encoding='UTF-8')
   source('board.clustering/R/clustering_ui.R',encoding='UTF-8')
   source('board.clustering/R/plot_clustannot.R',encoding='UTF-8')
-  source('board.clustering/R/plot_clustpca.R',encoding='UTF-8')
   source('board.compare/R/compare_plot_compare1.R',encoding='UTF-8')
   source('board.compare/R/compare_plot_compare2.R',encoding='UTF-8')
   source('board.compare/R/compare_plot_cum_fc1.R',encoding='UTF-8')
