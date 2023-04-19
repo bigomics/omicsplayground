@@ -82,7 +82,6 @@ correlation_plot_scattercorr_server <- function(id,
     })
 
     cor_scatter.PLOTFUN <- function() {
-      browser()
       dt <- cor_scatter.DATA()
       rho <- dt[[1]]
       this.gene <- dt[[2]]
