@@ -769,7 +769,9 @@ PlotModuleServer <- function(
                 # By default remove plotly logo from all plots
                 plot <- func() %>%
                   plotly::config(displaylogo = FALSE) %>%
-                  plotly::plotly_build()
+                  plotly::plotly_build() %>% 
+                  plotly::layout(
+                    margin = list(l = 0, r = 0))
                 #                plot <- plot %>%
                 #                  plotly_default()
                 # If there is already custom buttons, append the edit one
