@@ -114,6 +114,7 @@ correlation_plot_table_corr_server <- function(id,
       sel <- 1:pcor_ntop
       shiny::req(sel)
 
+      if(length(sel) > nrow(R)) sel <- 1:nrow(R)
       rho <- R[sel, "cor"]
       if (length(sel) == 1) names(rho) <- rownames(R)[sel]
 
