@@ -331,7 +331,8 @@ clustering_plot_splitmap_server <- function(id,
         colcex = colcex
       )
       obj2 <- plt %>% iheatmapr::to_plotly_list()
-      plt <- plotly::as_widget(obj2)
+      plt <- plotly::as_widget(obj2)%>% plotly::layout(
+        margin = list(l = 0, r = 0))
       return(plt)
     }
 
