@@ -173,6 +173,10 @@ CorrelationBoard <- function(id, pgx) {
 
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
 
+      sel <- 1:input$pcor_ntop
+      if(length(sel) > nrow(R)) sel <- 1:nrow(R)
+      rho <- R[sel,]
+
       R
     })
 
@@ -480,7 +484,6 @@ CorrelationBoard <- function(id, pgx) {
       getGeneCorr           = getGeneCorr,
       cor_table             = cor_table,
       pgx             = pgx,
-      pcor_ntop             = input$pcor_ntop,
       scrollY               = "calc(35vh - 140px)",
       watermark             = WATERMARK
     )
@@ -491,7 +494,7 @@ CorrelationBoard <- function(id, pgx) {
       pgx = pgx,
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
-      cor_gene = input$cor_gene,
+      cor_gene = shiny::reactive(input$cor_gene),
       COL = COL,
       watermark = WATERMARK
     )
