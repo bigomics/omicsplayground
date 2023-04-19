@@ -453,11 +453,14 @@ PlotModuleServer <- function(
                     ## generic function should produce PNG inside plot func()
                     ##
                   } else if(plotlib=="base") {
+                    # Save original plot parameters
+                    opar <- par(no.readonly = TRUE)
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     func()
                     dev.off()  ## important!!
                   } else { ## end base
+                    par(mar = c(0, 0, 0, 0))
                     png(PNGFILE, pointsize=pdf.pointsize)
                     plot.new()
                     mtext("Error. PNG not available.",line=-8)
