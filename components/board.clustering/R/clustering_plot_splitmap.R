@@ -179,8 +179,10 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     hm1_splitmap.RENDER <- function() {
-      pd <- plot_data_hm1()
 
+      dbg("[clustering_plot_splitmap.R] hm1_splitmap.RENDER called!")
+
+      pd <- plot_data_hm1()
       zx <- pd[["zx"]]
       annot <- pd[["annot"]]
       zx.idx <- pd[["zx.idx"]]
@@ -269,8 +271,11 @@ clustering_plot_splitmap_server <- function(id,
     hm2_splitmap.RENDER <- function() {
       ## iHeatmap based splitted heatmap #########
 
+      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER called!")      
       shiny::req(pgx$genes)
 
+      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : 1 ")
+      
       ## -------------- variable to split samples
       ## scale = ifelse(input$hm_scale=="relative","row.center","none")
       scale <- "none"
@@ -283,6 +288,8 @@ clustering_plot_splitmap_server <- function(id,
       ## if(is.null(filt)) return(NULL)
       shiny::req(filt)
 
+      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : 2 ")
+      
       ## if(input$hm_group) {
       X <- filt$mat
       annot <- filt$annot
@@ -331,10 +338,15 @@ clustering_plot_splitmap_server <- function(id,
         colcex = colcex
       )
       obj2 <- plt %>% iheatmapr::to_plotly_list()
-      plt <- plotly::as_widget(obj2)
+      plt <- plotly::as_widget(obj2) %>%
+        plotly::layout(
+          margin = list(l=0,r=0,t=0,b=0)
+        )
+      
+      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : done! ")
+      
       return(plt)
     }
-
 
     PlotModuleServer(
       "pltmod",
