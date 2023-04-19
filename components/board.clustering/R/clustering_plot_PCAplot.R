@@ -31,7 +31,9 @@ clustering_plot_clustpca_ui <- function(
       shiny::radioButtons(
         ns("hmpca_legend"),
         label = "Legend:",
-        choices = c("group label", "bottom"), inline = TRUE
+        choiceValues = list("bottom","group label"),
+        choiceNames = list("Bottom","Group label"),
+         inline = TRUE
       ),
       "Normalize matrix before calculating distances."
     ),

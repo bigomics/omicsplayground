@@ -32,7 +32,7 @@ expression_plot_barplot_ui <- function(
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", TRUE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
@@ -127,7 +127,7 @@ expression_plot_barplot_server <- function(id,
         names = TRUE,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]],
-        xlab = "Groups",
+        xlab = "",
         plotlib = "plotly"        
       )
       fig
