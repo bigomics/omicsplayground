@@ -213,7 +213,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             cex.text = cex.title
           ) %>%
             plotly::add_text(
-              x=x.title, y=y.title, text="", ## text=gset.name,
+              x=x.title, y=y.title, text=gset.name,
               textfont = list( size = 12*cex.title ),
               textposition="bottom right") %>%
             plotly::layout(
@@ -234,7 +234,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
     
     plotly.RENDER <- function() {
-      plist <- get_plotly_plots(cex.title=0.8)
+      plist <- get_plotly_plots(cex.title=0.7)
       ntop <- length(plist)
       if(ntop>1) {
         plt <- plotly::subplot(plist, nrows = 3,
@@ -254,7 +254,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
 
     plotly.RENDER2 <- function() {
-      plist <- get_plotly_plots(cex.title=1.3)
+      plist <- get_plotly_plots(cex.title=1.2)
       ntop <- length(plist)
       if(ntop>1) {
         plt <- plotly::subplot(plist, nrows = 3,
