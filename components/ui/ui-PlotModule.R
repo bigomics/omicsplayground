@@ -455,7 +455,7 @@ PlotModuleServer <- function(
                   } else if(plotlib=="base") {
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
-                    func()
+                    print(func())
                     dev.off()  ## important!!
                   } else { ## end base
                     png(PNGFILE, pointsize=pdf.pointsize)
@@ -527,7 +527,7 @@ PlotModuleServer <- function(
                     } else if(plotlib=="base") {
                       pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
                         pointsize=pdf.pointsize)
-                      func()
+                      print(func())
                       dev.off()  ## important!!
                     } else { ## end base
                       pdf(PDFFILE, pointsize=pdf.pointsize)
