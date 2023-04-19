@@ -103,7 +103,6 @@ correlation_plot_table_corr_server <- function(id,
                                                getGeneCorr,
                                                cor_table,
                                                pgx,
-                                               pcor_ntop,
                                                scrollY,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -111,12 +110,7 @@ correlation_plot_table_corr_server <- function(id,
     plot_data <- shiny::reactive({
       df <- getPartialCorrelation()
       R <- getGeneCorr()
-      sel <- 1:pcor_ntop
-      shiny::req(sel)
-
-      if(length(sel) > nrow(R)) sel <- 1:nrow(R)
-      rho <- R[sel, "cor"]
-      if (length(sel) == 1) names(rho) <- rownames(R)[sel]
+      rho <- R[, "cor"]
 
       prho <- df$pcor
       names(prho) <- rownames(df)

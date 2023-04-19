@@ -20,7 +20,7 @@ correlation_plot_scattercorr_ui <- function(
   height,
   width) {
   ns <- shiny::NS(id)
-  
+
   cor_scatter.opts <- shiny::tagList(
     withTooltip(shiny::selectInput(ns("cor_group"), "Color by:", choices = NULL, multiple = FALSE),
       "Variable to split and color by groups.",
@@ -59,6 +59,7 @@ correlation_plot_scattercorr_server <- function(id,
                                                 COL,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     shiny::observe({
       px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
@@ -66,23 +67,22 @@ correlation_plot_scattercorr_server <- function(id,
     })
 
     cor_scatter.DATA <- shiny::reactive({
+      cor_gene <- cor_gene()
       shiny::req(cor_gene)
 
       X <- getFilteredExpression()
       this.gene <- rownames(pgx$X)[1]
       this.gene <- cor_gene
 
-      NTOP <- 25
       R <- getGeneCorr()
       dbg("[cor_scatter.DATA] 1: dim.R = ", dim(R))
-      sel <- 1:NTOP
-      rho <- R[sel, "cor"]
-      if (length(sel) == 1) names(rho) <- rownames(R)[sel]
+      rho <- R[,"cor"]
 
       return(list(rho, this.gene))
     })
 
     cor_scatter.PLOTFUN <- function() {
+      browser()
       dt <- cor_scatter.DATA()
       rho <- dt[[1]]
       this.gene <- dt[[2]]
