@@ -52,6 +52,15 @@ FeatureMapBoard <- function(id, pgx) {
       )
     })
 
+    observeEvent( input$sigvar, {
+      shiny::req(pgx$samples, input$sigvar)
+      if(input$sigvar %in% colnames(pgx$samples)) {
+        y <- setdiff(pgx$samples[,input$sigvar],c(NA))
+        y <- c("<average>",sort(unique(y)))
+        shiny::updateSelectInput(session, "ref_group", choices = y)
+      }
+    })
+
     ## ================================================================================
     ## ============================= FUNCTIONS ========================================
     ## ================================================================================
@@ -155,15 +164,26 @@ FeatureMapBoard <- function(id, pgx) {
         playbase::pgx.scatterPlotXY.BASE(
           pos[jj, ],
           var = var[jj],
-          zsym = zsym, zlim = zlim, set.par = FALSE, softmax = 1,
-          cex = cex, cex.legend = 0.9, cex.lab = 1.2, bty = "n",
-          col = "grey70", dlim = c(0.05, 0.05),
-          hilight = hmarks, hilight2 = NULL,
-          hilight.col = NULL, opacity = opacity,
+          zsym = zsym,
+          zlim = zlim,
+          set.par = FALSE,
+          softmax = 1,
+          cex = cex,
+          cex.legend = 0.9,
+          cex.lab = 1.2,
+          bty = "n",
+          col = "grey70",
+          dlim = c(0.05, 0.05),
+          hilight = hmarks,
+          hilight2 = NULL,
+          hilight.col = NULL,
+          opacity = opacity,
           ## xlab = xlab, ylab = ylab,
           xlab = "", ylab = "",
-          xaxs = xaxs, yaxs = yaxs,
-          hilight.lwd = 0.5, hilight.cex = 1.3
+          xaxs = xaxs,
+          yaxs = yaxs,
+          hilight.lwd = 0.5,
+          hilight.cex = 1.3
         )
 
         cex1 <- ifelse(ncol(F) <= 16, 1.2, 1)
@@ -248,6 +268,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx         = pgx,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),
+      ref_group         = shiny::reactive(input$ref_group),      
       plotFeaturesPanel = plotFeaturesPanel,
       watermark         = WATERMARK
     )
@@ -271,6 +292,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx         = pgx,
       getGsetUMAP       = getGsetUMAP,
       sigvar            = shiny::reactive(input$sigvar),
+      ref_group         = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark         = WATERMARK
     )

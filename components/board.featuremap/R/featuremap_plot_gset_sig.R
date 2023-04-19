@@ -31,20 +31,29 @@ featuremap_plot_gset_sig_server <- function(id,
                                             pgx,
                                             getGsetUMAP,
                                             sigvar,
+                                            ref_group,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     gsetSigPlots.plot_data <- shiny::reactive({
       shiny::req(pgx)
 
       pos <- getGsetUMAP()
-      hilight <- NULL
-
+      hilight <- NULL      
+      
       pheno <- "tissue"
       pheno <- sigvar()
       if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$gsetX - rowMeans(pgx$gsetX)
         y <- pgx$samples[, pheno]
+        ref <- ref_group()
+        if(ref == "<average>") {
+          refX <- rowMeans(pgx$gsetX)
+        } else {
+          kk <- which(y == ref)
+          refX <- rowMeans(pgx$gsetX[,kk])          
+        }
+        X <- pgx$gsetX - refX
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
         }))
@@ -57,7 +66,7 @@ featuremap_plot_gset_sig_server <- function(id,
       return(list(F, pos))
     })
 
-    gsetSigPlots.RENDER <- shiny::reactive({
+    gsetSigPlots.RENDER <- function() {
       dt <- gsetSigPlots.plot_data()
       F <- dt[[1]]
       pos <- dt[[2]]
@@ -75,9 +84,7 @@ featuremap_plot_gset_sig_server <- function(id,
         progress$set(message = "Computing feature plots...", value = 0)
       }
       plotFeaturesPanel(pos, F, ntop, nr, nc, sel = NULL, progress)
-      p <- grDevices::recordPlot()
-      p
-    })
+    }
 
     PlotModuleServer(
       "gset_sig",

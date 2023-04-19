@@ -11,21 +11,17 @@ $(document).on('shiny:connected', function() {
         $(".card-footer-checked").prop("checked", isChecked);
 	
 	if ($(this).prop("checked") === true) {
-	    $(".card-footer").show().animate({height: '3rem'}, 200, function() {
-		$(window).resize();  // yikes...
-		console.log('window.resize!');
-	    });
+	    $(".card-footer").show().animate({height: '3rem'}, 200);
 	};
 	
 	if ($(this).prop("checked") === false) {
-	    console.log('window.resize...');			
 	    $(".card-footer").animate({height: '0px'}, 200, function() {
 		$(this).hide();
-		$(window).resize();  // yikes...
-		console.log('window.resize!');			
 	    });
 	};
-	
+
+	$(window).resize();  // yikes...
+	console.log('window.resize!');
     });
 
 // call with: session$sendCustomMessage("window_resize", list(resize = TRUE))
