@@ -779,7 +779,7 @@ PlotModuleServer <- function(
                   plotly::plotly_build()
                 
                 if (remove_margins == TRUE) {
-                   plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0))
+                   plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
                 }
                 
                 #                plot <- plot %>%
