@@ -59,7 +59,7 @@ CorrelationUI <- function(id) {
         height = "calc(100vh - 180px)",
         bslib::layout_column_wrap(
           width = 1,
-          correlation_plot_corr_ui(
+          correlation_plot_barplot_ui(
             id = ns("cor_barplot"),
             title = "Top correlated genes",
             info.text = "Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
@@ -69,7 +69,7 @@ CorrelationUI <- function(id) {
             width = c("auto", "100%")
           ),
           correlation_table_corr_ui(
-            id = ns("cor_barplot"),
+            id = ns("cor_table"),
             title = "Correlation table",
             info.text = "Statistical results from correlated gene pairs.",
             caption = "Correlation table of correlation and partial correlation with respect to the selected gene. ",
@@ -96,7 +96,7 @@ CorrelationUI <- function(id) {
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),
           title = "Partial correlation network",
-          info.text = "Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair.",
+          info.text = "Grey edges to positive correlation, red edges correspond to negative correlation. The width of the edge is proportional to the absolute partial correlation value of the gene pair.",
           caption = "Partial correlation network around the selected gene.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
