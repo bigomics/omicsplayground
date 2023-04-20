@@ -324,7 +324,8 @@ PlotModuleServer <- function(
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
-         add.watermark=FALSE )
+         add.watermark=FALSE,
+         remove_margins = TRUE)
 {
     moduleServer(
       id,
@@ -454,13 +455,16 @@ PlotModuleServer <- function(
                     ##
                   } else if(plotlib=="base") {
                     # Save original plot parameters
-                    opar <- par(no.readonly = TRUE)
+                    if(remove_margins == TRUE) {
+                      par(mar = c(0, 0, 0, 0))
+                    }
+                    
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     func()
                     dev.off()  ## important!!
                   } else { ## end base
-                    par(mar = c(0, 0, 0, 0))
+                  
                     png(PNGFILE, pointsize=pdf.pointsize)
                     plot.new()
                     mtext("Error. PNG not available.",line=-8)
@@ -772,9 +776,12 @@ PlotModuleServer <- function(
                 # By default remove plotly logo from all plots
                 plot <- func() %>%
                   plotly::config(displaylogo = FALSE) %>%
-                  plotly::plotly_build() %>% 
-                  plotly::layout(
-                    margin = list(l = 0, r = 0))
+                  plotly::plotly_build()
+                
+                if (remove_margins == TRUE) {
+                   plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0))
+                }
+                
                 #                plot <- plot %>%
                 #                  plotly_default()
                 # If there is already custom buttons, append the edit one
