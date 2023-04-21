@@ -235,9 +235,12 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     
     plotly.RENDER <- function() {
       plist <- get_plotly_plots(cex.title=0.7)
+
+      
       ntop <- length(plist)
+      forced_nrows <- ifelse(ntop >= 3, 3,1)
       if(ntop>1) {
-        plt <- plotly::subplot(plist,
+        plt <- plotly::subplot(plist, nrows = forced_nrows,
           shareX = TRUE, shareY = TRUE,
           ## titleX=FALSE, titleY=FALSE,
           titleX=TRUE, titleY=TRUE,          
@@ -255,9 +258,10 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
 
     plotly.RENDER2 <- function() {
       plist <- get_plotly_plots(cex.title=1.2)
+      forced_nrows <- ifelse(ntop >= 3, 3,1)
       ntop <- length(plist)
       if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = 3,
+        plt <- plotly::subplot(plist, nrows = forced_nrows,
           shareX = TRUE, shareY = TRUE,
           titleX=TRUE, titleY=TRUE,
           margin = c(0.0,0.0,0.02,0.02)
