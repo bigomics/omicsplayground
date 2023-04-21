@@ -74,7 +74,9 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       rpt <- rpt[ii, , drop = FALSE]
       
-      shiny::validate(shiny::need(nrow(rpt) > 0, "Please select geneset in the table below."))
+      if(nrow(rpt) == 0) {
+        shiny::validate(shiny::need(nrow(rpt) > 0, "Please select geneset in the table below."))
+      }
       
       ntop <- as.integer(input$gs_enrichfreq_ntop)
       gset.weight <- input$gs_enrichfreq_gsetweight
