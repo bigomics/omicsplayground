@@ -77,6 +77,19 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       shiny::updateSelectInput(session, "gs_features", choices = gsets.groups, selected = sel)
     })
 
+    gseatable_rows_selected <- reactiveVal()
+
+    observe({
+      gseatable_rows_selected(gseatable$rows_selected())
+    })
+
+    genetable_rows_selected <- reactiveVal()
+
+    observe({
+      genetable_rows_selected(genetable$rows_selected())
+    })
+
+
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
@@ -343,7 +356,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     gset_selected <- shiny::reactive({
-      i <- as.integer(gseatable$rows_selected())
+      i <- as.integer(gseatable_rows_selected())
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
@@ -411,7 +424,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     gene_selected <- shiny::reactive({
       shiny::req(pgx)
-      i <- as.integer(genetable$rows_selected())
+      i <- as.integer(genetable_rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
