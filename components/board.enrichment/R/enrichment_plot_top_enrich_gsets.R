@@ -29,7 +29,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
                                                     getFilteredGeneSetTable,
                                                     gs_contrast,
-                                                    gseatable,
+                                                    gseatable_rows_current,
+                                                    gseatable_rows_selected,
                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
@@ -37,7 +38,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
-      shiny::req(rpt, gs_contrast())
+      shiny::req(rpt, gs_contrast(),gseatable_rows_current())
 
       comp <- 1
       comp <- gs_contrast()
@@ -46,12 +47,12 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
       
       ## selected
-      sel <- as.integer(gseatable$rows_selected())
+      sel <- as.integer(gseatable_rows_selected())
       sel.gs <- NULL
       if (!is.null(sel) && length(sel) > 0) sel.gs <- rownames(rpt)[sel]
 
-      ii <- gseatable$rows_selected()
-      jj <- gseatable$rows_current()
+      ii <- gseatable_rows_selected()
+      jj <- gseatable_rows_current()
       shiny::req(jj)
       
       if (nrow(rpt) == 0) {
