@@ -63,18 +63,19 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       comp <- gs_contrast()
       if (is.null(comp)) {
-        return(NULL)
+        shiny::validate(shiny::need(!is.null(comp)), "Please select geneset in the table below.")
       }
       if (!(comp %in% names(pgx$gx.meta$meta))) {
-        return(NULL)
+        shiny::validate(shiny::need((comp %in% names(pgx$gx.meta$meta)), "Please select geneset in the table below."))
       }
 
       ## filter on active rows (using search)
       ii <- gseatable_rows_selected()
+
       rpt <- rpt[ii, , drop = FALSE]
-      if (nrow(rpt) == 0) {
-        return(NULL)
-      }
+      
+      shiny::validate(shiny::need(nrow(rpt) > 0, "Please select geneset in the table below."))
+      
       ntop <- as.integer(input$gs_enrichfreq_ntop)
       gset.weight <- input$gs_enrichfreq_gsetweight
       fcweight <- input$gs_enrichfreq_fcweight
