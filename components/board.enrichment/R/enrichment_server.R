@@ -78,14 +78,19 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gseatable_rows_selected <- reactiveVal()
+    gseatable_rows_current <- reactiveVal()
 
     observe({
+      message("gseatable_rows_selected and gseatable_rows_current changed")
+      req(gseatable)
       gseatable_rows_selected(gseatable$rows_selected())
+      gseatable_rows_current(gseatable$rows_current())
     })
 
     genetable_rows_selected <- reactiveVal()
 
     observe({
+      message("genetable_rows_selected changed")
       genetable_rows_selected(genetable$rows_selected())
     })
 
@@ -95,6 +100,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     selected_gsetmethods <- shiny::reactive({
+      message("selected_gsetmethods called")
       shiny::req(pgx)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
       ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
@@ -104,6 +110,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     calcGsetMeta <- function(comparison, methods, pgx) {
+      message("calcGsetMeta called")
       mx <- pgx$gset.meta$meta[[comparison]]
       if (is.null(mx)) {
         return(NULL)
@@ -151,6 +158,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     }
 
     getFullGeneSetTable <- shiny::reactive({
+      message("getFullGeneSetTable called")
       shiny::req(pgx)
       comp <- 1
       comp <- input$gs_contrast
@@ -292,6 +300,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
 
     getFilteredGeneSetTable <- shiny::reactive({
+      message("getFilteredGeneSetTable called")
       if (is.null(input$gs_showall) || length(input$gs_showall) == 0) {
         return(NULL)
       }
@@ -367,12 +376,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     geneDetails <- shiny::reactive({
       ## return details of the genes in the selected gene set
-      ##
-
       shiny::req(pgx, input$gs_contrast)
-      gs <- 1
-      comp <- 1
-
       comp <- input$gs_contrast
       gs <- gset_selected()
       if (is.null(gs) || length(gs) == 0) {
@@ -451,7 +455,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable = gseatable,
+      gseatable_rows_current = gseatable_rows_current,
+      gseatable_rows_selected = gseatable_rows_selected,
       watermark = WATERMARK
     )
 
@@ -462,7 +467,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable = gseatable,
+      gseatable_rows_current = gseatable_rows_current,
       watermark = WATERMARK
     )
 
