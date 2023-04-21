@@ -80,6 +80,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     gseatable_rows_selected <- reactiveVal()
 
     observe({
+      req(gseatable)
+      req(genetable)
       message("gseatable_rows_selected changed")
       gseatable_rows_selected(gseatable$rows_selected())
     })
@@ -87,6 +89,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     genetable_rows_selected <- reactiveVal()
 
     observe({
+      req(gseatable)
+      req(genetable)
       message("genetable_rows_selected changed")
       genetable_rows_selected(genetable$rows_selected())
     })
@@ -99,6 +103,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     selected_gsetmethods <- shiny::reactive({
       message("selected_gsetmethods called")
       shiny::req(pgx)
+      req(gseatable)
+      req(genetable)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
       ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
       test <- input$gs_statmethod
@@ -157,6 +163,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     getFullGeneSetTable <- shiny::reactive({
       message("getFullGeneSetTable called")
       shiny::req(pgx)
+      req(gseatable)
+      req(genetable)
       comp <- 1
       comp <- input$gs_contrast
       if (is.null(comp)) {
@@ -297,6 +305,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
 
     getFilteredGeneSetTable <- shiny::reactive({
+      req(gseatable)
+      req(genetable)
       message("getFilteredGeneSetTable called")
       if (is.null(input$gs_showall) || length(input$gs_showall) == 0) {
         return(NULL)
@@ -342,6 +352,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     metaQ <- shiny::reactive({
       req(pgx)
+      req(gseatable)
+      req(genetable)
       methods <- selected_gsetmethods()
       metaQ <- sapply(pgx$gset.meta$meta, function(m)
         apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
@@ -362,6 +374,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     gset_selected <- shiny::reactive({
+      req(gseatable)
+      req(genetable)
       i <- as.integer(gseatable_rows_selected())
       if (is.null(i) || length(i) == 0) {
         return(NULL)
@@ -424,6 +438,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gene_selected <- shiny::reactive({
+      req(gseatable)
+      req(genetable)
       shiny::req(pgx)
       i <- as.integer(genetable_rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
