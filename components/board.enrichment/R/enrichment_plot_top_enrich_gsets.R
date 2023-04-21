@@ -27,7 +27,6 @@ enrichment_plot_top_enrich_gsets_ui <- function(
 
 enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
-                                                    gseatable,
                                                     getFilteredGeneSetTable,
                                                     gs_contrast,
                                                     gseatable_rows_selected,
@@ -37,7 +36,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     get_TopEnriched <- reactive({
 
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
-      shiny::req(pgx$X, gseatable_rows_selected(),gseatable)
+      shiny::req(pgx$X, gseatable_rows_selected())
       rpt <- getFilteredGeneSetTable()
   
       shiny::req(rpt, gs_contrast())

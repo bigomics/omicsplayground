@@ -469,7 +469,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
       gseatable_rows_selected = gseatable_rows_selected,
-      gseatable,
       watermark = WATERMARK
     )
 
@@ -478,7 +477,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     enrichment_plot_freq_top_gsets_server(
       "topEnrichedFreq",
       pgx = pgx,
-      gseatable,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
       gseatable_rows_selected = gseatable_rows_selected,
