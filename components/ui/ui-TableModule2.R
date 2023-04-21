@@ -149,7 +149,7 @@ TableModuleServer <- function(id,
                               csvFunc = NULL,
                               height = c(640,800),
                               width = c("auto",1400),
-                              selector = c("none","single", "multi","key")[1],
+                              selector = c("none","single", "multiple","key")[1],
                               filename = "data.csv")
 {
   moduleServer(
