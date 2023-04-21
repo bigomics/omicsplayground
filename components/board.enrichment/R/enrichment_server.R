@@ -78,13 +78,10 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gseatable_rows_selected <- reactiveVal()
-    gseatable_rows_current <- reactiveVal()
 
     observe({
-      message("gseatable_rows_selected and gseatable_rows_current changed")
-      req(gseatable)
+      message("gseatable_rows_selected changed")
       gseatable_rows_selected(gseatable$rows_selected())
-      gseatable_rows_current(gseatable$rows_current())
     })
 
     genetable_rows_selected <- reactiveVal()
@@ -455,7 +452,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable_rows_current = gseatable_rows_current,
       gseatable_rows_selected = gseatable_rows_selected,
       watermark = WATERMARK
     )
@@ -467,7 +463,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable_rows_current = gseatable_rows_current,
+      gseatable_rows_selected = gseatable_rows_selected,
       watermark = WATERMARK
     )
 
