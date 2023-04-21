@@ -52,14 +52,15 @@ enrichment_plot_freq_top_gsets_ui <- function(
 
 enrichment_plot_freq_top_gsets_server <- function(id,
                                                   pgx,
+                                                  gseatable,
                                                   getFilteredGeneSetTable,
                                                   gs_contrast,
                                                   gseatable_rows_selected,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
+      shiny::req(pgx,  getFilteredGeneSetTable(), gs_contrast(),gseatable)
       rpt <- getFilteredGeneSetTable()
-      shiny::req(pgx, rpt, gs_contrast())
 
       comp <- gs_contrast()
       if (is.null(comp)) {
