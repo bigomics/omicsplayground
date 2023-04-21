@@ -118,7 +118,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       func = gseatable.RENDER,
       func2 = gseatable.RENDER_modal,
       csvFunc = table_data,
-      selector = "single"
+      selector = "multiple"
     )
 
     return(gseatable)
