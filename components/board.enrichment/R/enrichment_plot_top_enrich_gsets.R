@@ -34,8 +34,10 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
   moduleServer(id, function(input, output, session) {
     
     get_TopEnriched <- reactive({
+
+      browser()
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
-      shiny::req(pgx$X)
+      shiny::req(pgx$X, gseatable_rows_selected())
       rpt <- getFilteredGeneSetTable()
       shiny::req(rpt, gs_contrast())
 
@@ -46,23 +48,21 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
       
       ## selected
-      sel <- as.integer(gseatable_rows_selected())
+      sel <- sort(as.integer(gseatable_rows_selected()))
       sel.gs <- NULL
-      if (!is.null(sel) && length(sel) > 0) sel.gs <- rownames(rpt)[sel]
-
-      ii <- gseatable_rows_selected()
-      jj <- gseatable_rows_selected() #FIXME for multiple rows!
-      shiny::req(jj)
+      if (!is.null(sel) && length(sel) > 0) {
+        sel.gs <- rownames(rpt)[sel]
+      } 
       
       if (nrow(rpt) == 0) {
         return(NULL)
       }
 
-      ## ENPLOT TYPE
-      if (length(ii) > 0) {
-        itop <- ii[1]
+      # ENPLOT TYPE
+      if (length(sel) == 0) {
+        itop <- 1:12
       } else {
-        itop <- head(jj, 12)
+        itop <- sel
       }
       rpt <- rpt[itop,]
       
@@ -237,7 +237,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       plist <- get_plotly_plots(cex.title=0.7)
       ntop <- length(plist)
       if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = 3,
+        plt <- plotly::subplot(plist,
           shareX = TRUE, shareY = TRUE,
           ## titleX=FALSE, titleY=FALSE,
           titleX=TRUE, titleY=TRUE,          
