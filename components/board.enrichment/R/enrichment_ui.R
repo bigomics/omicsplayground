@@ -186,9 +186,9 @@ EnrichmentUI <- function(id) {
         ),
         enrichment_table_genes_in_geneset_ui(
           ns("genetable"),
-          title = "Genes in gene set",
+          title = "Genes present in gene sets",
           info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
-          caption = "Table showing the fold-change, statistics and correlation of the genes in the selected gene set.",
+          caption = "Table showing the fold-change, statistics and correlation of the genes overlapping all selected gene sets.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         )
