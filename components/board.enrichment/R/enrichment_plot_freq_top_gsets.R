@@ -54,7 +54,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
                                                   pgx,
                                                   getFilteredGeneSetTable,
                                                   gs_contrast,
-                                                  gseatable,
+                                                  gseatable_rows_selected,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -70,7 +70,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       }
 
       ## filter on active rows (using search)
-      ii <- gseatable$rows_current()
+      ii <- gseatable_rows_selected()
       rpt <- rpt[ii, , drop = FALSE]
       if (nrow(rpt) == 0) {
         return(NULL)
