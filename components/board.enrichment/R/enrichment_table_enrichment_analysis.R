@@ -84,7 +84,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         extensions = c("Scroller"),
         plugins = 'scrollResize',
         fillContainer = TRUE,
-        selection = list(mode = selectmode, target = "row", selected = NULL),
+        selection = list(mode = selectmode, target = "row", selected = c(1,2,3,4)),
         options = list(
           dom = "frtip",
           paging = TRUE,
