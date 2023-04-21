@@ -35,32 +35,30 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     
     get_TopEnriched <- reactive({
 
-      browser()
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X, gseatable_rows_selected())
       rpt <- getFilteredGeneSetTable()
+  
       shiny::req(rpt, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()
-      if (!(comp %in% names(pgx$gx.meta$meta))) {
-        return(NULL)
+      
+      if(!(comp %in% names(pgx$gx.meta$meta))){
+        shiny::validate(shiny::need(comp %in% names(pgx$gx.meta$meta), "Please select geneset in the table below."))
       }
       
       ## selected
       sel <- sort(as.integer(gseatable_rows_selected()))
+
       sel.gs <- NULL
       if (!is.null(sel) && length(sel) > 0) {
         sel.gs <- rownames(rpt)[sel]
-      } 
-      
-      if (nrow(rpt) == 0) {
-        return(NULL)
       }
 
       # ENPLOT TYPE
       if (length(sel) == 0) {
-        itop <- 1:12
+        shiny::validate(shiny::need(sel > 0, "Please select geneset in the table below."))
       } else {
         itop <- sel
       }
@@ -80,7 +78,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       top <- rownames(rpt)
       top <- setdiff(top, c(NA, "NA"))
       if (is.null(top) || is.na(top[1])) {
-        return(NULL)
+        shiny::validate(shiny::need(!(is.null(top) || is.na(top[1])), "Please select geneset in the table below."))
       }
       
       gmt.genes <- list()
