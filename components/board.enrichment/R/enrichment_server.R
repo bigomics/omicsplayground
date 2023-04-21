@@ -82,7 +82,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     observe({
       req(gseatable)
       req(genetable)
-      message("gseatable_rows_selected changed")
       gseatable_rows_selected(gseatable$rows_selected())
     })
 
@@ -91,7 +90,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     observe({
       req(gseatable)
       req(genetable)
-      message("genetable_rows_selected changed")
       genetable_rows_selected(genetable$rows_selected())
     })
 
@@ -101,7 +99,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     selected_gsetmethods <- shiny::reactive({
-      message("selected_gsetmethods called")
       shiny::req(pgx)
       req(gseatable)
       req(genetable)
@@ -113,7 +110,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     calcGsetMeta <- function(comparison, methods, pgx) {
-      message("calcGsetMeta called")
       mx <- pgx$gset.meta$meta[[comparison]]
       if (is.null(mx)) {
         return(NULL)
@@ -161,7 +157,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     }
 
     getFullGeneSetTable <- shiny::reactive({
-      message("getFullGeneSetTable called")
       shiny::req(pgx)
       req(gseatable)
       req(genetable)
@@ -307,7 +302,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     getFilteredGeneSetTable <- shiny::reactive({
       req(gseatable)
       req(genetable)
-      message("getFilteredGeneSetTable called")
       if (is.null(input$gs_showall) || length(input$gs_showall) == 0) {
         return(NULL)
       }
