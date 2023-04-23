@@ -20,7 +20,7 @@ wgcna_plot_MTrelationships_ui <- function(id, height, width) {
     options = moduleTrait_opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = NULL #FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
   )
 }
 

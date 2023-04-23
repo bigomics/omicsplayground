@@ -60,7 +60,7 @@ singlecell_plot_markersplot_ui <- function(
     title = title,
     caption = caption,
     options = markersplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "csv"), #FIXME pdf is not working, to avoid crashing other things, we decided to remove it
     height = height,
     width = width
   )

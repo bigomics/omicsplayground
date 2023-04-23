@@ -428,7 +428,9 @@ PlotModuleServer <- function(
                   } else if(plotlib=="iheatmapr") {
                     p <- func()
                     iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
-                  } else if(plotlib=="visnetwork") {
+                  } else if(plotlib=="visnetwork") {                    
+                    # download will not work if phantomjs is not installed
+                    # webshot::install_phantomjs() in case phantomjs is not installed
                     p <- func()
                     dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
                     visNetwork::visSave(p, HTMLFILE)
@@ -461,7 +463,7 @@ PlotModuleServer <- function(
                     
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
-                    func()
+                    print(func())
                     dev.off()  ## important!!
                   } else { ## end base
                   
@@ -534,7 +536,7 @@ PlotModuleServer <- function(
                     } else if(plotlib=="base") {
                       pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
                         pointsize=pdf.pointsize)
-                      func()
+                      print(func())
                       dev.off()  ## important!!
                     } else { ## end base
                       pdf(PDFFILE, pointsize=pdf.pointsize)
