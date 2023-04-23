@@ -143,6 +143,12 @@ functional_plot_reactome_graph_server <- function(id,
         sbgn.xmls <- dir(sbgn.dir,".sbgn")
         names(sbgn.xmls) <- sbgn.xmls
         
+        if (!interactive()) {
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message = "Rendering pathway...", value = 0.33)
+        }
+
         obj <- try( SBGNview::SBGNview(
           gene.data = fc, 
           ##gene.id.type = "ENTREZID",

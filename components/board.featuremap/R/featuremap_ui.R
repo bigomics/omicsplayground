@@ -9,7 +9,7 @@ FeatureMapInputs <- function(id) {
     shiny::hr(), shiny::br(),
     ## data set parameters
     withTooltip(shiny::selectInput(ns("sigvar"), "Show phenotype:", choices = NULL, multiple = FALSE),
-      "To update",
+      "Select the phenotype to show in the signatures plot.",
       placement = "top"
     ),
     shiny::br(),
@@ -23,6 +23,10 @@ FeatureMapInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
+        tipifyR(
+          shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
+          "Reference group. If no group is selected the average is used as reference."
+        ),
         tipifyR(
           shiny::radioButtons(ns("umap_type"), "UMAP datatype:",
             choices = c("logCPM", "logFC"), inline = TRUE
@@ -73,7 +77,7 @@ FeatureMapUI <- function(id) {
             ),
             featuremap_plot_gene_sig_ui(
                 ns("geneSigPlots"),
-                title = "Gene Signatures",
+                title = "Gene signatures",
                 info.text = "UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance.",
                 caption = "Gene signature maps coloured by differential expression.",
                 height = height1,
@@ -107,7 +111,7 @@ FeatureMapUI <- function(id) {
             ),                     
             featuremap_plot_gset_sig_ui(
                 ns("gsetSigPlots"),
-                title = "Geneset Signatures",
+                title = "Geneset signatures",
                 info.text = "UMAP clustering of genesets colored by relative log-expression of the phenotype group. The distance metric is covariance. Genesets that are clustered nearby have high covariance.",
                 caption = "Geneset signature maps coloured by differential expression.",
                 height = height1,

@@ -280,7 +280,7 @@ dataview_plot_expression_server <- function(id,
 
       fig <- fig %>%
         plotly::layout(
-          xaxis = list(title = pd$groupby, fixedrange = TRUE),
+          xaxis = list(title = "", fixedrange = TRUE),
           yaxis = list(title = pd$ylab, fixedrange = TRUE),
           font = list(family = "Lato"),
           showlegend = FALSE

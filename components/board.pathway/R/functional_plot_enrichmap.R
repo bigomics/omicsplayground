@@ -77,6 +77,13 @@ functional_plot_enrichmap_server <- function(id,
         res <- plot_data()        
         ct <- head(colnames(res$F),6)
         ct
+
+        if (!interactive()) {
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message = "Calculating feature-set scores", value = 0)
+        }
+
         plist <- list()
         for(i in 1:length(ct)) {
           plist[[i]] <- plot_enrichmentmap(
@@ -91,7 +98,8 @@ functional_plot_enrichmap_server <- function(id,
             # paper_bgcolor="#cdceebff",
             plot_bgcolor="#cdceeb66",            
             # plot_bgcolor="#ffffff88",
-            label = FALSE) 
+            label = FALSE)          
+          if (!interactive()) shiny::incProgress(1/length(ct))
         }
         plist
       }

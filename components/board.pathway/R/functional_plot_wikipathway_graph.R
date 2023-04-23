@@ -140,6 +140,11 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         dbg("[functional_plot_wikipathway_graph.R] rendering WikiPathway",pathway.id)
+        if (!interactive()) {
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message = "Rendering pathway...", value = 0.33)
+        }
 
         tmpfile <- paste0(tempfile(),".svg")
         svg <- wikipathview(wp=pathway.id, val=fc, dir=svg.dir) 
