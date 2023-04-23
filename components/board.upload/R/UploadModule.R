@@ -620,7 +620,7 @@ UploadModuleServer <- function(id,
       ## ===================== PLOTS AND TABLES ==============================
       ## =====================================================================
 
-      output$countStats <- shiny::renderPlot({
+      output$countStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$counts.csv)
 
         check <- checkTables()
@@ -652,7 +652,7 @@ UploadModuleServer <- function(id,
           ggplot2::ggtitle("COUNTS", subtitle = tt2)
       })
 
-      output$phenoStats <- shiny::renderPlot({
+      output$phenoStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$samples.csv)
 
         check <- checkTables()
@@ -704,7 +704,7 @@ UploadModuleServer <- function(id,
         p1
       })
 
-      output$contrastStats <- shiny::renderPlot({
+      output$contrastStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$contrasts.csv)
         ct <- uploaded$contrasts.csv
         has.contrasts <- !is.null(ct) && NCOL(ct) > 0
@@ -765,7 +765,6 @@ UploadModuleServer <- function(id,
 
         p1
       })
-
 
       checkTables <- shiny::reactive({
         ##

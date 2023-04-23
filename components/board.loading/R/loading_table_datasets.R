@@ -29,12 +29,13 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
 
     pgxTable_DT <- reactive({
       df <- rl$pgxTable_data
-
+      shiny::req(df)
+      
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
 
-      req(df)
-
+      df$creator <- NULL
+      
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))

@@ -46,6 +46,7 @@ UploadUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Upload",
+      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). NB Users can now create contrasts from the platform itself, so the contrasts.csv file is optional."),
       div(
         class = "row",
         div(
@@ -90,10 +91,12 @@ UploadUI <- function(id) {
     ),
     shiny::tabPanel(
       "Contrasts",
+      bs_alert("Here, you can interactively create your comparisons (or so-called 'contrasts'). Choose a phenotype on the left, then create groups by dragging the conditions to the boxes of 'main' or 'control' group. Then click 'add comparison'. "),
       MakeContrastUI(ns("makecontrast"))
     ),
     shiny::tabPanel(
       "Compute",
+      bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation will take 10-40 minutes depending on the size of your data and number of comparisons."),
       shiny::fillCol(
         height = height, ## width = 1200,
         ComputePgxUI(ns("compute"))

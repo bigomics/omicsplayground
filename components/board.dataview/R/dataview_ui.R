@@ -74,70 +74,76 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        style = htmltools::css(grid_template_columns = "2fr 10fr"),
-        dataview_module_geneinfo_ui(
-          id = ns("geneinfo"),
-          title = "Gene info",
-          info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
-          caption = "Information about the selected gene and its function from public databases.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        shinyjqui::jqui_sortable(        
+        heights_equal = "row",
+        bs_alert("This panel displays the expression level of the selected gene, correlation, and average expression ranking within the dataset. More information about the gene and hyperlinks to external databases are provided. Furthermore, it displays the correlation and tissue expression for a selected gene in external reference datasets."),
         bslib::layout_column_wrap(
           width = 1,
-          bslib::layout_column_wrap(
-            width = 1/3,
-            dataview_plot_expression_ui(
-              id = ns("expressionplot"),
-              title = "Gene expression",
-              info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
-              caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              label = "a"
-            ),
-            dataview_plot_averagerank_ui(
-              ns("averagerankplot"),
-              label = "b",
-              title = "Average rank",
-              info.text = "Select the gene or feature of interest under the main Options.",
-              caption = "Ranking of the selected gene by decreasing average expression.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            dataview_plot_tsne_ui(
-              ns("tsneplot"),
-              label = "c",
-              title = "t-SNE clustering",
-              info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
-              caption = "t-SNE of samples colored by expression of selected gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
+          height = "100%",
+          style = htmltools::css(grid_template_columns = "2fr 10fr"),
+          dataview_module_geneinfo_ui(
+            id = ns("geneinfo"),
+            title = "Gene info",
+            info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
+            caption = "Information about the selected gene and its function from public databases.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           ),
-          bslib::layout_column_wrap(
-            width = 1,
-            style = htmltools::css(grid_template_columns = "7fr 5fr"),
-            dataview_plot_correlation_ui(
-              ns("correlationplot"),
-              label = "d",
-              title = "Top correlated genes",
-              info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
-              caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),              
-              width = c("auto", "100%")
-            ),
-            dataview_plot_tissue_ui(
-              ns("tissueplot"),
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "e",
-              title = "Tissue expression (GTEX)",
-              info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
-              caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
-            )
-          )
-        ))
+          shinyjqui::jqui_sortable(        
+            bslib::layout_column_wrap(
+              width = 1,
+              bslib::layout_column_wrap(
+                width = 1/3,
+                dataview_plot_expression_ui(
+                  id = ns("expressionplot"),
+                  title = "Gene expression",
+                  info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
+                  caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  label = "a"
+                ),
+                dataview_plot_averagerank_ui(
+                  ns("averagerankplot"),
+                  label = "b",
+                  title = "Average rank",
+                  info.text = "Select the gene or feature of interest under the main Options.",
+                  caption = "Ranking of the selected gene by decreasing average expression.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                ),
+                dataview_plot_tsne_ui(
+                  ns("tsneplot"),
+                  label = "c",
+                  title = "t-SNE clustering",
+                  info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
+                  caption = "t-SNE of samples colored by expression of selected gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                )
+              ),
+              bslib::layout_column_wrap(
+                width = 1,
+                style = htmltools::css(grid_template_columns = "7fr 5fr"),
+                dataview_plot_correlation_ui(
+                  ns("correlationplot"),
+                  label = "d",
+                  title = "Top correlated genes",
+                  info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+                  caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),              
+                  width = c("auto", "100%")
+                ),
+                dataview_plot_tissue_ui(
+                  ns("tissueplot"),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%"),
+                  label = "e",
+                  title = "Tissue expression (GTEX)",
+                  info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
+                  caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
+                )
+              )
+            ))
+        )
       )
     ),
     

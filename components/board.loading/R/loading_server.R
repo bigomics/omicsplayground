@@ -71,10 +71,20 @@ LoadingBoard <- function(id,
         selected_row <- rl$selected_row_shared
         pgx_name <- rl$pgxTableShared_data[selected_row, 'dataset']
         pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
-        pgx_dir <- getPGXDIR()
-        new_pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
+        pgx_path <- getPGXDIR()
+        new_pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
+
+        if(file.exists(new_pgx_file)) {
+          shinyalert::shinyalert(
+            title = "Oops! File exists...",
+            paste('There is already a dataset called', pgx_name,
+              'in your dataset folder. Please delete your file first.')
+          )
+          return()
+        }
+
         file.copy(from = pgx_file, to = new_pgx_file)
-        rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
+        ## rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         shinyalert::shinyalert(
           "Dataset imported",
@@ -90,7 +100,18 @@ LoadingBoard <- function(id,
       rl$share_pgx, {
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
+        new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
         
+        ## abort if file exists
+        if(file.exists(new_pgx_file)) {
+          shinyalert::shinyalert(
+            title = "Oops! File exists...",
+            paste('There is already a dataset called', pgx_name,
+              'in the shared folder. Please rename your file.')
+          )
+          return()
+        }
+
         alert_val <- shinyalert::shinyalert(
           inputId = 'share_confirm',
           title = "Share this dataset?",
@@ -110,23 +131,26 @@ LoadingBoard <- function(id,
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])        
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
         pgx_name <- sub("[.]pgx$","",pgx_name)
-        pgx_file <- file.path(pgx_dir, paste0(pgx_name, '.pgx'))
+        pgx_path <- getPGXDIR()
+        pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
-
-        if(0) {
+        
+        ## file.copy(from = pgx_file, to = new_pgx_file)
+        dbg("[loading_server.R:share_confirm] pgx_file = ", pgx_file)
+        pgx0  <- playbase::pgx.load(pgx_file)
+        unknown.creator <- pgx0$creator %in% c(NA,"","user","anonymous","unknown")
+        if("creator" %in% names(pgx0) && !unknown.creator) {
           file.copy(from = pgx_file, to = new_pgx_file)
         } else {
-          dbg("[loading_server.R:share_confirm] pgx_file = ", pgx_file)
-          pgx0  <- playbase::pgx.load(pgx_file)
-          if(!"creator" %in% names(pgx0)) pgx0$creator <- session$user  ## really?
-          if(pgx0$creator %in% c(NA,"")) pgx0$creator <- session$user  ## really?          
+          pgx0$creator <- session$user  ## really?          
           dbg("[loading_server.R:share_confirm] session$user = ", session$user)
-          dbg("[loading_server.R:share_confirm] creator = ", pgx0$creator)          
+          dbg("[loading_server.R:share_confirm] creator = ", pgx0$creator)
+          if(pgx0$creator %in% c(NA,"","user","anonymous","unknown"))  pgx0$creator <- "unknown"
           playbase::pgx.save(pgx0, file = new_pgx_file)
         }
-
+        
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
-        r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+        ## r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
         shinyalert::shinyalert(
           title = "Successfully shared!",
@@ -180,16 +204,29 @@ LoadingBoard <- function(id,
     ## ================================================================================
     ## Modules
     ## ================================================================================
-    loading_tsne_server("tsne", pgx.dir = getPGXDIR, watermark = FALSE)
-    loading_tsne_server("tsne_shared", pgx.dir = reactive(pgx_shared_dir), watermark = FALSE)
+    loading_tsne_server(
+      id = "tsne",
+      pgx.dir = getPGXDIR,
+      info.table = getFilteredPGXINFO,      
+      watermark = FALSE
+    )
+
+    loading_tsne_server(
+      id = "tsne_shared",
+      pgx.dir = reactive(pgx_shared_dir),
+      info.table = getFilteredPGXINFO_SHARED,
+      watermark = FALSE)
 
     pgxtable <- loading_table_datasets_server(
-      id = "pgxtable", rl = rl,
+      id = "pgxtable",
+      rl = rl,
       enable_pgxdownload = enable_pgxdownload,
       enable_share = enable_share)
 
     pgxtable_shared <- loading_table_datasets_shared_server(
-      "pgxtable_shared", rl = rl)
+      id = "pgxtable_shared",
+      table = reactive(rl$pgxTableShared_data)
+    )
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -261,19 +298,14 @@ LoadingBoard <- function(id,
       pdir
     })
 
-    getPGXDIR_SHARED <- shiny::reactive({
-      rl$reload_pgxdir_shared ## force reload
-      pdir <- stringr::str_replace_all(pgx_dir, c('data'='data_shared'))
-      pdir
-    })
-
-
     getPGXINFO <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
+      dbg("[loading_server.R:getPGXINFO] reacted!")
+
       info <- NULL
       pdir <- getPGXDIR()
       info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
@@ -291,16 +323,21 @@ LoadingBoard <- function(id,
       info
     })
 
-
-    getPGXINFO_SHARED <- shiny::reactive({
+    getPGXINFO_SHARED <- shiny::eventReactive({
+      rl$reload_pgxdir_shared
+    }, {
       req(auth)
       if (!auth$logged()) {
-        warning("[LoadingBoard:getPGXINFO] user not logged in!")
+        warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
         return(NULL)
       }
+      dbg("[loading_server.R:getPGXINFO_SHARED] reacted!")
+
+      ## update meta files
+      playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
+      
       info <- NULL
-      pdir <- getPGXDIR_SHARED()
-      info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       info.colnames <- c(
         "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism",
@@ -366,10 +403,8 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       df <- getPGXINFO_SHARED()
-      if (is.null(df)) {
-        return(NULL)
-      }
-
+      shiny::req(df)
+      
       pgxfiles <- dir(pgx_shared_dir, pattern = ".pgx$")
       sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
       df <- df[sel, , drop = FALSE]
@@ -727,7 +762,6 @@ LoadingBoard <- function(id,
 
     observeEvent(
       c(getFilteredPGXINFO(), r_global$reload_pgxdir), {
-
         df <- getFilteredPGXINFO()
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
@@ -741,7 +775,8 @@ LoadingBoard <- function(id,
     )
 
     observeEvent(
-      c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
+      ## c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
+      c(getFilteredPGXINFO_SHARED()), {      
         df <- getFilteredPGXINFO_SHARED()
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
