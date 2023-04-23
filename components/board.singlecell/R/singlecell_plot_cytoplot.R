@@ -42,7 +42,7 @@ singlecell_plot_cytoplot_ui <- function(
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("csv"),#FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
     height = height,
     width = width
   )

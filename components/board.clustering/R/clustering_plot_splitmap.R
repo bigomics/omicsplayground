@@ -343,8 +343,6 @@ clustering_plot_splitmap_server <- function(id,
           margin = list(l=0,r=0,t=0,b=0)
         )
       
-      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : done! ")
-      
       return(plt)
     }
 
