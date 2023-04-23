@@ -48,17 +48,8 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       shiny::req(res)
       
       check_diversity_in_colums <- function(df){
-        sum(
-          unlist(
-            apply(
-              df, 2, function(x){
-                length(unique(x))>1
-                }
-                )
-              )
-            ) >1
+        sum( unlist( apply(df, 2, function(x) length(unique(x))>1 ))) >1
       }
-      
 
       if (check_diversity_in_colums(res$annot)) {
         ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
@@ -73,8 +64,6 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
         shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))
         return(NULL)
       }
-
-      
     }
 
     modal_plot.RENDER <- function() {

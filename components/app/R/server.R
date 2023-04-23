@@ -108,9 +108,10 @@ app_server <- function(input, output, session) {
 
     env <- list()  ## communication "environment"
 
-    ## *** EXPERIMENTAL *** global reactive value replacing env list
-    ## above create session global reactiveValue from list
+    ## Global reactive value for PGX object
     PGX <- reactiveValues()
+
+    ## Global reactive values for app-wide triggering
     r_global <- reactiveValues(
         load_example_trigger = 0,
         reload_pgxdir = 0,
@@ -125,6 +126,8 @@ app_server <- function(input, output, session) {
         limits = limits,
         auth = auth,
         enable_userdir = opt$ENABLE_USERDIR,
+        enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
+        enable_share = opt$ENABLE_SHARE,
         r_global = r_global
     )
 
@@ -142,10 +145,9 @@ app_server <- function(input, output, session) {
        )
     } else {
 
-
     }
 
-    ## If user is logged off, we clear the data
+    ## If user logs off, we clear the data
     observeEvent( auth$logged(), {
         is.logged <- auth$logged()
         length.pgx <- length(names(PGX))
@@ -153,6 +155,9 @@ app_server <- function(input, output, session) {
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
+#            session$clientData$user <- NA  ## try
+        } else {
+          ##            session$clientData$user <- auth$email()  ## try
         }
     })
 
@@ -471,7 +476,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         info("[server.R & TIMEOUT>0] change in user log status : logged = ",logged)
-
         ##--------- start timer --------------
         if(TIMEOUT>0 && logged) {
           info("[server.R] starting session timer!!!")
@@ -533,6 +537,18 @@ Upgrade today and experience advanced analysis features without the time limit.<
         logged <- auth$logged()
         info("[server.R] change in user log status : logged = ",logged)
 
+        if(logged) {
+          session$user <- auth$email()
+#          session$userData$user <- auth$email()
+        } else {
+          session$user <- "anonymous"
+#          session$userData$user <- ""
+        }
+
+        dbg("[server.R] session.user = ",session$user)
+        dbg("[server.R] session.names(userData) = ",names(session$userData))
+        ##dbg("[server.R] session.userData = ",session$userData)
+        
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase

@@ -38,11 +38,12 @@ LoadingUI <- function(id) {
           )
         ),
         shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats"),
-      ),
+    ),
     shiny::tabsetPanel(
       id = ns('tabs'),
       shiny::tabPanel(
         'User',
+        bs_alert("This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button."),
         div(
           class = "row",
           div(            
@@ -95,6 +96,7 @@ LoadingUI <- function(id) {
 
       shiny::tabPanel(
         'Shared',
+        bs_alert("In this panel you can share your data with others. You can also select a shared dataset and import that to your library for further analysis. Remember: sharing is caring! The more we share, the more we know."),
         div(
           class = "row",
           div(
@@ -102,8 +104,8 @@ LoadingUI <- function(id) {
             loading_table_datasets_shared_ui(
               ns("pgxtable_shared"),
               title = "Shared datasets",
-              info.text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
-              caption = "Table with public datasets available in the platform.",
+              info.text = "This table shows available shared datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
+              caption = "Table with shared datasets available in the platform.",
               height = c("65vh", 700),
               width = c("100%", "100%")
             ),
@@ -121,14 +123,14 @@ LoadingUI <- function(id) {
             loading_tsne_ui(
               ns("tsne_shared"),
               title = "Dataset explorer",
-              info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+              info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
               caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
               height = c("65vh", "70vh"),
               width = c("auto",  "100%")
             )
           )
-        )
-      )
+        ) ## end of row
+      ) ## end of tabPanel
     )
   )
 }

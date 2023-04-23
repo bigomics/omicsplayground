@@ -395,6 +395,10 @@ ComputePgxServer <- function(
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
+
+                ## override username from session object
+                params$creator <- session$user
+
                 
                 saveRDS(params, file=path_to_params)
 

@@ -1,4 +1,5 @@
 BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+BRANCH:=$(strip $(BRANCH))
 
 run: sass tag.version
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
@@ -24,13 +25,15 @@ clean.force:
 show.branch:
 	@echo $(BRANCH)
 
+
+TAG=$(BRANCH)
 docker.run:
-	@echo running docker $(BRANCH) at port 4000
-	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(BRANCH)
+	@echo running docker *$(TAG)* at port 4000
+	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
 docker.run2:
-	@echo running docker $(BRANCH) at port 4001
-	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(BRANCH)
+	@echo running docker $(TAG) at port 4001
+	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(TAG)
 
 docker: FORCE tag.version
 	@echo building docker $(BRANCH)
@@ -68,7 +71,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION = "v3.0-RC".$(DATE)
+VERSION := "v3.0-RC5."$(BRANCH)""$(DATE)
 
 tag.version:
 	@echo "new version ->" $(VERSION)

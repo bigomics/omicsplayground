@@ -67,7 +67,7 @@ loading_tsne_server <- function(id, pgx.dirRT,
         ## pos <- umap::umap(1-corF)$layout
         pos <- round(pos, digits = 4)
         rownames(pos) <- colnames(F)
-        colnames(pos) <- c("x", "y")
+        colnames(pos) <- c("x", "y")        
         write.csv(pos, file = tsne.file)
       }
 

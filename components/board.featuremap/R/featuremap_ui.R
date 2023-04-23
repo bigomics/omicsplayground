@@ -14,7 +14,7 @@ FeatureMapInputs <- function(id) {
     ),
     shiny::br(),
     shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
+    withTooltip(shiny::actionLink(ns("options"), "Advanced options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
     ),
