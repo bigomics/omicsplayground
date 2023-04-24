@@ -41,10 +41,14 @@ html {
 
     
     //---------------- sidebar ---------------------
+    .sidebar-container {
+	height: calc(100vh - 48px);
+    }
+    
     .sidebar-expanded>.sidebar {
         width: 12rem;
         min-width: 12rem;
-	max-height: calc(100vh - 320px);
+	max-height: calc(100vh - 300px);
 	overflow-y: auto;
     }
 
@@ -109,6 +113,10 @@ html {
     }
 
     //---------------- settings ---------------------
+    .settings-container {
+	height: calc(100vh - 48px);
+    }
+
     .settings-expanded {
         width: 12rem;
         min-width: 12rem;	
