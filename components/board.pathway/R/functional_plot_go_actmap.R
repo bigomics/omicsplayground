@@ -168,6 +168,7 @@ functional_plot_go_actmap_server <- function(id,
         csvFunc = plot_data,
         res = 72,
         pdf.width = 9,
+        remove_margins = FALSE,
         pdf.height = 9,
         add.watermark = watermark
       )
