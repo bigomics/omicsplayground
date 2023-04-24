@@ -363,6 +363,7 @@ app_server <- function(input, output, session) {
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
+        toggleTab("dataview-tabs","Resource info", show.beta)
 
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
@@ -376,11 +377,9 @@ app_server <- function(input, output, session) {
         info("[server.R] disabling alpha features")
         toggleTab("corr-tabs","Functional",DEV)   ## too slow
         toggleTab("corr-tabs","Differential",DEV)
-        toggleTab("dataview-tabs","Resource info",DEV)
         toggleTab("cell-tabs","iTALK",DEV)  ## DEV only
         toggleTab("cell-tabs","CNV",DEV)  ## DEV only
         toggleTab("cell-tabs","Monocle",DEV) ## DEV only
-        toggleTab("corr-tabs","Functional",DEV)
 
         info("[server.R] trigger on change dataset done!")
     })

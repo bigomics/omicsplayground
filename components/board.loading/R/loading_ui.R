@@ -25,7 +25,7 @@ LoadingUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   div(
-    class = "p-1",
+    class = "p-0",
     fillRow(
         flex = c(NA, NA, 1),
         shiny::div(
