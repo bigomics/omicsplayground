@@ -48,7 +48,8 @@ CorrelationBoard <- function(id, pgx) {
       sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
       shiny::updateSelectizeInput(session, "cor_gene", choices = genes, selected = sel, server = TRUE)
 
-      fam <- playbase::pgx.getFamilies(pgx, lib.dir = FILES, nmin = 10, extended = FALSE)
+      fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      ##fam <- names(pgx$families)      
       fam <- sort(c("<custom>", fam))
       shiny::updateSelectInput(session, "cor_features", choices = fam)
 

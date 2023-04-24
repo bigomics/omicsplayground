@@ -52,7 +52,8 @@ ExpressionBoard <- function(id, pgx) {
 
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
-      fam <- playbase::pgx.getFamilies(pgx, lib.dir = FILES, nmin = 10, extended = FALSE)
+      fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      ## fam <- names(pgx$families) ## this lack FAMILY: prefix ... need more work     
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
@@ -216,7 +217,6 @@ ExpressionBoard <- function(id, pgx) {
       gx_features <- 1
       gx_features <- input$gx_features
       if (gx_features != "<all>") {
-        ## gset <- GSETS[[gx_features]]
         gset <- unlist(getGSETS(gx_features))
         psel <- playbase::filterProbes(pgx$genes, gset)
       }
@@ -233,7 +233,7 @@ ExpressionBoard <- function(id, pgx) {
       ##
       ##
       ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx, input$gx_features, input$gx_fdr, input$gx_lfc)
+      shiny::req(pgx, input$gx_fdr, input$gx_lfc)
 
       comp <- 1
       test <- "trend.limma"
@@ -242,13 +242,8 @@ ExpressionBoard <- function(id, pgx) {
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
 
-      ## res = getDEGtable(pgx, testmethods="trend.limma", comparison=1,add.pq=FALSE)
-      ## res = getDEGtable(pgx, testmethods=tests, comparison=comp,
-      ## add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
       res <- fullDiffExprTable()
-      if (is.null(res) || nrow(res) == 0) {
-        return(NULL)
-      }
+      shiny::req(res)
 
       fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
       res <- res[order(-abs(res[, fx.col])), ]
