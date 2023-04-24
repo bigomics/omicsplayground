@@ -334,7 +334,12 @@ LoadingBoard <- function(id,
       dbg("[loading_server.R:getPGXINFO_SHARED] reacted!")
 
       ## update meta files
+      shiny::withProgress(message = "Updating datasets meta-info...", value = 0.33, {
+#      shinyWidgets::sendSweetAlert(
+#        title="Please wait..", text = "Updating scanning your datasets...", btn_labels = NA )
       playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
+#      shinyWidgets::closeSweetAlert()
+      })
       
       info <- NULL
       info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
@@ -466,7 +471,7 @@ LoadingBoard <- function(id,
       pgx <- NULL
       if (file.exists(pgxfile1)) {
         dbg("[loading_server.R] loading pgx file = ",pgxfile1)
-        shiny::withProgress(message = "Loading data...", value = 0.33, {
+        shiny::withProgress(message = "Loading PGX data...", value = 0.33, {
           pgx <- playbase::pgx.load(pgxfile1)
         })
         dbg("[loading_server.R] loading finished")
@@ -494,7 +499,7 @@ LoadingBoard <- function(id,
       if (dir.exists(pgxdir)) {
         file1 <- file.path(pgxdir, file)
         dbg("[loading_server.R:savePGX] saving pgx file = ",file1)
-        shiny::withProgress(message = "Saving data...", value = 0.33, {
+        shiny::withProgress(message = "Saving PGX data...", value = 0.33, {
           save(pgx, file=file1)
         })
         dbg("[loading_server.R] saving finished")
@@ -715,10 +720,15 @@ LoadingBoard <- function(id,
       ## Copying to pgx list to reactiveValues in
       ## session environment.
       dbg("[loading_server.R] copying pgx object to global environment")
-      for (i in 1:length(loaded_pgx)) {
-        pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
-      }
-
+      empty.slots <- setdiff(names(pgx),names(loaded_pgx))
+      isolate({
+        for (e in empty.slots) {
+          pgx[[e]] <- NULL
+        }
+        for (i in 1:length(loaded_pgx)) {
+          pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
+        }
+      })
       ## ----------------- remove modal on exit?? -------------------------
       remove(loaded_pgx)
       gc()

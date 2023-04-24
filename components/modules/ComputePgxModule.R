@@ -408,8 +408,9 @@ ComputePgxServer <- function(
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
-                    "Sit back and relax!",
-                    paste0("Your dataset will be computed in the background. You can continue to play with a different dataset or get some coffee in the meantime. When it is ready, it will appear in your dataset table as '",dataset_name,"'.")
+                    title = "Sit back and relax!",
+                    text = paste0("Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.")
+                    ## timer = 8000
                 )
                 bigdash.selectTab(
                     session,

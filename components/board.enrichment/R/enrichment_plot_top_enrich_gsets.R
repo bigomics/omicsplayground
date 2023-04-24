@@ -151,7 +151,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
     }
 
-    get_plotly_plots <- function(cex.title) {      
+    get_plotly_plots <- function(cex.text) {      
 
       dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
       
@@ -254,7 +254,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
 
     plotly.RENDER2 <- function() {
-      plist <- get_plotly_plots(cex.title=1.2)
+      plist <- get_plotly_plots(cex.text=1.1)
       ntop <- length(plist)
       if(ntop>1) {
         plt <- plotly::subplot(plist, nrows = 3,

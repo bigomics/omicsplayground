@@ -472,9 +472,6 @@ UploadModuleServer <- function(id,
               type = "info"
             )
 
-            dbg("[UploadModule:parseQueryString] dim(samples) = ", dim(uploaded$samples.csv))
-            dbg("[UploadModule:parseQueryString] dim(counts) = ", dim(uploaded$counts.csv))
-
             ## focus on this tab
             updateTabsetPanel(session, "tabs", selected = "Upload data")
           }

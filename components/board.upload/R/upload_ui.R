@@ -66,6 +66,7 @@ UploadUI <- function(id) {
           shiny::div(shiny::uiOutput(ns("upload_info")))
         )
       ),
+      br(),
       div(
         class = "row",
         div(

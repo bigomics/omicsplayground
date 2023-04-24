@@ -79,6 +79,7 @@ DataViewUI <- function(id) {
         bslib::layout_column_wrap(
           width = 1,
           height = "100%",
+          heights_equal = "row",          
           style = htmltools::css(grid_template_columns = "2fr 10fr"),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),

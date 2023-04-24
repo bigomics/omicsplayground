@@ -129,13 +129,22 @@ UploadBoard <- function(id,
         fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
 
         ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## 'pgx' as standard name. Actually saving as RDS
-        ## should be better.
+        ## switch 'pgx' as standard name. Actually saving as RDS
+        ## would have been better...
         pgx <- new_pgx
         save(pgx, file = fn)
         remove(pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
+        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
+        ## shinyWidgets::sendSweetAlert(
+        ##   title="Please wait...",
+        ##   text = "Scanning your datasets...",
+        ##   btn_labels = NA
+        ## )
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+        ##shinyWidgets::closeSweetAlert()
+        })
+        
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1        
       }
 
@@ -145,17 +154,22 @@ UploadBoard <- function(id,
 
       load_my_dataset <- function(){
         ## update Session PGX
-        dbg("[upload_server:load_my_dataset] input$confirmload",input$confirmload)
-        if(input$confirmload) {
+        ## dbg("[upload_server:load_my_dataset] input$confirmload = ",input$confirmload)
+        ## IK 24.4.2023: input$confirmload is empty... why???
+        ##       if(input$confirmload)
+        {
           dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
           empty.slots <- setdiff(names(pgx),names(new_pgx))
-          for (e in empty.slots) {
-            pgx[[e]] <- NULL
-          }
-          for (i in 1:length(new_pgx)) {
-            pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
-          }
-          dbg("[UploadBoard@load_react] **** finished  ****")          
+          isolate({
+            for (e in empty.slots) {
+              pgx[[e]] <- NULL
+            }
+            for (i in 1:length(new_pgx)) {
+              pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
+            }
+          })
+          dbg("[UploadBoard@load_react] **** finished  ****")
+          bigdash.selectTab(session, selected = 'dataview-tab')          
           ## r_global$loadedDataset <- r_global$loadedDataset+1          
           r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         }
@@ -165,13 +179,15 @@ UploadBoard <- function(id,
       if(r_global$loadedDataset > 0){
         # check if user already has a dataset loaded and have a different UX in that case
         shinyalert::shinyalert(
-          paste("Your dataset", new_pgx$name, "is ready!"),
-          "What do you want to do next?",
+          title = paste("Your dataset", new_pgx$name, "is ready!"),
+          ##text = "What do you want to do next?",
+          text = "We finished computing your data and now it's ready for visualization. Happy discoveries!",          
           confirmButtonText = "Show my new data!",
-          cancelButtonText = "Stay here",
-          showCancelButton = TRUE,
+          # cancelButtonText = "Stay here",
+          # showCancelButton = TRUE,
           callbackR = load_my_dataset,
           inputId = "confirmload"
+          ## immediate = TRUE
         )
       } else {
         load_my_dataset()
