@@ -210,6 +210,7 @@ expression_plot_volcano_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
+      remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
