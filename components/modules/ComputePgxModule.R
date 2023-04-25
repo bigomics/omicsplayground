@@ -191,22 +191,6 @@ ComputePgxServer <- function(
             shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
 
 
-            if(FALSE) {
-                shiny::observeEvent( input$gene_methods, {
-                    if(length(input$gene_methods) > 3){
-                        shiny::updateCheckboxGroupInput(session, "gene_methods",
-                                                        selected= tail(input$gene_methods,3))
-                    }
-                    if(length(input$gene_methods) < 1){
-                        shiny::updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
-                    }
-                })
-            }
-
-            shiny::observeEvent( input$options, {
-                ## shinyjs::disable(ns("gene_methods2"))
-            })
-
             shiny::observeEvent( enable_button(), {
                 ## NEED CHECK. not working...
                 ##
@@ -262,6 +246,7 @@ ComputePgxServer <- function(
                 numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
 
                 if(numpgx >= max.datasets) {
+                    ### should use sprintf here...
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
                     msg <- sub("NUMPGX",numpgx,msg)
                     msg <- sub("LIMIT",max.datasets,msg)
@@ -408,7 +393,7 @@ ComputePgxServer <- function(
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
-                    title = "Sit back and relax!",
+                    title = "Crunching your data!",
                     text = paste0("Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.")
                     ## timer = 8000
                 )
