@@ -64,11 +64,12 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ft <- playbase::pgx.getFamilies(pgx, lib.dir = FILES, nmin = 10, extended = FALSE)
+        ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
       ## if(input$level=="gene") ft = sort(c("<custom>",ft))
       ## ft = sort(c("<custom>",ft))
+      names(ft) <- sub(".*:","",ft)
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
 
