@@ -54,6 +54,9 @@ WgcnaBoard <- function(id, pgx) {
 
         if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
+          shiny::updateSelectInput(session, "selected_module",
+                                   choices = names(pgx$wgcna$me.genes),
+                                   selected = "ME1")
           return(pgx$wgcna)
         }
 

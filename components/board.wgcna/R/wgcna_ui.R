@@ -142,40 +142,38 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            wgcna_plot_correlation_network_ui(
+            wgcna_plot_enrichment_ui(
               ns("enrichPlot"),
               label = "c",
-              title = "Correlation network",
-              info.text = "Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection.",
+              title = "Module Enrichment",
+              info.text = "Functional enrichment of the selected module.",
               caption = "Module enrichment plot of top most enriched genesets.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-          ))
-        ),
+            )
+          ),
           bslib::layout_column_wrap(
-            width = 1/3,
+            width = 1,
             height = "40%",
-            bslib::layout_column_wrap(
-              width =  NULL,
-              style = htmltools::css(grid_template_columns = "1fr 2fr"),
-              wgcna_table_genes_ui(
-                ns("geneTable"),
-                label = "d",
-                title = "Module genes",
-                info.text = "Genes in the selected WGCNA module.",
-                caption = "Table of genes in the selected module.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              wgcna_table_enrichment_ui(
-                ns("enrichTable"),
-                label = "e",
-                title = "Module enrichment",
-                info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
-                caption = "Functional enrichment of the module calculated using Fisher's exact test.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
+            style = htmltools::css(grid_template_columns = "1fr 2fr"),
+            wgcna_table_genes_ui(
+              ns("geneTable"),
+              label = "d",
+              title = "Module genes",
+              info.text = "Genes in the selected WGCNA module.",
+              caption = "Table of genes in the selected module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            wgcna_table_enrichment_ui(
+              ns("enrichTable"),
+              label = "e",
+              title = "Module enrichment",
+              info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+              caption = "Functional enrichment of the module calculated using Fisher's exact test.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )
           )
         )
       ),
