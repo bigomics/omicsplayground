@@ -135,15 +135,15 @@ UploadBoard <- function(id,
         save(pgx, file = fn)
         remove(pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
-        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
-        ## shinyWidgets::sendSweetAlert(
-        ##   title="Please wait...",
-        ##   text = "Scanning your datasets...",
-        ##   btn_labels = NA
-        ## )
+##        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
+        shinyWidgets::sendSweetAlert(
+          title="Wow! So many new datasets",
+          text = "Please wait while scanning your new datasets...",
+          btn_labels = NA
+        )
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
-        ##shinyWidgets::closeSweetAlert()
-        })
+        shinyWidgets::closeSweetAlert()
+##        })
         
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1        
       }
@@ -179,9 +179,9 @@ UploadBoard <- function(id,
       if(r_global$loadedDataset > 0){
         # check if user already has a dataset loaded and have a different UX in that case
         shinyalert::shinyalert(
-          title = paste("Your dataset", new_pgx$name, "is ready!"),
+          title = paste("Your dataset is ready!"),
           ##text = "What do you want to do next?",
-          text = "We finished computing your data and now it's ready for visualization. Happy discoveries!",          
+          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),          
           confirmButtonText = "Show my new data!",
           # cancelButtonText = "Stay here",
           # showCancelButton = TRUE,
