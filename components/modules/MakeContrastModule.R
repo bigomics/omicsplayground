@@ -30,14 +30,15 @@ MakeContrastUI <- function(id) {
           flex = c(1, 4),
           shiny::fillCol(
             flex = c(NA, NA, NA, NA, 1),
-            tipifyL(
+            withTooltip(
               shiny::selectInput(ns("param"),
                 "Phenotype:",
                 choices = NULL,
                 selected = NULL,
                 multiple = TRUE
               ),
-              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations."
+              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+              placement = "left", options = list(container = "body")
             ),
             shiny::conditionalPanel(
               "input.param == '<gene>'",
@@ -49,12 +50,13 @@ MakeContrastUI <- function(id) {
               )
             ),
             shiny::br(),
-            tipifyL(
+            withTooltip(
               shiny::textInput(ns("newname"),
                 "Comparison name:",
                 placeholder = "e.g. MAIN_vs_CONTROL"
               ),
-              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."
+              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+              placement = "left", options = list(container = "body")
             ),
             shiny::br(),
             shiny::actionButton(ns("addcontrast"),

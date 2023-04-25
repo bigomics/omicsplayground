@@ -23,27 +23,31 @@ FeatureMapInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        tipifyR(
+        withTooltip(
           shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
-          "Reference group. If no group is selected the average is used as reference."
+          "Reference group. If no group is selected the average is used as reference.",
+          placement = "right", options = list(container = "body")
         ),
-        tipifyR(
+        withTooltip(
           shiny::radioButtons(ns("umap_type"), "UMAP datatype:",
             choices = c("logCPM", "logFC"), inline = TRUE
           ),
-          "The UMAP can be computed from the normalized log-expression (logCPM), or from the log-foldchange matrix (logFC). Clustering based on logCPM is the default, but when batch/tissue effects are present the logFC might be better."
+          "The UMAP can be computed from the normalized log-expression (logCPM), or from the log-foldchange matrix (logFC). Clustering based on logCPM is the default, but when batch/tissue effects are present the logFC might be better.",
+          placement = "right", options = list(container = "body")
         ),
-        tipifyR(
+        withTooltip(
           shiny::selectInput(ns("filter_genes"), "Show genes:",
             choices = NULL, multiple = FALSE
           ),
-          "Filter the genes to highlight on the map."
+          "Filter the genes to highlight on the map.",
+          placement = "right", options = list(container = "body")
         ),
-        tipifyR(
+        withTooltip(
           shiny::selectInput(ns("filter_gsets"), "Show genesets:",
             choices = NULL, multiple = FALSE
           ),
-          "Filter the genesets to highlight on the map."
+          "Filter the genesets to highlight on the map.",
+          placement = "right", options = list(container = "body")
         )
       )
     )
@@ -54,8 +58,8 @@ FeatureMapUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   height1 <- c("calc(60vh - 100px)", "70vh")
-  height2 <- c("calc(40vh - 100px)", "70vh")  
-  
+  height2 <- c("calc(40vh - 100px)", "70vh")
+
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
     shiny::tabsetPanel(
@@ -81,7 +85,7 @@ FeatureMapUI <- function(id) {
                 info.text = "UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance.",
                 caption = "Gene signature maps coloured by differential expression.",
                 height = height1,
-                width =  c("auto", "100%") 
+                width =  c("auto", "100%")
             )
           ),
           featuremap_table_gene_map_ui(
@@ -108,7 +112,7 @@ FeatureMapUI <- function(id) {
                 caption = "Geneset UMAP coloured by level of variance. Shades of red indicate high variance.",
                 height = height1,
                 width = c("auto", "100%")
-            ),                     
+            ),
             featuremap_plot_gset_sig_ui(
                 ns("gsetSigPlots"),
                 title = "Geneset signatures",

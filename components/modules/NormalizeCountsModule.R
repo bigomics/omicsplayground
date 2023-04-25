@@ -9,11 +9,11 @@
 ##=====================================================================================
 
 if(0) {
-    load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")    
+    load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
     NormalizeCountsGadget(X=ngs$X, pheno=ngs$samples)
     out <- gadgetize2(
         NormalizeCountsUI, NormalizeCountsServer,
-        title = "UploadGadget", height=640, size="l", 
+        title = "UploadGadget", height=640, size="l",
         X = ngs$X, pheno=ngs$samples )
     names(out)
 }
@@ -36,8 +36,8 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
     shiny::moduleServer(
         id,
         function(input, output, session) {
-            
-            all.methods <- c("none","scale","quantile", "CPM","TMM","RLE")            
+
+            all.methods <- c("none","scale","quantile", "CPM","TMM","RLE")
             nc_info = "normalization module"
             nc_info = ""
 
@@ -48,21 +48,24 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 shiny::sidebarLayout(
                     shiny::sidebarPanel(
                         shiny::helpText(nc_info),
-                        ##br(),                        
+                        ##br(),
                         ##radioButtons(ns("selectmethod"),"Select normalization:",
                         ##             choices=all.methods, selected="CPM"),
-                        tipify2(                        
+                        withTooltip(
                             shiny::selectInput(ns("selectmethod"),"Select normalization:",
                                         choices=all.methods, selected="CPM"),
-                            "Select initial normalization method."
+                            "Select initial normalization method.",
+                            placement = "top", options = list(container = "body")
                         ),
-                        tipify2(
+                        withTooltip(
                             shiny::checkboxInput(ns("postqn"),"Post quantile normalization"),
-                            "Apply additional quantile normalization after scaling method."
+                            "Apply additional quantile normalization after scaling method.",
+                            placement = "top", options = list(container = "body")
                         ),
-                        tipify2(
+                        withTooltip(
                             shiny::checkboxInput(ns("addnoise"),"Simulate unnormalized"),
-                            "Simulated unnormalized data by adding random scaling to raw data"
+                            "Simulated unnormalized data by adding random scaling to raw data",
+                            placement = "top", options = list(container = "body")
                         ),
                         width = 2
                     ),
@@ -73,7 +76,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 )
             })
             shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
-            
+
             pgx <- shiny::reactive({
                 if(is.null(input$addnoise)) return(NULL)
                 pgx <- list(counts=counts())
@@ -89,11 +92,11 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 }
                 pgx
             })
-            
+
             output$canvas <- shiny::renderPlot({
                 shiny::req(counts())
                 ## Show all methods
-                postqn <- input$postqn                
+                postqn <- input$postqn
                 viz.NormalizeCounts(
                     pgx(),
                     methods = all.methods,
@@ -108,10 +111,10 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     methods = NULL,
                     post.qn = FALSE,
                     title=NULL, subtitle=NULL, caption=NULL)
-                
+
 
             }
-            
+
             normalized_counts <- shiny::reactive({
                 ##req(input$selectmethod)
                 method <- input$selectmethod
