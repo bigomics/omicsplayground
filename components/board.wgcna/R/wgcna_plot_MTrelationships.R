@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_MTrelationships_ui <- function(id, height, width) {
+wgcna_plot_MTrelationships_ui <- function(
+  id,
+  title,
+  label,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA module and trait relationship.</b>"
 
   moduleTrait_opts <- shiny::tagList(
     shiny::checkboxInput(ns("traits_binarize"), "binarize continuous vars", FALSE)
@@ -14,9 +19,10 @@ wgcna_plot_MTrelationships_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Module-Trait relationships",
-    label = "a",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     options = moduleTrait_opts,
     height = height,
     width = width,

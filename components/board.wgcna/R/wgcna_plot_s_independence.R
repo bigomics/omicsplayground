@@ -3,16 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_s_independence_ui <- function(id, height, width) {
+wgcna_plot_s_independence_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA topology analysis.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Scale independence and mean connectivity",
-    label = "b",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

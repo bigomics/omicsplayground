@@ -73,7 +73,6 @@ BiomarkerBoard <- function(id, pgx) {
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ## ft <- playbase::pgx.getFamilies(pgx,nmin=10,extended=FALSE)
         ft <- names(pgx$families)
       }
       ft <- sort(ft)

@@ -50,6 +50,7 @@ CorrelationBoard <- function(id, pgx) {
 
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       fam <- sort(c("<custom>", fam))
+      names(fam) <- sub(".*:","",fam)
       shiny::updateSelectInput(session, "cor_features", choices = fam)
 
       px <- colnames(pgx$Y)
