@@ -283,21 +283,13 @@ ComputePgxServer <- function(
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
                 ##-----------------------------------------------------------
-                max.genes=20000;max.genesets=5000
-                gx.methods   = c("ttest.welch","trend.limma")
-                gset.methods = c("fisher")
-                extra.methods = ""
-                gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
-                gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("deconv","wordcloud","connectivity", "wgcna")
-
                 max.genes    = as.integer(max.genes)
                 max.genesets = as.integer(max.genesets)
 
                 ## get selected methods from input
-                gx.methods    <- c(input$gene_methods,input$gene_methods2)
-                gset.methods  <- c(input$gset_methods,input$gset_methods2)
-                extra.methods <- c(input$extra_methods,input$extra_methods2)
+                gx.methods    <- input$gene_methods
+                gset.methods  <- input$gset_methods
+                extra.methods <- input$extra_methods
 
                 if(length(gx.methods)==0) {
                     shinyalert::shinyalert("ERROR","You must select at least one gene test method")
@@ -349,7 +341,10 @@ ComputePgxServer <- function(
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 path_to_params <- file.path(temp_dir(), "params.RData")
                 dataset_name <- gsub("[ ]","_",input$upload_name)
-
+                creator <- session$user
+                libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
+                dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
+                
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
@@ -372,24 +367,19 @@ ComputePgxServer <- function(
                     use.design = use.design,        ## no.design+prune are combined
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
-                    libx.dir = lib.dir, # needs to be replaced with libx.dir
+                    libx.dir = libx.dir, # needs to be replaced with libx.dir
                     name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
-                    creator = "user",
+                    creator = creator,
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
-
-                ## override username from session object
-                params$creator <- session$user
-
-
                 saveRDS(params, file=path_to_params)
 
                 # Normalize paths
                 script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
-                cmd <- normalizePath(temp_dir())
+                tmpdir <- normalizePath(temp_dir())
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
@@ -411,7 +401,7 @@ ComputePgxServer <- function(
                             list(
                                 process = processx::process$new(
                                      "Rscript",
-                                     args = c(script_path, cmd),
+                                     args = c(script_path, tmpdir),
                                      supervise = TRUE,
                                      stderr = '|',
                                      stdout = '|'
@@ -426,7 +416,7 @@ ComputePgxServer <- function(
                                 list(
                                     process = processx::process$new(
                                         "Rscript",
-                                        args = c(script_path, cmd),
+                                        args = c(script_path, tmpdir),
                                         supervise = TRUE,
                                         stderr = '|',
                                         stdout = '|'
@@ -453,7 +443,7 @@ ComputePgxServer <- function(
                     temp_dir <- active_processes[[i]]$temp_dir
 
                     process_status <- current_process$get_exit_status()
-                    process_alive <- current_process$is_alive()
+                    process_alive  <- current_process$is_alive()
 
                     if (!is.null(process_status) && process_status == 0) {
                         # Process completed successfully
@@ -471,10 +461,9 @@ ComputePgxServer <- function(
                         stderr_output <- current_process$read_error_lines()
                         ##logfile <- file.path(temp_dir,"process.log")
                         logfile <- normalizePath(file.path(OPG,"processx.log"))
-                        dbg("[compute PGX process] : writing stderr to ", logfile)
+                        ## dbg("[compute PGX process] : writing stderr to ", logfile)
                         writeLines(stderr_output, logfile)
                     }
-
                 }
 
                 # Remove completed processes from the list
