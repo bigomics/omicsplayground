@@ -18,10 +18,11 @@ boardHeader <- function(title, info_link) {
                 shiny::actionLink(
                     inputId = info_link,
                     label="",
-                    icon = shiny::icon("info-circle"),
+                    ## icon = shiny::icon("info-circle"),
+                    icon = shiny::icon("youtube"),                    
                     style = "color: #ccc;"
                 ),
-                "Show information and tutorial about this board"
+                "Video tutorial about this board"
             )
         ),
         div(class = "card-footer-switch", 

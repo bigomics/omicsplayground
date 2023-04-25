@@ -33,7 +33,7 @@ LoadingUI <- function(id) {
           HTML("Load dataset &nbsp;"),
           shiny::actionLink(
             ns("module_info"), "",
-            icon = shiny::icon("info-circle"),
+            icon = shiny::icon("youtube"),            
             style = "color: #ccc;"
           )
         ),

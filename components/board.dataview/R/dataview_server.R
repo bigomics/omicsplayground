@@ -52,6 +52,11 @@ DataViewBoard <- function(id, pgx) {
     '
     )
 
+    data_infotext <- HTML('
+        <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
+        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
+    
 
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {

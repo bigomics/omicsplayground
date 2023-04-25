@@ -234,7 +234,7 @@ LoadingBoard <- function(id,
 
     shiny::observeEvent(input$module_info, {
       shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Load Dataset</strong>"),
+        title = shiny::HTML("<strong>Loading a dataset from your library</strong>"),
         shiny::HTML(module_infotext),
         easyClose = TRUE, size = "xl"
       ))
@@ -248,6 +248,13 @@ LoadingBoard <- function(id,
         the table. The Dataset info shows the information of the dataset of
         interest and users can load the data by clicking the 'Load dataset'
         button.<br><br><br><center><iframe width='560' height='315'
+        src='https://www.youtube.com/embed/elwT6ztt3Fo'
+        title='YouTube video player' frameborder='0'
+        allow='accelerometer; autoplay; clipboard-write; encrypted-media;
+        gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
+    )
+    module_infotext <- paste0(
+      "<center><iframe width='1120' height='630'
         src='https://www.youtube.com/embed/elwT6ztt3Fo'
         title='YouTube video player' frameborder='0'
         allow='accelerometer; autoplay; clipboard-write; encrypted-media;
