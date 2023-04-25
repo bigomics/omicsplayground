@@ -372,7 +372,7 @@ ComputePgxServer <- function(
                     use.design = use.design,        ## no.design+prune are combined
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
-                    libx.dir = lib.dir,
+                    libx.dir = lib.dir, # needs to be replaced with libx.dir
                     name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
