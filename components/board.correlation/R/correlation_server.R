@@ -171,7 +171,6 @@ CorrelationBoard <- function(id, pgx) {
       }
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
       rownames(R) <- zx.genes0
-
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
 
       R
@@ -475,14 +474,19 @@ CorrelationBoard <- function(id, pgx) {
 
     WATERMARK <- FALSE
 
-    correlation_plot_table_corr_server(
+    cor_table <- correlation_table_corr_server(
+      "cor_table",
+      getPartialCorrelation = getPartialCorrelation,
+      getGeneCorr           = getGeneCorr,
+      pgx                   = pgx,
+      watermark             = WATERMARK
+    ) 
+
+    correlation_plot_barplot_server(
       "cor_barplot",
       getPartialCorrelation = getPartialCorrelation,
       getGeneCorr           = getGeneCorr,
       cor_table             = cor_table,
-      pgx             = pgx,
-      pcor_ntop             = input$pcor_ntop,
-      scrollY               = "calc(35vh - 140px)",
       watermark             = WATERMARK
     )
 
@@ -490,17 +494,18 @@ CorrelationBoard <- function(id, pgx) {
       "cor_scatter",
       getFilteredExpression = getFilteredExpression,
       pgx = pgx,
+      cor_table = cor_table,      
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
-      cor_gene = input$cor_gene,
+      cor_gene = reactive(input$cor_gene),
       COL = COL,
       watermark = WATERMARK
     )
 
     correlation_plot_correlation_UMAP_server(
       "cor_umap",
-      pgx       = pgx,
-      cor_gene        = input$cor_gene,
+      pgx             = pgx,
+      cor_gene        = reactive(input$cor_gene),
       getFullGeneCorr = getFullGeneCorr,
       getGeneCorr     = getGeneCorr,
       watermark       = WATERMARK
@@ -508,7 +513,7 @@ CorrelationBoard <- function(id, pgx) {
 
     correlation_plot_cor_graph_server(
       "cor_graph",
-      cor_gene = input$cor_gene,
+      cor_gene = reactive(input$cor_gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       watermark = WATERMARK
     )

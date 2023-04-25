@@ -237,19 +237,20 @@ dataview_plot_tsne_server <- function(id,
         plotly::layout(
           xaxis = list(title = "tSNE-x"),
           yaxis = list(title = "tSNE-y"),
-          margin = list(l = 10, r = 10, b = 10, t = 10)
+          margin = list(l = 5, r = 0, b = 5, t = 5)
         ) %>%
         plotly::colorbar(
           title = "<b>Expression:</b>",
-          width = .001,
-          ticklen = 6
+          width = .001,          
+          ticklen = 6,
+          len = 0.4,
+          thickness = 20
         ) %>%
         plotly_default() ## %>% toWebGL()
     }
-
+   
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() # %>%
-      #    plotly::hide_colorbar()
+      fig <- plotly.RENDER0() %>% plotly::hide_colorbar()
       fig
     }
 

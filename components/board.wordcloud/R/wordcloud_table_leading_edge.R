@@ -46,19 +46,22 @@ wordcloud_table_leading_edge_server <- function(id,
       rownames(df) <- ee
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
-
       df$leading.edge <- playbase::wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
 
       tbl <- DT::datatable(df,
         rownames = FALSE, escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = "25vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollX = TRUE,
+          scrollY = "25vh",
+          scrollResize = TRUE,          
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

@@ -27,22 +27,28 @@ loading_tsne_ui <- function(
   )
 }
 
-loading_tsne_server <- function(id, pgx.dirRT,
+loading_tsne_server <- function(id, pgx.dirRT, info.table,
                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
 
       pgx.dir <- pgx.dirRT()
+      info.table <- info.table()
+      
+      dbg("[loading_tsne_server] reacted! id =",id)
+      
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
-      pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
-
+      ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
+      pgx.files <- info.table$dataset
+      
       pos <- NULL
       if (file.exists(tsne.file)) {
         pos <- read.csv(tsne.file, row.names = 1)
         dim(pos)
         pos.files <- unique(gsub("^\\[|\\].*", "", rownames(pos)))
         if (!all(pgx.files %in% pos.files)) {
+          ## missing pgx files.. need recompute
           pos <- NULL
         } else {
           ## OK
@@ -60,14 +66,23 @@ loading_tsne_server <- function(id, pgx.dirRT,
         corF <- cor(F, use = "pairwise") ## slow...
         dim(corF)
         px <- max(min(30, floor(ncol(corF) / 4)), 1)
-        pos <- Rtsne::Rtsne(1 - abs(corF),
+        dbg("[loading_tsne_server] plot_data : dim(corF) = ", dim(corF))
+        dbg("[loading_tsne_server] plot_data : px = ", px)        
+        
+        pos <- try(Rtsne::Rtsne(1 - abs(corF),
           perplexity = px,
           check_duplicates = FALSE, is_distance = TRUE
-        )$Y
+        )$Y)
+
+        if("try-error" %in% class(pos)) {
+          pos <- svd(corF)$u[,1:2]
+          rownames(pos) <- colnames(F)
+        }
+        
         ## pos <- umap::umap(1-corF)$layout
         pos <- round(pos, digits = 4)
         rownames(pos) <- colnames(F)
-        colnames(pos) <- c("x", "y")
+        colnames(pos) <- c("x", "y")        
         write.csv(pos, file = tsne.file)
       }
 
@@ -91,18 +106,25 @@ loading_tsne_server <- function(id, pgx.dirRT,
       }
       colnames(dpos) <- c("x", "y")
 
-      return(list(df, dpos))
+      pdata <- list(
+        df = df,
+        pos = dpos
+      )
+      
+      return(pdata)
     })
 
     plot.RENDER <- function() {
-      df <- plot_data()
-      shiny::req(df)
+
+      pdata <- plot_data()
+      shiny::req(pdata)      
+      pos <- pdata[['pos']]
+      df <- pdata[['df']]
       
-      dataset_pos <- df[[2]]
-      marker_size <- ifelse( nrow(df[[1]]) > 50, 5, 10)
+      marker_size <- ifelse( nrow(df) > 50, 5, 10)
       
       fig <- plotly::plot_ly(
-        data = df[[1]],
+        data = df,
         x = ~x,
         y = ~y,
         text = ~ paste("Dataset:", dataset, "<br>Comparison:", comparison),
@@ -117,14 +139,14 @@ loading_tsne_server <- function(id, pgx.dirRT,
         )
       )
 
-      dy <- diff(range(dataset_pos[,"y"]))
+      dy <- diff(range(pos[,"y"]))
       dbg("[loading_tsneplot.R] range.y=",dy)
       
       fig <- fig %>%
         plotly::add_annotations(
-          x = dataset_pos[,"x"],
-          y = dataset_pos[,"y"],
-          text = rownames(dataset_pos),
+          x = pos[,"x"],
+          y = pos[,"y"],
+          text = rownames(pos),
           xref = "x",
           yref = "y",          
           ## textposition = 'top',
@@ -141,10 +163,12 @@ loading_tsne_server <- function(id, pgx.dirRT,
           showlegend = FALSE,
           xaxis = list(
             title = "tsne-x",
+            zeroline = FALSE,
             showticklabels = FALSE
           ),
           yaxis = list(
             title = "tsne-y",
+            zeroline = FALSE,            
             showticklabels = FALSE
           )
         )
@@ -153,9 +177,10 @@ loading_tsne_server <- function(id, pgx.dirRT,
     }
 
     modal_plot.RENDER <- function() {
-      df <- plot_data()
-      shiny::req(df)
-      marker_size <- ifelse( nrow(df[[1]]) > 50, 6, 12)
+      pdata <- plot_data()
+      shiny::req(pdata)
+      df <- pdata[['df']]
+      marker_size <- ifelse( nrow(df) > 50, 6, 12)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,

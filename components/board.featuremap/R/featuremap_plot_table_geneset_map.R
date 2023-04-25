@@ -72,7 +72,13 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                                      sigvar,
                                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
+    ## In this setup, PlotModule and TableModule servers are combined
+    ## into one. Logically this might be preferred but is also
+    ## convenient if PlotModule and TableModule share functions or
+    ## share data. Notice the UI for table and plot is still seperate
+    ## to allow flexibility in the placement of the widget. Both use
+    ## the same module server id.
+    ##
     ns <- session$ns
 
     selGsets <- shiny::reactive({
@@ -164,7 +170,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       p
     }
     
-    PlotModuleServer(
+    plotmodule <- PlotModuleServer(
       "gset_map",
       plotlib = "plotly",
       plotlib2 = "plotly",
@@ -176,7 +182,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
     )
 
     # Table
-
     gsetTable.RENDER <- shiny::reactive({
       shiny::req(pgx)
       if (is.null(pgx$drugs)) {
@@ -225,12 +230,14 @@ featuremap_plot_table_geneset_map_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE, ## scrollY = TRUE,
           scrollY = 240,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -244,11 +251,19 @@ featuremap_plot_table_geneset_map_server <- function(id,
       dt
     })
 
-    TableModuleServer(
+    tablemodule <- TableModuleServer(
       "gset_table",
       func = gsetTable.RENDER,
       func2 = gsetTable.RENDER_modal,
       selector = "none"
     )
+
+
+    ## combined module return value for any downstream connections
+    list(
+      plotmodule = plotmodule,
+      tablemodule = tablemodule
+    )
+    
   })
 }

@@ -199,7 +199,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
         )
       })
 
-      buttonInput <- function(FUN, len, id, ...) {
+      makebuttonInputs <- function(FUN, len, id, ...) {
         inputs <- character(len)
         for (i in seq_len(len)) {
           inputs[i] <- as.character(FUN(paste0(id, i), ...))
@@ -243,8 +243,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
           rv$contr <- rv$contr[, -id, drop = FALSE]
         }
       })
-
-
 
       shiny::observeEvent(input$addcontrast, {
 
@@ -382,7 +380,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
               ss2 <- apply(ct1, 2, function(x) paste.max(ss0[which(x < 0)]))
             }
 
-            deleteButtons <- buttonInput(
+            deleteButtons <- makebuttonInputs(
               FUN = actionButton,
               len = ncol(ct),
               ## id = 'contrast_delete_',

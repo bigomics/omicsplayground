@@ -45,6 +45,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       if ("group" %in% var.types) grp <- "group"
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
     })
 
     ## update filter choices upon change of data set
@@ -58,8 +59,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
       ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
-      groupings <- c("<ungrouped>", sort(groupings))
-      shiny::updateSelectInput(session, "hm_group", choices = groupings)
+
+      groupings <- sort(groupings)
+
+      shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
@@ -80,21 +83,24 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     # reactive functions ##############
+    shiny::observeEvent(input$hm_samplefilter, {
+      dbg("[clustering_server.R] observeEvent.hm_samplefilter = ",input$hm_samplefilter)
+    })
 
+
+    ## Returns filtered matrix ready for clustering. Filtering based
+    ## on user selected geneset/features or custom list of genes.
+    ##
     getFilteredMatrix <- shiny::reactive({
-      ## Returns filtered matrix ready for clustering. Filtering based
-      ## on user selected geneset/features or custom list of genes.
-      ##
-      ##
-      ##
-      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
+      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
+      
       genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
       shiny::req(ft)
-
+      
       if (input$hm_level == "geneset") {
         ## Gene set level features #########
 
@@ -108,7 +114,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         zx <- zx[intersect(gsets, rownames(zx)), ]
       }
-
+      
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
@@ -171,11 +177,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           names(idx) <- rownames(zx)
         }
       }
+      
       if (nrow(zx) == 0) {
         return(NULL)
       }
-
-      dim(zx)
+      
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]
 
@@ -199,11 +205,23 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
 
-      flt <- list(zx = zx, idx = idx)
+      flt <- list(
+        zx = zx,
+        idx = idx
+      )
 
-      return(flt)
-    })
-
+      return(flt) ## end of getFilteredMatrix
+    })  %>%  bindEvent(
+      input$hm_samplefilter,
+      input$hm_features,
+      input$hm_level,
+      input$hm_customfeatures,
+      input$hm_samplefilter,
+      input$hm_filterXY,
+      input$hm_filterMitoRibo,
+      input$hm_group,
+      splitmap$hm_ntop()      
+    )
 
     getTopMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
@@ -433,7 +451,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         samples = samples
       )
       return(filt)
-    })
+    })  ## end of getTopMatrix
 
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
@@ -544,17 +562,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     hm_getClusterPositions <- shiny::reactive({
-      pgx <- pgx
       ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
-      ## take full matrix
-      # flt <- getFilteredMatrix()
-      # zx <- flt$zx
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-
+      dbg("[clustering_server.R:hm_getClusterPositions] L558 : samplefilter changed??? sel.samples = ",head(sel.samples))
+      
       clustmethod <- "tsne"
       pdim <- 2
-      do3d <- ("3D" %in% input$hmpca_options)
+      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!! 
       pdim <- c(2, 3)[1 + 1 * do3d]
 
       pos <- NULL
@@ -587,7 +602,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           ## zx = head(zx,ntop)  ## OK?
           zx <- zx[1:ntop, , drop = FALSE] ## OK?
         }
-        if ("normalize" %in% input$hmpca_options) {
+        if ("normalize" %in% input$`PCAplot-hmpca_options`) {
           zx <- scale(t(scale(t(zx))))
         }
         perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
@@ -624,6 +639,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       watermark = FALSE
     )
@@ -648,6 +664,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",
       pgx = pgx,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
       watermark = FALSE
     )
@@ -656,6 +673,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "clust_featureRank",
       pgx = pgx,
       hm_level = shiny::reactive(input$hm_level),
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
       watermark = FALSE
     )

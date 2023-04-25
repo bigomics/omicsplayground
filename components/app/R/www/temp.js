@@ -11,21 +11,17 @@ $(document).on('shiny:connected', function() {
         $(".card-footer-checked").prop("checked", isChecked);
 	
 	if ($(this).prop("checked") === true) {
-	    $(".card-footer").show().animate({height: '3rem'}, 200, function() {
-		$(window).resize();  // yikes...
-		console.log('window.resize!');
-	    });
+	    $(".card-footer").show().animate({height: '3rem'}, 200);
 	};
 	
 	if ($(this).prop("checked") === false) {
-	    console.log('window.resize...');			
 	    $(".card-footer").animate({height: '0px'}, 200, function() {
 		$(this).hide();
-		$(window).resize();  // yikes...
-		console.log('window.resize!');			
 	    });
 	};
-	
+
+	$(window).resize();  // yikes...
+	console.log('window.resize!');
     });
 
 // call with: session$sendCustomMessage("window_resize", list(resize = TRUE))
@@ -60,26 +56,31 @@ const unloadSidebar = () => {
 
 			$(el).hide();
 		});
+        $('#sidebar-help-container').hide();    
 }
 
 const sidebarClose = () => {
-	if($('#sidebar-container').hasClass('sidebar-expanded'))
-		$('.sidebar-label').trigger('click');
+    if($('#sidebar-container').hasClass('sidebar-expanded')) {
+	$('.sidebar-label').trigger('click');
+        $('#sidebar-help-container').hide();
+    }
 }
 
 const sidebarOpen = () => {
-	if($('#sidebar-container').hasClass('sidebar-collapsed'))
-		$('.sidebar-label').trigger('click');
+    if($('#sidebar-container').hasClass('sidebar-collapsed')) {
+	$('.sidebar-label').trigger('click');
+        $('#sidebar-help-container').show();
+    }
 }
 
 const settingsClose = () => {
 	if($('#settings-container').hasClass('settings-expanded'))
-		$('.setting-label').trigger('click');
+	    $('.setting-label').trigger('click');
 }
 
 const settingsOpen = () => {
 	if($('#settings-container').hasClass('sidebar-collapsed'))
-		$('.settings-label').trigger('click');
+	    $('.settings-label').trigger('click');
 }
 
 const settingsLock = () => {
@@ -399,7 +400,7 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 		return;
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
-	$('#sidebar-help-container').hide();
+	$('#sidebar-help-container').show();
 	}, 1000);
 });
 

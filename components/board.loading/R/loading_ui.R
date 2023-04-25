@@ -25,7 +25,7 @@ LoadingUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   div(
-    class = "p-1",
+    class = "p-0",
     fillRow(
         flex = c(NA, NA, 1),
         shiny::div(
@@ -38,11 +38,12 @@ LoadingUI <- function(id) {
           )
         ),
         shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats"),
-      ),
+    ),
     shiny::tabsetPanel(
       id = ns('tabs'),
       shiny::tabPanel(
         'User',
+        bs_alert("This tab shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button."),
         div(
           class = "row",
           div(            
@@ -52,7 +53,7 @@ LoadingUI <- function(id) {
               title = "Available datasets",
               info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
               caption = "Table of datasets available in the platform.",
-              height = c("calc(100vh - (240px + 70px))", 700),
+              height = c("calc(100vh - 330px)", 700),
               width = c("100%", "100%")
             ),
             div(
@@ -86,7 +87,7 @@ LoadingUI <- function(id) {
               title = "Dataset explorer",
               info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
               caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-              height = c("calc(100vh - (240px + 70px))", "70vh"),                           
+              height = c("calc(100vh - 330px)", "70vh"),                           
               width = c("auto",  "100%")
             )
           )
@@ -95,6 +96,7 @@ LoadingUI <- function(id) {
 
       shiny::tabPanel(
         'Shared',
+        bs_alert("This tab shows all shared datasets. You can select a shared dataset and import that to your library for further analysis. You can also share any of your datasets to this shared folder from your library in the previous tab. Remember: sharing is caring!"),
         div(
           class = "row",
           div(
@@ -102,9 +104,9 @@ LoadingUI <- function(id) {
             loading_table_datasets_shared_ui(
               ns("pgxtable_shared"),
               title = "Shared datasets",
-              info.text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
-              caption = "Table with public datasets available in the platform.",
-              height = c("65vh", 700),
+              info.text = "This table shows available shared datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
+              caption = "Table with shared datasets available in the platform.",
+              height = c("calc(100vh - 330px)", 700),
               width = c("100%", "100%")
             ),
             div(
@@ -121,14 +123,14 @@ LoadingUI <- function(id) {
             loading_tsne_ui(
               ns("tsne_shared"),
               title = "Dataset explorer",
-              info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+              info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
               caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-              height = c("65vh", "70vh"),
+              height = c("calc(100vh - 330px)", 700),
               width = c("auto",  "100%")
             )
           )
-        )
-      )
+        ) ## end of row
+      ) ## end of tabPanel
     )
   )
 }

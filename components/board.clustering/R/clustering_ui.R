@@ -6,16 +6,13 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(shiny::selectInput(ns("hm_features"), "Features:", choices = NULL, multiple = FALSE),
-      "Select a family of features.",
+    withTooltip(shiny::selectInput(ns("hm_features"), "Gene family:", choices = NULL, multiple = FALSE),
+      "Select a gene family for filtering which genes to show in the heatmap.",
       placement = "top"
     ),
-    withTooltip(
-      shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-        c("default", "tsne", "pca", "umap"),
-        inline = TRUE
-      ),
-      "Choose the layout method for clustering to visualise.",
+    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:", choices = NULL, multiple = TRUE),
+      "Select phenotypes to show in heatmap and phenotype distribution plots.",
+      placement = "top"
     ),
     shiny::conditionalPanel(
       "input.hm_features == '<custom>'",
@@ -49,11 +46,19 @@ ClusteringInputs <- function(id) {
       "Filter the relevant samples for the analysis.",
       placement = "top", options = list(container = "body")
     ),
-    withTooltip(shiny::actionLink(ns("hm_options"), "Options", icon = icon("cog", lib = "glyphicon")),
+    withTooltip(shiny::actionLink(ns("hm_options"), "Advanced options",
+                                  icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
     ),
     shiny::br(),
+    withTooltip(
+      shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
+        c("tsne", "pca", "umap"),
+        inline = TRUE
+      ),
+      "Choose the layout method for clustering plots.",
+    ),    
     shiny::conditionalPanel(
       "input.hm_options % 2 == 1",
       ns = ns,

@@ -21,8 +21,8 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
     label = "c",
     info.text = info_text,
     options = genecorr.opts,
-    height = c(740, 750),
-    width = c("auto", 900),
+    height = height,
+    width = c("auto", "100%"),
     download.fmt = c("png", "pdf")
   )
 }

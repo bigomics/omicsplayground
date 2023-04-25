@@ -41,9 +41,15 @@ html {
 
     
     //---------------- sidebar ---------------------
-    .sidebar-expanded {
+    .sidebar-container {
+	height: calc(100vh - 48px);
+    }
+    
+    .sidebar-expanded>.sidebar {
         width: 12rem;
-        min-width: 12rem;	
+        min-width: 12rem;
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
     }
 
     #sidebar-help-title {
@@ -52,11 +58,13 @@ html {
 
     #sidebar-help-container {
         width: 11.5rem;
-        font-size: 0.8em;
+        font-size: 12px;
         line-height: 1.2em;
         background: url("assets/img/mascotte-sc.png") no-repeat;
         background-size: 5rem 5rem;
         background-position: 3.5rem 5rem;
+	position: absolute;
+	bottom: 10px;
     }
 
     .sidebar-menu {
@@ -104,7 +112,11 @@ html {
 	padding: 0.65rem 0rem 0.65rem 0.7rem;	
     }
 
-    //---------------- sidebar ---------------------
+    //---------------- settings ---------------------
+    .settings-container {
+	height: calc(100vh - 48px);
+    }
+
     .settings-expanded {
         width: 12rem;
         min-width: 12rem;	

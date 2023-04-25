@@ -88,12 +88,15 @@ expression_table_FDRtable_server <- function(id,
         ##class = "compact hover",
         fillContainer = TRUE,
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = scrollY,
-          scroller = TRUE, deferRender = TRUE
+          scrollResize = TRUE,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

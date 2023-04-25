@@ -13,7 +13,7 @@ clustering_plot_phenoplot_ui <- function(
   height,
   width) {
   ns <- shiny::NS(id)
-  
+
   phenoplot.opts <- shiny::tagList(
     shiny::checkboxInput(ns("showlabels"), "Show group labels", TRUE)
   )
@@ -24,7 +24,7 @@ clustering_plot_phenoplot_ui <- function(
     label = label,
     #    plotlib = "base",
     plotlib = "plotly",
-    info.text = info,
+    info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -35,6 +35,7 @@ clustering_plot_phenoplot_ui <- function(
 
 clustering_plot_phenoplot_server <- function(id,
                                              pgx,
+                                             selected_phenotypes,
                                              hm_getClusterPositions,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -46,22 +47,28 @@ clustering_plot_phenoplot_server <- function(id,
 
       ## get t-SNE positions
       clust <- hm_getClusterPositions()
-      ## pos = pgx$tsne2d
       pos <- clust$pos
-      colnames(pos) <- c("x","y")
-      
-      Y <- pgx$Y[rownames(pos), , drop = FALSE]
-      pheno <- colnames(Y)
 
-      ## don't show these...
-      pheno <- grep("batch|sample|donor|repl|surv", pheno,
-        invert = TRUE, ignore.case = TRUE, value = TRUE
-      )
-      Y <- Y[,pheno] 
+      if(ncol(pos) == 3){
+        colnames(pos) <- c("x","y","z")
+      } else if (ncol(pos) == 2) {
+        colnames(pos) <- c("x","y")
+      }
+
+      Y <- pgx$Y[rownames(pos), , drop = FALSE]
+      pheno <- selected_phenotypes()
+
+      # ## don't show these...
+      # removed the code below because it was removing the batch and sample, overwritting user wishes
+      # on selected_phenotypes
+      # pheno <- grep("batch|sample|donor|repl|surv", pheno,
+      #   invert = TRUE, ignore.case = TRUE, value = TRUE
+      # )
+      Y <- Y[,pheno, drop =FALSE] 
       
       ## complete dataframe for downloading
       df <- data.frame( pos, Y)
-      
+
       return(
         list(
           df = df,
@@ -70,11 +77,11 @@ clustering_plot_phenoplot_server <- function(id,
         )
       )
     })
-    
+
     render_plotly <- function(pd, pheno, cex=1) {
 
       pheno <- pd[["pheno"]]
-      Y <- pd[["df"]][,pheno]
+      Y <- pd[["df"]][,pheno, drop =FALSE]
       showlabels <- pd[["showlabels"]]
       pos <- pd[["df"]][,c("x","y")]
 
@@ -85,7 +92,6 @@ clustering_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
       plt <- list()
-      i=1
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
         colvar <- factor(Y[, 1])
@@ -99,7 +105,7 @@ clustering_plot_phenoplot_server <- function(id,
         if (length(jj)) klr1[jj] <- "#AAAAAA22"
         tt <- tolower(pheno[i])
 
-        ## ------- start plot        
+        ## ------- start plot
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = colvar,
@@ -115,27 +121,31 @@ clustering_plot_phenoplot_server <- function(id,
           ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
         )
-        
+
         plt[[i]] <- p
-      } 
+      }
       return(plt)
     }
 
     plotly.RENDER <- function() {
 
       pd <- plot_data()
-      pheno <- pd[["pheno"]]      
-      plt <- render_plotly(pd, pheno, cex=0.85) 
-      
+      pheno <- pd[["pheno"]]
+      plt <- render_plotly(pd, pheno, cex=0.85)
+
       nr = min(3,length(plt))
       if (length(plt) >= 6)  nr = 4
       if (length(plt) >= 12)  nr = 5
-      
+
       fig <- plotly::subplot(
         plt,
         nrows = nr,
         margin = 0.04
-      ) %>% plotly_default()
+        ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            margin = list(l=0,r=0,b=0,t=30) # lrbt
+          )
 
       return(fig)
     }
@@ -143,27 +153,29 @@ clustering_plot_phenoplot_server <- function(id,
     plotly_modal.RENDER <- function() {
 
       pd <- plot_data()
-      pheno <- pd[["pheno"]]      
-      plt <- render_plotly(pd, pheno, cex=1.3) 
-      
+      pheno <- pd[["pheno"]]
+      plt <- render_plotly(pd, pheno, cex=1.3)
+
       nc = min(3,length(plt))
       if (length(plt) >= 6)  nc = 4
       if (length(plt) >= 12)  nc = 5
       nr <- ceiling(length(plt)/nc)
-      
+
       fig <- plotly::subplot(
         plt,
         nrows = nr,
         margin = 0.06
-      ) %>% plotly_modal_default()
-      
+      ) %>% plotly_modal_default() %>% 
+          plotly::layout(
+            margin = list(l=0,r=0,b=0,t=30) # lrbt
+          )
       return(fig)
     }
-    
+
     PlotModuleServer(
       "pltmod",
       ##plotlib = "base",
-      plotlib = "plotly",      
+      plotlib = "plotly",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

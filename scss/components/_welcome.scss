@@ -7,6 +7,13 @@ html {
 	margin-right: 2rem;
     }
     
+    #welcome-page {
+	text-align: center;
+	background-color: #f0f9fd;
+	margin: 0px -15px 0px -15px;
+	min-height: calc(100vh - 48px);
+    }
+
     #welcome-text {
 	font-size: 50px;
 	font-weight: 600;
@@ -32,12 +39,6 @@ html {
 	text-align: center;
 	font-size: 1.1em;
 	line-height: 1.4em;
-    }
-
-    #welcome-page {
-	text-align: center;
-	background-color: #f0f9fd;
-	margin: 0px -15px 0px -15px;
     }
 
     

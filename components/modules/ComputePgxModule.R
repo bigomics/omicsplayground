@@ -362,9 +362,9 @@ ComputePgxServer <- function(
                 dbg("[compute PGX process] : tempFile", temp_dir())
 
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-
                 path_to_params <- file.path(temp_dir(), "params.RData")
-
+                dataset_name <- gsub("[ ]","_",input$upload_name)
+                
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
@@ -388,13 +388,17 @@ ComputePgxServer <- function(
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
                     lib.dir = lib.dir,
-                    name = gsub("[ ]","_",input$upload_name),
+                    name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
                     creator = "user",
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
+
+                ## override username from session object
+                params$creator <- session$user
+
                 
                 saveRDS(params, file=path_to_params)
 
@@ -404,8 +408,10 @@ ComputePgxServer <- function(
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
-                    "Computing!",
-                    "Your dataset will be computed in the background. You can continue to analyze a different dataset or play with example data in the meantime.")
+                    title = "Sit back and relax!",
+                    text = paste0("Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.")
+                    ## timer = 8000
+                )
                 bigdash.selectTab(
                     session,
                     selected = 'load-tab'
@@ -475,7 +481,18 @@ ComputePgxServer <- function(
                     } else {
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")
+
+                        ## write error to console and temp file
+                        stderr_output <- current_process$read_error_lines()
+                        ##logfile <- file.path(temp_dir,"process.log")
+                        logfile <- normalizePath(file.path(OPG,"processx.log"))
+                        dbg("[compute PGX process] : writing stderr to ", logfile)
+                        writeLines(stderr_output, logfile)
+                        stderr_output <- stderr_output[nchar(stderr_output)>0]
+                        stderr_output <- paste0("  processx.",i,": ",stderr_output)
+                        writeLines(tail(stderr_output,5))
                     }
+                        
                 }
 
                 # Remove completed processes from the list
@@ -511,9 +528,8 @@ ComputePgxServer <- function(
                 
                 if (length(stderr_output) > 0) {
                     message("Standard error output from the process:")
-                    for (line in stderr_output) {
-                        message(line)
-                    }
+                    ##for (line in stderr_output) { message(line) }
+                    writeLines(stderr_output, con=stderr())
                 } else {
                     message("No standard error output available from the process")
                 }

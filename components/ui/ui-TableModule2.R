@@ -73,10 +73,11 @@ TableModuleUI <- function(id,
     flex = c(NA,1,NA,NA,NA,NA),
     class="tablemodule-header",
     shiny::div(class='tablemodule-title', title=title, title),
-    label,
+    ##    label,
+    "",  ## no labels
     DropdownMenu(
       shiny::div(class='tablemodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
-      width = "250px",      
+      width = "250px",
       size = "xs",
       icon = shiny::icon("info"),
       status = "default"
@@ -111,14 +112,14 @@ TableModuleUI <- function(id,
 
   # Div construction
   e = bslib::card(
-      class="tablemodule",      
+      class="tablemodule",
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       style = paste0("height:",height.1,";overflow:visible;"),
       bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
         ##height = height.1,
           ##  DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
-          DT::DTOutput(ns("datatable"),height="100%") %>% shinycssloaders::withSpinner(),
+          DT::DTOutput(ns("datatable"),height="100%") %>% bigLoaders::useSpinner(),
           shiny::div(
               class = "popup-modal",
               modalUI(
@@ -224,8 +225,9 @@ TableModuleServer <- function(id,
       module <- list(
         data = shiny::reactive(func()$x$data),
         rows_current = shiny::reactive(input$datatable_rows_current),
-        rows_selected = shiny::reactive(input$datatable_rows_selected),
+        rows_selected = shiny::reactive(input$datatable_rows_selected),        
         rows_all = shiny::reactive(input$datatable_rows_all),
+        row_last_clicked = shiny::reactive(input$row_last_clicked),        
         rownames_current = shiny::reactive({
           rns <- rownames(func()$x$data)
           if(is.null(rns)) rns <- 1:nrow(func()$x$data)
@@ -240,6 +242,11 @@ TableModuleServer <- function(id,
           rns <- rownames(func()$x$data)
           if(is.null(rns)) rns <- 1:nrow(func()$x$data)
           rns[input$datatable_rows_all]
+        }),
+        rowname_last_clicked = shiny::reactive({
+          rns <- rownames(func()$x$data)
+          if(is.null(rns)) rns <- 1:nrow(func()$x$data)
+          rns[input$datatable_row_last_clicked]
         })
       )
       return(module)

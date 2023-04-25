@@ -52,12 +52,14 @@ drugconnectivity_table_cmap_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
           scrollY = 240,  ## card is 380
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

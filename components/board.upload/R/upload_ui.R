@@ -46,6 +46,7 @@ UploadUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Upload",
+      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). NB Users can now create contrasts from the platform itself, so the contrasts.csv file is optional."),
       div(
         class = "row",
         div(
@@ -65,24 +66,26 @@ UploadUI <- function(id) {
           shiny::div(shiny::uiOutput(ns("upload_info")))
         )
       ),
+      br(),
       div(
         class = "row",
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("countStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("countStats")) %>% bigLoaders::useSpinner()
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("phenoStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("phenoStats")) # %>% bigLoaders::useSpinner()
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("contrastStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("contrastStats")) # %>% bigLoaders::useSpinner()
         )
       )
     ),
     shiny::tabPanel(
       "BatchCorrect",
+      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
       shiny::fillCol(
         height = height,
         BatchCorrectUI(ns("batchcorrect"))
@@ -90,10 +93,12 @@ UploadUI <- function(id) {
     ),
     shiny::tabPanel(
       "Contrasts",
+      bs_alert("Here, you can interactively create your comparisons (or so-called 'contrasts'). Choose a phenotype on the left, then create groups by dragging the conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'add auto-contrasts'."),
       MakeContrastUI(ns("makecontrast"))
     ),
     shiny::tabPanel(
       "Compute",
+      bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
       shiny::fillCol(
         height = height, ## width = 1200,
         ComputePgxUI(ns("compute"))

@@ -41,7 +41,7 @@ options(DT.options = list(
 # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
 # this will define how close the caption is to the table.
 SCROLLY_MODAL <<- "55vh"
-TABLE_HEIGHT_MODAL <<- "70vh"
+TABLE_HEIGHT_MODAL <<- "75vh"
 
 reticulate::use_miniconda('r-reticulate')
 
@@ -52,13 +52,21 @@ get_opg_root <- function() {
 
 ## Set folders
 OPG       = get_opg_root()
-OPG
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")
 FILES     = file.path(OPG,"lib")
 FILESX    = file.path(OPG,"libx")
 PGX.DIR   = file.path(OPG,"data")
 SIGDB.DIR = file.path(OPG,"libx/sigdb")
+
+## like system.file()
+pgx.system.file <- function(file='.', package) {
+    package <- sub("^board.","",package)
+    dir <-  normalizePath(file.path(OPG,"components",paste0("board.",package)))
+    file1 <- file.path(dir,"inst",file)
+    if(file.exists(file1) && file!='.') return(file1)
+    file.path(dir,file)
+}
 
 AUTHENTICATION = "none"
 WATERMARK = FALSE

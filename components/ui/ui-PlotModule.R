@@ -69,8 +69,8 @@ PlotModuleUI <- function(id,
     height.2 <- ifnotchar.int(height[2])
 
     ## OVERRIDE WIDTH: for fullscreen modal always 100%
-    width.2 = "100%"   
-    
+    width.2 = "100%"
+
     getOutputFunc <- function(plotlib)
     {
         FUN <- switch(
@@ -262,7 +262,7 @@ PlotModuleUI <- function(id,
       bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
 ##      style = paste0("height: ",height.1,";"),
-        outputFunc(ns("renderfigure")), #  %>% shinycssloaders::withSpinner(),
+        outputFunc(ns("renderfigure")) %>% bigLoaders::useSpinner(),
         shiny::div(class="popup-modal",
                     modalUI(
                           id = ns("plotPopup"),
@@ -288,7 +288,7 @@ PlotModuleUI <- function(id,
                     shiny::tags$head(shiny::tags$style(modalfooter.none))
                     )
       ),
-      bslib::card_body( #TODO probably want to set fillable and fill to FALSE 
+      bslib::card_body( #TODO probably want to set fillable and fill to FALSE
         class = "card-footer", # center the content horizontally and vertically
         style = paste0("height:", card_footer_height, ";"), # add left and top margin of 2 pixels
          div(
@@ -324,7 +324,8 @@ PlotModuleServer <- function(
          pdf.width=8,
          pdf.height=6,
          pdf.pointsize=12,
-         add.watermark=FALSE )
+         add.watermark=FALSE,
+         remove_margins = TRUE)
 {
     moduleServer(
       id,
@@ -421,27 +422,29 @@ PlotModuleServer <- function(
                   ## unlink(PNGFILE) ## do not remove!
                   if(plotlib=="plotly") {
                     p <- func()
-                    p$width = pdf.width * 160
-                    p$height = pdf.height * 160
+                    p$width = pdf.width * 80
+                    p$height = pdf.height * 80
                     plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                   } else if(plotlib=="iheatmapr") {
                     p <- func()
-                    iheatmapr::save_iheatmap(p, vwidth=pdf.width*160,vheight=pdf.height*160,PNGFILE)
-                  } else if(plotlib=="visnetwork") {
+                    iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
+                  } else if(plotlib=="visnetwork") {                    
+                    # download will not work if phantomjs is not installed
+                    # webshot::install_phantomjs() in case phantomjs is not installed
                     p <- func()
                     dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
                     visNetwork::visSave(p, HTMLFILE)
                     dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ",PNGFILE)
-                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                   } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                     p <- func()
                     htmlwidgets::saveWidget(p, HTMLFILE)
-                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                    webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                   } else if(plotlib %in% c("ggplot","ggplot2")) {
                     ggplot2::ggsave(PNGFILE, plot = func(), dpi=300)
                   } else if(plotlib=="grid") {
                     p <- func()
-                    png(PNGFILE, width=pdf.width*200*resx, height=pdf.height*200*resx,
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     grid::grid.draw(p)
                     dev.off()
@@ -453,11 +456,17 @@ PlotModuleServer <- function(
                     ## generic function should produce PNG inside plot func()
                     ##
                   } else if(plotlib=="base") {
-                    png(PNGFILE, width=pdf.width*200*resx, height=pdf.height*200*resx,
+                    # Save original plot parameters
+                    if(remove_margins == TRUE) {
+                      par(mar = c(0, 0, 0, 0))
+                    }
+                    
+                    png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
-                    func()
+                    print(func())
                     dev.off()  ## important!!
                   } else { ## end base
+                  
                     png(PNGFILE, pointsize=pdf.pointsize)
                     plot.new()
                     mtext("Error. PNG not available.",line=-8)
@@ -487,25 +496,25 @@ PlotModuleServer <- function(
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
                       p <- func()
-                      p$width = pdf.width * 160
-                      p$height = pdf.height * 160
+                      p$width = pdf.width * 80
+                      p$height = pdf.height * 80
                       ##err <- try(plotly::export(p, PDFFILE))  ## deprecated
                       ##err <- try(plotly::orca(p, PDFFILE))
                       ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
                       plotlyExport(p, PDFFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                       p <- func()
-                      iheatmapr::save_iheatmap(p, vwidth=pdf.width*160,vheight=pdf.height*160,PDFFILE)
+                      iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                       p <- func()
                       dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=",HTMLFILE)
                       visNetwork::visSave(p, HTMLFILE)
                       dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=",PDFFILE)
-                      webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*200,vheight=pdf.height*200)
+                      webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                       p <- func()
                       htmlwidgets::saveWidget(p, HTMLFILE)
-                      webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*200,vheight=pdf.height*200)
+                      webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                       p <- func()
                       pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
@@ -527,7 +536,7 @@ PlotModuleServer <- function(
                     } else if(plotlib=="base") {
                       pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
                         pointsize=pdf.pointsize)
-                      func()
+                      print(func())
                       dev.off()  ## important!!
                     } else { ## end base
                       pdf(PDFFILE, pointsize=pdf.pointsize)
@@ -770,6 +779,11 @@ PlotModuleServer <- function(
                 plot <- func() %>%
                   plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
+                
+                if (remove_margins == TRUE) {
+                   plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
+                }
+                
                 #                plot <- plot %>%
                 #                  plotly_default()
                 # If there is already custom buttons, append the edit one

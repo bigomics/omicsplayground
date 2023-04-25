@@ -53,7 +53,7 @@ compare_plot_cum_fc1_server <- function(id,
       F1 <- F[, indexes == 1, drop = FALSE]
       F2 <- F[, indexes == 2, drop = FALSE]
 
-      ii <- head(order(-rowMeans(F**2)), 50)
+      ii <- head(order(-rowMeans(F**2)), 40)
       ii <- ii[order(rowMeans(F[ii, ]))]
       F <- F[ii, , drop = FALSE]
       F1 <- F1[ii, , drop = FALSE]

@@ -43,7 +43,7 @@ clustering_plot_clusterannot_ui <- function(
     plotlib = "plotly",
     title = title,
     info.text = info.text,
-    caption,
+    caption = caption,
     options = clustannot_plots.opts,
     download.fmt = c("png", "pdf"),
     width = width,
@@ -59,8 +59,10 @@ clustering_plot_clusterannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-      shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
+      shiny::req(pgx$X, pgx$gsetX, pgx$families)
+      dbg("[clustering_plot_clustannot.R] observe : triggered ")
+      
       if (is.null(input$xann_level)) {
         return(NULL)
       }
@@ -87,6 +89,7 @@ clustering_plot_clusterannot_server <- function(id,
       } else {
         ann.types <- sel <- "<all>"
       }
+      dbg("[clustering_plot_clustannot.R] observe : shiny::updateSelectInput ")      
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
@@ -216,11 +219,11 @@ clustering_plot_clusterannot_server <- function(id,
     }
 
     clustannot_plots.PLOTLY <- function() {
-        createAnnotBarPlots(fontsize=10)
+      createAnnotBarPlots(fontsize=10)
     }
 
     clustannot_plots.PLOTLY_modal <- function() {
-        createAnnotBarPlots(fontsize=15)
+      createAnnotBarPlots(fontsize=15)
     }
     
     PlotModuleServer(

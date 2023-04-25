@@ -22,20 +22,20 @@ loading_table_datasets_ui <- function(
   )
 }
 
-loading_table_datasets_server <- function(id,
-                                          rl) {
+loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enable_share=TRUE) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
 
     pgxTable_DT <- reactive({
       df <- rl$pgxTable_data
-
+      shiny::req(df)
+      
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
 
-      req(df)
-
+      df$creator <- NULL
+      
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))
@@ -44,18 +44,35 @@ loading_table_datasets_server <- function(id,
       # create action menu for each row
       menus <- c()
       for (i in 1:nrow(df)) {
-        new_menu <- actionMenu(
+
+        download_pgx_menuitem = NULL
+        share_dataset_menuitem = NULL        
+        if(enable_pgxdownload) {
+          download_pgx_menuitem <- shiny::actionButton(
+            ns(paste0("download_pgx_row_",i)),
+            label = "Download PGX",
+            icon = shiny::icon('download'),
+            class = "btn btn-outline-dark",
+            style = "border: none;",
+            onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id)')
+          )
+        }
+        if(enable_share) {
+          share_dataset_menuitem <- shiny::actionButton(
+            ns(paste0("share_dataset_row_", i)),
+            label = "Share Dataset",
+            icon = shiny::icon('share-nodes'),
+            class = "btn btn-outline-info",
+            style = 'border: none;',
+            onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id)')
+          )
+        }
+        
+        new_menu <- actionMenu(  ## ui-DrowDownMenu.R
           div(
             style = "width: 160px;",
             div(
-              shiny::actionButton(
-                ns(paste0("download_pgx_row_",i)),
-                label = "Download PGX",
-                icon = shiny::icon('download'),
-                class = "btn btn-outline-dark",
-                style = "border: none;",
-                onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id)')
-              ),
+              download_pgx_menuitem,
               shiny::actionButton(
                 ns(paste0("download_zip_row_", i)),
                 label = "Download ZIP",
@@ -63,15 +80,8 @@ loading_table_datasets_server <- function(id,
                 class = "btn btn-outline-dark",
                 style = "border: none;",
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_zip"),'\",this.id)')
-              ),
-              shiny::actionButton(
-                ns(paste0("share_dataset_row_", i)),
-                label = "Share Dataset",
-                icon = shiny::icon('share-nodes'),
-                class = "btn btn-outline-info",
-                style = 'border: none;',
-                onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id)')
-              ),
+                ),
+              share_dataset_menuitem,
               shiny::actionButton(
                 ns(paste0("delete_dataset_row_",i)),
                 label = "Delete Dataset",

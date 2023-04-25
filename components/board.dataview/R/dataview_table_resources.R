@@ -6,24 +6,14 @@
 
 dataview_table_rescources_ui <- function(id) {
   ns <- shiny::NS(id)
-
-  shiny::fillCol(
-    flex = c(NA, 0.02, 1),
-    height = 750,
-    tags$div(
-      HTML("<b>Resource information.</b> Details about the execution times of the methods,
-                     dimensions and memory sizes of objects.")
-    ),
-    shiny::br(),
-    shiny::fillRow(
-      flex = c(5, 1, 2, 1, 1.5, 2),
-      tableWidget(ns("timings")),
-      shiny::br(),
-      tableWidget(ns("objectdims")),
-      shiny::br(),
-      tableWidget(ns("objectsizes")),
-      shiny::br()
-    )
+  bslib::layout_column_wrap(
+    width = 1,
+    height = "100%",
+    heights_equal = "row",          
+    style = htmltools::css(grid_template_columns = "4fr 4fr 4fr"),
+    tableWidget(ns("timings")),
+    tableWidget(ns("pgxobject")),
+    tableWidget(ns("objects"))    
   )
 }
 
@@ -34,7 +24,7 @@ dataview_table_resources_server <- function(id, pgx) {
     ## Timings
     ## ================================================================================
 
-    datatable_timings.RENDER <- shiny::reactive({
+    timings_data <- shiny::reactive({
       shiny::req(pgx$timings)
 
       ## if(is.null(pgx$timings)) return(NULL)
@@ -54,7 +44,7 @@ dataview_table_resources_server <- function(id, pgx) {
       req(D)
       DT::datatable(D,
         rownames = FALSE,
-        options = list(dom = "tp", pageLength = 100),
+        options = list(dom = "t", pageLength = 50),
         class = "compact hover"
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
@@ -70,54 +60,29 @@ dataview_table_resources_server <- function(id, pgx) {
     )
 
     ## ================================================================================
-    ## Object dimensions
+    ## PGX Object dimensions
     ## ================================================================================
 
-
-    objectdims_data <- reactive({
+    pgx_data <- reactive({
       shiny::req(pgx$X)
       dims1 <- lapply(pgx, dim)
-      lens <- sapply(pgx, length)
-      dims2 <- t(sapply(pgx[which(!sapply(dims1, is.null))], dim))
+      lens  <- sapply(pgx, length)
+      sel.matrix <- names(pgx)[which(!sapply(dims1, is.null))]
+      dims2 <- do.call(rbind, dims1[sel.matrix])
       kk <- which(sapply(dims1, is.null))
       dims2 <- rbind(dims2, cbind(lens[kk], 0))
       colnames(dims2) <- c("nrows", "ncols")
-      D <- data.frame(object = rownames(dims2), dims2, check.names = FALSE)
-    })
 
-    objectdims.RENDER <- function() {
-      D <- objectdims_data()
-      req(D)
-      DT::datatable(D,
-        rownames = FALSE,
-        options = list(dom = "t", pageLength = 50),
-        class = "compact hover"
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    }
-
-    objectdims_text <- "This table provides details about the data dimensions of objects."
-
-    datatable_objectdims <- shiny::callModule(
-      tableModule, "objectdims",
-      func = objectdims.RENDER,
-      info.text = objectdims_text,
-      options = NULL, title = "Object dimensions"
-    )
-
-    ## ================================================================================
-    ## Object sizes
-    ## ================================================================================
-
-    objectsize_data <- shiny::reactive({
-      shiny::req(pgx$name)
       objsize <- sapply(pgx, object.size)
       objsize <- round(objsize / 1e6, digits = 2)
-      data.frame(object = names(pgx), "size.Mb" = objsize, check.names = FALSE)
+      objsize <- objsize[rownames(dims2)]
+
+      data.frame(object = rownames(dims2), dims2, "size.Mb" = objsize, check.names = FALSE)
     })
 
-    objectsize.RENDER <- function() {
-      D <- objectsize_data()
+    pgx.RENDER <- function() {
+      D <- pgx_data()
+      D <- D[order(-D$size.Mb),]
       req(D)
       DT::datatable(D,
         rownames = FALSE,
@@ -127,13 +92,51 @@ dataview_table_resources_server <- function(id, pgx) {
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    objectsize_text <- "This table provides information about  about the memory sizes of objects"
+    pgx_text <- "This table provides details about the pgx object."
 
-    datatable_objectsize <- shiny::callModule(
-      tableModule, "objectsize",
-      func = objectsize.RENDER,
-      options = NULL, title = "Object sizes",
-      info.text = objectsize_text
+    datatable_pgxdims <- shiny::callModule(
+      tableModule, "pgxobject",
+      func = pgx.RENDER,
+      info.text = pgx_text,
+      options = NULL,
+      title = "PGX slot sizes"
     )
+
+    ## ================================================================================
+    ## PGX Object dimensions
+    ## ================================================================================
+
+    object_data <- reactive({
+      shiny::req(pgx$X)
+      obj <- ls(envir=.GlobalEnv)
+      sizes <- sapply(obj,function(s) object.size(get(s)))
+      sizes.Mb <- round(as.numeric(sizes) / 1024**2, digits=2)
+      names(sizes) <- names(sizes.Mb) <- obj
+      sizes.Mb <- sort(sizes.Mb, decreasing=TRUE)
+      data.frame(object = names(sizes.Mb), size.Mb = sizes.Mb)
+    })
+
+    object.RENDER <- function() {
+      D <- object_data()
+      req(D)
+      D <- head(D, 35)
+      DT::datatable(D,
+        rownames = FALSE,
+        options = list(dom = "t", pageLength = 50),
+        class = "compact hover"
+      ) %>%
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+    }
+
+    object_text <- "This table provides size details about R objects."
+
+    shiny::callModule(
+      tableModule, "objects",
+      func = object.RENDER,
+      info.text = object_text,
+      options = NULL,
+      title = "R object sizes"
+    )
+    
   }) ## end of moduleServer
 } ## end of server

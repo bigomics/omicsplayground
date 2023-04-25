@@ -29,6 +29,7 @@ featuremap_plot_gene_sig_server <- function(id,
                                             pgx,
                                             getGeneUMAP,
                                             sigvar,
+                                            ref_group,                                            
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -41,7 +42,15 @@ featuremap_plot_gene_sig_server <- function(id,
       pheno <- "tissue"
       pheno <- sigvar()
       if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$X - rowMeans(pgx$X)
+        y <- pgx$samples[, pheno]
+        ref <- ref_group()
+        if(ref == "<average>") {
+          refX <- rowMeans(pgx$X)
+        } else {
+          kk <- which(y == ref)
+          refX <- rowMeans(pgx$X[,kk])          
+        }        
+        X <- pgx$X - refX
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, i, drop = FALSE])
@@ -55,7 +64,7 @@ featuremap_plot_gene_sig_server <- function(id,
       return(list(F, pos))
     })
 
-    geneSigPlots.RENDER <- shiny::reactive({
+    geneSigPlots.RENDER <- function(){
       dt <- geneSigPlots.plot_data()
       F <- dt[[1]]
       pos <- dt[[2]]
@@ -71,9 +80,9 @@ featuremap_plot_gene_sig_server <- function(id,
         progress$set(message = "Computing feature plots...", value = 0)
       }
       plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = NULL, progress)
-      p <- grDevices::recordPlot()
-      p
-    })
+      # p <- grDevices::recordPlot()
+      # p
+    }
 
     PlotModuleServer(
       "gene_sig",

@@ -23,7 +23,8 @@ expression_plot_volcanoMethods_ui <- function(
   width) {
   ns <- shiny::NS(id)
 
-  PlotModuleUI(ns("pltmod"),
+  PlotModuleUI(
+    ns("pltmod"),
     title = "Volcano plots for all methods",
     label = label,
     plotlib = "ggplot",

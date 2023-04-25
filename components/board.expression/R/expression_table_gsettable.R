@@ -60,11 +60,13 @@ expression_table_gsettable_server <- function(id,
 #        class = "compact",  ## not good!
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
           scrollX = TRUE,
           scrollY = scrollY,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
