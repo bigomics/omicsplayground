@@ -488,9 +488,6 @@ ComputePgxServer <- function(
                         logfile <- normalizePath(file.path(OPG,"processx.log"))
                         dbg("[compute PGX process] : writing stderr to ", logfile)
                         writeLines(stderr_output, logfile)
-                        stderr_output <- stderr_output[nchar(stderr_output)>0]
-                        stderr_output <- paste0("  processx.",i,": ",stderr_output)
-                        writeLines(tail(stderr_output,5))
                     }
                         
                 }
