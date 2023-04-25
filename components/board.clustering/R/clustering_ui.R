@@ -30,9 +30,10 @@ ClusteringInputs <- function(id) {
     shiny::conditionalPanel(
       "input.hm_features == '<contrast>'",
       ns = ns,
-      tipifyR(
+      withTooltip(
         shiny::selectInput(ns("hm_contrast"), NULL, choices = NULL),
-        "Select contrast to be used as signature."
+        "Select contrast to be used as signature.",
+        placement = "right", options = list(container = "body")
       )
     ),
     withTooltip(shiny::selectInput(ns("hm_group"), "Group by:", choices = NULL),
@@ -58,7 +59,7 @@ ClusteringInputs <- function(id) {
         inline = TRUE
       ),
       "Choose the layout method for clustering plots.",
-    ),    
+    ),
     shiny::conditionalPanel(
       "input.hm_options % 2 == 1",
       ns = ns,
@@ -92,7 +93,7 @@ ClusteringUI <- function(id) {
 
   fullH <- "80vh" ## full height of full page
   rowH  <- "40vh"
-  
+
   div(
     class = "row",
     ## h4("Cluster Samples"),
@@ -130,7 +131,7 @@ ClusteringUI <- function(id) {
           "Parallel",
           shinyjqui::jqui_sortable(
               bslib::layout_column_wrap(
-                 width = 1,                 
+                 width = 1,
                  clustering_plot_parcoord_ui(
                      id = ns("parcoord"),
                      title = "Parallel coordinates",
@@ -147,9 +148,9 @@ ClusteringUI <- function(id) {
                      caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                      label = "a",
                      width = c("100%", "100%"),
-                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)                     
+                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)
                  )
-              ) ## layout   
+              ) ## layout
           ) ## sortable
         )
     )),
