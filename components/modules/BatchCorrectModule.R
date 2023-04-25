@@ -35,7 +35,7 @@ BatchCorrectUI <- function(id, height=720) {
       width = 2
     ),
     shiny::mainPanel(
-      shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner(),
+      shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner(),
       width = 10
     )
   )
@@ -48,7 +48,7 @@ BatchCorrectInputsUI <- function(id) {
 
 BatchCorrectCanvas <- function(id, height=720) {
   ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner()
+  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
 }
 
 BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
@@ -230,10 +230,11 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           shiny::br(),
           shiny::br(),
 
-          tipify2(
+          withTooltip(
             shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                selected=sel.par, multiple=TRUE),
-            "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings."),
+            "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings.",
+            placement = "top", options = list(container = "body")),
 
           ## withTooltip(
           ##   shiny::radioButtons(ns("bc_strength"), NULL,

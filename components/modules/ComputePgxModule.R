@@ -349,7 +349,7 @@ ComputePgxServer <- function(
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 path_to_params <- file.path(temp_dir(), "params.RData")
                 dataset_name <- gsub("[ ]","_",input$upload_name)
-                
+
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
@@ -372,7 +372,7 @@ ComputePgxServer <- function(
                     use.design = use.design,        ## no.design+prune are combined
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
-                    lib.dir = lib.dir,
+                    libx.dir = lib.dir, # needs to be replaced with libx.dir
                     name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
@@ -384,7 +384,7 @@ ComputePgxServer <- function(
                 ## override username from session object
                 params$creator <- session$user
 
-                
+
                 saveRDS(params, file=path_to_params)
 
                 # Normalize paths
@@ -442,7 +442,7 @@ ComputePgxServer <- function(
                 if (process_counter() == 0) {
                     return(NULL)
                 }
-                
+
                 reactive_timer()
                 active_processes <- process_obj()
                 completed_indices <- c()
@@ -474,7 +474,7 @@ ComputePgxServer <- function(
                         dbg("[compute PGX process] : writing stderr to ", logfile)
                         writeLines(stderr_output, logfile)
                     }
-                        
+
                 }
 
                 # Remove completed processes from the list
@@ -488,7 +488,7 @@ ComputePgxServer <- function(
 
             # Function to execute when the process is completed successfully
             on_process_completed <- function(temp_dir) {
-                dbg("[compute PGX process] on_process_completed() called!")                
+                dbg("[compute PGX process] on_process_completed() called!")
                 process_counter(process_counter()-1) # stop the timer
                 result_pgx <- file.path(temp_dir, "my.pgx")
                 if (file.exists(result_pgx)) {
@@ -501,13 +501,13 @@ ComputePgxServer <- function(
             }
 
             on_process_error <- function() {
-                dbg("[compute PGX process] on_process_error() called!")                
+                dbg("[compute PGX process] on_process_error() called!")
                 process_counter(process_counter()-1) # stop the timer
                 message("Error: Process completed with an error")
 
                 proc <-process_obj()[[1]]$process
-                stderr_output <- proc$read_error_lines()                
-                
+                stderr_output <- proc$read_error_lines()
+
                 if (length(stderr_output) > 0) {
                     message("Standard error output from the process:")
                     ##for (line in stderr_output) { message(line) }
@@ -518,7 +518,7 @@ ComputePgxServer <- function(
             }
 
             ## what does this do???
-            observe(check_process_status())  
+            observe(check_process_status())
 
             observe({
                 if (process_counter() > 0){
@@ -530,7 +530,7 @@ ComputePgxServer <- function(
                 } else if (process_counter() == 0) {
                     shiny::removeUI(selector = ".current-dataset > #spinner-container")
                 }
-                
+
                 if (process_counter() < opt$MAX_DS_PROCESS) {
                     shinyjs::enable("compute")
                 } else {
