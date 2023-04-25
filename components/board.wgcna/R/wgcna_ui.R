@@ -55,179 +55,128 @@ WgcnaUI <- function(id) {
       id = ns("tabs"),
       shiny::tabPanel(
         "WGCNA",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
+        bs_alert(HTML("<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction maps colored by WGCNA module. <b>(e)</b> Graph network of WGCNA modules.")),
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/2,
+            height = "35%",
             wgcna_plot_gdendogram_ui(
               ns("geneDendro"),
               caption = "WGCNA gene dendrogram and gene modules",
               info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
-              height = c(rowH1, 650),
-              width = c("auto", 1000)
-            )
-          ),
-          div(
-            class = "col-md-6",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_plot_s_independence_ui(
               ns("topologyPlots"),
-              height = c(rowH1, 600),
-              width = c("auto", 1200)
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-4",
+          ),
+          bslib::layout_column_wrap(
+            width = 1/3,
+            height = "65%",            
             wgcna_plot_TOMheatmap_ui(
               ns("TOMplot"),
-              height = c(rowH2, 650),
-              width = c("auto", 1000)
-            )
-          ),
-          div(
-            class = "col-md-4",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_plot_gclustering_ui(
               ns("umap"),
-              height = c(rowH2, 650),
-              width = c("auto", 650)
-            )
-          ),
-          div(
-            class = "col-md-4",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_plot_module_graph_ui(
               ns("moduleGraph"),
-              height = c(rowH2, 650),
-              width = c("auto", 1000)
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             )
           )
-        ),
-        tags$div(
-          class = "caption",
-          HTML("<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using
-                the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene.
-                The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.
-                <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological
-                overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction maps colored by WGCNA module.
-                <b>(e)</b> Graph network of WGCNA modules.")
-        ),
+        )
       ),
       shiny::tabPanel(
         "Modules",
-        div(
-          class = "row",
-          div(
-            class = "col-md-4",
+        bs_alert(HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module-trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",
+          heights_equal = "row",
+          bslib::layout_column_wrap(
+            width = 1/3,
+            height = "60%",
             wgcna_plot_MTrelationships_ui(
               ns("moduleTrait"),
-              height = c(420, 650),
-              width = c("auto", 1000)
-            )
-          ),
-          div(
-            class = "col-md-4",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_plot_correlation_network_ui(
               ns("corGraph"),
-              height = c(420, 650),
-              width = c("auto", 1000)
-            )
-          ),
-          div(
-            class = "col-md-4",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_plot_correlation_network_ui(
               ns("enrichPlot"),
-              height = c(420, 650),
-              width = c("auto", 800)
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-4",
-            wgcna_table_genes_ui(
-              ns("geneTable"),
-              height = c(250, TABLE_HEIGHT_MODAL),
+              height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           ),
-          div(
-            class = "col-md-8",
+          bslib::layout_column_wrap(
+            width = 1,
+            height = "40%",            
+            style = htmltools::css(grid_template_columns = "1fr 2fr"),
+            wgcna_table_genes_ui(
+              ns("geneTable"),
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
-              height = c(250, TABLE_HEIGHT_MODAL),
+              height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )
-        ),
-        tags$div(
-          class = "caption",
-          HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module-trait analysis identifies modules that are significantly
-                associated with the measured clinical traits by quantifying the association as the correlation of the
-                eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated
-                to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of
-                genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")
         )
       ),
       shiny::tabPanel(
         "Eigengenes",
-        div(
-          class = "row",
-          div(
-            class = "col-md-3",
-            wgcna_plot_eigengene_clustering_ui(
-              ns("eigenClustering"),
-              height = c(fullH, 700),
-              width = c("auto", 450)
-            )
+        bs_alert(HTML("<b>WGCNA eigengene analysis.</b> <b>(a)</b> It is often interesting to visualizing the network of eigengenes and study the relationships among the found modules. One can use the eigengenes as represen- tative profiles and quantify module similarity by eigengene correlation. <b>(b)</b> For each module, we also define a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes to every module.")),
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",
+          style = htmltools::css(grid_template_columns = "3fr 9fr"),
+          wgcna_plot_eigengene_clustering_ui(
+            ns("eigenClustering"),
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           ),
-          div(
-            class = "col-md-9",
-            wgcna_plot_module_membership_ui(
-              ns("eigenCorrelation"),
-              height = c(fullH, 720),
-              width = c("auto", 1050)
-            )
+          wgcna_plot_module_membership_ui(
+            ns("eigenCorrelation"),
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
-        ),
-        tags$div(
-          class = "caption",
-          HTML("<b>WGCNA eigengene analysis.</b> <b>(a)</b> It is often interesting to visualizing the network of eigengenes
-              and study the relationships among the found modules. One can use the eigengenes as represen- tative profiles
-              and quantify module similarity by eigengene correlation. <b>(b)</b> For each module, we also define
-              a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene
-              expression profile. This allows us to quantify the similarity of all genes to every module.")
         )
       ),
       shiny::tabPanel(
         "Intramodular",
-        div(
-          class = "row",
-          div(
-            class = "col-md-3",
-            wgcna_plot_heatmap_membership_ui(
-              ns("intraHeatmap"),
-              height = c(fullH, 720),
-              width = c("auto", 1050)
-            )
-          ),
-          div(
-            class = "col-md-9",
-            wgcna_plot_membership_v_trait_ui(
-              ns("intraScatter"),
-              height = c(fullH, 720),
-              width = c("auto", 1150)
-            )
-          )
+        bs_alert(HTML("<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")
         ),
-        tags$div(
-          class = "caption",
-          HTML("<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of
-                interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between
-                the gene and the trait. For each module, we also define a quantitative measure of module membership MM
-                as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures,
-                we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",
+          style = htmltools::css(grid_template_columns = "3fr 9fr"),
+          wgcna_plot_heatmap_membership_ui(
+            ns("intraHeatmap"),
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          ),
+          wgcna_plot_membership_v_trait_ui(
+            ns("intraScatter"),
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )      
         )
       )
     )
