@@ -26,6 +26,39 @@ bs_alert <- function(m="alert!") {
 }
 
 
+## See https://getbootstrap.com/docs/5.0/components/carousel/
+bs_carousel2 <- function(id, contents, interval=4000, autostart=TRUE, wrap=TRUE, fade=FALSE) {
+  autostart <- ifelse(autostart,"carousel","false")
+  wrap <- ifelse(wrap, "true","false")
+  fade <- ifelse(fade, "carousel-fade","")
+  p1 = paste0('<div id="',id,'" class="carousel slide ',fade,'" data-bs-ride="',autostart,'"',
+    'data-bs-wrap="',wrap,'"><div class="carousel-inner">')
+  p2 = paste0('</div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#',id,'" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#',id,'" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+  </div>')
+
+  items <- c()
+  if(length(interval)==1) interval <- rep(interval,length(contents))
+  for(i in 1:length(contents)) {
+    if(i==1) {
+      div1 <- paste0('<div class="carousel-item active" data-bs-interval="',interval[i],'">')
+    } else {
+      div1 <- paste0('<div class="carousel-item" data-bs-interval="',interval[i],'">')      
+    }
+    items[[i]] <- paste0(div1, contents[[i]],'</div>')
+  }
+  items <- paste(items, collapse="\n")
+  HTML(paste(p1, items, p2))
+}
+
+
 bs_carousel <- function(id, contents, img.src=NULL) {
     
   cbutton <- function(n) {
@@ -66,10 +99,10 @@ bs_carousel <- function(id, contents, img.src=NULL) {
       id = id,
       class = "carousel slide",
       `data-bs-ride` = "carousel",
-      shiny::div(
-          class="carousel-indicators",
-          shiny::tagList(buttons)
-      ),
+#      shiny::div(
+#          class="carousel-indicators",
+#          shiny::tagList(buttons)
+#      ),
       shiny::div(
           class="carousel-inner",
           shiny::tagList(items)

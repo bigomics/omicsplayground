@@ -10,7 +10,6 @@ html {
     #welcome-page {
 	text-align: center;
 	background-color: #f0f9fd;
-	margin: 0px -15px 0px -15px;
 	min-height: calc(100vh - 48px);
     }
 
@@ -18,9 +17,9 @@ html {
 	font-size: 50px;
 	font-weight: 600;
 	color: #2484bb;
-	padding-top: 340px;
+	padding-top: 300px;
 	background: url("monster-hi.png") no-repeat;
-	background-size: 350px 350px;
+	background-size: 300px 300px;
 	background-position: 53% 0px;
     }
     
@@ -37,9 +36,16 @@ html {
     #welcome-subtext {
 	padding: 0 25%;
 	text-align: center;
-	font-size: 1.1em;
+	font-size: 1.8em;
 	line-height: 1.4em;
     }
 
+    .welcome-slide {
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+    }
+	
     
 }

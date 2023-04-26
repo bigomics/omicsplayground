@@ -341,14 +341,14 @@ LoadingBoard <- function(id,
       dbg("[loading_server.R:getPGXINFO_SHARED] reacted!")
 
       ## update meta files
-##      shiny::withProgress(message = "Updating datasets meta-info...", value = 0.33, {
-      shinyWidgets::sendSweetAlert(
-          title="Wow! So many new datasets!",
-          text = "Please wait while scanning available datasets...",
-          btn_labels = NA )
+      shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
+##      shinyWidgets::sendSweetAlert(
+##          title="Wow! So many new datasets!",
+##          text = "Please wait while scanning available datasets...",
+##          btn_labels = NA )
       playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
-      shinyWidgets::closeSweetAlert()
-##      })
+##      shinyWidgets::closeSweetAlert()
+      })
       
       info <- NULL
       info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)

@@ -62,28 +62,62 @@ WelcomeBoardInputs <- function(id) {
   return(NULL)
 }
 
+
 WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
+  
+  pages <- list(
+    '<h1 class="d-block w-100 text-center align-middle" style="height:100vh;line-height:90vh;">HELLO...</h1>',
+    '<h1 class="d-block w-100 text-center align-middle" style="height:100vh;line-height:90vh;">WORLD!</h1>'    
+  )
+
+  ## Pages for the slider
+  mission.page =
+    div( class = "row welcome-slide",
+        div( class = "col-md-12 text-center",
+            shiny::tags$b("Omics Playground. Never stop discovering."),
+            shiny::p("We love Biology. We love Big Data. At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
+            )
+        )
+
+  credits.page =
+    div( class = "row welcome-slide",
+        div( class = "col-md-12 text-center",
+            shiny::tags$b("Credits"),
+            shiny::p("Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Stefan Reifenberg, Xavier Escribà Montagut")
+            )
+        )
+
+  motto.page =
+    div( class = "row welcome-slide",
+        div( class = "col-md-12 text-center",
+            shiny::tags$b("Omics Playground. Advanced omics analysis for everyone."),            
+            br(),
+            "Created with love and proudly presented to you by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
+            br(),br(),
+            "Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
+            shiny::a("www.bigomics.ch", href="https://www.bigomics.ch")
+            )
+        )
+
+  ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",
     div(
       class = "row",
-      style = "min-height:540px;height:60vh;",
-      id = "welcome-content",      
       div(
         class = "col-md-12",
         br(),
         br(),
-        div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
-        h2("What would you like to do today?"),
-        br(),
+        div(shiny::textOutput(ns("welcome")), id="welcome-text"),
+        div("What would you like to do today?", id="welcome-subtext"),
         br(),
         br()
       )
     ),
     div(
       class = "row",
-      style = "max-height:35vh;padding:20px 0 20px 0;vertical-align:bottom;",
+      style = "max-height:35vh;padding:0px 0px 20px 0px;vertical-align:bottom;",
       id = "welcome-buttons",
       div(
         class = "col-md-5",
@@ -109,6 +143,11 @@ WelcomeBoardUI <- function(id) {
         )
       )
     ),
-    br()
+    br(),
+    br(),
+    bs_carousel2(
+      "welcome-carousel",
+      interval=12000, wrap=TRUE, autostart=TRUE, fade=TRUE,
+      contents=list(mission.page, credits.page, motto.page) )    
   )
 }

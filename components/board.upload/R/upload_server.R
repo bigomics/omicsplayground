@@ -136,15 +136,15 @@ UploadBoard <- function(id,
         save(pgx, file = fn)
         remove(pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
-##        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
-        shinyWidgets::sendSweetAlert(
-          title="Wow! So many new datasets",
-          text = "Please wait while scanning your new datasets...",
-          btn_labels = NA
-        )
+        ## shinyWidgets::sendSweetAlert(
+        ##   title="Wow! So many new datasets",
+        ##   text = "Please wait while scanning your new datasets...",
+        ##   btn_labels = NA
+        ## )
+        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
-        shinyWidgets::closeSweetAlert()
-##        })
+        })
+        ##   shinyWidgets::closeSweetAlert()
         
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1        
       }
