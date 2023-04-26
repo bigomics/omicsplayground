@@ -75,7 +75,7 @@ DataViewUI <- function(id) {
         width = 1,
         height = fullH,
         heights_equal = "row",
-        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression for a selected gene in the GTEX tissue reference database."),
+        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
         bslib::layout_column_wrap(
           width = 1,
           height = "100%",

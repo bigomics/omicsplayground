@@ -318,7 +318,7 @@ sever_screen2 <- function(session_id) {
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons = c(
 	"toImage",
-	"senDataToCloud","editInChartStudio","zoom2d","pan2d","select2d",
+	"sendDataToCloud","editInChartStudio","zoom2d","pan2d","select2d",
 	"lasso2d","drawclosedpath","drawopenpath","drawline","drawrect",
 	"drawcircle","eraseshape","zoomIn2d","zoomOut2d",
 	"autoScale2d","resetScale2d","zoom3d","pan3d",

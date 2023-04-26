@@ -63,7 +63,7 @@ DataViewBoard <- function(id, pgx) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Data View Board</strong>"),
         shiny::HTML(data_infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE, size = "xl"
       ))
     })
 
