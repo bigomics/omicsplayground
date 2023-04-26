@@ -298,6 +298,7 @@ app_server <- function(input, output, session) {
           shinyjs::runjs("console.info('logo-bigomics clicked')")
           bigdash.selectTab(session, selected = 'welcome-tab')
           shinyjs::runjs("sidebarClose()")
+          shinyjs::runjs("sidebarClose()")
         })
 
     })

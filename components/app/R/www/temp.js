@@ -62,15 +62,15 @@ const unloadSidebar = () => {
 const sidebarClose = () => {
     if($('#sidebar-container').hasClass('sidebar-expanded')) {
 	$('.sidebar-label').trigger('click');
-        $('#sidebar-help-container').hide();
     }
+    $('#sidebar-help-container').hide();
 }
 
 const sidebarOpen = () => {
     if($('#sidebar-container').hasClass('sidebar-collapsed')) {
 	$('.sidebar-label').trigger('click');
-        $('#sidebar-help-container').show();
     }
+    $('#sidebar-help-container').show();
 }
 
 const settingsClose = () => {
