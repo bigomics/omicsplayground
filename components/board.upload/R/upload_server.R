@@ -322,9 +322,7 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
-              dbg(
-                "[upload_files] counts.csv : 1 : dim(df0) = ",
-                paste(dim(df0), collapse = "x")
+              dbg("[upload_files] counts.csv : 1 : dim(df0) = ",paste(dim(df0), collapse="x")
               )
 
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
@@ -406,7 +404,7 @@ UploadBoard <- function(id,
 
       if ("counts.csv" %in% names(matlist)) {
         ## Convert to gene names (need for biological effects)
-        dbg("[upload_files] converting probe names to symbols")
+        dbg("[upload_files] converting probe names to symbols...")
         X0 <- matlist[["counts.csv"]]
         pp <- rownames(X0)
         rownames(X0) <- playbase::probe2symbol(pp)
@@ -414,6 +412,7 @@ UploadBoard <- function(id,
         X0 <- X0[sel, ]
         xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
         X0 <- do.call(rbind, xx)
+        dbg("[upload_files] ...done!")        
         matlist[["counts.csv"]] <- X0
       }
 
