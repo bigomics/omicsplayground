@@ -42,20 +42,19 @@ RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
 
 WORKDIR /omicsplayground
 RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
-RUN R -e "devtools::install_github('bigomics/bigLoaders',force=TRUE)"
-RUN R -e "devtools::install_github('bigomics/playdata',force=TRUE)"
-RUN R -e "devtools::install_github('bigomics/playbase',force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/bigLoaders',force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/playdata',force=TRUE)"
+##RUN R -e "remotes::install_github('bigomics/playbase',force=TRUE)"
 
 #------------------------------------------------------------
-# Install fresh playbase
+# Install fresh playbase (this skips dependencies...)
 #------------------------------------------------------------
-# ##RUN R -e "remotes::install_github('bigomics/playbase',force=TRUE)"
-# WORKDIR /
-# RUN echo Downloading Playbase
-# RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
-#     && rm -fr /playbase-main  \
-#     && unzip main.zip \
-#     && R CMD INSTALL playbase-main
+WORKDIR /
+RUN echo Downloading Playbase
+RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
+    && rm -fr /playbase-main  \
+    && unzip main.zip \
+    && R CMD INSTALL playbase-main
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
