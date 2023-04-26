@@ -610,4 +610,11 @@ Upgrade today and experience advanced analysis features without the time limit.<
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[server.R] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
+    ##-------------------------------------------------------------
+    ## Startup Message
+    ##-------------------------------------------------------------
+    shinyalert::shinyalert(
+        title = "Welcome to Version 3!",
+        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!")
+  
 }
