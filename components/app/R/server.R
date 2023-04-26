@@ -452,7 +452,7 @@ app_server <- function(input, output, session) {
           dbg("[server.R] success = ",success)
           if(success==0) {
             info("[server.R] logout after no referral!!!")
-            shinyjs::runjs("logout()")
+            shinyjs::runjs("logoutInApp()")
           }
           if(success > 1) {
             info("[server.R] resetting timer after referral!!!")
@@ -617,5 +617,10 @@ Upgrade today and experience advanced analysis features without the time limit.<
     shinyalert::shinyalert(
         title = "Welcome to Version 3!",
         text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!")
+
+
+    ## clean up any remanining UI from previous aborted processx
+    shiny::removeUI(selector = ".current-dataset > #spinner-container")
+
   
 }

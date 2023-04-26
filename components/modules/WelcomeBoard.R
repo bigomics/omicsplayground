@@ -92,11 +92,9 @@ WelcomeBoardUI <- function(id) {
   motto.page =
     div( class = "row welcome-slide",
         div( class = "col-md-12 text-center",
-            shiny::tags$b("Omics Playground. Advanced omics analysis for everyone."),            
-            br(),
+            shiny::tags$b("Omics Playground. Advanced omics analysis for everyone."),br(),
             "Created with love by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-            br(),br(),
-            "Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
+            br(),"Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
             shiny::a("www.bigomics.ch", href="https://www.bigomics.ch")
             )
         )
