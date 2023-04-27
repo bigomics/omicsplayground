@@ -184,8 +184,8 @@ install.github("Coolgenome/iTALK")
 install.github('wt2015-github/FastGGM', force=TRUE)
 install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
-install_github('bigomics/bigdash', force=TRUE)
-install_github('bigomics/bigLoaders')
+install.github('bigomics/bigdash', force=TRUE)
+install.github('bigomics/bigLoaders')
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
