@@ -294,7 +294,7 @@ FirebaseAuthenticationModule <- function(id) {
         ## login process for not authorized people with wrong domain
         ## or against a subscription list.
         authorized <- grepl("@bigomics.ch$",response$response$email)
-        if(!authorized) {
+        if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.") 
           return(NULL)
         }
@@ -332,7 +332,7 @@ FirebaseAuthenticationModule <- function(id) {
         ## login process for not authorized people with wrong domain
         ## or against a subscription list.
         authorized <- grepl("@bigomics.ch$",response$response$email)
-        if(!authorized) {
+        if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
           USER$logged <- FALSE
           return(NULL)

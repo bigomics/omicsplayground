@@ -88,15 +88,15 @@ app_server <- function(input, output, session) {
         auth <- FirebaseAuthenticationModule(id ="auth")
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
-        ##email <- Sys.getenv("SHINYPROXY_EMAIL")
         auth <- NoAuthenticationModule(
-          id = "auth",
-          show_modal = TRUE,
-          username = username,
-          email = username
+            id = "auth",
+            show_modal = TRUE,
+            username = username,
+            email = username
         )
     } else if(authentication == "none2") {
-      auth <- NoAuthenticationModule( id = "auth", show_modal=FALSE )
+        ## no authentication but also not showing main modal (enter)
+        auth <- NoAuthenticationModule( id = "auth", show_modal=FALSE )
     } else {
         ##} else if(authentication == "none") {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
