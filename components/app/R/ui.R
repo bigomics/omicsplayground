@@ -393,8 +393,8 @@ app_ui <- function() {
                 bigdash::sidebarTabHelp(
                     "diffexpr-tab",
                     "Expression Analysis",
-                    "Compare expression between
-                    two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
+                    "Compare expression between two conditions. Determine which genes are
+                     significantly downregulated or overexpressed in one of the groups."
                 ),
                 bigdash::sidebarTabHelp(
                     "corr-tab",

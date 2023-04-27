@@ -393,7 +393,7 @@ ComputePgxServer <- function(
                 )
 
                 process_counter(process_counter() + 1)
-                dbg("[compute PGX process] : starting processx nr:", process_counter())
+                dbg("[compute PGX process] : starting processx nr: ", process_counter())
                 dbg("[compute PGX process] : process tmpdir = ", tmpdir)                
                 
                 ## append to process list
@@ -503,7 +503,7 @@ ComputePgxServer <- function(
                 dbg("[compute PGX process] on_process_completed() called!")
                 process_counter(process_counter()-1) # stop the timer
                 result_pgx <- file.path(temp_dir, "my.pgx")
-                message("[compute PGX process] Error: process",nr,"completed successfully!")
+                message("[compute PGX process] process",nr,"completed successfully!")
                 if (file.exists(result_pgx)) {
                     load(result_pgx)  ## always pgx
                     computedPGX(pgx)
