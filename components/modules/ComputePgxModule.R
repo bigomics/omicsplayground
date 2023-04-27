@@ -392,40 +392,34 @@ ComputePgxServer <- function(
                     selected = 'load-tab'
                 )
 
-                dbg("[compute PGX process] : starting process")
                 process_counter(process_counter() + 1)
+                dbg("[compute PGX process] : starting processx nr:", process_counter())
+                dbg("[compute PGX process] : process tmpdir = ", tmpdir)                
+                
+                ## append to process list
+                process_obj(
+                  append(
+                    process_obj(),
+                    list(
+                      ## new background computation job
+                      list(
+                        process = processx::process$new(
+                          "Rscript",
+                          args = c(script_path, tmpdir),
+                          supervise = TRUE,
+                          stderr = '|',
+                          stdout = '|'
+                          ),
+                        number = process_counter(),
+                        dataset_name = gsub("[ ]","_",input$upload_name),
+                        temp_dir = temp_dir(),
+                        stderr = c(),
+                        stdout = c()                  
+                      )
+                    )
+                  )
+                )
 
-                if(is.null(process_obj())) {
-                    process_obj(
-                        list(
-                            list(
-                                process = processx::process$new(
-                                     "Rscript",
-                                     args = c(script_path, tmpdir),
-                                     supervise = TRUE,
-                                     stderr = '|',
-                                     stdout = '|'
-                                ),
-                                dataset_name = gsub("[ ]","_",input$upload_name),
-                                temp_dir = temp_dir())))
-                } else {
-                    process_obj(
-                        append(
-                            process_obj(),
-                            list(
-                                list(
-                                    process = processx::process$new(
-                                        "Rscript",
-                                        args = c(script_path, tmpdir),
-                                        supervise = TRUE,
-                                        stderr = '|',
-                                        stdout = '|'
-                                    ),
-                                    dataset_name = gsub("[ ]","_",input$upload_name),
-                                    temp_dir = temp_dir())
-                                ))
-                            )
-                }
             })
 
             check_process_status <- reactive({
@@ -439,30 +433,59 @@ ComputePgxServer <- function(
 
                 for (i in seq_along(active_processes)) {
                     #i=1
+                    active_obj <- active_processes[[i]]
                     current_process <- active_processes[[i]]$process
                     temp_dir <- active_processes[[i]]$temp_dir
 
                     process_status <- current_process$get_exit_status()
                     process_alive  <- current_process$is_alive()
-
-                    if (!is.null(process_status) && process_status == 0) {
+                    nr <- active_obj$number
+                  
+                    ## [https://processx.r-lib.org/] Always
+                    ## make sure that you read out the standard
+                    ## output and/or error of the pipes, otherwise
+                    ## the background process will stop running!
+                    stderr_output <- current_process$read_error_lines()
+                    active_obj$stderr <- c(active_obj$stderr, stderr_output)
+                    stdout_output <- current_process$read_output_lines()
+                    active_obj$stdout <- c(active_obj$stdout, stdout_output)
+                      
+                    errlog <- file.path(temp_dir,"processx-error.log")
+                    outlog <- file.path(temp_dir,"processx-output.log")                      
+                    ## dbg("[compute PGX process] : writing stderr to ", logfile)
+                    cat(paste(stderr_output,collapse='\n'), file=errlog, append=TRUE)
+                    cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)                      
+                  
+                    if (!is.null(process_status)) {
+                      if (process_status == 0) {                    
                         # Process completed successfully
                         dbg("[compute PGX process] : process completed")
-                        on_process_completed(temp_dir = temp_dir)
-                        completed_indices <- c(completed_indices, i)
-                    } else if (!is.null(process_status) && process_status != 0) {
-                        on_process_error()
-                        completed_indices <- c(completed_indices, i)
+                        on_process_completed(temp_dir = temp_dir, nr=nr)
+                      } else {
+                        on_process_error(nr=nr)
+                      }
+                      completed_indices <- c(completed_indices, i)
+
+                      ## read latest output/error and copy to main stderr/stdout
+                      if (length(active_obj$stderr) > 0) {
+                        ## Copy the error to the stderr of main app
+                        message("Standard error from processx:")
+                        ##for (line in stderr_output) { message(line) }
+                        err <- paste0("[processx.",nr,":stderr] ", active_obj$stderr)
+                        writeLines(err, con = stderr())
+                      } 
+                      if (length(active_obj$stdout) > 0) {
+                        ## Copy the error to the stderr of main app
+                        cat("Standard output from processx:")
+                        ##for (line in stderr_output) { message(line) }
+                        out <- paste0("[processx.",nr,":stdout] ", active_obj$stdout)
+                        writeLines(out, con = stdout())
+                      } 
+
+                      
                     } else {
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")
-
-                        ## write error to console and temp file
-                        stderr_output <- current_process$read_error_lines()
-                        ##logfile <- file.path(temp_dir,"process.log")
-                        logfile <- normalizePath(file.path(OPG,"processx.log"))
-                        ## dbg("[compute PGX process] : writing stderr to ", logfile)
-                        writeLines(stderr_output, logfile)
                     }
                 }
 
@@ -476,10 +499,11 @@ ComputePgxServer <- function(
             })
 
             # Function to execute when the process is completed successfully
-            on_process_completed <- function(temp_dir) {
+            on_process_completed <- function(temp_dir,nr) {
                 dbg("[compute PGX process] on_process_completed() called!")
                 process_counter(process_counter()-1) # stop the timer
                 result_pgx <- file.path(temp_dir, "my.pgx")
+                message("[compute PGX process] Error: process",nr,"completed successfully!")
                 if (file.exists(result_pgx)) {
                     load(result_pgx)  ## always pgx
                     computedPGX(pgx)
@@ -489,21 +513,10 @@ ComputePgxServer <- function(
                 unlink(temp_dir, recursive = TRUE)
             }
 
-            on_process_error <- function() {
+            on_process_error <- function(nr) {
                 dbg("[compute PGX process] on_process_error() called!")
                 process_counter(process_counter()-1) # stop the timer
-                message("Error: Process completed with an error")
-
-                proc <-process_obj()[[1]]$process
-                stderr_output <- proc$read_error_lines()
-
-                if (length(stderr_output) > 0) {
-                    message("Standard error output from the process:")
-                    ##for (line in stderr_output) { message(line) }
-                    writeLines(stderr_output, con=stderr())
-                } else {
-                    message("No standard error output available from the process")
-                }
+                message("[compute PGX process] Error: process",nr,"completed with an error!")
             }
 
             ## what does this do???
