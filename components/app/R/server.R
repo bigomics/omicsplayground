@@ -80,24 +80,26 @@ app_server <- function(input, output, session) {
 
     auth <- NULL   ## shared in module
     if(authentication == "password") {
-        auth <- shiny::callModule(
-            PasswordAuthenticationModule, "auth",
-            credentials.file = "CREDENTIALS")
+      auth <- PasswordAuthenticationModule(
+        id = "auth",
+        credentials.file = "CREDENTIALS"
+      )
     } else if(authentication == "firebase") {
-        auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
+        auth <- FirebaseAuthenticationModule(id ="auth")
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         ##email <- Sys.getenv("SHINYPROXY_EMAIL")
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE,
-                                  username=username, email=username)
+        auth <- NoAuthenticationModule(
+          id = "auth",
+          show_modal = TRUE,
+          username = username,
+          email = username
+        )
     } else if(authentication == "none2") {
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=FALSE)
+      auth <- NoAuthenticationModule( id = "auth", show_modal=FALSE )
     } else {
         ##} else if(authentication == "none") {
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE)
+        auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
     dbg("[LoadingBoard] names.auth = ",names(auth))
 
@@ -155,10 +157,8 @@ app_server <- function(input, output, session) {
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
-#            session$clientData$user <- NA  ## try
-        } else {
-          ##            session$clientData$user <- auth$email()  ## try
-        }
+            session$user <- NA
+        } 
     })
 
     is_data_loaded <- reactive({
@@ -540,15 +540,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
         if(logged) {
           session$user <- auth$email()
-#          session$userData$user <- auth$email()
         } else {
           session$user <- "anonymous"
-#          session$userData$user <- ""
         }
 
         dbg("[server.R] session.user = ",session$user)
         dbg("[server.R] session.names(userData) = ",names(session$userData))
-        ##dbg("[server.R] session.userData = ",session$userData)
         
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {

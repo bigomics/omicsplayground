@@ -8,9 +8,9 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
-                                   username="", email="")
-{
+NoAuthenticationModule <- function(id, show_modal=TRUE, username="", email="") {
+    shiny::moduleServer( id, function(input, output, session) {
+
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -71,7 +71,10 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
         href  = shiny::reactive('')
     )
     return(rt)
+  } ## end-of-server
+ )
 }
+
 
 ##================================================================================
 ## FirebaseAuthenticationModule
@@ -183,8 +186,8 @@ upgrade.dialog <- function(ns, current.plan) {
     )  ## modalDialog
 }
 
-FirebaseAuthenticationModule <- function(input, output, session)
-{
+FirebaseAuthenticationModule <- function(id) {
+  shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     dbg("[AuthenticationModule] getwd = ",getwd())
@@ -286,6 +289,16 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
             return()
         }
+
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",response$response$email)
+        if(!authorized) {
+          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.") 
+          return(NULL)
+        }
+        
         session$sendCustomMessage(
             "email-feedback",
             list(
@@ -308,42 +321,23 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
-            removeModal()
+            if(USER$logged) removeModal()
         })
 
         for(i in 1:length(response$response)) {
             dbg("[FirebaseAuthenticationModule] ",names(response$response)[i],"=",response$response[[i]])
         }
 
-        t1=1637262031144
-        t0 <- response$response[['createdAt']]
-        t1 <- response$response[['lastLoginAt']]
-        if(is.null(t0)) t0 <- 0
-        if(is.null(t1)) t1 <- 0
-        t0 <- as.POSIXct(as.numeric(t0)/1000, origin="1970-01-01")
-        t1 <- as.POSIXct(as.numeric(t1)/1000, origin="1970-01-01")
-        dbg("[FirebaseAuthenticationModule] createdAt=",t0)
-        dbg("[FirebaseAuthenticationModule] lastLoginAt=",t1)
-        dbg("[FirebaseAuthenticationModule] TIMEOUT=",TIMEOUT)
-
-        delta.secs <- as.numeric(Sys.time() - t1 , units='secs')
-        delta.secs
-        WAIT_TIME = 3600
-        WAIT_TIME = TIMEOUT + 60*5
-        WAIT_TIME = 60*5
-
-        ## NEED RETHINK!!! Not working very well because lastLoginAt
-        ## is often the current login time. We would actually need the
-        ## last logout time instead.
-        ##
-        if( FALSE && TIMEOUT>0 && delta.secs < WAIT_TIME ) {
-            wait.mins <- format((WAIT_TIME - delta.secs)/60, digits=0)
-            msg <- paste("You need to wait",wait.mins,"minutes before you can login again.")
-            msg <- paste(msg,"\nLast login:",t1)
-            shinyalert::shinyalert("Bummer...", msg, callbackR = resetUSER)
-            return()
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",response$response$email)
+        if(!authorized) {
+          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
+          USER$logged <- FALSE
+          return(NULL)
         }
-
+        
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
@@ -409,7 +403,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
         session$sendCustomMessage('manage-sub', content$url)
     })
 
-
     rt <- list(
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),
@@ -420,17 +413,16 @@ FirebaseAuthenticationModule <- function(input, output, session)
         href  = shiny::reactive(USER$href)
     )
     return(rt)
-}
-
+  }
+)}
 
 ##================================================================================
 ## PasswordAuthenticationModule (ask login.name + password)
 ##================================================================================
 
 credentials.file='CREDENTIALS'
-PasswordAuthenticationModule <- function(input, output, session,
-                                         credentials.file)
-{
+PasswordAuthenticationModule <- function(id, credentials.file) {
+  shiny::moduleServer( id, function(input, output, session) {  
     message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns
@@ -561,8 +553,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         limit  = shiny::reactive(USER$limit)
     )
     return(rt)
-}
-
+  }
+)}
 
 ##================================================================================
 ## HELPER FUNCTIONS
