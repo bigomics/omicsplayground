@@ -32,7 +32,7 @@ dataview_plot_tissue_ui <- function(
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -114,7 +114,6 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
 
       # df$tissue <- factor(df$tissue, levels = df$tissue)
-
       plotly::plot_ly(
         data = df,
         ## name = pd$gene
@@ -123,7 +122,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         type = "bar",
         orientation = "h",
         color = ~color, ## TODO: use variable that encodes grouping
-        colors = omics_pal_d()(length(unique(df$color)))
+        colors = omics_pal_d()(length(unique(df$color))),
+        hovertemplate = '%{y}: %{x}<extra></extra>'
       ) %>%
         plotly::layout(
           yaxis = list(title = FALSE),
