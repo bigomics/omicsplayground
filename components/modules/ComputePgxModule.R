@@ -399,6 +399,9 @@ ComputePgxServer <- function(
 
                 ## new background computation job
                 new_proc_obj <- list(
+                # this process will be overwritten if multiple process are started
+                # to avoid that, simply place the process_obj directly in the list, 
+                # instead of saving as an intermediate variable
                   process = processx::process$new(
                     "Rscript",
                     args = c(script_path, tmpdir),
