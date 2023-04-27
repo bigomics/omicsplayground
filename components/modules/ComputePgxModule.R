@@ -396,31 +396,27 @@ ComputePgxServer <- function(
                 dbg("[compute PGX process] : starting processx nr:", process_counter())
                 dbg("[compute PGX process] : process tmpdir = ", tmpdir)                
                 
-
-                ## new background computation job
-                new_proc_obj <- list(
-                # this process will be overwritten if multiple process are started
-                # to avoid that, simply place the process_obj directly in the list, 
-                # instead of saving as an intermediate variable
-                  process = processx::process$new(
-                    "Rscript",
-                    args = c(script_path, tmpdir),
-                    supervise = TRUE,
-                    stderr = '|',
-                    stdout = '|'
-                  ),
-                  number = process_counter(),
-                  dataset_name = gsub("[ ]","_",input$upload_name),
-                  temp_dir = temp_dir(),
-                  stderr = c(),
-                  stdout = c()                  
-                )
-
                 ## append to process list
                 process_obj(
                   append(
                     process_obj(),
-                    list( new_proc_obj)
+                    list(
+                      ## new background computation job
+                      list(
+                        process = processx::process$new(
+                          "Rscript",
+                          args = c(script_path, tmpdir),
+                          supervise = TRUE,
+                          stderr = '|',
+                          stdout = '|'
+                          ),
+                        number = process_counter(),
+                        dataset_name = gsub("[ ]","_",input$upload_name),
+                        temp_dir = temp_dir(),
+                        stderr = c(),
+                        stdout = c()                  
+                      )
+                    )
                   )
                 )
 
