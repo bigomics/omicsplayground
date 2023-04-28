@@ -37,14 +37,14 @@ RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
-# Install bigomics stuff (as R packages)
+# Install fresh playdata (this skips dependencies...)
 #------------------------------------------------------------
-
-WORKDIR /omicsplayground
-RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
-RUN R -e "remotes::install_github('bigomics/bigLoaders',force=TRUE)"
-RUN R -e "remotes::install_github('bigomics/playdata',force=TRUE)"
-##RUN R -e "remotes::install_github('bigomics/playbase',force=TRUE)"
+WORKDIR /
+RUN echo Downloading Playdata
+RUN wget -nv https://github.com/bigomics/playdata/archive/main.zip \
+    && rm -fr /playdata-main  \
+    && unzip main.zip \
+    && R CMD INSTALL playdata-main
 
 #------------------------------------------------------------
 # Install fresh playbase (this skips dependencies...)
@@ -55,6 +55,16 @@ RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
     && rm -fr /playbase-main  \
     && unzip main.zip \
     && R CMD INSTALL playbase-main
+
+#------------------------------------------------------------
+# Install other bigomics stuff (as R packages)
+#------------------------------------------------------------
+
+WORKDIR /omicsplayground
+##RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playdata',force=TRUE)"
+##RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playbase',force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/bigdash',force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/bigLoaders',force=TRUE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
