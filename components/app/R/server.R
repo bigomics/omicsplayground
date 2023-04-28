@@ -84,8 +84,15 @@ app_server <- function(input, output, session) {
         id = "auth",
         credentials.file = "CREDENTIALS"
       )
+    } else if(authentication == "firebase.full") {
+        auth <- FirebaseAuthenticationModule(
+          id ="auth"
+        )
     } else if(authentication == "firebase") {
-        auth <- FirebaseAuthenticationModule(id ="auth")
+        auth <- EmailLinkAuthenticationModule(
+          id ="auth",
+          pgx_dir = pgx_dir,
+        )
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         auth <- NoAuthenticationModule(
@@ -102,8 +109,7 @@ app_server <- function(input, output, session) {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
     dbg("[LoadingBoard] names.auth = ",names(auth))
-
-
+  
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
@@ -145,8 +151,6 @@ app_server <- function(input, output, session) {
          enable_save = opt$ENABLE_SAVE,
          r_global = r_global
        )
-    } else {
-
     }
 
     ## If user logs off, we clear the data
@@ -181,7 +185,7 @@ app_server <- function(input, output, session) {
         if( is_data_loaded()==0){
             return(NULL)
         }
-
+        
         if(modules_loaded) {
             Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
@@ -461,10 +465,8 @@ app_server <- function(input, output, session) {
             msg = HTML(paste0("<center><h4>Ditch the ",timeout.min,"-minute limit</h4>
 Upgrade today and experience advanced analysis features without the time limit.</center>"))
 
-
             showModal(modalDialog(
               msg,
-
               size = "m",
               easyClose = TRUE
             ))
@@ -477,6 +479,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         info("[server.R & TIMEOUT>0] change in user log status : logged = ",logged)
+
         ##--------- start timer --------------
         if(TIMEOUT>0 && logged) {
           info("[server.R] starting session timer!!!")
@@ -541,11 +544,15 @@ Upgrade today and experience advanced analysis features without the time limit.<
         if(logged) {
           session$user <- auth$email()
         } else {
-          session$user <- "anonymous"
+          session$user <- "nobody"
         }
 
         dbg("[server.R] session.user = ",session$user)
         dbg("[server.R] session.names(userData) = ",names(session$userData))
+
+        ## This checks for personal email adress and asks to change to
+        ## a business email adress. This will affect also old users.
+        check_personal_email(auth, pgx_dir)         
         
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
@@ -608,16 +615,15 @@ Upgrade today and experience advanced analysis features without the time limit.<
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[server.R] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
-    ##-------------------------------------------------------------
-    ## Startup Message
-    ##-------------------------------------------------------------
-    shinyalert::shinyalert(
-        title = "Welcome to Version 3!",
-        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!")
-
 
     ## clean up any remanining UI from previous aborted processx
     shiny::removeUI(selector = ".current-dataset > #spinner-container")
 
+    ## Startup Message
+    shinyalert::shinyalert(
+        title = "Welcome to Version 3!",
+        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
+    )
+  
   
 }

@@ -76,7 +76,7 @@ WelcomeBoardUI <- function(id) {
   mission.page =
     div( class = "row welcome-slide",
         div( class = "col-md-12 text-center",
-            shiny::tags$b("Omics Playground. Never stop discovering."),
+            shiny::tags$b("Our mission. Your solution."),
             shiny::p("We love Biology. We love Big Data. At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
             )
         )
