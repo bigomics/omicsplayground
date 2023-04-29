@@ -25,16 +25,31 @@ check_personal_email <- function(auth, pgx_dir, title=NULL, text=NULL) {
       callbackR = function(new_email) {
         ## check if new email is valid
         newemail_is_personal <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",new_email)
+        valid_email <- grepl(".*@.*[.].*",new_email)
+        dbg("[check_personal_email] newemail_is_personal = ", newemail_is_personal)
+        dbg("[check_personal_email] valid_email = ", valid_email)        
+        if(!valid_email) {
+          dbg("[check_personal_email] ERROR!!",new_email,"is invalid")
+          title = "Invalid email"
+          text <- "Please provide a valid business, academic or institutional email."
+          check_personal_email(auth, pgx_dir, title=title, text=text)
+          return()
+        }
         if(newemail_is_personal) {
           dbg("[check_personal_email] ERROR!!",new_email,"is personal")
           title = "Please change email"
-          text <- "Your new email is invalid. Please provide a business, academic or institutional email."
+          text <- "No personal email adresses. Please provide a business, academic or institutional email."
           check_personal_email(auth, pgx_dir, title=title, text=text)
+          return()
         }
+ 
         
         ## copy old data to new data
         old_dir_exists <- (email %in% existing_user_dirs)
         new_dir_exists <- (new_email %in% existing_user_dirs)
+        dbg("[check_personal_email] old_dir_exists = ", old_dir_exists)
+        dbg("[check_personal_email] new_dir_exists = ", new_dir_exists)        
+
         if(old_dir_exists && !new_dir_exists) {
           dbg("[check_personal_email] moving data from",email,"to",new_email)
           old_dir <- file.path( pgx_dir, email)
