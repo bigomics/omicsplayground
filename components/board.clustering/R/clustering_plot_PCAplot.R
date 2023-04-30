@@ -1,20 +1,22 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
 
 ## Annotate clusters ############
 
-clustering_plot_clustpca_ui <- function(id,
-                                        label = "",
-                                        height = c(600, 800),
-                                        parent) {
+clustering_plot_clustpca_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption,
+  parent) {
   ns <- shiny::NS(id)
-
-  info_text <- tagsub(paste0(" The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (", a_PCA, ") or t-distributed stochastic embedding (", a_tSNE, ") algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other.
-<br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot."))
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -29,7 +31,9 @@ clustering_plot_clustpca_ui <- function(id,
       shiny::radioButtons(
         ns("hmpca_legend"),
         label = "Legend:",
-        choices = c("group label", "bottom"), inline = TRUE
+        choiceValues = list("bottom","group label"),
+        choiceNames = list("Bottom","Group label"),
+         inline = TRUE
       ),
       "Normalize matrix before calculating distances."
     ),
@@ -43,13 +47,14 @@ clustering_plot_clustpca_ui <- function(id,
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "PCA/tSNE plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -69,15 +74,18 @@ clustering_plot_clustpca_server <- function(id,
 
     plot_data <- shiny::reactive({
       clust <- hm_getClusterPositions()
-      ## data.frame( x=clust$pos[,1], y=clust$pos[,2], clust=clust$clust )
 
+      if("3D" %in% input$hmpca_options){
+        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2], z = clust$pos[, 3])
+      } else {
+        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2])
+      }
       return(
         list(
+          df = df,
           hmpca_options = input$hmpca_options,
           hmpca.colvar = hmpca.colvar(),
           hmpca.shapevar = hmpca.shapevar(),
-          df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2]),
-          pgx = pgx,
           hm_clustmethod = hm_clustmethod(),
           hmpca_legend = input$hmpca_legend
         )
@@ -85,14 +93,12 @@ clustering_plot_clustpca_server <- function(id,
     })
 
     plot.RENDER <- function() {
-      ## pgx <- inputData()
       pd <- plot_data()
 
       hmpca_options <- pd[["hmpca_options"]]
       hmpca.colvar <- pd[["hmpca.colvar"]]
       hmpca.shapevar <- pd[["hmpca.shapevar"]]
       pos <- pd[["df"]]
-      pgx <- pd[["pgx"]]
       hm_clustmethod <- pd[["hm_clustmethod"]]
       hmpca_legend <- pd[["hmpca_legend"]]
 
@@ -173,6 +179,7 @@ clustering_plot_clustpca_server <- function(id,
           )
         }
       } else {
+
         ## 2D plot
         j0 <- 1:nrow(df)
         j1 <- NULL
@@ -247,7 +254,8 @@ clustering_plot_clustpca_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {
-      plot.RENDER()
+      plot.RENDER() %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(
@@ -256,8 +264,6 @@ clustering_plot_clustpca_server <- function(id,
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      ## renderFunc = plotly::renderPlotly,
-      ## renderFunc2 = plotly::renderPlotly,
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 8,
       add.watermark = watermark

@@ -1,13 +1,15 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wordcloud_plot_enrichment_ui <- function(id, height) {
+wordcloud_plot_enrichment_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
-<br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
 
   gseaplots_opts <- shiny::tagList(
     withTooltip(shiny::textInput(ns("gseaplots_keywords"), "Keyword:", "cell cycle"),
@@ -18,9 +20,10 @@ wordcloud_plot_enrichment_ui <- function(id, height) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Enrichment plots",
+    title = title,
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = gseaplots_opts,
     height = height,
     download.fmt = c("png", "pdf")
@@ -67,7 +70,7 @@ wordcloud_plot_enrichment_server <- function(id,
           frame()
         } else {
           a <- top[i]
-          gsea.enplot(S[, a], targets,
+          playbase::gsea.enplot(S[, a], targets,
             names = NULL, ## main=gs,
             main = paste0("#", toupper(keyword), "\n@", a),
             cex.main = 0.9, len.main = 80, xlab = ""

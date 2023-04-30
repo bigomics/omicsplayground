@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Decisiontree plot UI input function
@@ -12,22 +12,25 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_decisiontree_ui <- function(id,
-                                           label = "",
-                                           height = c(600, 800)) {
+biomarker_plot_decisiontree_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("The decision tree shows a tree solution
-                      for classification based on the top most
-                      important features.")
 
   PlotModuleUI(ns("plot"),
-    title = "Decision tree",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -55,9 +58,9 @@ biomarker_plot_decisiontree_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
-        shiny::req(res)
+        shiny::req(res$res)
 
         res <- res$res
 
@@ -71,7 +74,7 @@ biomarker_plot_decisiontree_server <- function(id,
           rpart.plot::rpart.plot(res$rf)
           title("Classification tree", cex = 1.2, line = 3, adj = 0.35)
         }
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -79,7 +82,7 @@ biomarker_plot_decisiontree_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 315),
+        res = c(72, 120),
         pdf.width = 10, pdf.height = 6,
         add.watermark = watermark
       )

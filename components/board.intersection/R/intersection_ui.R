@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 IntersectionInputs <- function(id) {
@@ -49,53 +49,79 @@ IntersectionInputs <- function(id) {
 IntersectionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
+  fullH <- "calc(100vh - 200px)"  ## full height of page (minus header)
+  fullH.css <- "height: calc(100vh - 130px);"  ## full height of page (minus header)  
+  halfH.css <- "height: calc(50vh - 130px);" ## half height of page
+
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Pairwise scatter",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          intersection_scatterplot_pairs_ui(ns("scatterplot"))
+      bslib::layout_column_wrap(
+        width = 1,
+        height = fullH,
+        style = htmltools::css(grid_template_columns = "7fr 5fr"),
+        intersection_scatterplot_pairs_ui(
+          id = ns("scatterplot"),
+          title = "Scatterplot pairs",
+          info.text = "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as selection.",
+          caption = "Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
         ),
-        div(
-          class = "col-md-6",
-          intersection_plot_venn_diagram_ui(ns("venndiagram"))
+        bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          intersection_plot_venn_diagram_ui(
+            id = ns("venndiagram"),
+            title = "Venn diagram",
+            info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
+            caption = "Venn diagram showing the intersections between the expression profiles of selected contrasts.",
+            height = c("65%", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          ),
+          intersection_table_venn_diagram_ui(
+            id = ns("venndiagram"),
+            title = "Leading-edge table",
+            info.text = "Venn diagram areas can be selected via the settings menu and are represented by corresponding letters (e.g. 'ABC' represents the intersection of contrasts A, B and C). Contrast letter identifiers are provided in the Venn Diagram.",
+            caption = "Table of genes in a selected intersection.",
+            height = c("35%", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots
-                for two or more differential expression profiles for multiple selected contrasts.
-                Similar profiles will show high correlation with points close to the diagonal.
-                <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts.
-                <b>(c)</b> <b>Intersection.</b> Genes in the selected overlap region.")
       )
     ),
     shiny::tabPanel(
       "Signature clustering",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          foldchange_heatmap_ui(ns("FoldchangeHeatmap"))
+      bslib::layout_column_wrap(
+        width = 1,
+        height = fullH,
+        style = htmltools::css(grid_template_columns = "7fr 5fr"),
+        foldchange_heatmap_ui(
+          id = ns("FoldchangeHeatmap"),
+          title = "Folchange heatmap",
+          info.text = "The Connectivity Heatmap shows the most similar profiles as a heatmap.
+                       Contrasts that are similar will be clustered close together.",
+          caption = "Signature heatmap visualizing the similarity of all available contrasts
+                     with each other for the top most differentially expressed genes.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", 1600)
         ),
-        div(
-          class = "col-md-6",
-          contrast_correlation_ui(ns("ctcorrplot"))
+        contrast_correlation_ui(
+          id = ns("ctcorrplot"),
+          title = "Contrast correlation",
+          info.text = "Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation.",
+          caption = "Circle heatmap showing the correlation between all available contrasts.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
-      ),
-      tags$div(
-        HTML("<b>(a)</b> <b>Signature heatmap.</b> Similarity of the
-                signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange
-                values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells
-                correspond to the Pearson correlation coefficient. Red corresponds to positive correlation
-                    and blue to negative correlation.")
-      ),
-    ),
+      )
+    )
   )
+
+  ## return this div
   div(
-    boardHeader(title = "Compare signatures", info_link = ns("info")),
+    boardHeader( title = "Compare signatures", info_link = ns("info")),
     tabs
   )
 }

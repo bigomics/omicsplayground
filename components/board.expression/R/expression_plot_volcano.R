@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -15,6 +15,9 @@
 #' @export
 expression_plot_volcano_ui <- function(id,
                                        label = "",
+                                       title,
+                                       info.text,
+                                       caption,
                                        height,
                                        width) {
   ns <- shiny::NS(id)
@@ -22,16 +25,16 @@ expression_plot_volcano_ui <- function(id,
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
-
-  PlotModuleUI(ns("pltmod"),
-    title = "Volcano plot",
+  PlotModuleUI(
+    ns("pltmod"),
     label = label,
     plotlib = "plotly",
     ## outputFunc = plotly::plotlyOutput,
     ## outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
+    title = title,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -67,10 +70,10 @@ expression_plot_volcano_server <- function(id,
                                            df2,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       # calculate required inputs for plotting
-
 
       comp1 <- comp1()
       fdr <- as.numeric(fdr())
@@ -81,6 +84,9 @@ expression_plot_volcano_server <- function(id,
       df1 <- df1()
       sel2 <- sel2()
       df2 <- df2()
+
+      ## if no gene selected we should show full volcano plot
+#      req(sel1())
 
       fam.genes <- res$gene_name
 
@@ -163,35 +169,39 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      par(mfrow = c(1, 1), mar = c(4, 3, 1, 1.5), mgp = c(2, 0.8, 0), oma = c(0, 0, 0, 0))
-
-      plt <- plotlyVolcano(
-        x = pd[["x"]], y = pd[["y"]], names = pd[["fc.genes"]],
-        source = "plot1", marker.type = "scattergl",
+      plt <- playbase::plotlyVolcano(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = pd[["fc.genes"]],
+        source = "plot1",
+        marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]], label.cex = pd[["lab.cex"]],
+        label = pd[["lab.genes"]],
+        label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
         ## xlim=xlim, ylim=ylim, ## hi.col="#222222",
         ## use.fdr=TRUE,
-        psig = pd[["fdr"]], lfc = pd[["lfc"]],
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
         xlab = "effect size (log2FC)",
         ylab = "significance (-log10q)",
-        marker.size = 4,
+        marker.size = 3,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) %>% plotly::layout(margin = list(b = 65))
+      ) ## %>% plotly::layout(margin = list(b = 35))
       plt
     }
 
-    modal_plotly.RENDER <- function() {
+    modal_plotly.RENDER <- function() {    
       fig <- plotly.RENDER() %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
             font = list(size = 18)
           )
+        ) %>% plotly::style(
+          marker.size = 6
         )
-      fig <- plotly::style(fig, marker.size = 20)
       fig
     }
 
@@ -200,6 +210,7 @@ expression_plot_volcano_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
+      remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

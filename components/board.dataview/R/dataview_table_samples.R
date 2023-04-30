@@ -1,28 +1,33 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-dataview_table_samples_ui <- function(id, width, height) {
+dataview_table_samples_ui <- function(
+  id,
+  width,
+  height,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables
-                 starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
     width = width,
     height = height,
-    title = "Sample information",
+    title = title,
+    info.text = info.text,
+    caption = caption,
     label = "c"
   )
 }
 
 dataview_table_samples_server <- function(id,
                                           pgx,
-                                          r.samples = reactive("")) {
+                                          r.samples = reactive(""),
+                                          scrollY ) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       shiny::req(pgx$Y, pgx$samples, r.samples())
@@ -38,10 +43,14 @@ dataview_table_samples_server <- function(id,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = 150,
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = scrollY,
+          scrollResize = TRUE,
           deferRender = TRUE
         )
       ) %>%
@@ -58,7 +67,9 @@ dataview_table_samples_server <- function(id,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",
-          scroller = TRUE, scrollX = TRUE, scrollY = SCROLLY_MODAL,
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = SCROLLY_MODAL,
           deferRender = TRUE
         )
       ) %>%

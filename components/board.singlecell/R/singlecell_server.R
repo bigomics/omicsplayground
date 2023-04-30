@@ -1,10 +1,10 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-SingleCellBoard <- function(id, inputData) {
+SingleCellBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -38,15 +38,15 @@ SingleCellBoard <- function(id, inputData) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx, pgx$Y)
       ## levels for sample filter
-      levels <- getLevels(ngs$Y)
+      levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "samplefilter", choices = levels)
 
       ## update cluster methods if available in object
-      if ("cluster" %in% names(ngs)) {
-        clustmethods <- names(ngs$cluster$pos)
+      if ("cluster" %in% names(pgx)) {
+        clustmethods <- names(pgx$cluster$pos)
+        clustmethods <- grep("3d",clustmethods,value=TRUE,invert=TRUE,ignore.case=TRUE) ## no 3D
         clustmethods <- c("default", clustmethods)
         shiny::updateSelectInput(session, "clustmethod",
           choices = clustmethods
@@ -55,53 +55,50 @@ SingleCellBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx$X)
       refsets <- "LM22"
-      refsets <- sort(names(ngs$deconv))
+      refsets <- sort(names(pgx$deconv))
       refsel <- unique(c(grep("LM22", refsets, value = TRUE), refsets))[1]
       shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
       shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
 
-      ## dcmethods <- names(ngs$deconv[[1]])
+      ## dcmethods <- names(pgx$deconv[[1]])
       ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
       ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
       ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
 
-      grpvars <- c("<ungrouped>", colnames(ngs$samples))
+      grpvars <- c("<ungrouped>", colnames(pgx$samples))
       sel <- grpvars[1]
-      if (ncol(ngs$X) > 30) sel <- grpvars[2]
+      if (ncol(pgx$X) > 30) sel <- grpvars[2]
       shiny::updateSelectInput(session, "group2", choices = grpvars, selected = sel)
     })
 
     shiny::observeEvent(input$refset, {
       shiny::req(input$refset)
-      ngs <- inputData()
-      dcmethods <- names(ngs$deconv[[input$refset]])
+      shiny::req(pgx$X)
+
+      dcmethods <- names(pgx$deconv[[input$refset]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod", choices = dcmethods, selected = dcsel)
     })
 
     shiny::observeEvent(input$refset2, {
       shiny::req(input$refset2)
-      ngs <- inputData()
-      dcmethods <- names(ngs$deconv[[input$refset2]])
+      dcmethods <- names(pgx$deconv[[input$refset2]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod2", choices = dcmethods, selected = dcsel)
     })
 
     shiny::observe({
-      ngs <- inputData()
-      ## if(is.null(ngs)) return(NULL)
-      shiny::req(ngs)
+      shiny::req(pgx$X)
 
       ## if(is.null(input$crosstaboptions)) return(NULL)
-      pheno0 <- grep("group|sample|donor|id|batch", colnames(ngs$samples), invert = TRUE, value = TRUE)
-      pheno0 <- grep("sample|donor|id|batch", colnames(ngs$samples), invert = TRUE, value = TRUE)
-      kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
-      nphenolevel <- apply(ngs$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
+      pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
+      pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
+      nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
-      genes <- sort(as.character(ngs$genes$gene_name))
+      genes <- sort(as.character(rownames(pgx$X)))
       pheno1 <- c("<cell type>", pheno0) # pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
@@ -110,13 +107,12 @@ SingleCellBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      shiny::req(ngs, input$mrk_level)
+      shiny::req(pgx, input$mrk_level)
 
-      choices <- names(ngs$families)
+      choices <- names(pgx$families)
       selected <- grep("^CD", choices, ignore.case = TRUE, value = TRUE)[1]
       if (input$mrk_level == "geneset") {
-        nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
+        nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
         choices <- names(COLLECTIONS)[nn >= 5]
         selected <- grep("HALLMARK", names(COLLECTIONS), ignore.case = TRUE, value = TRUE)
       }
@@ -125,14 +121,13 @@ SingleCellBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      ## if(is.null(ngs)) return(NULL)
-      shiny::req(ngs)
+      ## if(is.null(pgx)) return(NULL)
+      shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
       g1 <- g2 <- NULL
 
-      F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
+      F <- playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc
       F <- F[order(-apply(F, 1, sd)), ]
       genes <- rownames(F)
       g1 <- rownames(F)[1]
@@ -150,13 +145,12 @@ SingleCellBoard <- function(id, inputData) {
     # REACTIVE FUNCTIONS #########
 
     pfGetClusterPositions <- shiny::reactive({ # used by many plots
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       ## zx <- filtered_matrix1()
-      zx <- ngs$X
+      zx <- pgx$X
       kk <- colnames(zx)
-      kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
       if (length(kk) == 0) {
         return(NULL)
       }
@@ -167,23 +161,22 @@ SingleCellBoard <- function(id, inputData) {
       pos <- NULL
       m <- "tsne"
       m <- input$clustmethod
-      has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
+      has.clust <- ("cluster" %in% names(pgx) && m %in% names(pgx$cluster$pos))
       has.clust
       if (!has.clust && m == "pca") {
         pos <- irlba::irlba(zx, nv = 3)$v
         rownames(pos) <- colnames(zx)
       } else if (has.clust) {
-        pos <- ngs$cluster$pos[[m]][, 1:2]
+        pos <- pgx$cluster$pos[[m]][, 1:2]
       } else {
-        pos <- ngs$tsne2d
+        pos <- pgx$tsne2d
       }
       dim(pos)
       pos <- pos[colnames(zx), ]
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-
-
+      
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
       # dbg("[pfGetClusterPositions2] computing distances and clusters...")
@@ -210,8 +203,7 @@ SingleCellBoard <- function(id, inputData) {
     # Type mapping (heatmap) reactivity ##########
 
     getDeconvResults2 <- shiny::reactive({ # used by many functions
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       method <- "meta"
       method <- input$dcmethod2
@@ -222,10 +214,10 @@ SingleCellBoard <- function(id, inputData) {
 
       refset <- "LM22"
       refset <- input$refset2
-      if (!("deconv" %in% names(ngs))) {
+      if (!("deconv" %in% names(pgx))) {
         return(NULL)
       }
-      results <- ngs$deconv[[refset]][[method]]
+      results <- pgx$deconv[[refset]][[method]]
       ## threshold everything (because DCQ can be negative!!!)
       results <- pmax(results, 0)
 
@@ -238,23 +230,23 @@ SingleCellBoard <- function(id, inputData) {
 
     singlecell_plot_icpplot_server(
       id = "icpplot",
-      inputData = inputData,
+      pgx = pgx,
       pfGetClusterPositions = pfGetClusterPositions,
       method = shiny::reactive(input$dcmethod),
       refset = shiny::reactive(input$refset),
-      lyo = shiny::reactive(input$layout),
+      layout = shiny::reactive(input$layout),
       sortby = shiny::reactive(input$sortby)
     )
 
     singlecell_plot_phenoplot_server(
       id = "phenoplot",
-      inputData = inputData,
+      pgx = pgx,
       pfGetClusterPositions = pfGetClusterPositions
     )
 
     singlecell_plot_mappingplot_server(
       id = "mappingplot",
-      inputData = inputData,
+      pgx = pgx,
       getDeconvResults2 = getDeconvResults2,
       pfGetClusterPositions = pfGetClusterPositions,
       grpvar = shiny::reactive(input$group2),
@@ -265,7 +257,7 @@ SingleCellBoard <- function(id, inputData) {
 
     singlecell_plot_crosstabPlot_server(
       id = "crosstabPlot",
-      inputData = inputData,
+      pgx = pgx,
       samplefilter = shiny::reactive(input$samplefilter),
       crosstabvar = shiny::reactive(input$crosstabvar),
       pheno = shiny::reactive(input$crosstabpheno),
@@ -276,7 +268,7 @@ SingleCellBoard <- function(id, inputData) {
 
     singlecell_plot_markersplot_server(
       id = "markersplot",
-      inputData = inputData,
+      pgx = pgx,
       pfGetClusterPositions = pfGetClusterPositions,
       mrk_level = shiny::reactive(input$mrk_level),
       mrk_features = shiny::reactive(input$mrk_features),
@@ -287,7 +279,7 @@ SingleCellBoard <- function(id, inputData) {
 
     singlecell_plot_cytoplot_server(
       id = "cytoplot",
-      inputData = inputData,
+      pgx = pgx,
       pfGetClusterPositions = pfGetClusterPositions,
       samplefilter = shiny::reactive(input$samplefilter),
       cytovar1 = shiny::reactive(input$cytovar1),
@@ -303,27 +295,25 @@ SingleCellBoard <- function(id, inputData) {
     # CNV #######
 
     # getCNAfromExpression <- shiny::reactive({ # Currently not used
-    #     ngs <- inputData()
-    #     shiny::req(ngs)
+    #     shiny::req(pgx)
     #
     #     dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV with SMA40 ...")
     #
     #     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
     #     shiny::withProgress( message='calculating CNV (sma40)...', value=0.33, {
-    #         res <- pgx.CNAfromExpression(ngs, nsmooth=40)
+    #         res <- playbase::pgx.CNAfromExpression(pgx, nsmooth=40)
     #     })
     #     return(res)
     # })
     #
     # getCNAfromExpression.inferCNV <- shiny::reactive({ # Currently not used
-    #     ngs <- inputData()
-    #     shiny::req(ngs)
+    #     shiny::req(pgx)
     #
     #     dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV using inferCNV...")
     #
     #
     #     shiny::withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
-    #         res <- pgx.inferCNV(ngs, refgroup=NULL)
+    #         res <- playbase::pgx.inferCNV(pgx, refgroup=NULL)
     #     })
     #     return(res)
     # })
@@ -334,8 +324,7 @@ SingleCellBoard <- function(id, inputData) {
     # cna.plotFUNC <- shiny::reactive({
 
     #     ##return(NULL)
-    #     ngs <- inputData()
-    #     shiny::req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
+    #     shiny::req(pgx,input$cna_method,input$cna_annotvar,input$cna_orderby)
 
     #     if(input$cna_method=="inferCNV") {
     #         res <- getCNAfromExpression.inferCNV()
@@ -347,8 +336,8 @@ SingleCellBoard <- function(id, inputData) {
     #         annotvar <- input$cna_annotvar
     #         if(annotvar=="<none>") annotvar <- NULL
     #         order.by <- input$cna_orderby
-    #         pgx.plotCNAHeatmap(
-    #             ngs, res, annot=annotvar, order.by=order.by,
+    #         playbase::pgx.plotCNAHeatmap(
+    #             pgx, res, annot=annotvar, order.by=order.by,
     #             downsample=10 )
     #     }
 
@@ -382,12 +371,11 @@ SingleCellBoard <- function(id, inputData) {
     # )
 
     # shiny::observe({
-    #     ngs <- inputData()
-    #     ##if(is.null(ngs)) return(NULL)
-    #     shiny::req(ngs)
+    #     ##if(is.null(pgx)) return(NULL)
+    #     shiny::req(pgx)
     #     ## levels for sample filter
 
-    #     annotvar <- c(colnames(ngs$Y),"<none>")
+    #     annotvar <- c(colnames(pgx$Y),"<none>")
     #     shiny::updateSelectInput(session, "cna_annotvar", choices=annotvar)
 
     # })
@@ -397,16 +385,15 @@ SingleCellBoard <- function(id, inputData) {
     # iTALK ######
 
     #     italk_getResults <- shiny::reactive({
-    #         ngs <- inputData()
-    #         ## if(is.null(ngs)) return(NULL)
-    #         shiny::req(ngs)
+    #         ## if(is.null(pgx)) return(NULL)
+    #         shiny::req(pgx)
     #         shiny::req(input$italk_groups)
 
     #         db <- iTALK::database
     #         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
     #         length(db.genes)
-    #         ##genes <- intersect(genes, rownames(ngs$X))
-    #         xgenes <- toupper(ngs$genes[rownames(ngs$X),"gene_name"])
+    #         ##genes <- intersect(genes, rownames(pgx$X))
+    #         xgenes <- toupper(pgx$genes[rownames(pgx$X),"gene_name"])
     #         db.genes <- intersect(db.genes, xgenes)
     #         length(db.genes)
 
@@ -414,12 +401,12 @@ SingleCellBoard <- function(id, inputData) {
     #         ph <- "group"
     #         ph <- "cell.type"
     #         ph <- input$italk_groups
-    #         ct <- as.character(ngs$samples[,ph])
+    #         ct <- as.character(pgx$samples[,ph])
     #         table(ct)
 
-    #         ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
-    #         pp1 <- rownames(ngs$X)[match(db.genes, toupper(xgenes))]
-    #         gx <- t(ngs$X[pp1,,drop=FALSE])
+    #         ##data <- data.frame(cell_type=ct, t(log2(1 + pgx$counts[genes,])))
+    #         pp1 <- rownames(pgx$X)[match(db.genes, toupper(xgenes))]
+    #         gx <- t(pgx$X[pp1,,drop=FALSE])
 
     #         colnames(gx) <- db.genes ## UPPERCASE
     #         gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
@@ -451,7 +438,7 @@ SingleCellBoard <- function(id, inputData) {
     #             res_cat <- res_cat[order(xx,decreasing=TRUE),]
     #         } else {
     #             ## contrast <- input$fa_contrast
-    #             ## group <- ngs$model.parameters$exp.matrix[,contrast]
+    #             ## group <- pgx$model.parameters$exp.matrix[,contrast]
     #             ## data1$compare_groups <- group
     #             ## data1 <- data1[which(data1$compare_groups!=0),]
     #             ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
@@ -502,9 +489,8 @@ SingleCellBoard <- function(id, inputData) {
 
     #     italk_heatmap.RENDER <- shiny::reactive({
     #         ## Expression heatmap
-    #         ngs <- inputData()
     #         res <- italk_getResults()
-    #         shiny::req(ngs,res)
+    #         shiny::req(pgx,res)
     #         ##if(is.null(res)) return(NULL)
 
     #         res_cat <- res$table
@@ -517,7 +503,7 @@ SingleCellBoard <- function(id, inputData) {
     #         rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
 
     #         par(oma=c(3,2,3,0))
-    #         gx.heatmap(gx0, scale="none", mar=c(15,8),
+    #         playbase::gx.heatmap(gx0, scale="none", mar=c(15,8),
     #                    cexRow=1, cexCol=1.3, col=BLUERED(64),
     #                    key=FALSE, keysize=0.6)
     #     })
@@ -581,9 +567,8 @@ SingleCellBoard <- function(id, inputData) {
     #     )
 
     #     shiny::observe({
-    #         ngs <- inputData()
-    #         shiny::req(ngs)
-    #         ph <- sort(colnames(ngs$samples))
+    #         shiny::req(pgx)
+    #         ph <- sort(colnames(pgx$samples))
     #         sel = ph[1]
     #         ct <- grep("cell.fam|cell.type|type|cluster",ph,value=TRUE)
     #         if(length(ct)>0) sel <- ct[1]
@@ -596,27 +581,26 @@ SingleCellBoard <- function(id, inputData) {
 
     # monocle_getResults <- shiny::reactive({
 
-    #     ngs <- inputData()
-    #     shiny::req(ngs)
-    #     ##if(is.null(ngs)) return(NULL)
+    #     shiny::req(pgx)
+    #     ##if(is.null(pgx)) return(NULL)
 
     #     ## Create a Progress object
     #     progress <- shiny::Progress$new()
     #     on.exit(progress$close())
     #     progress$set(message = "Calculating trajectories", value = 0)
 
-    #      ## Step 0: Make Monocle object from ngs #######
+    #      ## Step 0: Make Monocle object from pgx #######
 
     #     NGENES=2000
-    #     jj <- head(order(-apply(log(1+ngs$counts),1,sd,na.rm=TRUE)),NGENES)
-    #     ngs$counts <- ngs$counts[jj,]
-    #     ngs$genes  <- ngs$genes[rownames(ngs$counts),]
-    #     ngs$genes$gene_short_name <- ngs$genes$gene_name
-    #     ngs$samples$.cluster <- ngs$samples$cluster  ## save to avoid name clash
-    #     ngs$samples$cluster <- NULL
+    #     jj <- head(order(-apply(log(1+pgx$counts),1,sd,na.rm=TRUE)),NGENES)
+    #     pgx$counts <- pgx$counts[jj,]
+    #     pgx$genes  <- pgx$genes[rownames(pgx$counts),]
+    #     pgx$genes$gene_short_name <- pgx$genes$gene_name
+    #     pgx$samples$.cluster <- pgx$samples$cluster  ## save to avoid name clash
+    #     pgx$samples$cluster <- NULL
 
-    #     X <- ngs$counts
-    #     G <- as.data.frame(ngs$genes)
+    #     X <- pgx$counts
+    #     G <- as.data.frame(pgx$genes)
     #     rownames(X) <- toupper(rownames(X))
     #     sum(duplicated(rownames(X)))
 
@@ -630,11 +614,11 @@ SingleCellBoard <- function(id, inputData) {
 
     #     cds <- monocle3::new_cell_data_set(
     #                          expression_data = X,
-    #                          cell_metadata = ngs$samples,
+    #                          cell_metadata = pgx$samples,
     #                          gene_metadata = G)
 
     #     expression_data = X
-    #     cell_metadata = ngs$samples
+    #     cell_metadata = pgx$samples
     #     gene_metadata = G
     #     sce <- SingleCellExperiment::SingleCellExperiment(
     #         list(counts = as(expression_data, "dgCMatrix")),

@@ -1,12 +1,16 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
+enrichment_plot_freq_top_gsets_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
 
   topEnrichedFreq.opts <- shiny::tagList(
     withTooltip(
@@ -34,10 +38,11 @@ enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Frequency in top gene sets",
+    title = title,
     label = "b",
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = topEnrichedFreq.opts,
     height = height,
     width = width,
@@ -46,22 +51,21 @@ enrichment_plot_freq_top_gsets_ui <- function(id, height, width) {
 }
 
 enrichment_plot_freq_top_gsets_server <- function(id,
-                                                  inputData,
+                                                  pgx,
                                                   getFilteredGeneSetTable,
                                                   gs_contrast,
                                                   gseatable,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      ngs <- inputData()
       rpt <- getFilteredGeneSetTable()
-      shiny::req(ngs, rpt, gs_contrast())
+      shiny::req(pgx, rpt, gs_contrast())
 
       comp <- gs_contrast()
       if (is.null(comp)) {
         return(NULL)
       }
-      if (!(comp %in% names(ngs$gx.meta$meta))) {
+      if (!(comp %in% names(pgx$gx.meta$meta))) {
         return(NULL)
       }
 
@@ -76,7 +80,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       fcweight <- input$gs_enrichfreq_fcweight
       return(
         list(
-          ngs,
+          pgx,
           rpt,
           ntop,
           gset.weight,
@@ -88,7 +92,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
     topEnrichedFreq.RENDER <- function() {
       dt <- plot_data()
       shiny::req(dt)
-      ngs <- dt[[1]]
+      pgx <- dt[[1]]
       rpt <- dt[[2]]
       ntop <- dt[[3]]
       gset.weight <- dt[[4]]
@@ -100,11 +104,11 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       top <- rownames(rpt)
       top <- head(top, ntop)
-      if (!all(top %in% colnames(ngs$GMT))) {
+      if (!all(top %in% colnames(pgx$GMT))) {
         return(NULL)
       }
 
-      F <- 1 * (ngs$GMT[, top, drop = FALSE] > 0)
+      F <- 1 * (pgx$GMT[, top, drop = FALSE] > 0)
       F <- as.matrix(F)
       wt <- FALSE
       if (gset.weight) {
@@ -122,7 +126,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
       if (length(sel.zero)) rownames(F)[sel.zero] <- ""
 
-      pgx.stackedBarplot(
+      playbase::pgx.stackedBarplot(
         x = F,
         ylab = ifelse(wt, "weighted frequency", "frequency"),
         showlegend = FALSE

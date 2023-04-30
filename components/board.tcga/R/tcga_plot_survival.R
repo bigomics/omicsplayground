@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -12,10 +12,8 @@
 #' @param height
 #'
 #' @export
-tcga_plot_survival_ui <- function(id, height, width) {
+tcga_plot_survival_ui <- function(id, caption, info.text, height, width) {
   ns <- shiny::NS(id)
-
-  tcga_tcgasurv_info <- "This <b>TCGA analysis module</b> computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
 
   tcga_tcgasurv_opts <- tagList(
     withTooltip(
@@ -39,7 +37,8 @@ tcga_plot_survival_ui <- function(id, height, width) {
   PlotModuleUI(ns("plot"),
     title = "TCGA survival analysis",
     label = "a",
-    info.text = tcga_tcgasurv_info,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     options = tcga_tcgasurv_opts,
@@ -56,7 +55,7 @@ tcga_plot_survival_ui <- function(id, height, width) {
 #' @return
 #' @export
 tcga_plot_survival_server <- function(id,
-                                      inputData,
+                                      pgx,
                                       contrast,
                                       sigtype,
                                       genelist,
@@ -65,31 +64,30 @@ tcga_plot_survival_server <- function(id,
     ns <- session$ns
 
     tcga_tcgasurv_test <- reactive({
-      matrix_file <- search_path(c(FILES, FILESX), "tcga_matrix.h5")
+      matrix_file <- playbase::search_path(c(FILES, FILESX), "tcga_matrix.h5")
       if (is.null(matrix_file)) {
         showNotification("FATAL ERROR: could not find tcga_matrix.h5")
         return(NULL)
       }
 
-      ngs <- inputData()
-      req(ngs)
+      req(pgx)
 
       if (sigtype() == "contrast") {
         req(contrast())
 
-        res <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
+        res <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
         sig <- res$fc[, contrast()]
       } else if (sigtype() == "genelist") {
         req(genelist())
         genes <- as.character(genelist())
         genes <- strsplit(genes, split = "[\t, \n]")[[1]]
         genes <- gsub("[ ]", "", genes)
-        sig <- rownames(ngs$X) %in% genes
-        names(sig) <- rownames(ngs$X)
+        sig <- rownames(pgx$X) %in% genes
+        names(sig) <- rownames(pgx$X)
       }
 
       showNotification("Computing survival probabilities...")
-      pgx.testTCGAsurvival(
+      playbase::pgx.testTCGAsurvival(
         sig,
         matrix_file,
         lib.dir = FILES,

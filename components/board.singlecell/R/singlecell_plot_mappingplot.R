@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Single cell plot UI input function
@@ -13,11 +13,15 @@
 #' @param width
 #'
 #' @export
-singlecell_plot_mappingplot_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width,
-                                           parent) {
+singlecell_plot_mappingplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent) {
   ns <- shiny::NS(id)
 
   VIEWTYPES2 <- c("dotmap" = "dotmap", "heatmap (by method)" = "heatmap")
@@ -41,14 +45,13 @@ singlecell_plot_mappingplot_ui <- function(id,
     )
   )
 
-  mapping_info <- "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
-
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(
+    id = ns("plot"),
     label = label,
-    info.text = mapping_info,
+    info.text = info.text,
     options = mapping.opts,
-    title = "Cell type mapping",
+    title = title,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
@@ -63,7 +66,7 @@ singlecell_plot_mappingplot_ui <- function(id,
 #'
 #' @export
 singlecell_plot_mappingplot_server <- function(id,
-                                               inputData,
+                                               pgx,
                                                pfGetClusterPositions,
                                                getDeconvResults2,
                                                grpvar, # input$group2
@@ -75,16 +78,15 @@ singlecell_plot_mappingplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ngs <- inputData()
 
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      pos <- ngs$tsne2d
+      pos <- pgx$tsne2d
       pos <- clust.pos
 
-      score <- ngs$deconv[["LM22"]][["meta"]]
+      score <- pgx$deconv[["LM22"]][["meta"]]
       score <- getDeconvResults2()
       if (is.null(score) || length(score) == 0) {
         return(NULL)
@@ -120,7 +122,7 @@ singlecell_plot_mappingplot_server <- function(id,
         grpvar = grpvar,
         score = score,
         refset = refset,
-        ngs = ngs,
+        pgx = pgx,
         pos = pos,
         view = view
       ))
@@ -129,8 +131,8 @@ singlecell_plot_mappingplot_server <- function(id,
     plot.render <- function() {
       pd <- plot_data()
 
-      if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples)) {
-        grp <- pd[["ngs"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
+      if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
+        grp <- pd[["pgx"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
         pd[["pos"]] <- apply(pd[["pos"]], 2, function(x) tapply(x, grp, median))
         pd[["score"]] <- apply(pd[["score"]], 2, function(x) tapply(x, grp, mean))
         ii <- hclust(dist(pd[["score"]]))$order
@@ -140,7 +142,7 @@ singlecell_plot_mappingplot_server <- function(id,
       b0 <- 0.1 + 0.70 * pmax(30 - ncol(pd[["score"]]), 0)
 
       if (pd[["view"]] == "dotmap") {
-        ## gx.heatmap(pd[["score"]])
+        ## playbase::gx.heatmap(pd[["score"]])
         par(mfrow = c(1, 1), mar = c(0, 0, 8, 1), oma = c(1, 1, 1, 1) * 0.25)
         score3 <- pd[["score"]]**1.5
         rownames(score3) <- paste("", rownames(score3), "  ")
@@ -164,10 +166,10 @@ singlecell_plot_mappingplot_server <- function(id,
         if (!is.null(usermode) && usermode >= "PRO") {
           kk <- head(colnames(pd[["score"]])[order(-colMeans(pd[["score"]]**2))], 18)
           kk <- intersect(colnames(pd[["score"]]), kk)
-          all.scores <- pd[["ngs"]]$deconv[["LM22"]]
-          all.scores <- pd[["ngs"]]$deconv[[pd[["refset"]]]]
-          if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["ngs"]]$samples)) {
-            grp <- pd[["ngs"]]$samples[rownames(all.scores[[1]]), pd[["grpvar"]]]
+          all.scores <- pd[["pgx"]]$deconv[["LM22"]]
+          all.scores <- pd[["pgx"]]$deconv[[pd[["refset"]]]]
+          if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
+            grp <- pd[["pgx"]]$samples[rownames(all.scores[[1]]), pd[["grpvar"]]]
             for (i in 1:length(all.scores)) {
               all.scores[[i]] <- apply(
                 all.scores[[i]], 2,
@@ -200,14 +202,14 @@ singlecell_plot_mappingplot_server <- function(id,
             if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score1) <- rep("", nrow(score1))
             score1 <- score1 / (1e-8 + rowSums(score1))
             if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(score1))
-            gx.imagemap(t(score1**1), cex = 0.85, main = "", clust = FALSE)
+            playbase::gx.imagemap(t(score1**1), cex = 0.85, main = "", clust = FALSE)
             title(main = names(all.scores)[k], cex.main = 1.1, line = 0.4, font.main = 1)
           }
         } else {
           score1 <- pd[["score"]]
           score1 <- score1 / (1e-8 + rowSums(score1))
           if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(pd[["score"]]))
-          gx.heatmap(t(score1**2),
+          playbase::gx.heatmap(t(score1**2),
             scale = "none",
             cexRow = 1, cexCol = 0.6, col = heat.colors(16),
             mar = c(b0, 15), key = FALSE, keysize = 0.5

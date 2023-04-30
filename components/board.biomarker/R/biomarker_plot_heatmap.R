@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Heatmap plot UI input function
@@ -12,22 +12,25 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_heatmap_ui <- function(id,
-                                      label = "",
-                                      height = c(600, 800)) {
+biomarker_plot_heatmap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Biomarker heatmap.</b> Expression heatmap
-                      of top gene features according to their variable
-                      importance.")
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Heatmap",
+    title = title,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -42,13 +45,12 @@ biomarker_plot_heatmap_ui <- function(id,
 #' @export
 biomarker_plot_heatmap_server <- function(id,
                                           calcVariableImportance,
-                                          inputData,
+                                          pgx,
                                           pdx_predicted,
                                           watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        pgx <- inputData()
         shiny::req(pgx)
 
         res <- calcVariableImportance()
@@ -68,7 +70,7 @@ biomarker_plot_heatmap_server <- function(id,
         do.survival <- grepl("survival", ct, ignore.case = TRUE)
 
         splitx <- pgx$Y[colnames(X), ct]
-        if (!is.categorical(splitx) || do.survival) {
+        if (!playbase::is.categorical(splitx) || do.survival) {
           splitx <- NULL
         }
 
@@ -79,23 +81,26 @@ biomarker_plot_heatmap_server <- function(id,
         res <- list(X = X, splitx = splitx)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         shiny::req(res)
 
         X <- res$X
         splitx <- res$splitx
 
-        gx.splitmap(X,
+        playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
           dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
-          key.offset = c(0.05, 1.03),
+          #  key.offset = c(0.05, 1.03),
+          key.offset = c(0.05, 0.98),
           show_rownames = 99,
-          lab.len = 50, cexRow = 0.88, mar = c(2, 8)
+          lab.len = 50,
+          cexRow = 0.88,
+          mar = c(2, 8)
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -103,8 +108,9 @@ biomarker_plot_heatmap_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 435),
-        pdf.width = 10, pdf.height = 10,
+        res = c(72, 110),
+        pdf.width = 10,
+        pdf.height = 10,
         add.watermark = watermark
       )
     } ## end of moduleServer

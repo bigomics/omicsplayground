@@ -1,0 +1,38 @@
+html {
+    
+    .card {
+        --bs-card-spacer-y: 0.6rem !important;
+    }
+    
+    .caption {
+        margin: 4px;   
+    }
+    
+    .caption:hover {
+        overflow: auto;
+    }
+    
+    .card-footer {
+        background-color: #F7FAFD;
+        padding: 2px 0 0 2px;
+	height: 3em !important;
+	// height: 0em !important;
+	display: none;
+    }
+    
+    .card-footer-switch{
+        margin-top: 10px;
+        margin-left: 10px;
+    }
+
+    .form-check.form-switch {
+        font-size: 14px;
+        /* align-items: center; */
+        float: right;
+    }
+
+    .form-check-input:checked {
+        background-color: #4081dc;
+        border-color: #b8ddff;
+    }
+}

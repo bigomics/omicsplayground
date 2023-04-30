@@ -1,19 +1,24 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wordcloud_table_leading_edge_ui <- function(id, width, height) {
+wordcloud_table_leading_edge_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "Keyword leading edge table."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Leading-edge table",
+    title = title,
+    caption = caption,
     label = "e"
   )
 }
@@ -41,25 +46,28 @@ wordcloud_table_leading_edge_server <- function(id,
       rownames(df) <- ee
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
-
-      df$leading.edge <- wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
+      df$leading.edge <- playbase::wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
 
       tbl <- DT::datatable(df,
         rownames = FALSE, escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, scrollY = "25vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollX = TRUE,
+          scrollY = "25vh",
+          scrollResize = TRUE,          
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("fx",
-          background = color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

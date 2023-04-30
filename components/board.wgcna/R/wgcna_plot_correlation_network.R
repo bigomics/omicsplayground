@@ -1,18 +1,24 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_correlation_network_ui <- function(id, height, width) {
+wgcna_plot_correlation_network_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Correlation network.</b> Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Correlation network",
-    label = "c",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

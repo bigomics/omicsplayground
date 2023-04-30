@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -12,13 +12,20 @@
 #' @param height
 #'
 #' @export
-signature_plot_enplots_ui <- function(id, height, width) {
+signature_plot_enplots_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
   info_text <- "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
   PlotModuleUI(ns("plot"),
     title = "Enrichment plots",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf"),
     height = height,
     width = width
@@ -34,15 +41,16 @@ signature_plot_enplots_ui <- function(id, height, width) {
 #' @return
 #' @export
 signature_plot_enplots_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           sigCalculateGSEA,
                                           enrichmentContrastTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    enplots.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      alertDataLoaded(session, ngs)
-      if (is.null(ngs)) {
+        
+      ##    enplots.RENDER <- shiny::reactive({
+    enplots.RENDER <- function() {
+      alertDataLoaded(session, pgx)
+      if (is.null(pgx)) {
         return(NULL)
       }
 
@@ -80,10 +88,10 @@ signature_plot_enplots_server <- function(id,
       for (i in 1:min(20, ncol(F))) {
         f <- colnames(F)[i]
         tt <- sub(".*\\]", "", f)
-        tt <- breakstring(substring(tt, 1, 50), 28, force = TRUE)
+        tt <- playbase::breakstring(substring(tt, 1, 50), 28, force = TRUE)
         ylab <- ""
         if (i %% nc == 1) ylab <- "rank metric"
-        gsea.enplot(F[, i], gset,
+        playbase::gsea.enplot(F[, i], gset,
           main = tt, cex.main = cex.main,
           xlab = "", ylab = ylab
         )
@@ -94,15 +102,16 @@ signature_plot_enplots_server <- function(id,
           legend("topleft", db, cex = 0.9, bty = "n", adj = 0)
         }
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+##      p <- grDevices::recordPlot()
+##      p
+    } ##)
 
     PlotModuleServer(
       "plot",
       func = enplots.RENDER,
-      res = c(90, 90), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 8,
+      pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer

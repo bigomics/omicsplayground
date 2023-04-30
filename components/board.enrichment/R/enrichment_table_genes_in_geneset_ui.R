@@ -1,19 +1,24 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_table_genes_in_geneset_ui <- function(id, width, height) {
+enrichment_table_genes_in_geneset_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "By clicking on a gene set in the table <code>I</code>, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the <code>Expression</code> barplot and its correlation to the gene set in the <code>Gene to gene set correlation</code> scatter plot under the <code>Plots</code> section."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Genes in gene set",
+    title = title,
+    caption = caption,
     label = "II"
   )
 }
@@ -24,7 +29,8 @@ enrichment_table_genes_in_geneset_server <- function(id,
     genetable.RENDER <- shiny::reactive({
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
-        shiny::validate(shiny::need(nrow(rpt) > 0, "warning. no genes."))
+        shiny::validate(shiny::need(nrow(rpt) > 0,
+        "Please select a geneset from the table on the left to view genes."))
         return(NULL)
       }
 
@@ -33,7 +39,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         jj <- which(sapply(rpt, is.numeric))
         rpt[, jj] <- round(rpt[, jj], digits = 4)
         jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
-        if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, shortstring, 60)
+        if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 60)
       } else {
         rpt <- data.frame("", 0, 0, 0)[0, ]
         colnames(rpt) <- c("gene_name", "fc", "p", "q")
@@ -46,6 +52,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       tbl <- DT::datatable(rpt,
         class = "compact cell-border stripe", rownames = FALSE,
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
@@ -53,7 +60,8 @@ enrichment_table_genes_in_geneset_server <- function(id,
           # paging = TRUE,
           # pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = "calc(45vh - 260px)",
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -68,7 +76,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fx <- rpt[, "fc"]
         tbl <- tbl %>%
           DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-          DT::formatStyle("fc", background = color_from_middle(fx, "lightblue", "#f5aeae"))
+          DT::formatStyle("fc", background = playbase::color_from_middle(fx, "lightblue", "#f5aeae"))
       }
       tbl
     })

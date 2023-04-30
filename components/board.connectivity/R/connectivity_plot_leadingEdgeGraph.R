@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,17 +12,15 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_leadingEdgeGraph_ui <- function(id,
-                                                  label = "",
-                                                  rowH = 660) {
+connectivity_plot_leadingEdgeGraph_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- strwrap(
-    "<b>Leading-edge graph.</b> Network of shared leading-edge genes between
-    top-N most similar signatures. The edge width corresponds to the number of
-    signatures that share that pair of genes in their top differentially expressed
-    genes. In the plot options you can set the threshold of the edges."
-  )
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -44,13 +42,14 @@ connectivity_plot_leadingEdgeGraph_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Leading-edge graph",
+    title = title,
     label = label,
+    caption = caption,
     plotlib = "visnetwork",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
-    height = c(720, 720),
-    width = c("auto", 1300)
+    height = height,
+    width = width
   )
 }
 

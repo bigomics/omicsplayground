@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -13,18 +13,22 @@
 #' @param width
 #'
 #' @export
-expression_plot_topfoldchange_ui <- function(id,
-                                             label = "",
-                                             height,
-                                             width) {
+expression_plot_topfoldchange_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
 
   PlotModuleUI(ns("pltmod"),
-    title = "Gene in contrasts",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -37,7 +41,7 @@ expression_plot_topfoldchange_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param ngs
+#' @param pgx
 #' @param sel
 #' @param res
 #' @param watermark
@@ -47,7 +51,7 @@ expression_plot_topfoldchange_ui <- function(id,
 #' @export
 expression_plot_topfoldchange_server <- function(id,
                                                  comp,
-                                                 ngs,
+                                                 pgx,
                                                  sel,
                                                  res,
                                                  watermark = FALSE) {
@@ -56,12 +60,14 @@ expression_plot_topfoldchange_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
-      ngs <- ngs()
       sel <- sel()
       res <- res()
 
+      ##shiny::req(sel())
+      shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
+      
       psel <- rownames(res)[sel]
-      gene <- ngs$genes[psel, "gene_name"]
+      gene <- pgx$genes[psel, "gene_name"]
 
       if (is.null(sel) || length(sel) == 0) { # Ugly
         return(list(sel = sel))
@@ -70,7 +76,7 @@ expression_plot_topfoldchange_server <- function(id,
       if (is.null(comp) || length(comp) == 0) {
         return(NULL)
       }
-      fc <- sapply(ngs$gx.meta$meta, function(x) x[psel, "meta.fx"])
+      fc <- sapply(pgx$gx.meta$meta, function(x) x[psel, "meta.fx"])
       top.up <- head(names(sort(fc[which(fc > 0)], decreasing = TRUE)), 10)
       top.dn <- head(names(sort(fc[which(fc < 0)], decreasing = FALSE)), 10)
       fc.top <- c(fc[top.up], fc[top.dn])
@@ -103,18 +109,7 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      par(mfrow = c(1, 1), mar = c(4, 4, 2, 2) * 1, mgp = c(2, 0.8, 0), oma = c(1, 1, 1, 0.5) * 0.2)
-      par(mfrow = c(1, 1), mar = c(6, 3, 0, 1), mgp = c(2, 0.8, 0), oma = c(1, 0, 0, 0))
-      nch <- max(nchar(names(pd[["fc.top"]])))
-      m1 <- ifelse(nch > 12, 12, 8)
-      m1 <- ifelse(nch > 30, 16, m1)
-
-      par(mar = c(3.2, m1 - 0.5, 1, 1))
-      cex1 <- 0.9
-      nn <- sum(!is.na(pd[["fc.top"]]))
-      if (nn > 15) cex1 <- 0.8
-
-      pgx.barplot.PLOTLY(
+      playbase::pgx.barplot.PLOTLY(
         data = data.frame(
           x = names(pd[["fc.top"]]),
           y = as.numeric(pd[["fc.top"]])
@@ -123,19 +118,19 @@ expression_plot_topfoldchange_server <- function(id,
         y = "y",
         title = pd[["gene"]],
         yaxistitle = "Fold change (log2)",
-        xaxistitle = "Groups",
+        xaxistitle = "",
         yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
         fillcolor = pd[["klr"]],
-        plotRawValues = TRUE
+        margin = list(l = 10, r = 10, b = 0, t = 25),        
+        grouped = FALSE
       )
     }
-
-
 
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
+      remove_margins = FALSE,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots

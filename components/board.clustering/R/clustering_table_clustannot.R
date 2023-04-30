@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -11,17 +11,22 @@
 #' @param width
 #'
 #' @export
-clustering_table_clustannot_ui <- function(id, width, height) {
+clustering_table_clustannot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  clustannot_table_info_text <- "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
 
   TableModuleUI(
     ns("datasets"),
     width = width,
     height = height,
-    info.text = clustannot_table_info_text,
-    title = "Annotation scores",
+    info.text = info.text,
+    title = title,
+    caption = caption,
     label = "b"
   )
 }
@@ -32,10 +37,13 @@ clustering_table_clustannot_ui <- function(id, width, height) {
 #' @param watermark
 #'
 #' @export
-clustering_table_clustannot_server <- function(id,
-                                               getClustAnnotCorrelation,
-                                               xann_level,
-                                               watermark = FALSE) {
+clustering_table_clustannot_server <- function(
+  id,
+  getClustAnnotCorrelation,
+  xann_level,
+  watermark,
+  scrollY )
+{
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -46,31 +54,31 @@ clustering_table_clustannot_server <- function(id,
         return(NULL)
       }
 
-      ## rownames(rho) = shortstring(rownames(rho),50)
-      rho.name <- shortstring(sub(".*:", "", rownames(rho)), 60)
+      ## rownames(rho) = playbase::shortstring(rownames(rho),50)
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       ## rho = data.frame(cbind( name=rho.name, rho))
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
       rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
-        df$feature <- wrapHyperLink(df$feature, rownames(df))
+        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
       }
 
       DT::datatable(
         df,
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = c(1)),
         class = "compact hover",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip", buttons = c("copy", "csv", "pdf"),
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
-          scrollY = "23vh",
+          scrollX = TRUE,
+          scrollY = scrollY,
           scroller = TRUE,
+          scrollResize = TRUE,
           deferRender = TRUE
-        ) ## end of options.list
+        ) ## end of options
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     })

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,17 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_cumFCplot_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width) {
+connectivity_plot_cumFCplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Meta-foldchange.</b> The barplot visualizes the
-                       cumulative foldchange between the top-10 most similar
-                       profiles. Genes that are frequently shared with high
-                       foldchange will show a higher cumulative score. You can
-                       choose between signed or absolute foldchange in the options.")
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
@@ -39,10 +38,11 @@ connectivity_plot_cumFCplot_ui <- function(id,
     )
   )
   PlotModuleUI(ns("plot"),
-    title = "Cumulative foldchange",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
     height = height,
     width = width
@@ -97,7 +97,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         shiny::req(F)
 
         MAXF <- 10
-        NGENES <- 64
+        NGENES <- 50
 
         F <- F[, 1:min(MAXF, ncol(F)), drop = FALSE]
         if (input$cumFCplot_order == "FC") {
@@ -109,9 +109,9 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
         }
 
-        pgx.stackedBarplot(
-          x = data.frame(F1),
-          ylab = "Cumulative logFC",
+        playbase::pgx.stackedBarplot(
+          x = data.frame(F1, check.names=FALSE),
+          ylab = "cumulative logFC", xlab="",
           showlegend = FALSE
         )
       })

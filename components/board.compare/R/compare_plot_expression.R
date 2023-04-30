@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
@@ -13,14 +13,14 @@ compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
     title = "Expression",
     label = "a",
     info.text = info_text,
-    height = c(440, 700),
-    width = c("auto", 1280),
+    height = height,
+    width = c("auto", "100%"),
     download.fmt = c("png", "pdf")
   )
 }
 
 compare_plot_expression_server <- function(id,
-                                           inputData,
+                                           pgx,
                                            dataset2,
                                            input.contrast1,
                                            input.contrast2,
@@ -34,26 +34,26 @@ compare_plot_expression_server <- function(id,
     })
 
     multibarplot.RENDER <- shiny::reactive({
-      ngs1 <- inputData()
-      ngs2 <- dataset2()
+      pgx1 <- pgx
+      pgx2 <- dataset2()
 
-      ct1 <- head(names(ngs1$gx.meta$meta), 3)
-      ct2 <- head(names(ngs2$gx.meta$meta), 3)
+      ct1 <- head(names(pgx1$gx.meta$meta), 3)
+      ct2 <- head(names(pgx2$gx.meta$meta), 3)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
+      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
-      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
 
       gene <- "ESR1"
       gene <- "ERBB2"
       genes <- c("ERBB2", "ESR1", "FOXA1", "PGR", "ERBB2", "ESR1", "FOXA1", "PGR")
-      genes <- rownames(ngs1$X)
+      genes <- rownames(pgx1$X)
       genes <- hilightgenes()
 
       df <- getOmicsScoreTable()
@@ -64,15 +64,15 @@ compare_plot_expression_server <- function(id,
       shiny::req(sel)
       genes <- rownames(df)[sel]
 
-      xgenes <- intersect(rownames(ngs1$X), rownames(ngs2$X))
+      xgenes <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       genes <- head(intersect(genes, xgenes), 8)
 
       par(mfrow = c(2, 4), mar = c(6, 4, 1, 0), mgp = c(2.0, 0.7, 0), oma = c(0, 0, 0, 0))
       for (gene in genes) {
-        x1 <- ngs1$X[gene, ]
-        x2 <- ngs2$X[gene, ]
-        e1 <- contrastAsLabels(ngs1$model.parameters$exp.matrix[, ct1, drop = FALSE])
-        e2 <- contrastAsLabels(ngs2$model.parameters$exp.matrix[, ct2, drop = FALSE])
+        x1 <- pgx1$X[gene, ]
+        x2 <- pgx2$X[gene, ]
+        e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
+        e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
         m1 <- lapply(e1, function(y) tapply(x1, y, mean))
         m2 <- lapply(e2, function(y) tapply(x2, y, mean))
 
@@ -92,7 +92,7 @@ compare_plot_expression_server <- function(id,
         mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
         mm.group <- c(rep(1, length(m1)), rep(2, length(m2)))
 
-        gx.barplot(mm,
+        playbase::gx.barplot(mm,
           srt = srt, main = gene, cex.main = 1.0,
           group = mm.group, cex.names = 0.85,
           group.names = grp.names,

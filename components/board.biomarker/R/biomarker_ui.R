@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 BiomarkerInputs <- function(id) {
@@ -54,31 +54,51 @@ BiomarkerInputs <- function(id) {
 
 BiomarkerUI <- function(id) {
   ns <- shiny::NS(id)
-
+  
+  imgH1 <- c("calc(40vh - 120px)", "70vh") ## heights for small and fullscreen image
+  imgH2 <- c("calc(60vh - 120px)", "70vh") 
+  
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
-    tagList(
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          biomarker_plot_importance_ui(ns("pdx_importance"), label = "a"),
-          biomarker_plot_heatmap_ui(ns("pdx_heatmap"), label = "b")
-        ),
-        div(
-          class = "col-md-6",
-          biomarker_plot_decisiontree_ui(ns("pdx_decisiontree"), label = "c"),
-          biomarker_plot_boxplots_ui(ns("pdx_boxplots"), label = "d")
-        )
+    bslib::layout_column_wrap(
+      width = 1/2,
+      height = "calc(100vh - 130px)",
+      heights_equal = "row",
+      biomarker_plot_importance_ui(
+        ns("pdx_importance"),
+        title = "Variable importance",
+        info.text = "An importance score for each variable is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
+        caption = "Barchart indicating the cumulative weight of a proposed biomarker based on six machine learning algorithms.",
+        height = imgH1,
+        width = c("auto", "100%"),
+        label = "a"
       ),
-      tags$div(
-        HTML("<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain
-            phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications.
-            <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms,
-            including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according
-            to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features.
-            <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features.
-            <b>(d)</b> Boxplots show the expression of biomarker genes across the groups.")
+      biomarker_plot_boxplots_ui(
+        ns("pdx_boxplots"),
+        title = "Biomarker expression",
+        info.text = "These boxplots shows the expression of genes/samples of the identified features.",
+        caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
+        height = imgH1,
+        width = c("auto", "100%"),
+        label = "b"
+      ),
+      biomarker_plot_heatmap_ui(
+        ns("pdx_heatmap"),
+        title = "Heatmap",
+        info.text = "Expression heatmap of top gene features according to their variable importance.",
+        caption = "Heatmap indicating the expression pattern across selected phenotypic groups for the most likely biomarkers.",
+        height = imgH2,
+        width = c("auto", "100%"),
+        label = "c"
+      ),
+      biomarker_plot_decisiontree_ui(
+        ns("pdx_decisiontree"),
+        title = "Decision tree",
+        info.text = "The decision tree shows a tree solution for classification based on the top most important features. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
+        caption = "Decision tree indicating expression-based biomarkers that distinguish the selected phenotypic groups.",
+        height = imgH2,
+        width = c("auto", "100%"),
+        label = "d"
       )
     )
   )

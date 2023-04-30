@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_MTrelationships_ui <- function(id, height, width) {
+wgcna_plot_MTrelationships_ui <- function(
+  id,
+  title,
+  label,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA module and trait relationship.</b>"
 
   moduleTrait_opts <- shiny::tagList(
     shiny::checkboxInput(ns("traits_binarize"), "binarize continuous vars", FALSE)
@@ -14,13 +19,14 @@ wgcna_plot_MTrelationships_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Module-Trait relationships",
-    label = "a",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     options = moduleTrait_opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = NULL #FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
   )
 }
 

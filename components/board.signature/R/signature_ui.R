@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 style0 <- "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
@@ -15,7 +15,7 @@ SignatureInputs <- function(id) {
         value = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA",
         rows = 15, placeholder = "Paste your gene list"
       ),
-      "Paste a list of signature genes.",
+      "Paste a list of genes that defines your signature.",
       placement = "top",
       options = list(container = "body")
     ),
@@ -70,112 +70,117 @@ SignatureInputs <- function(id) {
 SignatureUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800 ## full height of page
-  tabH <- "70vh"
-
-  tabs <- div(
-    class = "row",
-    div(
-      class = "col-md-8",
-      shiny::tabsetPanel(
-        id = ns("tabs1"),
-        shiny::tabPanel(
-          "Enrichment",
-          signature_plot_enplots_ui(
-            ns("enplots"),
-            height = c(fullH - 80, 750),
-            width = c("100%", 1000)
-          ),
-          shiny::br(),
-          tags$div(
-            HTML("<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts.
-                        Positive enrichment means that this particular contrast
-                        shows similar expression changes as the query signature.")
-          )
-        ),
-        shiny::tabPanel(
-          "Volcano plots",
-          signature_plot_volcano_ui(
-            ns("volcanoPlots"),
-            height = c(fullH - 80, 780),
-            width = c("100%", 1100)
-          ),
-          shiny::br(),
-          tags$div(
-            HTML("
-                            <b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts.
-                            For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot,
-                            for negative enrichment, on the upper left.")
-          )
-        ),
-        shiny::tabPanel(
-          "Overlap/similarity",
-          signature_plot_overlap_ui(
-            ns("overlapScorePlot"),
-            height = 0.45 * fullH
-          ),
-          shiny::br(),
-          signature_table_overlap_ui(
-            ns("overlapTable"),
-            height = c(0.4 * fullH, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
-          ),
-          shiny::br(),
-          tags$div(
-            HTML("
-                            <b>Overlap/Similarity table.</b><b>(a)</b> Top overlapping gene sets with selected signature.
-                            The vertical axis shows the overlap score of the gene set which combines the odds ratio and
-                            significance (q-value) of the Fisher's test. <b>(b)</b> Table summarizing the results
-                            of the Fishers's test for overlap. The column \'common genes\' reports the
-                            shared gene in order of largest fold-change.")
-          )
-        ),
-        shiny::tabPanel(
-          "Markers",
-          signature_plot_markers_ui(
-            ns("markers"),
-            height = c(fullH - 100, 750)
-          ),
-          shiny::br(),
-          tags$div(
-            HTML("
-                            <b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples)
-                            are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene.")
-          )
+  left.panel <- shiny::tabsetPanel(
+    id = ns("tabs1"),
+    ## ----------------------------- volcano panel  ------------------                
+    shiny::tabPanel(
+      "Volcano plots",
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 190px)",
+        ##height = "100%",        
+        signature_plot_volcano_ui(
+          ns("volcanoPlots"),
+          title = "Volcano plots",
+          info.text = "For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left.",
+          caption = "Volcano plots visualising the test signature in all available contrasts.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
         )
       )
     ),
-    div(
-      class = "col-md-4",
-      shiny::tabsetPanel(
-        id = ns("tabs2"),
-        shiny::tabPanel(
-          "Enrichment table",
-          signature_table_enrich_by_contrasts_ui(
-            ns("enrichmentContrastTable"),
-            height = c(230, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
-          ),
-          shiny::br(),
-          signature_table_genes_in_signature_ui(
-            ns("enrichmentGeneTable"),
-            height = c(360, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
-          ),
-          shiny::br(),
-          tags$div(
-            HTML("
-                            <b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all
-                            contrasts for the selected query signature . The NES corresponds to the normalized enrichment
-                            score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute)
-                            fold-change corresponding to the selected contrast.")
-          )
+    ## ----------------------------- enrichment panel  ------------------        
+    shiny::tabPanel(
+      "Enrichment",
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 190px)",
+        signature_plot_enplots_ui(
+          ns("enplots"),
+          title = "Enrichment plots",
+          info.text = "Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.",
+          caption = "Gene set enrichment plots indicating the type of correlation of the test signature with the available contrast profiles.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    ),
+    ## ----------------------------- overlap panel ------------------        
+    shiny::tabPanel(
+      "Overlap/similarity",
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 190px)",
+        signature_plot_overlap_ui(
+          ns("overlapScorePlot"),
+          title = "Signature overlap scores",
+          info.text = "The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test.",
+          caption = "The plot shows the gene sets most correlated with the test signature.",
+          width = c("auto", "100%"),
+          height = c("50%", TABLE_HEIGHT_MODAL)
+        ),
+        signature_table_overlap_ui(
+          ns("overlapTable"),
+          title = "Overlap with other signatures",
+          info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
+          caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
+          height = c("50%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    ),
+    ## ----------------------------- panel markers ------------------
+    shiny::tabPanel(
+      "Markers",
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 190px)",
+        signature_plot_markers_ui(
+          ns("markers"),
+          title = "Markers plot",
+          info.text = "After uploading a gene list, the Markers section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
+          caption = "t-SNE plot showing the expression levels of the tested genes in each of the dataset samples.",
+          height = c("100%", TABLE_HEIGHT_MODAL)
         )
       )
     )
   )
+
+  right.panel <- shiny::tabsetPanel(
+    id = ns("tabs2"),
+    shiny::tabPanel(
+      "Enrichment table",
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 190px)",
+        signature_table_enrich_by_contrasts_ui(
+          ns("enrichmentContrastTable"),
+          title = "Enrichment by contrasts",
+          info.text = "Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.",
+          caption = "Table showing the overall enrichment scores of the tested signature in the available contrasts.",
+          height = c("40%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        ),
+        signature_table_genes_in_signature_ui(
+          ns("enrichmentGeneTable"),
+          title = "Genes in signature",
+          info.text = "Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change.",
+          caption = "Table indicating the expression levels of the genes of the tested signature in the available contrasts.",
+          height = c("60%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    )
+  )
+  
   div(
     boardHeader(title = "Test signatures", info_link = ns("info")),
-    tabs
+    bslib::layout_column_wrap(
+      width = 1,
+      ## height = "calc(100vh - 190px)",
+      style = htmltools::css(grid_template_columns = "8fr 4fr"),
+      left.panel,
+      right.panel
+    )
   )
 }

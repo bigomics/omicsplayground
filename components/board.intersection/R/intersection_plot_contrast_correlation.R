@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-contrast_correlation_ui <- function(id, label = "", height = c(600, 800)) {
+contrast_correlation_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
 
   ctcorrplot.opts <- shiny::tagList(
     ## tipify( shiny::checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
@@ -28,27 +33,27 @@ contrast_correlation_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
     ns("ctcorrplot"),
-    title = "Contrast correlation",
+    title = title,
     label = "b",
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = ctcorrplot.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(550, 720),
-    width = c("auto", 1100)
+    height = height,
+    width = width
   )
 }
 
 
 contrast_correlation_server <- function(id,
                                         getFoldChangeMatrix,
-                                        inputData,
+                                        pgx,
                                         input_comparisons,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       res <- getFoldChangeMatrix()
       if (is.null(res)) {
@@ -125,11 +130,10 @@ contrast_correlation_server <- function(id,
 
 # ctcorrplot.PLOT <- shiny::reactive({
 #
-#     ngs <- inputData()
-#     shiny::req(ngs)
+#     shiny::req(pgx)
 #     shiny::req(input$comparisons)
 #
-#     ## res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+#     ## res <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what="meta")
 #     res <- getFoldChangeMatrix()
 #
 #     if(is.null(res)) return(NULL)

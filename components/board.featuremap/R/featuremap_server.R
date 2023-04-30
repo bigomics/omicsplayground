@@ -1,9 +1,9 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-FeatureMapBoard <- function(id, inputData) {
+FeatureMapBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -30,8 +30,7 @@ FeatureMapBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx$X)
 
       families <- names(FAMILIES)
       shiny::updateSelectInput(session, "filter_genes",
@@ -39,18 +38,27 @@ FeatureMapBoard <- function(id, inputData) {
         selected = "<all>"
       )
 
-      gsetcats <- sort(unique(gsub(":.*", "", rownames(ngs$gsetX))))
+      gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
       shiny::updateSelectInput(session, "filter_gsets",
         choices = gsetcats,
         selected = "H"
       )
 
-      cvar <- pgx.getCategoricalPhenotypes(ngs$samples, max.ncat = 99)
+      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
       cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
       shiny::updateSelectInput(session, "sigvar",
         choices = cvar,
         selected = cvar0
       )
+    })
+
+    observeEvent( input$sigvar, {
+      shiny::req(pgx$samples, input$sigvar)
+      if(input$sigvar %in% colnames(pgx$samples)) {
+        y <- setdiff(pgx$samples[,input$sigvar],c(NA))
+        y <- c("<average>",sort(unique(y)))
+        shiny::updateSelectInput(session, "ref_group", choices = y)
+      }
     })
 
     ## ================================================================================
@@ -59,18 +67,22 @@ FeatureMapBoard <- function(id, inputData) {
 
     ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
-                         zlim = NULL, cex = 0.9, source = "", plotlib = "base") {
+                         zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
+
       if (!is.null(hilight)) {
-        hilight <- intersect(hilight, rownames(pos))
-        hilight <- intersect(hilight, names(var))
-        hilight <- hilight[order(-var[hilight])]
-        if (min(var, na.rm = TRUE) < 0) {
-          hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
-          hilight2 <- unique(hilight2)
-        } else {
-          hilight2 <- head(hilight, nlabel)
-        }
+
+          hilight <- intersect(hilight, rownames(pos))
+          hilight <- intersect(hilight, names(var))
+          hilight <- hilight[order(-var[hilight])]
+
+          if (min(var, na.rm = TRUE) < 0) {
+              hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
+              hilight2 <- unique(hilight2)
+          } else {
+                hilight2 <- head(hilight, nlabel)
+          }
       }
+
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
 
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
@@ -80,12 +92,12 @@ FeatureMapBoard <- function(id, inputData) {
       ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
 
-      p <- pgx.scatterPlotXY(
+      p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
         plotlib = plotlib,
         softmax = TRUE,
-        cex.lab = 1.3 * cexlab,
+        cex.lab = 1.2 * cex.label * cexlab,
         opacity = opacity,
         cex = cex,
         zsym = (min(var, na.rm = TRUE) < 0),
@@ -96,9 +108,9 @@ FeatureMapBoard <- function(id, inputData) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        title = title
+        title = title,
         ## legend.pos = 'bottomright',
-        ## source = source,
+        source = source,
         ## key = rownames(pos)
       )
 
@@ -149,18 +161,29 @@ FeatureMapBoard <- function(id, inputData) {
           xaxs <- FALSE
         }
 
-        pgx.scatterPlotXY.BASE(
+        playbase::pgx.scatterPlotXY.BASE(
           pos[jj, ],
           var = var[jj],
-          zsym = zsym, zlim = zlim, set.par = FALSE, softmax = 1,
-          cex = cex, cex.legend = 0.9, cex.lab = 1.2, bty = "n",
-          col = "grey70", dlim = c(0.05, 0.05),
-          hilight = hmarks, hilight2 = NULL,
-          hilight.col = NULL, opacity = opacity,
+          zsym = zsym,
+          zlim = zlim,
+          set.par = FALSE,
+          softmax = 1,
+          cex = cex,
+          cex.legend = 0.9,
+          cex.lab = 1.2,
+          bty = "n",
+          col = "grey70",
+          dlim = c(0.05, 0.05),
+          hilight = hmarks,
+          hilight2 = NULL,
+          hilight.col = NULL,
+          opacity = opacity,
           ## xlab = xlab, ylab = ylab,
           xlab = "", ylab = "",
-          xaxs = xaxs, yaxs = yaxs,
-          hilight.lwd = 0.5, hilight.cex = 1.3
+          xaxs = xaxs,
+          yaxs = yaxs,
+          hilight.lwd = 0.5,
+          hilight.cex = 1.3
         )
 
         cex1 <- ifelse(ncol(F) <= 16, 1.2, 1)
@@ -172,13 +195,12 @@ FeatureMapBoard <- function(id, inputData) {
 
     getGeneUMAP_FC <- shiny::reactive({
       ## buffered reactive
-      ngs <- inputData()
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(ngs, level = "gene")$fc
+          F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
           F <- scale(F, center = FALSE)
-          pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
-          pos <- pos.compact(pos)
+          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP",
         value = 0.5
@@ -187,25 +209,23 @@ FeatureMapBoard <- function(id, inputData) {
     })
 
     getGeneUMAP <- shiny::reactive({
-      ngs <- inputData()
       if (input$umap_type == "logFC") {
         message("[getGeneUMAP] computing foldchange UMAP")
         pos <- getGeneUMAP_FC()
       } else {
-        pos <- ngs$cluster.genes$pos[["umap2d"]]
+        pos <- pgx$cluster.genes$pos[["umap2d"]]
       }
       pos
     })
 
     getGsetUMAP_FC <- shiny::reactive({
       ## buffered reactive
-      ngs <- inputData()
       shiny::withProgress(
         {
-          F <- pgx.getMetaMatrix(ngs, level = "geneset")$fc
+          F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
           F <- scale(F, center = FALSE)
-          pos <- pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
-          pos <- pos.compact(pos)
+          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP (genesets)",
         value = 0.5
@@ -214,12 +234,11 @@ FeatureMapBoard <- function(id, inputData) {
     })
 
     getGsetUMAP <- shiny::reactive({
-      ngs <- inputData()
       if (input$umap_type == "logFC") {
         message("[getGsetUMAP] computing foldchange UMAP (genesets)")
         pos <- getGsetUMAP_FC()
       } else {
-        pos <- ngs$cluster.gsets$pos[["umap2d"]]
+        pos <- pgx$cluster.gsets$pos[["umap2d"]]
       }
       pos
     })
@@ -233,8 +252,8 @@ FeatureMapBoard <- function(id, inputData) {
     # Gene Map
 
     featuremap_plot_gene_map_server(
-      "gene_map",
-      inputData    = inputData,
+      "geneUMAP",
+      pgx    = pgx,
       getGeneUMAP  = getGeneUMAP,
       plotUMAP     = plotUMAP,
       sigvar       = shiny::reactive(input$sigvar),
@@ -245,10 +264,11 @@ FeatureMapBoard <- function(id, inputData) {
     # Gene Signatures
 
     featuremap_plot_gene_sig_server(
-      "gene_sig",
-      inputData         = inputData,
+      "geneSigPlots",
+      pgx         = pgx,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),
+      ref_group         = shiny::reactive(input$ref_group),      
       plotFeaturesPanel = plotFeaturesPanel,
       watermark         = WATERMARK
     )
@@ -257,7 +277,7 @@ FeatureMapBoard <- function(id, inputData) {
 
     featuremap_plot_table_geneset_map_server(
       "gsetUMAP",
-      inputData = inputData,
+      pgx = pgx,
       getGsetUMAP = getGsetUMAP,
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
@@ -269,9 +289,10 @@ FeatureMapBoard <- function(id, inputData) {
 
     featuremap_plot_gset_sig_server(
       "gsetSigPlots",
-      inputData         = inputData,
+      pgx         = pgx,
       getGsetUMAP       = getGsetUMAP,
       sigvar            = shiny::reactive(input$sigvar),
+      ref_group         = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark         = WATERMARK
     )

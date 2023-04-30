@@ -1,23 +1,29 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_genetypes_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_genetypes_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption
+  ) {
   ns <- shiny::NS(id)
-
-  menu_grouped <- "<code>grouped</code>"
-  info_text <- paste0("Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ", menu_grouped, " setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Relative abundance of major gene types",
+    title = title,
     label = label,
+    caption,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -125,17 +131,15 @@ dataview_plot_genetypes_server <- function(id,
           margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         ) %>%
-        plotly_default1()
+        plotly_default()
       fig
     }
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
+        plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE,
-          font = list(
-            size = 18
-          )
+          showlegend = TRUE
         )
       ## fig <- plotly::style(fig, marker.size = 14)
       fig

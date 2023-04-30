@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
@@ -21,14 +21,14 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
     label = "c",
     info.text = info_text,
     options = genecorr.opts,
-    height = c(740, 750),
-    width = c("auto", 900),
+    height = height,
+    width = c("auto", "100%"),
     download.fmt = c("png", "pdf")
   )
 }
 
 compare_plot_gene_corr_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           dataset2,
                                           input.contrast1,
                                           input.contrast2,
@@ -49,24 +49,24 @@ compare_plot_gene_corr_server <- function(id,
     })
 
     genecorr.RENDER <- shiny::reactive({
-      ngs1 <- inputData()
-      ngs2 <- dataset2()
+      pgx1 <- pgx
+      pgx2 <- dataset2()
 
-      ct1 <- head(names(ngs1$gx.meta$meta), 2)
-      ct2 <- head(names(ngs2$gx.meta$meta), 2)
+      ct1 <- head(names(pgx1$gx.meta$meta), 2)
+      ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(ngs1$gx.meta$meta))) {
+      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
-      if (!all(ct2 %in% names(ngs2$gx.meta$meta))) {
+      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
 
-      gg <- intersect(rownames(ngs1$X), rownames(ngs2$X))
-      kk <- intersect(colnames(ngs1$X), colnames(ngs2$X))
+      gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
+      kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
       if (length(kk) == 0) {
         par(mfrow = c(1, 1))
@@ -86,10 +86,10 @@ compare_plot_gene_corr_server <- function(id,
       }
 
       ## conform matrices
-      X1 <- ngs1$X[gg, kk]
-      X2 <- ngs2$X[gg, kk]
-      Y1 <- ngs1$samples[kk, ]
-      Y2 <- ngs2$samples[kk, ]
+      X1 <- pgx1$X[gg, kk]
+      X2 <- pgx2$X[gg, kk]
+      Y1 <- pgx1$samples[kk, ]
+      Y2 <- pgx2$samples[kk, ]
 
       dset1 <- paste0("[dataset1]  expression")
       dset2 <- paste0("[dataset2]  expression")
@@ -97,7 +97,7 @@ compare_plot_gene_corr_server <- function(id,
       dset2 <- paste0("2: expression")
 
       if (0) {
-        F <- pgx.getMetaMatrix(ngs1)$fc
+        F <- playbase::pgx.getMetaMatrix(pgx1)$fc
         higenes <- names(head(sort(-rowMeans(F**2)), 16))
         higenes <- hilightgenes()
         higenes <- intersect(higenes, rownames(X1))
@@ -132,7 +132,7 @@ compare_plot_gene_corr_server <- function(id,
         grp <- factor(Y1[, colorby])
         klr1 <- klrpal[as.integer(grp)]
       } else {
-        grp <- pgx.getContrastGroups(ngs1, colorby, as.factor = TRUE)
+        grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
         grp <- grp[colnames(X1)]
         klr1 <- klrpal[as.integer(grp)]
       }

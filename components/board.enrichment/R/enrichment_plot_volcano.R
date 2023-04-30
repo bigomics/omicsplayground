@@ -1,20 +1,26 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_volcano_ui <- function(id, height, width) {
+enrichment_plot_volcano_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width) {
   ns <- shiny::NS(id)
 
-  info_text <- "<b>Volcano plot.</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
-
+  
   PlotModuleUI(
     ns("plot"),
-    title = "Volcano plot",
+    title = title,
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
     height = height,
     width = width,
+    caption = caption,
     plotlib = "base",
     plotlib2 = "plotly",
     download.fmt = c("png", "pdf")
@@ -22,7 +28,7 @@ enrichment_plot_volcano_ui <- function(id, height, width) {
 }
 
 enrichment_plot_volcano_server <- function(id,
-                                           inputData,
+                                           pgx,
                                            gs_contrast,
                                            selected_gxmethods,
                                            gset_selected,
@@ -31,26 +37,25 @@ enrichment_plot_volcano_server <- function(id,
                                            subplot.MAR,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     subplot_volcano.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
 
-      gx.meta <- ngs$gx.meta$meta[[comp]]
+      gx.meta <- pgx$gx.meta$meta[[comp]]
       meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max) ## max q-value
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
-      gx.annot <- ngs$genes[rownames(gx.meta), c("gene_name", "gene_title")]
+      gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
       gs <- gset_selected()
@@ -80,7 +85,7 @@ enrichment_plot_volcano_server <- function(id,
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
-      gx.volcanoPlot.XY(
+      playbase::gx.volcanoPlot.XY(
         x = fx, pv = qval, gene = fc.genes,
         render = "canvas", n = 5000, nlab = 10,
         xlim = xlim, ylim = ylim, ## hi.col="#222222",
@@ -91,29 +96,27 @@ enrichment_plot_volcano_server <- function(id,
         ylab = "significance (log10q)",
         highlight = sel.genes
       )
-      gs <- breakstring(gs, 50)
+      gs <- playbase::breakstring(gs, 50)
       title(gs, cex.main = 0.85)
       p <- grDevices::recordPlot()
       p
     })
 
     subplot_volcano.PLOTLY <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
 
-      gx.meta <- ngs$gx.meta$meta[[comp]]
+      gx.meta <- pgx$gx.meta$meta[[comp]]
       meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max, na.rm = TRUE)
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
-      gx.annot <- ngs$genes[rownames(gx.meta), c("gene_name", "gene_title")]
+      gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
       gs <- gset_selected()
@@ -158,7 +161,7 @@ enrichment_plot_volcano_server <- function(id,
         head(sel.genes[order(-impt(sel.genes))], 10)
       )
 
-      plotlyVolcano(
+      playbase::plotlyVolcano(
         x = fx, y = y, names = fc.genes,
         source = "plot1", marker.type = "scattergl",
         highlight = sel.genes, label = lab.genes,

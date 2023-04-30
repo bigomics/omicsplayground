@@ -1,13 +1,13 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## ================================================================================
 ## Upload data Module
 ## ================================================================================
 
-UploadModuleUI <- function(id) {
+UploadModuleUI.NOTUSED <- function(id) {
   ns <- shiny::NS(id)
   height <- 720
 
@@ -78,7 +78,7 @@ UploadModuleUI <- function(id) {
 }
 
 UploadModuleServer <- function(id,
-                               FILES,
+                               lib.dir,
                                pgx.dirRT,
                                height = 720,
                                limits = c(
@@ -99,7 +99,7 @@ UploadModuleServer <- function(id,
       output$downloadExampleData <- shiny::downloadHandler(
         filename = "exampledata.zip",
         content = function(file) {
-          zip <- file.path(FILES, "exampledata.zip")
+          zip <- file.path(lib.dir, "exampledata.zip")
           file.copy(zip, file)
         }
       )
@@ -206,15 +206,11 @@ UploadModuleServer <- function(id,
         if (pgx.uploaded) {
           message("[upload_files] PGX upload detected")
 
-          ## If the user uploaded a PGX file, we extract the matrix
-          ## dimensions from the given PGX/NGS object. Really?
-          ##
+          ## user uploaded a PGX file
           i <- grep("[.]pgx$", input$upload_files$name)
-          load(input$upload_files$datapath[i]) ## load NGS/PGX
-          ## matlist[["counts.csv"]] <- ngs$counts
-          ## matlist[["samples.csv"]] <- type.convert(ngs$samples)
-          ## matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
-          uploaded[["pgx"]] <- ngs
+          ##load(input$upload_files$datapath[i]) ## load NGS/PGX
+          pgxfile <- input$upload_files$datapath[i]
+          uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0)))
         } else {
           ## If the user uploaded CSV files, we read in the data
           ## from the files.
@@ -242,7 +238,7 @@ UploadModuleServer <- function(id,
               df <- NULL
               if (grepl("count", fn1, ignore.case = TRUE)) {
                 ## allows duplicated rownames
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
                   ndup <- sum(duplicated(rownames(df0)))
                   shinyWidgets::sendSweetAlert(
@@ -261,7 +257,7 @@ UploadModuleServer <- function(id,
                 }
               } else if (grepl("expression", fn1, ignore.case = TRUE)) {
                 ## allows duplicated rownames
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (TRUE && any(duplicated(rownames(df0)))) {
                   ndup <- sum(duplicated(rownames(df0)))
                   shinyWidgets::sendSweetAlert(
@@ -279,7 +275,7 @@ UploadModuleServer <- function(id,
                   matname <- "counts.csv"
                 }
               } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                   msg <- paste(
@@ -300,7 +296,7 @@ UploadModuleServer <- function(id,
                   matname <- "samples.csv"
                 }
               } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-                df0 <- read.as_matrix(fn2)
+                df0 <- playbase::read.as_matrix(fn2)
                 if (any(duplicated(rownames(df0)))) {
                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                   msg <- paste(
@@ -332,7 +328,7 @@ UploadModuleServer <- function(id,
           ## Convert to gene names (need for biological effects)
           X0 <- matlist[["counts.csv"]]
           pp <- rownames(X0)
-          rownames(X0) <- probe2symbol(pp)
+          rownames(X0) <- playbase::probe2symbol(pp)
           sel <- !(rownames(X0) %in% c(NA, "", "NA"))
           X0 <- X0[sel, ]
           xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
@@ -370,7 +366,7 @@ UploadModuleServer <- function(id,
       ## ------------------------------------------------------------------
       shiny::observeEvent(input$load_example, {
         if (input$load_example) {
-          zipfile <- file.path(FILES, "exampledata.zip")
+          zipfile <- file.path(lib.dir, "exampledata.zip")
           readfromzip1 <- function(file) {
             read.csv(unz(zipfile, file),
               check.names = FALSE, stringsAsFactors = FALSE,
@@ -476,9 +472,6 @@ UploadModuleServer <- function(id,
               type = "info"
             )
 
-            dbg("[UploadModule:parseQueryString] dim(samples) = ", dim(uploaded$samples.csv))
-            dbg("[UploadModule:parseQueryString] dim(counts) = ", dim(uploaded$counts.csv))
-
             ## focus on this tab
             updateTabsetPanel(session, "tabs", selected = "Upload data")
           }
@@ -501,10 +494,9 @@ UploadModuleServer <- function(id,
             FUN.readPGX <- function() {
               dbg("[UploadModule:parseQueryString] *** loading PGX file = ", pgx_file, "***")
 
-              load(pgx_file) ## load NGS/PGX
-              uploaded$pgx <- ngs
-              remove(ngs)
-
+              ##load(pgx_file) ## load NGS/PGX
+              uploaded$pgx <- local(get(load(pgx_file, verbose = 0)))
+              ##remove(ngs)
               uploaded$meta <- NULL
             }
 
@@ -601,10 +593,10 @@ UploadModuleServer <- function(id,
         contrastsRT = shiny::reactive(uploaded$contrasts.csv),
         batchRT = batch_vectors,
         metaRT = shiny::reactive(uploaded$meta),
+        lib.dir = lib.dir,
+        pgx.dirRT = shiny::reactive(getPGXDIR()),
         enable_button = upload_ok,
         alertready = FALSE,
-        FILES = FILES,
-        pgx.dirRT = shiny::reactive(getPGXDIR()),
         max.genes = as.integer(limits["genes"]),
         max.genesets = as.integer(limits["genesets"]),
         max.datasets = as.integer(limits["datasets"]),
@@ -614,7 +606,7 @@ UploadModuleServer <- function(id,
       uploaded_pgx <- shiny::reactive({
         if (!is.null(uploaded$pgx)) {
           pgx <- uploaded$pgx
-          ## pgx <- pgx.initialize(pgx)
+          ## pgx <- playbase::pgx.initialize(pgx)
         } else {
           pgx <- computed_pgx()
         }
@@ -625,7 +617,7 @@ UploadModuleServer <- function(id,
       ## ===================== PLOTS AND TABLES ==============================
       ## =====================================================================
 
-      output$countStats <- shiny::renderPlot({
+      output$countStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$counts.csv)
 
         check <- checkTables()
@@ -657,7 +649,7 @@ UploadModuleServer <- function(id,
           ggplot2::ggtitle("COUNTS", subtitle = tt2)
       })
 
-      output$phenoStats <- shiny::renderPlot({
+      output$phenoStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$samples.csv)
 
         check <- checkTables()
@@ -709,7 +701,7 @@ UploadModuleServer <- function(id,
         p1
       })
 
-      output$contrastStats <- shiny::renderPlot({
+      output$contrastStats.NOTUSED <- shiny::renderPlot({
         ## req(uploaded$contrasts.csv)
         ct <- uploaded$contrasts.csv
         has.contrasts <- !is.null(ct) && NCOL(ct) > 0
@@ -743,7 +735,7 @@ UploadModuleServer <- function(id,
         dbg("[output$contrastStats] 3 : ")
 
         ## contrasts <- sign(contrasts)
-        ## df <- contrastAsLabels(contrasts)
+        ## df <- playbase::contrastAsLabels(contrasts)
         df <- contrasts
         px <- head(colnames(df), 20) ## maximum to show??
         df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
@@ -770,7 +762,6 @@ UploadModuleServer <- function(id,
 
         p1
       })
-
 
       checkTables <- shiny::reactive({
         ##
@@ -857,7 +848,7 @@ UploadModuleServer <- function(id,
               message("[UploadModule] WARNING: converting old1 style contrast to new format")
               new.contrasts <- samples1[, 0]
               if (NCOL(contrasts1) > 0) {
-                new.contrasts <- contrastAsLabels(contrasts1)
+                new.contrasts <- playbase::contrastAsLabels(contrasts1)
                 grp <- as.character(samples1[, group.col])
                 new.contrasts <- new.contrasts[grp, , drop = FALSE]
                 rownames(new.contrasts) <- rownames(samples1)
@@ -873,7 +864,7 @@ UploadModuleServer <- function(id,
               message("[UploadModule] WARNING: converting old2 style contrast to new format")
               new.contrasts <- samples1[, 0]
               if (NCOL(contrasts1) > 0) {
-                new.contrasts <- contrastAsLabels(contrasts1)
+                new.contrasts <- playbase::contrastAsLabels(contrasts1)
                 rownames(new.contrasts) <- rownames(samples1)
               }
               contrasts1 <- new.contrasts

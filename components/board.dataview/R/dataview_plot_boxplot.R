@@ -1,21 +1,26 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-dataview_plot_boxplot_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_boxplot_ui <- function(
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text
+  ) {
   ns <- shiny::NS(id)
-
-  menu_grouped <- "<code>grouped</code>"
-  info_text <- paste0("Boxplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ", menu_grouped, " setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Counts distribution",
+    title = title,
     plotlib = "plotly",
     label = label,
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     height = height
   )
@@ -23,6 +28,7 @@ dataview_plot_boxplot_ui <- function(id, label = "", height = c(600, 800)) {
 
 dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
@@ -63,22 +69,27 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
       )
     }
 
-
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
 
       df <- res$counts[, ]
+      if(nrow(df)>1000) {
+        sel <- sample(nrow(df),1000)
+        df <- df[sel,]
+      }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
 
       ## boxplot
-      fig <- pgx.boxplot.PLOTLY(
+      fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
         y = "value",
         yaxistitle = "Counts (log2)"
-      )
+      ) %>%
+        plotly_default()      
+
       fig
     }
 
@@ -87,7 +98,8 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
     }
 
     modal_plotly.RENDER <- function() {
-      plotly.RENDER()
+      plotly.RENDER() %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(

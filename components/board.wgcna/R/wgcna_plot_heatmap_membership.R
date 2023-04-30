@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_heatmap_membership_ui <- function(id, height, width) {
+wgcna_plot_heatmap_membership_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA Module membership (eigengene correlation).</b> For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module."
 
   intraHeatmap_opts <- shiny::tagList(
     shiny::checkboxInput(ns("eigen_cov"), "covariance", FALSE)
@@ -14,9 +19,10 @@ wgcna_plot_heatmap_membership_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Membership-trait heatmap",
-    label = "a",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     options = intraHeatmap_opts,
     height = height,
     width = width,
@@ -41,7 +47,7 @@ wgcna_plot_heatmap_membership_server <- function(id,
       rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
       rho3[is.na(rho3) | is.infinite(rho3)] <- 0
 
-      gx.heatmap(rho3,
+      playbase::gx.heatmap(rho3,
         nmax = 50, mar = c(5, 10),
         keysize = 0.5, scale = "none", key = FALSE
       )

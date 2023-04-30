@@ -4,28 +4,76 @@ html {
     }
     
     .plotmodule-header {
-	margin: 0px 0px 10px 0px;	
-	height: 24px;
+    padding: 6px 9px 5px 9px;
 	border-bottom: 1px solid #ccc;
     }
 
     .plotmodule-title {
-	padding: 0px 0px 0px 0px;	
 	font-size: 16px;
     }
 
-    .popup-plot > div {
+    .plotmodule-info {
+	padding: 5px;	
+	font-size: 15px;
+	line-height: 1.2em;
+    }
+
+    .popup-modal > div {
         margin-left: auto;
         margin-right: auto;
     }
 
-    .bslib-card {
-        border-color: transparent;
+    .popup-modal .modal-title{
+	font-size: 2.5em;
+	margin-right: 0;
+    }
+    
+    .popup-modal .modal-footer {
+	display: none;
     }
 
-    .card-header {
-        background-color: transparent;
-        border-color: transparent;
+    // center contents 
+    .popup-plot > div {
+	margin-left: auto;
+	margin-right: auto;
+    }
+    
+    /* -------------------------- TableModule ---------------------- */
+    .tablemodule {
+//	padding: 5px 15px 50px 15px; 
+    }
+    
+    .tablemodule-header {
+        padding: 6px 9px 5px 9px;
+        border-bottom: 1px solid #ccc;
+        }
+
+    .tablemodule-title {
+	font-size: 16px;
     }
 
+    .tablemodule-info {
+	padding: 5px;	
+	font-size: 15px;
+	line-height: 1.2em;
+    }
+
+    .popup-table {
+	width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .popup-table > div {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .popup-table-caption {
+	width: 90%;	
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    
 }

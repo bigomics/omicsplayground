@@ -1,23 +1,25 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-dataview_table_rawdata_ui <- function(id, width, height) {
+dataview_table_rawdata_ui <- function(
+  id,
+  width,
+  height,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  dropdown_search_gene <- "<code>Search gene</code>"
-  menu_grouped <- "<code>grouped</code>"
-  menu_options <- "<code>Options</code>"
-  info_text <- paste0("Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ", menu_grouped, " in the main <i>Options</i> to see the exact expression values per sample (or cell).", "The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ", dropdown_search_gene, " setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).")
-
+  
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Gene expression table"
+    title = title
   )
 }
 
@@ -26,7 +28,9 @@ dataview_table_rawdata_server <- function(id,
                                           r.gene = reactive(""),
                                           r.data_type = reactive("counts"),
                                           r.samples = reactive(""),
-                                          r.groupby = reactive("")) {
+                                          r.groupby = reactive(""),
+                                          scrollY = "auto"
+                                          ) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       ## get current view of raw_counts
@@ -176,21 +180,23 @@ dataview_table_rawdata_server <- function(id,
         ## class = 'compact cell-border stripe hover',
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           # dom = 'lfrtip',
           dom = "frtip",
           pageLength = 100,
           lengthMenu = c(25, 40, 100, 250, 1000),
-          ## scroller = FALSE, scrollY = FALSE,
-          scroller = TRUE, scrollY = "65vh",
+          scroller = TRUE,
+          scrollY = scrollY,
+          scrollResize = TRUE,
           deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(numcols,
           background = DT::styleColorBar(data = c(0, dt$x99), color = unname(omics_colors("light_blue"))),
-          ## background = color_from_middle(x99, 'lightblue', '#f5aeae'),
+          ## background = playbase::color_from_middle(x99, 'lightblue', '#f5aeae'),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -34,11 +34,12 @@ options(DT.options = list(
   scrollX = TRUE,
   fillContainer = FALSE
 ))
+
 # Set global modal height values for tables.
-  # - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
-  # this only defines the srollable part of the table, not the header height.
-  # - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
-  # this will define how close the caption is to the table.
+# - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
+# this only defines the srollable part of the table, not the header height.
+# - The TABLE_HEIGHT_MODAL defines the whole width of the table + header,
+# this will define how close the caption is to the table.
 SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 
@@ -51,13 +52,21 @@ get_opg_root <- function() {
 
 ## Set folders
 OPG       = get_opg_root()
-OPG
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")
 FILES     = file.path(OPG,"lib")
 FILESX    = file.path(OPG,"libx")
 PGX.DIR   = file.path(OPG,"data")
 SIGDB.DIR = file.path(OPG,"libx/sigdb")
+
+## like system.file()
+pgx.system.file <- function(file='.', package) {
+    package <- sub("^board.","",package)
+    dir <-  normalizePath(file.path(OPG,"components",paste0("board.",package)))
+    file1 <- file.path(dir,"inst",file)
+    if(file.exists(file1) && file!='.') return(file1)
+    file.path(dir,file)
+}
 
 AUTHENTICATION = "none"
 WATERMARK = FALSE
@@ -88,11 +97,12 @@ message(">>>>> LOADING INITIAL LIBS")
 library(shiny)
 library(shinyBS)
 library(grid)
-library(ggplot2)
-library(concaveman)
+library(magrittr)
+#library(ggplot2)
+#library(concaveman)
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
-source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
-source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
+#source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
+#source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -151,7 +161,7 @@ message("************************************************")
 
 opt.file <- file.path(APPDIR,"OPTIONS")
 if(!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
-opt <- pgx.readOptions(file=opt.file)
+opt <- playbase::pgx.readOptions(file=opt.file)
 
 ## Check and set authentication method
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
@@ -183,15 +193,12 @@ message("*********** READ MODULES/BOARDS ****************")
 message("************************************************")
 
 
-BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-            "word","drug","sig","scell","cor","bio","cmap","ftmap",
-            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
+BOARDS <- c("welcome","load","upload","dataview","clustersamples","clusterfeatures",
+  "diffexpr","enrich","isect","pathway","wordcloud","drug","sig","cell","corr","bio","cmap",
+  "wgcna", "tcga","comp","user")
 if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
-if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
-
-ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
-DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
-ENABLED  <- ENABLED & !DISABLED
+ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
+ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
@@ -200,7 +207,6 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 ## Main tab titles
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","DEV")
-
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
@@ -281,6 +287,6 @@ message("\n\n")
 ## Calculate init time
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[INIT] main init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[global.R] global init time = ",main.init_time," ",attr(main.init_time,"units"))
 
 shiny::addResourcePath("static", "www")

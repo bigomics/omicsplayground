@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ClusteringBoard <- function(id, pgx) {
@@ -20,6 +20,15 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
 ')
 
+    ## ------- observe functions -----------
+    shiny::observeEvent(input$board_info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Clustering Board</strong>"),
+        shiny::HTML(clust_infotext),
+        easyClose = TRUE, size = "l"
+      ))
+    })
+
     # modules ########
     # observe functions ########
 
@@ -36,22 +45,25 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       if ("group" %in% var.types) grp <- "group"
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
     })
 
     ## update filter choices upon change of data set
     shiny::observe({
       shiny::req(pgx$Y)
-      levels <- getLevels(pgx$Y)
+      levels <- playbase::getLevels(pgx$Y)
 
       shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
 
       ## update defaults??
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
-      ## groupings <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
-      groupings <- c("<ungrouped>", sort(groupings))
-      shiny::updateSelectInput(session, "hm_group", choices = groupings)
-      contrasts <- pgx.getContrasts(pgx)
+      ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
+
+      groupings <- sort(groupings)
+
+      shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
+      contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
 
@@ -71,21 +83,24 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     # reactive functions ##############
+    shiny::observeEvent(input$hm_samplefilter, {
+      dbg("[clustering_server.R] observeEvent.hm_samplefilter = ",input$hm_samplefilter)
+    })
 
+
+    ## Returns filtered matrix ready for clustering. Filtering based
+    ## on user selected geneset/features or custom list of genes.
+    ##
     getFilteredMatrix <- shiny::reactive({
-      ## Returns filtered matrix ready for clustering. Filtering based
-      ## on user selected geneset/features or custom list of genes.
-      ##
-      ##
-      ##
-      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
+      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
+      
       genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
       shiny::req(ft)
-
+      
       if (input$hm_level == "geneset") {
         ## Gene set level features #########
 
@@ -99,7 +114,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         zx <- zx[intersect(gsets, rownames(zx)), ]
       }
-
+      
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
@@ -110,9 +125,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         } else if (ft == "<contrast>") {
           ct <- input$hm_contrast
           shiny::req(ct)
-          shiny::req(hm_splitmap$hm_ntop())
-          fc <- names(sort(pgx.getMetaMatrix(pgx)$fc[, ct]))
-          n1 <- floor(as.integer(hm_splitmap$hm_ntop()) / 2)
+          shiny::req(splitmap$hm_ntop())
+          fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
+          n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
@@ -162,12 +177,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           names(idx) <- rownames(zx)
         }
       }
+      
       if (nrow(zx) == 0) {
         return(NULL)
       }
-
-      dim(zx)
-      kk <- selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]
 
       if (input$hm_level == "gene" &&
@@ -190,11 +205,23 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
 
-      flt <- list(zx = zx, idx = idx)
+      flt <- list(
+        zx = zx,
+        idx = idx
+      )
 
-      return(flt)
-    })
-
+      return(flt) ## end of getFilteredMatrix
+    })  %>%  bindEvent(
+      input$hm_samplefilter,
+      input$hm_features,
+      input$hm_level,
+      input$hm_customfeatures,
+      input$hm_samplefilter,
+      input$hm_filterXY,
+      input$hm_filterMitoRibo,
+      input$hm_group,
+      splitmap$hm_ntop()      
+    )
 
     getTopMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
@@ -209,11 +236,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
 
       nmax <- 4000
-      nmax <- as.integer(hm_splitmap$hm_ntop())
+      nmax <- as.integer(splitmap$hm_ntop())
       idx <- NULL
       splitvar <- "none"
-      splitvar <- hm_splitmap$hm_splitvar()
-      splitby <- hm_splitmap$hm_splitby()
+      splitvar <- splitmap$hm_splitvar()
+      splitby <- splitmap$hm_splitby()
       do.split <- splitby != "none"
 
       if (splitby == "gene" && !splitvar %in% rownames(pgx$X)) {
@@ -253,7 +280,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         if (k.est == 2) {
           km <- kmeans(gx, centers = 2)
           km.rnk <- rank(km$centers, ties.method = "random")
-          grp.labels <- c("low", "high")[]
+          grp.labels <- c("low", "high")[km.rnk]
           grp <- grp.labels[km$cluster]
         } else if (k.est == 3) {
           km <- kmeans(gx, centers = 3)
@@ -277,7 +304,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       ## Any BMC scaling?? ##########
 
-      if (do.split && hm_splitmap$hm_scale() == "BMC") {
+      if (do.split && splitmap$hm_scale() == "BMC") {
         dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")
         for (g in unique(grp)) {
           jj <- which(grp == g)
@@ -290,7 +317,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       topmode <- "specific"
       topmode <- "sd"
-      topmode <- hm_splitmap$hm_topmode()
+      topmode <- splitmap$hm_topmode()
       if (topmode == "specific" && length(table(grp)) <= 1) {
         topmode <- "sd"
       }
@@ -310,7 +337,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         NPCA <- 5
         svdres <- irlba::irlba(zx - rowMeans(zx), nv = NPCA)
         ntop <- 12
-        ntop <- as.integer(hm_splitmap$hm_ntop()) / NPCA
+        ntop <- as.integer(splitmap$hm_ntop()) / NPCA
         gg <- rownames(zx)
         sv.top <- lapply(1:NPCA, function(i) gg[head(order(-abs(svdres$u[, i])), ntop)])
         gg.top <- unlist(sv.top)
@@ -342,7 +369,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         gg <- rownames(zx)
         ntop <- 12
-        ntop <- ceiling(as.integer(hm_splitmap$hm_ntop()) / ncol(grp.dx))
+        ntop <- ceiling(as.integer(splitmap$hm_ntop()) / ncol(grp.dx))
         grp.top <- lapply(1:nc, function(i) gg[head(order(-grp.dx[, i]), ntop)])
         ## idx <- unlist(sapply(1:nc,function(i) rep(i,length(grp.top[[i]]))))
         idx <- unlist(mapply(rep, 1:nc, sapply(grp.top, length)))
@@ -369,7 +396,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       }
 
       CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
-      CLUSTK <- as.integer(hm_splitmap$hm_clustk())
+      CLUSTK <- as.integer(splitmap$hm_clustk())
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
         system.time(hc <- fastcluster::hclust(D, method = "ward.D2"))
@@ -424,10 +451,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         samples = samples
       )
       return(filt)
-    })
+    })  ## end of getTopMatrix
 
     getClustAnnotCorrelation <- shiny::reactive({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
       filt <- getTopMatrix()
@@ -466,7 +492,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ref <- pgx$gsetX[ss, ]
       }
       if (ann.level == "phenotype") {
-        ref <- t(expandAnnotationMatrix(pgx$Y))
+        ref <- t(playbase::expandAnnotationMatrix(pgx$Y))
       }
       if (is.null(ref)) {
         cat("<clustering:getClustAnnotCorrelation> WARNING:: ref error\n")
@@ -485,7 +511,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       ## ----------- for each gene cluster compute average correlation
       hm_topmode <- "sd"
-      hm_topmode <- hm_splitmap$hm_topmode()
+      hm_topmode <- splitmap$hm_topmode()
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
@@ -513,7 +539,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         P <- c()
         for (i in 1:ncol(rho)) {
           k <- colnames(rho)[i]
-          res <- gset.fisher(
+          res <- playbase::gset.fisher(
             grp[[k]], gmt,
             fdr = 1, min.genes = 0, max.genes = Inf,
             background = bg.genes
@@ -536,17 +562,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     })
 
     hm_getClusterPositions <- shiny::reactive({
-      pgx <- pgx
       ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
-      ## take full matrix
-      # flt <- getFilteredMatrix()
-      # zx <- flt$zx
-      sel.samples <- selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-
+      sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      dbg("[clustering_server.R:hm_getClusterPositions] L558 : samplefilter changed??? sel.samples = ",head(sel.samples))
+      
       clustmethod <- "tsne"
       pdim <- 2
-      do3d <- ("3D" %in% input$hmpca_options)
+      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!! 
       pdim <- c(2, 3)[1 + 1 * do3d]
 
       pos <- NULL
@@ -579,12 +602,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           ## zx = head(zx,ntop)  ## OK?
           zx <- zx[1:ntop, , drop = FALSE] ## OK?
         }
-        if ("normalize" %in% input$hmpca_options) {
+        if ("normalize" %in% input$`PCAplot-hmpca_options`) {
           zx <- scale(t(scale(t(zx))))
         }
         perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
         perplexity
-        res <- pgx.clusterMatrix(
+        res <- playbase::pgx.clusterMatrix(
           zx,
           dims = pdim, perplexity = perplexity,
           ntop = 999999, prefix = "C",
@@ -612,10 +635,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     # plots ##########
 
-    hm_splitmap <- clustering_plot_hm_splitmap_server(
-      id = "hm_splitmap",
+    splitmap <- clustering_plot_splitmap_server(
+      id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       watermark = FALSE
     )
@@ -630,9 +654,9 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       parent = ns
     )
 
-    clustering_plot_table_hm_parcoord_server(
-      id = "hm_parcoord",
-      hm_parcoord.matrix = hm_parcoord.matrix,
+    clustering_plot_table_parcoord_server(
+      id = "parcoord",
+      parcoord.matrix = parcoord.matrix,
       getTopMatrix = getTopMatrix,
       watermark = FALSE
     )
@@ -640,6 +664,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",
       pgx = pgx,
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
       watermark = FALSE
     )
@@ -648,6 +673,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "clust_featureRank",
       pgx = pgx,
       hm_level = shiny::reactive(input$hm_level),
+      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
       watermark = FALSE
     )
@@ -660,11 +686,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     )
 
     # tables ##########
-
     clustering_table_clustannot_server(
       id = "tables_clustannot",
       getClustAnnotCorrelation = getClustAnnotCorrelation,
       xann_level = clusterannot$xann_level,
+      scrollY = "calc(40vh - 236px)",
       watermark = FALSE
     )
 

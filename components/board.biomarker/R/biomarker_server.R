@@ -1,9 +1,9 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-BiomarkerBoard <- function(id, inputData) {
+BiomarkerBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -57,7 +57,6 @@ BiomarkerBoard <- function(id, inputData) {
     }) %>% shiny::debounce(1000)
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
       ct <- colnames(pgx$Y)
       ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
@@ -66,7 +65,6 @@ BiomarkerBoard <- function(id, inputData) {
     })
 
     shiny::observe({
-      pgx <- inputData()
       shiny::req(pgx)
 
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
@@ -75,7 +73,6 @@ BiomarkerBoard <- function(id, inputData) {
         ft <- ft[nn >= 10]
       } else {
         ## gene level
-        ## ft <- pgx.getFamilies(pgx,nmin=10,extended=FALSE)
         ft <- names(pgx$families)
       }
       ft <- sort(ft)
@@ -88,7 +85,6 @@ BiomarkerBoard <- function(id, inputData) {
       ##
       ## This code also features a progress indicator.
       ##
-      pgx <- inputData()
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -158,10 +154,10 @@ BiomarkerBoard <- function(id, inputData) {
         pp <- rownames(X)
         if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
-          pp <- filterProbes(pgx$genes, gg)
+          pp <- playbase::filterProbes(pgx$genes, gg)
         } else if (ft %in% names(iGSETS)) {
           gg <- unlist(getGSETS(ft))
-          pp <- filterProbes(pgx$genes, gg)
+          pp <- playbase::filterProbes(pgx$genes, gg)
         }
         pp <- intersect(pp, rownames(X))
         X <- X[pp, , drop = FALSE]
@@ -181,7 +177,7 @@ BiomarkerBoard <- function(id, inputData) {
         time <- abs(y)
         status <- (y > 0) ## dead is positive time
         methods <- c("glmnet", "randomforest", "xgboost", "pls")
-        P <- pgx.survivalVariableImportance(
+        P <- playbase::pgx.survivalVariableImportance(
           X,
           time = time, status = status, methods = methods
         )
@@ -190,7 +186,7 @@ BiomarkerBoard <- function(id, inputData) {
         X1 <- X
         y1 <- y
         names(y1) <- colnames(X1) <- paste0("x", 1:ncol(X))
-        P <- pgx.multiclassVariableImportance(X1, y1, methods = methods)
+        P <- playbase::pgx.multiclassVariableImportance(X1, y1, methods = methods)
       }
       P <- abs(P)
 
@@ -312,7 +308,7 @@ BiomarkerBoard <- function(id, inputData) {
     biomarker_plot_heatmap_server(
       "pdx_heatmap",
       calcVariableImportance,
-      inputData,
+      pgx,
       reactive(input$pdx_predicted),
       watermark = WATERMARK
     )

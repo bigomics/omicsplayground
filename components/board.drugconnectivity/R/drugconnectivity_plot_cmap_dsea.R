@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Drug Connectivity plot UI input function
@@ -12,47 +12,52 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_cmap_dsea_ui <- function(id,
-                                               label = "",
-                                               height = c(750, 750)) {
+drugconnectivity_plot_cmap_dsea_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height
+  ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>Connectivity map.</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space.")
 
   plot_opts <- shiny::tagList(
-    tipifyL(
+    withTooltip(
       shiny::radioButtons(
         ns("cmap_labeltype"), "label type:",
         c("drugs", "MOA", "target"),
         inline = TRUE
       ),
-      "Label point with drugs, MOA terms or targets (if no drug selected)."
+      "Label point with drugs, MOA terms or targets (if no drug selected).",
+      placement = "left", options = list(container = "body")
     ),
-    tipifyL(
+    withTooltip(
       shiny::radioButtons(ns("cmap_nlabel"), "number of labels:", c(3, 10, 20, 100),
         selected = 10, inline = TRUE
       ),
-      "Number of labels to show."
+      "Number of labels to show.",
+      placement = "left", options = list(container = "body")
     ),
-    tipifyL(shiny::checkboxGroupInput(
+    withTooltip(shiny::checkboxGroupInput(
       ns("cmap_labeloptions"), "label options:",
       choices = c("show", "fixed"),
       selected = c("show"), inline = TRUE
-    ), "Other labels options.")
+    ), "Other labels options.",
+    placement = "left", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Connectivity Map",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(750, 750),
-    width = c("auto", 900),
+    height = height,
+    width = c("auto", "100%")
   )
 }
 
@@ -75,6 +80,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
       plotCMAP <- function(pgx, db, contr, moa.target, moa.class,
                            labtype = "drugs", showlabel = TRUE,
                            npoints = 100, nlabel = 10,
@@ -183,7 +189,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
           }
           wcex[is.na(wcex)] <- 1
 
-          pgx.scatterPlotXY.BASE(
+          playbase::pgx.scatterPlotXY.BASE(
             xpos,
             var = xvar, title = title,
             xlab = "UMAP-x", ylab = "UMAP-y",
@@ -195,7 +201,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
             softmax = softmax, opacity = opacity
           )
         } else {
-          plt <- pgx.scatterPlotXY(
+          plt <- playbase::pgx.scatterPlotXY(
             xpos,
             var = xvar, plotlib = plotlib, title = title,
             xlab = "UMAP-x", ylab = "UMAP-y",
@@ -210,7 +216,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
 
       plot_data <- shiny::reactive({
         res <- list(
-          pgx = pgx(),
+          pgx = pgx,
           dsea = getActiveDSEA(),
           cmap_table = cmap_table,
           moa.class = getMOA.class(),

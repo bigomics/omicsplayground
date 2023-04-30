@@ -1,6 +1,17 @@
 html {
 
-    /* ---------- modal dialogs ------------- */
+    #shiny-modal {
+        display: flex !important;
+        margin: auto;
+    }
+
+    .modal-title{
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: -5px;
+	font-size: 1.2em;
+    }
+    
     .modal-content .well {
 	font-size: 1.3em;
 	line-height: 1.2em;
@@ -8,17 +19,34 @@ html {
     }
 
     .modal-dialog {
-	top: 0px;
-	box-shadow: 10px 10px 30px #999;
-    }
+        box-shadow: 10px 10px 30px #999;
+        display: flex !important;
+        margin: auto;
+        }
 
     .modal-dialog.modal-lg {
-	width: 1400px;
+        width: 600px;
+        justify-content: center;
+        align-items: center;
     }
 
     .modal-dialog.modal-sm {
-	width: 400px;
-	top: 100px;
+        width: 300px;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal-footer .btn {
+	margin-left: 5px;
+	margin-bottom: 0;
+	font-size: 14px;
+    }
+
+
+    .img-fluid{
+      display: block;
+      margin-right: auto;
+      margin-left: auto;
     }
 
     .modal-content {
@@ -39,10 +67,16 @@ html {
 	background-color: #fff;
     }
 
-    .popup-plot .modal-footer {
-	display: none;
+    .swal2-popup {
+	font-size: 1rem !important; 
     }
-    
+
+    .modal-body {
+	height: auto;
+    }
 
 
+    .sweet-alert p {
+	color: black;
+    }    
 }

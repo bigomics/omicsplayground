@@ -1,9 +1,9 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-SignatureBoard <- function(id, inputData, selected_gxmethods) {
+SignatureBoard <- function(id, pgx, selected_gxmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -29,7 +29,8 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
     IMMCHECK.GENES <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
     APOPTOSIS.GENES <- "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
-
+    CELLCYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
+    
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -38,7 +39,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
         shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE, size = "xl"
       ))
     })
 
@@ -55,8 +56,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
     })
 
     shiny::observe({
-      ngs <- inputData()
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
       type <- "contrast"
@@ -64,7 +64,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        contr <- sort(names(ngs$gx.meta$meta))
+        contr <- sort(names(pgx$gx.meta$meta))
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
@@ -106,8 +106,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       ##
       ##
 
-      ngs <- inputData()
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
 
@@ -117,8 +116,8 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       dbg("<signature:getCurrentMarkers> called\n")
 
       level <- "gene"
-      features <- toupper(ngs$genes$gene_name)
-      xfeatures <- toupper(ngs$genes[rownames(ngs$X), "gene_name"])
+      features <- toupper(pgx$genes$gene_name)
+      xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
       gset <- NULL
       if (input$feature == "<custom>") {
         gset <- input_genelistUP()
@@ -130,21 +129,21 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
           if (grepl("^@", gset[1]) && gene %in% xfeatures) {
             ## most correlated with this genes
             jj <- match(gene, xfeatures) ## single gene
-            rho <- cor(t(ngs$X), ngs$X[jj, ])[, 1]
+            rho <- cor(t(pgx$X), pgx$X[jj, ])[, 1]
             gset <- head(names(sort(abs(rho), decreasing = TRUE)), 36) ## how many?
           } else {
             ## grep-like match
             rx <- toupper(gset[1])
             rx <- grep(rx, xfeatures, value = TRUE, ignore.case = TRUE)
-            gset <- rownames(ngs$X)[which(xfeatures %in% rx)] ## all probes matching gene
+            gset <- rownames(pgx$X)[which(xfeatures %in% rx)] ## all probes matching gene
           }
         }
       } else if (type == "contrast" &&
-        input$feature %in% names(ngs$gx.meta$meta)) {
+        input$feature %in% names(pgx$gx.meta$meta)) {
         contr <- input$feature
-        fx <- ngs$gx.meta$meta[[contr]]$meta.fx
-        probes <- rownames(ngs$gx.meta$meta[[contr]])
-        genes <- toupper(ngs$genes[probes, "gene_name"])
+        fx <- pgx$gx.meta$meta[[contr]]$meta.fx
+        probes <- rownames(pgx$gx.meta$meta[[contr]])
+        genes <- toupper(pgx$genes[probes, "gene_name"])
         top.genes <- genes[order(-fx)]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
@@ -166,21 +165,20 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       ## Calculate fgsea for current marker selection and active
       ## datasets.
       ##
-      ngs <- inputData()
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
 
 
       ## observe input list
-      gset <- head(rownames(ngs$X), 100)
+      gset <- head(rownames(pgx$X), 100)
       gset <- getCurrentMarkers()
       if (is.null(gset)) {
         return(NULL)
       }
 
       ## get all logFC of this dataset
-      meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
+      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       F <- meta$fc
       rownames(F) <- toupper(rownames(F))
 
@@ -239,7 +237,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         i <- 1
         fx <- 1 * (rownames(F) %in% gmt[[1]])
         rho <- cor(apply(F, 2, rank, na.last = "keep"), fx, use = "pairwise")[, 1]
-        pv <- cor.pvalue(rho, nrow(F))
+        pv <- playbase::cor.pvalue(rho, nrow(F))
         qv <- p.adjust(pv, method = "fdr")
         res1 <- data.frame(pval = pv, padj = qv, rho = rho, NES = NA)
         rownames(res1) <- names(pv)
@@ -277,21 +275,20 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
       ##
       ##
       ##
-      ngs <- inputData()
-      if (is.null(ngs)) {
+      if (is.null(pgx)) {
         return(NULL)
       }
 
-      markers <- head(rownames(ngs$X), 100)
+      markers <- head(rownames(pgx$X), 100)
       markers <- getCurrentMarkers()
       if (is.null(markers)) {
         return(NULL)
       }
 
       ## fold change just for ranking of genes
-      ## F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-      F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
-      rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
+      ## F <- sapply(pgx$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+      F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
+      rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
       fx <- rowMeans(F**2)
 
       ## fisher test
@@ -367,8 +364,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
     ## ================================================================================
 
     getEnrichmentGeneTable <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       gsea <- sigCalculateGSEA()
       if (is.null(gsea)) {
@@ -380,7 +376,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
         return(NULL)
       }
 
-      meta <- pgx.getMetaFoldChangeMatrix(ngs, what = "meta")
+      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
       rownames(fc) <- toupper(rownames(fc))
@@ -418,7 +414,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
     signature_plot_enplots_server(
       "enplots",
-      inputData = inputData,
+      pgx = pgx,
       sigCalculateGSEA = sigCalculateGSEA,
       enrichmentContrastTable = enrichmentContrastTable,
       watermark = WATERMARK
@@ -428,7 +424,7 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
     signature_plot_volcano_server(
       "volcanoPlots",
-      inputData = inputData,
+      pgx = pgx,
       sigCalculateGSEA = sigCalculateGSEA,
       enrichmentContrastTable = enrichmentContrastTable,
       selected_gxmethods = selected_gxmethods,
@@ -459,9 +455,8 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
     signature_plot_markers_server(
       "markers",
-      inputData = inputData,
+      pgx = pgx,
       getCurrentMarkers = getCurrentMarkers,
-      IMMCHECK.GENES = IMMCHECK.GENES,
       watermark = WATERMARK
     )
 
@@ -469,16 +464,14 @@ SignatureBoard <- function(id, inputData, selected_gxmethods) {
 
     enrichmentContrastTable <- signature_table_enrich_by_contrasts_server(
       "enrichmentContrastTable",
-      sigCalculateGSEA = sigCalculateGSEA,
-      tabH = tabH
+      sigCalculateGSEA = sigCalculateGSEA
     )
 
     # Genes in signature
 
     enrichmentGeneTable <- signature_table_genes_in_signature_server(
       "enrichmentGeneTable",
-      getEnrichmentGeneTable = getEnrichmentGeneTable,
-      tabH = tabH
+      getEnrichmentGeneTable = getEnrichmentGeneTable
     )
   })
 } ## end-of-Board

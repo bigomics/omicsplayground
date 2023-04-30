@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,18 +12,16 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_cumEnrichmentPlot_ui <- function(id,
-                                                   label = "",
-                                                   height,
-                                                   width) {
+connectivity_plot_cumEnrichmentPlot_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment
-    of the top-10 most similar profiles. Gene sets that are frequently shared
-    with high enrichment will show a higher cumulative scores. You can choose
-    between signed or absolute enrichment in the options."
-  )
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumgsea_absfc"), "Absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
@@ -41,10 +39,11 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Cumulative enrichment",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     height = height,
     width = width
@@ -60,8 +59,8 @@ connectivity_plot_cumEnrichmentPlot_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_cumEnrichmentPlot_server <- function(id,
-                                                       inputData,
-                                                       cmap_sigdb,
+                                                       pgx,
+                                                       sigdb,
                                                        getConnectivityScores,
                                                        connectivityScoreTable,
                                                        getEnrichmentMatrix,
@@ -70,9 +69,9 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       cumEnrichmentTable <- shiny::reactive({
-        cmap_sigdb <- cmap_sigdb()
-        shiny::req(cmap_sigdb)
-        if (!grepl(".h5$", cmap_sigdb)) {
+        sigdb <- sigdb()
+        shiny::req(sigdb)
+        if (!grepl(".h5$", sigdb)) {
           return(NULL)
         }
 
@@ -84,7 +83,6 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         shiny::req(ii)
 
         sel <- head(df$pathway[ii], 10)
-        sigdb <- cmap_sigdb
         F <- getEnrichmentMatrix(sigdb, select = sel)
         if (is.null(F)) {
           return(NULL)
@@ -131,13 +129,15 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
 
         rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
         rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
-        rownames(F) <- shortstring(rownames(F), 72)
+        rownames(F) <- playbase::shortstring(rownames(F), 72)
         maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
         xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
 
-        pgx.stackedBarplot(
+        playbase::pgx.stackedBarplot(
           x = data.frame(F),
-          ylab = "cumulative enrichment", showlegend = FALSE
+          ylab = "cumulative enrichment",
+          xlab = "",
+          showlegend = FALSE
         )
       })
 

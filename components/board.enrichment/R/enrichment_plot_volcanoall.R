@@ -1,17 +1,23 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_volcanoall_ui <- function(id, height, width) {
+enrichment_plot_volcanoall_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Volcano plots for all contrasts",
-    info.text = info_text,
+    plotlib = "grid",
+    title = title,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")
@@ -19,7 +25,7 @@ enrichment_plot_volcanoall_ui <- function(id, height, width) {
 }
 
 enrichment_plot_volcanoall_server <- function(id,
-                                              inputData,
+                                              pgx,
                                               gs_features,
                                               gs_statmethod,
                                               gs_fdr,
@@ -27,22 +33,21 @@ enrichment_plot_volcanoall_server <- function(id,
                                               calcGsetMeta,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    volcanoAll.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+
+    plot_data <- shiny::reactive({
+
+      shiny::req(pgx)
       if (is.null(gs_features())) {
         return(NULL)
       }
 
-      meta <- ngs$gset.meta$meta
+      meta     <- pgx$gset.meta$meta
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {
         return(NULL)
       }
 
-      fdr <- 1
-      lfc <- 1
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
       sel.gsets <- NULL
@@ -53,78 +58,145 @@ enrichment_plot_volcanoall_server <- function(id,
       i <- 1
       mx.list <- list()
       for (i in 1:length(meta)) {
-        mx.list[[i]] <- calcGsetMeta(i, gsmethod, ngs = ngs)
+        mx.list[[i]] <- calcGsetMeta(i, gsmethod, pgx = pgx)
       }
       names(mx.list) <- names(meta)
 
       Q <- lapply(mx.list, function(mx) mx[, "qv"])
+      F <- lapply(mx.list, function(mx) mx[, "fc"])
       names(Q) <- names(mx.list)
+      names(F) <- names(mx.list)
 
       ## select maximum 24 comparisons (because of space...)
-      q.score <- sapply(Q, function(q) mean(tail(sort(-log10(1e-99 + q)), 100)))
-      sel <- head(names(sort(q.score, decreasing = TRUE)), 20)
-      Q <- Q[which(names(Q) %in% sel)]
-      mx.list <- mx.list[names(Q)]
       nlq <- -log10(1e-99 + unlist(Q))
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
+      xmax <- quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]
+      
+      pd <- list(
+        F = F,
+        Q = Q,
+        sel.gsets = sel.gsets,
+        xmax = xmax,
+        ymax = ymax,
+        fdr = fdr,
+        lfc = lfc
+      )
+      pd
+    })
 
-      ## ------------- layout ----------------
-      nplots <- length(mx.list)
-      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0.2, mgp = c(2.6, 1, 0), oma = c(1, 1, 0, 0) * 2)
-      if (nplots > 24) {
-        nc <- max(ceiling(nplots / 3), 6)
-        par(mfrow = c(3, nc))
-      } else if (FALSE && nplots <= 3) {
-        nc <- 3
-        par(mfrow = c(1, nc))
-      } else {
-        nc <- max(ceiling(nplots / 2), 6)
-        par(mfrow = c(2, nc))
-      }
+    get_ggplots <- function(cex=1, base_size=12) {
 
+      pd <- plot_data()
+      shiny::req(pd)
+      F <- pd$F
+      Q <- pd$Q
+      mx.list <- pd$mx.list
+      ymax <- pd$ymax
+      xmax <- pd$xmax
+      nplots <- length(Q)
+      fdr <- pd$fdr
+      lfc <- pd$lfc
+      sel.gsets <- pd$sel.gsets
+      
       shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
         i <- 1
+        plt <- list()
         for (i in 1:nplots) {
-          mx <- mx.list[[i]]
-          is.sig <- (mx[, "qv"] <= fdr & abs(mx[, "fc"]) >= lfc)
-          table(is.sig)
-          sig.gs <- rownames(mx)[which(is.sig)]
-          if (!is.null(sel.gsets)) sig.gs <- intersect(sel.gsets, sig.gs)
 
-          gx.volcanoPlot.XY(
-            x = mx[, "fc"], pv = mx[, "qv"],
-            use.fdr = TRUE, p.sig = fdr, lfc = lfc,
-            gene = rownames(mx),
-            xlab = "effect size (NES)", lab.cex = 0, nlab = 0,
-            render = "canvas", n = 1000, highlight = sig.gs,
-            cex = 1, cex.axis = 1.3, cex.main = 1.4, axes = FALSE,
-            ylim = c(0, ymax), main = ""
-          )
-
-          ## draw axis if first column or last row
-          graphics::box(lwd = 1, col = "black", lty = "solid")
-          is.first <- (i %% nc == 1)
-          last.row <- ((i - 1) %/% nc == (nplots - 1) %/% nc)
-          if (is.first) axis(2, mgp = c(2, 0.7, 0), cex.axis = 0.8)
-          if (last.row) axis(1, mgp = c(2, 0.7, 0), cex.axis = 0.8)
-          legend("top",
-            legend = names(mx.list)[i], box.lty = 0,
-            x.intersp = 0.3, y.intersp = 0.5,
-            inset = c(0, 0.01), cex = 1.2, bg = "white"
-          )
+          fc <- F[[i]]
+          qv <- Q[[i]]
+          is.sig1 <- (qv <= fdr & abs(fc) >= lfc)
+          table(is.sig1)
+          sig.genes <- names(fc)[which(is.sig1)]
+          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
+          
+          xy <- cbind(x = fc, y = -log10(qv))
+          tt <- names(F)[i]
+          ## xmax <- max(abs(mx[,"fc"]))
+          
+          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
+            xy,
+            title = tt,
+            cex.title = 0.75,
+            var = is.sig1,
+            type = "factor",
+            col = c("#bbbbbb", "#1e60bb"),
+            legend.pos = "none", ## plotlib="ggplot",
+            hilight = NULL,
+            # hilight2 = sig.genes,
+            hilight2 = NULL,
+            xlim = xmax * c(-1, 1),
+            ylim = c(0, ymax),
+            xlab = "difference  (log2FC)",
+            ylab = "significance  (-log10q)",
+            hilight.lwd = 0,
+            hilight.col = "#1e60bb",
+            hilight.cex = 1.5,
+            cex = cex,
+            cex.lab = 1.8*cex,
+            base_size = base_size
+          ) + ggplot2::theme_bw(base_size = base_size)
+          
           shiny::incProgress(1.0 / nplots)
         }
       })
-      p <- grDevices::recordPlot()
-      p
-    })
+      return(plt)
+    }
 
+  
+    volcano.RENDER <- function() {
+      plt <- get_ggplots(cex=0.4, base_size=12)
+      shiny::req(plt)    
+      ## ------------- layout ----------------
+      nplots <- length(plt)
+      nc <- max(4,nplots)
+      nr <- 1
+      if (nplots > 6) {
+        nc <- ceiling(nplots / 2)
+        nr <- 2
+      }
+      if (nplots > 12 ) {
+        nc <- ceiling(nplots / 3)
+        nr <- 3
+      }
+      ## if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    }
+    
+    volcano.RENDER2 <- function() {
+      plt <- get_ggplots(cex=0.9, base_size=16)
+      shiny::req(plt)    
+      ## ------------- layout ----------------
+      nplots <- length(plt)
+      nr = nc = 1
+      nc <- 3
+      nr <- 1
+      if (nplots > 3) {
+        nc <- ceiling(nplots / 2)
+        nr <- 2
+      }
+      if (nplots > 8) {
+        nc <- ceiling(nplots / 3)
+        nr <- 3
+      }    
+      if (nplots > 15 ) {
+        nc <- ceiling(nplots / 4)
+        nr <- 4
+      } 
+      ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    }
+    
     PlotModuleServer(
       "plot",
-      func = volcanoAll.RENDER,
-      pdf.width = 5, pdf.height = 5,
+      plotlib = "grid",
+      func = volcano.RENDER,
+      func2 = volcano.RENDER2,
+      pdf.width = 10,
+      pdf.height = 5,
       res = c(72, 85),
       add.watermark = watermark
     )
-  })
-}
+    
+  })  ## end module-server
+} ## server

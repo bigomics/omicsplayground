@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -13,22 +13,25 @@
 #' @param width
 #'
 #' @export
-expression_plot_maplot_ui <- function(id,
-                                      label = "",
-                                      height,
-                                      width) {
+expression_plot_maplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
   options <- tagList(
     actionButton(ns("button1"), "some action")
   )
 
-  info_text <- "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
-
   PlotModuleUI(ns("pltmod"),
-    title = "MA plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -41,7 +44,7 @@ expression_plot_maplot_ui <- function(id,
 #' @description A shiny Module for plotting (server code).
 #'
 #' @param id
-#' @param inputData
+#' @param pgx
 #' @param gx_fdr
 #' @param gx_contrast
 #' @param gx_lfc
@@ -55,7 +58,7 @@ expression_plot_maplot_ui <- function(id,
 #'
 #' @export
 expression_plot_maplot_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           gx_fdr,
                                           gx_contrast,
                                           gx_lfc,
@@ -75,10 +78,11 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
+      shiny::req(pgx)
 
-      ngs <- inputData()
-      shiny::req(ngs)
-
+      dbg("[expression_plot_maplot.R] sel1 = ",sel1())
+      ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
+      
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
 
@@ -89,7 +93,7 @@ expression_plot_maplot_server <- function(id,
       fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
 
       ## filter genes by gene family or gene set
-      fam.genes <- unique(unlist(ngs$families[10]))
+      fam.genes <- unique(unlist(pgx$families[10]))
       fam.genes <- res$gene_name
       if (gx_features() != "<all>") {
         gset <- getGSETS(gx_features())
@@ -147,7 +151,7 @@ expression_plot_maplot_server <- function(id,
       }
 
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
-      x <- rowMeans(ngs$X[rownames(res), ], na.rm = TRUE)
+      x <- rowMeans(pgx$X[rownames(res), ], na.rm = TRUE)
 
       impt <- function(g) {
         j <- match(g, fc.genes)
@@ -185,7 +189,7 @@ expression_plot_maplot_server <- function(id,
 
       par(mfrow = c(1, 1), mar = c(4, 3, 1, 1.5), mgp = c(2, 0.8, 0), oma = c(0, 0, 0, 0))
 
-      plt <- plotlyMA(
+      plt <- playbase::plotlyMA(
         x = pd[["x"]], y = pd[["y"]], names = pd[["fc.genes"]],
         source = "plot1", marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
@@ -197,8 +201,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) %>%
-        plotly::layout(margin = list(b = 65))
+      )  ## %>% plotly::layout(margin = list(b = 65))
       plt
     }
 
@@ -210,7 +213,7 @@ expression_plot_maplot_server <- function(id,
             font = list(size = 18)
           )
         )
-      fig <- plotly::style(fig, marker.size = 20)
+      fig <- plotly::style(fig, marker.size = 10)
       fig
     }
 
@@ -219,6 +222,7 @@ expression_plot_maplot_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
+      remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

@@ -1,25 +1,30 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_totalcounts_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_totalcounts_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  info.text,
+  caption,
+  title) {
   ns <- shiny::NS(id)
-
-  menu_grouped <- "<code>grouped</code>"
-  info_text <- paste("Barplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the", menu_grouped, "setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Total counts",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -106,13 +111,14 @@ dataview_plot_totalcounts_server <- function(id,
           font = list(family = "Lato"),
           margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
-        plotly_default1()
+        plotly_default()
 
       fig
     }
 
     modal_plotly.RENDER <- function() {
-      plotly.RENDER()
+      plotly.RENDER() %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(

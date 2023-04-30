@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,44 +12,44 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_connectivityMap_ui <- function(id,
-                                                 label = "",
-                                                 fullH = 750) {
+connectivity_plot_connectivityMap_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap(
-    "<b>The Connectivity Map</b> shows the similarity of the contrasts profiles
-    as a t-SNE plot. Contrasts that are similar will be clustered close together,
-    contrasts that are different are placed farther away."
-  )
-
+  
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::radioButtons(
         ## "Choose the plot layout: t-SNE, PCA or UMAP",
-        ns("cmap_layout"), "Layout:", c("pca", "tsne", "volcano"),
+        ns("layout"), "Layout:", c("pca", "tsne", "volcano"),
         selected = "tsne", inline = TRUE
       ),
       "Choose the plot layout: t-SNE, PCA, or volcano-type",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::sliderInput(ns("cmap_scorethreshold"), "Score threshold:", 0, 1, 0, step = 0.01),
+    withTooltip(shiny::sliderInput(ns("scorethreshold"), "Score threshold:", 0, 1, 0, step = 0.01),
       "Threshold the points by minimum score",
       placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::radioButtons(
-        ns("cmap_cmapcolorby"), "Color by:", c("score", "dataset", "hallmark"),
+        ns("cmapcolorby"), "Color by:", c("score", "dataset", "hallmark"),
         inline = TRUE
       ), "Color the points by score, dataset or hallmark",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::sliderInput(ns("cmap_scoregamma"), "Color gamma:", 0.1, 2, 0.5, step = 0.1),
+    withTooltip(shiny::sliderInput(ns("scoregamma"), "Color gamma:", 0.1, 2, 0.5, step = 0.1),
       "Gamma for color adjustments",
       placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::checkboxGroupInput(
-        ns("cmap_plotoptions"), "Other options:",
+        ns("plotoptions"), "Other options:",
         choiceValues = c("label", "grouped", "3D", "dark", "large"),
         choiceNames = c(
           "show label", "group by dataset", "3D plot", "dark mode",
@@ -63,13 +63,15 @@ connectivity_plot_connectivityMap_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Connectivity map",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
+    caption = caption,
     download.fmt = c("pdf", "png", "html"),
-    height = c(fullH - 100, 750), width = c("auto", 1000)
+    height = height,
+    width = width
   )
 }
 
@@ -82,21 +84,20 @@ connectivity_plot_connectivityMap_ui <- function(id,
 #' @return
 #' @export
 connectivity_plot_connectivityMap_server <- function(id,
-                                                     inputData,
-                                                     cmap_sigdb,
+                                                     pgx,
+                                                     sigdb,
                                                      getConnectivityScores,
                                                      getEnrichmentMatrix,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       getConnectivityPositions <- shiny::reactive({
-        ngs <- inputData()
-        cmap_sigdb <- cmap_sigdb()
-        shiny::req(ngs)
+        sigdb <- sigdb()
+        shiny::req(pgx)
 
         ## get the foldchanges of selected comparison and neighbourhood
         dims <- 2
-        method <- input$cmap_layout
+        method <- input$layout
 
         if (method == "volcano") {
           res <- getConnectivityScores()
@@ -106,10 +107,10 @@ connectivity_plot_connectivityMap_server <- function(id,
           return(pos)
         }
 
-        do3d <- "3D" %in% input$cmap_plotoptions
+        do3d <- "3D" %in% input$plotoptions
         dims <- 2 + 1 * do3d
 
-        sigdb <- cmap_sigdb
+        sigdb <- sigdb
         shiny::req(sigdb)
         h5.ref <- grepl("h5$", sigdb)
         h5.file <- NULL
@@ -167,8 +168,8 @@ connectivity_plot_connectivityMap_server <- function(id,
         res$rho[is.na(res$rho)] <- 0
 
         ## select on minimum score
-        minscore <- input$cmap_scorethreshold
-        shiny::req(input$cmap_scorethreshold)
+        minscore <- input$scorethreshold
+        shiny::req(input$scorethreshold)
         minscore <- min(minscore, 0.999 * max(abs(res$score), na.rm = TRUE))
         sel <- which(abs(res$score) >= minscore)
         if (length(sel) == 0) {
@@ -177,8 +178,8 @@ connectivity_plot_connectivityMap_server <- function(id,
         res <- res[sel, , drop = FALSE]
 
         ## rownames(res) <- res$pathway
-        cmap_grouped <- "grouped" %in% input$cmap_plotoptions
-        if (cmap_grouped) {
+        grouped <- "grouped" %in% input$plotoptions
+        if (grouped) {
           res <- res[order(-res$score), ]
           dset <- sub("].*", "]", res$pathway)
           names(dset) <- res$pathway
@@ -195,8 +196,7 @@ connectivity_plot_connectivityMap_server <- function(id,
       })
 
       plot_RENDER <- shiny::reactive({
-        pgx <- inputData()
-        cmap_sigdb <- cmap_sigdb()
+        sigdb <- sigdb()
         shiny::req(pgx)
 
         ## get positions
@@ -213,8 +213,8 @@ connectivity_plot_connectivityMap_server <- function(id,
           return(NULL)
         }
 
-        cmap_grouped <- "grouped" %in% input$cmap_plotoptions
-        if (cmap_grouped) {
+        grouped <- "grouped" %in% input$plotoptions
+        if (grouped) {
           pset <- sub("].*", "]", rownames(pos0))
           pos0 <- apply(pos0, 2, function(x) tapply(x, pset, mean))
         }
@@ -253,7 +253,7 @@ connectivity_plot_connectivityMap_server <- function(id,
         do3d <- ncol(pos) == 3
         mode <- "markers"
         ann.text <- rep(NA, nrow(df))
-        showlabels <- "label" %in% input$cmap_plotoptions
+        showlabels <- "label" %in% input$plotoptions
         if (showlabels) ann.text <- df$name
 
         tt.info <- paste(
@@ -272,7 +272,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           colors = c("navyblue", "royalblue4", "grey90", "indianred3", "firebrick4")
         )(64)
         greyred64 <- colorRampPalette(colors = c("grey85", "grey70", "indianred3", "firebrick4"))(64)
-        if ("dark" %in% input$cmap_plotoptions) {
+        if ("dark" %in% input$plotoptions) {
           greyred64 <- colorRampPalette(colors = c("grey15", "grey30", "indianred3", "firebrick4"))(64)
         }
 
@@ -280,7 +280,7 @@ connectivity_plot_connectivityMap_server <- function(id,
         greyred64 <- sapply(1:64, function(i) paste0(greyred64[i], sprintf("%02X", 0 + 4 * i - 1)))
         bluered64 <- sapply(1:64, function(i) paste0(bluered64[i], sprintf("%02X", abs(-259 + 8 * i - 1))))
         colorby <- "score"
-        colorby <- input$cmap_cmapcolorby
+        colorby <- input$cmapcolorby
         sizevar <- (df$score)**2
         colorpal <- NULL
         marker.col <- NULL
@@ -291,14 +291,14 @@ connectivity_plot_connectivityMap_server <- function(id,
           marker.col <- list()
           colorpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
         } else if (colorby == "hallmark") {
-          Y <- t(getEnrichmentMatrix(cmap_sigdb, nc = 15))
+          Y <- t(getEnrichmentMatrix(sigdb, nc = 15))
           Y <- Y[match(rownames(df), rownames(Y)), ]
           colorvar <- colnames(Y)[max.col(Y)]
-          colorvar <- shortstring(colorvar, 40) ## too long!!!
+          colorvar <- playbase::shortstring(colorvar, 40) ## too long!!!
           marker.col <- list()
           colorpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
         } else if (colorby == "score") {
-          gamma1 <- input$cmap_scoregamma
+          gamma1 <- input$scoregamma
           score1 <- sign(df$score) * (abs(df$score) / max(abs(df$score), na.rm = TRUE))**gamma1
           colorvar <- score1
           colorpal <- greyred64
@@ -320,7 +320,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           ## 3D plot
           sizeref <- 0.06 * max(1, nrow(df) / 1000)**0.33
           sizeref
-          if ("large" %in% input$cmap_plotoptions) sizeref <- 0.25 * sizeref
+          if ("large" %in% input$plotoptions) sizeref <- 0.25 * sizeref
 
           plt <- plotly::plot_ly(
             df,
@@ -348,7 +348,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           ##
           sizeref <- 0.08 * max(1, nrow(df) / 1000)**0.33
           sizeref
-          if ("large" %in% input$cmap_plotoptions) sizeref <- 0.85 * sizeref
+          if ("large" %in% input$plotoptions) sizeref <- 0.85 * sizeref
 
           plt <- plotly::plot_ly(
             df,
@@ -401,8 +401,8 @@ connectivity_plot_connectivityMap_server <- function(id,
           ) %>%
           plotly::event_register("plotly_selected")
 
-        if ("dark" %in% input$cmap_plotoptions) {
-          plt <- darkmode(plt, dim = ncol(pos))
+        if ("dark" %in% input$plotoptions) {
+          plt <- playbase::darkmode(plt, dim = ncol(pos))
         }
 
         return(plt)

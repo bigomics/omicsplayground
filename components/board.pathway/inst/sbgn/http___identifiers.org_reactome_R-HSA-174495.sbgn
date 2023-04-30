@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbgn>
+  <map language="process description">
+    <glyph class="compartment" id="cytosol" if.within.compartment="">
+      <label text="cytosol"/>
+      <bbox w="339.5" h="334.455049915532" x="100" y="205"/>
+    </glyph>
+    <glyph class="nucleic acid feature" id="Rna_84168dd7d44e2e3d3e7eccb5bf88341e" compartmentRef="cytosol" if.within.compartment="">
+      <label text="HIV-1 unspliced RNA"/>
+      <bbox w="70" h="40" x="358.5" y="358.894191624432"/>
+      <glyph class="unit of information" id="Rna_84168dd7d44e2e3d3e7eccb5bf88341e.info.1" if.within.compartment="">
+        <label text="mt:RNA"/>
+        <bbox w="35" h="17.5" x="358.5" y="350.144191624432"/>
+      </glyph>
+    </glyph>
+    <glyph class="macromolecule" id="Protein_f25872533c41488d601ec1bd73f72141" compartmentRef="cytosol" if.within.compartment="">
+      <label text="GAG Polyprotein (P04591)"/>
+      <bbox w="70" h="40" x="111" y="216"/>
+    </glyph>
+    <glyph class="process" id="reactome_R-HSA-187213_LEFT_TO_RIGHT" compartmentRef="cytosol" if.within.compartment="">
+      <bbox w="26.6666666666667" h="26.6666666666667" x="111" y="494.788383248865"/>
+    </glyph>
+    <arc class="consumption" id="Rna_84168dd7d44e2e3d3e7eccb5bf88341e--to--reactome_R-HSA-187213_LEFT_TO_RIGHT-input" source="Rna_84168dd7d44e2e3d3e7eccb5bf88341e" target="reactome_R-HSA-187213_LEFT_TO_RIGHT">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+    <arc class="production" id="reactome_R-HSA-187213_LEFT_TO_RIGHT-output--to--Protein_f25872533c41488d601ec1bd73f72141" source="reactome_R-HSA-187213_LEFT_TO_RIGHT" target="Protein_f25872533c41488d601ec1bd73f72141">
+      <start x="0" y="0"/>
+      <end x="0" y="0"/>
+    </arc>
+  
+ <glyph class="macromolecule" id="stamp" > <label text="SBGNhub Pathway Collection"/> <bbox w="73.7" h="8.18888888888889" x="20" y="564.788383248865"/> </glyph> 
+</map>
+  <edge.spline.info>
+    <arc.spline id="Rna_84168dd7d44e2e3d3e7eccb5bf88341e--to--reactome_R-HSA-187213_LEFT_TO_RIGHT" source="Rna_84168dd7d44e2e3d3e7eccb5bf88341e" target="reactome_R-HSA-187213_LEFT_TO_RIGHT" class="consumption">
+      <source.arc start.x="298" start.y="424" end.x="358" end.y="395" class="consumption"/>
+      <spline s.x="358.000000" s.y="395.000000" c1.x="298.000000" c1.y="424.000000" c2.x="178.000000" c2.y="482.000000" e.x="137.000000" e.y="501.000000"/>
+      <target.arc start.x="178" start.y="482" end.x="137" end.y="501" class="consumption"/>
+    </arc.spline>
+    <arc.spline id="reactome_R-HSA-187213_LEFT_TO_RIGHT--to--Protein_f25872533c41488d601ec1bd73f72141" source="reactome_R-HSA-187213_LEFT_TO_RIGHT" target="Protein_f25872533c41488d601ec1bd73f72141" class="production">
+      <source.arc start.x="128" start.y="450" end.x="125" end.y="494" class="consumption"/>
+      <spline s.x="144.000000" s.y="256.000000" c1.x="140.000000" c1.y="308.000000" c2.x="128.000000" c2.y="450.000000" e.x="125.000000" e.y="494.000000"/>
+      <target.arc start.x="140" start.y="308" end.x="144" end.y="256" class="production"/>
+    </arc.spline>
+  </edge.spline.info>
+  <compartment.layer.info>cytosol-compartment.layer.info-cytosol-compartment.layer.info-Rna_84168dd7d44e2e3d3e7eccb5bf88341e-compartment.layer.info-Protein_f25872533c41488d601ec1bd73f72141-compartment.layer.info-reactome_R-HSA-187213_LEFT_TO_RIGHT</compartment.layer.info>
+
+
+<edge.spline.info> 
+
+<arc.spline id="Rna_84168dd7d44e2e3d3e7eccb5bf88341e--to--reactome_R-HSA-187213_LEFT_TO_RIGHT" source="Rna_84168dd7d44e2e3d3e7eccb5bf88341e" target="reactome_R-HSA-187213_LEFT_TO_RIGHT" class="consumption">
+<source.arc start.x="298" start.y="424" end.x="358" end.y="395" class="consumption"/>
+
+
+<spline s.x="358.000000"  s.y="395.000000" c1.x="298.000000" c1.y="424.000000" c2.x="178.000000" c2.y="482.000000" e.x="137.000000"  e.y="501.000000" />
+<target.arc start.x="178" start.y="482" end.x="137" end.y="501" class="consumption"/>
+
+</arc.spline>
+<arc.spline id="reactome_R-HSA-187213_LEFT_TO_RIGHT--to--Protein_f25872533c41488d601ec1bd73f72141" source="reactome_R-HSA-187213_LEFT_TO_RIGHT" target="Protein_f25872533c41488d601ec1bd73f72141" class="production">
+<source.arc start.x="128" start.y="450" end.x="125" end.y="494" class="consumption"/>
+
+
+<spline s.x="144.000000"  s.y="256.000000" c1.x="140.000000" c1.y="308.000000" c2.x="128.000000" c2.y="450.000000" e.x="125.000000"  e.y="494.000000" />
+<target.arc start.x="140" start.y="308" end.x="144" end.y="256" class="production"/>
+
+</arc.spline> </edge.spline.info>
+<compartment.layer.info></compartment.layer.info>
+</sbgn>
+

@@ -1,9 +1,7 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
-
-## source("../../app/R/global.R",chdir=TRUE);load("../../../data/example-data.pgx")
 
 
 #' DataView module server function
@@ -54,13 +52,18 @@ DataViewBoard <- function(id, pgx) {
     '
     )
 
+    data_infotext <- HTML('
+        <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
+        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
+    
 
     ## ------- observe functions -----------
-    shiny::observeEvent(input$data_info, {
+    shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Data View Board</strong>"),
         shiny::HTML(data_infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE, size = "xl"
       ))
     })
 
@@ -69,10 +72,10 @@ DataViewBoard <- function(id, pgx) {
       shiny::req(pgx$Y, pgx$samples)
 
       ## levels for sample filter
-      levels <- getLevels(pgx$Y)
+      levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "data_samplefilter", choices = levels)
 
-      grps <- pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
+      grps <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
       grps <- sort(grps)
       grps <- c(grep("^[.]", grps, value = TRUE, invert = TRUE), grep("^[.]", grps, value = TRUE))
       selgrp <- grps[1]
@@ -91,16 +94,16 @@ DataViewBoard <- function(id, pgx) {
         pgx$counts
       },
       {
+        shiny::req(input$data_type)
         if (input$data_type %in% c("counts", "CPM")) {
           pp <- rownames(pgx$counts)
         } else {
           ## log2CPM
           pp <- rownames(pgx$X)
         }
-
         ## gene filter.
         genes <- sort(pgx$genes[pp, ]$gene_name)
-        fc2 <- rowMeans(pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
+        fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
         genes <- intersect(names(sort(-fc2)), genes) ## most var gene??
         selgene <- genes[1]
         genes1 <- unique(c(selgene, sort(genes)))
@@ -111,10 +114,10 @@ DataViewBoard <- function(id, pgx) {
           )
         }
         shiny::updateSelectizeInput(session, "search_gene",
-          choices = genes1, selected = selgene,
-          ## options = list(maxOptions = 9999999),
-          options = list(maxOptions = 1001),
-          server = TRUE
+                                    choices = genes1, selected = selgene,
+                                    ## options = list(maxOptions = 9999999),
+                                    options = list(maxOptions = 1001),
+                                    server = TRUE
         )
       }
     )
@@ -141,7 +144,7 @@ DataViewBoard <- function(id, pgx) {
     selected_samples <- reactive({
       samples <- colnames(pgx$X)
       if (!is.null(input$data_samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       }
       samples
     })
@@ -255,12 +258,14 @@ DataViewBoard <- function(id, pgx) {
       r.gene = reactive(input$search_gene),
       r.data_type = reactive(input$data_type),
       r.samples = selected_samples,
-      r.groupby = reactive(input$data_groupby)
+      r.groupby = reactive(input$data_groupby),
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
     dataview_table_samples_server(
       "sampletable", pgx,
-      r.samples = selected_samples
+      r.samples = selected_samples,
+      scrollY = "calc(35vh - 140px)"
     )
 
     dataview_table_resources_server(
@@ -269,21 +274,22 @@ DataViewBoard <- function(id, pgx) {
 
     dataview_table_contrasts_server(
       "contrastTable", pgx,
-      r.samples = selected_samples
+      r.samples = selected_samples,
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
     ## ================================================================================
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    getCountStatistics <- shiny::reactive({
+    getCountStatistics <- reactiveVal()
+    observeEvent(c(input$data_groupby, input$data_samplefilter), {
       shiny::req(pgx$X, pgx$Y, pgx$samples)
-
       shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
       subtt <- NULL
 
       samples <- colnames(pgx$X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       nsamples <- length(samples)
       if ("counts" %in% names(pgx)) {
         counts <- pgx$counts[, samples, drop = FALSE]
@@ -388,10 +394,8 @@ DataViewBoard <- function(id, pgx) {
         prop.counts = prop.counts,
         gset.genes = gset.genes
       )
-
-      res
-    })
-
+      getCountStatistics(res)
+    }, ignoreNULL = TRUE)
 
     ## ================================================================================
     ## ================================= END ====================================

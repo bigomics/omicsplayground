@@ -1,17 +1,22 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_plot_compare_ui <- function(id, height, width) {
+enrichment_plot_compare_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "Under the <strong>Compare</strong> tab, enrichment profiles of the selected geneset in enrichment Table <code>I</code> can be visualised against all available contrasts."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Enrichment of geneset across multiple contrasts",
-    info.text = info_text,
+    title = title,
+    caption = caption,
+    info.text = info.text,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")
@@ -19,15 +24,15 @@ enrichment_plot_compare_ui <- function(id, height, width) {
 }
 
 enrichment_plot_compare_server <- function(id,
-                                           inputData,
+                                           pgx,
                                            gs_contrast,
                                            gset_selected,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    compare.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs, gs_contrast())
+
+    render_compare <- function() {
+      shiny::req(pgx, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()
@@ -35,7 +40,7 @@ enrichment_plot_compare_server <- function(id,
         return(NULL)
       }
 
-      gset <- rownames(ngs$gsetX)[1]
+      gset <- rownames(pgx$gsetX)[1]
       gset <- gset_selected()
       if (is.null(gset)) {
         frame()
@@ -44,13 +49,13 @@ enrichment_plot_compare_server <- function(id,
       }
       gset <- gset[1]
 
-      score <- sapply(ngs$gset.meta$meta, function(x) x[gset, "meta.fx"])
+      score <- sapply(pgx$gset.meta$meta, function(x) x[gset, "meta.fx"])
 
       top.up <- names(sort(score[which(score > 0)], decreasing = TRUE))
       top.dn <- names(sort(score[which(score < 0)]))
-      genes <- names(which(ngs$GMT[, gset] != 0))
+      genes <- names(which(pgx$GMT[, gset] != 0))
       genes <- toupper(sub(".*:", "", genes))
-      gx.meta <- ngs$gx.meta$meta
+      gx.meta <- pgx$gx.meta$meta
 
       gsmethods <- selected_gsetmethods()
 
@@ -65,12 +70,12 @@ enrichment_plot_compare_server <- function(id,
           names(rnk0) <- rownames(gx.meta[[1]])
           names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
 
-          gs.meta <- ngs$gset.meta$meta[[cmp]]
+          gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
-          gs1 <- breakstring(gset, 28, 50, force = FALSE)
+          gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          gsea.enplot(rnk0, genes,
+          playbase::gsea.enplot(rnk0, genes,
             names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
@@ -88,12 +93,12 @@ enrichment_plot_compare_server <- function(id,
           names(rnk0) <- rownames(gx.meta[[1]])
           names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
 
-          gs.meta <- ngs$gset.meta$meta[[cmp]]
+          gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
-          gs1 <- breakstring(gset, 28, 50, force = FALSE)
+          gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          gsea.enplot(rnk0, genes,
+          playbase::gsea.enplot(rnk0, genes,
             names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
@@ -102,13 +107,23 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+#      p <- grDevices::recordPlot()
+#      p
+    }
 
+    compare.RENDER <- function() {
+      render_compare()
+    }
+    
+    compare.RENDER2 <- function() {
+      render_compare()
+    }
+
+    
     PlotModuleServer(
       "plot",
       func = compare.RENDER,
+      func2 = compare.RENDER,      
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
       add.watermark = watermark

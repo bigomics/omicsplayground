@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -12,13 +12,19 @@
 #' @param height
 #'
 #' @export
-signature_plot_volcano_ui <- function(id, height, width) {
+signature_plot_volcano_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts. For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left."
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Volcano plots",
-    info.text = info_text,
+    title = title,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf"),
     height = height,
     width = width
@@ -34,7 +40,7 @@ signature_plot_volcano_ui <- function(id, height, width) {
 #' @return
 #' @export
 signature_plot_volcano_server <- function(id,
-                                          inputData,
+                                          pgx,
                                           sigCalculateGSEA,
                                           enrichmentContrastTable,
                                           selected_gxmethods,
@@ -42,10 +48,11 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    volcanoPlots.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      alertDataLoaded(session, ngs)
-      if (is.null(ngs)) {
+        
+    ##    volcanoPlots.RENDER <- shiny::reactive({
+    volcanoPlots.RENDER <- function() {
+      alertDataLoaded(session, pgx)
+      if (is.null(pgx)) {
         return(NULL)
       }
 
@@ -61,11 +68,11 @@ signature_plot_volcano_server <- function(id,
       }
       shiny::req(ii)
 
-      ct <- colnames(ngs$model.parameters$contr.matrix)
+      ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- rownames(gsea$output)[ii]
 
       mm <- selected_gxmethods()
-      meta <- pgx.getMetaMatrix(ngs, methods = mm)
+      meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
       F <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
       score <- abs(F) * -log(qv)
@@ -101,7 +108,7 @@ signature_plot_volcano_server <- function(id,
           cex2 <- 1.3
         }
         xy <- cbind(fc = F[, i, drop = FALSE], z = -log10(qv[, i, drop = FALSE]))
-        pgx.scatterPlotXY.BASE(
+        playbase::pgx.scatterPlotXY.BASE(
           xy,
           var = NULL, type = "factor", title = "",
           xlab = "differential expression (log2FC)",
@@ -113,15 +120,16 @@ signature_plot_volcano_server <- function(id,
         )
         title(ct[i], cex.main = cex.main, line = 0.3)
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+#      p <- grDevices::recordPlot()
+#      p
+    }#)
 
     PlotModuleServer(
       "plot",
       func = volcanoPlots.RENDER,
-      res = c(90, 100), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 6,
+      pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer

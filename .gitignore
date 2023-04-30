@@ -43,7 +43,18 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
+
 data/*.pgx
+data_shared/**/*.pgx
+data_shared/**/*.data
+data_shared/**/*u2.R
+data_shared/**/*u1.R
+data_shared/**/*init.R
+data_shared/**/*init2.R
+data_shared/**/*pgx.R
+data_shared/**/*test.R
+data_shared/**/*pgx.R
+data_shared/**/*checkfiles.R
 !data/example-data.pgx
 data/*.csv
 logs/*.rds
@@ -59,3 +70,4 @@ bigomics-extra.js
 Renviron.site
 .Rdata
 inst/doc
+*.csv

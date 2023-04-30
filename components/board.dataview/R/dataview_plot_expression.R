@@ -1,20 +1,25 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_expression_ui <- function(
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("Expression barplot of grouped samples (or cells) for the gene selected in the <code>Search gene</code> Samples (or cells) in the barplot can be ungrouped by setting the <code>grouped</code> under the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Abundance/expression",
+    title = title,
     label = label,
+    caption = caption,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     ## width = c("auto","100%"),
     height = height
@@ -103,7 +108,7 @@ dataview_plot_expression_server <- function(id,
         cx1 <- ifelse(ngrp < 10, 1, 0.8)
         cx1 <- ifelse(ngrp > 20, 0.6, cx1)
         if (pd$geneplot_type == "bar") {
-          gx.b3plot(
+          playbase::gx.b3plot(
             df$x,
             df$group,
             las = 3,
@@ -123,7 +128,7 @@ dataview_plot_expression_server <- function(id,
             col = rgb(0.4, 0.6, 0.85, 0.85)
           )
         } else if (pd$geneplot_type == "violin") {
-          pgx.violinPlot(
+          playbase::pgx.violinPlot(
             df$x,
             df$group,
             main = pd$gene,
@@ -193,7 +198,7 @@ dataview_plot_expression_server <- function(id,
       }
     }
 
-    plot.RENDER <- function() {
+    plotly.RENDER <- function() {
       pd <- plot_data()
 
       shiny::req(pd)
@@ -273,59 +278,32 @@ dataview_plot_expression_server <- function(id,
         ## fig
       }
 
-      ## DEBUG
-      if (0) {
-        message("[DEBUG] saving fig.rda ...")
-        y <- array(c(1, 2, 3, 4, 5, 6), dimnames = list(letters[1:6]))
-        ## fig2 <- plotly::plot_ly(x = names(y), y = y, type = "bar")
-        # fig2 <- plotly::plot_ly(pd$df,  x = ~samples, y = ~x, type = "bar")
-        ## fig2 <- plotly::plot_ly(x = pd$df$samples, y = pd$df$x, type = "bar")
-        fig2 <- plotly::plot_ly(x = df$samples, y = df$x, type = "bar")
-        saveRDS(fig2, file = "/tmp/figplotexpression-render-debug.rds")
-        message("[DEBUG] done saving!")
-      }
-
       fig <- fig %>%
         plotly::layout(
-          xaxis = list(title = pd$groupby, fixedrange = TRUE),
+          xaxis = list(title = "", fixedrange = TRUE),
           yaxis = list(title = pd$ylab, fixedrange = TRUE),
           font = list(family = "Lato"),
           showlegend = FALSE
           ## title = pd$gene
         ) %>%
-        ## plotly::config(displayModeBar = FALSE) %>%
-        plotly::config(displaylogo = FALSE) %>%
-        plotly::config(
-          modeBarButtons = list(list("toImage")),
-          toImageButtonOptions = list(format = "svg", height = 500, width = 900)
-        )
+        plotly_default()
       fig
     }
 
-    modal_plot.RENDER <- function() {
-      fig <- plot.RENDER() %>%
-        plotly::layout(
-          showlegend = TRUE,
-          font = list(
-            size = 18
-          )
-        )
-      fig <- plotly::style(fig, marker.size = 14)
+    modal_plotly.RENDER <- function() {
+      fig <- plotly.RENDER() %>%
+        plotly_modal_default()
+      ## fig <- plotly::style(fig, marker.size = 14)
       fig
     }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      plotlib2 = "plotly",
-      func = plot.RENDER,
-      func2 = modal_plot.RENDER,
+      func = plotly.RENDER,
+      func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       download.fmt = c("png", "pdf", "csv", "obj"),
-      renderFunc = plotly::renderPlotly,
-      renderFunc2 = plotly::renderPlotly,
-      ## renderFunc = shiny::renderPlot,
-      ## renderFunc2 = shiny::renderPlot,
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

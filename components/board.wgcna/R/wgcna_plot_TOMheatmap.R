@@ -1,18 +1,24 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_TOMheatmap_ui <- function(id, height, width) {
+wgcna_plot_TOMheatmap_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA Topological Overlap Matrix (TOM) heatmap.</b>"
 
   PlotModuleUI(
     ns("plot"),
-    title = "TOM heatmap",
-    label = "c",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")
@@ -101,7 +107,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
         col.annot <- ann
         symm <- TRUE
         scale <- "none"
-        gx.heatmap(D,
+        playbase::gx.heatmap(D,
           symm = TRUE, scale = "none",
           dist.method = "euclidean",
           col.dist.method = "euclidean",
@@ -111,7 +117,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
         )
 
 
-        gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
+        playbase::gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
       }
 
       ## add color legend

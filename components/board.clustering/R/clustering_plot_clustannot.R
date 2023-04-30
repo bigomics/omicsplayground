@@ -1,16 +1,18 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-clustering_plot_clusterannot_ui <- function(id,
-                                            label = "",
-                                            height,
-                                            width) {
+clustering_plot_clusterannot_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width)
+{
   ns <- shiny::NS(id)
-
-  clustannot_plots_text <- paste0("The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.")
 
   clustannot_plots.opts <- shiny::tagList(
     withTooltip(
@@ -35,14 +37,13 @@ clustering_plot_clusterannot_ui <- function(id,
     )
   )
 
-
-
   PlotModuleUI(
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-    title = "Functional annotation of clusters",
-    info.text = clustannot_plots_text,
+    title = title,
+    info.text = info.text,
+    caption = caption,
     options = clustannot_plots.opts,
     download.fmt = c("png", "pdf"),
     width = width,
@@ -58,9 +59,10 @@ clustering_plot_clusterannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-      ## pgx <- inputData()
-      shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
+      shiny::req(pgx$X, pgx$gsetX, pgx$families)
+      dbg("[clustering_plot_clustannot.R] observe : triggered ")
+      
       if (is.null(input$xann_level)) {
         return(NULL)
       }
@@ -87,13 +89,19 @@ clustering_plot_clusterannot_server <- function(id,
       } else {
         ann.types <- sel <- "<all>"
       }
+      dbg("[clustering_plot_clustannot.R] observe : shiny::updateSelectInput ")      
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
-    clustannot_plots.PLOTLY <- shiny::reactive({
-      rho <- getClustAnnotCorrelation()
-      ## if(is.null(rho)) return(NULL)
-      shiny::req(rho)
+    plot_data <- function() {
+      getClustAnnotCorrelation()
+    }
+    
+    ##    clustannot_plots.PLOTLY <- shiny::reactive({
+    createAnnotBarPlots <- function(fontsize=10) {
+
+      rho <- plot_data()
+      if(is.null(rho)) return(NULL)
 
       ## par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
       NTERMS <- 6
@@ -123,10 +131,10 @@ clustering_plot_clusterannot_server <- function(id,
         y <- factor(y, levels = y)
         anntitle <- function(tt) {
           list(
-            x = 0.5, y = 1.02,
+            x = 0.5, y = 1.0,
             xref = "paper", yref = "paper",
             xanchor = "center", yanchor = "bottom",
-            text = tt, font = list(size = 13),
+            text = tt, font = list(size = fontsize*1.33),
             align = "center", showarrow = FALSE
           )
         }
@@ -163,8 +171,8 @@ clustering_plot_clusterannot_server <- function(id,
             xref = "paper",
             yref = "y",
             xanchor = "left",
-            text = shortstring(y, slen),
-            font = list(size = 10),
+            text = playbase::shortstring(y, slen),
+            font = list(size = fontsize),
             showarrow = FALSE,
             align = "right"
           ) %>%
@@ -174,9 +182,8 @@ clustering_plot_clusterannot_server <- function(id,
             ##       the axis range is the same but the tooltip and axis are out of sync)
             xaxis = list(
               range = c(0, .9),
-              font = list(family = "Lato"),
-              titlefont = list(size = 11),
-              tickfont = list(size = 10),
+              titlefont = list(size = fontsize*1.2),
+              tickfont = list(size = fontsize),
               showgrid = FALSE,
               title = "\ncorrelation (R)"
             ),
@@ -191,9 +198,9 @@ clustering_plot_clusterannot_server <- function(id,
             showlegend = FALSE,
             annotations = anntitle(colnames(rho)[i]),
             bargap = .2,
-            margin = list(l = 5, r = 0, b = 25, t = 20)
+            margin = list(l = 5, r = 0, b = 15, t = 22)
           ) %>%
-          plotly_default1()
+          plotly_default()
       }
 
       if (length(plot_list) <= 4) {
@@ -209,17 +216,22 @@ clustering_plot_clusterannot_server <- function(id,
         margin = c(0, 0, .05, .05)
       ) %>%
         plotly::config(displayModeBar = FALSE)
-    })
+    }
 
+    clustannot_plots.PLOTLY <- function() {
+      createAnnotBarPlots(fontsize=10)
+    }
 
+    clustannot_plots.PLOTLY_modal <- function() {
+      createAnnotBarPlots(fontsize=15)
+    }
+    
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "plotly",
       func = clustannot_plots.PLOTLY,
-      # csvFunc = plot_data,   ##  *** downloadable data as CSV
-      ## renderFunc = plotly::renderPlotly,
-      ## renderFunc2 = plotly::renderPlotly,
+      func2 = clustannot_plots.PLOTLY_modal,
+      csvFunc = plot_data,   ##  *** downloadable data as CSV
       res = 80, ## resolution of plots
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark

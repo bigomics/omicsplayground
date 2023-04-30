@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -69,7 +69,6 @@ clustannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
       if (is.null(input$xann_level)) {
@@ -103,7 +102,6 @@ clustannot_server <- function(id,
 
     ## This is used both for plot and table
     get_annot_correlation <- shiny::reactive({
-      ## pgx <- inputData()
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
       ## filt <- getTopMatrix()
@@ -143,7 +141,7 @@ clustannot_server <- function(id,
         ref <- pgx$gsetX[ss, ]
       }
       if (ann.level == "phenotype") {
-        ref <- t(expandAnnotationMatrix(pgx$Y))
+        ref <- t(playbase::expandAnnotationMatrix(pgx$Y))
       }
       if (is.null(ref)) {
         cat("<clustering:get_annot_correlation> WARNING:: ref error\n")
@@ -188,7 +186,7 @@ clustannot_server <- function(id,
         P <- c()
         for (i in 1:ncol(rho)) {
           k <- colnames(rho)[i]
-          res <- gset.fisher(
+          res <- playbase::gset.fisher(
             grp[[k]], gmt,
             fdr = 1, min.genes = 0, max.genes = Inf,
             background = bg.genes
@@ -298,7 +296,7 @@ clustannot_server <- function(id,
           plotly::add_annotations(
             xref = "paper", yref = "y",
             x = 0.01, y = y, xanchor = "left",
-            text = shortstring(y, slen),
+            text = playbase::shortstring(y, slen),
             font = list(size = 10),
             showarrow = FALSE, align = "right"
           )
@@ -346,13 +344,13 @@ clustannot_server <- function(id,
         return(NULL)
       }
 
-      ## rownames(rho) = shortstring(rownames(rho),50)
-      rho.name <- shortstring(sub(".*:", "", rownames(rho)), 60)
+      ## rownames(rho) = playbase::shortstring(rownames(rho),50)
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       ## rho = data.frame(cbind( name=rho.name, rho))
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
       rownames(df) <- rownames(rho)
       if (input$xann_level == "geneset") {
-        df$feature <- wrapHyperLink(df$feature, rownames(df))
+        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
       }
 
       DT::datatable(

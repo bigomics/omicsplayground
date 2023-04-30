@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
 ## DEAN ATTALI code recommendation:
 ## example of how a board module should be written (TcgaBoard)
 ##
@@ -60,36 +65,37 @@ TcgaInputs <- function(id) {
   )
 }
 
+tcga_info <- "This analysis module computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
+
 TcgaUI <- function(id) {
   ns <- NS(id)
 
-  fullH <- 800
-  tabH <- "70vh"
-
-  tabs <- tabsetPanel(
-    id = ns("tabs1"),
-    tabPanel(
-      "TCGA survival",
-      fillCol(
-        height = 800,
-        flex = c(NA, 0.02, 1),
-        tcga_plot_survival_ui(
-          ns("tcga_tcgasurv"),
-          height = c(fullH, 750),
-          width = c("auto", 1400)
-        ),
-        div(
-          class = "caption",
-          tags$strong("TCGA survival analysis."),
-          "Survival probability of cancer patients in 32 TCGA cancer types.",
-          "Each cohort is dichotomized into positively and negatively correlated with your signature.",
-          "The survival probabilities are computed and tested using the Kaplan-Meier method."
+  div(
+    boardHeader(
+      title = "TCGA",
+      info_link = ns("tcga_info")
+    ),
+    tabsetPanel(
+      id = ns("tabs1"),
+      tabPanel(
+        "TCGA survival",
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",        
+          tcga_plot_survival_ui(
+            ns("tcga_tcgasurv"),
+            caption = paste(
+              "TCGA survival analysis",
+              "Survival probability of cancer patients in 32 TCGA cancer types.",
+              "Each cohort is dichotomized into positively and negatively correlated with your signature.",
+              "The survival probabilities are computed and tested using the Kaplan-Meier method."),
+            info.text = tcga_info,
+            height = c("100%", "70vh"),
+            width = c("auto", "100%")
+          )
         )
       )
     )
   )
-  div(
-    boardHeader(title = "TCGA", info_link = ns("tcga_info")),
-    tabs
-  )
+
 }

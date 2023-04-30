@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_phenoassociation_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_phenoassociation_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlated' variables. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continous pairs, Pearson's correlation test is used."
 
   opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("phenoclustsamples"), "cluster samples", TRUE),
@@ -17,12 +22,13 @@ dataview_plot_phenoassociation_ui <- function(id, label = "", height = c(600, 80
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Phenotype association",
+    title = title,
     label = label,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -40,10 +46,24 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
+      
+      check_diversity_in_colums <- function(df){
+        sum( unlist( apply(df, 2, function(x) length(unique(x))>1 ))) >1
+      }
 
-      ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
-      ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
-      pq <- pgx.testPhenoCorrelation(res$annot, plot = TRUE)
+      if (check_diversity_in_colums(res$annot) && is.data.frame(res$annot)) {
+        ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
+        ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
+        pq <- playbase::pgx.testPhenoCorrelation(
+          df = res$annot, 
+          plot = TRUE,
+          cex = 1
+          ) 
+        return(pq)  
+      } else {
+        shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))
+        return(NULL)
+      }
     }
 
     modal_plot.RENDER <- function() {

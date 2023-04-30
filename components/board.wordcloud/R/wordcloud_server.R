@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 WordCloudBoard <- function(id, pgx) {
@@ -42,7 +42,7 @@ WordCloudBoard <- function(id, pgx) {
       } else {
         dbg("**** CALCULATING WORDCLOUD ****\n")
         progress <- shiny::Progress$new()
-        res <- pgx.calculateWordCloud(pgx, progress = progress, pg.unit = 1)
+        res <- playbase::pgx.calculateWordCloud(pgx, progress = progress, pg.unit = 1)
         on.exit(progress$close())
 
         ## save in object??

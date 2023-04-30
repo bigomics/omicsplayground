@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 compare_table_corr_score_ui <- function(id, width, height) {
@@ -34,6 +34,7 @@ compare_table_corr_score_server <- function(id,
         df,
         rownames = TRUE, ## escape = c(-1,-2),
         extensions = c("Buttons", "Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
@@ -41,6 +42,7 @@ compare_table_corr_score_server <- function(id,
           dom = "lfrtip",
           scrollX = TRUE,
           scrollY = "15vh",
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

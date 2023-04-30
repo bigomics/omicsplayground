@@ -136,9 +136,9 @@ a {
 .gene-info-output {
     font-size: 0.9em;
     background-color: #dde6f0BB;
-    padding: 20px 10px 10px 10px;
-    overflow: auto;
-    height: 680px;
+    /* padding: 20px 10px 10px 10px; */
+    /* overflow: auto; */
+    /* height: 680px; */
 }
 
 .modal-body .gene-info-output {
@@ -467,14 +467,6 @@ input[type="checkbox"], input[type="radio"] {
 .modal-dialog {
     width: 900px;
     top: 0px;
-}
-.modal-dialog.modal-lg {
-    width: 1400px;
-    top: 0px;	       
-}
-.modal-dialog.modal-sm {
-    width: 400px;
-    top: 100px;	           
 }
 
 .modal-content {

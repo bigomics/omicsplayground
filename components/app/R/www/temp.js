@@ -1,13 +1,47 @@
 let db;
 let pricing;
-Shiny.addCustomMessageHandler('set-user', (msg) => {
-	$('#authentication-user').text(msg.user);
+let user;
+
+//$(document).ready(function() {
+$(document).on('shiny:connected', function() {
+
+    $(document).on('change', '.card-footer-checked', function(e) {	
+	// Set the "checked" property for all the card-footer-checked elements
+	var isChecked = $(this).prop("checked");
+        $(".card-footer-checked").prop("checked", isChecked);
+	
+	if ($(this).prop("checked") === true) {
+	    $(".card-footer").show().animate({height: '3rem'}, 200);
+	};
+	
+	if ($(this).prop("checked") === false) {
+	    $(".card-footer").animate({height: '0px'}, 200, function() {
+		$(this).hide();
+	    });
+	};
+
+	$(window).resize();  // yikes...
+	console.log('window.resize!');
+    });
+
+// call with: session$sendCustomMessage("window_resize", list(resize = TRUE))
+    Shiny.addCustomMessageHandler('window_resize', function(message) {
+        // console.log('hit', message.resize);
+        if (message.resize) $(window).resize();
+    })
+
+    Shiny.addCustomMessageHandler('set-user', (msg) => {
+        $('#authentication-user').text(msg.user);
+        user = msg.user;
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
-		// $('#authentication-upgrade').hide();  // really?
+	    // $('#authentication-upgrade').hide();  // really?
 	}
-});
+    });
 
+});  // end of on.shiny.connected
+
+    
 const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
@@ -22,19 +56,51 @@ const unloadSidebar = () => {
 
 			$(el).hide();
 		});
+        $('#sidebar-help-container').hide();    
 }
 
 const sidebarClose = () => {
-	if(!$('#sidebar-container').hasClass('sidebar-collapsed'))
-		$('.sidebar-label').trigger('click');
+    if($('#sidebar-container').hasClass('sidebar-expanded')) {
+	$('.sidebar-label').trigger('click');
+    }
+    $('#sidebar-help-container').hide();
 }
 
 const sidebarOpen = () => {
-	if($('#sidebar-container').hasClass('sidebar-collapsed'))
-		$('.sidebar-label').trigger('click');
+    if($('#sidebar-container').hasClass('sidebar-collapsed')) {
+	$('.sidebar-label').trigger('click');
+    }
+    $('#sidebar-help-container').show();
 }
 
+const settingsClose = () => {
+	if($('#settings-container').hasClass('settings-expanded'))
+	    $('.setting-label').trigger('click');
+}
+
+const settingsOpen = () => {
+	if($('#settings-container').hasClass('sidebar-collapsed'))
+	    $('.settings-label').trigger('click');
+}
+
+const settingsLock = () => {
+	if($('#settings-container').hasClass('settings-unlocked'))
+		$('.settings-lock').trigger('click');
+	if(!$('#settings-container').hasClass('settings-locked'))
+		$('.settings-lock').trigger('click');
+}
+
+const settingsUnlock = () => {
+	if($('#settings-container').hasClass('settings-locked'))
+		$('.settings-lock').trigger('click');
+}
+
+$(() => {
+	unloadSidebar();
+});
+
 $(function(){
+        // init sequence: close sidebar, goto Welcome page and hide it's tab item
 	setTimeout(() => {
 		$('.sidebar-label').trigger('click');
 		$('.sidebar-menu')
@@ -44,20 +110,10 @@ $(function(){
 		$('.tab-sidebar')
 			.first()
 			.css('display', 'none');
-
-	        // $('.settings-label').click()
+		// on mouseover this does not work anymore, substitute by lock button option
+	        //$('.settings-label').click()
 	}, 250);
-
-	$('#init-load-data').on('click', (e) => {
-		$(".tab-sidebar:eq(1)").trigger('click');
-		$('.sidebar-label').trigger('click');
-	});
-
-	$('#init-upload-data').on('click', (e) => {
-		$(".tab-sidebar:eq(2)").trigger('click');
-		$('.sidebar-label').trigger('click');
-	});
-
+    
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 })
@@ -205,7 +261,8 @@ const logout = () => {
 
 const logoutInApp = () => {
 	unloadSidebar();
-	$(".tab-sidebar:eq(1)").trigger('click');
+    //	$(".tab-sidebar:eq(1)").trigger('click');  // show welcome page
+        $(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
@@ -323,10 +380,6 @@ Shiny.addCustomMessageHandler('referral-global-error', (msg) => {
 	}, 5000);
 });
 
-$(() => {
-	unloadSidebar();
-});
-
 Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	setTimeout(() => {
 		$('.sidebar-content')
@@ -348,6 +401,54 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 		return;
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
-
+	$('#sidebar-help-container').show();
 	}, 1000);
 });
+
+Shiny.addCustomMessageHandler('bigdash-select-tab', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).trigger('click');
+});
+
+Shiny.addCustomMessageHandler('bigdash-hide-menuitem', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).hide();
+});
+
+Shiny.addCustomMessageHandler('bigdash-show-menuitem', (msg) => {
+    $(`.tab-trigger[data-target=${msg.value}]`).show();    
+});
+
+Shiny.addCustomMessageHandler('bigdash-hide-tab', (msg) => {
+    $(`.big-tab[data-name=${msg.value}]`).hide();
+});
+
+Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
+    $(`.big-tab[data-name=${msg.value}]`).show();
+});
+
+
+$(document).ready(function() {
+    console.log('*** setting up HSQ ***');
+    /* Default installation */
+    /* From https://stackoverflow.com/questions/74643167 */
+    /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
+    $(".tab-trigger").on("click", function(e) {
+	var tabId = $(e.target).data("target");
+	let hasHsq = (typeof window._hsq !== 'undefined' && window._hsq !== null)
+ 	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
+	console.log('[tab-trigger:click] tabId =' + tabId);
+	if(hasHsq && user !== '' && user !== 'undefined') {
+	    var _hsq = window._hsq = window._hsq || [];
+	    var orginalTitle = document.title;
+	    document.title = orginalTitle + ' > ' + tabId ;
+	    _hsq.push(["identify", { email: user }]);  // set to current user	
+	    _hsq.push(['setPath', '#' + tabId]);	
+	    _hsq.push(['trackPageView']);
+	    document.title = orginalTitle;
+	}
+    });
+    
+});
+
+
+
+

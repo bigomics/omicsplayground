@@ -1,31 +1,38 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_histogram_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_histogram_ui <- function(
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("Histogram of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the <code>grouped</code> setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Counts histogram",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
 
 dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    gx.hist <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
+
+    .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)
       h0 <- hist(as.vector(c(gx[jj], min(gx), max(gx))),
@@ -54,7 +61,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       shiny::req(res)
-      hh <- gx.hist(gx = res$log2counts, n = 2000, plot = FALSE)
+      hh <- .gx.histogram(gx = res$log2counts, n = 2000, plot = FALSE)
       pdata <- list(
         histogram = hh,
         log2counts = res$log2counts
@@ -66,7 +73,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
       res <- plot_data()
       shiny::req(res)
       par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
-      gx.hist(gx = res$log2counts, n = 2000, plot = TRUE) # , main="histogram")
+      .gx.histogram(gx = res$log2counts, n = 2000, plot = TRUE) # , main="histogram")
     }
 
     modal_plot.RENDER <- function() {
@@ -116,15 +123,15 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
           margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         ) %>%
-        plotly_default1()
+        plotly_default()
       fig
     }
 
     modal_plotly.RENDER <- function() {
       plotly.RENDER() %>%
+        plotly_modal_default() %>%        
         plotly::layout(
-          showlegend = TRUE,
-          font = list(size = 18)
+          showlegend = TRUE
         )
     }
 

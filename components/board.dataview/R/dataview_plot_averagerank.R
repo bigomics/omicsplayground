@@ -1,22 +1,29 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_averagerank_ui <- function(id, label = "", height = c(350, 600)) {
+dataview_plot_averagerank_ui <- function(
+  id, 
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption) {
   ns <- shiny::NS(id)
-  info_text <- paste0("Ranking of the selected gene by decreasing average expression.")
 
   PlotModuleUI(
     ns("pltsrv"),
-    title = "Average rank",
+    title = title,
     label = label,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -152,17 +159,13 @@ dataview_plot_averagerank_server <- function(id,
           xaxis = list(title = "Ordered genes"),
           yaxis = list(title = stringr::str_to_sentence(ylab))
         ) %>%
-        plotly_default1()
+        plotly_default()
       fig
     }
 
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() %>%
-        plotly::layout(
-          font = list(
-            size = 18
-          )
-        )
+        plotly_modal_default()
       ## fig <- plotly::style(fig, marker.size = 14)
       fig
     }

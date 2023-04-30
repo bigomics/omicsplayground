@@ -1,0 +1,150 @@
+PACKAGE                             VERSION        LICENSE                       
+ape                                 5.7-1          GPL-2 | GPL-3                 
+argparse                            2.2.2          GPL (>= 2)                    
+base                                4.1.2          Part of R 4.1.2               
+base64enc                           0.1-3          GPL-2 | GPL-3                 
+batchelor                           1.10.0         GPL-3                         
+beepr                               1.3            GPL-3                         
+bigdash                             0.0.0.9003     MIT + file LICENSE            
+bigLoaders                          0.0.2          MIT + file LICENSE            
+BiocGenerics                        0.40.0         Artistic-2.0                  
+BiocManager                         1.30.20        Artistic-2.0                  
+brew                                1.0-8          GPL-2                         
+bslib                               0.4.2          MIT + file LICENSE            
+coin                                1.4-2          GPL-2                         
+colorspace                          2.1-0          BSD_3_clause + file LICENSE   
+ComplexHeatmap                      2.10.0         MIT + file LICENSE            
+corpora                             0.5-1          GPL-3                         
+corrplot                            0.92           MIT + file LICENSE            
+cowplot                             1.1.1          GPL-2                         
+data.table                          1.14.8         MPL-2.0 | file LICENSE        
+DelayedArray                        0.20.0         Artistic-2.0                  
+DelayedMatrixStats                  1.16.0         MIT + file LICENSE            
+devtools                            2.4.5          MIT + file LICENSE            
+diptest                             0.76-0         GPL (>= 2)                    
+docopt                              0.7.1          MIT + file LICENSE            
+dplyr                               1.1.2          MIT + file LICENSE            
+DT                                  0.27           GPL-3 | file LICENSE          
+e1071                               1.7-13         GPL-2 | GPL-3                 
+EPIC                                1.1.6          file LICENSE                  
+fastcluster                         1.2.3          FreeBSD | GPL-2 | file LICENSE
+FastGGM                             1.0            GPL (>= 2)                    
+fgsea                               1.20.0         MIT + file LICENCE            
+firebase                            0.2.1.9000     AGPL-3                        
+flashClust                          1.01-2         GPL (>= 2)                    
+flexdashboard                       0.6.1          MIT + file LICENSE            
+fluctuator                          0.1.0          GPL-3 + file LICENSE          
+forcats                             1.0.0          MIT + file LICENSE            
+fpc                                 2.2-10         GPL                           
+GEOmetadb                           1.56.0         Artistic-2.0                  
+ggforce                             0.4.1          MIT + file LICENSE            
+ggplot2                             3.4.2          MIT + file LICENSE            
+ggrepel                             0.9.3          GPL-3 | file LICENSE          
+ggVennDiagram                       1.2.2          GPL-3                         
+gplots                              3.1.3          GPL-2                         
+graphics                            4.1.2          Part of R 4.1.2               
+grDevices                           4.1.2          Part of R 4.1.2               
+gridExtra                           2.3            GPL (>= 2)                    
+gridGraphics                        0.5-1          GPL (>= 2)                    
+GSVA                                1.42.0         GPL (>= 2)                    
+heatmaply                           1.4.2          GPL-2 | GPL-3                 
+HiddenMarkov                        1.8-13         GPL (>= 2)                    
+htmltools                           0.5.5          GPL (>= 2)                    
+htmlwidgets                         1.6.2          MIT + file LICENSE            
+httr                                1.4.5          MIT + file LICENSE            
+igraph                              1.4.2          GPL (>= 2)                    
+iheatmapr                           0.5.1          MIT + file LICENSE            
+infercnv                            1.1.3          BSD_3_clause + file LICENSE   
+inspectdf                           0.0.12         GPL-2                         
+irlba                               2.3.5.1        GPL-3                         
+iTALK                               0.1.0          CC-BY-NC-SA                   
+jpeg                                0.1-10         GPL-2 | GPL-3                 
+jsonlite                            1.8.4          MIT + file LICENSE            
+kableExtra                          1.3.4          MIT + file LICENSE            
+KEGG.db                             3.2.4          file LICENSE                  
+KEGGgraph                           1.54.0         GPL (>= 2)                    
+leidenbase                          0.1.18         GPL-3                         
+liger                               2.0.1          GPL-3 | file LICENSE          
+limma                               3.50.3         GPL (>=2)                     
+listviewer                          3.0.0          MIT + file LICENSE            
+magrittr                            2.0.3          MIT + file LICENSE            
+markdown                            1.6            GPL-2                         
+Matrix                              1.5-4          GPL (>= 2) | file LICENCE     
+Matrix                              1.5-4          GPL (>= 2) | file LICENCE     
+metap                               1.8            GPL-2                         
+miniUI                              0.1.1.1        GPL-3                         
+mixOmics                            6.18.1         GPL (>= 2)                    
+monocle                             2.22.0         Artistic-2.0                  
+monocle3                            1.3.1          MIT + file LICENSE            
+mygene                              1.30.0         Artistic-2.0                  
+NNLM                                0.4.4          BSD_2_clause + file LICENSE   
+optparse                            1.7.3          GPL (>= 2)                    
+org.Hs.eg.db                        3.14.0         Artistic-2.0                  
+pairsD3                             0.1.3          GPL (>= 3)                    
+partykit                            1.2-20         GPL-2 | GPL-3                 
+patchwork                           1.1.2          MIT + file LICENSE            
+pathview                            1.16.7         GPL (>=3.0)                   
+playbase                            0.1.0          Dual Commercial and Non-Commer
+plotly                              4.10.1         MIT + file LICENSE            
+png                                 0.1-8          GPL-2 | GPL-3                 
+preprocessCore                      1.56.0         LGPL (>= 2)                   
+processx                            3.8.1          MIT + file LICENSE            
+qgraph                              1.9.4          GPL-2                         
+R.utils                             2.12.2         LGPL (>= 2.1)                 
+RColorBrewer                        1.1-3          Apache License 2.0            
+RcppParallel                        5.1.7          GPL (>= 3)                    
+RCurl                               1.98-1.12      BSD_3_clause + file LICENSE   
+renv                                0.17.3         MIT + file LICENSE            
+reshape                             0.8.9          MIT + file LICENSE            
+reshape2                            1.4.4          MIT + file LICENSE            
+reticulate                          1.28           Apache License 2.0            
+Rgraphviz                           2.38.0         EPL                           
+rhdf5                               2.38.1         Artistic-2.0                  
+rjags                               4-14           GPL (== 2)                    
+rpart                               4.1.19         GPL-2 | GPL-3                 
+rpart.plot                          3.1.1          GPL-3                         
+Rtsne                               0.16           file LICENSE                  
+rworldmap                           1.3-6          GPL (>= 2)                    
+S4Vectors                           0.32.4         Artistic-2.0                  
+SBGNview                            1.8.0          AGPL-3                        
+scales                              1.2.1          MIT + file LICENSE            
+scatterD3                           1.0.1          GPL (>= 3)                    
+seriation                           1.4.2          GPL-3                         
+Seurat                              4.3.0          MIT + file LICENSE            
+sever                               0.0.7          MIT + file LICENSE            
+shiny                               1.7.4          GPL-3 | file LICENSE          
+shinyalert                          3.0.0          MIT + file LICENSE            
+shinyBS                             0.61.1         GPL-3                         
+shinybusy                           0.3.1          GPL-3                         
+shinycssloaders                     1.0.0          MIT + file LICENSE            
+shinydashboard                      0.7.2          GPL (>= 2) | file LICENSE     
+shinydashboardPlus                  2.0.3          GPL (>= 2) | file LICENSE     
+shinyFeedback                       0.4.0          MIT + file LICENSE            
+shinyjqui                           0.4.1          MIT + file LICENSE            
+shinyjs                             2.1.0          MIT + file LICENSE            
+shinythemes                         1.2.0          GPL-3 | file LICENSE          
+shinyWidgets                        0.7.6          GPL-3                         
+SILGGM                              1.0.0          GPL (>= 2)                    
+SingleCellExperiment                1.16.0         GPL-3                         
+SmartSVA                            0.1.3          GPL-3                         
+sortable                            0.5.0          MIT + file LICENSE            
+stats                               4.1.2          Part of R 4.1.2               
+stringr                             1.5.0          MIT + file LICENSE            
+SummarizedExperiment                1.24.0         Artistic-2.0                  
+survival                            3.5-5          LGPL (>= 2)                   
+svgPanZoom                          0.3.4          MIT + file LICENSE            
+systemfonts                         1.0.4          MIT + file LICENSE            
+TCGAbiolinks                        2.22.4         GPL (>= 3)                    
+TCGAutils                           1.14.1         Artistic-2.0                  
+tools                               4.1.2          Part of R 4.1.2               
+TxDb.Hsapiens.UCSC.hg19.knownGene   3.2.2          Artistic-2.0                  
+TxDb.Mmusculus.UCSC.mm10.knownGene  3.10.0         Artistic-2.0                  
+umap                                0.2.10.0       MIT + file LICENSE            
+utils                               4.1.2          Part of R 4.1.2               
+visNetwork                          2.1.2          MIT + file LICENSE            
+waiter                              0.2.5          MIT + file LICENSE            
+webshot                             0.5.4          GPL-2                         
+WGCNA                               1.72-1         GPL (>= 2)                    
+wordcloud                           2.6            LGPL-2.1                      
+wordcloud2                          0.2.1          GPL-2                         
+zip                                 2.3.0          MIT + file LICENSE            

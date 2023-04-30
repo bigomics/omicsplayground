@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 800)) {
+intersection_scatterplot_pairs_ui <- function(
+  id,
+  title,
+  label = "",
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
   scatterplot_pairs.opts <- shiny::tagList(
     withTooltip(
@@ -18,13 +23,14 @@ intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 80
   PlotModuleUI(
     ns("scatterplot"),
     plotlib = "plotly",
-    title = "Scatterplot pairs",
+    title = title,
     label = "a",
-    info.text = info_text,
+    caption = caption,
+    info.text = info.text,
     options = scatterplot_pairs.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(740, 750),
-    width = c("100%", 1000)
+    height = height,
+    width = width
   )
 }
 
@@ -32,7 +38,7 @@ intersection_scatterplot_pairs_ui <- function(id, label = "", height = c(600, 80
 intersection_scatterplot_pairs_server <- function(id,
                                                   getActiveFoldChangeMatrix,
                                                   level,
-                                                  inputData,
+                                                  pgx,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -92,7 +98,7 @@ intersection_scatterplot_pairs_server <- function(id,
       ## Labels for top 50
       label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
       label.text <- sub(".*[:]", "", label.text) ## strip prefix??
-      label.text <- shortstring(label.text, 30)
+      label.text <- playbase::shortstring(label.text, 30)
       if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
       ## reorder so the selected genes don't get overlapped
@@ -106,12 +112,11 @@ intersection_scatterplot_pairs_server <- function(id,
       ## tt <- sub("","",tt)  ## strip prefix??
       # if(input$level == "gene") {
       if (level == "gene") {
-        ngs <- inputData()
         g <- rownames(df)
-        tt <- paste0("<b>", g, "</b> ", ngs$genes[g, "gene_title"])
+        tt <- paste0("<b>", g, "</b> ", pgx$genes[g, "gene_title"])
       }
       tt <- gsub("_", " ", tt)
-      tt <- sapply(tt, breakstring2, 50, brk = "<br>")
+      tt <- sapply(tt, playbase::breakstring2, 50, brk = "<br>")
 
       ## plotly
       ##

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 CompareInputs <- function(id) {
@@ -79,82 +79,81 @@ CompareInputs <- function(id) {
 CompareUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 770
-  tabH <- "70vh"
-
+  fullH <- "calc(100vh - 180px)"
+  tabH  <- "70vh"
+  
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Compare expression",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          compare_plot_compare1_ui(ns("dt1"),
-            width = c("auto", 900),
-            height = c(700, 750)
-          )
+      bslib::layout_column_wrap(
+        width = 1/2,
+        height = fullH,
+        compare_plot_compare1_ui(
+          id = ns("dt1"),
+          width = c("auto", "100%"),
+          height = c("100%", "70vh")
         ),
-        div(
-          class = "col-md-6",
-          compare_plot_compare2_ui(ns("dt2"),
-            width = c("auto", 900),
-            height = c(700, 750)
-          )
+        compare_plot_compare2_ui(
+          id = ns("dt2"),
+          width = c("auto", "100%"),
+          height = c("100%", "70vh")
         )
       )
     ),
     shiny::tabPanel(
       "Foldchange",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          compare_plot_fc_correlation_ui(ns("fcfcplot"),
-            height = c(700, fullH),
-            width = c("auto", 900)
-          )
+      bslib::layout_column_wrap(
+        width = 1/2,
+        height = fullH,
+        compare_plot_fc_correlation_ui(
+          id = ns("fcfcplot"),
+          width = c("auto", "100%"),
+          height = c("100%", "70vh")
         ),
-        div(
-          class = "col-md-6",
-          compare_plot_cum_fc1_ui(ns("cumfcplot1"),
-            height = c(350, 375),
-            width = c("auto", 900),
+        bslib::layout_column_wrap(
+          width = 1,
+          compare_plot_cum_fc1_ui(
+            id = ns("cumfcplot1"),
+            width = c("auto", "100%"),
+            height = c("100%", "70vh"),
             label = "b"
           ),
-          compare_plot_cum_fc2_ui(ns("cumfcplot2"),
-            height = c(350, 375),
-            width = c("auto", 900),
+          compare_plot_cum_fc2_ui(
+            id = ns("cumfcplot2"),
+            width = c("auto", "100%"),
+            height = c("100%", "70vh"),
             label = "c"
           )
         )
-      ),
-      tags$div(
-        class = "caption",
-        HTML("<b>Compare datasets</b>. Identification of similar features across datasets and contrasts.  <b>(a)</b> Correlation between selected contrasts.
-            <b>(b)</b> Cumulative fold change of genes on dataset 1.  <b>(c)</b> Cumulative fold change of genes on dataset 2.")
       )
     ),
     shiny::tabPanel(
       "Gene Correlation",
-      div(
-        class = "row",
-        div(
-          class = "col-md-6",
-          compare_plot_expression_ui(ns("multibarplot")),
+      bslib::layout_column_wrap(
+        width = 1/2,
+        height = fullH,
+        bslib::layout_column_wrap(
+          width = 1,
+          compare_plot_expression_ui(
+            id = ns("multibarplot"),
+            height = c("70%", TABLE_HEIGHT_MODAL)
+          ),
           compare_table_corr_score_ui(
-            ns("score_table"),
-            height = c(235, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
+            id = ns("score_table"),
+            height = c("30%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")            
           )
         ),
-        div(
-          class = "col-md-6",
-          compare_plot_gene_corr_ui(ns("genecorr"))
+        compare_plot_gene_corr_ui(
+          id = ns("genecorr"),
+          height = c("100%", TABLE_HEIGHT_MODAL),          
         )
       )
     )
   )
+
+  
   div(
     boardHeader(title = "Compare datasets", info_link = ns("info")),
     tabs

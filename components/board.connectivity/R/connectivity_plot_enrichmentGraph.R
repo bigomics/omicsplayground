@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,17 +12,15 @@
 #' @param height
 #'
 #' @export
-connectivity_plot_enrichmentGraph_ui <- function(id,
-                                                 label = "",
-                                                 rowH = 660) {
+connectivity_plot_enrichmentGraph_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- strwrap(
-    "<b>Enrichment graph.</b> Network of shared enriched genesets between
-    top-N most similar signatures. The edge width corresponds to the number of
-    signatures that share that pair of genesets in their top enriched genesets.
-    In the plot options you can set the threshold the edges."
-  )
 
   plot_opts <- shiny::tagList(
     withTooltip(
@@ -48,12 +46,14 @@ connectivity_plot_enrichmentGraph_ui <- function(id,
   )
 
   PlotModuleUI(ns("plot"),
-    title = "Enrichment graph",
+    title = title,
     label = label,
     plotlib = "visnetwork",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = plot_opts,
-    height = c(720, 720), width = c("auto", 1200)
+    width = width,
+    height = height
   )
 }
 
@@ -86,7 +86,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
           gsets <- getGSETS(rownames(F))
           gsets <- gsets[sapply(gsets, length) >= 5]
           bg <- unique(unlist(gsets))
-          ft <- gset.fisher(le.genes, gsets,
+          ft <- playbase::gset.fisher(le.genes, gsets,
             fdr = 1.0,
             min.genes = 3, max.genes = 99999,
             background = bg

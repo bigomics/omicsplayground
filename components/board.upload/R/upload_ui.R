@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 UploadInputs <- function(id) {
@@ -46,6 +46,7 @@ UploadUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Upload",
+      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). NB Users can now create contrasts from the platform itself, so the contrasts.csv file is optional."),
       div(
         class = "row",
         div(
@@ -65,24 +66,26 @@ UploadUI <- function(id) {
           shiny::div(shiny::uiOutput(ns("upload_info")))
         )
       ),
+      br(),
       div(
         class = "row",
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("countStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("countStats")) %>% bigLoaders::useSpinner()
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("phenoStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("phenoStats")) # %>% bigLoaders::useSpinner()
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("contrastStats")) %>% shinycssloaders::withSpinner()
+          shiny::plotOutput(ns("contrastStats")) # %>% bigLoaders::useSpinner()
         )
       )
     ),
     shiny::tabPanel(
       "BatchCorrect",
+      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
       shiny::fillCol(
         height = height,
         BatchCorrectUI(ns("batchcorrect"))
@@ -90,101 +93,12 @@ UploadUI <- function(id) {
     ),
     shiny::tabPanel(
       "Contrasts",
-      shiny::fillCol(
-        height = 750,
-        flex = c(1, NA, NA, 1),
-        shiny::fillRow(
-          flex = c(3, 0.06, 1.0),
-          shiny::fillCol(
-            flex = c(NA, NA, 1.0),
-            shiny::h4("Create comparisons"),
-            ## p(help_text),
-            shiny::fillRow(
-              flex = c(1, 4),
-              shiny::fillCol(
-                flex = c(NA, NA, NA, NA, 1),
-                tipifyL(
-                  shiny::selectInput(ns("param"), "Phenotype:",
-                    choices = NULL,
-                    multiple = TRUE
-                  ),
-                  "Select phenotype(s) to create conditions for your groups. Select <gene> if you want to split by high/low expression of some gene. Select <samples> if you want to group manually on sample names. You can select multiple phenotypes to create combinations."
-                ),
-                shiny::conditionalPanel(
-                  "input.param == '<gene>'",
-                  ns = ns,
-                  ## tipifyL(
-                  shiny::selectizeInput(ns("gene"), "Gene:",
-                    choices = NULL,
-                    multiple = FALSE
-                  ),
-                  ## "Select gene to divide your samples into high and low expression of that gene.")
-                ),
-                shiny::br(),
-                tipifyL(
-                  shiny::textInput(ns("newname"), "Comparison name:",
-                    placeholder = "e.g. MAIN_vs_CONTROL"
-                  ),
-                  "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."
-                ),
-                shiny::br(),
-                ## tipifyL(
-                shiny::actionButton(ns("addcontrast"),
-                  "add comparison",
-                  icon = icon("plus"),
-                  class = "btn-outline-primary"
-                ),
-                ## "After creating the groups, press this button to add the comparison to the table."a),
-                shiny::br()
-              ),
-              withTooltip(
-                shiny::uiOutput(ns("createcomparison"),
-                  style = "font-size:13px; height: 280px; overflow-y: scroll;"
-                ),
-                "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
-                placement = "top", options = list(container = "body")
-              )
-            )
-          ),
-          shiny::br(),
-          ## plotOutput(ns("pcaplot"), height="330px")
-          upload_plot_pcaplot_ui(
-            ns("pcaplot"),
-            height = c(320, 700),
-            width = c("auto", 800)
-          )
-
-          # plotWidget(ns("pcaplot"))
-        ),
-        shiny::h4("Contrast table"),
-        shiny::fillRow(
-          height = 24,
-          flex = c(NA, 0.05, NA, NA, 1),
-          withTooltip(
-            shiny::actionButton(ns("autocontrast"),
-              "add auto-contrasts",
-              icon = icon("plus"),
-              class = "small-button btn-outline-primary"
-            ),
-            "If you are feeling lucky, try this to automatically create contrasts.",
-            placement = "top", options = list(container = "body")
-          ),
-          shiny::br(),
-          shiny::div(shiny::HTML("<b>Strata:</b>"), style = "padding: 4px 4px;"),
-          shiny::selectInput(ns("strata"), NULL, choices = NULL, width = "120px"),
-          shiny::br()
-        ),
-        # shiny::br(),
-        ## shiny::tags$head(shiny::tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
-        ## this.style(ns("contrastTable"), "table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}"),
-        shiny::div(DT::dataTableOutput(ns("contrastTable")),
-          style = "font-size:13px; height: 300px; margin-top: 20px;overflow-y: scroll;"
-        )
-      )
-      # shiny::uiOutput(ns("contrasts_UI"))
+      bs_alert("Here, you can interactively create your comparisons (or so-called 'contrasts'). Choose a phenotype on the left, then create groups by dragging the conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'add auto-contrasts'."),
+      MakeContrastUI(ns("makecontrast"))
     ),
     shiny::tabPanel(
       "Compute",
+      bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
       shiny::fillCol(
         height = height, ## width = 1200,
         ComputePgxUI(ns("compute"))

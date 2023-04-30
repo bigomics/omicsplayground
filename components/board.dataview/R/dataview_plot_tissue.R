@@ -1,33 +1,38 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-dataview_plot_tissue_ui <- function(id, label = "", height = c(600, 800)) {
+dataview_plot_tissue_ui <- function(
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-  info_text <- paste(
-    "Top 15 tissues for the selected gene in the tissue expression ",
-    a_GTEx, " dataset. Colors corresponds to 'tissue clusters' as computed by unsupervised clustering."
-  )
 
   PlotModuleUI(
     ns("pltmod"),
-    title = "Tissue expression (GTEX)",
+    title = title,
     label = label,
     plotlib = "plotly",
     # outputFunc = plotOutput,
     # outputFunc2 = plotOutput,
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -64,7 +69,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         color = tissue.klr
       )
       df <- df[with(df, order(-x)), ]
-      df <- df[1:15, ] # select top 15 tissues
+      df <- head(df,15) # select top 15 tissues
 
       return(
         list(
@@ -105,10 +110,10 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       gene <- pdat$gene
 
       ## plot as regular bar plot
-      df <- dplyr::mutate(df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
+      df <- dplyr::mutate(
+        df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
 
       # df$tissue <- factor(df$tissue, levels = df$tissue)
-
       plotly::plot_ly(
         data = df,
         ## name = pd$gene
@@ -117,7 +122,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         type = "bar",
         orientation = "h",
         color = ~color, ## TODO: use variable that encodes grouping
-        colors = omics_pal_d()(length(unique(df$color)))
+        colors = omics_pal_d()(length(unique(df$color))),
+        hovertemplate = '%{y}: %{x}<extra></extra>'
       ) %>%
         plotly::layout(
           yaxis = list(title = FALSE),
@@ -127,16 +133,14 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
           bargap = .4,
           margin = list(l = 10, r = 10, b = 10, t = 10)
         ) %>%
-        plotly_default1()
+        plotly_default()
     }
 
     modal_plot.RENDER <- function() {
       plot.RENDER() %>%
+        plotly_modal_default() %>%
         plotly::layout(
-          showlegend = TRUE, ## TODO: I guess a legend makes sense here?
-          font = list(
-            size = 18
-          )
+          showlegend = FALSE ## TODO: I guess a legend makes sense here?
         )
     }
 

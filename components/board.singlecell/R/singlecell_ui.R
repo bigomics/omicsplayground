@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 SingleCellInputs <- function(id) {
@@ -18,7 +18,7 @@ SingleCellInputs <- function(id) {
           shiny::selectInput(ns("clustmethod"), "Layout", c("default", "pca"),
             selected = "default"
           ),
-          "Specify a layout for the figures: t-SNE or PCA-based layout.",
+          "Specify a layout for the figures: t-SNE, UMAP or PCA-based layout.",
           placement = "top", options = list(container = "body")
         )
   )
@@ -28,6 +28,8 @@ SingleCellUI <- function(id) {
   fullH <- 750 ## full height of panel
   imgH <- 680 ## row height of panel
   tabH <- 200 ## row height of panel
+  modH <- TABLE_HEIGHT_MODAL
+
 
   ns <- shiny::NS(id) ## namespace
   div(
@@ -40,110 +42,81 @@ SingleCellUI <- function(id) {
           id = ns("tabs"),
           shiny::tabPanel(
             "Cell type",
-            div(
-              class = "row",
-              div(
-                class = "col-md-6",
-                singlecell_plot_icpplot_ui(ns("icpplot"),
+            bslib::layout_column_wrap(
+              width = 1/2,
+              height = "calc(100vh - 180px)",
+              singlecell_plot_icpplot_ui(
+                  id = ns("icpplot"),
+                  title = "Cell type profiling",
+                  info.text = " Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.",
+                  caption = "Plot infering the type of cells using computational deconvolution methods and reference datasets from the literature.",
                   label = "a",
-                  height = c(fullH - 80, 700),
-                  width = c("100%", 1400),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%"),
                   parent = ns
-                )
               ),
-              div(
-                class = "col-md-6",
-                singlecell_plot_phenoplot_ui(
+              singlecell_plot_phenoplot_ui(
                   id = ns("phenoplot"),
+                  title = "Phenotypes",
+                  info.text = "The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.",
+                  caption = "t-SNE plot of the samples with superposed phenotypes.",
                   label = "b",
-                  height = c(fullH - 100, 750),
-                  width = c("100%", 500)
-                )
-              )
-            ),
-            tags$div(
-              HTML(
-                "<strong>(a) Cell type profiling</strong> infers the type of cells using computational deconvolution
-                                methods and reference datasets from the literature. Currently, we have implemented a total
-                                of 8 methods and 9 reference datasets to predict immune cell types (4 datasets),
-                                tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset).
-                                However, we plan to expand the collection of methods and databases and to infer other cell types.
-                                <b>(b) Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the
-                                t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular
-                                phenotype that is controlled by the experimental condition or unwanted batch effects."
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
               )
             )
           ),
           shiny::tabPanel(
             "Mapping",
-            div(
-              class = "row",
-              div(
-                class = "col-md-6",
-                singlecell_plot_mappingplot_ui(
+            bslib::layout_column_wrap(
+              width = 1/2,
+              height = "calc(100vh - 180px)",
+              singlecell_plot_mappingplot_ui(
                   id = ns("mappingplot"),
+                  title = "Cell type mapping",
+                  info.text = "Cell type profiling infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.",
+                  caption = "Dot plot indicating the chosen cell type profile of each individual sample/cell or phenotypic group. Useful for determining a sample/cell origin.",
                   label = "a",
-                  height = c(fullH - 80, 780),
-                  width = c("100%", 1000),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               ),
-              div(
-                class = "col-md-6",
-                singlecell_plot_crosstabPlot_ui(
+              singlecell_plot_crosstabPlot_ui(
                   id = ns("crosstabPlot"),
+                  title = "Proportions",
+                  info.text = "The Proportions tab visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.",
+                  caption = "Proportion plot indicating the chosen cell-type composition of each experimental phenotype.",
                   label = "b",
-                  height = c(fullH - 80, 760),
-                  width = c("100%", 900),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
-              )
-            ),
-            div(
-              HTML(
-                "<b>(a) Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable
-                            of the data set. The reference set can be a cell type reference database but also cancer types,
-                            tissue types or cell lines.
-                            <b>(b) Proportion plot.</b> Plot visualizing the overlap between two categorical variables
-                            (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data,
-                            it provides useful information about the proportion of different cell types in samples
-                            obtained by the bulk sequencing method."
               )
             )
           ),
           shiny::tabPanel(
             "Markers",
-            div(
-              class = "row",
-              div(
-                class = "col-md-6",
-                singlecell_plot_markersplot_ui(
+            bslib::layout_column_wrap(
+              width = 1/2,
+              height = "calc(100vh - 180px)",
+              singlecell_plot_markersplot_ui(
                   id = ns("markersplot"),
+                  title = "Expression of marker genes",
+                  info.text = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on.",
+                  caption = "Selected Marker gene expression across all samples.",
                   label = "a",
-                  height = c(fullH - 80, 780),
-                  width = c("100%", 1000),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
               ),
-              div(
-                class = "col-md-6",
-                singlecell_plot_cytoplot_ui(
+              singlecell_plot_cytoplot_ui(
                   id = ns("cytoplot"),
+                  title = "Cytometry plot",
+                  info.text = "The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination.",
+                  caption = "Cytometry-like plot of samples based on gene pair combinations. ",
                   label = "b",
-                  height = c(fullH - 80, 780),
-                  width = c("100%", 600),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("100%", "100%"),
                   parent = ns
-                )
-              )
-            ),
-            div(
-              HTML(
-                "<b>(a) T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a
-                            distribution pattern strongly correlated with some phenotype. The top genes with the highest
-                            standard deviation are shown. The red color shading is proportional to the (absolute)
-                            expression of the gene in corresponding samples.
-                            <b>(b) Cyto plot.</b> This plot shows the distribution of samples in relation to the expression
-                            of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."
               )
             )
           )

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' UI code for table code: expression board
@@ -11,17 +11,22 @@
 #' @param width
 #'
 #' @export
-expression_table_FDRtable_ui <- function(id, width, height) {
+expression_table_FDRtable_ui <- function(
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  FDRtable_text <- "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = FDRtable_text,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Number of significant genes"
+    title = title
   )
 }
 
@@ -32,10 +37,10 @@ expression_table_FDRtable_ui <- function(id, width, height) {
 #'
 #' @export
 expression_table_FDRtable_server <- function(id,
-                                             ngs,
+                                             pgx,
                                              methods, # input$gx_statmethod
-                                             tabV,
                                              height, # c(tabH, 700)
+                                             scrollY,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -49,12 +54,11 @@ expression_table_FDRtable_server <- function(id,
       }
 
       ## comp <- input$gx_contrast
-      ngs <- ngs()
 
-      kk <- rownames(ngs$gx.meta$sig.counts[[1]][[1]])
-      kk <- intersect(methods, rownames(ngs$gx.meta$sig.counts[[1]][[1]]))
-      counts.up <- ngs$gx.meta$sig.counts$up
-      counts.down <- ngs$gx.meta$sig.counts$down
+      kk <- rownames(pgx$gx.meta$sig.counts[[1]][[1]])
+      kk <- intersect(methods, rownames(pgx$gx.meta$sig.counts[[1]][[1]]))
+      counts.up <- pgx$gx.meta$sig.counts$up
+      counts.down <- pgx$gx.meta$sig.counts$down
       counts.up <- lapply(counts.up, function(x) x[kk, , drop = FALSE])
       counts.down <- lapply(counts.down, function(x) x[kk, , drop = FALSE])
       for (i in 1:length(counts.up)) {
@@ -81,15 +85,18 @@ expression_table_FDRtable_server <- function(id,
       DT::datatable(D,
         rownames = FALSE,
         #                      class = 'compact cell-border stripe hover',
-        class = "compact hover",
+        ##class = "compact hover",
         fillContainer = TRUE,
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
-          scroller = TRUE, deferRender = TRUE
+          scrollY = scrollY,
+          scrollResize = TRUE,
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

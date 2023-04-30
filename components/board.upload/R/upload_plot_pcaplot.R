@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 upload_plot_pcaplot_ui <- function(id, height, width) {
@@ -38,7 +38,6 @@ upload_plot_pcaplot_server <- function(id,
     })
 
     pcaplot.RENDER <- shiny::reactive({
-      ## ngs <- inputData()
       ## X <- ngs$X
       pheno <- phenoRT()
       counts <- countsRT()
@@ -53,7 +52,7 @@ upload_plot_pcaplot_server <- function(id,
 
       method <- input$pcaplot.method
       X <- log2(1 + counts)
-      clust <- pgx.clusterMatrix(X, dims = 2, method = method)
+      clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
       names(clust)
 
       cond <- sel.conditions()
@@ -61,7 +60,7 @@ upload_plot_pcaplot_server <- function(id,
         return(NULL)
       }
       ## par(mar=c(4,1,1,1))
-      pgx.scatterPlotXY(
+      playbase::pgx.scatterPlotXY(
         clust$pos2d,
         var = cond, plotlib = "plotly",
         legend = FALSE ## , labels=TRUE

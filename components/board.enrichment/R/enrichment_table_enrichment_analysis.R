@@ -1,13 +1,16 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_table_enrichment_analysis_ui <- function(id, width, height) {
+enrichment_table_enrichment_analysis_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including", a_Spearman, ", ", a_GSVA, ", ", a_ssGSEA, ", ", a_Fisher, ", ", a_GSEA, ", ", a_camera, " and ", a_fry, ".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
-
 
   gseatable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gs_showqvalues"), "show indivivual q-values", FALSE),
@@ -18,11 +21,12 @@ enrichment_table_enrichment_analysis_ui <- function(id, width, height) {
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
+    caption = caption,
     height = height,
     options = gseatable_opts,
-    title = "Enrichment analysis",
+    title = title,
     label = "I"
   )
 }
@@ -32,8 +36,14 @@ enrichment_table_enrichment_analysis_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    gseatable.RENDER <- shiny::reactive({
+    table_data <- shiny::reactive({
       rpt <- getFilteredGeneSetTable()
+      rpt
+    })
+
+    gseatable.RENDER <- function() {
+      rpt <- table_data()
+      
       if (is.null(rpt)) {
         return(NULL)
       }
@@ -42,7 +52,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       }
 
       if (!("GS" %in% colnames(rpt))) rpt <- cbind(GS = rownames(rpt), rpt)
-      if ("GS" %in% colnames(rpt)) rpt$GS <- shortstring(rpt$GS, 72)
+      if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 72)
       if ("size" %in% colnames(rpt)) rpt$size <- as.integer(rpt$size)
 
       fx <- NULL
@@ -52,14 +62,13 @@ enrichment_table_enrichment_analysis_server <- function(id,
       jj <- which(sapply(rpt, is.numeric))
       if (length(jj) > 0) rpt[, jj] <- round(rpt[, jj], digits = 4)
       jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
-      if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, shortstring, 100)
-
+      if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 100)
       if (!input$gs_showqvalues) {
         rpt <- rpt[, grep("^q[.]|^q$", colnames(rpt), invert = TRUE)]
       }
 
       ## wrap genesets names with known links.
-      rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))
+      rpt$GS <- playbase::wrapHyperLink(rpt$GS, rownames(rpt))
       selectmode <- "single"
 
       is.numcol <- sapply(rpt, is.numeric)
@@ -73,14 +82,16 @@ enrichment_table_enrichment_analysis_server <- function(id,
         rownames = FALSE,
         escape = c(-1, -5),
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         fillContainer = TRUE,
-        selection = list(mode = selectmode, target = "row", selected = NULL),
+        selection = list(mode = selectmode, target = "row", selected = 1),
         options = list(
           dom = "frtip",
           paging = TRUE,
           pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
-          scrollY = "20vh",
+          scrollY = "calc(45vh - 260px)",
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           search = list(
@@ -92,9 +103,9 @@ enrichment_table_enrichment_analysis_server <- function(id,
         DT::formatSignif(numcols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(fx.col,
-          background = color_from_middle(fx, "lightblue", "#f5aeae")
+          background = playbase::color_from_middle(fx, "lightblue", "#f5aeae")
         )
-    })
+    }
 
     gseatable.RENDER_modal <- shiny::reactive({
       dt <- gseatable.RENDER()
@@ -106,6 +117,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       "datasets",
       func = gseatable.RENDER,
       func2 = gseatable.RENDER_modal,
+      csvFunc = table_data,
       selector = "single"
     )
 

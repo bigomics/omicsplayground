@@ -1,17 +1,18 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-clustering_plot_featurerank_ui <- function(id,
-                                           label = "",
-                                           height,
-                                           width) {
+clustering_plot_featurerank_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  clust_featureRank_info <- "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
-
 
   clust_featureRank.opts <- shiny::tagList(
     withTooltip(
@@ -30,8 +31,9 @@ clustering_plot_featurerank_ui <- function(id,
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-    title = "Feature-set ranking",
-    info.text = clust_featureRank_info,
+    title = title,
+    caption = caption,	
+    info.text = info.text,
     options = clust_featureRank.opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -42,6 +44,7 @@ clustering_plot_featurerank_ui <- function(id,
 clustering_plot_featurerank_server <- function(id,
                                                pgx,
                                                hm_level,
+                                               selected_phenotypes,
                                                hm_samplefilter,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -71,14 +74,16 @@ clustering_plot_featurerank_server <- function(id,
 
       ## ------------ Just to get current samples
       ## samples = colnames(X)
-      samples <- selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
+      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, hm_samplefilter())
       X <- X[, samples]
-      cvar <- pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
-      cvar <- grep("sample|patient|years|days|months|gender",
-        cvar,
-        invert = TRUE, value = TRUE
-      ) ## no sample IDs
-      cvar
+      cvar = selected_phenotypes()
+      # the code below overwrittes user input, and should be removed
+      # cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
+      # cvar <- grep("sample|patient|years|days|months|gender",
+      #   cvar,
+      #   invert = TRUE, value = TRUE
+      # ) ## no sample IDs
+      # cvar
       Y <- pgx$Y[colnames(X), cvar, drop = FALSE]
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
       Y <- Y[, kk, drop = FALSE]
@@ -107,22 +112,18 @@ clustering_plot_featurerank_server <- function(id,
         grp <- Y[, i]
         grp <- as.character(grp)
 
-        cat("[calcFeatureRanking] head(grp)=", head(grp), "\n")
-
         score <- rep(NA, length(features))
         names(score) <- names(features)
         j <- 1
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
-            pp <- filterProbes(pgx$genes, features[[j]])
+            pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
           pp <- intersect(pp, rownames(X))
           X1 <- X[pp, , drop = FALSE]
           dim(X1)
-          ## cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
-          ## if( nrow(X1)
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
@@ -153,35 +154,47 @@ clustering_plot_featurerank_server <- function(id,
       return(S)
     })
 
-    clust_featureRank.RENDER <- shiny::reactive({
+    render_featureRank <- function() {
       S <- calcFeatureRanking()
-
       if (is.null(S) || nrow(S) == 0 || ncol(S) == 0) {
         return(NULL)
       }
 
       ## top scoring
-      S <- tail(S[order(rowSums(S)), , drop = FALSE], 35)
-
-      rownames(S) <- substring(rownames(S), 1, 80)
-
-      cc1 <- grey.colors(ncol(S))
-
-      pgx.stackedBarplot(
+      S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
+      rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
+      
+      playbase::pgx.stackedBarplot(
         x = t(S),
-        showlegend = T,
+        showlegend = TRUE,
         xlab = "Discriminant score",
-        ylab = "Groups",
+        ylab = "",
         horiz = TRUE
       )
-    })
+      #%>%
+      #  plotly::layout(
+      #    legend = list(orientation = "h")   # show entries horizontally
+      #  )
+    }
 
+    clust_featureRank.RENDER <- function() {
+      render_featureRank() %>%
+        plotly_default() %>%
+        plotly::layout(
+          legend = list(orientation = 'h')
+        )
+    }
 
+    clust_featureRank.RENDER2 <- function() {
+      render_featureRank() %>%
+        plotly_modal_default()
+    }
+      
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "plotly",
       func = clust_featureRank.RENDER,
+      func2 = clust_featureRank.RENDER2,      
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
       ## renderFunc = plotly::renderPlotly,
       ## renderFunc2 = plotly::renderPlotly,

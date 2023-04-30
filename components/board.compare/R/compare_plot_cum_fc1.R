@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -38,7 +38,7 @@ compare_plot_cum_fc1_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc1_server <- function(id,
-                                        inputData,
+                                        pgx,
                                         dataset2,
                                         cum_fc,
                                         input.contrast1,
@@ -53,13 +53,13 @@ compare_plot_cum_fc1_server <- function(id,
       F1 <- F[, indexes == 1, drop = FALSE]
       F2 <- F[, indexes == 2, drop = FALSE]
 
-      ii <- head(order(-rowMeans(F**2)), 50)
+      ii <- head(order(-rowMeans(F**2)), 40)
       ii <- ii[order(rowMeans(F[ii, ]))]
       F <- F[ii, , drop = FALSE]
       F1 <- F1[ii, , drop = FALSE]
       F2 <- F2[ii, , drop = FALSE]
 
-      fig <- pgx.barplot.PLOTLY(
+      fig <- playbase::pgx.barplot.PLOTLY(
         data = data.frame(
           x = factor(rownames(F1), levels = rownames(F1)),
           y = as.numeric(F1)
@@ -69,8 +69,8 @@ compare_plot_cum_fc1_server <- function(id,
         yaxistitle = "Cumulative foldchange",
         xaxistitle = "Genes",
         title = "Dataset 1",
-        type = "bar",
-        plotRawValues = TRUE
+#        type = "bar",
+        grouped = FALSE
       )
 
       fig

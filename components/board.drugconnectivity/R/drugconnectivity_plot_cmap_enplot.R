@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Drug Connectivity plot UI input function
@@ -12,24 +12,25 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_cmap_enplot_ui <- function(id,
-                                                 label = "",
-                                                 height = c(305, 600)) {
+drugconnectivity_plot_cmap_enplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- "<strong>Connectivity map.</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space."
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Enrichment Plot",
+    title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(305, 600),
-    width = c("auto", 1000),
+    height = height,
+    width = width,
   )
 }
 
@@ -49,7 +50,6 @@ drugconnectivity_plot_cmap_enplot_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
-        pgx <- pgx()
         dsea <- getActiveDSEA()
 
         res <- list(
@@ -81,7 +81,7 @@ drugconnectivity_plot_cmap_enplot_server <- function(id,
         rnk <- dsea$stats
         dtype <- sub("[@_].*$", "", names(rnk))
         gmt <- names(rnk)[dtype == d]
-        p1 <- gsea.enplotly(rnk, gmt, main = d)
+        p1 <- playbase::gsea.enplotly(rnk, gmt, main = d)
         return(p1)
       })
 

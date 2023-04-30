@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 800)) {
+intersection_plot_venn_diagram_ui <- function(
+                                              id,
+                                              title,
+                                              caption,
+                                              info.text,
+                                              label = "",
+                                              height,
+                                              width) {
   ns <- shiny::NS(id)
-
-  info_text <- "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis."
 
   FDR.VALUES2 <- c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1)
 
@@ -31,37 +36,47 @@ intersection_plot_venn_diagram_ui <- function(id, label = "", height = c(600, 80
     shiny::radioButtons(ns("include"), "Counting:", choices = c("both", "up/down"), inline = TRUE)
   )
 
-  info_text.table <- "Table of genes in selected intersection."
+  PlotModuleUI(
+    ns("vennplot"),
+    title = title,
+    label = "b",
+    info.text = info.text,
+    options = venndiagram.opts,
+    caption = caption,
+    download.fmt = c("png", "pdf", "csv"),
+    height = height,
+    width = width
+  )
+}
+
+intersection_table_venn_diagram_ui <- function(
+                                               id,
+                                               title,
+                                               caption,
+                                               info.text,
+                                               label = "",
+                                               height,
+                                               width) {
+  ns <- shiny::NS(id)
+
   venntable_opts <- shiny::tagList(
     shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
   )
-
-  div(
-    PlotModuleUI(
-      ns("vennplot"),
-      title = "Venn diagram",
-      label = "b",
-      info.text = info_text,
-      options = venndiagram.opts,
-      download.fmt = c("png", "pdf", "csv"),
-      height = c(400, 700),
-      width = c("100%", 900)
-    ),
-    TableModuleUI(
-      ns("datasets"),
-      info.text = info_text.table,
-      options = venntable_opts,
-      height = c(260, TABLE_HEIGHT_MODAL),
-      width = c("auto", 1200),
-      title = "Leading-edge table",
-      label = "e"
-    )
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info.text,
+    options = venntable_opts,
+    caption = caption,
+    height = height,
+    width = width,
+    title = title,
+    label = "e"
   )
 }
 
 
 intersection_plot_venn_diagram_server <- function(id,
-                                                  inputData,
+                                                  pgx,
                                                   level,
                                                   input_comparisons,
                                                   getFoldChangeMatrix,
@@ -209,11 +224,10 @@ intersection_plot_venn_diagram_server <- function(id,
     getSignificanceCalls <- shiny::reactive({
       ## Gets the matrix of significance calls.
       ##
-      ngs <- inputData()
 
-      sel <- head(names(ngs$gset.meta$meta), 7)
+      sel <- head(names(pgx$gset.meta$meta), 7)
       sel <- input_comparisons()
-      sel <- intersect(sel, names(ngs$gset.meta$meta))
+      sel <- intersect(sel, names(pgx$gset.meta$meta))
       if (length(sel) == 0) {
         return(NULL)
       }
@@ -328,8 +342,7 @@ intersection_plot_venn_diagram_server <- function(id,
     })
 
     venntable.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs)
+      shiny::req(pgx)
 
       ## get foldchanges
       fc0 <- getSignificantFoldChangeMatrix() ## isolate??
@@ -339,7 +352,7 @@ intersection_plot_venn_diagram_server <- function(id,
 
       ## add gene name/title
       if (level == "gene") {
-        gene <- as.character(ngs$genes[rownames(fc0), "gene_name"])
+        gene <- as.character(pgx$genes[rownames(fc0), "gene_name"])
         gene.tt <- substring(GENE.TITLE[gene], 1, 50)
         gene.tt <- as.character(gene.tt)
         ## fc0 = data.frame( name=name, title=gene.tt, fc0)
@@ -357,7 +370,9 @@ intersection_plot_venn_diagram_server <- function(id,
       DT::datatable(df,
         class = "compact cell-border stripe",
         rownames = FALSE,
-        extensions = c("Scroller"), selection = "none",
+        extensions = c("Scroller"),
+        plugins = "scrollResize",
+        selection = "none",
         options = list(
           ## dom = 'lfrtip',
           dom = "tip",
@@ -366,6 +381,7 @@ intersection_plot_venn_diagram_server <- function(id,
           ## columnDefs = list(list(targets=nsc, searchable = FALSE)),
           scrollX = TRUE,
           scrollY = 215,
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

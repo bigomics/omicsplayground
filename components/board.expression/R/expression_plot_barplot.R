@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -13,10 +13,14 @@
 #' @param width
 #'
 #' @export
-expression_plot_barplot_ui <- function(id,
-                                       label = "",
-                                       height,
-                                       width) {
+expression_plot_barplot_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
 
   plots_barplot_opts <- shiny::tagList(
@@ -28,19 +32,18 @@ expression_plot_barplot_ui <- function(id,
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", TRUE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
   )
 
-  info_text <- "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
-
   PlotModuleUI(ns("pltmod"),
-    title = "Differential expression",
+    title = title,
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     plotlib = "plotly",
+    caption = caption,
     options = plots_barplot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -54,7 +57,7 @@ expression_plot_barplot_ui <- function(id,
 #'
 #' @param id
 #' @param comp
-#' @param ngs
+#' @param pgx
 #' @param sel
 #' @param res
 #' @param watermark
@@ -64,7 +67,7 @@ expression_plot_barplot_ui <- function(id,
 #' @export
 expression_plot_barplot_server <- function(id,
                                            comp,
-                                           ngs,
+                                           pgx,
                                            sel,
                                            res,
                                            watermark = FALSE) {
@@ -76,18 +79,20 @@ expression_plot_barplot_server <- function(id,
       grouped <- input$barplot_grouped
       logscale <- input$barplot_logscale
       showothers <- input$barplot_showothers
-      ngs <- ngs()
       sel <- sel()
       res <- res()
 
-      psel <- rownames(res)[sel]
-      gene <- ngs$genes[1, "gene_name"]
+      ##shiny::req(sel())
+      shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
 
-      gene <- ngs$genes[psel, "gene_name"]
+      psel <- rownames(res)[sel]
+      gene <- pgx$genes[1, "gene_name"]
+
+      gene <- pgx$genes[psel, "gene_name"]
       srt <- ifelse(grouped, 0, 35)
 
       return(list(
-        ngs = ngs,
+        pgx = pgx,
         gene = gene,
         comp = comp,
         sel = sel,
@@ -112,8 +117,8 @@ expression_plot_barplot_server <- function(id,
         return(NULL)
       }
 
-      fig <- pgx.plotExpression(
-        pd[["ngs"]],
+      fig <- playbase::pgx.plotExpression(
+        pd[["pgx"]],
         pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
@@ -122,7 +127,8 @@ expression_plot_barplot_server <- function(id,
         names = TRUE,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]],
-        xlab = "Groups"
+        xlab = "",
+        plotlib = "plotly"        
       )
       fig
     }

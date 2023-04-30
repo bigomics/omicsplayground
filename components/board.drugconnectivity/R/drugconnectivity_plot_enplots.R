@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Drug Connectivity plot UI input function
@@ -12,27 +12,29 @@
 #' @param height
 #'
 #' @export
-drugconnectivity_plot_enplots_ui <- function(id,
-                                             label = "",
-                                             height = c(600, 800),
-                                             rowH = 660) {
+drugconnectivity_plot_enplots_ui <- function(
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+                                             ) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<strong>Drug connectivity</strong> correlates your
-                       signature with known drug profiles from the L1000
-                       database, and shows similar and opposite profiles by
-                       running the GSEA algorithm on the drug profile
-                       correlation space.")
+  
   plot_opts <- shiny::tagList()
 
   PlotModuleUI(ns("plot"),
-    title = "Drug connectivity",
+    title = title,
     label = label,
+    caption = caption,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(0.54 * rowH, 750),
-    width = c("auto", 1280),
+    height = height,
+    width = width,
   )
 }
 
@@ -53,8 +55,8 @@ drugconnectivity_plot_enplots_server <- function(id,
                                                  watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
       plot_data <- shiny::reactive({
-        pgx <- pgx()
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)
@@ -79,7 +81,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      ##plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
@@ -136,7 +139,7 @@ drugconnectivity_plot_enplots_server <- function(id,
           par(cex.axis = 0.001)
           if (i %% nc == 1) par(cex.axis = 0.98)
           suppressWarnings(
-            gsea.enplot(rnk, gmtdx,
+            playbase::gsea.enplot(rnk, gmtdx,
               main = dx1, cex.main = 1.2,
               xlab = xlab, ylab = ylab
             )
@@ -149,7 +152,10 @@ drugconnectivity_plot_enplots_server <- function(id,
             mtext("rank metric", side = 2, line = 1.8, cex = lab.cex)
           }
         }
-      })
+
+        ## This is needed for base plots as reactive to return something
+        ##grDevices::recordPlot()
+      }
 
       PlotModuleServer(
         "plot",

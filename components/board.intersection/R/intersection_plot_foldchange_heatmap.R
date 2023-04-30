@@ -1,12 +1,17 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
+foldchange_heatmap_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
 
   FoldchangeHeatmap.opts <- shiny::tagList(
     withTooltip(
@@ -28,14 +33,15 @@ foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
     ns("FoldchangeHeatmap"),
-    title = "Folchange heatmap",
+    title = title,
     label = "a",
     plotlib = "grid",
-    info.text = info_text,
+    info.text = info.text,
+    caption = caption,
     options = FoldchangeHeatmap.opts,
     download.fmt = c("png", "pdf", "csv"),
-    height = c(750, 750),
-    width = c("auto", 1600)
+    height = height,
+    width = width
   )
 }
 
@@ -43,12 +49,11 @@ foldchange_heatmap_ui <- function(id, label = "", height = c(600, 800)) {
 foldchange_heatmap_server <- function(id,
                                       getFoldChangeMatrix,
                                       getActiveFoldChangeMatrix,
-                                      inputData,
+                                      pgx,
                                       level,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      ngs <- inputData()
       if (input$FoldchangeHeatmap_allfc) {
         F <- getFoldChangeMatrix()$fc
       } else {
@@ -81,7 +86,7 @@ foldchange_heatmap_server <- function(id,
 
       plt <- grid::grid.grabExpr({
         frame()
-        heatmapWithAnnot(
+        playbase::heatmapWithAnnot(
           F1,
           anno.type = at,
           bar.height = bh, map.height = mh,

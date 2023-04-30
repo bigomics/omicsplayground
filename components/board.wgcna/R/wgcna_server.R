@@ -1,17 +1,24 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 
-WgcnaBoard <- function(id, inputData) {
+WgcnaBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
     rowH1 <- 250 ## row 1 height
     rowH2 <- 440 ## row 2 height
 
-    infotext <- "Weighted gene co-expression network analysis (WGCNA) is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets."
+    infotext <- "<b>Weighted gene co-expression network analysis (WGCNA)</b> is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets.
+
+<p>References:<br>
+<ol>
+<li>Langfelder, P. and Horvath, S., 2008. WGCNA: an R package for weighted correlation network analysis. BMC bioinformatics, 9(1), p.559.
+<li>Zhang, B. and Horvath, S., 2005. A general framework for weighted gene co-expression network analysis. Statistical applications in genetics and molecular biology, 4(1).
+</ol>
+"
 
     intra_caption <-
       "<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules."
@@ -40,16 +47,17 @@ WgcnaBoard <- function(id, inputData) {
     wgcna.compute <- shiny::eventReactive(
       {
         input$compute
-        ngs <- inputData()
         1
       },
       {
-        ngs <- inputData()
         require(WGCNA)
 
-        if ("wgcna" %in% names(ngs)) {
+        if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          return(ngs$wgcna)
+          shiny::updateSelectInput(session, "selected_module",
+                                   choices = names(pgx$wgcna$me.genes),
+                                   selected = "ME1")
+          return(pgx$wgcna)
         }
 
         pgx.showSmallModal("Calculating WGCNA...<br>please wait")
@@ -64,7 +72,6 @@ WgcnaBoard <- function(id, inputData) {
           )
         }
 
-
         WGCNA::enableWGCNAThreads()
 
         if (0) {
@@ -76,125 +83,17 @@ WgcnaBoard <- function(id, inputData) {
           dim(X)
         }
 
-        X <- as.matrix(ngs$X)
-        dim(X)
-        X <- X[order(-apply(X, 1, sd, na.rm = TRUE)), ]
-        X <- X[!duplicated(rownames(X)), ]
-
-        minmodsize <- 30
-        power <- 6
-        cutheight <- 0.25
-        deepsplit <- 2
-        ngenes <- 1000
-
-        ngenes <- input$ngenes
-        minmodsize <- as.integer(input$minmodsize)
-        power <- as.numeric(input$power)
-        cutheight <- as.numeric(input$cutheight)
-        deepsplit <- as.integer(input$deepsplit)
-
-        datExpr <- t(head(X, ngenes))
-        progress$inc(0.1, "Computing WGCNA modules...")
-        require(WGCNA)
-        net <- WGCNA::blockwiseModules(
-          datExpr,
-          power = power,
-          TOMType = "unsigned", minModuleSize = minmodsize,
-          reassignThreshold = 0, mergeCutHeight = cutheight,
-          numericLabels = TRUE, pamRespectsDendro = FALSE,
-          deepSplit = deepsplit,
-          ## saveTOMs = TRUE, saveTOMFileBase = "WCNA.tom",
-          verbose = 3
+        out <- playbase::pgx.wgcna(
+          pgx = pgx,
+          lib.dir = FILES,
+          ngenes = input$ngenes,
+          minmodsize = as.integer(input$minmodsize),
+          power = as.numeric(input$power),
+          cutheight = as.numeric(input$cutheight),
+          deepsplit = as.integer(input$deepsplit)
         )
-        names(net)
-        table(net$colors)
-
-        ## clean up traits matrix
-        datTraits <- ngs$samples
-        ## no dates please...
-        isdate <- apply(datTraits, 2, is.Date)
-        datTraits <- datTraits[, !isdate, drop = FALSE]
-
-        ## Expand multi-class discrete phenotypes into binary vectors
-        ## datTraits1 <- datTraits
-        tr.class <- sapply(type.convert(datTraits), class)
-        sel1 <- which(tr.class %in% c("factor", "character"))
-        sel2 <- which(tr.class %in% c("integer", "numeric"))
-
-        tr1 <- datTraits[, 0]
-        if (length(sel1)) {
-          tr1 <- expandPhenoMatrix(datTraits[, sel1, drop = FALSE], drop.ref = FALSE)
-        }
-        ## keeping numeric phenotypes
-        tr2 <- datTraits[, sel2, drop = FALSE]
-        datTraits <- cbind(tr1, tr2)
-
-        ## get colors of eigengene modules
-        me.genes <- tapply(names(net$colors), net$colors, list)
-        names(me.genes) <- paste0("ME", names(me.genes))
-        color1 <- labels2rainbow(net)
-        me.colors <- color1[!duplicated(color1)]
-        names(me.colors) <- paste0("ME", names(me.colors))
-        me.colors <- me.colors[names(me.genes)]
-        progress$inc(0.4, "")
-
-        if (1) {
-          message("[wgcna.compute] >>> Calculating WGCNA clustering...")
-          progress$inc(0.1, "Computing dim reductions...")
-
-          X1 <- t(datExpr)
-          X1 <- t(scale(datExpr))
-          ## pos <- Rtsne::Rtsne(X1)$Y
-          ## dissTOM <- 1 - abs(cor(datExpr))**6
-          dissTOM <- 1 - WGCNA::TOMsimilarityFromExpr(datExpr, power = power)
-          rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)
-          clust <- pgx.clusterBigMatrix(dissTOM, methods = c("umap", "tsne", "pca"), dims = c(2))
-          ## pos <- pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
-          ## pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
-          names(clust)
-          if ("cluster.genes" %in% names(ngs)) {
-            clust[["umap2d"]] <- ngs$cluster.genes$pos[["umap2d"]][colnames(datExpr), ]
-          }
-          progress$inc(0.2)
-        }
-
-        if (1) {
-          message("[wgcna.compute] >>> Calculating WGCNA module enrichments...")
-          progress$inc(0, "Calculating module enrichment...")
-
-          gmt <- getGSETS(grep("HALLMARK|GOBP|^C[1-9]", names(iGSETS), value = TRUE))
-          gse <- NULL
-          ## bg <- unlist(me.genes)
-          bg <- toupper(rownames(ngs$X))
-          i <- 1
-          for (i in 1:length(me.genes)) {
-            gg <- toupper(me.genes[[i]])
-            rr <- gset.fisher(gg, gmt, background = bg, fdr = 1)
-            rr <- cbind(
-              module = names(me.genes)[i],
-              geneset = rownames(rr), rr
-            )
-            rr <- rr[order(rr$p.value), , drop = FALSE]
-            if (i == 1) gse <- rr
-            if (i > 1) gse <- rbind(gse, rr)
-          }
-          rownames(gse) <- NULL
-
-          progress$inc(0.3)
-        }
-
-        ## construct results object
-        out <- list(
-          datExpr = datExpr,
-          datTraits = datTraits,
-          net = net,
-          gse = gse,
-          clust = clust,
-          me.genes = me.genes,
-          me.colors = me.colors
-        )
-
-        shiny::updateSelectInput(session, "selected_module", choices = names(me.genes), sel = "ME1")
+        
+        shiny::updateSelectInput(session, "selected_module", choices = names(out$me.genes), sel = "ME1")
 
         beepr::beep(2) ## short beep
         shiny::removeModal()
@@ -212,6 +111,7 @@ WgcnaBoard <- function(id, inputData) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
+        size = 'l',
         easyClose = TRUE
       ))
     })
@@ -220,27 +120,6 @@ WgcnaBoard <- function(id, inputData) {
     ## ================================================================================
     ## ======================= PLOTTING FUNCTIONS =====================================
     ## ================================================================================
-
-    ## ----------------------------------------
-    ## ------------ samples dendro ------------
-    ## ----------------------------------------
-
-    labels2rainbow <- function(net) {
-      hc <- net$dendrograms[[1]]
-      nc <- length(unique(net$colors))
-      n <- length(net$colors)
-      ii <- hc$order
-      col1 <- labels2colors(net$colors)
-      col.rnk <- rank(tapply(1:n, col1[ii], mean))
-      new.col <- rainbow(nc)[col.rnk]
-      ## new.col <- heat.colors(nc)[col.rnk]
-      names(new.col) <- names(col.rnk)
-      new.col["grey"] <- "#AAAAAA"
-      new.col
-      new.col <- new.col[col1]
-      names(new.col) <- net$colors
-      new.col
-    }
 
     ## ----------------------------------------
     ## ------------ samples dendro ------------
@@ -315,7 +194,7 @@ WgcnaBoard <- function(id, inputData) {
       ii <- unique(as.vector(t(ii)))
       ii <- head(ii, 70)
 
-      gx.heatmap(t(rho[, ii]),
+      playbase::gx.heatmap(t(rho[, ii]),
         keysize = 0.2, mar = c(4, 5), key = FALSE,
         cexRow = 0.85, cexCol = 1, scale = "none"
       )
@@ -374,7 +253,7 @@ WgcnaBoard <- function(id, inputData) {
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
@@ -391,7 +270,7 @@ WgcnaBoard <- function(id, inputData) {
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       power = shiny::reactive(input$power),
       watermark = WATERMARK
     )
@@ -409,7 +288,7 @@ WgcnaBoard <- function(id, inputData) {
     wgcna_plot_module_graph_server(
       "moduleGraph",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
@@ -418,7 +297,7 @@ WgcnaBoard <- function(id, inputData) {
     wgcna_plot_MTrelationships_server(
       "moduleTrait",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = labels2rainbow,
+      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 

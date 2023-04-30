@@ -20,8 +20,8 @@ html {
     }
 
     .datatables {
-	font-size: 12px;
-	line-height: '70%';
+//	font-size: 13px;
+//	line-height: '70%';
     }
 
     .dataTables_filter {
@@ -34,11 +34,30 @@ html {
 	text-align: left;
     }
 
+    .popup-table div.dataTables_wrapper div.dataTables_filter {
+	text-align: left;
+	font-size: 18px;
+    }
+
+    .popup-table div.dataTables_info {
+	font-size: 18px;
+    }
+
     div.dataTables_wrapper div.dataTables_filter input {
 	width: 350px;
 	background-color: #f7fafd;
     }
 
+    // https://github.com/rstudio/DT/issues/951
+/*    .dataTables.html-widget.html-widget-static-bound { 
+	height: auto !important;
+	width: 90vw !important;
+    }
+    .dataTables_scrollBody {
+	height: unset !important;
+    }    
+*/
+    
     table.dataTable {
 	border-collapse: collapse !important;
     }
@@ -47,15 +66,27 @@ html {
 	border-bottom: solid 1px #aaa !important;
 //	border-style: none !important;
     }
+
     table.dataTable>thead>tr>th {
-	font-size: 14px;
+	font-size: 13px;
+	padding: 0px 0px 4px 0px;
+	line-height: 1em;
     }
     table.dataTable>tbody>tr>td {
-	font-size: 14px;
+	font-size: 13px;
+	padding: 5px;
+    }
+
+    .popup-table table.dataTable>thead>tr>th {
+	font-size: 18px;
+    }
+    .popup-table table.dataTable>tbody>tr>td {
+	font-size: 16px;
+	padding: 7px;
     }
 
     .table.dataTable tbody td.active, .table.dataTable tbody tr.active td {
-	background-color: #F7FAFD;
+	background-color: #e9ecef;
 	color: black;
 	font-weight: 600;
     }

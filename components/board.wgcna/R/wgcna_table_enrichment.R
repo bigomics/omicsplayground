@@ -1,20 +1,26 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_table_enrichment_ui <- function(id, width, height) {
+wgcna_table_enrichment_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    title = title,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = "Module enrichment",
-    label = "e"
+    label = label
   )
 }
 

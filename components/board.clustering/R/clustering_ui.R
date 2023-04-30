@@ -1,24 +1,18 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    #        withTooltip( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
-    #                "Show more information and video tutorial about this module."),
-    #        shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("hm_features"), "Features:", choices = NULL, multiple = FALSE),
-      "Select a family of features.",
+    withTooltip(shiny::selectInput(ns("hm_features"), "Gene family:", choices = NULL, multiple = FALSE),
+      "Select a gene family for filtering which genes to show in the heatmap.",
       placement = "top"
     ),
-    withTooltip(
-      shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-        c("default", "tsne", "pca", "umap"),
-        inline = TRUE
-      ),
-      "Choose the layout method for clustering to visualise.",
+    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:", choices = NULL, multiple = TRUE),
+      "Select phenotypes to show in heatmap and phenotype distribution plots.",
+      placement = "top"
     ),
     shiny::conditionalPanel(
       "input.hm_features == '<custom>'",
@@ -36,9 +30,10 @@ ClusteringInputs <- function(id) {
     shiny::conditionalPanel(
       "input.hm_features == '<contrast>'",
       ns = ns,
-      tipifyR(
+      withTooltip(
         shiny::selectInput(ns("hm_contrast"), NULL, choices = NULL),
-        "Select contrast to be used as signature."
+        "Select contrast to be used as signature.",
+        placement = "right", options = list(container = "body")
       )
     ),
     withTooltip(shiny::selectInput(ns("hm_group"), "Group by:", choices = NULL),
@@ -52,11 +47,19 @@ ClusteringInputs <- function(id) {
       "Filter the relevant samples for the analysis.",
       placement = "top", options = list(container = "body")
     ),
-    withTooltip(shiny::actionLink(ns("hm_options"), "Options", icon = icon("cog", lib = "glyphicon")),
+    withTooltip(shiny::actionLink(ns("hm_options"), "Advanced options",
+                                  icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
     ),
     shiny::br(),
+    withTooltip(
+      shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
+        c("tsne", "pca", "umap"),
+        inline = TRUE
+      ),
+      "Choose the layout method for clustering plots.",
+    ),
     shiny::conditionalPanel(
       "input.hm_options % 2 == 1",
       ns = ns,
@@ -85,70 +88,72 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 850 ## full height of page
+  fullH <- 800 ## full height of page
+  rowH  <- 350
+
+  fullH <- "80vh" ## full height of full page
+  rowH  <- "40vh"
 
   div(
     class = "row",
     ## h4("Cluster Samples"),
-    boardHeader(title = "Cluster Samples", info_link = ns("clust_info")),
+    boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
     div(
       class = "col-md-7",
       shiny::tabsetPanel(
         id = ns("tabs1"),
         shiny::tabPanel(
           "Heatmap",
-          clustering_plot_hm_splitmap_ui(
-            id = ns("hm_splitmap"),
+          clustering_plot_splitmap_ui(
+            id = ns("splitmap"),
             label = "a",
-            height = fullH - 80,
+            title = "Clustered Heatmap",
+            caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
+            info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
+            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
             width = "100%"
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
-                        clustering. Red corresponds to overexpression, blue to underexpression of the gene.
-                        At the same time, gene clusters are functionally annotated in the
-                        'Annotate clusters' panel on the right.")
           )
         ),
         shiny::tabPanel(
           "PCA/tSNE",
           clustering_plot_clustpca_ui(
             ns("PCAplot"),
+            title = "PCA/tSNE plot",
+            info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis ( PCA), t-distributed stochastic embedding ( tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
+            caption = "Clustering plot of the dataset samples.",
             label = "",
-            height = c("70vh", "70vh"),
+            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%"),
             parent = ns
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
-                          samples as a scatterplot in reduced dimension (2D or 3D).
-                          Samples that are similar are clustered near to each other, while samples with different
-                          expression are positioned farther away. Groups of samples with similar profiles
-                          will appear as <i>clusters</i> in the plot.")
           )
         ),
         shiny::tabPanel(
           "Parallel",
-          clustering_plot_table_hm_parcoord_ui(
-            id = ns("hm_parcoord"),
-            label = "a",
-            width = c("100%", 1000),
-            height = c(0.45 * fullH, 600)
-          ),
-          br(),
-          tags$div(
-            class = "caption",
-            HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
-                            the expression levels of selected genes across all conditions.
-                            On the x-axis the experimental conditions are plotted. The y-axis shows the expression level
-                            of the genes grouped by condition. The colors correspond to the gene groups as
-                            defined by the hierarchical clustered heatmap. <b>(b)</b>
-                            Average expression of selected genes across conditions.")
-          )
+          shinyjqui::jqui_sortable(
+              bslib::layout_column_wrap(
+                 width = 1,
+                 clustering_plot_parcoord_ui(
+                     id = ns("parcoord"),
+                     title = "Parallel coordinates",
+                     info.text = "The Parallel Coordinates panel displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. The plot is interactive.",
+                     caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
+                     label = "a",
+                     width = c("100%", "100%"),
+                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)
+                 ),
+                 clustering_table_parcoord_ui(
+                     id = ns("parcoord"),
+                     title = "Selected genes",
+                     info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+                     caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
+                     label = "a",
+                     width = c("100%", "100%"),
+                     height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)
+                 )
+              ) ## layout
+          ) ## sortable
         )
-      ),
-    ),
+    )),
     div(
       class = "col-md-5",
       shiny::tabsetPanel(
@@ -157,48 +162,44 @@ ClusteringUI <- function(id) {
           "Annotate clusters",
           clustering_plot_clusterannot_ui(
             id = ns("plots_clustannot"),
+            title = "Functional annotation of clusters",
+            info.text =  "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
+            caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
             label = "a",
-            height = c(360, 600),
-            width = c("100%", 1000)
+            height = c("calc(60vh - 100px)", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
           ),
           clustering_table_clustannot_ui(
             ns("tables_clustannot"),
-            height = c(330, TABLE_HEIGHT_MODAL),
-            width = c("auto", "90%")
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster.")
+            title = "Annotation scores",
+            info.text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings.",
+            caption = "Average correlation values of annotation terms, for each gene cluster.",
+            height = c("calc(40vh - 100px)", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         shiny::tabPanel(
           "Phenotypes",
           clustering_plot_phenoplot_ui(
             id = ns("clust_phenoplot"),
+            title = "Phenotype distribution",
+            info.text = "This figure visualizes the distribution of the available phenotype data. The plots show the distribution of the phenotypes superposed on the t-SNE clustering. You can choose to put the group labels in the figure or as separate legend in the plot settings",
+            caption = "t-SNE clustering plot of phenotype distribution for the current samples.",
             label = "",
-            height = c(fullH - 80, 700)
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
-                            superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be
-                            driven by the particular phenotype that is controlled by the experimental condition
-                            or unwanted batch effects.")
+            height = c(fullH, TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         shiny::tabPanel(
           "Feature ranking",
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
+            title = "Feature-set ranking",
+            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
+            caption = "Ranked discriminant score for top feature sets.",
             label = "",
-            height = c(fullH - 80, 700),
-            width = c("auto", 800)
-          ),
-          tags$div(
-            class = "caption",
-            HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
-                            The plot ranks the discriminative power of feature sets (or gene sets) as the
-                            cumulative discriminant score for all phenotype variables.")
+            height = c(fullH, TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         )
       )

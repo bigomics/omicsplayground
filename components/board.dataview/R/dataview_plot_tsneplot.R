@@ -1,22 +1,28 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_tsne_ui <- function(id, label = "", height = c(350, 600)) {
+dataview_plot_tsne_ui <- function(
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text) {
   ns <- shiny::NS(id)
-
-  info_text <- paste0("<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the <code>search_gene</code> dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).")
 
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height,
     label = label,
-    title = "t-SNE clustering"
+    caption = caption,
+    title = title
   )
 }
 
@@ -106,8 +112,8 @@ dataview_plot_tsne_server <- function(id,
           labels = function(x) sprintf("%1.2f", x),
           name = "Expression"
         ) +
-        guide_continuous(aes = "color", type = "steps", width = .4) +
-        theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .4) +
+        playbase::theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
 
       plot_dl$base <- fig_base
 
@@ -160,8 +166,8 @@ dataview_plot_tsne_server <- function(id,
 
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() +
-        guide_continuous(aes = "color", type = "steps", width = .7) +
-        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+        playbase::guide_continuous(aes = "color", type = "steps", width = .7) +
+        playbase::theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
       ## plotly::ggplotly(fig)
       fig
     }
@@ -172,7 +178,8 @@ dataview_plot_tsne_server <- function(id,
 
       df <- data[[1]]
       gene <- data[[2]]
-      symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up", "star-diamond", "square-cross", "diamond-wide")
+      symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
+        "star-diamond", "square-cross", "diamond-wide")
 
       if (!is.null(df$group)) {
         fig <-
@@ -230,31 +237,29 @@ dataview_plot_tsne_server <- function(id,
         plotly::layout(
           xaxis = list(title = "tSNE-x"),
           yaxis = list(title = "tSNE-y"),
-          margin = list(l = 10, r = 10, b = 10, t = 10)
+          margin = list(l = 5, r = 0, b = 5, t = 5)
         ) %>%
         plotly::colorbar(
           title = "<b>Expression:</b>",
-          width = .001,
-          ticklen = 6
+          width = .001,          
+          ticklen = 6,
+          len = 0.4,
+          thickness = 20
         ) %>%
-        plotly_default1() ## %>% toWebGL()
+        plotly_default() ## %>% toWebGL()
     }
-
+   
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() # %>%
-      #    plotly::hide_colorbar()
+      fig <- plotly.RENDER0() %>% plotly::hide_colorbar()
       fig
     }
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
+        plotly_modal_default() %>%
+        plotly::style(
+          marker.size = 20
         )
-      fig <- plotly::style(fig, marker.size = 20)
       fig
     }
 

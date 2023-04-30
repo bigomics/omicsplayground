@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS os-base
 ##FROM ubuntu:20.10
 ##FROM ubuntu:20.04
 
@@ -29,7 +29,7 @@ RUN apt update && apt install -y \
     pdftk vim-tiny less wget gdebi-core \
     pandoc pandoc-citeproc imagemagick \ 
     libcairo2-dev libxt-dev xvfb \
-    libfftw3-dev 
+    libfftw3-dev libglpk-dev
 
 # Set the locale to UTF8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -42,25 +42,25 @@ RUN apt install -y r-base r-base-dev r-recommended
 # Install R packages that are required
 #------------------------------------------------------------
 
+## add auto detected packages -------------------------------
+FROM os-base AS r-base1
 WORKDIR /
 RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
-
 WORKDIR /omicsplayground
+#COPY build /omicsplayground/build
 COPY dev /omicsplayground/dev
 COPY components /omicsplayground/components
+COPY extdata/packages /omicsplayground/extdata/packages
+RUN R -e "source('dev/requirements.R')"
 
-## auto detected packages
-RUN R -e "setwd('dev');source('requirements.R')"
-
-## any missing packages
-RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
-    'metap','brew','Seurat','R.utils', 'qgraph','psych'))"
-RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
-RUN R -e "remotes::install_github('JohnCoene/firebase@omics')"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz')"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-14.tar.gz')"
-RUN R -e "install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')"
-RUN R -e "install.packages(c('shinylogs','shinycssloaders','concaveman','ggtext','sass'))"
+## add any missing packages manually------------------------
+FROM r-base1 AS r-base2
+#RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
+RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
+RUN R -e "BiocManager::install('KEGGgraph')"
+RUN R -e "install.packages(c('RSpectra'))"
+RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
+RUN R -e "install.packages('reticulate');library(reticulate);install_miniconda(force=TRUE);conda_install('r-reticulate','python-kaleido');conda_install('r-reticulate','plotly',channel='plotly');use_miniconda('r-reticulate')"
 
 #------------------------------------------------------------
 # Clean up when done.

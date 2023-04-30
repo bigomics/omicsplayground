@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 EnrichmentInputs <- function(id) {
@@ -55,195 +55,184 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800
-  rowH <- 420 ## row height of panels
-  imgH <- 340 ## height of images
-  tabV <- "70vh" ## height of tables
-  tabH <- 340 ## row height of panels
-  tabH <- "80vh" ## height of tables
+  fullH <- "calc(100vh - 120px)"  ## full height of page (minus header)
+  halfH <- "height: calc(50vh - 120px);" ## half height of page
 
-  tabs <- tagList(
-    shiny::tabsetPanel(
-      id = ns("tabs1"),
-      shiny::tabPanel(
-        "Top enriched",
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            enrichment_plot_top_enrich_gsets_ui(
-              ns("topEnriched"),
-              height = c(imgH, 720),
-              width = c("auto", 1500)
-            )
-          ),
-          div(
-            class = "col-md-6",
-            enrichment_plot_freq_top_gsets_ui(
-              ns("topEnrichedFreq"),
-              height = c(imgH, 500),
-              width = c("auto", 1200)
-            )
-          )
+  tabs1 <- shiny::tabsetPanel(
+    id = ns("tabs1"),
+    shiny::tabPanel(
+      "Top enriched",
+      bslib::layout_column_wrap(
+        width = 1/2,
+        style = halfH,
+        enrichment_plot_top_enrich_gsets_ui(
+          ns("topEnriched"),
+          title = "Top enriched gene sets",
+          info.text = "This plot shows the top enriched gene sets for the selected comparison in the Contrast settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group.",
+          caption = "Gene set enrichment plots of the top differentially enriched gene sets. ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         ),
-        div(
-          HTML(
-            "<b>(a)</b> <b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score.",
-            "<b>(b)</b> <strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
-          )
-        )
-      ),
-      shiny::tabPanel(
-        "Plots",
-        div(
-          class = "row",
-          div(
-            class = "col-md-3",
-            enrichment_plot_volcano_ui(
-              ns("subplot_volcano"),
-              height = c(imgH, 750),
-              width = c("auto", 900)
-            )
-          ),
-          div(
-            class = "col-md-3",
-            enrichment_plot_barplot_ui(
-              ns("subplot_barplot"),
-              height = c(imgH, 750),
-              width = c("auto", 900)
-            )
-          ),
-          div(
-            class = "col-md-3",
-            enrichment_plot_geneplot_ui(
-              ns("subplot_geneplot"),
-              height = c(imgH, 750),
-              width = c("auto", 900)
-            )
-          ),
-          div(
-            class = "col-md-3",
-            enrichment_plot_scatter_ui(
-              ns("subplot_scatter"),
-              height = c(imgH, 750),
-              width = c("auto", 900)
-            )
-          )
-        ),
-        shiny::br(),
-        tags$div(
-          HTML("<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>).
-                    <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively.
-                    Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups.
-                    <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression
-                    of the selected geneset and gene, on the y and x axes, respectively.")
-        )
-      ),
-      shiny::tabPanel(
-        "Compare",
-        enrichment_plot_compare_ui(
-          ns("compare"),
-          height = c(imgH, 450),
-          width = c("auto", 1500)
-        ),
-        tags$div(
-          HTML("<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>)
-                    across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set
-                    across all other comparisons.")
-        )
-      ),
-      shiny::tabPanel(
-        "Volcano (all)",
-        shiny::fillCol(
-          height = 420,
-          flex = c(1, NA),
-          enrichment_plot_volcanoall_ui(
-            ns("volcanoAll"),
-            height = c(imgH, 450),
-            width = c("auto", 1500)
-          ),
-          tags$div(
-            HTML("<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene
-                    set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus
-                    significance on the x and y axes, respectively. Experimental contrasts showing better statistical
-                    significance will show volcano plots with 'higher' wings.")
-          )
-        )
-      ),
-      shiny::tabPanel(
-        "Volcano (methods)",
-        enrichment_plot_volcanomethods_ui(
-          ns("volcanoMethods"),
-          height = c(imgH, 450),
-          width = c("auto", 1600)
-        ),
-        tags$div(
-          HTML("<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene
-                    sets for different enrichment methods. Methods showing better statistical
-                    significance will show volcano plots with 'higher' wings.")
+        enrichment_plot_freq_top_gsets_ui(
+          ns("topEnrichedFreq"),
+          title = "Frequency in top gene sets",
+          info.text = "The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
+          caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     ),
-    shiny::tabsetPanel(
-      id = ns("tabs2"),
-      shiny::tabPanel(
-        "Table",
-        tags$div(
-          HTML("<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene
-                    set enrichment analysis for selected contrast. The number of stars indicate how many methods
-                    identified the geneset significant. <b>(II)</b> Table showing the fold-change,
-                    statistics and correlation of the genes in the selected gene set.")
+    shiny::tabPanel(
+      "Plots",
+      bslib::layout_column_wrap(
+        width = 1/4,
+        style = halfH,        
+        enrichment_plot_volcano_ui(
+          ns("subplot_volcano"),
+          title = "Volcano plot",
+          info.text = "Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis Table I are highlighted in blue.",
+          caption = "Volcano-plot showing significance versus fold-change with genes from the selected gene set highlighted.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-7",
-            enrichment_table_enrichment_analysis_ui(
-              ns("gseatable"),
-              width = c("100%", "90%"),
-              height = c(285, TABLE_HEIGHT_MODAL)
-            )
-          ),
-          div(
-            class = "col-md-5",
-            enrichment_table_genes_in_geneset_ui(
-              ns("genetable"),
-              height = c(285, TABLE_HEIGHT_MODAL),
-              width = c("100%", "90%")
-            )
-          )
+        enrichment_plot_barplot_ui(
+          ns("subplot_barplot"),
+          title = "Enrichment barplot",
+          info.text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table I. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+          caption = "Barplot of the selected gene set in the phenotypic groups. ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", 900)
+        ),
+        enrichment_plot_geneplot_ui(
+          ns("subplot_geneplot"),
+          title = "Expression geneplot",
+          info.text = "An expression barplot per sample group for the gene that is selected from the genes Table II. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+          caption = "Barplot of the selected gene in the phenotypic groups. ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", 900)
+        ),
+        enrichment_plot_scatter_ui(
+          ns("subplot_scatter"),
+          title = "Enrichment vs. expression",
+          info.text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table I and the gene selected from the genes Table II.",
+          caption = "Scatter plot of the selected gene set enrichment scores versus the selected gene expression values by sample.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", 900)
         )
-      ),
-      shiny::tabPanel(
-        "Foldchange (all)",
-        div(
-          shiny::HTML("<b>Enrichment for all contrasts.</b> Table summarizing the enrichment
-                      for all gene sets across all contrasts. The column `fc.var` corresponds
-                      to the variance of the gene set across all contrasts.")
-        ),
-        enrichment_table_gset_enrich_all_contrasts_ui(
-          ns("fctable"),
-          height = c(295, TABLE_HEIGHT_MODAL),
-          width = c("100%", "90%")
+      )
+    ),
+    shiny::tabPanel(
+      "Compare",
+      bslib::layout_column_wrap(
+        width = 1,
+        style = halfH,          
+        enrichment_plot_compare_ui(
+          ns("compare"),
+          title = "Enrichment of geneset across multiple contrasts",
+          info.text = "Under the Compare tab, enrichment profiles of the selected geneset in enrichment Table I can be visualised against all available contrasts.",
+          caption = "Enrichment plots for the selected gene set (in Table I) across multiple contrasts.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
-      ),
-      shiny::tabPanel(
-        "FDR table",
-        div(
-          shiny::HTML("<b>FDR table.</b> Number of significant gene sets versus different
-                      FDR thresholds, for all contrasts and all methods. The blue color
-                      denote the number of downregulated genes, the red color for upregulated genes.")
-        ),
-        enrichment_table_n_sig_gsets_ui(
-          ns("FDRtable"),
-          height = c(295, TABLE_HEIGHT_MODAL),
-          width = c("100%", "90%")
+      )
+    ),
+    shiny::tabPanel(
+      "Volcano (all)",
+      bslib::layout_column_wrap(
+        width = 1,
+        style = halfH,          
+        enrichment_plot_volcanoall_ui(
+          id = ns("volcanoAll"),
+          title = "Volcano plots for all contrasts",
+          info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong based on the 'height' of the 'wings'.",
+          caption = "Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "Volcano (methods)",
+      bslib::layout_column_wrap(
+        width = 1,
+        style = halfH,
+        enrichment_plot_volcanomethods_ui(
+          ns("volcanoMethods"),
+          title = "Volcano plots for all methods",
+          info.text = "The Volcano (methods) panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings.",
+          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     )
   )
+  
+  tabs2 <- shiny::tabsetPanel(
+    id = ns("tabs2"),
+    shiny::tabPanel(
+      "Table",
+      bslib::layout_column_wrap(
+        width = 1,
+        style = paste(halfH, htmltools::css(grid_template_columns = "2fr 1fr")),
+        enrichment_table_enrichment_analysis_ui(
+          ns("gseatable"),
+          title = "Enrichment analysis",
+          info.text = "Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including Spearman rank correlation , GSVA , ssGSEA , Fisher exact test , GSEA , camera and fry . The combined result from the methods is displayed in this table, where for each geneset the meta.q corresponds to the highest q val. The number of stars indicates how many methods detected a significant correlation.",
+          caption = "Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        ),
+        enrichment_table_genes_in_geneset_ui(
+          ns("genetable"),
+          title = "Genes in gene set",
+          info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
+          caption = "Table showing the fold-change, statistics and correlation of the genes in the selected gene set.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "Enrichment (all)",
+      bslib::layout_column_wrap(
+        width = 1,
+        enrichment_table_gset_enrich_all_contrasts_ui(
+          ns("fctable"),
+          title = "Gene set enrichment for all contrasts",
+          info.text = "The column `fc.var` corresponds to the variance of the gene set across all contrasts.",
+          caption = "The Enrichment (all) panel reports the gene set enrichment for all contrasts in the selected dataset.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "FDR table",
+      bslib::layout_column_wrap(
+        width = 1,
+        enrichment_table_n_sig_gsets_ui(
+          ns("FDRtable"),
+          title = "Number of significant gene sets",
+          info.text = "Using the table the user can determine which statistical methods perform better for a particular contrast.",
+          caption = "The FDR table panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. ",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    )
+  )
+
   div(
     boardHeader(title = "Geneset enrichment", info_link = ns("gs_info")),
-    tabs
+    bslib::layout_column_wrap(
+      width = 1,
+      height = fullH,
+      gap = '0px',
+      tabs1,
+      tabs2
+    )
   )
+  
 }

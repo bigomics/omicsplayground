@@ -1,31 +1,37 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-signature_table_genes_in_signature_ui <- function(id, width, height) {
+signature_table_genes_in_signature_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Genes in signature",
+    title = title,
+    caption, caption,
     label = "b"
   )
 }
 
 signature_table_genes_in_signature_server <- function(id,
-                                                      getEnrichmentGeneTable,
-                                                      tabH) {
+                                                      getEnrichmentGeneTable
+                                                      ) {
   moduleServer(id, function(input, output, session) {
+
     enrichmentGeneTable.RENDER <- shiny::reactive({
       df <- getEnrichmentGeneTable()
       if (is.null(df)) {
-        shiny::validate(shiny::need(!is.null(df), "Select a signature."))
+        shiny::validate(shiny::need(!is.null(df), "Please select a contrast"))
         return(NULL)
       }
 
@@ -38,11 +44,15 @@ signature_table_genes_in_signature_server <- function(id,
         class = "compact cell-border stripe",
         rownames = FALSE,
         extensions = c("Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         fillContainer = TRUE,
         options = list(
           dom = "lrftip",
-          scrollX = TRUE, scrollY = "30vh", scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = "30vh",
+          scrollResize = TRUE,
+          scroller = TRUE,
           deferRender = FALSE
         )
       ) %>% ## end of options.list
@@ -50,7 +60,7 @@ signature_table_genes_in_signature_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(
           numeric.cols,
-          background = color_from_middle(color_fx, "lightblue", "#f5aeae"),
+          background = playbase::color_from_middle(color_fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

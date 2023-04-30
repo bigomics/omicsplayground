@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Importance plot UI input function
@@ -12,25 +12,25 @@
 #' @param height
 #'
 #' @export
-biomarker_plot_importance_ui <- function(id,
-                                         label = "",
-                                         height = c(600, 800)) {
+biomarker_plot_importance_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width) {
   ns <- shiny::NS(id)
-  info_text <- strwrap("<b>Variable importance.</b>. An importance score for each
-  variable is calculated using multiple machine learning algorithms, including
-  LASSO, elastic nets, random forests, and extreme gradient boosting. By
-  combining several methods, the platform aims to select the best possible
-  biomarkers. The top features are plotted according to cumulative ranking by
-  the algorithms.")
-
+  
   PlotModuleUI(ns("plot"),
-    title = "Variable importance",
+    title = title,
+    caption = caption,
     label = label,
     plotlib = "base",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
-    width = c("auto", "100%"),
+    width = width,
     height = height
   )
 }
@@ -67,7 +67,7 @@ biomarker_plot_importance_server <- function(id,
         return(res)
       })
 
-      plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
         res <- plot_data()
         
         if(is.null(res) || length(res) == 0){
@@ -81,18 +81,18 @@ biomarker_plot_importance_server <- function(id,
         R <- pmax(R, 0.05)
 
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 4, 0, 4))
+        par(mar = c(5, 3, 0, 1))
         R.top <- head(R, 40)
         barplot(t(R.top),
           las = 3, horiz = FALSE,
-          cex.names = 0.75, ylab = "cumulative importance"
+          cex.names = 0.85, ylab = "cumulative importance"
         )
         klr <- grey.colors(ncol(R))
         legend("topright",
           legend = rev(colnames(R)), fill = rev(klr),
           cex = 0.8, y.intersp = 0.8
         )
-      })
+      }
 
       PlotModuleServer(
         "plot",
@@ -100,7 +100,7 @@ biomarker_plot_importance_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(78, 235),
+        res = c(70, 140),
         pdf.width = 10, pdf.height = 5,
         add.watermark = watermark
       )

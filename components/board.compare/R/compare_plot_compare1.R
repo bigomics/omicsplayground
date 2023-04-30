@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -38,7 +38,7 @@ compare_plot_compare1_ui <- function(id,
 #' @return
 #' @export
 compare_plot_compare1_server <- function(id,
-                                         inputData,
+                                         pgx,
                                          input.contrast1,
                                          hilightgenes,
                                          createPlot,
@@ -49,13 +49,13 @@ compare_plot_compare1_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      inputData()
+      pgx
     })
 
     scatter1.RENDER <- shiny::reactive({
-      ngs1 <- plot_data()
-      ngs2 <- dataset2()
-      all.ct <- names(ngs1$gx.meta$meta)
+      pgx1 <- plot_data()
+      pgx2 <- dataset2()
+      all.ct <- names(pgx1$gx.meta$meta)
       ct1 <- input.contrast1()
       shiny::req(ct1)
       if (!all(ct1 %in% all.ct)) {
@@ -67,7 +67,7 @@ compare_plot_compare1_server <- function(id,
       type <- plottype()
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      createPlot(ngs1, ngs1, ngs2, ct1, type, cex.lab, higenes, ntop)
+      createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop)
     })
 
     PlotModuleServer(

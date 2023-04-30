@@ -1,33 +1,37 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-enrichment_table_n_sig_gsets_ui <- function(id, width, height) {
+enrichment_table_n_sig_gsets_ui <- function(
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height) {
   ns <- shiny::NS(id)
-
-  info_text <- "The <strong>FDR table</strong> panel reports the number of significant gene sets at different FDR thresholds, for all contrasts and all methods. Using the table the user can determine which statistical methods perform better for a particular contrast."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Number of significant gene sets"
+    caption = caption,
+    title = title
   )
 }
 
 enrichment_table_n_sig_gsets_server <- function(id,
-                                                inputData,
+                                                pgx,
                                                 gs_statmethod) {
   moduleServer(id, function(input, output, session) {
     tabH <- 340 ## row height of panels
 
     FDRtable.RENDER <- shiny::reactive({
-      ngs <- inputData()
-      shiny::req(ngs, gs_statmethod())
+      shiny::req(pgx, gs_statmethod())
 
-      meta <- ngs$gset.meta
+      meta <- pgx$gset.meta
       test <- gs_statmethod()
 
       if (length(test) == 1) {
@@ -69,12 +73,14 @@ enrichment_table_n_sig_gsets_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = "20vh",
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
