@@ -100,13 +100,15 @@ clustering_plot_splitmap_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text,
     caption,
     options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    cards = TRUE,
+    card_names = c("Dynamic", "Static")
   )
 }
 
@@ -271,11 +273,11 @@ clustering_plot_splitmap_server <- function(id,
     hm2_splitmap.RENDER <- function() {
       ## iHeatmap based splitted heatmap #########
 
-      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER called!")      
+      dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER called!")
       shiny::req(pgx$genes)
 
       dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : 1 ")
-      
+
       ## -------------- variable to split samples
       ## scale = ifelse(input$hm_scale=="relative","row.center","none")
       scale <- "none"
@@ -289,7 +291,7 @@ clustering_plot_splitmap_server <- function(id,
       shiny::req(filt)
 
       dbg("[clustering_plot_splitmap.R] hm2_splitmap.RENDER : 2 ")
-      
+
       ## if(input$hm_group) {
       X <- filt$mat
       annot <- filt$annot
@@ -301,14 +303,14 @@ clustering_plot_splitmap_server <- function(id,
 
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
-      
+
       rownames(annotF) <- rownames(annot)
       if (length(selected_phenotypes()) == 0) {
         annotF = NULL
       } else {
         annotF <- annotF[,selected_phenotypes(), drop=FALSE]
       }
-      
+
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
 
@@ -342,7 +344,7 @@ clustering_plot_splitmap_server <- function(id,
         plotly::layout(
           margin = list(l=0,r=0,t=0,b=0)
         )
-      
+
       return(plt)
     }
 
@@ -353,7 +355,18 @@ clustering_plot_splitmap_server <- function(id,
       csvFunc = plot_data_hm1,
       res = c(80, 95), ## resolution of plots
       pdf.width = 10, pdf.height = 8,
-      add.watermark = watermark
+      add.watermark = watermark,
+      card = 1
+    )
+    PlotModuleServer(
+      "pltmod",
+      plotlib = "ggplot",
+      func = hm1_splitmap.RENDER,
+      csvFunc = plot_data_hm1,
+      res = c(80, 95), ## resolution of plots
+      pdf.width = 10, pdf.height = 8,
+      add.watermark = watermark,
+      card = 2
     )
 
     return(list(
