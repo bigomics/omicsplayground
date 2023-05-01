@@ -759,7 +759,7 @@ PlotModuleServer <- function(
             output$download <- download.obj
           }
         })
-      } else {
+        } else {
         observeEvent(input$downloadOption, {
           if (input$downloadOption == "png") {
             output[[paste0(
@@ -971,20 +971,21 @@ PlotModuleServer <- function(
           ##--------------------------------------------------------------------------------
 
           list(
-            plotfun = func,
-            plotfun2 = func2,
-            .tmpfiles = c(pdf = PDFFILE, html = HTMLFILE),
-            render = render,
-            render2 = render2,
-            download.pdf = download.pdf,
-            download.png = download.png,
-            download.html = download.html,
-            download.csv = download.csv,
-            ## getCaption = caption.fun,
-            saveHTML = saveHTML,
-            ## outputFunc = outputFunc,
-            renderFunc = renderFunc
+              plotfun = func,
+              plotfun2 = func2,
+              .tmpfiles = c(pdf=PDFFILE, html=HTMLFILE),
+              render = render,
+              render2 = render2,
+              download.pdf = download.pdf,
+              download.png = download.png,
+              download.html = download.html,
+              download.csv = download.csv,
+              ##getCaption = caption.fun,
+              saveHTML = saveHTML,
+              ## outputFunc = outputFunc,
+              renderFunc = renderFunc
           )
+
       }
     )
 }
