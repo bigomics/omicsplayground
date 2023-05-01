@@ -322,9 +322,9 @@ PlotModuleUI <- function(id,
           )
         )
       })
-      tabs <- c(tabs, id = ns("card_selector"))
+      tabs <- c(tabs, id = ns("card_selector"), bg = "transparent", inverse = FALSE)
       plot_cards <- do.call(
-        bslib::navs_tab_card,
+        bslib::navs_bar,
         tabs
       )
     } else {
