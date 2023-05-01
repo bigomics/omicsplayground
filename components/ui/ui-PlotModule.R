@@ -5,29 +5,29 @@
 
 
 if(0) {
-  id="plot1"
-  info.text="Figure"
-  title=""
-  options = NULL
-  label=""
-  caption=""
-  caption2=info.text ## header=NULL
-  plotlib = "base"
-  plotlib2 = plotlib
-  ##renderFunc=NULL
-  outputFunc=shiny::plotOutput
-  ##csvFunc=NULL
-  ##renderFunc2=NULL
-  outputFunc2=shiny::plotOutput
-  no.download = FALSE
-  download.fmt=c("png","pdf")
-  just.info=FALSE
-  info.width="300px"
-  show.maximize = TRUE
-  height = c(640,800)
-  width = c("auto",1400)
-  pdf.width = 6
-  pdf.height = 6
+    id="plot1"
+    info.text="Figure"
+    title=""
+    options = NULL
+    label=""
+    caption=""
+    caption2=info.text ## header=NULL
+    plotlib = "base"
+    plotlib2 = plotlib
+    ##renderFunc=NULL
+    outputFunc=shiny::plotOutput
+    ##csvFunc=NULL
+    ##renderFunc2=NULL
+    outputFunc2=shiny::plotOutput
+    no.download = FALSE
+    download.fmt=c("png","pdf")
+    just.info=FALSE
+    info.width="300px"
+    show.maximize = TRUE
+    height = c(640,800)
+    width = c("auto",1400)
+    pdf.width = 6
+    pdf.height = 6
 }
 
 PlotModuleUI <- function(id,
@@ -63,13 +63,10 @@ PlotModuleUI <- function(id,
     if(length(width)==1)  width  <- c(width,"100%")
 
 
-    ifnotchar.int <- function(s) {
-      suppressWarnings(
-        ifelse(!is.na(as.integer(s)), paste0(as.integer(s), "px"), s)
-      )
-    }
-    width.1 <- ifnotchar.int(width[1])
-    width.2 <- ifnotchar.int(width[2])
+    ifnotchar.int <- function(s) suppressWarnings(
+        ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
+    width.1  <- ifnotchar.int(width[1])
+    width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
 
@@ -97,7 +94,7 @@ PlotModuleUI <- function(id,
         FUN
     }
 
-    if (is.null(plotlib2)) plotlib2 <- plotlib
+    if(is.null(plotlib2))   plotlib2 <- plotlib
     if (cards) {
       if(length(plotlib) != length(card_names)){
         plotlib <- rep(plotlib[1], length(card_names))
@@ -142,12 +139,12 @@ PlotModuleUI <- function(id,
 
     pdf_size = NULL
     if(TRUE || plotlib!="base") {
-      pdf_size <- shiny::tagList(
-        shiny::fillRow(
-          shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width='95%'),
-          shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width='100%')
-        ),
-        shiny::br(),shiny::br(),shiny::br()
+        pdf_size <- shiny::tagList(
+            shiny::fillRow(
+                shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width='95%'),
+                shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width='100%')
+            ),
+            shiny::br(),shiny::br(),shiny::br()
       )
     }
 
@@ -207,11 +204,11 @@ PlotModuleUI <- function(id,
 
     zoom.button <- NULL
     if(1 && show.maximize) {
-      zoom.button <- modalTrigger(ns("zoombutton"),
-                                  ns("plotPopup"),
-                                  icon("window-maximize"),
-                                  class="btn-circle-xs"
-      )
+        zoom.button <- modalTrigger(ns("zoombutton"),
+                                    ns("plotPopup"),
+                                    icon("window-maximize"),
+                                    class="btn-circle-xs"
+        )
     }
 
     header <- shiny::fillRow(
@@ -241,7 +238,7 @@ PlotModuleUI <- function(id,
           id = card_names[x],
           bslib::card_body_fill(
             outputFunc[[x]](ns(paste0("renderpopup", x)),
-                            width = width.1, height = height.1
+                            width = width.2, height = height.2
             ) %>%
               bigLoaders::useSpinner()
           )
@@ -253,15 +250,13 @@ PlotModuleUI <- function(id,
         tabs_modal
       )
     } else {
-      plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
+      plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.2, height = height.2) %>%
         bigLoaders::useSpinner()
 
     }
 
 
     popupfigUI <- function() {
-        w <- width.2
-        h <- height.2
 
         ## NOTE: this was in the server before and we could ask the
         ## image size. How to do this in the UI part?
@@ -466,7 +461,7 @@ PlotModuleServer <- function(
 
           ## these engines cannot (yet) provide html
           if(plotlib %in% c("base")) {
-            download.fmt <- setdiff(download.fmt, c("html"))
+              download.fmt <- setdiff(download.fmt, c("html"))
           }
 
           do.pdf = "pdf" %in% download.fmt
@@ -474,7 +469,7 @@ PlotModuleServer <- function(
           do.html = "html" %in% download.fmt
           do.obj = "obj" %in% download.fmt
 
-          ##do.csv = "csv" %in% download.fmt && !is.null(csvFunc)
+          ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
 
           PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
