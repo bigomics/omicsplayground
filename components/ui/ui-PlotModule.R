@@ -102,6 +102,12 @@ PlotModuleUI <- function(id,
     if(length(plotlib) != length(card_names)){
       plotlib <- rep(plotlib[1], length(card_names))
     }
+    if(length(outputFunc) == 1){
+      outputFunc <- rep(list(outputFunc), length(card_names))
+    }
+    if(length(outputFunc2) == 1){
+      outputFunc2 <- rep(list(outputFunc2), length(card_names))
+    }
     if (is.null(outputFunc)) outputFunc <- lapply(plotlib, getOutputFunc)
     if (is.null(outputFunc2)) outputFunc2 <- lapply(plotlib2, getOutputFunc)
   } else {
