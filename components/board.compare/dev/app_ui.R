@@ -8,17 +8,17 @@ app_ui <- function(request) {
 
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.clustering')
+    golem_add_external_resources('board.compare')
   )
 
   # sidebar
   sidebar <- bigdash::sidebar(
     "Menu",
     bigdash::sidebarMenu(
-      "Clustering",
+      "Signature",
       bigdash::sidebarMenuItem(
-        "Samples",
-        "clustersamples-tab"
+        "Compare datasets (beta)",
+        "comp-tab"
       )
     )
   )
@@ -46,11 +46,13 @@ app_ui <- function(request) {
     ),
     bigdash::bigTabs(
       bigdash::bigTabItem(
-        "clustersamples-tab",
-        ClusteringInputs("clustersamples"),
-        ClusteringUI("clustersamples")
+        "comp-tab",
+        CompareInputs("comp"),
+        CompareUI("comp")
       )
     )
   )
 
 }
+
+

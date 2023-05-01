@@ -54,30 +54,3 @@ app_ui <- function(request) {
     )
 
 }
-
-#' Add external Resources to the Application
-#'
-#' This function is internally used to add external
-#' resources inside the Shiny application.
-#'
-#' @import shiny
-#' @importFrom golem add_resource_path activate_js favicon bundle_resources
-#' @noRd
-golem_add_external_resources <- function(board) {
-  golem::add_resource_path(
-    "www",
-    'components/app/R/www'
-  )
-
-  tags$head(
-    golem::favicon(),
-    golem::bundle_resources(
-      path = 'components/app/R/www',
-      app_title = board
-    ),
-    shinyjs::useShinyjs(),
-    sever::useSever(),
-    bigLoaders::addBigLoaderDeps(),
-    firebase::useFirebase(firestore = TRUE, analytics = TRUE)
-  )
-}
