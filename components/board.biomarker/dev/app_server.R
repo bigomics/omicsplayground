@@ -7,6 +7,6 @@
 app_server <- function(input, output, session) {
 
     # Your application server logic
-    load('~/Desktop/omicsplayground/data/example-data.pgx')
+    load('data/example-data.pgx')
     server <- BiomarkerBoard('bio', pgx)
 }
