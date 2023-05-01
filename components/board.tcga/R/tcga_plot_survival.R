@@ -90,7 +90,6 @@ tcga_plot_survival_server <- function(id,
       playbase::pgx.testTCGAsurvival(
         sig,
         matrix_file,
-        lib.dir = FILES,
         ntop = as.integer(input$tcga_tcgasurv_ntop),
         sortby.p = FALSE,
         deceased.only = input$tcga_surv_deceasedonly,
