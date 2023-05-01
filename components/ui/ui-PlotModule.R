@@ -244,9 +244,9 @@ PlotModuleUI <- function(id,
           )
         )
       })
-      tabs_modal <- c(tabs_modal, id = "card_selector_modal")
+      tabs_modal <- c(tabs_modal, id = "card_selector_modal", bg = "transparent", inverse = FALSE)
       plot_cards_modal <- do.call(
-        bslib::navs_tab_card,
+        bslib::navs_bar,
         tabs_modal
       )
     } else {
