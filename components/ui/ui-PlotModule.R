@@ -4,30 +4,30 @@
 ##
 
 
-if (0) {
-  id <- "plot1"
-  info.text <- "Figure"
-  title <- ""
-  options <- NULL
-  label <- ""
-  caption <- ""
-  caption2 <- info.text ## header=NULL
-  plotlib <- "base"
-  plotlib2 <- plotlib
-  ## renderFunc=NULL
-  outputFunc <- shiny::plotOutput
-  ## csvFunc=NULL
-  ## renderFunc2=NULL
-  outputFunc2 <- shiny::plotOutput
-  no.download <- FALSE
-  download.fmt <- c("png", "pdf")
-  just.info <- FALSE
-  info.width <- "300px"
-  show.maximize <- TRUE
-  height <- c(640, 800)
-  width <- c("auto", 1400)
-  pdf.width <- 6
-  pdf.height <- 6
+if(0) {
+  id="plot1"
+  info.text="Figure"
+  title=""
+  options = NULL
+  label=""
+  caption=""
+  caption2=info.text ## header=NULL
+  plotlib = "base"
+  plotlib2 = plotlib
+  ##renderFunc=NULL
+  outputFunc=shiny::plotOutput
+  ##csvFunc=NULL
+  ##renderFunc2=NULL
+  outputFunc2=shiny::plotOutput
+  no.download = FALSE
+  download.fmt=c("png","pdf")
+  just.info=FALSE
+  info.width="300px"
+  show.maximize = TRUE
+  height = c(640,800)
+  width = c("auto",1400)
+  pdf.width = 6
+  pdf.height = 6
 }
 
 PlotModuleUI <- function(id,
@@ -63,15 +63,15 @@ PlotModuleUI <- function(id,
     if(length(width)==1)  width  <- c(width,"100%")
 
 
-  ifnotchar.int <- function(s) {
-    suppressWarnings(
-      ifelse(!is.na(as.integer(s)), paste0(as.integer(s), "px"), s)
-    )
-  }
-  width.1 <- ifnotchar.int(width[1])
-  width.2 <- ifnotchar.int(width[2])
-  height.1 <- ifnotchar.int(height[1])
-  height.2 <- ifnotchar.int(height[2])
+    ifnotchar.int <- function(s) {
+      suppressWarnings(
+        ifelse(!is.na(as.integer(s)), paste0(as.integer(s), "px"), s)
+      )
+    }
+    width.1 <- ifnotchar.int(width[1])
+    width.2 <- ifnotchar.int(width[2])
+    height.1 <- ifnotchar.int(height[1])
+    height.2 <- ifnotchar.int(height[2])
 
     ## OVERRIDE WIDTH: for fullscreen modal always 100%
     width.2 = "100%"
@@ -97,206 +97,206 @@ PlotModuleUI <- function(id,
         FUN
     }
 
-  if (is.null(plotlib2)) plotlib2 <- plotlib
-  if (cards) {
-    if(length(plotlib) != length(card_names)){
-      plotlib <- rep(plotlib[1], length(card_names))
+    if (is.null(plotlib2)) plotlib2 <- plotlib
+    if (cards) {
+      if(length(plotlib) != length(card_names)){
+        plotlib <- rep(plotlib[1], length(card_names))
+      }
+      if(length(outputFunc) == 1){
+        outputFunc <- rep(list(outputFunc), length(card_names))
+      }
+      if(length(outputFunc2) == 1){
+        outputFunc2 <- rep(list(outputFunc2), length(card_names))
+      }
+      if (is.null(outputFunc)) outputFunc <- lapply(plotlib, getOutputFunc)
+      if (is.null(outputFunc2)) outputFunc2 <- lapply(plotlib2, getOutputFunc)
+    } else {
+      if (is.null(outputFunc)) outputFunc <- getOutputFunc(plotlib)
+      if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
     }
-    if(length(outputFunc) == 1){
-      outputFunc <- rep(list(outputFunc), length(card_names))
+
+    ##--------------------------------------------------------------------------------
+    ##------------------------ BUTTONS -----------------------------------------------
+    ##--------------------------------------------------------------------------------
+
+    ##if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
+    options.button <- ""
+
+    if(!just.info && !is.null(options) && length(options)>0) {
+        options.button <- DropdownMenu(
+          options,
+          size = "xs",
+          width = "auto",
+          icon = shiny::icon("bars"),
+          status = "default"
+        )
     }
-    if(length(outputFunc2) == 1){
-      outputFunc2 <- rep(list(outputFunc2), length(card_names))
-    }
-    if (is.null(outputFunc)) outputFunc <- lapply(plotlib, getOutputFunc)
-    if (is.null(outputFunc2)) outputFunc2 <- lapply(plotlib2, getOutputFunc)
-  } else {
-    if (is.null(outputFunc)) outputFunc <- getOutputFunc(plotlib)
-    if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
-  }
 
-  ##--------------------------------------------------------------------------------
-  ##------------------------ BUTTONS -----------------------------------------------
-  ##--------------------------------------------------------------------------------
-
-  ##if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
-  options.button <- ""
-
-  if(!just.info && !is.null(options) && length(options)>0) {
-      options.button <- DropdownMenu(
-        options,
-        size = "xs",
-        width = "auto",
-        icon = shiny::icon("bars"),
-        status = "default"
-      )
-  }
-
-  dload.csv <- dload.pdf <- dload.png <- dload.html <- dload.obj <- NULL
-  if ("pdf" %in% download.fmt) dload.pdf <- shiny::downloadButton(ns("pdf"), "PDF")
-  if ("png" %in% download.fmt) dload.png <- shiny::downloadButton(ns("png"), "PNG")
-  if ("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
-  if ("csv" %in% download.fmt) dload.csv <- shiny::downloadButton(ns("csv"), "CSV")
-  if ("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
+    dload.csv <- dload.pdf <- dload.png <- dload.html <- dload.obj <- NULL
+    if ("pdf" %in% download.fmt) dload.pdf <- shiny::downloadButton(ns("pdf"), "PDF")
+    if ("png" %in% download.fmt) dload.png <- shiny::downloadButton(ns("png"), "PNG")
+    if ("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
+    if ("csv" %in% download.fmt) dload.csv <- shiny::downloadButton(ns("csv"), "CSV")
+    if ("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
 
 
-  pdf_size <- NULL
-  if (TRUE || plotlib != "base") {
-    pdf_size <- shiny::tagList(
-      shiny::fillRow(
-        shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width = "95%"),
-        shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width = "100%")
-      ),
-      shiny::br(), shiny::br(), shiny::br()
-    )
-  }
-
-  if (cards == FALSE) {
-    download_buttons <- div(
-      shiny::downloadButton(
-        outputId = ns("download"),
-        label = "Download",
-        class = "btn-outline-primary"
-      )
-    )
-  } else {
-    button_list <- lapply(seq_along(card_names), function(x) {
-      shiny::conditionalPanel(
-        condition = paste0(
-          "input.card_selector == '", card_names[x], "'"
+    pdf_size <- NULL
+    if (TRUE || plotlib != "base") {
+      pdf_size <- shiny::tagList(
+        shiny::fillRow(
+          shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width = "95%"),
+          shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width = "100%")
         ),
-        ns = ns,
-        div(
-          shiny::downloadButton(
-            outputId = ns(paste0(
-              "download", x
-            )),
-            label = "Download",
-            class = "btn-outline-primary"
+        shiny::br(), shiny::br(), shiny::br()
+      )
+    }
+
+    if (cards == FALSE) {
+      download_buttons <- div(
+        shiny::downloadButton(
+          outputId = ns("download"),
+          label = "Download",
+          class = "btn-outline-primary"
+        )
+      )
+    } else {
+      button_list <- lapply(seq_along(card_names), function(x) {
+        shiny::conditionalPanel(
+          condition = paste0(
+            "input.card_selector == '", card_names[x], "'"
+          ),
+          ns = ns,
+          div(
+            shiny::downloadButton(
+              outputId = ns(paste0(
+                "download", x
+              )),
+              label = "Download",
+              class = "btn-outline-primary"
+            )
           )
         )
-      )
-    })
-    download_buttons <- do.call(div, button_list)
-  }
+      })
+      download_buttons <- do.call(div, button_list)
+    }
 
-   dload.button <- DropdownMenu(
-    div(
-      style = "width: 150px;",
-      shiny::selectInput(
-        inputId = ns("downloadOption"),
-        label = "Format",
-        choices = download.fmt
-      ),
-      shiny::conditionalPanel(
-        condition = "input.downloadOption == 'pdf' || input.downloadOption == 'png'",
-        ns = ns,
-        shiny::div(
-          pdf_size,
-          shiny::br()
-        )
-      ),
-      download_buttons,
-    ),
-    size = "xs",
-    icon = shiny::icon("download"),
-    status = "default"
-  )
-
-  if (no.download || length(download.fmt) == 0) dload.button <- ""
-
-  zoom.button <- NULL
-  if (1 && show.maximize) {
-    zoom.button <- modalTrigger(ns("zoombutton"),
-      ns("plotPopup"),
-      icon("window-maximize"),
-      class = "btn-circle-xs"
-    )
-  }
-
-  header <- shiny::fillRow(
-      flex = c(1,NA,NA,NA,NA),
-      class="plotmodule-header",
-      shiny::div(class='plotmodule-title', title=title, title),
-      DropdownMenu(
-          shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
-          width = "250px",
-          size = "xs",
-          icon = shiny::icon("info"),
-          status = "default"
-      ),
-      options.button,
-      shiny::div(class='download-button', title='download', dload.button),
-      shiny::div(class='zoom-button', title='zoom', zoom.button)
-  )
-
-  ## ------------------------------------------------------------------------
-  ## --------------- modal UI (former output$popupfig) ----------------------
-  ## ------------------------------------------------------------------------
-
-  if (cards) {
-    tabs_modal <- lapply(1:length(card_names), function(x) {
-      bslib::nav(
-        card_names[x],
-        id = card_names[x],
-        bslib::card_body_fill(
-          outputFunc[[x]](ns(paste0("renderpopup", x)),
-                          width = width.1, height = height.1
-          ) %>%
-            bigLoaders::useSpinner()
-        )
-      )
-    })
-    tabs_modal <- c(tabs_modal, id = "card_selector_modal")
-    plot_cards_modal <- do.call(
-      bslib::navs_tab_card,
-      tabs_modal
-    )
-  } else {
-    plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
-      bigLoaders::useSpinner()
-
-  }
-
-
-  popupfigUI <- function() {
-      w <- width.2
-      h <- height.2
-
-      ## NOTE: this was in the server before and we could ask the
-      ## image size. How to do this in the UI part?
-      if(FALSE && plotlib2=="image") {
-          ## retains aspect ratio
-          ##
-          img.file <- func()$src
-          img.dim <- c(h,w)
-          if(grepl("png|PNG",img.file)) img.dim <- dim(png::readPNG(img.file))[1:2]
-          if(grepl("jpg|JPG",img.file)) img.dim <- dim(jpeg::readJPEG(img.file))[1:2]
-          r <- min( width.2 / img.dim[2], height.2 / img.dim[1])
-          h <- img.dim[1]*r
-          w <- img.dim[2]*r
-      }
-
-      ## render caption2 (for modal)
-      if(any(class(caption2)=="reactive")) {
-          caption2 <- caption2()
-      }
-      caption2 <- shiny::div(
-        class="caption2 popup-plot-caption",
-        shiny::HTML(paste0("<b>", as.character(title),".</b>&nbsp;&nbsp;",
-          as.character(caption2)))
-      )
-
-      ##        shiny::tagList(
-      shiny::div(
-        class = "popup-plot-body",
-        shiny::div(
-          class = "popup-plot",
-          plot_cards_modal
+     dload.button <- DropdownMenu(
+      div(
+        style = "width: 150px;",
+        shiny::selectInput(
+          inputId = ns("downloadOption"),
+          label = "Format",
+          choices = download.fmt
         ),
-        caption2
+        shiny::conditionalPanel(
+          condition = "input.downloadOption == 'pdf' || input.downloadOption == 'png'",
+          ns = ns,
+          shiny::div(
+            pdf_size,
+            shiny::br()
+          )
+        ),
+        download_buttons,
+      ),
+      size = "xs",
+      icon = shiny::icon("download"),
+      status = "default"
+    )
+
+    if (no.download || length(download.fmt) == 0) dload.button <- ""
+
+    zoom.button <- NULL
+    if (1 && show.maximize) {
+      zoom.button <- modalTrigger(ns("zoombutton"),
+        ns("plotPopup"),
+        icon("window-maximize"),
+        class = "btn-circle-xs"
       )
-  }
+    }
+
+    header <- shiny::fillRow(
+        flex = c(1,NA,NA,NA,NA),
+        class="plotmodule-header",
+        shiny::div(class='plotmodule-title', title=title, title),
+        DropdownMenu(
+            shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
+            width = "250px",
+            size = "xs",
+            icon = shiny::icon("info"),
+            status = "default"
+        ),
+        options.button,
+        shiny::div(class='download-button', title='download', dload.button),
+        shiny::div(class='zoom-button', title='zoom', zoom.button)
+    )
+
+    ## ------------------------------------------------------------------------
+    ## --------------- modal UI (former output$popupfig) ----------------------
+    ## ------------------------------------------------------------------------
+
+    if (cards) {
+      tabs_modal <- lapply(1:length(card_names), function(x) {
+        bslib::nav(
+          card_names[x],
+          id = card_names[x],
+          bslib::card_body_fill(
+            outputFunc[[x]](ns(paste0("renderpopup", x)),
+                            width = width.1, height = height.1
+            ) %>%
+              bigLoaders::useSpinner()
+          )
+        )
+      })
+      tabs_modal <- c(tabs_modal, id = "card_selector_modal")
+      plot_cards_modal <- do.call(
+        bslib::navs_tab_card,
+        tabs_modal
+      )
+    } else {
+      plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.1, height = height.1) %>%
+        bigLoaders::useSpinner()
+
+    }
+
+
+    popupfigUI <- function() {
+        w <- width.2
+        h <- height.2
+
+        ## NOTE: this was in the server before and we could ask the
+        ## image size. How to do this in the UI part?
+        if(FALSE && plotlib2=="image") {
+            ## retains aspect ratio
+            ##
+            img.file <- func()$src
+            img.dim <- c(h,w)
+            if(grepl("png|PNG",img.file)) img.dim <- dim(png::readPNG(img.file))[1:2]
+            if(grepl("jpg|JPG",img.file)) img.dim <- dim(jpeg::readJPEG(img.file))[1:2]
+            r <- min( width.2 / img.dim[2], height.2 / img.dim[1])
+            h <- img.dim[1]*r
+            w <- img.dim[2]*r
+        }
+
+        ## render caption2 (for modal)
+        if(any(class(caption2)=="reactive")) {
+            caption2 <- caption2()
+        }
+        caption2 <- shiny::div(
+          class="caption2 popup-plot-caption",
+          shiny::HTML(paste0("<b>", as.character(title),".</b>&nbsp;&nbsp;",
+            as.character(caption2)))
+        )
+
+        ##        shiny::tagList(
+        shiny::div(
+          class = "popup-plot-body",
+          shiny::div(
+            class = "popup-plot",
+            plot_cards_modal
+          ),
+          caption2
+        )
+    }
 
     popupfigUI_editor <- function(){
         htmlOutput(ns("editor_frame"))
@@ -460,36 +460,36 @@ PlotModuleServer <- function(
             tags$iframe(src=url, style = "height: 85vh; width: 100%;")
           })
 
-      ## --------------------------------------------------------------------------------
-      ## ------------------------ FIGURE ------------------------------------------------
-      ## --------------------------------------------------------------------------------
+          ##--------------------------------------------------------------------------------
+          ##------------------------ FIGURE ------------------------------------------------
+          ##--------------------------------------------------------------------------------
 
-      ## these engines cannot (yet) provide html
-      if (plotlib %in% c("base")) {
-        download.fmt <- setdiff(download.fmt, c("html"))
-      }
+          ## these engines cannot (yet) provide html
+          if (plotlib %in% c("base")) {
+            download.fmt <- setdiff(download.fmt, c("html"))
+          }
 
-      do.pdf <- "pdf" %in% download.fmt
-      do.png <- "png" %in% download.fmt
-      do.html <- "html" %in% download.fmt
-      do.obj <- "obj" %in% download.fmt
+          do.pdf = "pdf" %in% download.fmt
+          do.png = "png" %in% download.fmt
+          do.html = "html" %in% download.fmt
+          do.obj = "obj" %in% download.fmt
 
-      ## do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
-      do.csv <- !is.null(csvFunc)
+          ## do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
+          do.csv = !is.null(csvFunc)
 
-      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- NULL
-      if (do.pdf) PDFFILE <- paste0(gsub("file", "plot", tempfile()), ".pdf")
-      if (do.png) PNGFILE <- paste0(gsub("file", "plot", tempfile()), ".png")
-      if (do.csv) CSVFILE <- paste0(gsub("file", "data", tempfile()), ".csv")
-      HTMLFILE <- paste0(gsub("file", "plot", tempfile()), ".html") ## tempory for webshot
-      HTMLFILE
-      unlink(HTMLFILE)
+          PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
+          if (do.pdf) PDFFILE = paste0(gsub("file", "plot", tempfile()), ".pdf")
+          if (do.png) PNGFILE = paste0(gsub("file", "plot", tempfile()), ".png")
+          if (do.csv) CSVFILE = paste0(gsub("file", "data", tempfile()), ".csv")
+          HTMLFILE = paste0(gsub("file", "plot", tempfile()), ".html") ## tempory for webshot
+          HTMLFILE
+          unlink(HTMLFILE)
 
-       ##============================================================
-       ##=============== Download Handlers ==========================
-       ##============================================================
-       ## download.pdf = NULL
-       ##download.png = download.html = NULL
+          ##============================================================
+          ##=============== Download Handlers ==========================
+          ##============================================================
+          ## download.pdf = NULL
+          ##download.png = download.html = NULL
 
           if(do.png && is.null(download.png)) {
             download.png <- shiny::downloadHandler(
@@ -971,27 +971,27 @@ PlotModuleServer <- function(
 
 
 
-      ## --------------------------------------------------------------------------------
-      ## ---------------------------- RETURN VALUE --------------------------------------
-      ## --------------------------------------------------------------------------------
+          ##--------------------------------------------------------------------------------
+          ##---------------------------- RETURN VALUE --------------------------------------
+          ##--------------------------------------------------------------------------------
 
-      list(
-        plotfun = func,
-        plotfun2 = func2,
-        .tmpfiles = c(pdf = PDFFILE, html = HTMLFILE),
-        render = render,
-        render2 = render2,
-        download.pdf = download.pdf,
-        download.png = download.png,
-        download.html = download.html,
-        download.csv = download.csv,
-        ## getCaption = caption.fun,
-        saveHTML = saveHTML,
-        ## outputFunc = outputFunc,
-        renderFunc = renderFunc
-      )
-    }
-  )
+          list(
+            plotfun = func,
+            plotfun2 = func2,
+            .tmpfiles = c(pdf = PDFFILE, html = HTMLFILE),
+            render = render,
+            render2 = render2,
+            download.pdf = download.pdf,
+            download.png = download.png,
+            download.html = download.html,
+            download.csv = download.csv,
+            ## getCaption = caption.fun,
+            saveHTML = saveHTML,
+            ## outputFunc = outputFunc,
+            renderFunc = renderFunc
+          )
+      }
+    )
 }
 
 
