@@ -289,4 +289,4 @@ main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
 message("[global.R] global init time = ",main.init_time," ",attr(main.init_time,"units"))
 
-shiny::addResourcePath("static", "www")
+shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
