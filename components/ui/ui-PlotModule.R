@@ -132,22 +132,22 @@ PlotModuleUI <- function(id,
         )
     }
 
-    dload.csv <- dload.pdf <- dload.png <- dload.html <- dload.obj <- NULL
-    if ("pdf" %in% download.fmt) dload.pdf <- shiny::downloadButton(ns("pdf"), "PDF")
-    if ("png" %in% download.fmt) dload.png <- shiny::downloadButton(ns("png"), "PNG")
-    if ("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
-    if ("csv" %in% download.fmt) dload.csv <- shiny::downloadButton(ns("csv"), "CSV")
-    if ("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
+    dload.csv = dload.pdf = dload.png = dload.html = dload.obj = NULL
+    if("pdf" %in% download.fmt)   dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
+    if("png" %in% download.fmt)   dload.png  <- shiny::downloadButton(ns("png"), "PNG")
+    if("html" %in% download.fmt)  dload.html <- shiny::downloadButton(ns("html"), "HTML")
+    if("csv"  %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    if("obj"  %in% download.fmt)  dload.obj  <- shiny::downloadButton(ns("obj"), "obj")
 
 
-    pdf_size <- NULL
-    if (TRUE || plotlib != "base") {
+    pdf_size = NULL
+    if(TRUE || plotlib!="base") {
       pdf_size <- shiny::tagList(
         shiny::fillRow(
-          shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width = "95%"),
-          shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width = "100%")
+          shiny::numericInput(ns("pdf_width"), "Width", pdf.width, 1, 20, 1, width='95%'),
+          shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width='100%')
         ),
-        shiny::br(), shiny::br(), shiny::br()
+        shiny::br(),shiny::br(),shiny::br()
       )
     }
 
@@ -180,7 +180,7 @@ PlotModuleUI <- function(id,
       download_buttons <- do.call(div, button_list)
     }
 
-     dload.button <- DropdownMenu(
+    dload.button <- DropdownMenu(
       div(
         style = "width: 150px;",
         shiny::selectInput(
@@ -203,14 +203,14 @@ PlotModuleUI <- function(id,
       status = "default"
     )
 
-    if (no.download || length(download.fmt) == 0) dload.button <- ""
+    if(no.download || length(download.fmt)==0 ) dload.button <- ""
 
     zoom.button <- NULL
-    if (1 && show.maximize) {
+    if(1 && show.maximize) {
       zoom.button <- modalTrigger(ns("zoombutton"),
-        ns("plotPopup"),
-        icon("window-maximize"),
-        class = "btn-circle-xs"
+                                  ns("plotPopup"),
+                                  icon("window-maximize"),
+                                  class="btn-circle-xs"
       )
     }
 
@@ -465,7 +465,7 @@ PlotModuleServer <- function(
           ##--------------------------------------------------------------------------------
 
           ## these engines cannot (yet) provide html
-          if (plotlib %in% c("base")) {
+          if(plotlib %in% c("base")) {
             download.fmt <- setdiff(download.fmt, c("html"))
           }
 
@@ -474,14 +474,14 @@ PlotModuleServer <- function(
           do.html = "html" %in% download.fmt
           do.obj = "obj" %in% download.fmt
 
-          ## do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
+          ##do.csv = "csv" %in% download.fmt && !is.null(csvFunc)
           do.csv = !is.null(csvFunc)
 
           PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
-          if (do.pdf) PDFFILE = paste0(gsub("file", "plot", tempfile()), ".pdf")
-          if (do.png) PNGFILE = paste0(gsub("file", "plot", tempfile()), ".png")
-          if (do.csv) CSVFILE = paste0(gsub("file", "data", tempfile()), ".csv")
-          HTMLFILE = paste0(gsub("file", "plot", tempfile()), ".html") ## tempory for webshot
+          if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
+          if(do.png) PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
+          if(do.csv) CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
+          HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
           HTMLFILE
           unlink(HTMLFILE)
 
