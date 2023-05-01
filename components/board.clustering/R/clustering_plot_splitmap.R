@@ -100,7 +100,7 @@ clustering_plot_splitmap_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    plotlib = c("plotly", "ggplot"),
+    plotlib = c("plotly", "base"),
     info.text,
     caption,
     options = splitmap_opts,
@@ -360,7 +360,7 @@ clustering_plot_splitmap_server <- function(id,
     )
     PlotModuleServer(
       "pltmod",
-      plotlib = "ggplot",
+      plotlib = "base",
       func = hm1_splitmap.RENDER,
       csvFunc = plot_data_hm1,
       res = c(80, 95), ## resolution of plots
