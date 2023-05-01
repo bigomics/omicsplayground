@@ -1,9 +1,8 @@
 
 launch_board <- function(board) {
-  #board <- 'board.biomarker'
 
   library(golem)
-  #library(playbase)
+  library(playbase) ## install or devtools::load_all(PATH_TO_PLAYBASE)
 
   # Set options here
   options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
@@ -47,9 +46,6 @@ launch_board <- function(board) {
     }
   # Document and reload your package
   #document_and_reload2()
-
-  ## THIRD-PARTY PACKAGES ##
-  devtools::load_all('~/Desktop/playbase')
 
   ## SOURCE FILES ##
 
