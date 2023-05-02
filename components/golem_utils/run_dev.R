@@ -3,10 +3,15 @@
 # e.g. `launch_board('board.enrichment', c('board.expression'))` because
 # board.enrichment takes input from board.expression. Any board deps need
 # to also be included in the app_ui.R and app_server.R files
-launch_board <- function(board, board_deps = NULL) {
+launch_board <- function(board, board_deps = NULL, playbase_path = NULL) {
 
   library(golem)
-  library(playbase) ## install or devtools::load_all(PATH_TO_PLAYBASE)
+  if (!is.null(playbase_path)) {
+    library(playbase) ## install or devtools::load_all(PATH_TO_PLAYBASE)
+  } else {
+    devtools::load_all(playbase_path)
+  }
+
 
   # Set options here
   options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
@@ -75,8 +80,8 @@ launch_board <- function(board, board_deps = NULL) {
   }
 
   # load any other boards
-  if (!is.null(extra_boards)) {
-    for (extra_board in extra_boards) {
+  if (!is.null(board_deps)) {
+    for (extra_board in board_deps) {
       r_files <- list.files(path = glue::glue('components/{extra_board}/R'))
       for (r_file in r_files) {
         source(file.path(glue::glue('components/{extra_board}/R/'),r_file))
