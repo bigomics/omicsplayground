@@ -1,5 +1,9 @@
 
-launch_board <- function(board) {
+# board_deps : vector of other board names that the main board depends on
+# e.g. `launch_board('board.enrichment', c('board.expression'))` because
+# board.enrichment takes input from board.expression. Any board deps need
+# to also be included in the app_ui.R and app_server.R files
+launch_board <- function(board, board_deps = NULL) {
 
   library(golem)
   library(playbase) ## install or devtools::load_all(PATH_TO_PLAYBASE)
@@ -68,6 +72,16 @@ launch_board <- function(board) {
   r_files <- list.files(path = glue::glue('components/{board}/R'))
   for (r_file in r_files) {
     source(file.path(glue::glue('components/{board}/R/'),r_file))
+  }
+
+  # load any other boards
+  if (!is.null(extra_boards)) {
+    for (extra_board in extra_boards) {
+      r_files <- list.files(path = glue::glue('components/{extra_board}/R'))
+      for (r_file in r_files) {
+        source(file.path(glue::glue('components/{extra_board}/R/'),r_file))
+      }
+    }
   }
 
   # Run the application
