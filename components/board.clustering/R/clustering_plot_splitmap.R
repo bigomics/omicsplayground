@@ -335,7 +335,7 @@ clustering_plot_splitmap_server <- function(id,
         X = X, annot = annotF, ytips = tooltips,
         idx = idx, splitx = splitx, scale = scale,
         row_annot_width = 0.03, rowcex = rowcex,
-        colcex = colcex
+        colcex = colcex, show_legend = input$hm_legend
       )
       obj2 <- plt %>% iheatmapr::to_plotly_list()
       plt <- plotly::as_widget(obj2) %>%
