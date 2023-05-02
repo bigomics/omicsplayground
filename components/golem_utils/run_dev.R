@@ -6,8 +6,9 @@
 launch_board <- function(board, board_deps = NULL, playbase_path = NULL) {
 
   library(golem)
-  if (!is.null(playbase_path)) {
-    library(playbase) ## install or devtools::load_all(PATH_TO_PLAYBASE)
+
+  if (is.null(playbase_path)) {
+    library(playbase)
   } else {
     devtools::load_all(playbase_path)
   }
