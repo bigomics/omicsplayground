@@ -85,14 +85,13 @@ WgcnaBoard <- function(id, pgx) {
 
         out <- playbase::pgx.wgcna(
           pgx = pgx,
-          lib.dir = FILES,
           ngenes = input$ngenes,
           minmodsize = as.integer(input$minmodsize),
           power = as.numeric(input$power),
           cutheight = as.numeric(input$cutheight),
           deepsplit = as.integer(input$deepsplit)
         )
-        
+
         shiny::updateSelectInput(session, "selected_module", choices = names(out$me.genes), sel = "ME1")
 
         beepr::beep(2) ## short beep
