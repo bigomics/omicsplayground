@@ -3,7 +3,7 @@
 # e.g. `launch_board('board.enrichment', c('board.expression'))` because
 # board.enrichment takes input from board.expression. Any board deps need
 # to also be included in the app_ui.R and app_server.R files
-launch_board <- function(board, board_deps = NULL, playbase_path = NULL) {
+launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options = list()) {
 
   library(golem)
 
@@ -91,7 +91,7 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL) {
   }
 
   # Run the application
-  run_app()
+  run_app(options=options)
 }
 
 
