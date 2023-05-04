@@ -87,3 +87,7 @@ push.latest:
 	docker push bigomics/omicsplayground:latest
 	docker push bigomics/omicsplayground:$(VERSION)
 
+BOARD = dataview
+board:
+	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
+

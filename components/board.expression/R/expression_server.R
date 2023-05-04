@@ -152,7 +152,7 @@ ExpressionBoard <- function(id, pgx) {
       ## is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
       is.sig <- 1 * (mx.q <= stars.fdr) * (abs(mx$meta.fx) >= lfc)
       ## stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]
-      stars <- sapply(rowSums(is.sig, na.rm = TRUE), star.symbols)
+      stars <- sapply(rowSums(is.sig, na.rm = TRUE), playbase::star.symbols)
 
       ## recalculate group averages???
       y0 <- pgx$model.parameters$exp.matrix[, comparison]
@@ -432,7 +432,7 @@ ExpressionBoard <- function(id, pgx) {
       sel.row <- 1
       sel.row <- genetable_rows_selected()
       if (is.null(sel.row)) return(NULL)
-      
+
       gene0 <- rownames(res)[sel.row]
       gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
 
@@ -462,7 +462,7 @@ ExpressionBoard <- function(id, pgx) {
       id = "genetable",
       res = filteredDiffExprTable,
       height = c(tabH - 10, 700),
-      scrollY = "200px"      
+      scrollY = "200px"
     )
 
     gsettable <- expression_table_gsettable_server(
