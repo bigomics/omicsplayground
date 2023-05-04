@@ -211,10 +211,35 @@ PlotModuleUI <- function(id,
         )
     }
 
+    # Build cards or single plot
+    if (cards) {
+        tabs <- lapply(1:length(card_names), function(x) {
+            bslib::nav(
+                card_names[x],
+                bslib::card_body_fill(
+                    outputFunc[[x]](ns(paste0("renderfigure", x))) %>%
+                        bigLoaders::useSpinner()
+                )
+            )
+        })
+        tabs <- c(tabs, id = ns("card_selector"), ulClass = "nav navbar-nav",
+                  selected = NULL)
+        plot_cards <- do.call(
+            bslib:::buildTabset,
+            tabs
+        )
+    } else {
+        plot_cards <- outputFunc(ns("renderfigure")) %>%
+            bigLoaders::useSpinner()
+    }
+
     header <- shiny::fillRow(
         flex = c(1,NA,NA,NA,NA),
         class="plotmodule-header",
         shiny::div(class='plotmodule-title', title=title, title),
+        if(cards){
+            plot_cards$navList
+        },
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
             width = "250px",
@@ -311,34 +336,13 @@ PlotModuleUI <- function(id,
 #        caption <- shiny::span(caption)
 #    }
 
-    # Build cards or single plot
-    if (cards) {
-      tabs <- lapply(1:length(card_names), function(x) {
-        bslib::nav(
-          card_names[x],
-          bslib::card_body_fill(
-            outputFunc[[x]](ns(paste0("renderfigure", x))) %>%
-              bigLoaders::useSpinner()
-          )
-        )
-      })
-      tabs <- c(tabs, id = ns("card_selector"), bg = "transparent", inverse = FALSE)
-      plot_cards <- do.call(
-        bslib::navs_bar,
-        tabs
-      )
-    } else {
-      plot_cards <- outputFunc(ns("renderfigure")) %>%
-        bigLoaders::useSpinner()
-    }
-
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       style = paste0("height:",height.1,";overflow: visible;"),
       bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
 ##      style = paste0("height: ",height.1,";"),
-        plot_cards,
+        if(cards){plot_cards$content}else{plot_cards},
         shiny::div(class="popup-modal",
                     modalUI(
                           id = ns("plotPopup"),
