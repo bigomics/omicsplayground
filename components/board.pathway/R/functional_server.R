@@ -472,7 +472,9 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       svg.dir <- pgx.system.file("svg/",package="board.pathway")
       wp.available <- sub("_[0-9]+.svg","",gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
       wp.gsets <- grep("_WP",rownames(pgx$gsetX),value=TRUE)
+      # extract wp.ids from string
       wp.ids <- gsub(".*_WP","WP",wp.gsets)
+      wp.ids <-  gsub("(_.*$)", "", wp.ids)
       ## sometimes no WIKIPATHWAY in genesets...
       if (length(wp.ids) == 0) {
         shinyWidgets::sendSweetAlert(
