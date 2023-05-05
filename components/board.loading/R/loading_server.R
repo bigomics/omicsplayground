@@ -31,8 +31,9 @@ LoadingBoard <- function(id,
       selected_row_shared = NULL,
       download_pgx = NULL,
       download_zip = NULL,
-      share_pgx = NULL,      
-      delete_pgx = NULL      
+      share_pgx = NULL,
+      delete_pgx = NULL,
+      delete_trigger = 0
     )
 
     ## static, not changing
@@ -101,7 +102,7 @@ LoadingBoard <- function(id,
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
-        
+
         ## abort if file exists
         if(file.exists(new_pgx_file)) {
           shinyalert::shinyalert(
@@ -121,20 +122,23 @@ LoadingBoard <- function(id,
           showCancelButton = TRUE,
           showConfirmButton = TRUE
         )
-      }
+
+        rl$share_pgx <- NULL
+      },
+      ignoreNULL = TRUE
     )
 
     observeEvent(input$share_confirm, {
       # if confirmed, then share the data
       if (input$share_confirm) {
         ##selected_row <- rl$selected_row  ## does not work reliably
-        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])        
+        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])
         pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
         pgx_name <- sub("[.]pgx$","",pgx_name)
         pgx_path <- getPGXDIR()
         pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
-        
+
         ## file.copy(from = pgx_file, to = new_pgx_file)
         dbg("[loading_server.R:share_confirm] pgx_file = ", pgx_file)
         pgx0  <- playbase::pgx.load(pgx_file)
@@ -142,13 +146,13 @@ LoadingBoard <- function(id,
         if("creator" %in% names(pgx0) && !unknown.creator) {
           file.copy(from = pgx_file, to = new_pgx_file)
         } else {
-          pgx0$creator <- session$user  ## really?          
+          pgx0$creator <- session$user  ## really?
           dbg("[loading_server.R:share_confirm] session$user = ", session$user)
           dbg("[loading_server.R:share_confirm] creator = ", pgx0$creator)
           if(pgx0$creator %in% c(NA,"","user","anonymous","unknown"))  pgx0$creator <- "unknown"
           playbase::pgx.save(pgx0, file = new_pgx_file)
         }
-        
+
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         ## r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
@@ -172,7 +176,7 @@ LoadingBoard <- function(id,
       if (is.na(example_row)) {
         shinyWidgets::sendSweetAlert(
           session = session,
-          title = "No example data found",          
+          title = "No example data found",
           text ='Sorry, the example dataset cannot be found. You may have deleted
             it in a previous session.',
           type = "warning",
@@ -186,10 +190,10 @@ LoadingBoard <- function(id,
         # close the right sidebar
         #shinyjs::runjs("$('#settings-container').trigger('click');")
         #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
-        
+
         # open the left & right sidebar
         bigdash.openSettings(lock=TRUE)
-        shinyjs::runjs("$('#settings-container').trigger('mouseenter');")        
+        shinyjs::runjs("$('#settings-container').trigger('mouseenter');")
         bigdash.openSidebar()
 
         # go to dataview
@@ -207,7 +211,7 @@ LoadingBoard <- function(id,
     loading_tsne_server(
       id = "tsne",
       pgx.dir = getPGXDIR,
-      info.table = getFilteredPGXINFO,      
+      info.table = getFilteredPGXINFO,
       watermark = FALSE
     )
 
@@ -349,7 +353,7 @@ LoadingBoard <- function(id,
       playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
 ##      shinyWidgets::closeSweetAlert()
       })
-      
+
       info <- NULL
       info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       info.colnames <- c(
@@ -418,7 +422,7 @@ LoadingBoard <- function(id,
       }
       df <- getPGXINFO_SHARED()
       shiny::req(df)
-      
+
       pgxfiles <- dir(pgx_shared_dir, pattern = ".pgx$")
       sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
       df <- df[sel, , drop = FALSE]
@@ -500,7 +504,7 @@ LoadingBoard <- function(id,
     savePGX <- function(pgx, file) {
       req(auth$logged())
       if (!auth$logged()) {
-        warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")        
+        warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")
         return(NULL)
       }
       file <- paste0(sub("[.]pgx$", "", file), ".pgx") ## add/replace .pgx
@@ -518,20 +522,24 @@ LoadingBoard <- function(id,
       return(NULL)
     }
 
-    
+
     # DOWNLOAD PGX FILE #
-    observeEvent(rl$download_pgx, { shinyjs::click(id = 'download_pgx_btn') })
+    observeEvent(rl$download_pgx, {
+      shinyjs::click(id = 'download_pgx_btn')
+      rl$download_pgx_idx <- rl$download_pgx
+      rl$download_pgx <- NULL
+    }, ignoreNULL = TRUE)
     output$download_pgx_btn <- shiny::downloadHandler(
       ## filename = "userdata.pgx",
       filename = function() {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx, '_row_')[[1]][2])
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
         pgxfile
       },
       content = function(file) {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx, '_row_')[[1]][2])
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
@@ -544,11 +552,15 @@ LoadingBoard <- function(id,
 
 
     # DOWNLOAD DATA AS ZIP FILE #
-    observeEvent(rl$download_zip, { shinyjs::click(id = 'download_zip_btn') })
+    observeEvent(rl$download_zip, {
+      shinyjs::click(id = 'download_zip_btn')
+      rl$download_zip_idx <- rl$download_zip
+      rl$download_zip <- NULL
+    }, ignoreNULL = TRUE)
     output$download_zip_btn <- shiny::downloadHandler(
       ## filename = "userdata.zip",
       filename = function() {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
@@ -556,7 +568,7 @@ LoadingBoard <- function(id,
         newfile
       },
       content = function(file) {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip, '_row_')[[1]][2])
+        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
@@ -589,8 +601,9 @@ LoadingBoard <- function(id,
     )
 
     shiny::observeEvent(rl$delete_pgx, {
+      print('opening modal')
       row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
-      
+
       df <- getFilteredPGXINFO()
       pgxfile <- as.character(df$dataset[row_idx])
       pgxname <- sub("[.]pgx$", "", pgxfile)
@@ -632,7 +645,10 @@ LoadingBoard <- function(id,
           inputId = "confirmdelete"
         )
       }
-    })
+
+      rl$delete_pgx <- NULL
+
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
 
     ## ================================================================================
@@ -701,7 +717,7 @@ LoadingBoard <- function(id,
       dbg("[loading_server.R] initializing pgx object")
       slots0 <- names(loaded_pgx)
       loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
-      
+
       if (is.null(loaded_pgx)) {
         warning("[loading_server.R@load_react] ERROR in object initialization\n")
         beepr::beep(10)
@@ -717,12 +733,12 @@ LoadingBoard <- function(id,
       if(length(slots1) != length(slots0)) {
         dbg("[loading_server.R@load_react] pgx has been updated: resaving pgx... \n")
         new_slots <- setdiff(slots1, slots0)
-        dbg("[loading_server.R@load_react] new slots = ",new_slots)        
+        dbg("[loading_server.R@load_react] new slots = ",new_slots)
         savePGX(loaded_pgx, file=pgxfile)
       } else {
         dbg("[loading_server.R@load_react] not re-saving pgx")
       }
-      
+
       ## ----------------- update input --------------------------------------
       r_global$loadedDataset <- r_global$loadedDataset + 1 ## notify new data uploaded
 
@@ -755,7 +771,7 @@ LoadingBoard <- function(id,
       nsamples <- sum(as.integer(pgx$nsamples), na.rm = TRUE)
       paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
     })
-    
+
     output$pgx_stats_ui <- shiny::renderUI(HTML(pgx_stats()))
 
     ## ================================================================================
@@ -795,7 +811,7 @@ LoadingBoard <- function(id,
 
     observeEvent(
       ## c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
-      c(getFilteredPGXINFO_SHARED()), {      
+      c(getFilteredPGXINFO_SHARED()), {
         df <- getFilteredPGXINFO_SHARED()
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
@@ -818,14 +834,14 @@ LoadingBoard <- function(id,
       pgx_name <- rl$pgxTable_data[rl$pgxTable_edited_row, 'dataset']
       pgx_file <- file.path(pdir, paste0(pgx_name, '.pgx'))
       pgx <- local(get(load(pgx_file, verbose = 0))) ## override any name
-      
+
       col_edited <- colnames(rl$pgxTable_data)[rl$pgxTable_edited_col]
       new_val <- rl$pgxTable_data[rl$pgxTable_edited_row, rl$pgxTable_edited_col]
 
       pgx[[col_edited]] <- new_val
       save(pgx, file = pgx_file)
       remove(pgx)
-      
+
     }, ignoreInit = TRUE)
 
     ## ------------------------------------------------
