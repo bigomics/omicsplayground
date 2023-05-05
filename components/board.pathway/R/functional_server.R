@@ -499,7 +499,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
-
+      # wp.gsets_clean <-  gsub(".*:(.*?)_.*", "\\1", wp.gsets)
       df <- data.frame(
         pathway.id = wp.ids,
         pathway = wp.gsets,
@@ -542,8 +542,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       "wikipathway_table",
       pgx,
       getFilteredWikiPathwayTable,
-      reactive(input$fa_contrast),
-      scrollY = 180
+      reactive(input$fa_contrast)
     )
     
   }) ## end-of-moduleServer
