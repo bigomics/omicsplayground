@@ -214,10 +214,11 @@ PlotModuleUI <- function(id,
     # Build cards or single plot
     if (cards) {
         tabs <- lapply(1:length(card_names), function(x) {
+            browser()
             bslib::nav(
                 card_names[x],
                 bslib::card_body_fill(
-                    outputFunc[[x]](ns(paste0("renderfigure", x))) %>%
+                    outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
                         bigLoaders::useSpinner()
                 )
             )

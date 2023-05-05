@@ -88,11 +88,9 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800 ## full height of page
   rowH  <- 350
-
-  fullH <- "80vh" ## full height of full page
   rowH  <- "40vh"
+  fullH = "calc(100vh - 180px)"
 
   div(
     class = "row",
@@ -104,14 +102,18 @@ ClusteringUI <- function(id) {
         id = ns("tabs1"),
         shiny::tabPanel(
           "Heatmap",
-          clustering_plot_splitmap_ui(
-            id = ns("splitmap"),
-            label = "a",
-            title = "Clustered Heatmap",
-            caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
-            info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
-            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
-            width = "100%"
+          bslib::layout_column_wrap(
+              height = fullH,
+              width = 1,
+              clustering_plot_splitmap_ui(
+                  id = ns("splitmap"),
+                  label = "a",
+                  title = "Clustered Heatmap",
+                  caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
+                  info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
+                  height = c("calc(100vh - 270px)", TABLE_HEIGHT_MODAL),
+                  width = "100%"
+              )
           )
         ),
         shiny::tabPanel(
