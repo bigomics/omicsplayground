@@ -222,7 +222,7 @@ PlotModuleUI <- function(id,
                 )
             )
         })
-        tabs <- c(tabs, id = ns("card_selector"), ulClass = "nav navbar-nav",
+        tabs <- c(tabs, id = ns("card_selector"), ulClass = "nav navbar-nav header-nav",
                   selected = NULL)
         plot_cards <- do.call(
             bslib:::buildTabset,
@@ -236,9 +236,12 @@ PlotModuleUI <- function(id,
     header <- shiny::fillRow(
         flex = c(1,NA,NA,NA,NA),
         class="plotmodule-header",
-        shiny::div(class='plotmodule-title', title=title, title),
         if(cards){
-            plot_cards$navList
+            shiny::div(class='plotmodule-title',
+                       shiny::span(title, style = "float: left;"),
+                       plot_cards$navList)
+        } else {
+            shiny::div(class='plotmodule-title', title=title, title)
         },
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
