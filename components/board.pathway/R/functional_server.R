@@ -103,7 +103,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         rownames(score2),
         ignore.case = TRUE
       ))
-        
+      rownames(score2) <- gsub("(_.*$)", "", rownames(score2))    
       ##rownames(score2) <- substring(rownames(score2), 1, row.nchar)
       rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)      
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
@@ -499,7 +499,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
-      # wp.gsets_clean <-  gsub(".*:(.*?)_.*", "\\1", wp.gsets)
       df <- data.frame(
         pathway.id = wp.ids,
         pathway = wp.gsets,
