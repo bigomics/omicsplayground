@@ -231,8 +231,8 @@ singlecell_plot_crosstabPlot_server <- function(id,
       if (gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1, ])]
-        grp.score2 <- grp.score2[, match(kk, colnames(grp.score2))]
-        grp.score1 <- grp.score1[, match(kk, colnames(grp.score1))]
+        grp.score2 <- grp.score2[, match(kk, colnames(grp.score2)), drop = F]
+        grp.score1 <- grp.score1[, match(kk, colnames(grp.score1)), drop = F]
       }
 
       jj <- match(colnames(grp.score1), names(grp.counts))
