@@ -78,10 +78,12 @@ html {
     ul.nav.navbar-nav>li>a {
         padding: 0 0 0 20px;
         color: grey;
+        font-size: calc(100% - 20%);
     }
 
     ul.nav.navbar-nav>li>a:hover ul.nav.navbar-nav>li>a:active {
         color: black;
+        font-size: calc(100% - 20%);
     }
 
     ul.nav.navbar-nav>li {
