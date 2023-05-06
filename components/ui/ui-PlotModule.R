@@ -214,7 +214,6 @@ PlotModuleUI <- function(id,
     # Build cards or single plot
     if (cards) {
         tabs <- lapply(1:length(card_names), function(x) {
-            browser()
             bslib::nav(
                 card_names[x],
                 bslib::card_body_fill(
@@ -322,8 +321,13 @@ PlotModuleUI <- function(id,
         )
     }
 
-    popupfigUI_editor <- function(){
-        htmlOutput(ns("editor_frame"))
+    popupfigUI_editor <- function(card = NULL){
+        if(!is.null(card)){
+            htmlOutput(ns(paste0("editor_frame", card)))
+        } else {
+            htmlOutput(ns("editor_frame"))
+        }
+
     }
 
     ## inline styles (should be in CSS...)
@@ -356,15 +360,31 @@ PlotModuleUI <- function(id,
                           popupfigUI()
                       )
                     ),
-        shiny::div(class="popup-modal",
-                    modalUI(
-                          id = ns("plotPopup_editor"),
-                          title = "Editor",
-                          size = "fullscreen",
-                          footer = NULL,
-                          popupfigUI_editor()
-                      )
-                    ),
+        if(cards){
+            div(
+                lapply(1:length(card_names), function(x){
+                    shiny::div(class="popup-modal",
+                               modalUI(
+                                   id = ns(paste0("plotPopup_editor", x)),
+                                   title = "Editor",
+                                   size = "fullscreen",
+                                   footer = NULL,
+                                   popupfigUI_editor(x)
+                               )
+                    )
+                })
+            )
+        } else {
+            shiny::div(class="popup-modal",
+                       modalUI(
+                           id = ns("plotPopup_editor"),
+                           title = "Editor",
+                           size = "fullscreen",
+                           footer = NULL,
+                           popupfigUI_editor()
+                       )
+            )
+        },
         shiny::tagList(
                     shiny::tags$head(shiny::tags$style(modaldialog.style)),
                     shiny::tags$head(shiny::tags$style(modalbody.style)),
@@ -427,9 +447,12 @@ PlotModuleServer <- function(
               path = "M410.052,46.398c-0.812-10.885-5.509-21.129-13.226-28.845c-16.089-16.089-41.044-17.965-59.34-4.459l-7.427,5.487C257.281,72.291,191.872,135.46,135.647,206.336c-14.115,17.795-27.792,36.287-40.715,55.015c-0.928-0.042-1.859-0.068-2.795-0.068c-16.279,0-31.583,6.339-43.094,17.851C28.607,299.57,27.77,319.906,26.96,339.572c-0.745,18.1-1.449,35.196-16.99,54.271L0,406.081h15.785c37.145,0,96.119-17.431,119.447-40.759c11.511-11.511,17.85-26.815,17.85-43.094c0-0.941-0.026-1.877-0.068-2.81c18.766-12.941,37.258-26.614,55.01-40.704C278.873,222.52,342.046,157.11,395.787,84.302l5.479-7.419C407.747,68.111,410.867,57.284,410.052,46.398z M124.625,354.715c-16.334,16.334-58.786,31.89-94.095,35.555c10.098-18.012,10.791-34.866,11.417-50.082c0.754-18.326,1.406-34.152,17.702-50.449c8.678-8.678,20.216-13.457,32.488-13.457s23.81,4.779,32.488,13.457s13.457,20.215,13.457,32.487C138.082,334.5,133.303,346.037,124.625,354.715z M135.232,279.133c-6.875-6.875-15.11-11.889-24.091-14.825c10.801-15.429,22.107-30.656,33.724-45.426c12.79,1.717,24.7,7.567,33.871,16.737c9.174,9.174,15.027,21.087,16.745,33.875c-14.743,11.601-29.97,22.905-45.427,33.719C147.116,294.236,142.104,286.006,135.232,279.133z M389.2,67.971l-5.481,7.421c-50.415,68.302-109.268,129.976-175.037,183.518c-3.279-12.747-9.915-24.473-19.34-33.897c-9.421-9.421-21.145-16.055-33.893-19.333C209.017,139.887,270.692,81.036,338.97,30.649l7.427-5.488c12.275-9.062,29.023-7.801,39.823,3c5.177,5.177,8.329,12.05,8.874,19.355C395.641,54.822,393.548,62.086,389.2,67.971z",
               transform = 'scale(0.035)'
             ),
-            click = htmlwidgets::JS(paste0(
-              "function(gd){$('#", ns("plotPopup_editor"), "').modal('show')}"
-            )
+            click = htmlwidgets::JS(
+              if(!is.null(card)){
+                  paste0("function(gd){$('#", ns(paste0("plotPopup_editor", card)), "').modal('show')}")
+              } else {
+                  paste0("function(gd){$('#", ns("plotPopup_editor"), "').modal('show')}")
+              }
             )
           )
 
@@ -446,22 +469,42 @@ PlotModuleServer <- function(
             )
           }
 
-          output$editor_frame <- renderUI({
-            plot <- func()
-            json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
-            res <- session$registerDataObj(
-              "plotly_graph", json$x$data,
-              function(data, req) {
-                httpResponse(
-                  status = 200,
-                  content_type = 'application/json',
-                  content = data
-                )
-              }
-            )
-            url <- getEditorUrl(session, res)
-            tags$iframe(src=url, style = "height: 85vh; width: 100%;")
-          })
+          if(!is.null(card)){
+              output[[paste0("editor_frame", card)]] <- renderUI({
+                  plot <- func()
+                  json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+                  res <- session$registerDataObj(
+                      "plotly_graph", json$x$data,
+                      function(data, req) {
+                          httpResponse(
+                              status = 200,
+                              content_type = 'application/json',
+                              content = data
+                          )
+                      }
+                  )
+                  url <- getEditorUrl(session, res)
+                  tags$iframe(src=url, style = "height: 85vh; width: 100%;")
+              })
+          } else {
+              output$editor_frame <- renderUI({
+                  plot <- func()
+                  json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+                  res <- session$registerDataObj(
+                      "plotly_graph", json$x$data,
+                      function(data, req) {
+                          httpResponse(
+                              status = 200,
+                              content_type = 'application/json',
+                              content = data
+                          )
+                      }
+                  )
+                  url <- getEditorUrl(session, res)
+                  tags$iframe(src=url, style = "height: 85vh; width: 100%;")
+              })
+          }
+
 
           ##--------------------------------------------------------------------------------
           ##------------------------ FIGURE ------------------------------------------------

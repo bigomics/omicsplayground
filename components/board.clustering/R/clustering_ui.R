@@ -90,7 +90,7 @@ ClusteringUI <- function(id) {
 
   rowH  <- 350
   rowH  <- "40vh"
-  fullH = "calc(100vh - 180px)"
+  fullH = "calc(100vh - 183px)"
 
   div(
     class = "row",
@@ -124,7 +124,7 @@ ClusteringUI <- function(id) {
             info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis ( PCA), t-distributed stochastic embedding ( tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
             caption = "Clustering plot of the dataset samples.",
             label = "",
-            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
+            height = c(fullH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             parent = ns
           )
