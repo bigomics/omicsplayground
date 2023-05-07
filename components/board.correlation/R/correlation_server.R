@@ -472,15 +472,13 @@ CorrelationBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     cor_table <- correlation_table_corr_server(
       "cor_table",
       getPartialCorrelation = getPartialCorrelation,
       getGeneCorr           = getGeneCorr,
       pgx                   = pgx,
       watermark             = WATERMARK
-    ) 
+    )
 
     correlation_plot_barplot_server(
       "cor_barplot",
@@ -494,7 +492,7 @@ CorrelationBoard <- function(id, pgx) {
       "cor_scatter",
       getFilteredExpression = getFilteredExpression,
       pgx = pgx,
-      cor_table = cor_table,      
+      cor_table = cor_table,
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
       cor_gene = reactive(input$cor_gene),
