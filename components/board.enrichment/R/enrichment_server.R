@@ -337,7 +337,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
       metaFC
     })
-    
+
     ## ================================================================================
     ## Enrichment table
     ## ================================================================================
@@ -427,7 +427,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
     subplot.MAR <- c(3, 3.5, 1.5, 0.5)
     subplot.MAR <- c(2.8, 4, 4, 0.8)
 
@@ -533,7 +532,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       gs_features = shiny::reactive(input$gs_features),
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
-      gs_lfc = shiny::reactive(input$gs_lfc),      
+      gs_lfc = shiny::reactive(input$gs_lfc),
       watermark = WATERMARK
     )
 
