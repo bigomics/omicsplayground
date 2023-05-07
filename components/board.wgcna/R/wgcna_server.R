@@ -245,8 +245,6 @@ WgcnaBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # Gene dendrogram and gene modules
 
     wgcna_plot_gdendogram_server(
