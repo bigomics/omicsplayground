@@ -247,8 +247,6 @@ FeatureMapBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # Gene Map
 
     featuremap_plot_gene_map_server(
@@ -268,7 +266,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx         = pgx,
       getGeneUMAP       = getGeneUMAP,
       sigvar            = shiny::reactive(input$sigvar),
-      ref_group         = shiny::reactive(input$ref_group),      
+      ref_group         = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark         = WATERMARK
     )
