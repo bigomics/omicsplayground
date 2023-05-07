@@ -45,8 +45,6 @@ TcgaBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # TCGA survival analysis
 
     tcga_plot_survival_server(
