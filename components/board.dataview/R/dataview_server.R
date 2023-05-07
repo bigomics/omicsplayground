@@ -56,7 +56,7 @@ DataViewBoard <- function(id, pgx) {
         <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
-    
+
 
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {
@@ -137,8 +137,6 @@ DataViewBoard <- function(id, pgx) {
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
-
-    WATERMARK <- FALSE
 
     ## get selected samples after sample filtering
     selected_samples <- reactive({
