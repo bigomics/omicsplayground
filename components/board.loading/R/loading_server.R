@@ -212,14 +212,14 @@ LoadingBoard <- function(id,
       id = "tsne",
       pgx.dir = getPGXDIR,
       info.table = getFilteredPGXINFO,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     loading_tsne_server(
       id = "tsne_shared",
       pgx.dir = reactive(pgx_shared_dir),
       info.table = getFilteredPGXINFO_SHARED,
-      watermark = FALSE)
+      watermark = WATERMARK)
 
     pgxtable <- loading_table_datasets_server(
       id = "pgxtable",
