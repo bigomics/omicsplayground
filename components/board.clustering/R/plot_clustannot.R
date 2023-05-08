@@ -245,7 +245,7 @@ clustannot_server <- function(id,
       for (i in 1:min(9, ncol(rho))) {
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
-        names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
+        names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
 
         y <- names(x)
         y <- factor(y, levels = y)
