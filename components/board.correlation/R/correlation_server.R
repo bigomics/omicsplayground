@@ -83,7 +83,7 @@ CorrelationBoard <- function(id, pgx) {
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
-      } else if (ft != "<all>" && ft %in% names(iGSETS)) {
+      } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
         ft <- input$cor_features
         psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
         ## psel = unique(c(gene, psel))

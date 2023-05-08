@@ -68,15 +68,15 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
-        gsets <- sort(grep("HALLMARK", names(iGSETS), value = TRUE))
+        gsets <- sort(grep("HALLMARK", names(playdata::iGSETS), value = TRUE))
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "KEGG") {
         ## collection
-        gsets <- sort(grep("KEGG", names(iGSETS), value = TRUE))
+        gsets <- sort(grep("KEGG", names(playdata::iGSETS), value = TRUE))
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
-        gsets <- sort(names(iGSETS))
+        gsets <- sort(names(playdata::iGSETS))
         shiny::updateSelectizeInput(session, "feature", choices = gsets, selected = gsets[1], server = TRUE)
       } else {
         ## custom
@@ -149,7 +149,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         top.genes0 <- paste(top.genes, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
         gset <- top.genes
-      } else if (input$feature %in% names(iGSETS)) {
+      } else if (input$feature %in% names(playdata::iGSETS)) {
         gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = gset0)
