@@ -363,7 +363,7 @@ LoadingBoard <- function(id,
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
         )
       if (is.null(info)) {
-        aa <- rep(NA, 10)
+        aa <- rep(NA, length(info.colnames))
         colnames(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
       }
