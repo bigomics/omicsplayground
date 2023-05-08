@@ -123,7 +123,6 @@ LoadingBoard <- function(id,
           showConfirmButton = TRUE
         )
 
-        rl$share_pgx <- NULL
       },
       ignoreNULL = TRUE
     )
@@ -163,6 +162,8 @@ LoadingBoard <- function(id,
             'this dataset. Thank you!')
         )
       }
+
+        rl$share_pgx <- NULL
     })
 
     observeEvent(r_global$load_example_trigger, {
@@ -322,7 +323,7 @@ LoadingBoard <- function(id,
       info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-      
+
       if (is.null(info)) {
         aa <- rep(NA, length(info.colnames))
         names(aa) <- info.colnames
@@ -330,7 +331,7 @@ LoadingBoard <- function(id,
       }
       ## add missing columns fields
       missing.cols <- setdiff(info.colnames,colnames(info))
-      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))     
+      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
       ii <- match(info.colnames,colnames(info))
       info <- info[,ii]
       info
@@ -369,7 +370,7 @@ LoadingBoard <- function(id,
       }
       ## add missing columns fields
       missing.cols <- setdiff(info.colnames,colnames(info))
-      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))     
+      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
       ii <- match(info.colnames,colnames(info))
       info <- info[,ii]
       info
@@ -605,7 +606,6 @@ LoadingBoard <- function(id,
     )
 
     shiny::observeEvent(rl$delete_pgx, {
-      print('opening modal')
       row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
 
       df <- getFilteredPGXINFO()
