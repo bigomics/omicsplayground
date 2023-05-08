@@ -45,7 +45,7 @@ RUN wget -nv https://github.com/bigomics/playdata/archive/main.zip \
     && rm -fr /playdata-main  \
     && unzip main.zip \
     && R CMD INSTALL playdata-main \
-    && rm main.zip \    
+    && rm main.zip
 
 #------------------------------------------------------------
 # Install fresh playbase (this skips dependencies...)
@@ -56,7 +56,7 @@ RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
     && rm -fr /playbase-main  \
     && unzip main.zip \
     && R CMD INSTALL playbase-main \
-    && rm main.zip \        
+    && rm main.zip        
 
 #------------------------------------------------------------
 # Install other bigomics stuff (as R packages)
