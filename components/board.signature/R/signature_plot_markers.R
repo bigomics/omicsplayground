@@ -64,7 +64,7 @@ signature_plot_markers_server <- function(id,
                                           getCurrentMarkers,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
+
     calcSingleSampleValues <- function(X, y, method = c("rho", "gsva")) {
       ##
       ## Calculates single-sample enrichment values for given matrix and
@@ -178,7 +178,7 @@ signature_plot_markers_server <- function(id,
       ## get GSVA values
       res <- getSingleSampleEnrichment()
       shiny::req(res)
-      
+
       level <- "gene"
       xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
       jj <- match(toupper(markers), toupper(xgene))
@@ -235,7 +235,7 @@ signature_plot_markers_server <- function(id,
       for (i in 0:min(nmax, nrow(top.gx))) {
         jj <- 1:ncol(top.gx)
         if (i == 0) {
-          klrpal <- BLUERED(16)
+          klrpal <- playdata::BLUERED(16)
           colvar <- fc1
           klr1 <- klrpal[8 + round(7 * fc1)]
           tt <- "INPUT SIGNATURE"
@@ -251,7 +251,7 @@ signature_plot_markers_server <- function(id,
         }
         klr1 <- paste0(gplots::col2hex(klr1), "99")
 
-        ## ------- start plot ----------       
+        ## ------- start plot ----------
         ## base::plot(pos[jj, ],
         ##   pch = 19, cex = cex1, col = klr1[jj],
         ##   xlim = 1.2 * range(pos[, 1]), ylim = 1.2 * range(pos[, 2]),
@@ -262,7 +262,7 @@ signature_plot_markers_server <- function(id,
         ##   cex = cex2, col = "grey30", text.font = ifelse(i == 0, 2, 1),
         ##   inset = c(-0.1, -0.05), bty = "n"
         ## )
-        
+
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos[jj,],
           var = colvar[jj],
@@ -293,7 +293,7 @@ signature_plot_markers_server <- function(id,
 
     plotly.RENDER <- function() {
       plt <- get_plots()
-      shiny::req(plt)        
+      shiny::req(plt)
       nr  <- ceiling(sqrt(length(plt)))
 
       fig <- plotly::subplot(
@@ -305,7 +305,7 @@ signature_plot_markers_server <- function(id,
         plotly::layout(
           title = list(text="genes in signature", size=12),
           margin = list(l=0,r=0,b=0,t=30) # lrbt
-        ) 
+        )
       return(fig)
     }
 
@@ -313,12 +313,12 @@ signature_plot_markers_server <- function(id,
       fig <- plotly.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          margin = list(l=0,r=0,b=0,t=40), # lfbt  
+          margin = list(l=0,r=0,b=0,t=40), # lfbt
           title = list(size=18)
-        ) 
+        )
       return(fig)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plotly.RENDER,

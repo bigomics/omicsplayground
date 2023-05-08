@@ -52,8 +52,8 @@ enrichment_plot_volcanoall_server <- function(id,
       lfc <- as.numeric(gs_lfc())
       sel.gsets <- NULL
       sel.gsets <- rownames(meta[[1]])
-      sel.gsets <- COLLECTIONS[[1]]
-      sel.gsets <- COLLECTIONS[[gs_features()]]
+      sel.gsets <- playdata::COLLECTIONS[[1]]
+      sel.gsets <- playdata::COLLECTIONS[[gs_features()]]
 
       i <- 1
       mx.list <- list()
@@ -71,7 +71,7 @@ enrichment_plot_volcanoall_server <- function(id,
       nlq <- -log10(1e-99 + unlist(Q))
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
       xmax <- quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]
-      
+
       pd <- list(
         F = F,
         Q = Q,
@@ -97,7 +97,7 @@ enrichment_plot_volcanoall_server <- function(id,
       fdr <- pd$fdr
       lfc <- pd$lfc
       sel.gsets <- pd$sel.gsets
-      
+
       shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
         i <- 1
         plt <- list()
@@ -109,11 +109,11 @@ enrichment_plot_volcanoall_server <- function(id,
           table(is.sig1)
           sig.genes <- names(fc)[which(is.sig1)]
           if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
-          
+
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- names(F)[i]
           ## xmax <- max(abs(mx[,"fc"]))
-          
+
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = tt,
@@ -136,17 +136,17 @@ enrichment_plot_volcanoall_server <- function(id,
             cex.lab = 1.8*cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
-          
+
           shiny::incProgress(1.0 / nplots)
         }
       })
       return(plt)
     }
 
-  
+
     volcano.RENDER <- function() {
       plt <- get_ggplots(cex=0.4, base_size=12)
-      shiny::req(plt)    
+      shiny::req(plt)
       ## ------------- layout ----------------
       nplots <- length(plt)
       nc <- max(4,nplots)
@@ -162,10 +162,10 @@ enrichment_plot_volcanoall_server <- function(id,
       ## if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
-    
+
     volcano.RENDER2 <- function() {
       plt <- get_ggplots(cex=0.9, base_size=16)
-      shiny::req(plt)    
+      shiny::req(plt)
       ## ------------- layout ----------------
       nplots <- length(plt)
       nr = nc = 1
@@ -178,15 +178,15 @@ enrichment_plot_volcanoall_server <- function(id,
       if (nplots > 8) {
         nc <- ceiling(nplots / 3)
         nr <- 3
-      }    
+      }
       if (nplots > 15 ) {
         nc <- ceiling(nplots / 4)
         nr <- 4
-      } 
+      }
       ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
-    
+
     PlotModuleServer(
       "plot",
       plotlib = "grid",
@@ -197,6 +197,6 @@ enrichment_plot_volcanoall_server <- function(id,
       res = c(72, 85),
       add.watermark = watermark
     )
-    
+
   })  ## end module-server
 } ## server

@@ -32,7 +32,7 @@ FeatureMapBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
 
-      families <- names(FAMILIES)
+      families <- names(playdata::FAMILIES)
       shiny::updateSelectInput(session, "filter_genes",
         choices = families,
         selected = "<all>"

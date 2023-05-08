@@ -12,7 +12,7 @@ enrichment_plot_volcano_ui <- function(
   width) {
   ns <- shiny::NS(id)
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -66,7 +66,7 @@ enrichment_plot_volcano_server <- function(id,
       }
       gs <- gs[1]
 
-      gset <- getGSETS(gs)[[1]]
+      gset <- playdata::getGSETS(gs)[[1]]
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
@@ -124,7 +124,7 @@ enrichment_plot_volcano_server <- function(id,
         return(NULL)
       }
       gs <- gs[1]
-      gset <- getGSETS(gs)[[1]]
+      gset <- playdata::getGSETS(gs)[[1]]
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 

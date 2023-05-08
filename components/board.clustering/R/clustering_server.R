@@ -74,8 +74,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       ### if(is.null(input$hm_level)) return(NULL)
       choices <- names(pgx$families)
       if (input$hm_level == "geneset") {
-        nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(COLLECTIONS)[nk >= 5]
+        nk <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+        choices <- names(playdata::COLLECTIONS)[nk >= 5]
       }
       choices <- c("<custom>", "<contrast>", choices)
       choices <- sort(unique(choices))
@@ -105,8 +105,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ## Gene set level features #########
 
         gsets <- rownames(pgx$gsetX)
-        ## gsets = unique(unlist(COLLECTIONS[ft]))
-        gsets <- unique(COLLECTIONS[[ft]])
+        ## gsets = unique(unlist(playdata::COLLECTIONS[ft]))
+        gsets <- unique(playdata::COLLECTIONS[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
           gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
@@ -485,8 +485,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
       }
-      if (ann.level == "geneset" && ann.refset %in% names(COLLECTIONS)) {
-        ss <- COLLECTIONS[[ann.refset]]
+      if (ann.level == "geneset" && ann.refset %in% names(playdata::COLLECTIONS)) {
+        ss <- playdata::COLLECTIONS[[ann.refset]]
         ss <- intersect(ss, rownames(pgx$gsetX))
         length(ss)
         ref <- pgx$gsetX[ss, ]
@@ -534,7 +534,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
         ## gmt <- GSETS[rownames(rho)]
-        gmt <- getGSETS(rownames(rho))
+        gmt <- playdata::getGSETS(rownames(rho))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {

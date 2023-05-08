@@ -99,7 +99,7 @@ functional_plot_go_network_server <- function(id,
         score[is.na(score) | is.infinite(score)] <- 0
         score <- (score / (1e-8 + max(abs(score), na.rm = TRUE)))
         igraph::V(sub2)$value <- score
-        igraph::V(sub2)$color <- BLUERED(32)[16 + round(15 * score)]
+        igraph::V(sub2)$color <- playdata::BLUERED(32)[16 + round(15 * score)]
         igraph::V(sub2)$label <- igraph::V(sub2)$Term
         igraph::V(sub2)$label[which(is.na(score) | score == 0)] <- ""
         pos <- sub2$layout

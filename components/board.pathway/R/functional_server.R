@@ -116,7 +116,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         score2,
         is.corr = FALSE,
         cl.pos = "n",
-        col = BLUERED(100),
+        col = playdata::BLUERED(100),
         tl.cex = 1.0*tl.cex,
         tl.col = "grey20",
         tl.srt = 90,
@@ -512,8 +512,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       )
       df <- df[!duplicated(df$pathway.id), ] ## take out duplicated gene sets...
       df <- df[order(-abs(df$logFC)), ]
-
-      dbg("[functional_server.R:getWikiPathwayTable] dim.df = ",dim(df))
 
       return(df)
     })

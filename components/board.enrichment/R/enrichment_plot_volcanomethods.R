@@ -32,7 +32,7 @@ enrichment_plot_volcanomethods_server <- function(id,
                                                   gs_lfc,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
+
     plot_data <- shiny::reactive({
 
       shiny::req(pgx, gs_features(), gs_contrast())
@@ -47,12 +47,12 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
-      sel.gsets <- COLLECTIONS[[gs_features()]]
+      sel.gsets <- playdata::COLLECTIONS[[gs_features()]]
 
       nlq <- -log10(1e-99 + unlist(Q))
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
       xmax <- quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]
-      
+
       pd <- list(
         F = F,
         Q = Q,
@@ -83,11 +83,11 @@ enrichment_plot_volcanomethods_server <- function(id,
       dbg("[enrichment_plot_volcanomethods.R] dim.F = ",dim(F))
       dbg("[enrichment_plot_volcanomethods.R] lfc = ",lfc)
       dbg("[enrichment_plot_volcanomethods.R] fdr = ",fdr)
-            
+
       shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
 
         plt <- list()
-        i=1        
+        i=1
         for (i in 1:nplots) {
 
           fc <- F[,i]
@@ -96,7 +96,7 @@ enrichment_plot_volcanomethods_server <- function(id,
           is.sig <- (qv <= fdr & abs(fc) >= lfc)
           table(is.sig)
           sig.genes <- names(fc)[which(is.sig)]
-          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)          
+          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
 
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- colnames(Q)[i]
@@ -105,7 +105,7 @@ enrichment_plot_volcanomethods_server <- function(id,
           dbg("[enrichment_plot_volcanomethods.R] dim.xy = ",dim(xy))
           dbg("[enrichment_plot_volcanomethods.R] sig.genes = ",head(sig.genes))
           dbg("[enrichment_plot_volcanomethods.R] length.is.sig = ",length(is.sig))
-          
+
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = tt,
@@ -137,7 +137,7 @@ enrichment_plot_volcanomethods_server <- function(id,
 
     volcano.RENDER <- function() {
       plt <- get_ggplots(cex=0.4, base_size=12)
-      shiny::req(plt)    
+      shiny::req(plt)
       nplots <- length(plt)
       nr <- ifelse(nplots <=6, 1, 2)
       nc <- max(ceiling(nplots/nr),4)
@@ -147,20 +147,20 @@ enrichment_plot_volcanomethods_server <- function(id,
 
     volcano.RENDER2 <- function() {
       plt <- get_ggplots(cex=0.8, base_size=18)
-      shiny::req(plt)    
+      shiny::req(plt)
       nplots <- length(plt)
       nr <- ifelse(nplots <=5, 1, 2)
       nc <- max(ceiling(nplots/nr),3)
       ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
-    
-      
+
+
     PlotModuleServer(
       "plot",
       plotlib = "grid",
       func = volcano.RENDER,
-      func2 = volcano.RENDER2,      
+      func2 = volcano.RENDER2,
       pdf.width = 10, pdf.height = 5,
       res = c(75, 90),
       add.watermark = watermark

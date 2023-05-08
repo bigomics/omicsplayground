@@ -214,6 +214,7 @@ sever_screen0 <- function(error = NULL) {
         shiny::div(
           style = "
             transform: translateY(50%);
+            background-color: #004c7d;
           ",
           shiny::tags$h1(
             "Woops!", style="color:white;font-family:lato;"

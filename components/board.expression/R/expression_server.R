@@ -218,7 +218,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features <- input$gx_features
       if (gx_features != "<all>") {
         ## gset <- GSETS[[gx_features]]
-        gset <- unlist(getGSETS(gx_features))
+        gset <- unlist(playdata::getGSETS(gx_features))
         psel <- playbase::filterProbes(pgx$genes, gset)
       }
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]

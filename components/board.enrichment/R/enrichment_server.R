@@ -68,8 +68,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     shiny::observe({
       shiny::req(pgx)
-      nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-      gsets.groups <- names(COLLECTIONS)[which(nn >= 5)]
+      nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+      gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
       sel <- "<all>"
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
@@ -167,8 +167,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         return(NULL)
       }
       if (1 && !(gsfeatures %in% c(NA, "", "*", "<all>")) &&
-        gsfeatures %in% names(COLLECTIONS)) {
-        sel <- intersect(rownames(mx), COLLECTIONS[[gsfeatures]])
+        gsfeatures %in% names(playdata::COLLECTIONS)) {
+        sel <- intersect(rownames(mx), playdata::COLLECTIONS[[gsfeatures]])
         mx <- mx[sel, , drop = FALSE]
       }
 
@@ -393,7 +393,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       genes <- setdiff(genes, c("", NA, "NA", " "))
 
       title <- rep(NA, length(genes))
-      title <- as.character(GENE.TITLE[genes])
+      title <- as.character(playdata::GENE_TITLE[genes])
       title[is.na(title)] <- " "
 
       rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))

@@ -68,15 +68,15 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
-        gsets <- sort(grep("HALLMARK", names(iGSETS), value = TRUE))
+        gsets <- sort(grep("HALLMARK", names(playdata::iGSETS), value = TRUE))
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "KEGG") {
         ## collection
-        gsets <- sort(grep("KEGG", names(iGSETS), value = TRUE))
+        gsets <- sort(grep("KEGG", names(playdata::iGSETS), value = TRUE))
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
-        gsets <- sort(names(iGSETS))
+        gsets <- sort(names(playdata::iGSETS))
         shiny::updateSelectizeInput(session, "feature", choices = gsets, selected = gsets[1], server = TRUE)
       } else {
         ## custom
@@ -149,8 +149,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         top.genes0 <- paste(top.genes, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
         gset <- top.genes
-      } else if (input$feature %in% names(iGSETS)) {
-        gset <- toupper(unlist(getGSETS(input$feature)))
+      } else if (input$feature %in% names(playdata::iGSETS)) {
+        gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = gset0)
       } else {
@@ -292,12 +292,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       fx <- rowMeans(F**2)
 
       ## fisher test
-      ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)), NA)
+      ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
       N <- cbind(
-        k1 = Matrix::rowSums(GSETxGENE != 0), n1 = ncol(GSETxGENE),
-        k2 = Matrix::rowSums(GSETxGENE[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
+        k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
       )
-      rownames(N) <- rownames(GSETxGENE)
+      rownames(N) <- rownames(playdata::GSETxGENE)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
       dim(N)
@@ -317,16 +317,16 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       ## get shared genes
       aa <- rownames(A)
 
-      y <- 1 * (colnames(GSETxGENE) %in% toupper(markers))
-      names(y) <- colnames(GSETxGENE)
-      ncommon <- Matrix::colSums(Matrix::t(GSETxGENE[aa, , drop = FALSE]) * as.vector(y) != 0)
-      ntotal <- Matrix::rowSums(GSETxGENE[aa, , drop = FALSE] != 0)
+      y <- 1 * (colnames(playdata::GSETxGENE) %in% toupper(markers))
+      names(y) <- colnames(playdata::GSETxGENE)
+      ncommon <- Matrix::colSums(Matrix::t(playdata::GSETxGENE[aa, , drop = FALSE]) * as.vector(y) != 0)
+      ntotal <- Matrix::rowSums(playdata::GSETxGENE[aa, , drop = FALSE] != 0)
       A$ratio <- ncommon / ntotal
       ratio.kk <- paste0(ncommon, "/", ntotal)
 
-      gg <- colnames(GSETxGENE)
+      gg <- colnames(playdata::GSETxGENE)
       gset <- names(y)[which(y != 0)]
-      G1 <- GSETxGENE[aa, which(y != 0)]
+      G1 <- playdata::GSETxGENE[aa, which(y != 0)]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
@@ -397,7 +397,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       fc <- fc[genes, , drop = FALSE]
       qv <- qv[genes, , drop = FALSE]
 
-      gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))], 1, 40)
+      gene.tt <- substring(playdata::GENE_TITLE[toupper(rownames(fc))], 1, 40)
       names(gene.tt) <- rownames(fc)
       df <- data.frame(gene = rownames(fc), title = gene.tt, fc, check.names = FALSE)
 

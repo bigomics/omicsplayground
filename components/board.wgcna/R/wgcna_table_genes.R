@@ -33,7 +33,7 @@ wgcna_table_genes_server <- function(id,
 
       k <- selected_module()
       genes <- out$me.genes[[k]]
-      tt <- GENE.TITLE[toupper(genes)]
+      tt <- playdata::GENE_TITLE[toupper(genes)]
       rho <- cor(out$datExpr[, genes], out$net$MEs[, k])[, 1]
 
       df <- data.frame(module = k, gene = genes, me.rho = rho, title = tt)

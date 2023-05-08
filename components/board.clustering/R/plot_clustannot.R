@@ -77,8 +77,8 @@ clustannot_server <- function(id,
       ann.types <- sel <- NULL
       if (input$xann_level != "phenotype") {
         if (input$xann_level == "geneset") {
-          ann.types <- names(COLLECTIONS)
-          cc <- sapply(COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
+          ann.types <- names(playdata::COLLECTIONS)
+          cc <- sapply(playdata::COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
           ann.types <- ann.types[cc >= 3]
         }
         if (input$xann_level == "gene") {
@@ -134,8 +134,8 @@ clustannot_server <- function(id,
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
       }
-      if (ann.level == "geneset" && ann.refset %in% names(COLLECTIONS)) {
-        ss <- COLLECTIONS[[ann.refset]]
+      if (ann.level == "geneset" && ann.refset %in% names(playdata::COLLECTIONS)) {
+        ss <- playdata::COLLECTIONS[[ann.refset]]
         ss <- intersect(ss, rownames(pgx$gsetX))
         length(ss)
         ref <- pgx$gsetX[ss, ]
@@ -181,7 +181,7 @@ clustannot_server <- function(id,
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
         ## gmt <- GSETS[rownames(rho)]
-        gmt <- getGSETS(rownames(rho))
+        gmt <- playdata::getGSETS(rownames(rho))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {
@@ -245,7 +245,7 @@ clustannot_server <- function(id,
       for (i in 1:min(9, ncol(rho))) {
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
-        names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
+        names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
 
         y <- names(x)
         y <- factor(y, levels = y)

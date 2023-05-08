@@ -69,7 +69,6 @@ connectivity_plot_enrichmentGraph_server <- function(id,
                                                      getLeadingEdgeGraph,
                                                      getConnectivityScores,
                                                      connectivityScoreTable,
-                                                     getGSETS,
                                                      cumEnrichmentTable,
                                                      watermark = FALSE) {
   moduleServer(
@@ -83,7 +82,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         if (input$enrichGraph_oddweighting) {
           gr2 <- getLeadingEdgeGraph()
           le.genes <- igraph::V(gr2)$name
-          gsets <- getGSETS(rownames(F))
+          gsets <- playdata::getGSETS(rownames(F))
           gsets <- gsets[sapply(gsets, length) >= 5]
           bg <- unique(unlist(gsets))
           ft <- playbase::gset.fisher(le.genes, gsets,
@@ -129,7 +128,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         pw <- igraph::V(gr)$name
         le.genes <- igraph::V(gr2)$name
 
-        gsets <- getGSETS(pw)
+        gsets <- playdata::getGSETS(pw)
         pw.genes <- sapply(gsets, function(gs) intersect(gs, le.genes))
         pw.genes <- sapply(pw.genes, paste, collapse = " ")
 
@@ -170,12 +169,12 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         ## defaults graph parameters
         vname <- sub("H:HALLMARK_|C2:KEGG_", "", igraph::V(gr)$name)
         # Select the same names(pw.genes) as in `vname`, remove duplicates
-        pw.genes.selector <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)] %>% 
-          names() %>% 
-          duplicated() %>% 
+        pw.genes.selector <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)] %>%
+          names() %>%
+          duplicated() %>%
           `!`
         pw.genes <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)][pw.genes.selector]
-        
+
         igraph::V(gr)$label <- vname
         igraph::V(gr)$title <- paste0("<b>", vname, "</b><br>", pw.genes)
         igraph::V(gr)$size <- vsize ## rather small
