@@ -147,7 +147,7 @@ WelcomeBoardUI <- function(id) {
     bs_carousel2(
       "welcome-carousel",
       wrap=TRUE, autostart=TRUE, fade=TRUE,
-      interval=8000,
+      interval=10000,
       contents=list(mission.page, credits.page, motto.page))    
   )
 }
