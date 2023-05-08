@@ -150,7 +150,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
         shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
         gset <- top.genes
       } else if (input$feature %in% names(iGSETS)) {
-        gset <- toupper(unlist(getGSETS(input$feature)))
+        gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
         shiny::updateTextAreaInput(session, "genelistUP", value = gset0)
       } else {

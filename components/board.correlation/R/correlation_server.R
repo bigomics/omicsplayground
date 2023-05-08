@@ -85,7 +85,7 @@ CorrelationBoard <- function(id, pgx) {
         X <- X[psel, , drop = FALSE]
       } else if (ft != "<all>" && ft %in% names(iGSETS)) {
         ft <- input$cor_features
-        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
+        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
         ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -311,7 +311,7 @@ CorrelationBoard <- function(id, pgx) {
       names(rho) <- toupper(names(rho))
 
       ## gmt <- GSETS[colnames(pgx$GMT)]
-      gmt <- getGSETS(colnames(pgx$GMT))
+      gmt <- playdata::getGSETS(colnames(pgx$GMT))
       ## gmt <- GSETS  ## all???
       gsea <- fgsea::fgsea(gmt, rho, minSize = 15, maxSize = 1000)
       gsea <- gsea[order(-gsea$NES), ]

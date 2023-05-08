@@ -156,7 +156,7 @@ BiomarkerBoard <- function(id, pgx) {
           gg <- pgx$families[[ft]]
           pp <- playbase::filterProbes(pgx$genes, gg)
         } else if (ft %in% names(iGSETS)) {
-          gg <- unlist(getGSETS(ft))
+          gg <- unlist(playdata::getGSETS(ft))
           pp <- playbase::filterProbes(pgx$genes, gg)
         }
         pp <- intersect(pp, rownames(X))

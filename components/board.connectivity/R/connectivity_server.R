@@ -10,7 +10,7 @@ ConnectivityBoard <- function(id, pgx) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
     tabH <- "70vh"
-    
+
     infotext <- strwrap(
       "The <strong>Experiment connectivity</strong> module enables users to
       compare their data to other datasets. For the selected contrast, this
@@ -477,7 +477,7 @@ ConnectivityBoard <- function(id, pgx) {
       columns = c("score", "pathway", "rho", "NES", "padj"),
       height = "550px"
     )
-    
+
     ## -------------------------------------------------------------------------------
     ## Leading-edge graph
     ## -------------------------------------------------------------------------------
@@ -499,7 +499,7 @@ ConnectivityBoard <- function(id, pgx) {
       getLeadingEdgeGraph,
       getConnectivityScores,
       connectivityScoreTable,
-      getGSETS,
+      playdata::getGSETS,
       cumEnrichmentTable
     )
 
