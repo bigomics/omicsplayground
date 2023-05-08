@@ -73,7 +73,7 @@ UploadBoard <- function(id,
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
-    
+
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
@@ -141,12 +141,12 @@ UploadBoard <- function(id,
         ##   text = "Please wait while scanning your new datasets...",
         ##   btn_labels = NA
         ## )
-        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {        
+        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
         })
         ##   shinyWidgets::closeSweetAlert()
-        
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1        
+
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       }
 
       ## shiny::removeModal()
@@ -170,8 +170,8 @@ UploadBoard <- function(id,
             }
           })
           dbg("[UploadBoard@load_react] **** finished  ****")
-          bigdash.selectTab(session, selected = 'dataview-tab')          
-          ## r_global$loadedDataset <- r_global$loadedDataset+1          
+          bigdash.selectTab(session, selected = 'dataview-tab')
+          ## r_global$loadedDataset <- r_global$loadedDataset+1
           r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         }
         suppressWarnings(remove(new_pgx))
@@ -182,7 +182,7 @@ UploadBoard <- function(id,
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
           ##text = "What do you want to do next?",
-          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),          
+          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),
           confirmButtonText = "Show my new data!",
           # cancelButtonText = "Stay here",
           # showCancelButton = TRUE,
@@ -217,18 +217,18 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Contrasts")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
-          shiny::showTab("tabs", "Normalize")
+          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (all(has.upload(need2))) {
         if (input$advanced_mode) {
-          shiny::showTab("tabs", "Normalize")
+          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
       } else {
-        shiny::hideTab("tabs", "Normalize")
+        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
@@ -241,10 +241,10 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$advanced_mode, {
       if (input$advanced_mode) {
-        shiny::showTab("tabs", "Normalize") ## NOT YET!!!
+        #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
         shiny::showTab("tabs", "BatchCorrect")
       } else {
-        shiny::hideTab("tabs", "Normalize")
+        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
@@ -412,7 +412,7 @@ UploadBoard <- function(id,
         X0 <- X0[sel, ]
         xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
         X0 <- do.call(rbind, xx)
-        dbg("[upload_files] ...done!")        
+        dbg("[upload_files] ...done!")
         matlist[["counts.csv"]] <- X0
       }
 
@@ -845,11 +845,11 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     ## correctedX <- shiny::reactive({
-    normalized_counts <- NormalizeCountsServerRT(
-      id = "normalize",
-      counts = shiny::reactive(uploaded$counts.csv),
-      height = height
-    )
+    #normalized_counts <- NormalizeCountsServerRT(
+    #  id = "normalize",
+    #  counts = shiny::reactive(uploaded$counts.csv),
+    #  height = height
+    #)
 
     ## correctedX <- shiny::reactive({
     correctedX <- BatchCorrectServer(
