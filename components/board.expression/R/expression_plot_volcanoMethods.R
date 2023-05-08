@@ -60,7 +60,7 @@ expression_plot_volcanoMethods_server <- function(id,
       features <- features()
 
       dbg("[expression_plot_volcanoMethods.R] comp = ",comp)
-      
+
       if (is.null(comp)) {
         return(NULL)
       }
@@ -69,14 +69,14 @@ expression_plot_volcanoMethods_server <- function(id,
         return(NULL)
       }
 
-      fdr <- as.numeric(fdr()) 
-      lfc <- as.numeric(lfc()) 
+      fdr <- as.numeric(fdr())
+      lfc <- as.numeric(lfc())
       sel.genes <- rownames(pgx$X)
       if (features != "<all>") {
-        gset <- getGSETS(features)
+        gset <- playdata::getGSETS(features)
         sel.genes <- unique(unlist(gset))
       }
-      
+
       pd <- list(
           pgx = pgx,
           fdr = fdr,
@@ -84,7 +84,7 @@ expression_plot_volcanoMethods_server <- function(id,
           comp = comp,
           sel.genes = sel.genes
       )
-        
+
       return(pd)
     })
 
@@ -108,21 +108,21 @@ expression_plot_volcanoMethods_server <- function(id,
       ## methods = names(pgx$gx.meta$output)
       methods <- colnames(pd[["pgx"]]$gx.meta$meta[[1]]$fc)
       plt <- list()
-      
+
       shiny::withProgress(message = "computing volcano plots ...", value = 0, {
         i <- 1
         for (i in 1:nplots) {
           fx <- fc[, i]
           qval <- qv[,i]
           is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
-          sig.genes <- fc.genes[which(is.sig)]          
+          sig.genes <- fc.genes[which(is.sig)]
           genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
           genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
-          
+
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
-          
+
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = methods[i],
@@ -151,8 +151,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       return(plt)
     }
-      
-    plot.RENDER <- function() {      
+
+    plot.RENDER <- function() {
       plt <- render_plots(cex=0.45, base_size=11)
       nplots <- length(plt)
       ## layout
@@ -169,7 +169,7 @@ expression_plot_volcanoMethods_server <- function(id,
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
-    modal_plot.RENDER <- function() {      
+    modal_plot.RENDER <- function() {
       plt <- render_plots(cex=1, base_size=16)
       nplots <- length(plt)
       ## layout
@@ -185,7 +185,7 @@ expression_plot_volcanoMethods_server <- function(id,
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
-    
+
     PlotModuleServer(
       "pltmod",
 ##      plotlib = "ggplot",

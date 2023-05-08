@@ -181,7 +181,7 @@ clustannot_server <- function(id,
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
         ## gmt <- GSETS[rownames(rho)]
-        gmt <- getGSETS(rownames(rho))
+        gmt <- playdata::getGSETS(rownames(rho))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {
@@ -245,7 +245,7 @@ clustannot_server <- function(id,
       for (i in 1:min(9, ncol(rho))) {
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
-        names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
+        names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
 
         y <- names(x)
         y <- factor(y, levels = y)

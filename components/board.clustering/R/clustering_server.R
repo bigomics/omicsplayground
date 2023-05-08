@@ -534,7 +534,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
         ## gmt <- GSETS[rownames(rho)]
-        gmt <- getGSETS(rownames(rho))
+        gmt <- playdata::getGSETS(rownames(rho))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {

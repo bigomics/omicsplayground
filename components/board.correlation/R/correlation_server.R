@@ -83,9 +83,9 @@ CorrelationBoard <- function(id, pgx) {
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
-      } else if (ft != "<all>" && ft %in% names(iGSETS)) {
+      } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
         ft <- input$cor_features
-        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
+        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
         ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -151,7 +151,7 @@ CorrelationBoard <- function(id, pgx) {
       xref <- list(
         "cor" = 2**zx,
         "cor.HPA" = as.matrix(playdata::TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
@@ -193,7 +193,7 @@ CorrelationBoard <- function(id, pgx) {
       xref <- list(
         "cor" = 2**zx,
         "cor.HPA" = as.matrix(playdata::TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
@@ -311,7 +311,7 @@ CorrelationBoard <- function(id, pgx) {
       names(rho) <- toupper(names(rho))
 
       ## gmt <- GSETS[colnames(pgx$GMT)]
-      gmt <- getGSETS(colnames(pgx$GMT))
+      gmt <- playdata::getGSETS(colnames(pgx$GMT))
       ## gmt <- GSETS  ## all???
       gsea <- fgsea::fgsea(gmt, rho, minSize = 15, maxSize = 1000)
       gsea <- gsea[order(-gsea$NES), ]

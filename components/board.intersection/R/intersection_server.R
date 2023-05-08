@@ -164,7 +164,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
           }
         } else if (input$filter != "<all>") {
           ## gset <- GSETS[[input$filter]]
-          gset.genes <- unlist(getGSETS(input$filter))
+          gset.genes <- unlist(playdata::getGSETS(input$filter))
           sel.probes <- playbase::filterProbes(pgx$genes, gset.genes)
         }
         sel.probes <- intersect(sel.probes, rownames(fc0))
@@ -304,7 +304,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       if (length(sel2) > 0) {
         gse <- out$gsea
         gset <- rownames(gse)[sel2]
-        gset.genes <- unlist(getGSETS(gset))
+        gset.genes <- unlist(playdata::getGSETS(gset))
         hilight <- c(hilight, gset.genes)
         hilight2 <- c(hilight2, hilight)
       }
@@ -554,7 +554,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       sel1 <- ctGseaTable_module$rows_selected()
       if (length(sel1) > 0) {
         gset <- rownames(out$gsea)[sel1]
-        gset.genes <- unlist(getGSETS(gset))
+        gset.genes <- unlist(playdata::getGSETS(gset))
         gg <- intersect(rownames(df), gset.genes)
         df <- df[gg, , drop = FALSE]
       }

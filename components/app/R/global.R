@@ -150,12 +150,6 @@ if(file.exists("global.R")) {
 ##source(file.path(RDIR,"ggplot-theme.R"))
 
 message("\n************************************************")
-message("*************** LOADING SYSTEM DATA ************")
-message("************************************************")
-
-load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
-
-message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 

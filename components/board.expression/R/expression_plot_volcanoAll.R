@@ -60,12 +60,12 @@ expression_plot_volcanoAll_server <- function(id,
       if (is.null(pgx)) {
         return(NULL)
       }
-      
+
       features <- features()
       ct <- getAllContrasts()
       F <- ct$F
       Q <- ct$Q
-      
+
       ## comp = names(pgx$gx.meta$meta)
       comp <- names(F)
       if (length(comp) == 0) {
@@ -82,7 +82,7 @@ expression_plot_volcanoAll_server <- function(id,
 
       sel.genes <- rownames(pgx$X)
       if (features != "<all>") {
-        gset <- getGSETS(features)
+        gset <- playdata::getGSETS(features)
         sel.genes <- unique(unlist(gset))
       }
 
@@ -92,7 +92,7 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind,Q)
       colnames(matQ) <- paste0("q.",names(Q))
       FQ <- cbind(matF, matQ)
-      
+
       pd <- list(
         FQ = FQ,   ## Remember: the first element is returned as downloadable CSV
         comp = comp,
@@ -118,7 +118,7 @@ expression_plot_volcanoAll_server <- function(id,
       ## maximum 24!!!
       nplots <- min(24,length(pd$Q))
       plt <- list()
-      
+
       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
         i <- 1
         for (i in 1:nplots) {
@@ -153,7 +153,7 @@ expression_plot_volcanoAll_server <- function(id,
             cex.lab = 1.8*cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
-          
+
           if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
         }
       }) ## progress
@@ -178,7 +178,7 @@ expression_plot_volcanoAll_server <- function(id,
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
-    modal_plot.RENDER <- function() {      
+    modal_plot.RENDER <- function() {
       plt <- get_plots(cex=0.9, base_size=15)
       nplots <- length(plt)
       ## layout

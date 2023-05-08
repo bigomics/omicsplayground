@@ -141,7 +141,7 @@ BiomarkerBoard <- function(id, pgx) {
       }
       shiny::isolate(sel <- input_pdx_select())
 
-      is.family <- (ft %in% c(names(pgx$families), names(iGSETS)))
+      is.family <- (ft %in% c(names(pgx$families), names(playdata::iGSETS)))
 
       if (ft == "<custom>" && !is.null(sel) && length(sel) > 0) {
         ## ------------- filter with user selection
@@ -155,8 +155,8 @@ BiomarkerBoard <- function(id, pgx) {
         if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
           pp <- playbase::filterProbes(pgx$genes, gg)
-        } else if (ft %in% names(iGSETS)) {
-          gg <- unlist(getGSETS(ft))
+        } else if (ft %in% names(playdata::iGSETS)) {
+          gg <- unlist(playdata::getGSETS(ft))
           pp <- playbase::filterProbes(pgx$genes, gg)
         }
         pp <- intersect(pp, rownames(X))
