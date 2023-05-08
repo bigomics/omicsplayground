@@ -64,8 +64,8 @@ DataViewUI <- function(id) {
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
   fullH = "calc(100vh - 180px)"
-  fullH.css = "height: calc(100vh - 180px);"  
-  
+  fullH.css = "height: calc(100vh - 180px);"
+
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
     # Gene overview tab #####
@@ -79,7 +79,7 @@ DataViewUI <- function(id) {
         bslib::layout_column_wrap(
           width = 1,
           height = "100%",
-          heights_equal = "row",          
+          heights_equal = "row",
           style = htmltools::css(grid_template_columns = "2fr 10fr"),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
@@ -89,7 +89,7 @@ DataViewUI <- function(id) {
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
-          shinyjqui::jqui_sortable(        
+          shinyjqui::jqui_sortable(
             bslib::layout_column_wrap(
               width = 1,
               bslib::layout_column_wrap(
@@ -130,7 +130,7 @@ DataViewUI <- function(id) {
                   title = "Top correlated genes",
                   info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
                   caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
-                  height = c("100%", TABLE_HEIGHT_MODAL),              
+                  height = c("100%", TABLE_HEIGHT_MODAL),
                   width = c("auto", "100%")
                 ),
                 dataview_plot_tissue_ui(
@@ -147,16 +147,16 @@ DataViewUI <- function(id) {
         )
       )
     ),
-    
+
     # QC tab #####
     shiny::tabPanel(
-      "Sample QC",      
+      "Sample QC",
       shinyjqui::jqui_sortable(
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        heights_equal = "row",        
-        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),        
+        heights_equal = "row",
+        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),
         bslib::layout_column_wrap(
           width = 1/3,
           dataview_plot_totalcounts_ui(
@@ -235,7 +235,7 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        heights_equal = "row",        
+        heights_equal = "row",
         bs_alert("In the Sample information panel, more complete information about samples can be found."),
         bslib::layout_column_wrap(
           width = 1/2,
@@ -245,13 +245,13 @@ DataViewUI <- function(id) {
             title = "Phenotype clustering",
             info.text = "Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix.",
             caption = "Clustered heatmap of sample information (i.e. phenotype data)",
-            height = c("50%", TABLE_HEIGHT_MODAL),            
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "a"
           ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
-            height = c("50%", TABLE_HEIGHT_MODAL),            
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "b",
             title = "Phenotype association",
@@ -267,7 +267,7 @@ DataViewUI <- function(id) {
             width = c("auto", "100%"),
             title = "Sample information",
             info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
-            caption = "Phenotype information about the samples." 
+            caption = "Phenotype information about the samples."
           )
         )
       )
@@ -280,11 +280,11 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        heights_equal = "row",        
+        heights_equal = "row",
         dataview_table_contrasts_ui(
           ns("contrastTable"),
           title = "Contrast table",
-          info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.", 
+          info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.",
           caption = "Table summarizing the contrasts of all comparisons.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
@@ -297,7 +297,7 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        dataview_table_rescources_ui(ns("resources"))
+        dataview_table_resources_ui(ns("resources"))
       )
     )
   )
