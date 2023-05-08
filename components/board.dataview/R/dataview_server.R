@@ -56,7 +56,7 @@ DataViewBoard <- function(id, pgx) {
         <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
-    
+
 
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {
@@ -345,8 +345,8 @@ DataViewBoard <- function(id, pgx) {
       gset[["Mitochondrial ribosomal (MRPL/MRPS)"]] <- g2
       gset[["Mitochondrial (MT)"]] <- g3
       gset[["Other mitochondrial"]] <- setdiff(g4, g3)
-      jj <- grep("mitochondr|ribosom", names(FAMILIES), invert = TRUE, ignore.case = TRUE)
-      gset.other <- lapply(FAMILIES[jj], function(x) setdiff(x, c(g1, g2, g3, g4)))
+      jj <- grep("mitochondr|ribosom", names(playdata::FAMILIES), invert = TRUE, ignore.case = TRUE)
+      gset.other <- lapply(playdata::FAMILIES[jj], function(x) setdiff(x, c(g1, g2, g3, g4)))
       gset <- c(gset, gset.other)
       gset <- gset[grep("<all>", names(gset), invert = TRUE)]
       gset <- gset[sapply(gset, length) > 10]
