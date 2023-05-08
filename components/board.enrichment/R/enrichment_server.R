@@ -393,7 +393,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       genes <- setdiff(genes, c("", NA, "NA", " "))
 
       title <- rep(NA, length(genes))
-      title <- as.character(GENE.TITLE[genes])
+      title <- as.character(playdata::GENE_TITLE[genes])
       title[is.na(title)] <- " "
 
       rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))

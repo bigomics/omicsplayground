@@ -548,7 +548,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       W <- W[, sel0, drop = FALSE]
 
       tt <- NA
-      tt <- GENE.TITLE[rownames(W)]
+      tt <- playdata::GENE_TITLE[rownames(W)]
       tt <- substring(tt, 1, 80)
       df <- data.frame(gene = rownames(W), title = tt, W, check.names = FALSE)
       sel1 <- ctGseaTable_module$rows_selected()

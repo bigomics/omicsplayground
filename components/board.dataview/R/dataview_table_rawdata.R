@@ -12,7 +12,7 @@ dataview_table_rawdata_ui <- function(
   caption,
   info.text) {
   ns <- shiny::NS(id)
-  
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
@@ -142,7 +142,7 @@ dataview_table_rawdata_server <- function(id,
       dbg("[dataview_rawdata:table_data] create dataframe")
       ## rownames(x) = sub(".*:","",rownames(x))
       xgenes <- pgx$genes[rownames(x), "gene_name"]
-      gene.title <- GENE.TITLE[toupper(xgenes)]
+      gene.title <- playdata::GENE_TITLE[toupper(xgenes)]
       gene.title <- substring(gene.title, 1, 50)
       if (is.null(rho)) {
         x <- data.frame(
