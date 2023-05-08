@@ -138,8 +138,6 @@ DataViewBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     ## get selected samples after sample filtering
     selected_samples <- reactive({
       samples <- colnames(pgx$X)

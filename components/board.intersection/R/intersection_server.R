@@ -309,8 +309,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     ## first tab ---------------------------------------
 
-    WATERMARK <- FALSE
-
     intersection_plot_venn_diagram_server(
       "venndiagram",
       pgx           = pgx,

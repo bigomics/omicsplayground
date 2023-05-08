@@ -1100,7 +1100,7 @@ UploadBoard <- function(id,
       phenoRT = phenoRT,
       countsRT = corrected_counts,
       sel.conditions = sel.conditions,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     ## ------------------------------------------------

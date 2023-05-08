@@ -408,8 +408,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # Enrichment plots
 
     signature_plot_enplots_server(

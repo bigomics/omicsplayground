@@ -472,8 +472,6 @@ CorrelationBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     cor_table <- correlation_table_corr_server(
       "cor_table",
       getPartialCorrelation = getPartialCorrelation,

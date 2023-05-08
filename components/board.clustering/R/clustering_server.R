@@ -641,7 +641,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       getTopMatrix = getTopMatrix,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_clustpca_server("PCAplot",
@@ -650,7 +650,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
       hm_clustmethod = shiny::reactive(input$hm_clustmethod),
-      watermark = FALSE,
+      watermark = WATERMARK,
       parent = ns
     )
 
@@ -658,7 +658,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "parcoord",
       parcoord.matrix = parcoord.matrix,
       getTopMatrix = getTopMatrix,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_phenoplot_server(
@@ -666,7 +666,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_featurerank_server(
@@ -675,14 +675,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       hm_level = shiny::reactive(input$hm_level),
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clusterannot <- clustering_plot_clusterannot_server(
       id = "plots_clustannot",
       pgx,
       getClustAnnotCorrelation = getClustAnnotCorrelation,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # tables ##########
@@ -691,7 +691,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       getClustAnnotCorrelation = getClustAnnotCorrelation,
       xann_level = clusterannot$xann_level,
       scrollY = "calc(40vh - 236px)",
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustannot_caption <- "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."

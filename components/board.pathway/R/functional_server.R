@@ -409,14 +409,16 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       pgx,
       getFilteredReactomeTable,
       reactome_table,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_reactome_actmap_server(
       "reactome_actmap",
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
-      plotActivationMatrix
+      plotActivationMatrix,
+      WATERMARK
     )
 
     reactome_table <- functional_table_reactome_server(
@@ -429,7 +431,8 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     functional_plot_enrichmap_server(
       "enrichment_map",
       pgx,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     ## ================================================================================
@@ -439,12 +442,14 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     functional_plot_go_network_server(
       "GO_network",
       pgx,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_go_actmap_server(
       "GO_actmap",
-      pgx
+      pgx,
+      WATERMARK
     )
 
     functional_table_go_table_server(
@@ -508,8 +513,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       df <- df[!duplicated(df$pathway.id), ] ## take out duplicated gene sets...
       df <- df[order(-abs(df$logFC)), ]
 
-      dbg("[functional_server.R:getWikiPathwayTable] dim.df = ",dim(df))
-
       return(df)
     })
 
@@ -526,14 +529,16 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       pgx,
       getFilteredWikiPathwayTable,
       wikipathway_table,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_wikipathway_actmap_server(
       "wikipathway_actmap",
       pgx,
       getWikiPathwayTable,
-      plotActivationMatrix
+      plotActivationMatrix,
+      WATERMARK
     )
 
     wikipathway_table <- functional_table_wikipathway_server(
