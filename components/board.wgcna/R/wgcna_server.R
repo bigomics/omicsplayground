@@ -37,12 +37,10 @@ WgcnaBoard <- function(id, pgx) {
           plotWidget(ns("intraScatter"))
         )
       )
-    })
-
-    ## ================================================================================
+    }) ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
-
+    
     ## wgcna.compute <- shiny::reactive({
     wgcna.compute <- shiny::eventReactive(
       {
@@ -106,11 +104,16 @@ WgcnaBoard <- function(id, pgx) {
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
+    infotext <-
+       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
+        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
+    
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
-        size = 'l',
+        size = 'xl',
         easyClose = TRUE
       ))
     })

@@ -97,16 +97,13 @@ in.shinyproxy <- function() {
         return(Sys.getenv("SHINYPROXY_USERNAME") != "")
 }
 
-tabRequire <- function(pgx, session, tabname, slot) {
+tabRequire <- function(pgx, session, tabname, slot, enable=TRUE) {
         has.slot <- (slot %in% names(pgx))
-        if(!has.slot) {
-          cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
-          ##hideTab(tabname, subtab)
-          bigdash.hideTab(session, tabname)
-	} else {
-          ##showTab(tabname, subtab)
+        if(has.slot && enable) {
           bigdash.showTab(session, tabname)
-	}
+	} else {
+          bigdash.hideTab(session, tabname)
+        }
 }
 
 fileRequire <- function(file, tabname, subtab) {

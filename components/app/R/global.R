@@ -198,10 +198,6 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
-## Main tab titles
-MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","DEV")
-
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
 ## --------------------------------------------------------------------

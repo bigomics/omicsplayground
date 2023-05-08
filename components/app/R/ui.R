@@ -88,7 +88,7 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA (beta)"),
+            wgcna = "WGCNA"),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis"

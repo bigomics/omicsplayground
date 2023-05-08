@@ -85,8 +85,11 @@ ClusteringInputs <- function(id) {
   )
 }
 
+
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
+
+  board_info = "The Clustering Board performs unsupervised clustering analysis. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects."
 
   rowH  <- 350
   rowH  <- "40vh"
@@ -96,6 +99,7 @@ ClusteringUI <- function(id) {
     class = "row",
     ## h4("Cluster Samples"),
     boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
+    bs_alert(board_info),
     div(
       class = "col-md-7",
       shiny::tabsetPanel(
@@ -197,7 +201,7 @@ ClusteringUI <- function(id) {
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
             title = "Feature-set ranking",
-            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
+            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminative power of the feature set (or gene family) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
             caption = "Ranked discriminant score for top feature sets.",
             label = "",
             height = c(fullH, TABLE_HEIGHT_MODAL),
