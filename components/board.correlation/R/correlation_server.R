@@ -151,7 +151,7 @@ CorrelationBoard <- function(id, pgx) {
       xref <- list(
         "cor" = 2**zx,
         "cor.HPA" = as.matrix(playdata::TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
@@ -193,7 +193,7 @@ CorrelationBoard <- function(id, pgx) {
       xref <- list(
         "cor" = 2**zx,
         "cor.HPA" = as.matrix(playdata::TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
