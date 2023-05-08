@@ -32,7 +32,7 @@ clustering_plot_featurerank_ui <- function(
     label = label,
     plotlib = "plotly",
     title = title,
-    caption = caption,	
+    caption = caption,
     info.text = info.text,
     options = clust_featureRank.opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -58,7 +58,7 @@ clustering_plot_featurerank_server <- function(id,
 
       features <- X <- NULL
       if (hm_level == "geneset") {
-        features <- COLLECTIONS
+        features <- playdata::COLLECTIONS
         X <- pgx$gsetX
       } else {
         features <- pgx$families
@@ -163,7 +163,7 @@ clustering_plot_featurerank_server <- function(id,
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
       rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
-      
+
       playbase::pgx.stackedBarplot(
         x = t(S),
         showlegend = TRUE,
@@ -189,12 +189,12 @@ clustering_plot_featurerank_server <- function(id,
       render_featureRank() %>%
         plotly_modal_default()
     }
-      
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = clust_featureRank.RENDER,
-      func2 = clust_featureRank.RENDER2,      
+      func2 = clust_featureRank.RENDER2,
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
       ## renderFunc = plotly::renderPlotly,
       ## renderFunc2 = plotly::renderPlotly,

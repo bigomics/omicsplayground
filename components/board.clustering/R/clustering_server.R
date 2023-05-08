@@ -74,8 +74,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       ### if(is.null(input$hm_level)) return(NULL)
       choices <- names(pgx$families)
       if (input$hm_level == "geneset") {
-        nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(COLLECTIONS)[nk >= 5]
+        nk <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+        choices <- names(playdata::COLLECTIONS)[nk >= 5]
       }
       choices <- c("<custom>", "<contrast>", choices)
       choices <- sort(unique(choices))
@@ -94,19 +94,19 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     getFilteredMatrix <- shiny::reactive({
 
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
-      
+
       genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
       shiny::req(ft)
-      
+
       if (input$hm_level == "geneset") {
         ## Gene set level features #########
 
         gsets <- rownames(pgx$gsetX)
-        ## gsets = unique(unlist(COLLECTIONS[ft]))
-        gsets <- unique(COLLECTIONS[[ft]])
+        ## gsets = unique(unlist(playdata::COLLECTIONS[ft]))
+        gsets <- unique(playdata::COLLECTIONS[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
           gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
@@ -114,7 +114,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         zx <- zx[intersect(gsets, rownames(zx)), ]
       }
-      
+
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
@@ -177,11 +177,11 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
           names(idx) <- rownames(zx)
         }
       }
-      
+
       if (nrow(zx) == 0) {
         return(NULL)
       }
-      
+
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]
 
@@ -220,7 +220,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       input$hm_filterXY,
       input$hm_filterMitoRibo,
       input$hm_group,
-      splitmap$hm_ntop()      
+      splitmap$hm_ntop()
     )
 
     getTopMatrix <- shiny::reactive({
@@ -485,8 +485,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
       }
-      if (ann.level == "geneset" && ann.refset %in% names(COLLECTIONS)) {
-        ss <- COLLECTIONS[[ann.refset]]
+      if (ann.level == "geneset" && ann.refset %in% names(playdata::COLLECTIONS)) {
+        ss <- playdata::COLLECTIONS[[ann.refset]]
         ss <- intersect(ss, rownames(pgx$gsetX))
         length(ss)
         ref <- pgx$gsetX[ss, ]
@@ -566,10 +566,10 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       dbg("[clustering_server.R:hm_getClusterPositions] L558 : samplefilter changed??? sel.samples = ",head(sel.samples))
-      
+
       clustmethod <- "tsne"
       pdim <- 2
-      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!! 
+      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!!
       pdim <- c(2, 3)[1 + 1 * do3d]
 
       pos <- NULL

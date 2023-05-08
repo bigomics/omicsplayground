@@ -77,8 +77,8 @@ clustannot_server <- function(id,
       ann.types <- sel <- NULL
       if (input$xann_level != "phenotype") {
         if (input$xann_level == "geneset") {
-          ann.types <- names(COLLECTIONS)
-          cc <- sapply(COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
+          ann.types <- names(playdata::COLLECTIONS)
+          cc <- sapply(playdata::COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
           ann.types <- ann.types[cc >= 3]
         }
         if (input$xann_level == "gene") {
@@ -134,8 +134,8 @@ clustannot_server <- function(id,
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
       }
-      if (ann.level == "geneset" && ann.refset %in% names(COLLECTIONS)) {
-        ss <- COLLECTIONS[[ann.refset]]
+      if (ann.level == "geneset" && ann.refset %in% names(playdata::COLLECTIONS)) {
+        ss <- playdata::COLLECTIONS[[ann.refset]]
         ss <- intersect(ss, rownames(pgx$gsetX))
         length(ss)
         ref <- pgx$gsetX[ss, ]
