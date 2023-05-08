@@ -64,8 +64,8 @@ clustering_plot_phenoplot_server <- function(id,
       # pheno <- grep("batch|sample|donor|repl|surv", pheno,
       #   invert = TRUE, ignore.case = TRUE, value = TRUE
       # )
-      Y <- Y[,pheno, drop =FALSE] 
-      
+      Y <- Y[,pheno, drop =FALSE]
+
       ## complete dataframe for downloading
       df <- data.frame( pos, Y)
 
@@ -98,7 +98,7 @@ clustering_plot_phenoplot_server <- function(id,
         colvar <- factor(Y[, pheno[i]])
         colvar[which(colvar %in% c(NA, "", " ", "NA", "na"))] <- NA
         colvar <- factor(as.character(colvar))
-        klrpal <- COLORS
+        klrpal <- playdata::COLORS
         klr1 <- klrpal[colvar]
         klr1 <- paste0(gplots::col2hex(klr1), "99")
         jj <- which(is.na(klr1))
@@ -165,7 +165,7 @@ clustering_plot_phenoplot_server <- function(id,
         plt,
         nrows = nr,
         margin = 0.06
-      ) %>% plotly_modal_default() %>% 
+      ) %>% plotly_modal_default() %>%
           plotly::layout(
             margin = list(l=0,r=0,b=0,t=30) # lrbt
           )
