@@ -499,7 +499,6 @@ ConnectivityBoard <- function(id, pgx) {
       getLeadingEdgeGraph,
       getConnectivityScores,
       connectivityScoreTable,
-      playdata::getGSETS,
       cumEnrichmentTable
     )
 

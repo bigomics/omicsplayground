@@ -69,7 +69,6 @@ connectivity_plot_enrichmentGraph_server <- function(id,
                                                      getLeadingEdgeGraph,
                                                      getConnectivityScores,
                                                      connectivityScoreTable,
-                                                     playdata::getGSETS,
                                                      cumEnrichmentTable,
                                                      watermark = FALSE) {
   moduleServer(
