@@ -109,7 +109,7 @@ app_server <- function(input, output, session) {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
     dbg("[LoadingBoard] names.auth = ",names(auth))
-  
+
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
@@ -162,7 +162,7 @@ app_server <- function(input, output, session) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
             session$user <- NA
-        } 
+        }
     })
 
     is_data_loaded <- reactive({
@@ -178,6 +178,9 @@ app_server <- function(input, output, session) {
       r_global = r_global)
     env$user <- UserBoard("user", user=auth)
 
+    ## Do not display "Welcome" tab on the menu
+    bigdash.hideMenuItem(session, "welcome-tab")
+
     ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
     observeEvent( is_data_loaded(), {
@@ -185,7 +188,7 @@ app_server <- function(input, output, session) {
         if( is_data_loaded()==0){
             return(NULL)
         }
-        
+
         if(modules_loaded) {
             Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
@@ -387,6 +390,7 @@ app_server <- function(input, output, session) {
         toggleTab("cell-tabs","Monocle",DEV) ## DEV only
 
         info("[server.R] trigger on change dataset done!")
+
     })
 
     ##-------------------------------------------------------------
@@ -552,8 +556,8 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
         ## This checks for personal email adress and asks to change to
         ## a business email adress. This will affect also old users.
-        check_personal_email(auth, pgx_dir)         
-        
+        check_personal_email(auth, pgx_dir)
+
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
@@ -624,6 +628,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
         title = "Welcome to Version 3!",
         text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
     )
-  
-  
+
+
 }
