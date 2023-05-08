@@ -360,16 +360,18 @@ LoadingBoard <- function(id,
       info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       info.colnames <- c(
         "dataset", "datatype", "description", "nsamples",
-        "ngenes", "nsets", "conditions", "organism",
-        "date", "creator"
+        "ngenes", "nsets", "conditions", "organism", "date", "creator"
         )
       if (is.null(info)) {
         aa <- rep(NA, 10)
         colnames(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
       }
-      if(!"creator" %in% colnames(info)) info$creator <- ""
-      info <- info[,match(info.colnames,colnames(info))]
+      ## add missing columns fields
+      missing.cols <- setdiff(info.colnames,colnames(info))
+      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))     
+      ii <- match(info.colnames,colnames(info))
+      info <- info[,ii]
       info
     })
 
