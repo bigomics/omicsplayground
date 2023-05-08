@@ -150,7 +150,7 @@ CorrelationBoard <- function(id, pgx) {
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
-        "cor.HPA" = as.matrix(TISSUE),
+        "cor.HPA" = as.matrix(playdata::TISSUE),
         "cor.ImmProt" = as.matrix(IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
@@ -192,7 +192,7 @@ CorrelationBoard <- function(id, pgx) {
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
-        "cor.HPA" = as.matrix(TISSUE),
+        "cor.HPA" = as.matrix(playdata::TISSUE),
         "cor.ImmProt" = as.matrix(IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
@@ -480,7 +480,7 @@ CorrelationBoard <- function(id, pgx) {
       getGeneCorr           = getGeneCorr,
       pgx                   = pgx,
       watermark             = WATERMARK
-    ) 
+    )
 
     correlation_plot_barplot_server(
       "cor_barplot",
@@ -494,7 +494,7 @@ CorrelationBoard <- function(id, pgx) {
       "cor_scatter",
       getFilteredExpression = getFilteredExpression,
       pgx = pgx,
-      cor_table = cor_table,      
+      cor_table = cor_table,
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
       cor_gene = reactive(input$cor_gene),

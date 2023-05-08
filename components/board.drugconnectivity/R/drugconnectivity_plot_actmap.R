@@ -116,7 +116,7 @@ drugconnectivity_plot_actmap_server <- function(id,
 
         corrplot::corrplot(score,
           is.corr = FALSE, cl.pos = "n",
-          col = BLUERED(100),
+          col = playdata::BLUERED(100),
           col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
           tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
         )

@@ -176,7 +176,7 @@ SingleCellBoard <- function(id, pgx) {
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-      
+
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
       # dbg("[pfGetClusterPositions2] computing distances and clusters...")
@@ -504,7 +504,7 @@ SingleCellBoard <- function(id, pgx) {
 
     #         par(oma=c(3,2,3,0))
     #         playbase::gx.heatmap(gx0, scale="none", mar=c(15,8),
-    #                    cexRow=1, cexCol=1.3, col=BLUERED(64),
+    #                    cexRow=1, cexCol=1.3, col=playdata::BLUERED(64),
     #                    key=FALSE, keysize=0.6)
     #     })
 

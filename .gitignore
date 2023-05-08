@@ -55,6 +55,7 @@ data_shared/**/*pgx.R
 data_shared/**/*test.R
 data_shared/**/*pgx.R
 data_shared/**/*checkfiles.R
+data_shared/*.csv
 !data/example-data.pgx
 data/*.csv
 logs/*.rds

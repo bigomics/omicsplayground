@@ -45,9 +45,9 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       hgnc.gene <- toupper(as.character(pgx$genes[pp, "gene_name"]))
 
       tx <- tissue.klr <- grp <- NULL
-      if (hgnc.gene %in% rownames(TISSUE)) {
-        tx <- TISSUE[hgnc.gene, ]
-        grp <- TISSUE.grp[names(tx)]
+      if (hgnc.gene %in% rownames(playdata::TISSUE)) {
+        tx <- playdata::TISSUE[hgnc.gene, ]
+        grp <- playdata::TISSUE_GRP[names(tx)]
         tissue.klr <- COLORS[grp]
         ylab <- "expression (TPM)"
         if (data_type == "logCPM") {
