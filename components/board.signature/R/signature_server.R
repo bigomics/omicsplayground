@@ -292,12 +292,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       fx <- rowMeans(F**2)
 
       ## fisher test
-      ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)), NA)
+      ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
       N <- cbind(
-        k1 = Matrix::rowSums(GSETxGENE != 0), n1 = ncol(GSETxGENE),
-        k2 = Matrix::rowSums(GSETxGENE[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
+        k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
       )
-      rownames(N) <- rownames(GSETxGENE)
+      rownames(N) <- rownames(playdata::GSETxGENE)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
       dim(N)
@@ -317,16 +317,16 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       ## get shared genes
       aa <- rownames(A)
 
-      y <- 1 * (colnames(GSETxGENE) %in% toupper(markers))
-      names(y) <- colnames(GSETxGENE)
-      ncommon <- Matrix::colSums(Matrix::t(GSETxGENE[aa, , drop = FALSE]) * as.vector(y) != 0)
-      ntotal <- Matrix::rowSums(GSETxGENE[aa, , drop = FALSE] != 0)
+      y <- 1 * (colnames(playdata::GSETxGENE) %in% toupper(markers))
+      names(y) <- colnames(playdata::GSETxGENE)
+      ncommon <- Matrix::colSums(Matrix::t(playdata::GSETxGENE[aa, , drop = FALSE]) * as.vector(y) != 0)
+      ntotal <- Matrix::rowSums(playdata::GSETxGENE[aa, , drop = FALSE] != 0)
       A$ratio <- ncommon / ntotal
       ratio.kk <- paste0(ncommon, "/", ntotal)
 
-      gg <- colnames(GSETxGENE)
+      gg <- colnames(playdata::GSETxGENE)
       gset <- names(y)[which(y != 0)]
-      G1 <- GSETxGENE[aa, which(y != 0)]
+      G1 <- playdata::GSETxGENE[aa, which(y != 0)]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
