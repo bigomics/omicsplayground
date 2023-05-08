@@ -50,7 +50,9 @@ PlotModuleUI <- function(id,
                        card_footer_height = "3rem",
                        width = c("auto","100%"),
                        pdf.width = 8,
-                       pdf.height = 8
+                       pdf.height = 8,
+                       cards = FALSE,
+                       card_names = NULL
                        )
 {
     require(magrittr)
@@ -62,7 +64,7 @@ PlotModuleUI <- function(id,
 
 
     ifnotchar.int <- function(s) suppressWarnings(
-      ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
+        ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
     width.1  <- ifnotchar.int(width[1])
     width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
@@ -93,8 +95,22 @@ PlotModuleUI <- function(id,
     }
 
     if(is.null(plotlib2))   plotlib2 <- plotlib
-    if(is.null(outputFunc))  outputFunc  <- getOutputFunc(plotlib)
-    if(is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
+    if (cards) {
+      if(length(plotlib) != length(card_names)){
+        plotlib <- rep(plotlib[1], length(card_names))
+      }
+      if(length(outputFunc) == 1){
+        outputFunc <- rep(list(outputFunc), length(card_names))
+      }
+      if(length(outputFunc2) == 1){
+        outputFunc2 <- rep(list(outputFunc2), length(card_names))
+      }
+      if (is.null(outputFunc)) outputFunc <- lapply(plotlib, getOutputFunc)
+      if (is.null(outputFunc2)) outputFunc2 <- lapply(plotlib2, getOutputFunc)
+    } else {
+      if (is.null(outputFunc)) outputFunc <- getOutputFunc(plotlib)
+      if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
+    }
 
     ##--------------------------------------------------------------------------------
     ##------------------------ BUTTONS -----------------------------------------------
@@ -129,7 +145,36 @@ PlotModuleUI <- function(id,
                 shiny::numericInput(ns("pdf_height"), "Height", pdf.height, 1, 20, 1, width='100%')
             ),
             shiny::br(),shiny::br(),shiny::br()
+      )
+    }
+
+    if (cards == FALSE) {
+      download_buttons <- div(
+        shiny::downloadButton(
+          outputId = ns("download"),
+          label = "Download",
+          class = "btn-outline-primary"
         )
+      )
+    } else {
+      button_list <- lapply(seq_along(card_names), function(x) {
+        shiny::conditionalPanel(
+          condition = paste0(
+            "input.card_selector == '", card_names[x], "'"
+          ),
+          ns = ns,
+          div(
+            shiny::downloadButton(
+              outputId = ns(paste0(
+                "download", x
+              )),
+              label = "Download",
+              class = "btn-outline-primary"
+            )
+          )
+        )
+      })
+      download_buttons <- do.call(div, button_list)
     }
 
     dload.button <- DropdownMenu(
@@ -148,12 +193,7 @@ PlotModuleUI <- function(id,
             shiny::br()
           )
         ),
-        div(
-          shiny::downloadButton(
-            outputId = ns("download"),
-            label = "Download",
-          )
-        )
+        download_buttons,
       ),
       size = "xs",
       icon = shiny::icon("download"),
@@ -162,22 +202,47 @@ PlotModuleUI <- function(id,
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
 
-    if(!is.null(label) && label!="") label <- paste0("&nbsp;(",label,")")
-    label <- shiny::div(class = "plotmodule-title", shiny::HTML(label))
-
     zoom.button <- NULL
     if(1 && show.maximize) {
         zoom.button <- modalTrigger(ns("zoombutton"),
-            ns("plotPopup"),
-            icon("window-maximize"),
-            class="btn-circle-xs"
+                                    ns("plotPopup"),
+                                    icon("window-maximize"),
+                                    class="btn-circle-xs"
         )
+    }
+
+    # Build cards or single plot
+    if (cards) {
+        tabs <- lapply(1:length(card_names), function(x) {
+            bslib::nav(
+                card_names[x],
+                bslib::card_body_fill(
+                    outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
+                        bigLoaders::useSpinner()
+                )
+            )
+        })
+        tabs <- c(tabs, id = ns("card_selector"), ulClass = "nav navbar-nav header-nav",
+                  selected = NULL)
+        plot_cards <- do.call(
+            bslib:::buildTabset,
+            tabs
+        )
+    } else {
+        plot_cards <- outputFunc(ns("renderfigure")) %>%
+            bigLoaders::useSpinner()
     }
 
     header <- shiny::fillRow(
         flex = c(1,NA,NA,NA,NA),
         class="plotmodule-header",
-        shiny::div(class='plotmodule-title', title=title, title),
+        if(cards){
+            shiny::div(class='plotmodule-title',
+                       shiny::span(title, style = "float: left;"),
+                       plot_cards$navList)
+        } else {
+            shiny::div(class='plotmodule-title', title=title, title)
+        },
         DropdownMenu(
             shiny::div(class='plotmodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
             width = "250px",
@@ -194,9 +259,32 @@ PlotModuleUI <- function(id,
     ## --------------- modal UI (former output$popupfig) ----------------------
     ## ------------------------------------------------------------------------
 
+    if (cards) {
+      tabs_modal <- lapply(1:length(card_names), function(x) {
+        bslib::nav(
+          card_names[x],
+          id = card_names[x],
+          bslib::card_body_fill(
+            outputFunc[[x]](ns(paste0("renderpopup", x)),
+                            width = width.2, height = height.2
+            ) %>%
+              bigLoaders::useSpinner()
+          )
+        )
+      })
+      tabs_modal <- c(tabs_modal, id = "card_selector_modal", bg = "transparent", inverse = FALSE)
+      plot_cards_modal <- do.call(
+        bslib::navs_bar,
+        tabs_modal
+      )
+    } else {
+      plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.2, height = height.2) %>%
+        bigLoaders::useSpinner()
+
+    }
+
+
     popupfigUI <- function() {
-        w <- width.2
-        h <- height.2
 
         ## NOTE: this was in the server before and we could ask the
         ## image size. How to do this in the UI part?
@@ -227,20 +315,19 @@ PlotModuleUI <- function(id,
           class = "popup-plot-body",
           shiny::div(
             class = "popup-plot",
-            tryCatch({
-            outputFunc2(ns("renderpopup"), width=w, height=h, inline=FALSE)
-            }, error = function(x){ # This try-catch is used for render functions that
-                                  # do not have the arguments, such as
-                                  # iheatmap plots
-            outputFunc2(ns("renderpopup"), width=w, height=h)
-            })
+            plot_cards_modal
           ),
           caption2
         )
     }
 
-    popupfigUI_editor <- function(){
-        htmlOutput(ns("editor_frame"))
+    popupfigUI_editor <- function(card = NULL){
+        if(!is.null(card)){
+            htmlOutput(ns(paste0("editor_frame", card)))
+        } else {
+            htmlOutput(ns("editor_frame"))
+        }
+
     }
 
     ## inline styles (should be in CSS...)
@@ -256,13 +343,14 @@ PlotModuleUI <- function(id,
 #        caption <- shiny::HTML(caption)
 #        caption <- shiny::span(caption)
 #    }
+
     e <- bslib::card(
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       style = paste0("height:",height.1,";overflow: visible;"),
       bslib::as.card_item(div(header)),
       bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
 ##      style = paste0("height: ",height.1,";"),
-        outputFunc(ns("renderfigure")) %>% bigLoaders::useSpinner(),
+        if(cards){plot_cards$content}else{plot_cards},
         shiny::div(class="popup-modal",
                     modalUI(
                           id = ns("plotPopup"),
@@ -272,15 +360,31 @@ PlotModuleUI <- function(id,
                           popupfigUI()
                       )
                     ),
-        shiny::div(class="popup-modal",
-                    modalUI(
-                          id = ns("plotPopup_editor"),
-                          title = "Editor",
-                          size = "fullscreen",
-                          footer = NULL,
-                          popupfigUI_editor()
-                      )
-                    ),
+        if(cards){
+            div(
+                lapply(1:length(card_names), function(x){
+                    shiny::div(class="popup-modal",
+                               modalUI(
+                                   id = ns(paste0("plotPopup_editor", x)),
+                                   title = "Editor",
+                                   size = "fullscreen",
+                                   footer = NULL,
+                                   popupfigUI_editor(x)
+                               )
+                    )
+                })
+            )
+        } else {
+            shiny::div(class="popup-modal",
+                       modalUI(
+                           id = ns("plotPopup_editor"),
+                           title = "Editor",
+                           size = "fullscreen",
+                           footer = NULL,
+                           popupfigUI_editor()
+                       )
+            )
+        },
         shiny::tagList(
                     shiny::tags$head(shiny::tags$style(modaldialog.style)),
                     shiny::tags$head(shiny::tags$style(modalbody.style)),
@@ -325,7 +429,8 @@ PlotModuleServer <- function(
          pdf.height=6,
          pdf.pointsize=12,
          add.watermark=FALSE,
-         remove_margins = TRUE)
+         remove_margins = TRUE,
+         card = NULL)
 {
     moduleServer(
       id,
@@ -342,9 +447,12 @@ PlotModuleServer <- function(
               path = "M410.052,46.398c-0.812-10.885-5.509-21.129-13.226-28.845c-16.089-16.089-41.044-17.965-59.34-4.459l-7.427,5.487C257.281,72.291,191.872,135.46,135.647,206.336c-14.115,17.795-27.792,36.287-40.715,55.015c-0.928-0.042-1.859-0.068-2.795-0.068c-16.279,0-31.583,6.339-43.094,17.851C28.607,299.57,27.77,319.906,26.96,339.572c-0.745,18.1-1.449,35.196-16.99,54.271L0,406.081h15.785c37.145,0,96.119-17.431,119.447-40.759c11.511-11.511,17.85-26.815,17.85-43.094c0-0.941-0.026-1.877-0.068-2.81c18.766-12.941,37.258-26.614,55.01-40.704C278.873,222.52,342.046,157.11,395.787,84.302l5.479-7.419C407.747,68.111,410.867,57.284,410.052,46.398z M124.625,354.715c-16.334,16.334-58.786,31.89-94.095,35.555c10.098-18.012,10.791-34.866,11.417-50.082c0.754-18.326,1.406-34.152,17.702-50.449c8.678-8.678,20.216-13.457,32.488-13.457s23.81,4.779,32.488,13.457s13.457,20.215,13.457,32.487C138.082,334.5,133.303,346.037,124.625,354.715z M135.232,279.133c-6.875-6.875-15.11-11.889-24.091-14.825c10.801-15.429,22.107-30.656,33.724-45.426c12.79,1.717,24.7,7.567,33.871,16.737c9.174,9.174,15.027,21.087,16.745,33.875c-14.743,11.601-29.97,22.905-45.427,33.719C147.116,294.236,142.104,286.006,135.232,279.133z M389.2,67.971l-5.481,7.421c-50.415,68.302-109.268,129.976-175.037,183.518c-3.279-12.747-9.915-24.473-19.34-33.897c-9.421-9.421-21.145-16.055-33.893-19.333C209.017,139.887,270.692,81.036,338.97,30.649l7.427-5.488c12.275-9.062,29.023-7.801,39.823,3c5.177,5.177,8.329,12.05,8.874,19.355C395.641,54.822,393.548,62.086,389.2,67.971z",
               transform = 'scale(0.035)'
             ),
-            click = htmlwidgets::JS(paste0(
-              "function(gd){$('#", ns("plotPopup_editor"), "').modal('show')}"
-            )
+            click = htmlwidgets::JS(
+              if(!is.null(card)){
+                  paste0("function(gd){$('#", ns(paste0("plotPopup_editor", card)), "').modal('show')}")
+              } else {
+                  paste0("function(gd){$('#", ns("plotPopup_editor"), "').modal('show')}")
+              }
             )
           )
 
@@ -361,22 +469,42 @@ PlotModuleServer <- function(
             )
           }
 
-          output$editor_frame <- renderUI({
-            plot <- func()
-            json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
-            res <- session$registerDataObj(
-              "plotly_graph", json$x$data,
-              function(data, req) {
-                httpResponse(
-                  status = 200,
-                  content_type = 'application/json',
-                  content = data
-                )
-              }
-            )
-            url <- getEditorUrl(session, res)
-            tags$iframe(src=url, style = "height: 85vh; width: 100%;")
-          })
+          if(!is.null(card)){
+              output[[paste0("editor_frame", card)]] <- renderUI({
+                  plot <- func()
+                  json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+                  res <- session$registerDataObj(
+                      "plotly_graph", json$x$data,
+                      function(data, req) {
+                          httpResponse(
+                              status = 200,
+                              content_type = 'application/json',
+                              content = data
+                          )
+                      }
+                  )
+                  url <- getEditorUrl(session, res)
+                  tags$iframe(src=url, style = "height: 85vh; width: 100%;")
+              })
+          } else {
+              output$editor_frame <- renderUI({
+                  plot <- func()
+                  json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
+                  res <- session$registerDataObj(
+                      "plotly_graph", json$x$data,
+                      function(data, req) {
+                          httpResponse(
+                              status = 200,
+                              content_type = 'application/json',
+                              content = data
+                          )
+                      }
+                  )
+                  url <- getEditorUrl(session, res)
+                  tags$iframe(src=url, style = "height: 85vh; width: 100%;")
+              })
+          }
+
 
           ##--------------------------------------------------------------------------------
           ##------------------------ FIGURE ------------------------------------------------
@@ -428,7 +556,7 @@ PlotModuleServer <- function(
                   } else if(plotlib=="iheatmapr") {
                     p <- func()
                     iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
-                  } else if(plotlib=="visnetwork") {                    
+                  } else if(plotlib=="visnetwork") {
                     # download will not work if phantomjs is not installed
                     # webshot::install_phantomjs() in case phantomjs is not installed
                     p <- func()
@@ -460,13 +588,13 @@ PlotModuleServer <- function(
                     if(remove_margins == TRUE) {
                       par(mar = c(0, 0, 0, 0))
                     }
-                    
+
                     png(PNGFILE, width=pdf.width*100*resx, height=pdf.height*100*resx,
                       pointsize=1.2*pdf.pointsize, res=72*resx)
                     print(func())
                     dev.off()  ## important!!
                   } else { ## end base
-                  
+
                     png(PNGFILE, pointsize=pdf.pointsize)
                     plot.new()
                     mtext("Error. PNG not available.",line=-8)
@@ -664,23 +792,58 @@ PlotModuleServer <- function(
           ##--------------------------------------------------------------------------------
           ##------------------------ OUTPUT ------------------------------------------------
           ##--------------------------------------------------------------------------------
-          observeEvent(input$downloadOption, {
-            if(input$downloadOption == "png"){
-              output$download <- download.png
-            }
-            if(input$downloadOption == "pdf"){
-              output$download <- download.pdf
-            }
-            if(input$downloadOption == "csv"){
-              output$download <- download.csv
-            }
-            if(input$downloadOption == "html"){
-              output$download <- download.html
-            }
-            if(input$downloadOption == "obj"){
-              output$download <- download.obj
-            }
-          })
+          if (is.null(card)) {
+            observeEvent(input$downloadOption, {
+          if (input$downloadOption == "png") {
+            output$download <- download.png
+          }
+          if (input$downloadOption == "pdf") {
+            output$download <- download.pdf
+          }
+          if (input$downloadOption == "csv") {
+            output$download <- download.csv
+          }
+          if (input$downloadOption == "html") {
+            output$download <- download.html
+          }
+          if (input$downloadOption == "obj") {
+            output$download <- download.obj
+          }
+        })
+        } else {
+        observeEvent(input$downloadOption, {
+          if (input$downloadOption == "png") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.png
+          }
+          if (input$downloadOption == "pdf") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.pdf
+          }
+          if (input$downloadOption == "csv") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.csv
+          }
+          if (input$downloadOption == "html") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.html
+          }
+          if (input$downloadOption == "obj") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.obj
+          }
+        })
+      }
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- UI ------------------------------------------------
@@ -779,11 +942,11 @@ PlotModuleServer <- function(
                 plot <- func() %>%
                   plotly::config(displaylogo = FALSE) %>%
                   plotly::plotly_build()
-                
+
                 if (remove_margins == TRUE) {
                    plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
                 }
-                
+
                 #                plot <- plot %>%
                 #                  plotly_default()
                 # If there is already custom buttons, append the edit one
@@ -838,8 +1001,21 @@ PlotModuleServer <- function(
             }
           }
 
-          output$renderfigure <- render
-          output$renderpopup  <- render2
+      if (is.null(card)) {
+        output$renderfigure <- render
+        output$renderpopup <- render2
+      } else {
+        output[[paste0(
+          "renderfigure",
+          card
+        )]] <- render
+        output[[paste0(
+          "renderpopup",
+          card
+        )]] <- render2
+      }
+
+
 
           ##--------------------------------------------------------------------------------
           ##---------------------------- RETURN VALUE --------------------------------------
