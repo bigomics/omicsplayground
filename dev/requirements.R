@@ -78,28 +78,6 @@ install.github <- function(repo, force=FALSE) {
         INSTALLED.PKGS <<- unique(c(INSTALLED.PKGS, pkg))
     }
 }
-autoscan.pkgs <- function() {
-    rfiles1 <- system("find components -name \\*.r", intern=TRUE)
-    rfiles2 <- system("find components -name \\*.R", intern=TRUE)
-    rfiles <- paste(c(rfiles1,rfiles2),collapse=" ")
-    pkg1 <- system(paste("grep '::' ",rfiles), intern=TRUE)
-    pkg2 <- system(paste("grep 'require(' ",rfiles), intern=TRUE)
-    pkg3 <- system(paste("grep 'library(' ",rfiles), intern=TRUE)
-    pkg <- c(pkg1,pkg2,pkg3)
-    pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
-    pkg <- gsub(".*[rR]:","",pkg)  ## strip filename
-    pkg <- grep("^[#]",pkg,invert=TRUE,value=TRUE)  ## no comments
-    pkg <- trimws(pkg)
-    pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
-    pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
-    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))
-    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)  ## skip commented out
-    pkg <- grep("^[a-z]",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
-    pkg <- grep("[a-z.]*",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
-    pkg <- setdiff(pkg,c(""))
-    pkg <- sort(unique(pkg))
-    pkg
-}
 
 ##---------------------------------------------------------------------
 ## Install basic shiny packages
@@ -114,11 +92,9 @@ install.pkgs(base.pkg, force=FALSE)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-##pkg.used <- autoscan.pkgs()
-
 ## We use renv to detect dependencies. Renv is looking for library and
 ## require statements in the r/R source files.
-renv.out <- renv::dependencies(path="components")
+renv.out <- renv::dependencies(path="components", errors="ignored")
 #head(renv.out)
 pkg.used <- unique(renv.out$Package)
 
@@ -135,7 +111,8 @@ pkg.extra <- c(
   "RcppParallel", "KEGGgraph", "svgPanZoom",
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
-  'listviewer'
+  'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
+  'svgPanZoom','rhdf5','monocle','mygene'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -186,6 +163,7 @@ install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
+install.github('m-jahn/fluctuator')
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
@@ -227,10 +205,12 @@ reticulate::use_miniconda('r-reticulate')
 ##---------------------------------------------------------------------
 BIG.NOTUSED <- c(
     "reactome.db", ## >2GB!!!
-    "BH","PCSF","terra",
+    "BH",
+    "PCSF",
+    "terra",
     "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
-    "RSpectra",
+    ## "RSpectra",  ## ???
     ##"org.Mm.eg.db",
     "tximportData"
     ##"EnsDb.Hsapiens.v86",

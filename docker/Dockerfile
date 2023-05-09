@@ -19,8 +19,8 @@ FROM bigomics/omicsplayground-base:ub2204
 ENV DEBIAN_FRONTEND noninteractive
 
 #RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-RUN apt update && apt install -y locales \
-    librsvg2-dev
+#RUN apt update && apt install -y locales \
+#    librsvg2-dev
 
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -30,11 +30,10 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN R -e "devtools::install_github('m-jahn/fluctuator')"
-RUN R -e "BiocManager::install(c('SBGNview','org.Hs.eg.db','DeMixT'))"
-RUN R -e "install.packages(c('svgPanZoom'))"
-RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
-# RUN pip3 install umap-learn
+#RUN R -e "devtools::install_github('m-jahn/fluctuator')"
+#RUN R -e "BiocManager::install(c('SBGNview','org.Hs.eg.db','DeMixT'))"
+#RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
+#RUN pip3 install umap-learn
 
 #------------------------------------------------------------
 # Install fresh playdata (this skips dependencies...)
