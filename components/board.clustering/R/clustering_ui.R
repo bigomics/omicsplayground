@@ -85,33 +85,39 @@ ClusteringInputs <- function(id) {
   )
 }
 
+
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800 ## full height of page
-  rowH  <- 350
+  board_info = "The Clustering Board performs unsupervised clustering analysis. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects."
 
-  fullH <- "80vh" ## full height of full page
+  rowH  <- 350
   rowH  <- "40vh"
+  fullH = "calc(100vh - 183px)"
 
   div(
     class = "row",
     ## h4("Cluster Samples"),
     boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
+    bs_alert(board_info),
     div(
       class = "col-md-7",
       shiny::tabsetPanel(
         id = ns("tabs1"),
         shiny::tabPanel(
           "Heatmap",
-          clustering_plot_splitmap_ui(
-            id = ns("splitmap"),
-            label = "a",
-            title = "Clustered Heatmap",
-            caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
-            info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
-            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
-            width = "100%"
+          bslib::layout_column_wrap(
+              height = fullH,
+              width = 1,
+              clustering_plot_splitmap_ui(
+                  id = ns("splitmap"),
+                  label = "a",
+                  title = "Clustered Heatmap",
+                  caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
+                  info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,specific - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
+                  height = c("calc(100vh - 270px)", TABLE_HEIGHT_MODAL),
+                  width = "100%"
+              )
           )
         ),
         shiny::tabPanel(
@@ -122,7 +128,7 @@ ClusteringUI <- function(id) {
             info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis ( PCA), t-distributed stochastic embedding ( tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
             caption = "Clustering plot of the dataset samples.",
             label = "",
-            height = c("calc(100vh - 183px)", TABLE_HEIGHT_MODAL),
+            height = c(fullH, TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             parent = ns
           )
@@ -195,7 +201,7 @@ ClusteringUI <- function(id) {
           clustering_plot_featurerank_ui(
             id = ns("clust_featureRank"),
             title = "Feature-set ranking",
-            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
+            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminative power of the feature set (or gene family) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
             caption = "Ranked discriminant score for top feature sets.",
             label = "",
             height = c(fullH, TABLE_HEIGHT_MODAL),

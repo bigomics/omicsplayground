@@ -100,8 +100,11 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
       }
       observeEvent(input$download_pgx, { rl$download_pgx <- input$download_pgx })
       observeEvent(input$download_zip, { rl$download_zip <- input$download_zip })
-      observeEvent(input$share_pgx, { rl$share_pgx <- input$share_pgx })
-      observeEvent(input$delete_pgx, { rl$delete_pgx <- input$delete_pgx;})
+      observeEvent(input$share_pgx, { rl$share_pgx <- input$share_pgx },
+                   ignoreInit = TRUE)
+      observeEvent(input$delete_pgx, {
+          rl$delete_pgx <- input$delete_pgx;
+      }, ignoreInit = TRUE)
 
       df$actions <- menus
       colnames(df)[ncol(df)] <- ' '

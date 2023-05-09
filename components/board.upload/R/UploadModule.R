@@ -148,18 +148,18 @@ UploadModuleServer <- function(id,
           shiny::showTab("tabs", "Contrasts")
           shiny::showTab("tabs", "Compute")
           if (input$advanced_mode) {
-            shiny::showTab("tabs", "Normalize")
+            #shiny::showTab("tabs", "Normalize")
             shiny::showTab("tabs", "BatchCorrect")
           }
         } else if (all(has.upload(need2))) {
           if (input$advanced_mode) {
-            shiny::showTab("tabs", "Normalize")
+            #shiny::showTab("tabs", "Normalize")
             shiny::showTab("tabs", "BatchCorrect")
           }
           shiny::showTab("tabs", "Contrasts")
           shiny::hideTab("tabs", "Compute")
         } else {
-          shiny::hideTab("tabs", "Normalize")
+          #shiny::hideTab("tabs", "Normalize")
           shiny::hideTab("tabs", "BatchCorrect")
           shiny::hideTab("tabs", "Contrasts")
           shiny::hideTab("tabs", "Compute")
@@ -171,10 +171,10 @@ UploadModuleServer <- function(id,
 
       shiny::observeEvent(input$advanced_mode, {
         if (input$advanced_mode) {
-          shiny::showTab("tabs", "Normalize") ## NOT YET!!!
+          #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
           shiny::showTab("tabs", "BatchCorrect")
         } else {
-          shiny::hideTab("tabs", "Normalize")
+          #shiny::hideTab("tabs", "Normalize")
           shiny::hideTab("tabs", "BatchCorrect")
         }
       })
@@ -526,11 +526,11 @@ UploadModuleServer <- function(id,
       ## =====================================================================
 
       ## correctedX <- shiny::reactive({
-      normalized_counts <- NormalizeCountsServerRT(
-        id = "normalize",
-        counts = shiny::reactive(uploaded$counts.csv),
-        height = height
-      )
+      #normalized_counts <- NormalizeCountsServerRT(
+      #  id = "normalize",
+      #  counts = shiny::reactive(uploaded$counts.csv),
+      #  height = height
+      #)
 
       ## correctedX <- shiny::reactive({
       correctedX <- BatchCorrectServer(

@@ -100,13 +100,15 @@ clustering_plot_splitmap_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    plotlib = c("plotly", "base"),
     info.text,
     caption,
     options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    cards = TRUE,
+    card_names = c("Dynamic", "Static")
   )
 }
 
@@ -346,15 +348,23 @@ clustering_plot_splitmap_server <- function(id,
       return(plt)
     }
 
-    PlotModuleServer(
-      "pltmod",
-      plotlib = "plotly",
-      func = hm2_splitmap.RENDER,
-      csvFunc = plot_data_hm1,
-      res = c(80, 95), ## resolution of plots
-      pdf.width = 10, pdf.height = 8,
-      add.watermark = watermark
-    )
+    plot_grid <- list(
+      list(plotlib = "plotly", func = hm2_splitmap.RENDER, card = 1),
+      list(plotlib = "base", func = hm1_splitmap.RENDER, card = 2)
+)
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "pltmod",
+        plotlib = x$plotlib,
+        func = x$func,
+        csvFunc = plot_data_hm1,
+        res = c(80, 95), # resolution of plots
+        pdf.width = 10, pdf.height = 8,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
 
     return(list(
       hm_ntop = shiny::reactive(input$hm_ntop),

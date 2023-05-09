@@ -247,8 +247,6 @@ FeatureMapBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # Gene Map
 
     featuremap_plot_gene_map_server(

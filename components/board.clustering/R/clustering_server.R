@@ -8,24 +8,17 @@ ClusteringBoard <- function(id, pgx) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
 
-    clust_infotext <- paste("
-The <strong>Clustering Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
-
-<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ", a_MSigDB, ", ", a_KEGG, " and ", a_GO, ". The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ", a_PCA, " or ", a_tSNE, ' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot.
-
-<br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups.
-
-<br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/hyDEk_MCaTk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
-
-')
+    clust_infotext =
+      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/hyDEk_MCaTk"
+       title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+       encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Clustering Board</strong>"),
         shiny::HTML(clust_infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE, size = "xl"
       ))
     })
 
@@ -641,7 +634,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       getTopMatrix = getTopMatrix,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_clustpca_server("PCAplot",
@@ -650,7 +643,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
       hm_clustmethod = shiny::reactive(input$hm_clustmethod),
-      watermark = FALSE,
+      watermark = WATERMARK,
       parent = ns
     )
 
@@ -658,7 +651,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       id = "parcoord",
       parcoord.matrix = parcoord.matrix,
       getTopMatrix = getTopMatrix,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_phenoplot_server(
@@ -666,7 +659,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustering_plot_featurerank_server(
@@ -675,14 +668,14 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       hm_level = shiny::reactive(input$hm_level),
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_samplefilter = shiny::reactive(input$hm_samplefilter),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clusterannot <- clustering_plot_clusterannot_server(
       id = "plots_clustannot",
       pgx,
       getClustAnnotCorrelation = getClustAnnotCorrelation,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # tables ##########
@@ -691,7 +684,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
       getClustAnnotCorrelation = getClustAnnotCorrelation,
       xann_level = clusterannot$xann_level,
       scrollY = "calc(40vh - 236px)",
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     clustannot_caption <- "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."

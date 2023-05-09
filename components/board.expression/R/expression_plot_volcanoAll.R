@@ -200,7 +200,7 @@ expression_plot_volcanoAll_server <- function(id,
       plotlib = "grid",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
-      ## csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
