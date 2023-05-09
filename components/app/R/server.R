@@ -196,7 +196,7 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        x <- list(
+        x <- tagList(
             bigdash::bigTabItem(
                 "dataview-tab",
                 DataViewInputs("dataview"),
@@ -288,14 +288,12 @@ app_server <- function(input, output, session) {
                 UserUI("user")
             )
         )
-        for (xx in x) {
-            shiny::insertUI(
-                selector = '#big-tabs',
-                where = 'beforeEnd',
-                ui = xx,
-                immediate = TRUE
-            )
-        }
+        shiny::insertUI(
+            selector = '#big-tabs',
+            where = 'beforeEnd',
+            ui = x,
+            immediate = TRUE
+        )
 
         # this is a function - like "handleSettings()" in bigdash- needed to
         # make the settings sidebar show up for the inserted tabs
@@ -310,7 +308,8 @@ app_server <- function(input, output, session) {
       $(settings).appendTo('#settings-content');
     });"
         )
-
+        bigdash.selectTab(session, selected = 'dataview-tab')
+        bigdash.openSettings()
         shiny::withProgress(message="Preparing your dashboards...", value=0, {
 
 
