@@ -297,6 +297,8 @@ app_server <- function(input, output, session) {
             )
         }
 
+        # this is a function - like "handleSettings()" in bigdash- needed to
+        # make the settings sidebar show up for the inserted tabs
         shinyjs::runjs(
             "  $('.big-tab')
     .each((index, el) => {
