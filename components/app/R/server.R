@@ -198,6 +198,16 @@ app_server <- function(input, output, session) {
 
         x <- list(
             bigdash::bigTabItem(
+                "dataview-tab",
+                DataViewInputs("dataview"),
+                DataViewUI("dataview")
+            ),
+            bigdash::bigTabItem(
+                "clustersamples-tab",
+                ClusteringInputs("clustersamples"),
+                ClusteringUI("clustersamples")
+            ),
+            bigdash::bigTabItem(
                 "clusterfeatures-tab",
                 FeatureMapInputs("clusterfeatures"),
                 FeatureMapUI("clusterfeatures")

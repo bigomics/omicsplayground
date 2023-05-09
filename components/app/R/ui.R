@@ -489,16 +489,6 @@ app_ui <- function() {
                     "upload-tab",
                     # UploadInputs("upload"),
                     UploadUI("upload")
-                ),
-                bigdash::bigTabItem(
-                    "dataview-tab",
-                    DataViewInputs("dataview"),
-                    DataViewUI("dataview")
-                ),
-                bigdash::bigTabItem(
-                    "clustersamples-tab",
-                    ClusteringInputs("clustersamples"),
-                    ClusteringUI("clustersamples")
                 )
             ),
             tagList(footer),
