@@ -42,22 +42,32 @@ RUN apt install -y r-base r-base-dev r-recommended
 # Install R packages that are required
 #------------------------------------------------------------
 
-## add auto detected packages -------------------------------
+## playbase -------------------------------
 FROM os-base AS r-base1
+WORKDIR /
+RUN echo Downloading Playbase
+RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
+    && rm -fr /playbase-main  \
+    && unzip main.zip \
+    && rm main.zip        
+
+WORKDIR /playbase-main
+RUN Rscript dev/requirements.R
+## RUN R CMD INSTALL . 
+
+## omicsplayground ------------------------------
+FROM r-base1 AS r-base2
 WORKDIR /
 RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
 WORKDIR /omicsplayground
-#COPY build /omicsplayground/build
-COPY dev /omicsplayground/dev
 COPY components /omicsplayground/components
-COPY extdata/packages /omicsplayground/extdata/packages
-RUN R -e "source('dev/requirements.R')"
+COPY dev /omicsplayground/dev
+RUN Rscript dev/requirements.R
 
 ## add any missing packages manually------------------------
-FROM r-base1 AS r-base2
+FROM r-base2 AS r-base3
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
-#RUN R -e "BiocManager::install('KEGGgraph')"
 #RUN R -e "install.packages(c('RSpectra'))"
 #RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz', type='source', force=TRUE)"
 #RUN R -e "install.packages('reticulate');library(reticulate);install_miniconda(force=TRUE);conda_install('r-reticulate','python-kaleido');conda_install('r-reticulate','plotly',channel='plotly');use_miniconda('r-reticulate')"
