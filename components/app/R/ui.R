@@ -40,6 +40,7 @@ app_ui <- function() {
             shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
             shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
             shinyjs::useShinyjs(),
+            waiter::use_waiter(),
             sever::useSever(),
             bigLoaders::addBigLoaderDeps(),
             firebase::useFirebase(firestore = TRUE, analytics = TRUE),

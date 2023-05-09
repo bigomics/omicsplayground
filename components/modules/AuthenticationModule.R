@@ -12,7 +12,7 @@ NoAuthenticationModule <- function( id,
                                    username = "",
                                    email = "") {
   shiny::moduleServer( id, function(input, output, session) {
-    
+
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -279,7 +279,15 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         resetUSER()
     })
 
+
+    email_waiter <- waiter::Waiter$new(
+        id = ns("emailSubmit"),
+        html = spin_3(),
+        color = transparent(.5)
+    )
+
     observeEvent( input$emailSubmit, {
+        email_waiter$show()
         if(input$emailInput == ""){
             session$sendCustomMessage(
                 "email-feedback",
@@ -300,7 +308,7 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
           resetUSER()
           return()
         }
-        
+
         is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",input$emailInput)
         if(TRUE && is_personal_email) {
           shinyalert::shinyalert("We're sorry...","No personal email allowed. Please log in with your business, academic or institutional email.")
@@ -317,6 +325,7 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
             )
         )
         firebase2$send_email(input$emailInput)
+        email_waiter$hide()
     })
 
     observeEvent( firebase$get_signed_in(), {
@@ -347,7 +356,7 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
           USER$logged <- FALSE
           return(NULL)
         }
-        
+
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
@@ -521,7 +530,14 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         resetUSER()
     })
 
+    email_waiter <- waiter::Waiter$new(
+        id = ns("emailSubmit"),
+        html = spin_3(),
+        color = transparent(.5)
+    )
+
     observeEvent( input$emailSubmit, {
+        email_waiter$show()
         if(input$emailInput == ""){
             session$sendCustomMessage(
                 "email-feedback",
@@ -539,7 +555,7 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         authorized <- grepl("@bigomics.ch$",input$emailInput)
         if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
-          resetUSER()          
+          resetUSER()
           return()
         }
 
@@ -552,7 +568,7 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
           shiny::updateTextInput(session, "emailInput", value="")
           return()
         }
-        
+
         ## >>> OK let's send auth request
         session$sendCustomMessage(
             "email-feedback",
@@ -561,7 +577,10 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
                 msg = "Email sent, check your inbox."
             )
         )
+
         firebase2$send_email(input$emailInput)
+
+        email_waiter$hide()
     })
 
     observeEvent( firebase$get_signed_in(), {
@@ -590,10 +609,10 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
           USER$logged <- FALSE
-          resetUSER()          
+          resetUSER()
           return(NULL)
         }
-        
+
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
@@ -628,7 +647,7 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
 
 credentials.file='CREDENTIALS'
 PasswordAuthenticationModule <- function(id, credentials.file) {
-  shiny::moduleServer( id, function(input, output, session) {  
+  shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns
@@ -805,7 +824,7 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 }
 
 splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
-                             with.username=FALSE, 
+                             with.username=FALSE,
                              with.firebase=FALSE,
                              with.firebase_emailonly=FALSE,
                              login.text="Login", alt=NULL)
