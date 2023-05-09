@@ -330,7 +330,7 @@ app_ui <- function() {
                     ),
                     bigdash::navbarDropdownItem(
                         "Case studies",
-                        link = "https://bigomics.ch/category/case-study/",
+                        link = "https://bigomics.ch/blog/category/case-study/",
                         target = "_blank"
                     )
                 ),
