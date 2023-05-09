@@ -55,13 +55,11 @@ PlotModuleUI <- function(id,
                        card_names = NULL
                        )
 {
-    require(magrittr)
     ns <- shiny::NS(id)
 
     if(is.null(plotlib2)) plotlib2 <- plotlib
     if(length(height)==1) height <- c(height,800)
     if(length(width)==1)  width  <- c(width,"100%")
-
 
     ifnotchar.int <- function(s) suppressWarnings(
         ifelse(!is.na(as.integer(s)), paste0(as.integer(s),"px"), s))
@@ -185,13 +183,12 @@ PlotModuleUI <- function(id,
           label = "Format",
           choices = download.fmt
         ),
-        shiny::conditionalPanel(
-          condition = "input.downloadOption == 'pdf' || input.downloadOption == 'png'",
-          ns = ns,
-          shiny::div(
-            pdf_size,
-            shiny::br()
-          )
+        div(
+            id = ns('pdf_size_panel'),
+            shiny::div(
+                pdf_size,
+                shiny::br()
+            )
         ),
         download_buttons,
       ),
@@ -437,6 +434,14 @@ PlotModuleServer <- function(
       function(input, output, session) {
 
           ns <- session$ns
+
+          observeEvent(input$downloadOption, {
+              if (!input$downloadOption %in% c('pdf', 'png')) {
+                  shinyjs::hide('pdf_size_panel')
+              } else {
+                  shinyjs::show('pdf_size_panel')
+              }
+          }, ignoreInit = TRUE)
 
           ##--------------------------------------------------------------------------------
           ##------------------------ Plotly editor------------------------------------------
