@@ -82,9 +82,11 @@ tags:
 	git push && git push --tags
 
 push.latest: 
-	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:latest
-	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:$(VERSION)
+	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:latest
 	docker push bigomics/omicsplayground:latest
+
+push.version: 
+	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
 BOARD = dataview
