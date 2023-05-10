@@ -22,13 +22,22 @@ biomarker_plot_heatmap_ui <- function(
   width) {
   ns <- shiny::NS(id)
   
+  plot_options <- tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_all"), "show all samples", value = FALSE
+      ), "Show all samples or only selected.",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
     plotlib = "base",
     caption = caption,
     info.text = info.text,
-    options = NULL,
+    options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -50,6 +59,8 @@ biomarker_plot_heatmap_server <- function(id,
                                           watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
+      ## return data structure for plots  
       plot_data <- shiny::reactive({
         shiny::req(pgx)
 
@@ -61,8 +72,12 @@ biomarker_plot_heatmap_server <- function(id,
 
         gg <- rownames(res$X)
         gg <- intersect(gg, rownames(pgx$X))
-        X <- pgx$X[gg, ]
-
+        if(input$show_all) {
+            kk <- colnames(pgx$X)
+        } else {
+            kk <- colnames(res$X)
+        }
+        X <- pgx$X[gg,kk]
         X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
 
         splitx <- NULL

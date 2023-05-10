@@ -22,11 +22,21 @@ biomarker_plot_boxplots_ui <- function(
   width) {
   ns <- shiny::NS(id)
   
+  plot_options <- tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_all"), "show all samples", value = FALSE
+      ), "Show all samples or only selected.",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
     plotlib = "base",
     info.text = info.text,
+    ##    options = plot_options,
     options = NULL,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
@@ -48,20 +58,11 @@ biomarker_plot_boxplots_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
+
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
-
-        res <- list(
-          res = res
-        )
-        return(res)
-      })
-
-      plot.RENDER <- function() {
-        res <- plot_data()
-        shiny::req(res)
-        res <- res$res
 
         vars <- setdiff(res$rf$frame$var, "<leaf>")
         vars <- res$rf$orig.names[vars]
@@ -87,7 +88,25 @@ biomarker_plot_boxplots_server <- function(id,
           table(y)
         }
 
+        ## vars, X, y
+        pdata <- list(
+            X = res$X,
+            vars = vars,
+            y = y
+        )
+        return(pdata)
+      })
+
+      plot.RENDER <- function() {
+        pdata <- plot_data()
+        shiny::req(pdata)
+
+        ## vars, X, y
+        X <- pdata$X
+        vars <- pdata$vars
+        y <- pdata$y
         ny <- length(unique(y))
+
         par(
           mfrow = c(2, 4), mar = c(3.0, 3.0, 1.5, 0.5),
           mgp = c(1.6, 0.6, 0), oma = c(0.5, 0.5, 0.5, 0.5) * 0
@@ -96,10 +115,14 @@ biomarker_plot_boxplots_server <- function(id,
         i <- 1
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]
-          gx <- res$X[g, ]
-          boxplot(gx ~ y,
-            col = "grey85", ylim = range(gx),
-            ylab = "expression", xlab = "", cex.axis = 0.001
+          gx <- X[g, ]
+          boxplot(
+            gx ~ y,
+            col = "grey85",
+            ylim = range(gx),
+            ylab = "expression",
+            xlab = "",
+            cex.axis = 0.001
           )
           axis(2, cex.axis = 0.9)
 
@@ -129,7 +152,7 @@ biomarker_plot_boxplots_server <- function(id,
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        csvFunc = plot_data,
+        ## csvFunc = plot_data,
         res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
         add.watermark = watermark
