@@ -64,18 +64,21 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
             F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
             F <- as.matrix(F[, -1], rownames = F[[1]])
 
-            ## !!! Make this fast as possible...
+            ## 1: Make this fast as possible!!! (IK)
+            ## 2: Should we calculate few layouts/methods?
+            
             F[is.na(F)] <- 0 ## really??
             ##F <- apply(F, 2, rank, na.last = "keep")
-            F <- scale(F)
+            F <- scale(F) / sqrt(nrow(F)-1)
             ##system.time( corF <- cor(F) ) ## fast
-            system.time( corF <- playbase::fastcor(F) )
+            ## system.time( corF <- playbase::fastcor(F) )
             ##system.time( corF <- cor(F, use = "pairwise") ) ## slow...             
-            ## system.time( corF <- Rfast::Crossprod( F[,], F[,])) ## not working??
+            system.time( corF <- Rfast::Crossprod(F,F)) ## not working??
             ## system.time( corF <- Rfast::mat.mult( t(F), F))  ## not working??
+
             px <- max(min(30, floor(ncol(corF) / 4)), 1)
-            
-            pos <- try( Rtsne::Rtsne(1 - abs(corF),
+            distF <- max(abs(corF)) - abs(corF)
+            pos <- try( Rtsne::Rtsne( distF,
               perplexity = px,
               check_duplicates = FALSE,
               is_distance = TRUE
@@ -84,7 +87,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
             ##plot(pos)
             
             if("try-error" %in% class(pos)) {
-              pos <- svd(corF)$u[,1:2]
+              pos <- svd(distF)$u[,1:2]
               rownames(pos) <- colnames(F)
             }
             
