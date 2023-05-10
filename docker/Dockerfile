@@ -19,8 +19,8 @@ FROM bigomics/omicsplayground-base:ub2204
 ENV DEBIAN_FRONTEND noninteractive
 
 #RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-#RUN apt update && apt install -y locales \
-#    librsvg2-dev
+RUN apt update && apt install -y locales \
+    librsvg2-dev libgsl-dev
 
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -34,7 +34,7 @@ WORKDIR /
 #RUN R -e "devtools::install_github('m-jahn/fluctuator')"
 #RUN R -e "BiocManager::install(c('iheatmapr'))"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-#RUN R -e "install.packages('extdata/packages/pathview_1.16.7.tar.gz')"
+RUN R -e "install.packages(c('RcppZiggurat','Rfast'))"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
