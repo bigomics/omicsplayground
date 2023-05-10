@@ -89,10 +89,10 @@ biomarker_plot_boxplots_server <- function(id,
 
         ny <- length(unique(y))
         par(
-          mfrow = c(2, 4), mar = c(3.5, 3, 2, 0.5),
-          mgp = c(2, 0.8, 0), oma = c(0.5, 1, 1, 1) * 0
+          mfrow = c(2, 4), mar = c(3.0, 3.0, 1.5, 0.5),
+          mgp = c(1.6, 0.6, 0), oma = c(0.5, 0.5, 0.5, 0.5) * 0
         )
-        if (length(vars) > 8) par(mfrow = c(3, 4), mar = c(2.8, 3, 2, 0.3))
+        if (length(vars) > 8) par(mfrow = c(3, 4), mar = c(2.8, 3, 2, 0.3)*0.7)
         i <- 1
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]

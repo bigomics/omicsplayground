@@ -17,6 +17,13 @@ BiomarkerInputs <- function(id) {
         placement = "top"
       ),
       withTooltip(
+        shiny::selectInput(ns("pdx_samplefilter"), "Filter samples:",
+          choices = NULL, multiple = TRUE
+        ),
+        "Filter samples for the analysis.",
+        placement = "top"
+      ),
+      withTooltip(
         shiny::selectInput(ns("pdx_filter"), "Feature filter:",
           choices = NULL
         ),
