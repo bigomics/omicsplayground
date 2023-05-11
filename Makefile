@@ -32,8 +32,12 @@ docker.run:
 	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
 docker.run2:
-	@echo running docker $(TAG) at port 4001
-	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(TAG)
+	@echo running docker $(TAG) at port 4000
+	docker run --rm -it -p 4000:3838 \
+		-v ~/Playground/pgx:/omicsplayground/data \
+		-v ~/Playground/libx:/omicsplayground/libx \
+		-v ~/Playground/config/firebase:/omicsplayground/components/app/R/firebase \
+		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE tag.version
 	@echo building docker $(BRANCH)
