@@ -282,8 +282,8 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
 
     email_waiter <- waiter::Waiter$new(
         id = ns("emailSubmit"),
-        html = spin_3(),
-        color = transparent(.5)
+        html = waiter::spin_3(),
+        color = waiter::transparent(.5)
     )
 
     observeEvent( input$emailSubmit, {
@@ -532,8 +532,8 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
 
     email_waiter <- waiter::Waiter$new(
         id = ns("emailSubmit"),
-        html = spin_3(),
-        color = transparent(.5)
+        html = waiter::spin_3(),
+        color = waiter::transparent(.5)
     )
 
     observeEvent( input$emailSubmit, {
