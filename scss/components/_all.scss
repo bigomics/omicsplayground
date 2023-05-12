@@ -8,7 +8,7 @@ html {
       font-size: 14px;
 /*    font-family: "Cubano"; */
   }
-  
+
   .content {
     min-height: 800px;
   }
@@ -35,7 +35,7 @@ html {
 
   .tabbable .nav-tabs {
     padding: 0px;
-    margin: 5px 0px 20px 10px;
+    margin: 5px 0px 20px 0px;
     border-radius: 0px;
     font-size: 18px;
   }
@@ -80,9 +80,9 @@ html {
 
   .gene-info {
     font-size: 0.9em;
-    line-height: 1.1em;  
+    line-height: 1.1em;
   }
-  
+
   .bg-cover-image {
     background-color: #dde6f0;
     background-color: #fff;
@@ -124,13 +124,13 @@ html {
     line-height: 1.1em;
     // padding: 0rem 0.3rem 0.3rem 0.6rem;
     margin: 6px 4px 3px 6px;
-    
+
     // https://stackoverflow.com/questions/33058004/applying-an-ellipsis-to-multiline-text
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    
+
   }
 
   .caption2 {
@@ -251,7 +251,7 @@ html {
   div#navheader-current-section {
     font-size: 30px;
     font-weight: 400;
-    margin: 15px 0 5px 10px;
+    margin: 15px 0 5px 0px;
   }
 
   div#navheader-dataset-stats {
