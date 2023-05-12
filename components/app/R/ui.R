@@ -489,6 +489,11 @@ app_ui <- function() {
                     "upload-tab",
                     # UploadInputs("upload"),
                     UploadUI("upload")
+                ),
+                bigdash::bigTabItem(
+                    "userSettings",
+                    UserInputs("user"),
+                    UserUI("user")
                 )
             ),
             tagList(footer),

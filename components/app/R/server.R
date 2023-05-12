@@ -281,11 +281,6 @@ app_server <- function(input, output, session) {
                 "cell-tab",
                 SingleCellInputs("cell"),
                 SingleCellUI("cell")
-            ),
-            bigdash::bigTabItem(
-                "userSettings",
-                UserInputs("user"),
-                UserUI("user")
             )
         )
         shiny::insertUI(
