@@ -306,6 +306,7 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
           resetUSER()
+          email_waiter$hide()
           return()
         }
 
@@ -313,6 +314,7 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         if(TRUE && is_personal_email) {
           shinyalert::shinyalert("We're sorry...","No personal email allowed. Please log in with your business, academic or institutional email.")
           shiny::updateTextInput(session, "emailInput", value="")
+          email_waiter$hide()
           return()
         }
 
@@ -556,6 +558,7 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         if(FALSE && !authorized) {
           shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
           resetUSER()
+          email_waiter$hide()
           return()
         }
 
@@ -566,6 +569,7 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         if(TRUE && is_personal_email && new_user) {
           shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
           shiny::updateTextInput(session, "emailInput", value="")
+          email_waiter$hide()
           return()
         }
 
