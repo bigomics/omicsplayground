@@ -1,12 +1,16 @@
 body {
     // font-family: Arial;
     font-size: 14px;
-    font-weight: 400;    
+    font-weight: 400;
+}
+
+.alert {
+    margin-bottom: 0 !important;
 }
 
 .tooltip-inner {
-  background-color: #e0e0e0FF; 
-  color: #3f3f3fFF; 
+  background-color: #e0e0e0FF;
+  color: #3f3f3fFF;
   border: 1px solid #9f9f9fFF;
   opacity: 1;
 }
@@ -17,7 +21,7 @@ body {
   border: 1px solid #e0e0e0;
 }
 
-code { 
+code {
   color: #1f1f1fFF;
   background-color: #F9F9F9FF;
   font-weight: 400;
@@ -41,7 +45,7 @@ code {
 .gene-info-output {
     font-size: 0.9em;
     background-color: #dde6f0BB;
-    padding: 10px 10px 10px 10px;    
+    padding: 10px 10px 10px 10px;
 }
 
 .action-text #sig_example1 #sig_example2 #sig_example3 {
@@ -55,16 +59,16 @@ code {
 
 @keyframes blinking {
     0%{
-	background-color: #1967be;	
+	background-color: #1967be;
         border: #2244AA;
     }
     50%{
         background-color: #2244AA;
-	border: #1967be;		
+	border: #1967be;
     }
     100%{
 	background-color: #1967be;
-        border: #2244AA;	
+        border: #2244AA;
     }
 }
 
@@ -80,7 +84,7 @@ code {
     background-color: #0067c4FF;
 }
 
-    
+
 .datatables {
     font-size: 12px; line-height: '70%';
 }
@@ -158,13 +162,13 @@ code {
 #plot-container {
     position: relative;
 }
-#loading-spinner {    
+#loading-spinner {
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: -1;
     margin-top: -33px;  /* half of the spinner's height */
-    margin-top: 150px;  /* half of the spinner's height */    
+    margin-top: 150px;  /* half of the spinner's height */
     margin-left: -33px; /* half of the spinner's width */
 }
 #plot.recalculating {
