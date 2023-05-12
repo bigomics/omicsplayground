@@ -8,6 +8,19 @@ UserBoard <- function(id, user) {
     ns <- session$ns ## NAMESPACE
     dbg("[UserBoard] >>> initializing UserBoard...")
 
+    shiny::observeEvent(input$board_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>User Profile</strong>"),
+            shiny::HTML(
+                'The User Profile page allows you to change overall settings
+                that will alter how the app looks, to view and change your
+                subscription plan, and to view the latest news about application
+                development.'
+            ),
+            easyClose = TRUE, size = "l"
+        ))
+    })
+
     observeEvent(user$logged(), {
       if (!user$logged()) {
         return()
