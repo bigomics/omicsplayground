@@ -5,48 +5,57 @@
 
 UserInputs <- function(id) {
   ns <- shiny::NS(id)
-  bigdash::tabSettings(
-    shiny::uiOutput(ns("description"))
-  )
+  bigdash::tabSettings()
 }
 
 UserUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  shiny::fillCol(
-    height = 750,
-    shiny::tabsetPanel(
-      id = ns("tabs"),
-      shiny::tabPanel(
-        "User settings",
-        fillRow(
-          flex = c(0.8, 0.2, 1, 0.2, 1),
-          tagList(
-            shiny::h4("News"),
-            shiny::htmlOutput(ns("news"))
-          ), br(),
-          tagList(
-            shiny::h4("Personal"),
-            uiOutput(ns("plan")),
-            shiny::tableOutput(ns("userdata"))
-          ), br(),
-          tagList(
-            shiny::h4("Settings"),
-            shinyWidgets::prettySwitch(ns("enable_beta"), "enable beta features")
+
+  div(
+      class = "row",
+      boardHeader(title = "Profile", info_link = ns("board_info")),
+      div(
+          class = "col-md-7",
+          shiny::tabsetPanel(
+              id = ns("tabs1"),
+              shiny::tabPanel(
+                  "App Settings",
+                  bslib::layout_column_wrap(
+                      height = "calc(100vh - 183px)",
+                      width = 1,
+                      tagList(
+                          shinyWidgets::prettySwitch(ns("enable_beta"), "enable beta features")
+                      )
+                  )
+              ),
+              shiny::tabPanel(
+                  "Subscription",
+                  bslib::layout_column_wrap(
+                      height = "calc(100vh - 183px)",
+                      width = 1,
+                      tagList(
+                          shiny::h4("Personal"),
+                          uiOutput(ns("plan")),
+                          shiny::tableOutput(ns("userdata"))
+                      )
+                  )
+              )
           )
-        )
+      ),
+      div(
+          class = "col-md-5",
+          shiny::tabsetPanel(
+              id = ns("tabs2"),
+              shiny::tabPanel(
+                  "News",
+                  bslib::layout_column_wrap(
+                      height = "calc(100vh - 183px)",
+                      width = 1,
+                      shiny::htmlOutput(ns("news"))
+                  )
+              )
+          )
       )
-      # Currently not used Stefan 22.03.22
-      # shiny::tabPanel("Visitors map",
-      #     shiny::fillCol(
-      #         height = 600,
-      #         shiny::fillRow(
-      #             flex = c(1,4.5),
-      #             shiny::wellPanel( shiny::uiOutput(ns("usersmapInfo"))),
-      #             plotWidget(ns("usersmap"))
-      #         )
-      #     )
-      # )
-      # shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
-    )
   )
+
 }
