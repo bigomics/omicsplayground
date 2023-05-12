@@ -57,7 +57,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos)) {
-
+        dbg("[loading_tsne_server] Calculating signature similarities...")
+        
         shiny::withProgress(
           message = "Calculating signature similarities...", value = 0.33, {
 
@@ -69,17 +70,19 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
             
             F[is.na(F)] <- 0 ## really??
             ##F <- apply(F, 2, rank, na.last = "keep")
-            F <- scale(F) / sqrt(nrow(F)-1)
-            ##system.time( corF <- cor(F) ) ## fast
-            ## system.time( corF <- playbase::fastcor(F) )
-            ##system.time( corF <- cor(F, use = "pairwise") ) ## slow...             
-            system.time( corF <- Rfast::Crossprod(F,F)) ## not working??
-            ## system.time( corF <- Rfast::mat.mult( t(F), F))  ## not working??
-
-            px <- max(min(30, floor(ncol(corF) / 4)), 1)
-            distF <- max(abs(corF)) - abs(corF)
+            ##F <- scale(F) / sqrt(nrow(F)-1)
+            F <- t(t(F) / ( sqrt(colSums(F**2,na.rm=TRUE))) + 1e-8)
+            F[is.na(F)] <- 0 ## really??
+            system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
+            corF <- abs(corF) ## negative corr is also good...
+            ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
+            corF[is.na(corF)] <- 0
+            distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]
+            
+            ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
+            dbg("[loading_tsne_server] perplexity = ",ppx)
             pos <- try( Rtsne::Rtsne( distF,
-              perplexity = px,
+              perplexity = ppx,
               check_duplicates = FALSE,
               is_distance = TRUE
               )$Y )
