@@ -7,7 +7,6 @@ app_ui <- function() {
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
-    user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))
 
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {
@@ -339,7 +338,7 @@ app_ui <- function() {
                     ##"User",
                     shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
-                        "Settings",
+                        "Profile",
                         "userSettings"
                     ),
                     upgrade.tab,
