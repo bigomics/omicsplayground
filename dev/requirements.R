@@ -86,7 +86,6 @@ install.github <- function(repo, force=FALSE) {
 base.pkg = c("shiny","flexdashboard","shinydashboard", "shinyBS","systemfonts","shinyjs",
              "shinydashboardPlus",'R.utils','shinythemes',"shinybusy","shinycssloaders",
              "shinyWidgets")
-install.pkgs(base.pkg, force=FALSE)
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
@@ -94,9 +93,11 @@ install.pkgs(base.pkg, force=FALSE)
 
 ## We use renv to detect dependencies. Renv is looking for library and
 ## require statements in the r/R source files.
-renv.out <- renv::dependencies(path="components", errors="ignored")
-#head(renv.out)
+##install.packages("renv")
+cat("RENV:: building dependencies...\n")
+renv.out <- renv::dependencies(path="components", root=getwd(), errors="ignored")
 pkg.used <- unique(renv.out$Package)
+cat("RENV:: done!\n")
 
 ## These packages were not detected by renv::dependencies(). We should
 ## check if they are actually used or needed.
@@ -112,7 +113,8 @@ pkg.extra <- c(
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
-  'svgPanZoom','rhdf5','monocle','mygene'
+  'svgPanZoom','rhdf5','monocle','mygene',
+  'iheatmapr'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -128,6 +130,12 @@ pkg.later <- c(
     "mygene","diptest","edgeR","DESeq2"
   )
 
+
+##---------------------------------------------------------------------
+## start install
+##---------------------------------------------------------------------
+
+install.pkgs(base.pkg, force=FALSE)
 install.pkgs( setdiff(pkg.used,pkg.later) )
 
 length(INSTALLED.PKGS)
@@ -208,7 +216,7 @@ BIG.NOTUSED <- c(
     "BH",
     "PCSF",
     "terra",
-    "DeMixT", ## purify
+    ## "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
     ## "RSpectra",  ## ???
     ##"org.Mm.eg.db",

@@ -57,27 +57,41 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos)) {
-        dbg("[loading_tsneplot.R] recalculating tSNE positions...")
-        F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
-        F <- as.matrix(F[, -1], rownames = F[[1]])
-        dim(F)
-        ## F[is.na(F)] <- 0
-        F <- apply(F, 2, rank, na.last = FALSE)
-        corF <- cor(F, use = "pairwise") ## slow...
-        dim(corF)
-        px <- max(min(30, floor(ncol(corF) / 4)), 1)
-        dbg("[loading_tsne_server] plot_data : dim(corF) = ", dim(corF))
-        dbg("[loading_tsne_server] plot_data : px = ", px)        
-        
-        pos <- try(Rtsne::Rtsne(1 - abs(corF),
-          perplexity = px,
-          check_duplicates = FALSE, is_distance = TRUE
-        )$Y)
 
-        if("try-error" %in% class(pos)) {
-          pos <- svd(corF)$u[,1:2]
-          rownames(pos) <- colnames(F)
-        }
+        shiny::withProgress(
+          message = "Calculating signature similarities...", value = 0.33, {
+
+            F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
+            F <- as.matrix(F[, -1], rownames = F[[1]])
+
+            ## 1: Make this fast as possible!!! (IK)
+            ## 2: Should we calculate few layouts/methods?
+            
+            F[is.na(F)] <- 0 ## really??
+            ##F <- apply(F, 2, rank, na.last = "keep")
+            F <- scale(F) / sqrt(nrow(F)-1)
+            ##system.time( corF <- cor(F) ) ## fast
+            ## system.time( corF <- playbase::fastcor(F) )
+            ##system.time( corF <- cor(F, use = "pairwise") ) ## slow...             
+            system.time( corF <- Rfast::Crossprod(F,F)) ## not working??
+            ## system.time( corF <- Rfast::mat.mult( t(F), F))  ## not working??
+
+            px <- max(min(30, floor(ncol(corF) / 4)), 1)
+            distF <- max(abs(corF)) - abs(corF)
+            pos <- try( Rtsne::Rtsne( distF,
+              perplexity = px,
+              check_duplicates = FALSE,
+              is_distance = TRUE
+              )$Y )
+
+            ##plot(pos)
+            
+            if("try-error" %in% class(pos)) {
+              pos <- svd(distF)$u[,1:2]
+              rownames(pos) <- colnames(F)
+            }
+            
+        })
         
         ## pos <- umap::umap(1-corF)$layout
         pos <- round(pos, digits = 4)
