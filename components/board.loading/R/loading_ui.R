@@ -33,7 +33,7 @@ LoadingUI <- function(id) {
           HTML("Load dataset &nbsp;"),
           shiny::actionLink(
             ns("module_info"), "",
-            icon = shiny::icon("youtube"),            
+            icon = shiny::icon("youtube"),
             style = "color: #ccc;"
           )
         ),
@@ -44,10 +44,11 @@ LoadingUI <- function(id) {
       shiny::tabPanel(
         'User',
         bs_alert("This tab shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button."),
+        br(),
         div(
           class = "row",
-          div(            
-            class = "col-md-7",            
+          div(
+            class = "col-md-7",
             loading_table_datasets_ui(
               ns("pgxtable"),
               title = "Available datasets",
@@ -87,7 +88,7 @@ LoadingUI <- function(id) {
               title = "Dataset explorer",
               info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
               caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-              height = c("calc(100vh - 330px)", "70vh"),                           
+              height = c("calc(100vh - 330px)", "70vh"),
               width = c("auto",  "100%")
             )
           )
@@ -97,6 +98,7 @@ LoadingUI <- function(id) {
       shiny::tabPanel(
         'Shared',
         bs_alert("This tab shows all shared datasets. You can select a shared dataset and import that to your library for further analysis. You can also share any of your datasets to this shared folder from your library in the previous tab. Remember: sharing is caring!"),
+        br(),
         div(
           class = "row",
           div(
