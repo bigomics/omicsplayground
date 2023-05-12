@@ -101,14 +101,6 @@ UploadBoard <- function(id,
       pdir
     })
 
-    ## uploaded_pgx <- UploadModuleServer(
-    ##   id = "upload_panel",
-    ##   lib.dir = FILES,
-    ##   pgx.dirRT = shiny::reactive(getPGXDIR()),
-    ##   height = 720,
-    ##   limits = limits
-    ## )
-
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
 
