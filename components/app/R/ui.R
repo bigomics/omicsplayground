@@ -43,14 +43,11 @@ app_ui <- function() {
             sever::useSever(),
             bigLoaders::addBigLoaderDeps(),
             firebase::useFirebase(firestore = TRUE, analytics = TRUE),
-            ##shiny::div(class='label label-info current-user',id='authentication-user'),
             shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
             shinybusy::busy_start_up(
-              text = "\nPrepping your personal playground...", mode = "auto",
+              text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
               background="#2780e3", color="#ffffff",
-              loader = shiny::img(
-                src="static/ready.png"
-              )
+              loader = shinybusy::spin_epic("orbit", color = "#FFF")
             )
         )
 
