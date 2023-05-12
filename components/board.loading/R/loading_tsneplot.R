@@ -71,7 +71,10 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
             F[is.na(F)] <- 0 ## really??
             ##F <- apply(F, 2, rank, na.last = "keep")
             ##F <- scale(F) / sqrt(nrow(F)-1)
-            F <- t(t(F) / ( sqrt(colSums(F**2,na.rm=TRUE))) + 1e-8)
+            rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
+            ##F <- t(t(F) / rmsF)
+            F <- F %*% Matrix::Diagonal(x=1/rmsF)
+
             F[is.na(F)] <- 0 ## really??
             system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
             corF <- abs(corF) ## negative corr is also good...

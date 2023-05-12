@@ -139,15 +139,12 @@ LoadingBoard <- function(id,
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
         ## file.copy(from = pgx_file, to = new_pgx_file)
-        dbg("[loading_server.R:share_confirm] pgx_file = ", pgx_file)
         pgx0  <- playbase::pgx.load(pgx_file)
         unknown.creator <- pgx0$creator %in% c(NA,"","user","anonymous","unknown")
         if("creator" %in% names(pgx0) && !unknown.creator) {
           file.copy(from = pgx_file, to = new_pgx_file)
         } else {
           pgx0$creator <- session$user  ## really?
-          dbg("[loading_server.R:share_confirm] session$user = ", session$user)
-          dbg("[loading_server.R:share_confirm] creator = ", pgx0$creator)
           if(pgx0$creator %in% c(NA,"","user","anonymous","unknown"))  pgx0$creator <- "unknown"
           playbase::pgx.save(pgx0, file = new_pgx_file)
         }
@@ -316,7 +313,6 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
-      dbg("[loading_server.R:getPGXINFO] reacted!")
 
       info <- NULL
       pdir <- getPGXDIR()
@@ -345,7 +341,6 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
         return(NULL)
       }
-      dbg("[loading_server.R:getPGXINFO_SHARED] reacted!")
 
       ## update meta files
       shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
@@ -488,11 +483,9 @@ LoadingBoard <- function(id,
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
-        dbg("[loading_server.R] loading pgx file = ",pgxfile1)
         shiny::withProgress(message = "Loading PGX data...", value = 0.33, {
           pgx <- playbase::pgx.load(pgxfile1)
         })
-        dbg("[loading_server.R] loading finished")
       } else {
         warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
         return(NULL)
@@ -516,11 +509,9 @@ LoadingBoard <- function(id,
       pgxdir <- getPGXDIR()[1]
       if (dir.exists(pgxdir)) {
         file1 <- file.path(pgxdir, file)
-        dbg("[loading_server.R:savePGX] saving pgx file = ",file1)
         shiny::withProgress(message = "Saving PGX data...", value = 0.33, {
           save(pgx, file=file1)
         })
-        dbg("[loading_server.R] saving finished")
       } else {
         warning("[LoadingBoard::savePGX] ***ERROR*** dir not found : ", pgxdir)
       }
@@ -718,7 +709,6 @@ LoadingBoard <- function(id,
       }
 
       ## ----------------- update PGX object ---------------------------------
-      dbg("[loading_server.R] initializing pgx object")
       slots0 <- names(loaded_pgx)
       loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
