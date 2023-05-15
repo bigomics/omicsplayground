@@ -61,33 +61,10 @@ EnrichmentUI <- function(id) {
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Top enriched",
+      "Enriched pathways",
       bslib::layout_column_wrap(
         width = 1/2,
         style = halfH,
-        enrichment_plot_top_enrich_gsets_ui(
-          ns("topEnriched"),
-          title = "Top enriched gene sets",
-          info.text = "This plot shows the top enriched gene sets for the selected comparison in the Contrast settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group.",
-          caption = "Gene set enrichment plots of the top differentially enriched gene sets. ",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        enrichment_plot_freq_top_gsets_ui(
-          ns("topEnrichedFreq"),
-          title = "Frequency in top gene sets",
-          info.text = "The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
-          caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
-    ),
-    shiny::tabPanel(
-      "Plots",
-      bslib::layout_column_wrap(
-        width = 1/4,
-        style = halfH,        
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
           title = "Volcano plot",
@@ -96,14 +73,45 @@ EnrichmentUI <- function(id) {
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         ),
-        enrichment_plot_barplot_ui(
-          ns("subplot_barplot"),
-          title = "Enrichment barplot",
-          info.text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table I. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
-          caption = "Barplot of the selected gene set in the phenotypic groups. ",
+        enrichment_plot_top_enrich_gsets_ui(
+          ns("topEnriched"),
+          title = "Top enriched gene sets",
+          info.text = "This plot shows the top enriched gene sets for the selected comparison in the Contrast settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group.",
+          caption = "Gene set enrichment plots of the top differentially enriched gene sets. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", 900)
+          width = c("auto", "100%")
+        )
+        # enrichment_plot_freq_top_gsets_ui(
+        #   ns("topEnrichedFreq"),
+        #   title = "Frequency in top gene sets",
+        #   info.text = "The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
+        #   caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
+        #   height = c("100%", TABLE_HEIGHT_MODAL),
+        #   width = c("auto", "100%")
+        # )
+      )
+    ),
+    shiny::tabPanel(
+      "Genes by pathway",
+      bslib::layout_column_wrap(
+        width = 1/4,
+        style = halfH,
+        enrichment_table_genes_in_geneset_ui(
+          ns("genetable"),
+          title = "Genes present in gene sets",
+          info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
+          caption = "Table showing the fold-change, statistics and correlation of the genes overlapping all selected gene sets.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
         ),
+        # enrichment_plot_barplot_ui(
+        #   ns("subplot_barplot"),
+        #   title = "Enrichment barplot",
+        #   info.text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table I. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+        #   caption = "Barplot of the selected gene set in the phenotypic groups. ",
+        #   height = c("100%", TABLE_HEIGHT_MODAL),
+        #   width = c("auto", 900)
+        # ),
         enrichment_plot_geneplot_ui(
           ns("subplot_geneplot"),
           title = "Expression geneplot",
@@ -183,15 +191,15 @@ EnrichmentUI <- function(id) {
           caption = "Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
-        ),
-        enrichment_table_genes_in_geneset_ui(
-          ns("genetable"),
-          title = "Genes present in gene sets",
-          info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
-          caption = "Table showing the fold-change, statistics and correlation of the genes overlapping all selected gene sets.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
         )
+        # enrichment_table_genes_in_geneset_ui(
+        #   ns("genetable"),
+        #   title = "Genes present in gene sets",
+        #   info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
+        #   caption = "Table showing the fold-change, statistics and correlation of the genes overlapping all selected gene sets.",
+        #   height = c("100%", TABLE_HEIGHT_MODAL),
+        #   width = c("100%", "100%")
+        # )
       )
     ),
     shiny::tabPanel(
