@@ -530,6 +530,11 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     enrichment_plot_compare_server(
       "compare",
       pgx = pgx,
+      gs_features = shiny::reactive(input$gs_features),
+      gs_statmethod = shiny::reactive(input$gs_statmethod),
+      gs_fdr = shiny::reactive(input$gs_fdr),
+      gs_lfc = shiny::reactive(input$gs_lfc),
+      calcGsetMeta = calcGsetMeta,
       gs_contrast = shiny::reactive(input$gs_contrast),
       gset_selected = gset_selected,
       selected_gsetmethods = selected_gsetmethods,
@@ -538,16 +543,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     # Volcano plots for all contrasts
 
-    enrichment_plot_volcanoall_server(
-      "volcanoAll",
-      pgx = pgx,
-      gs_features = shiny::reactive(input$gs_features),
-      gs_statmethod = shiny::reactive(input$gs_statmethod),
-      gs_fdr = shiny::reactive(input$gs_fdr),
-      gs_lfc = shiny::reactive(input$gs_lfc),
-      calcGsetMeta = calcGsetMeta,
-      watermark = WATERMARK
-    )
+    # enrichment_plot_volcanoall_server(
+    #   "volcanoAll",
+    #   pgx = pgx,
+    #   gs_features = shiny::reactive(input$gs_features),
+    #   gs_statmethod = shiny::reactive(input$gs_statmethod),
+    #   gs_fdr = shiny::reactive(input$gs_fdr),
+    #   gs_lfc = shiny::reactive(input$gs_lfc),
+    #   calcGsetMeta = calcGsetMeta,
+    #   watermark = WATERMARK
+    # )
 
     # Volcano plots for all methods
 

@@ -131,7 +131,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Compare",
+      "Compare contrasts",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,          
@@ -145,21 +145,21 @@ EnrichmentUI <- function(id) {
         )
       )
     ),
-    shiny::tabPanel(
-      "Volcano (all)",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,          
-        enrichment_plot_volcanoall_ui(
-          id = ns("volcanoAll"),
-          title = "Volcano plots for all contrasts",
-          info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong based on the 'height' of the 'wings'.",
-          caption = "Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
-    ),
+    # shiny::tabPanel(
+    #   "Volcano (all)",
+    #   bslib::layout_column_wrap(
+    #     width = 1,
+    #     style = halfH,          
+    #     enrichment_plot_volcanoall_ui(
+    #       id = ns("volcanoAll"),
+    #       title = "Volcano plots for all contrasts",
+    #       info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong based on the 'height' of the 'wings'.",
+    #       caption = "Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts.",
+    #       height = c("100%", TABLE_HEIGHT_MODAL),
+    #       width = c("auto", "100%")
+    #     )
+    #   )
+    # ),
     shiny::tabPanel(
       "Volcano (methods)",
       bslib::layout_column_wrap(
