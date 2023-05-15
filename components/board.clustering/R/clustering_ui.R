@@ -135,7 +135,6 @@ ClusteringUI <- function(id) {
         ),
         shiny::tabPanel(
           "Parallel",
-          shinyjqui::jqui_sortable(
               bslib::layout_column_wrap(
                  width = 1,
                  clustering_plot_parcoord_ui(
@@ -157,7 +156,6 @@ ClusteringUI <- function(id) {
                      height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL)
                  )
               ) ## layout
-          ) ## sortable
         )
     )),
     div(

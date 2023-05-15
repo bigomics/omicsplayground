@@ -89,7 +89,6 @@ DataViewUI <- function(id) {
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
-          shinyjqui::jqui_sortable(
             bslib::layout_column_wrap(
               width = 1,
               bslib::layout_column_wrap(
@@ -143,7 +142,7 @@ DataViewUI <- function(id) {
                   caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
                 )
               )
-            ))
+            )
         )
       )
     ),
@@ -151,7 +150,6 @@ DataViewUI <- function(id) {
     # QC tab #####
     shiny::tabPanel(
       "Sample QC",
-      shinyjqui::jqui_sortable(
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
@@ -208,7 +206,6 @@ DataViewUI <- function(id) {
             width = c("auto", "100%")
           )
         )
-      )
       )
     ),
     # counts table tab #####
