@@ -119,9 +119,11 @@ $(document).on('shiny:outputinvalidated', function(event) {
   update_spinner(event.target.id);
 });
 /* When new value or error comes in, hide spinner container (if any) & show the output */
-$(document).on('shiny:value shiny:error', function(event) {
-  output_states[event.target.id] = 1;
-  update_spinner(event.target.id);
+$(document).ready(function() {
+  $(document).on('shiny:value shiny:error', function(event) {
+    output_states[event.target.id] = 1;
+    update_spinner(event.target.id);
+  });
 });
 }());
 </script>

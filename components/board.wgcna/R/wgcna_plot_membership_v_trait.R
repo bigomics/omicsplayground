@@ -3,17 +3,23 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_membership_v_trait_ui <- function(id, height, width) {
+wgcna_plot_membership_v_trait_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>WGCNA Module membership (eigengene correlation).</b> For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module."
 
   PlotModuleUI(
     ns("plot"),
-    title = "Membership vs. trait correlation",
-    label = "b",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
     height = height,
+    caption = caption,
     width = width,
     download.fmt = c("png", "pdf")
   )

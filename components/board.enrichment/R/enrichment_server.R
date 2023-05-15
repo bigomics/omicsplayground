@@ -68,8 +68,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     shiny::observe({
       shiny::req(pgx)
-      nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-      gsets.groups <- names(COLLECTIONS)[which(nn >= 5)]
+      nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+      gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
       sel <- "<all>"
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
@@ -188,8 +188,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         return(NULL)
       }
       if (1 && !(gsfeatures %in% c(NA, "", "*", "<all>")) &&
-        gsfeatures %in% names(COLLECTIONS)) {
-        sel <- intersect(rownames(mx), COLLECTIONS[[gsfeatures]])
+        gsfeatures %in% names(playdata::COLLECTIONS)) {
+        sel <- intersect(rownames(mx), playdata::COLLECTIONS[[gsfeatures]])
         mx <- mx[sel, , drop = FALSE]
       }
 
@@ -362,7 +362,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
       metaFC
     })
-    
+
     ## ================================================================================
     ## Enrichment table
     ## ================================================================================
@@ -415,7 +415,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       genes <- setdiff(genes, c("", NA, "NA", " "))
 
       title <- rep(NA, length(genes))
-      title <- as.character(GENE.TITLE[genes])
+      title <- as.character(playdata::GENE_TITLE[genes])
       title[is.na(title)] <- " "
 
       rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))
@@ -451,7 +451,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
     subplot.MAR <- c(3, 3.5, 1.5, 0.5)
     subplot.MAR <- c(2.8, 4, 4, 0.8)
 
@@ -562,7 +561,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       gs_features = shiny::reactive(input$gs_features),
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
-      gs_lfc = shiny::reactive(input$gs_lfc),      
+      gs_lfc = shiny::reactive(input$gs_lfc),
       watermark = WATERMARK
     )
 

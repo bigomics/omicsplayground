@@ -74,5 +74,9 @@ html {
     .modal-body {
 	height: auto;
     }
-    
+
+
+    .sweet-alert p {
+	color: black;
+    }    
 }

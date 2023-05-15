@@ -97,16 +97,13 @@ in.shinyproxy <- function() {
         return(Sys.getenv("SHINYPROXY_USERNAME") != "")
 }
 
-tabRequire <- function(pgx, session, tabname, slot) {
+tabRequire <- function(pgx, session, tabname, slot, enable=TRUE) {
         has.slot <- (slot %in% names(pgx))
-        if(!has.slot) {
-          cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
-          ##hideTab(tabname, subtab)
-          bigdash.hideTab(session, tabname)
-	} else {
-          ##showTab(tabname, subtab)
+        if(has.slot && enable) {
           bigdash.showTab(session, tabname)
-	}
+	} else {
+          bigdash.hideTab(session, tabname)
+        }
 }
 
 fileRequire <- function(file, tabname, subtab) {
@@ -214,6 +211,7 @@ sever_screen0 <- function(error = NULL) {
         shiny::div(
           style = "
             transform: translateY(50%);
+            background-color: #004c7d;
           ",
           shiny::tags$h1(
             "Woops!", style="color:white;font-family:lato;"
@@ -318,7 +316,7 @@ sever_screen2 <- function(session_id) {
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons = c(
 	"toImage",
-	"senDataToCloud","editInChartStudio","zoom2d","pan2d","select2d",
+	"sendDataToCloud","editInChartStudio","zoom2d","pan2d","select2d",
 	"lasso2d","drawclosedpath","drawopenpath","drawline","drawrect",
 	"drawcircle","eraseshape","zoomIn2d","zoomOut2d",
 	"autoScale2d","resetScale2d","zoom3d","pan3d",

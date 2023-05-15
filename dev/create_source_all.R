@@ -12,24 +12,25 @@ create_SourceAll <- function(path='R',
                              add.source=TRUE,
                              excl.files=NULL)
 {
-  
+
   out.file = file.path(path[1],"00SourceAll.R")
   message("Creating SourceAll file: ",out.file)
   rfiles <- list.files(path, pattern='.[rR]$', recursive=TRUE, full.names=TRUE)
 
   ## exclude some files
-  rfiles <- setdiff(rfiles, out.file)    
-  excl.files <- c(excl.files,"global.R","app.R","server.R","ui.R")
+  rfiles <- setdiff(rfiles, out.file)
+  excl.files <- c(excl.files,"global.R","app.R","server.R","ui.R", "app_server.R",
+                  "app_ui.R", "app_config.R", "run_app.R", "run_dev.R")
   rfiles <- rfiles[!basename(rfiles) %in% excl.files]
 
   rfiles0 <- list.files('R', pattern='.[rR]$', recursive=FALSE, full.names=FALSE)
-  
-  write('## Generated automatically: do not edit by hand\n', out.file, append=FALSE)    
 
-  write("message('source all called from wd = ',getwd())", out.file, append=TRUE)            
-  write(paste("if(!file.exists('00SourceAll.R')) {"), out.file, append=TRUE)        
+  write('## Generated automatically: do not edit by hand\n', out.file, append=FALSE)
+
+  write("message('source all called from wd = ',getwd())", out.file, append=TRUE)
+  write(paste("if(!file.exists('00SourceAll.R')) {"), out.file, append=TRUE)
   write("  message('WARNING: not in source folder. skipping.')", out.file, append=TRUE)
-  write("} else {", out.file, append=TRUE)        
+  write("} else {", out.file, append=TRUE)
   write("  message('Note: sourcing all code...')", out.file, append=TRUE)
   i=1
   for(i in 1:length(rfiles)) {
@@ -52,24 +53,24 @@ create_SourceAll <- function(path='R',
     }
     if(add.source) {
       rm.path <- paste0("^",path,"|^",path,"/")
-      fn  <- paste0("\'",sub(rm.path,"",rfiles[i]),"\'")      
+      fn  <- paste0("\'",sub(rm.path,"",rfiles[i]),"\'")
       src <- paste0("  source(",fn,",encoding='UTF-8')")
       write(src, out.file, append=TRUE)
     }
   }
-  write("  message('done! (sourcing all code)')", out.file, append=TRUE)    
-  write("}", out.file, append=TRUE)      
+  write("  message('done! (sourcing all code)')", out.file, append=TRUE)
+  write("}", out.file, append=TRUE)
 }
 
 
 if(1) {
 
     source("dev/dev-utils.R")
-    appdir <- get_appdir() 
+    appdir <- get_appdir()
     setwd(appdir)
     appdir
-    
+
     setwd(appdir)
     create_SourceAll('components',add.comments=FALSE)
-    
+
 }

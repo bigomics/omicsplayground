@@ -51,9 +51,10 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$module_info, {
       shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Upload data</strong>"),
+        title = shiny::HTML("<strong>How to upload new data</strong>"),
         shiny::HTML(module_infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE,
+        size = "xl"
       ))
     })
 
@@ -68,10 +69,10 @@ UploadBoard <- function(id,
 </ol>
 
 <br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
-'
-    )
+    module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
+
 
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
@@ -100,14 +101,6 @@ UploadBoard <- function(id,
       pdir
     })
 
-    uploaded_pgx <- UploadModuleServer(
-      id = "upload_panel",
-      lib.dir = FILES,
-      pgx.dirRT = shiny::reactive(getPGXDIR()),
-      height = 720,
-      limits = limits
-    )
-
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
 
@@ -115,12 +108,6 @@ UploadBoard <- function(id,
 
       dbg("[observe::uploaded_pgx] initializing PGX object")
       new_pgx <- playbase::pgx.initialize(new_pgx)
-
-      ## update Session PGX
-      dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
-      for (i in 1:length(new_pgx)) {
-        pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
-      }
 
       savedata_button <- NULL
       if (enable_save) {
@@ -135,51 +122,77 @@ UploadBoard <- function(id,
         fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
 
         ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## 'pgx' as standard name. Actually saving as RDS
-        ## should be better.
+        ## switch 'pgx' as standard name. Actually saving as RDS
+        ## would have been better...
         pgx <- new_pgx
         save(pgx, file = fn)
-
         remove(pgx)
-        remove(new_pgx)
         message("[UploadBoard::@savedata] updating PGXINFO")
+        ## shinyWidgets::sendSweetAlert(
+        ##   title="Wow! So many new datasets",
+        ##   text = "Please wait while scanning your new datasets...",
+        ##   btn_labels = NA
+        ## )
+        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
-        ## reload_pgxdir(reload_pgxdir()+1)
+        })
+        ##   shinyWidgets::closeSweetAlert()
+
+        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       }
 
       ## shiny::removeModal()
-      msg1 <- "<b>Ready!</b>"
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
-      if (enable_save) {
-        msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library.
-                You can now start exploring your data."
-      } else {
-        msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
-      }
-
       load_my_dataset <- function(){
+        ## update Session PGX
+        ## dbg("[upload_server:load_my_dataset] input$confirmload = ",input$confirmload)
+        ## IK 24.4.2023: input$confirmload is empty... why???
+        ##       if(input$confirmload)
+        {
+          dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
+          empty.slots <- setdiff(names(pgx),names(new_pgx))
+          isolate({
+            for (e in empty.slots) {
+              pgx[[e]] <- NULL
+            }
+            for (i in 1:length(new_pgx)) {
+              pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
+            }
+          })
+          dbg("[UploadBoard@load_react] **** finished  ****")
+          bigdash.selectTab(session, selected = 'dataview-tab')
+          ## r_global$loadedDataset <- r_global$loadedDataset+1
           r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         }
+        suppressWarnings(remove(new_pgx))
+      }
 
       if(r_global$loadedDataset > 0){
         # check if user already has a dataset loaded and have a different UX in that case
         shinyalert::shinyalert(
-          paste("Dataset", pgx$name, "is ready!"),
-          "What do you want\nto do next?",
-          confirmButtonText = "Load dataset",
-          cancelButtonText = "Stay here",
-          showCancelButton = TRUE,
+          title = paste("Your dataset is ready!"),
+          ##text = "What do you want to do next?",
+          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),
+          confirmButtonText = "Show my new data!",
+          # cancelButtonText = "Stay here",
+          # showCancelButton = TRUE,
           callbackR = load_my_dataset,
           inputId = "confirmload"
+          ## immediate = TRUE
         )
-      }else{
+      } else {
+        load_my_dataset()
         bigdash.selectTab(session, selected = 'load-tab')
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1
         r_global$loadedDataset <- r_global$loadedDataset+1
       }
-      
+
+      on.exit({
+        ## suppressWarnings(remove(new_pgx))
+      })
+
     })
 
     # Some 'global' reactive variables used in this file
@@ -196,18 +209,18 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Contrasts")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
-          shiny::showTab("tabs", "Normalize")
+          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (all(has.upload(need2))) {
         if (input$advanced_mode) {
-          shiny::showTab("tabs", "Normalize")
+          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
       } else {
-        shiny::hideTab("tabs", "Normalize")
+        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
@@ -220,10 +233,10 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$advanced_mode, {
       if (input$advanced_mode) {
-        shiny::showTab("tabs", "Normalize") ## NOT YET!!!
+        #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
         shiny::showTab("tabs", "BatchCorrect")
       } else {
-        shiny::hideTab("tabs", "Normalize")
+        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
@@ -301,9 +314,7 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
-              dbg(
-                "[upload_files] counts.csv : 1 : dim(df0) = ",
-                paste(dim(df0), collapse = "x")
+              dbg("[upload_files] counts.csv : 1 : dim(df0) = ",paste(dim(df0), collapse="x")
               )
 
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
@@ -385,7 +396,7 @@ UploadBoard <- function(id,
 
       if ("counts.csv" %in% names(matlist)) {
         ## Convert to gene names (need for biological effects)
-        dbg("[upload_files] converting probe names to symbols")
+        dbg("[upload_files] converting probe names to symbols...")
         X0 <- matlist[["counts.csv"]]
         pp <- rownames(X0)
         rownames(X0) <- playbase::probe2symbol(pp)
@@ -393,6 +404,7 @@ UploadBoard <- function(id,
         X0 <- X0[sel, ]
         xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
         X0 <- do.call(rbind, xx)
+        dbg("[upload_files] ...done!")
         matlist[["counts.csv"]] <- X0
       }
 
@@ -825,11 +837,11 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     ## correctedX <- shiny::reactive({
-    normalized_counts <- NormalizeCountsServerRT(
-      id = "normalize",
-      counts = shiny::reactive(uploaded$counts.csv),
-      height = height
-    )
+    #normalized_counts <- NormalizeCountsServerRT(
+    #  id = "normalize",
+    #  counts = shiny::reactive(uploaded$counts.csv),
+    #  height = height
+    #)
 
     ## correctedX <- shiny::reactive({
     correctedX <- BatchCorrectServer(
@@ -1021,11 +1033,7 @@ UploadBoard <- function(id,
         return(NULL)
       }
 
-      dbg("[output$contrastStats] 2 : ")
-
       contrasts <- uploaded$contrasts.csv
-
-      dbg("[output$contrastStats] 3 : ")
 
       ## contrasts <- sign(contrasts)
       ## df <- playbase::contrastAsLabels(contrasts)
@@ -1034,12 +1042,10 @@ UploadBoard <- function(id,
       df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
       tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "contrasts")
       ## tt2 <- paste(ncol(contrasts),"contrasts")
-      dbg("[output$contrastStats] 4a : dim.df=", dim(df))
 
       p1 <- df %>%
         inspectdf::inspect_cat() %>%
         inspectdf::show_plot()
-      dbg("[output$contrastStats] 4b : ")
 
       p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle = tt2) +
         ggplot2::theme(
@@ -1050,8 +1056,6 @@ UploadBoard <- function(id,
             hjust = 1
           )
         )
-
-      dbg("[output$contrastStats] 5 : ")
 
       p1
     })
@@ -1088,7 +1092,7 @@ UploadBoard <- function(id,
       phenoRT = phenoRT,
       countsRT = corrected_counts,
       sel.conditions = sel.conditions,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     ## ------------------------------------------------

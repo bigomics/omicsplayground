@@ -22,17 +22,18 @@ loading_table_datasets_shared_ui <- function(
   )
 }
 
-loading_table_datasets_shared_server <- function(id,
-                                                 rl) {
+loading_table_datasets_shared_server <- function(id, table) {
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- reactive({
-      df <- rl$pgxTableShared_data
-
+      df <- table()
+      shiny::req(df)
+      dbg("[loading_table_datasets_shared_server] pgxTable_DT reacted!")
+      dbg("[loading_table_datasets_shared_server] df.dataset = ",df$dataset)
+      
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
-
-      req(df)
+      df$creator <- sub("@.*","",df$creator)  ## hide full email
 
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))

@@ -174,7 +174,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         ## defaults graph parameters
         gene <- igraph::V(gr)$name
         igraph::V(gr)$label <- igraph::V(gr)$name
-        igraph::V(gr)$title <- paste0("<b>", gene, "</b><br>", GENE.TITLE[toupper(gene)])
+        igraph::V(gr)$title <- paste0("<b>", gene, "</b><br>", playdata::GENE_TITLE[toupper(gene)])
         igraph::V(gr)$size <- vsize ## rather small
         igraph::V(gr)$color <- vcolor
 

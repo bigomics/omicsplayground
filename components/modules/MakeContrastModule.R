@@ -30,14 +30,15 @@ MakeContrastUI <- function(id) {
           flex = c(1, 4),
           shiny::fillCol(
             flex = c(NA, NA, NA, NA, 1),
-            tipifyL(
+            withTooltip(
               shiny::selectInput(ns("param"),
                 "Phenotype:",
                 choices = NULL,
                 selected = NULL,
                 multiple = TRUE
               ),
-              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations."
+              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+              placement = "left", options = list(container = "body")
             ),
             shiny::conditionalPanel(
               "input.param == '<gene>'",
@@ -49,12 +50,13 @@ MakeContrastUI <- function(id) {
               )
             ),
             shiny::br(),
-            tipifyL(
+            withTooltip(
               shiny::textInput(ns("newname"),
                 "Comparison name:",
                 placeholder = "e.g. MAIN_vs_CONTROL"
               ),
-              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."
+              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+              placement = "left", options = list(container = "body")
             ),
             shiny::br(),
             shiny::actionButton(ns("addcontrast"),
@@ -199,7 +201,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
         )
       })
 
-      buttonInput <- function(FUN, len, id, ...) {
+      makebuttonInputs <- function(FUN, len, id, ...) {
         inputs <- character(len)
         for (i in seq_len(len)) {
           inputs[i] <- as.character(FUN(paste0(id, i), ...))
@@ -243,8 +245,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
           rv$contr <- rv$contr[, -id, drop = FALSE]
         }
       })
-
-
 
       shiny::observeEvent(input$addcontrast, {
 
@@ -382,7 +382,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
               ss2 <- apply(ct1, 2, function(x) paste.max(ss0[which(x < 0)]))
             }
 
-            deleteButtons <- buttonInput(
+            deleteButtons <- makebuttonInputs(
               FUN = actionButton,
               len = ncol(ct),
               ## id = 'contrast_delete_',
@@ -393,7 +393,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
               inline = TRUE,
               icon = shiny::icon("trash-alt"),
               class = "btn-inline btn-outline-danger-hover",
-              style = "padding:2px; margin:2px; font-size:95%; color: #B22222;",
+              style = "padding:0px; margin:0px; font-size:95%; color: #B22222;",
               ## onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
               onclick = paste0('Shiny.onInputChange(\"', ns("contrast_delete"), '\",this.id)')
             )

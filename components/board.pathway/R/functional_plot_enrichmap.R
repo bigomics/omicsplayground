@@ -106,7 +106,8 @@ functional_plot_enrichmap_server <- function(id,
       
       plot_RENDER <- function() {
         plist <- get_plots(cex = 0.45, lwd = 0.7)
-        plotly::subplot( head(plist,6), nrows=2, margin=0.025) %>%
+        nr <- min(2, ceiling(length(plist)/2))
+        plotly::subplot( head(plist,6), nrows=nr, margin=0.025) %>%
           plotly::layout(
             ##title = list(text="<b>Enrichment Map</b>", font=list(size=36)),
             margin = list(l=0,r=0,b=0,t=0,pad=10)  
@@ -115,7 +116,8 @@ functional_plot_enrichmap_server <- function(id,
 
       plot_RENDER2 <- function() {
         plist <- get_plots(cex = 0.6, lwd = 0.9)
-        plotly::subplot( head(plist,6), nrows=2, margin=0.025) %>%
+        nr <- min(2, ceiling(length(plist)/2))
+        plotly::subplot( head(plist,6), nrows=nr, margin=0.025) %>%
           plotly::layout(
             ##title = list(text="<b>Enrichment Map</b>", font=list(size=36)),
             margin = list(l=0,r=0,b=0,t=0,pad=10)  

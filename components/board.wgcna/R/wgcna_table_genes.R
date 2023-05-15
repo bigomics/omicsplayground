@@ -3,18 +3,24 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_table_genes_ui <- function(id, height, width) {
+wgcna_table_genes_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "Genes in the selected WGCNA module."
 
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    info.text = info.text,
     width = width,
     height = height,
-    title = "Module genes",
-    label = "d"
+    title = title,
+    caption = caption,
+    label = label
   )
 }
 
@@ -27,7 +33,7 @@ wgcna_table_genes_server <- function(id,
 
       k <- selected_module()
       genes <- out$me.genes[[k]]
-      tt <- GENE.TITLE[toupper(genes)]
+      tt <- playdata::GENE_TITLE[toupper(genes)]
       rho <- cor(out$datExpr[, genes], out$net$MEs[, k])[, 1]
 
       df <- data.frame(module = k, gene = genes, me.rho = rho, title = tt)

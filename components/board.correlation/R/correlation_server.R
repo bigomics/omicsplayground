@@ -50,6 +50,7 @@ CorrelationBoard <- function(id, pgx) {
 
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       fam <- sort(c("<custom>", fam))
+      names(fam) <- sub(".*:","",fam)
       shiny::updateSelectInput(session, "cor_features", choices = fam)
 
       px <- colnames(pgx$Y)
@@ -82,9 +83,9 @@ CorrelationBoard <- function(id, pgx) {
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
-      } else if (ft != "<all>" && ft %in% names(iGSETS)) {
+      } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
         ft <- input$cor_features
-        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(getGSETS(ft))))
+        psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
         ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -149,8 +150,8 @@ CorrelationBoard <- function(id, pgx) {
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
-        "cor.HPA" = as.matrix(TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.HPA" = as.matrix(playdata::TISSUE),
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
@@ -191,8 +192,8 @@ CorrelationBoard <- function(id, pgx) {
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
         "cor" = 2**zx,
-        "cor.HPA" = as.matrix(TISSUE),
-        "cor.ImmProt" = as.matrix(IMMPROT)
+        "cor.HPA" = as.matrix(playdata::TISSUE),
+        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
 
@@ -217,261 +218,9 @@ CorrelationBoard <- function(id, pgx) {
       R
     })
 
-
-    ## ================================================================================
-    ## ======================= PLOTTING FUNCTIONS =====================================
-    ## ================================================================================
-
-    ## ----------------------------------------------------------------------
-    ##  Cumulative correlation plot (stacked)
-    ## ----------------------------------------------------------------------
-
-    cum_corplot_data <- shiny::reactive({
-      shiny::req(pgx)
-      R <- getGeneCorr()
-
-      ## get top correlated genes
-      ## jj = head(order(rowSums(R),decreasing=FALSE),35)
-      rsum <- rowSums(R, na.rm = TRUE)
-      jj <- head(order(abs(rsum), decreasing = TRUE), 35)
-      jj <- head(order(-abs(rsum)), 30)
-      jj <- c(head(order(rsum), 15), head(order(-rsum), 15))
-      jj <- jj[order(-rsum[jj])]
-      head(rsum[jj])
-      Rtop <- R[jj, , drop = FALSE]
-      rownames(Rtop) <- sub(".*:", "", rownames(Rtop))
-      offset <- min(Rtop, na.rm = TRUE) * 0.95
-      offset <- 0
-      klr <- grey.colors(ncol(Rtop), start = 0.3, end = 0.7)
-
-      ## --- color test -----##
-      klr <- grey.colors(ncol(Rtop), start = 0.3, end = 0.7)
-      klr <- colorRampPalette(c(rgb(0.2, 0.5, 0.8, 0.8), rgb(0.2, 0.5, 0.8, 0.2)), alpha = TRUE)(ncol(Rtop))
-
-      res <- list(Rtop = Rtop, offset = offset, klr = klr)
-      return(res)
-    })
-
-    cum_corplot.RENDER <- shiny::reactive({
-      res <- cum_corplot_data()
-      if (is.null(res)) {
-        return(NULL)
-      }
-
-      par(mar = c(6, 4, 2, 1), mgp = c(2.2, 0.8, 0))
-      mar <- MARGINS1
-      par(mar = mar, mgp = c(1.5, 0.5, 0))
-
-      barplot(t(res$Rtop) - res$offset,
-        col = res$klr, border = NA, ## horiz=TRUE,
-        las = 3, cex.names = 0.73, ## names.arg=rep(NA,nrow(R)),
-        offset = res$offset, ylab = "cumulative correlation (r)"
-        ## cex.main=1.2, main="cumulative correlation\nwith other data sets"
-      )
-      if (!is.null(colnames(res$Rtop))) {
-        legend("topright",
-          legend = rev(colnames(res$Rtop)), fill = rev(res$klr),
-          cex = 0.8, y.intersp = 0.8
-        )
-      }
-    })
-
-    cum_corplot_text <- paste0("Top cumulative positively and negatively correlated genes with the selected gene in the current dataset as well as in public datasets such as ", a_ImmProt, " and ", a_HPA, ". The correlations of genes are colored by dataset.")
-
-    shiny::callModule(
-      plotModule, "cum_corplot",
-      func = cum_corplot.RENDER,
-      func2 = cum_corplot.RENDER,
-      info.text = cum_corplot_text,
-      height = 400,
-      pdf.width = 8, pdf.height = 6,
-      label = "f",
-      title = "Cumulative correlation",
-      add.watermark = WATERMARK
-    )
-
-    ## --------------------------------------------------------------------------------
-    ## Correlation GSEA
-    ## --------------------------------------------------------------------------------
-
-    getCorrelationGSEA <- shiny::reactive({
-      alertDataLoaded(session, pgx)
-      shiny::req(pgx)
-
-      pgx.showSmallModal("Calculating correlation GSEA...<br>please wait")
-
-      gene <- "CD4"
-      gene <- rownames(pgx$X)[1]
-      gene <- input$cor_gene
-
-      ## single gene correlation as rank metric
-      gx <- pgx$X[gene, ]
-      rho <- cor(t(pgx$X), gx, use = "pairwise")[, 1]
-      names(rho) <- toupper(names(rho))
-
-      ## gmt <- GSETS[colnames(pgx$GMT)]
-      gmt <- getGSETS(colnames(pgx$GMT))
-      ## gmt <- GSETS  ## all???
-      gsea <- fgsea::fgsea(gmt, rho, minSize = 15, maxSize = 1000)
-      gsea <- gsea[order(-gsea$NES), ]
-      head(gsea)
-
-      ## done!
-      shiny::removeModal()
-      beepr::beep(10) ## short beep
-
-      res <- list(gsea = gsea, rho = rho)
-      return(res)
-    })
-
-
-    ## -----------------------------------------------------------------------------
-    ## DGCA Correlation scatter plots
-    ## -----------------------------------------------------------------------------
-
-    gene1 <- "MKI67"
-    gene2 <- "NCAPD2"
-
-    dgca.scatterplot <- function(X, gene1, gene2, grp, cex = 1, key = TRUE,
-                                 rho = TRUE, col = c("grey40", "red2")) {
-      grp.levels <- sort(unique(setdiff(as.character(grp), NA)))
-      x1 <- X[gene1, which(grp == grp.levels[1])]
-      y1 <- X[gene2, which(grp == grp.levels[1])]
-      x2 <- X[gene1, which(grp == grp.levels[2])]
-      y2 <- X[gene2, which(grp == grp.levels[2])]
-
-      col1 <- paste0(gplots::col2hex(col), "AA") ## add opacity
-      rgb2col <- function(cc) rgb(cc[1], cc[2], cc[3], maxColorValue = 255)
-      col2 <- apply(0.66 * col2rgb(col), 2, rgb2col)
-
-      ## par(mfrow=c(2,2), mar=c(4,4,2,2), oma=c(0,0,0,0))
-      par(mgp = c(1.6, 0.6, 0))
-      base::plot(x1, y1,
-        col = col1[1], pch = 19, cex = cex,
-        xlim = range(c(x1, x2)), ylim = range(c(y1, y2)),
-        ## main = 'differential correlation',
-        xlab = gene1, ylab = gene2
-      )
-
-      y1 <- y1 + 1e-3 * rnorm(length(y1))
-      x1 <- x1 + 1e-3 * rnorm(length(x1))
-      y2 <- y2 + 1e-3 * rnorm(length(y2))
-      x2 <- x2 + 1e-3 * rnorm(length(x2))
-
-      abline(lm(y1 ~ x1), col = col2[1], lty = 1, lwd = 1.5)
-      points(x2, y2, col = col1[2], pch = 19, cex = cex)
-      abline(lm(y2 ~ x2), col = col2[2], lty = 1, lwd = 1.5)
-
-      if (key) {
-        legend("topleft",
-          legend = grp.levels,
-          fill = col, bty = "n",
-          cex = 0.9, y.intersp = 0.8
-        )
-      }
-      if (rho) {
-        r1 <- round(cor(x1, y1), 3)
-        r2 <- round(cor(x2, y2), 3)
-        rr <- paste0("R_", grp.levels, " = ", c(r1, r2))
-        legend("bottomright",
-          legend = rr,
-          ## fill=c('red','blue'),
-          bty = "n",
-          cex = 0.9, y.intersp = 0.85
-        )
-      }
-    }
-
-    dgca_scatter.PLOTFUN <- shiny::reactive({
-      shiny::req(input$cor_gene)
-      res <- dgca.output()
-
-      ii <- dgca_table$rows_all()
-      if (is.null(ii) || length(ii) == 0) {
-        return(NULL)
-      }
-      res1 <- res[ii, , drop = FALSE]
-      ## res1 <- res1[rowSums(is.na(res1))==0,]
-
-      ph <- "ER_STATUS"
-      ph <- input$cor_group
-      shiny::req(ph)
-
-      grp <- factor(pgx$samples[, ph])
-      ndim <- nrow(pgx$samples)
-      sel1 <- which(as.integer(grp) == 1)
-      sel2 <- which(as.integer(grp) == 2)
-      NTOP <- 25
-
-      nplots <- min(NTOP, nrow(res1))
-      nr <- ceiling(sqrt(nplots))
-      par(
-        mfrow = c(nr, nr), mar = c(3, 3.5, 0.5, 0),
-        mgp = c(1.9, 0.7, 0), oma = c(0, 0, 0.5, 0.5)
-      )
-
-      cex_levels <- c(1.2, 0.8, 0.5, 0.2)
-      dim_cuts <- c(0, 40, 100, 200, Inf)
-      cex <- cex_levels[findInterval(ndim, dim_cuts)]
-
-      klrpal <- c("grey30", "red2")
-      klrpal <- COL2
-      klrpal <- COL ## more colors
-      if (nr <= 2) cex <- cex * 2
-
-      i <- 1
-      for (i in 1:nplots) {
-        gene1 <- res1$Gene2[i]
-        gene2 <- res1$Gene1[i]
-        X1 <- pgx$X[c(gene1, gene2), ]
-        dgca.scatterplot(X1, gene1, gene2,
-          grp = grp, cex = cex,
-          key = 0, rho = 1, col = klrpal
-        )
-        if (i == 1) {
-          tt <- c("   ", levels(grp))
-          legend("topleft",
-            legend = tt,
-            fill = c(NA, klrpal), inset = c(0.01, 0.01),
-            border = c(NA, "black", "black"),
-            cex = 0.9, box.lwd = 0, pt.lwd = 0,
-            x.intersp = 0.5, y.intersp = 0.8
-          )
-          legend("topleft", ph,
-            x.intersp = -0.2, inset = c(0.01, 0.01),
-            cex = 0.9, y.intersp = 0.45, bty = "n"
-          )
-        }
-      }
-    })
-
-    dgca_scatter.opts <- shiny::tagList(
-      ## checkboxInput(ns("dgcascatter.swapaxis"),"swap axes"),
-      ## selectInput(ns("dgcascatter.colorby"),"color by:", choices=NULL),
-    )
-
-    dgca_scatter.info <- "<b>DGCA scatter plots.</b> Pairwise scatter plots for the co-expression of the gene pairs in two different conditions. Differentially correlated gene pairs will show different correlation values measured by the difference in their z-score ('zScoreDiff'). The straight lines correspond to the linear regression fits. "
-
-    shiny::callModule(
-      plotModule,
-      id = "dgca_scatter", label = "c",
-      func = dgca_scatter.PLOTFUN,
-      func2 = dgca_scatter.PLOTFUN,
-      info.text = dgca_scatter.info,
-      options = dgca_scatter.opts,
-      title = "DGCA correlation scatter plots",
-      ## pdf.width = 14, pdf.height = 4,
-      height = c(fullH - 80, 760),
-      width = c("auto", 900),
-      res = c(80, 95),
-      add.watermark = WATERMARK
-    )
-
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
-
-    WATERMARK <- FALSE
 
     cor_table <- correlation_table_corr_server(
       "cor_table",
@@ -479,7 +228,7 @@ CorrelationBoard <- function(id, pgx) {
       getGeneCorr           = getGeneCorr,
       pgx                   = pgx,
       watermark             = WATERMARK
-    ) 
+    )
 
     correlation_plot_barplot_server(
       "cor_barplot",
@@ -493,7 +242,7 @@ CorrelationBoard <- function(id, pgx) {
       "cor_scatter",
       getFilteredExpression = getFilteredExpression,
       pgx = pgx,
-      cor_table = cor_table,      
+      cor_table = cor_table,
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       getGeneCorr = getGeneCorr,
       cor_gene = reactive(input$cor_gene),

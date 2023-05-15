@@ -1,4 +1,5 @@
 BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+BRANCH:=$(strip $(BRANCH))
 
 run: sass tag.version
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
@@ -24,13 +25,19 @@ clean.force:
 show.branch:
 	@echo $(BRANCH)
 
+
+TAG=$(BRANCH)
 docker.run:
-	@echo running docker $(BRANCH) at port 4000
-	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(BRANCH)
+	@echo running docker *$(TAG)* at port 4000
+	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
 docker.run2:
-	@echo running docker $(BRANCH) at port 4001
-	docker run --rm -it -p 4001:3838 bigomics/omicsplayground:$(BRANCH)
+	@echo running docker $(TAG) at port 4000
+	docker run --rm -it -p 4000:3838 \
+		-v ~/Playground/pgx:/omicsplayground/data \
+		-v ~/Playground/libx:/omicsplayground/libx \
+		-v ~/Playground/config/firebase:/omicsplayground/components/app/R/firebase \
+		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE tag.version
 	@echo building docker $(BRANCH)
@@ -68,7 +75,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION = "v3.0-RC".$(DATE)
+VERSION := "v3.0-RC9."$(BRANCH)""$(DATE)
 
 tag.version:
 	@echo "new version ->" $(VERSION)
@@ -79,8 +86,14 @@ tags:
 	git push && git push --tags
 
 push.latest: 
-	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:latest
-	docker tag bigomics/omicsplayground:testing bigomics/omicsplayground:$(VERSION)
+	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:latest
 	docker push bigomics/omicsplayground:latest
+
+push.version: 
+	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
+
+BOARD = dataview
+board:
+	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
 

@@ -32,32 +32,31 @@ SocialMediaModule <- function(id, r.show = reactive(0))
     )
 
     social.buttons <- fillRow(
+##      flex = c(1,NA,1),
+      br(),br(),br(),
       actionButton(ns("twitter"),"", icon=icon("twitter"), class="btn-social"),
       actionButton(ns("linkedin"),"", icon=icon("linkedin"), class="btn-social"),
       actionButton(ns("facebook"),"", icon=icon("facebook"), class="btn-social"),
-      actionButton(ns("whatsapp"),"", icon=icon("whatsapp"), class="btn-social"),
-      actionButton(ns("email"),"", icon=icon("envelope"), class="btn-social"),
-      actionButton(ns("telegram"),"", icon=icon("telegram"), class="btn-social"),
+#      actionButton(ns("whatsapp"),"", icon=icon("whatsapp"), class="btn-social"),
+#      actionButton(ns("email"),"", icon=icon("envelope"), class="btn-social"),
+#      actionButton(ns("telegram"),"", icon=icon("telegram"), class="btn-social"),
       actionButton(ns("reddit"),"", icon=icon("reddit"), class="btn-social"),
-      actionButton(ns("pinterest"),"", icon=icon("pinterest"), class="btn-social"),
-      actionButton(ns("yahoo"),"", icon=icon("yahoo"), class="btn-social"),
-      actionButton(ns("skype"),"", icon=icon("skype"), class="btn-social"),
-      actionButton(ns("xing"),"", icon=icon("xing"), class="btn-social")
+#      actionButton(ns("pinterest"),"", icon=icon("pinterest"), class="btn-social"),
+#      actionButton(ns("yahoo"),"", icon=icon("yahoo"), class="btn-social"),
+#      actionButton(ns("skype"),"", icon=icon("skype"), class="btn-social"),
+#      actionButton(ns("xing"),"", icon=icon("xing"), class="btn-social")
       ##tags$a(href=urls["line.me"], NULL, icon("line"), style="font-size:30px;", target="_blank")
+      br(),br(),br()
     )
 
-    modalButton2 <- function(label, icon=NULL) {
-      tags$button(type = "button", class = "btn btn-primary", `data-dismiss` = "modal",
-                  `data-bs-dismiss` = "modal", icon, label)
-    }
 
     submit.buttons <- fillRow(
       height = 30,
-      flex = c(NA,1,NA),
-      actionButton(ns("later"),"Maybe later...", class="btn-warn"),
+      flex = c(1,NA,1),
       br(),
-      actionButton(ns("sure"),"Yes, for sure! I just did!", class="btn-primary")
-      ##modalButton2(""Yes, sure! I just did!"")
+      ##      actionButton(ns("later"),"Maybe later...", class="btn-warn"),
+      actionButton(ns("sure"),"Yes, for sure! I just did!", class="btn-primary"),
+      br()
     )
 
     output$modal <- renderUI({
@@ -67,7 +66,7 @@ SocialMediaModule <- function(id, r.show = reactive(0))
       if(do.show==0) return(NULL)
 
       showModal( modalDialog(
-        div(HTML("<center><h2>Sorry, time's up mate!</h2></center>"),style="margin-top:0px;"),
+        div(HTML("<center><h2>Sorry, time's up!</h2></center>"),style="margin-top:0px;"),
         br(),
         HTML("Your FREE session has expired.
          Did you enjoy using BigOmics Playground? You can extend

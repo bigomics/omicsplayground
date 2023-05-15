@@ -62,15 +62,15 @@ clustering_plot_clusterannot_server <- function(id,
 
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
       dbg("[clustering_plot_clustannot.R] observe : triggered ")
-      
+
       if (is.null(input$xann_level)) {
         return(NULL)
       }
       ann.types <- sel <- NULL
       if (input$xann_level != "phenotype") {
         if (input$xann_level == "geneset") {
-          ann.types <- names(COLLECTIONS)
-          cc <- sapply(COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
+          ann.types <- names(playdata::COLLECTIONS)
+          cc <- sapply(playdata::COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
           ann.types <- ann.types[cc >= 3]
         }
         if (input$xann_level == "gene") {
@@ -89,14 +89,14 @@ clustering_plot_clusterannot_server <- function(id,
       } else {
         ann.types <- sel <- "<all>"
       }
-      dbg("[clustering_plot_clustannot.R] observe : shiny::updateSelectInput ")      
+      dbg("[clustering_plot_clustannot.R] observe : shiny::updateSelectInput ")
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 
     plot_data <- function() {
       getClustAnnotCorrelation()
     }
-    
+
     ##    clustannot_plots.PLOTLY <- shiny::reactive({
     createAnnotBarPlots <- function(fontsize=10) {
 
@@ -125,7 +125,7 @@ clustering_plot_clusterannot_server <- function(id,
       for (i in 1:min(9, ncol(rho))) {
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
-        names(x) <- gsub(GSET.PREFIX.REGEX, "", names(x))
+        names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
 
         y <- names(x)
         y <- factor(y, levels = y)
@@ -225,7 +225,7 @@ clustering_plot_clusterannot_server <- function(id,
     clustannot_plots.PLOTLY_modal <- function() {
       createAnnotBarPlots(fontsize=15)
     }
-    
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",

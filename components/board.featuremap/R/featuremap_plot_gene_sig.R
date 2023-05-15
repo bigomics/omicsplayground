@@ -64,7 +64,7 @@ featuremap_plot_gene_sig_server <- function(id,
       return(list(F, pos))
     })
 
-    geneSigPlots.RENDER <- shiny::reactive({
+    geneSigPlots.RENDER <- function(){
       dt <- geneSigPlots.plot_data()
       F <- dt[[1]]
       pos <- dt[[2]]
@@ -80,9 +80,9 @@ featuremap_plot_gene_sig_server <- function(id,
         progress$set(message = "Computing feature plots...", value = 0)
       }
       plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = NULL, progress)
-      p <- grDevices::recordPlot()
-      p
-    })
+      # p <- grDevices::recordPlot()
+      # p
+    }
 
     PlotModuleServer(
       "gene_sig",

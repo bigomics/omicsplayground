@@ -149,7 +149,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
     }
 
-    get_plotly_plots <- function(cex.title) {      
+    get_plotly_plots <- function(cex.text) {      
 
       dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
       
@@ -189,7 +189,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             yth = 1,  ## threshold for which points get label
             cbar.width = 32,
             tooltips = NULL,
-            cex.text = cex.title
+            cex.text = cex.text
           ) %>% plotly::layout(
             margin = list(l=30,r=10,t=20,b=40)
           )
@@ -208,11 +208,11 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             yth = 999,  ## threshold for which points get label
             cbar.width = 15,
             tooltips = NULL,
-            cex.text = cex.title
+            cex.text = cex.text
           ) %>%
             plotly::add_text(
               x=x.title, y=y.title, text=gset.name,
-              textfont = list( size = 12*cex.title ),
+              textfont = list( size = 12*cex.text ),
               textposition="bottom right") %>%
             plotly::layout(
               xaxis= list(showticklabels = FALSE),
@@ -232,16 +232,16 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
     
     plotly.RENDER <- function() {
-      plist <- get_plotly_plots(cex.title=0.7)
 
-      
+      plist <- get_plotly_plots(cex.text=0.7)
+
       ntop <- length(plist)
       forced_nrows <- ifelse(ntop >= 3, 3,1)
       if(ntop>1) {
         plt <- plotly::subplot(plist, nrows = forced_nrows,
           shareX = TRUE, shareY = TRUE,
           ## titleX=FALSE, titleY=FALSE,
-          titleX=TRUE, titleY=TRUE,          
+          titleX = TRUE, titleY = TRUE,          
           margin = c(0.0,0.0,0.02,0.02)
         ) %>%
           plotly::layout(

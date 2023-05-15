@@ -82,7 +82,7 @@ expression_plot_maplot_server <- function(id,
 
       dbg("[expression_plot_maplot.R] sel1 = ",sel1())
       ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
-      
+
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
 
@@ -96,7 +96,7 @@ expression_plot_maplot_server <- function(id,
       fam.genes <- unique(unlist(pgx$families[10]))
       fam.genes <- res$gene_name
       if (gx_features() != "<all>") {
-        gset <- getGSETS(gx_features())
+        gset <- playdata::getGSETS(gx_features())
         fam.genes <- unique(unlist(gset))
       }
       jj <- match(toupper(fam.genes), toupper(res$gene_name))
@@ -135,7 +135,7 @@ expression_plot_maplot_server <- function(id,
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
         ## gset <- GSETS[[gs]]
-        gset <- unlist(getGSETS(gs))
+        gset <- unlist(playdata::getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(
           head(sel.genes[order(impt(sel.genes))], 10),
@@ -222,6 +222,7 @@ expression_plot_maplot_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
+      remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

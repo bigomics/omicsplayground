@@ -59,7 +59,7 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-          
+
       plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
                                  tl.cex=0.85)
         {
@@ -109,7 +109,7 @@ functional_plot_go_actmap_server <- function(id,
           score,
           is.corr = FALSE,
           cl.pos = "n",
-          col = BLUERED(100),
+          col = playdata::BLUERED(100),
           tl.cex = tl.cex,
           tl.col = "grey20",
           tl.srt = 90,
@@ -156,7 +156,7 @@ functional_plot_go_actmap_server <- function(id,
           normalize = input$normalize,
           maxterm = 50,
           maxfc = 100,
-          tl.cex = 0.85          
+          tl.cex = 0.85
         )
       }
 
@@ -168,6 +168,7 @@ functional_plot_go_actmap_server <- function(id,
         csvFunc = plot_data,
         res = 72,
         pdf.width = 9,
+        remove_margins = FALSE,
         pdf.height = 9,
         add.watermark = watermark
       )

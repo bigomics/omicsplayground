@@ -3,10 +3,15 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_gclustering_ui <- function(id, height, width) {
+wgcna_plot_gclustering_ui <- function(
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>TOM umap.</b> UMAP visualization of TOM correlation of genes."
 
   umap.opts <- shiny::tagList(
     shiny::selectInput(ns("clust_method"), "method:", choices = c("tsne2d", "umap2d", "pca2d"))
@@ -14,9 +19,10 @@ wgcna_plot_gclustering_ui <- function(id, height, width) {
 
   PlotModuleUI(
     ns("plot"),
-    title = "Gene clustering",
-    label = "d",
-    info.text = info_text,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
     options = umap.opts,
     height = height,
     width = width,

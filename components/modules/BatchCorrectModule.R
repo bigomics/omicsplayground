@@ -35,7 +35,7 @@ BatchCorrectUI <- function(id, height=720) {
       width = 2
     ),
     shiny::mainPanel(
-      shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner(),
+      shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner(),
       width = 10
     )
   )
@@ -48,7 +48,7 @@ BatchCorrectInputsUI <- function(id) {
 
 BatchCorrectCanvas <- function(id, height=720) {
   ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner()
+  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
 }
 
 BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
@@ -56,27 +56,6 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-
-
-      if(0) {
-        shiny::observeEvent( input$bc_strength, {
-          if(input$bc_strength=="low") {
-            shiny::updateSelectInput(session,"bc_batchpar",selected="*")
-            shiny::updateCheckboxGroupInput(session, "bc_methods", selected="")
-          }
-          if(input$bc_strength=="medium") {
-            sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
-            shiny::updateSelectInput(session,"bc_batchpar",selected=sel)
-            shiny::updateCheckboxGroupInput(session,"bc_methods", selected=c("PCA","HC"))
-          }
-          if(input$bc_strength=="strong") {
-            sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
-            shiny::updateSelectInput(session,"bc_batchpar",selected=sel)
-            shiny::updateCheckboxGroupInput(session, "bc_methods", selected="SVA")
-          }
-        })
-      }
-
 
       max.rho=0.5
       getNotCorrelatedBatchPars <- function(pheno, model.par, max.rho=0.5) {
@@ -230,38 +209,20 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           shiny::br(),
           shiny::br(),
 
-          tipify2(
+          withTooltip(
             shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                selected=sel.par, multiple=TRUE),
-            "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings."),
-
-          ## withTooltip(
-          ##   shiny::radioButtons(ns("bc_strength"), NULL,
-          ##                       c("low","medium","strong"), inline=TRUE),
-          ##   "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options.",
-          ##   placement="left", options=list(container="body")),
-
-##          withTooltip( shiny::actionLink(ns("bc_options"), "Advanced",
-##                                             icon=icon("cog", lib = "glyphicon")),
-##                          "Toggle advanced options.",
-##                          placement="left", options=list(container="body")),
-##          shiny::br(),
-
-##          shiny::conditionalPanel(
-##            "input.bc_options%2 == 1", ns=ns,
-##            shiny::tagList(
-
-##          shiny::conditionalPanel(
-##            "input.bc_methods == 'limma'", ns=ns,
-            withTooltip(
-              shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
-                                 selected=batch.par, multiple=TRUE),
-              "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
-              placement="left", options=list(container="body")
-##            )
-              ),
-
-
+            "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings.",
+            placement = "top", options = list(container = "body")
+          ),
+          
+          withTooltip(
+            shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
+                               selected=batch.par, multiple=TRUE),
+            "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
+            placement="left", options=list(container="body")
+          ),
+          
           withTooltip(
             ##shiny::checkboxGroupInput(
             shiny::radioButtons(

@@ -100,7 +100,7 @@ expression_plot_volcano_server <- function(id,
         return(NULL)
       }
       if (features != "<all>") {
-        gset <- getGSETS(features)
+        gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
 
@@ -135,7 +135,7 @@ expression_plot_volcano_server <- function(id,
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
-        gset <- unlist(getGSETS(gs))
+        gset <- unlist(playdata::getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(
           head(sel.genes[order(impt(sel.genes))], 10),
@@ -192,7 +192,7 @@ expression_plot_volcano_server <- function(id,
       plt
     }
 
-    modal_plotly.RENDER <- function() {    
+    modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
         plotly::layout(
           font = list(size = 18),
@@ -210,6 +210,7 @@ expression_plot_volcano_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
+      remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

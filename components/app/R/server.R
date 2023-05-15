@@ -80,27 +80,35 @@ app_server <- function(input, output, session) {
 
     auth <- NULL   ## shared in module
     if(authentication == "password") {
-        auth <- shiny::callModule(
-            PasswordAuthenticationModule, "auth",
-            credentials.file = "CREDENTIALS")
+      auth <- PasswordAuthenticationModule(
+        id = "auth",
+        credentials.file = "CREDENTIALS"
+      )
+    } else if(authentication == "firebase.full") {
+        auth <- FirebaseAuthenticationModule(
+          id ="auth"
+        )
     } else if(authentication == "firebase") {
-        auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
+        auth <- EmailLinkAuthenticationModule(
+          id ="auth",
+          pgx_dir = pgx_dir,
+        )
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
-        ##email <- Sys.getenv("SHINYPROXY_EMAIL")
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE,
-                                  username=username, email=username)
+        auth <- NoAuthenticationModule(
+            id = "auth",
+            show_modal = TRUE,
+            username = username,
+            email = username
+        )
     } else if(authentication == "none2") {
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=FALSE)
+        ## no authentication but also not showing main modal (enter)
+        auth <- NoAuthenticationModule( id = "auth", show_modal=FALSE )
     } else {
         ##} else if(authentication == "none") {
-        auth <- shiny::callModule(NoAuthenticationModule, "auth",
-                                  show_modal=TRUE)
+        auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
     dbg("[LoadingBoard] names.auth = ",names(auth))
-
 
     ##-------------------------------------------------------------
     ## Call modules
@@ -108,9 +116,10 @@ app_server <- function(input, output, session) {
 
     env <- list()  ## communication "environment"
 
-    ## *** EXPERIMENTAL *** global reactive value replacing env list
-    ## above create session global reactiveValue from list
+    ## Global reactive value for PGX object
     PGX <- reactiveValues()
+
+    ## Global reactive values for app-wide triggering
     r_global <- reactiveValues(
         load_example_trigger = 0,
         reload_pgxdir = 0,
@@ -125,6 +134,8 @@ app_server <- function(input, output, session) {
         limits = limits,
         auth = auth,
         enable_userdir = opt$ENABLE_USERDIR,
+        enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
+        enable_share = opt$ENABLE_SHARE,
         r_global = r_global
     )
 
@@ -140,12 +151,9 @@ app_server <- function(input, output, session) {
          enable_save = opt$ENABLE_SAVE,
          r_global = r_global
        )
-    } else {
-
-
     }
 
-    ## If user is logged off, we clear the data
+    ## If user logs off, we clear the data
     observeEvent( auth$logged(), {
         is.logged <- auth$logged()
         length.pgx <- length(names(PGX))
@@ -153,6 +161,7 @@ app_server <- function(input, output, session) {
             for(i in 1:length.pgx) {
                 PGX[[names(PGX)[i]]] <<- NULL
             }
+            session$user <- NA
         }
     })
 
@@ -168,6 +177,9 @@ app_server <- function(input, output, session) {
       enable_upload = opt$ENABLE_UPLOAD,
       r_global = r_global)
     env$user <- UserBoard("user", user=auth)
+
+    ## Do not display "Welcome" tab on the menu
+    bigdash.hideMenuItem(session, "welcome-tab")
 
     ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
@@ -292,6 +304,8 @@ app_server <- function(input, output, session) {
         shinyjs::onclick("logo-bigomics",{
           shinyjs::runjs("console.info('logo-bigomics clicked')")
           bigdash.selectTab(session, selected = 'welcome-tab')
+          shinyjs::runjs("sidebarClose()")
+          shinyjs::runjs("settingsClose()")
         })
 
     })
@@ -338,45 +352,48 @@ app_server <- function(input, output, session) {
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
             warning("[server.R] !!! no data. hiding menu.")
-            lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
-            updateTabsetPanel(session, "maintabs", selected = "Home")
             ##toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
-            bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+            ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+            shinyjs::runjs("sidebarClose()")
+            shinyjs::runjs("settingsClose()")
+            bigdash.selectTab(session, selected = 'welcome-tab')            
             return(NULL)
         }
 
         ## show all main tabs
-        lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
+        shinyjs::runjs("sidebarOpen()")
+        shinyjs::runjs("settingsOpen()")
 
+        ## do we have libx libraries?
+        has.libx <- dir.exists(file.path(OPG,"libx"))
+        
         ## Beta features
         info("[server.R] disabling beta features")
-        has.libx <- dir.exists(file.path(OPG,"libx"))
-        bigdash.toggleTab(session, "wgcna-tab", show.beta)
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
-        ##bigdash.toggleTab(session, "cmap-tab", show.beta)  ## similar experiments
+        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets        
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
+        toggleTab("dataview-tabs","Resource info", show.beta)
 
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
-        tabRequire(PGX, session, "cmap-tab", "connectivity")
-        tabRequire(PGX, session, "drug-tab", "drugs")
-        tabRequire(PGX, session, "wordcloud-tab", "wordcloud")
-        tabRequire(PGX, session, "cell-tab", "deconv")
+        tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
+        tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)        
+        tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
+        tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
+        tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
         ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
 
         ## DEVELOPER only tabs (still too alpha)
         info("[server.R] disabling alpha features")
         toggleTab("corr-tabs","Functional",DEV)   ## too slow
         toggleTab("corr-tabs","Differential",DEV)
-        toggleTab("dataview-tabs","Resource info",DEV)
         toggleTab("cell-tabs","iTALK",DEV)  ## DEV only
         toggleTab("cell-tabs","CNV",DEV)  ## DEV only
         toggleTab("cell-tabs","Monocle",DEV) ## DEV only
-        toggleTab("corr-tabs","Functional",DEV)
 
         info("[server.R] trigger on change dataset done!")
+
     })
 
     ##-------------------------------------------------------------
@@ -446,7 +463,7 @@ app_server <- function(input, output, session) {
           dbg("[server.R] success = ",success)
           if(success==0) {
             info("[server.R] logout after no referral!!!")
-            shinyjs::runjs("logout()")
+            shinyjs::runjs("logoutInApp()")
           }
           if(success > 1) {
             info("[server.R] resetting timer after referral!!!")
@@ -455,10 +472,8 @@ app_server <- function(input, output, session) {
             msg = HTML(paste0("<center><h4>Ditch the ",timeout.min,"-minute limit</h4>
 Upgrade today and experience advanced analysis features without the time limit.</center>"))
 
-
             showModal(modalDialog(
               msg,
-
               size = "m",
               easyClose = TRUE
             ))
@@ -533,6 +548,19 @@ Upgrade today and experience advanced analysis features without the time limit.<
         logged <- auth$logged()
         info("[server.R] change in user log status : logged = ",logged)
 
+        if(logged) {
+          session$user <- auth$email()
+        } else {
+          session$user <- "nobody"
+        }
+
+        dbg("[server.R] session.user = ",session$user)
+        dbg("[server.R] session.names(userData) = ",names(session$userData))
+
+        ## This checks for personal email adress and asks to change to
+        ## a business email adress. This will affect also old users.
+        check_personal_email(auth, pgx_dir)
+
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
@@ -593,5 +621,16 @@ Upgrade today and experience advanced analysis features without the time limit.<
     message("[server.R] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[server.R] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
+
+
+    ## clean up any remanining UI from previous aborted processx
+    shiny::removeUI(selector = ".current-dataset > #spinner-container")
+
+    ## Startup Message
+    shinyalert::shinyalert(
+        title = "Welcome to Version 3!",
+        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
+    )
+
 
 }

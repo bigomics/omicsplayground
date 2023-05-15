@@ -72,7 +72,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
             ) >1
       }
       
-      if (check_diversity_in_colums(res$annot)) {
+      if (check_diversity_in_colums(res$annot) && is.data.frame(res$annot)) {
         ## TODO: Color palettes should be unique, not the same for condition and time
         ## NOTE: the package doesnt allow to change the typeface, the position of the legend, the label placement, ...
         ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)

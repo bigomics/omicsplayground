@@ -52,10 +52,10 @@ ComputePgxServer <- function(
             GENESET.SELECTED = c("fisher","gsva","fgsea")
 
             ## batch correction and extrs methods
-            EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity")
+            EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity", "wgcna")
             EXTRA.NAMES = c("celltype deconvolution", "drugs connectivity",
-                            "wordcloud","experiment similarity")
-            EXTRA.SELECTED = c("deconv","drugs","wordcloud","connectivity")
+                            "wordcloud","experiment similarity", "WGCNA")
+            EXTRA.SELECTED = c("deconv","drugs","wordcloud","connectivity","wgcna")
 
             DEV.METHODS = c("noLM.prune")
             DEV.NAMES = c("noLM + prune")
@@ -191,22 +191,6 @@ ComputePgxServer <- function(
             shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
 
 
-            if(FALSE) {
-                shiny::observeEvent( input$gene_methods, {
-                    if(length(input$gene_methods) > 3){
-                        shiny::updateCheckboxGroupInput(session, "gene_methods",
-                                                        selected= tail(input$gene_methods,3))
-                    }
-                    if(length(input$gene_methods) < 1){
-                        shiny::updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
-                    }
-                })
-            }
-
-            shiny::observeEvent( input$options, {
-                ## shinyjs::disable(ns("gene_methods2"))
-            })
-
             shiny::observeEvent( enable_button(), {
                 ## NEED CHECK. not working...
                 ##
@@ -262,6 +246,7 @@ ComputePgxServer <- function(
                 numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
 
                 if(numpgx >= max.datasets) {
+                    ### should use sprintf here...
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
                     msg <- sub("NUMPGX",numpgx,msg)
                     msg <- sub("LIMIT",max.datasets,msg)
@@ -298,21 +283,13 @@ ComputePgxServer <- function(
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
                 ##-----------------------------------------------------------
-                max.genes=20000;max.genesets=5000
-                gx.methods   = c("ttest.welch","trend.limma")
-                gset.methods = c("fisher")
-                extra.methods = ""
-                gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
-                gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("deconv","wordcloud","connectivity")
-
                 max.genes    = as.integer(max.genes)
                 max.genesets = as.integer(max.genesets)
 
                 ## get selected methods from input
-                gx.methods    <- c(input$gene_methods,input$gene_methods2)
-                gset.methods  <- c(input$gset_methods,input$gset_methods2)
-                extra.methods <- c(input$extra_methods,input$extra_methods2)
+                gx.methods    <- input$gene_methods
+                gset.methods  <- input$gset_methods
+                extra.methods <- input$extra_methods
 
                 if(length(gx.methods)==0) {
                     shinyalert::shinyalert("ERROR","You must select at least one gene test method")
@@ -364,6 +341,9 @@ ComputePgxServer <- function(
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 path_to_params <- file.path(temp_dir(), "params.RData")
                 dataset_name <- gsub("[ ]","_",input$upload_name)
+                creator <- session$user
+                libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
+                dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
                 # Define create_pgx function arguments
                 params <- list(
@@ -387,107 +367,126 @@ ComputePgxServer <- function(
                     use.design = use.design,        ## no.design+prune are combined
                     prune.samples = prune.samples,  ##
                     do.cluster = TRUE,
-                    lib.dir = lib.dir,
+                    libx.dir = libx.dir, # needs to be replaced with libx.dir
                     name = dataset_name,
                     datatype = input$upload_datatype,
                     description = input$upload_description,
-                    creator = "user",
+                    creator = creator,
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
-                
                 saveRDS(params, file=path_to_params)
 
                 # Normalize paths
                 script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
-                cmd <- normalizePath(temp_dir())
+                tmpdir <- normalizePath(temp_dir())
 
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
-                    "Sit back and relax!",
-                    paste0("Your dataset will be computed in the background. You can continue to play with a different dataset or get some coffee in the meantime. When it is ready, it will appear in your dataset table as '",dataset_name,"'.")
+                    title = "Crunching your data!",
+                    text = paste0("Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.")
+                    ## timer = 8000
                 )
                 bigdash.selectTab(
                     session,
                     selected = 'load-tab'
                 )
 
-                dbg("[compute PGX process] : starting process")
                 process_counter(process_counter() + 1)
+                dbg("[compute PGX process] : starting processx nr: ", process_counter())
+                dbg("[compute PGX process] : process tmpdir = ", tmpdir)                
+                
+                ## append to process list
+                process_obj(
+                  append(
+                    process_obj(),
+                    list(
+                      ## new background computation job
+                      list(
+                        process = processx::process$new(
+                          "Rscript",
+                          args = c(script_path, tmpdir),
+                          supervise = TRUE,
+                          stderr = '|',
+                          stdout = '|'
+                          ),
+                        number = process_counter(),
+                        dataset_name = gsub("[ ]","_",input$upload_name),
+                        temp_dir = temp_dir(),
+                        stderr = c(),
+                        stdout = c()                  
+                      )
+                    )
+                  )
+                )
 
-                if(is.null(process_obj())) {
-                    process_obj(
-                        list(
-                            list(
-                                process = processx::process$new(
-                                     "Rscript",
-                                     args = c(script_path, cmd),
-                                     supervise = TRUE,
-                                     stderr = '|',
-                                     stdout = '|'
-                                ),
-                                dataset_name = gsub("[ ]","_",input$upload_name),
-                                temp_dir = temp_dir())))
-                } else {
-                    process_obj(
-                        append(
-                            process_obj(),
-                            list(
-                                list(
-                                    process = processx::process$new(
-                                        "Rscript",
-                                        args = c(script_path, cmd),
-                                        supervise = TRUE,
-                                        stderr = '|',
-                                        stdout = '|'
-                                    ),
-                                    dataset_name = gsub("[ ]","_",input$upload_name),
-                                    temp_dir = temp_dir())
-                                ))
-                            )
-                }
             })
 
             check_process_status <- reactive({
                 if (process_counter() == 0) {
                     return(NULL)
                 }
-                
+
                 reactive_timer()
                 active_processes <- process_obj()
                 completed_indices <- c()
 
                 for (i in seq_along(active_processes)) {
                     #i=1
+                    active_obj <- active_processes[[i]]
                     current_process <- active_processes[[i]]$process
                     temp_dir <- active_processes[[i]]$temp_dir
 
                     process_status <- current_process$get_exit_status()
-                    process_alive <- current_process$is_alive()
-
-                    if (!is.null(process_status) && process_status == 0) {
+                    process_alive  <- current_process$is_alive()
+                    nr <- active_obj$number
+                  
+                    ## [https://processx.r-lib.org/] Always
+                    ## make sure that you read out the standard
+                    ## output and/or error of the pipes, otherwise
+                    ## the background process will stop running!
+                    stderr_output <- current_process$read_error_lines()
+                    active_obj$stderr <- c(active_obj$stderr, stderr_output)
+                    stdout_output <- current_process$read_output_lines()
+                    active_obj$stdout <- c(active_obj$stdout, stdout_output)
+                      
+                    errlog <- file.path(temp_dir,"processx-error.log")
+                    outlog <- file.path(temp_dir,"processx-output.log")                      
+                    ## dbg("[compute PGX process] : writing stderr to ", logfile)
+                    cat(paste(stderr_output,collapse='\n'), file=errlog, append=TRUE)
+                    cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)                      
+                  
+                    if (!is.null(process_status)) {
+                      if (process_status == 0) {                    
                         # Process completed successfully
                         dbg("[compute PGX process] : process completed")
-                        on_process_completed(temp_dir = temp_dir)
-                        completed_indices <- c(completed_indices, i)
-                    } else if (!is.null(process_status) && process_status != 0) {
-                        on_process_error()
-                        completed_indices <- c(completed_indices, i)
+                        on_process_completed(temp_dir = temp_dir, nr=nr)
+                      } else {
+                        on_process_error(nr=nr)
+                      }
+                      completed_indices <- c(completed_indices, i)
+
+                      ## read latest output/error and copy to main stderr/stdout
+                      if (length(active_obj$stderr) > 0) {
+                        ## Copy the error to the stderr of main app
+                        message("Standard error from processx:")
+                        ##for (line in stderr_output) { message(line) }
+                        err <- paste0("[processx.",nr,":stderr] ", active_obj$stderr)
+                        writeLines(err, con = stderr())
+                      } 
+                      if (length(active_obj$stdout) > 0) {
+                        ## Copy the error to the stderr of main app
+                        cat("Standard output from processx:")
+                        ##for (line in stderr_output) { message(line) }
+                        out <- paste0("[processx.",nr,":stdout] ", active_obj$stdout)
+                        writeLines(out, con = stdout())
+                      } 
+
+                      
                     } else {
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")
-
-                        ## write error to console and temp file
-                        stderr_output <- current_process$read_error_lines()
-                        ##logfile <- file.path(temp_dir,"process.log")
-                        logfile <- normalizePath(file.path(OPG,"processx.log"))
-                        dbg("[compute PGX process] : writing stderr to ", logfile)
-                        writeLines(stderr_output, logfile)
-                        stderr_output <- stderr_output[nchar(stderr_output)>0]
-                        stderr_output <- paste0("  processx.",i,": ",stderr_output)
-                        writeLines(tail(stderr_output,5))
                     }
-                        
                 }
 
                 # Remove completed processes from the list
@@ -500,10 +499,11 @@ ComputePgxServer <- function(
             })
 
             # Function to execute when the process is completed successfully
-            on_process_completed <- function(temp_dir) {
-                dbg("[compute PGX process] on_process_completed() called!")                
+            on_process_completed <- function(temp_dir,nr) {
+                dbg("[compute PGX process] on_process_completed() called!")
                 process_counter(process_counter()-1) # stop the timer
                 result_pgx <- file.path(temp_dir, "my.pgx")
+                message("[compute PGX process] process",nr,"completed successfully!")
                 if (file.exists(result_pgx)) {
                     load(result_pgx)  ## always pgx
                     computedPGX(pgx)
@@ -513,25 +513,14 @@ ComputePgxServer <- function(
                 unlink(temp_dir, recursive = TRUE)
             }
 
-            on_process_error <- function() {
-                dbg("[compute PGX process] on_process_error() called!")                
+            on_process_error <- function(nr) {
+                dbg("[compute PGX process] on_process_error() called!")
                 process_counter(process_counter()-1) # stop the timer
-                message("Error: Process completed with an error")
-
-                proc <-process_obj()[[1]]$process
-                stderr_output <- proc$read_error_lines()                
-                
-                if (length(stderr_output) > 0) {
-                    message("Standard error output from the process:")
-                    ##for (line in stderr_output) { message(line) }
-                    writeLines(stderr_output, con=stderr())
-                } else {
-                    message("No standard error output available from the process")
-                }
+                message("[compute PGX process] Error: process",nr,"completed with an error!")
             }
 
             ## what does this do???
-            observe(check_process_status())  
+            observe(check_process_status())
 
             observe({
                 if (process_counter() > 0){
@@ -543,7 +532,7 @@ ComputePgxServer <- function(
                 } else if (process_counter() == 0) {
                     shiny::removeUI(selector = ".current-dataset > #spinner-container")
                 }
-                
+
                 if (process_counter() < opt$MAX_DS_PROCESS) {
                     shinyjs::enable("compute")
                 } else {

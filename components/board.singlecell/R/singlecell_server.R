@@ -112,9 +112,9 @@ SingleCellBoard <- function(id, pgx) {
       choices <- names(pgx$families)
       selected <- grep("^CD", choices, ignore.case = TRUE, value = TRUE)[1]
       if (input$mrk_level == "geneset") {
-        nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(COLLECTIONS)[nn >= 5]
-        selected <- grep("HALLMARK", names(COLLECTIONS), ignore.case = TRUE, value = TRUE)
+        nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+        choices <- names(playdata::COLLECTIONS)[nn >= 5]
+        selected <- grep("HALLMARK", names(playdata::COLLECTIONS), ignore.case = TRUE, value = TRUE)
       }
       shiny::updateSelectInput(session, "features", choices = choices, selected = selected)
       shiny::updateSelectInput(session, "mrk_features", choices = choices, selected = selected)
@@ -176,7 +176,7 @@ SingleCellBoard <- function(id, pgx) {
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-      
+
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
       # dbg("[pfGetClusterPositions2] computing distances and clusters...")
@@ -235,13 +235,15 @@ SingleCellBoard <- function(id, pgx) {
       method = shiny::reactive(input$dcmethod),
       refset = shiny::reactive(input$refset),
       layout = shiny::reactive(input$layout),
-      sortby = shiny::reactive(input$sortby)
+      sortby = shiny::reactive(input$sortby),
+      watermark = WATERMARK
     )
 
     singlecell_plot_phenoplot_server(
       id = "phenoplot",
       pgx = pgx,
-      pfGetClusterPositions = pfGetClusterPositions
+      pfGetClusterPositions = pfGetClusterPositions,
+      watermark = WATERMARK
     )
 
     singlecell_plot_mappingplot_server(
@@ -252,7 +254,8 @@ SingleCellBoard <- function(id, pgx) {
       grpvar = shiny::reactive(input$group2),
       refset = shiny::reactive(input$refset2),
       group = shiny::reactive(input$group2),
-      view = shiny::reactive(input$view2)
+      view = shiny::reactive(input$view2),
+      watermark = WATERMARK
     )
 
     singlecell_plot_crosstabPlot_server(
@@ -263,7 +266,7 @@ SingleCellBoard <- function(id, pgx) {
       pheno = shiny::reactive(input$crosstabpheno),
       gene = shiny::reactive(input$crosstabgene),
       getDeconvResults2 = getDeconvResults2,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     singlecell_plot_markersplot_server(
@@ -274,7 +277,7 @@ SingleCellBoard <- function(id, pgx) {
       mrk_features = shiny::reactive(input$mrk_features),
       mrk_search = shiny::reactive(input$mrk_search),
       mrk_sortby = shiny::reactive(input$mrk_sortby),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     singlecell_plot_cytoplot_server(
@@ -285,7 +288,7 @@ SingleCellBoard <- function(id, pgx) {
       cytovar1 = shiny::reactive(input$cytovar1),
       cytovar2 = shiny::reactive(input$cytovar2),
       selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
 
@@ -504,7 +507,7 @@ SingleCellBoard <- function(id, pgx) {
 
     #         par(oma=c(3,2,3,0))
     #         playbase::gx.heatmap(gx0, scale="none", mar=c(15,8),
-    #                    cexRow=1, cexCol=1.3, col=BLUERED(64),
+    #                    cexRow=1, cexCol=1.3, col=playdata::BLUERED(64),
     #                    key=FALSE, keysize=0.6)
     #     })
 

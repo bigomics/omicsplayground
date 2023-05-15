@@ -64,8 +64,8 @@ DataViewUI <- function(id) {
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
   fullH = "calc(100vh - 180px)"
-  fullH.css = "height: calc(100vh - 180px);"  
-  
+  fullH.css = "height: calc(100vh - 180px);"
+
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
     # Gene overview tab #####
@@ -74,73 +74,80 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
-        style = htmltools::css(grid_template_columns = "2fr 10fr"),
-        dataview_module_geneinfo_ui(
-          id = ns("geneinfo"),
-          title = "Gene info",
-          info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
-          caption = "Information about the selected gene and its function from public databases.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        shinyjqui::jqui_sortable(        
+        heights_equal = "row",
+        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
         bslib::layout_column_wrap(
           width = 1,
-          bslib::layout_column_wrap(
-            width = 1/3,
-            dataview_plot_expression_ui(
-              id = ns("expressionplot"),
-              title = "Gene expression",
-              info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
-              caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              label = "a"
-            ),
-            dataview_plot_averagerank_ui(
-              ns("averagerankplot"),
-              label = "b",
-              title = "Average rank",
-              info.text = "Select the gene or feature of interest under the main Options.",
-              caption = "Ranking of the selected gene by decreasing average expression.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            dataview_plot_tsne_ui(
-              ns("tsneplot"),
-              label = "c",
-              title = "t-SNE clustering",
-              info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
-              caption = "t-SNE of samples colored by expression of selected gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
+          height = "100%",
+          heights_equal = "row",
+          style = htmltools::css(grid_template_columns = "2fr 10fr"),
+          dataview_module_geneinfo_ui(
+            id = ns("geneinfo"),
+            title = "Gene info",
+            info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
+            caption = "Information about the selected gene and its function from public databases.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           ),
-          bslib::layout_column_wrap(
-            width = 1,
-            style = htmltools::css(grid_template_columns = "7fr 5fr"),
-            dataview_plot_correlation_ui(
-              ns("correlationplot"),
-              label = "d",
-              title = "Top correlated genes",
-              info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
-              caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
-              height = c("100%", TABLE_HEIGHT_MODAL),              
-              width = c("auto", "100%")
-            ),
-            dataview_plot_tissue_ui(
-              ns("tissueplot"),
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "e",
-              title = "Tissue expression (GTEX)",
-              info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
-              caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
-            )
-          )
-        ))
+          shinyjqui::jqui_sortable(
+            bslib::layout_column_wrap(
+              width = 1,
+              bslib::layout_column_wrap(
+                width = 1/3,
+                dataview_plot_expression_ui(
+                  id = ns("expressionplot"),
+                  title = "Gene expression",
+                  info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
+                  caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  label = "a"
+                ),
+                dataview_plot_averagerank_ui(
+                  ns("averagerankplot"),
+                  label = "b",
+                  title = "Average rank",
+                  info.text = "Select the gene or feature of interest under the main Options.",
+                  caption = "Ranking of the selected gene by decreasing average expression.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                ),
+                dataview_plot_tsne_ui(
+                  ns("tsneplot"),
+                  label = "c",
+                  title = "t-SNE clustering",
+                  info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
+                  caption = "t-SNE of samples colored by expression of selected gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                )
+              ),
+              bslib::layout_column_wrap(
+                width = 1,
+                style = htmltools::css(grid_template_columns = "7fr 5fr"),
+                dataview_plot_correlation_ui(
+                  ns("correlationplot"),
+                  label = "d",
+                  title = "Top correlated genes",
+                  info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+                  caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%")
+                ),
+                dataview_plot_tissue_ui(
+                  ns("tissueplot"),
+                  height = c("100%", TABLE_HEIGHT_MODAL),
+                  width = c("auto", "100%"),
+                  label = "e",
+                  title = "Tissue expression (GTEX)",
+                  info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
+                  caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters.")
+                )
+              )
+            ))
+        )
       )
     ),
-    
+
     # QC tab #####
     shiny::tabPanel(
       "Sample QC",
@@ -148,6 +155,8 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
+        heights_equal = "row",
+        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),
         bslib::layout_column_wrap(
           width = 1/3,
           dataview_plot_totalcounts_ui(
@@ -205,14 +214,17 @@ DataViewUI <- function(id) {
     # counts table tab #####
     shiny::tabPanel(
         "Counts table",
+        bs_alert("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
         bslib::layout_column_wrap(
             width = 1,
+            height = fullH,
+            heights_equal = "row",
             dataview_table_rawdata_ui(
                 ns("rawdatatable"),
                 title = "Gene expression table",
                 info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
                 caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
-                height = c("calc(100vh - 180px)", TABLE_HEIGHT_MODAL),
+                height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("100%", "100%")
             )
         )
@@ -222,6 +234,9 @@ DataViewUI <- function(id) {
       "Sample information",
       bslib::layout_column_wrap(
         width = 1,
+        height = fullH,
+        heights_equal = "row",
+        bs_alert("In the Sample information panel, more complete information about samples can be found."),
         bslib::layout_column_wrap(
           width = 1/2,
           heights_equal = "row",
@@ -230,13 +245,13 @@ DataViewUI <- function(id) {
             title = "Phenotype clustering",
             info.text = "Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix.",
             caption = "Clustered heatmap of sample information (i.e. phenotype data)",
-            height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL),            
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "a"
           ),
           dataview_plot_phenoassociation_ui(
             ns("phenoassociation"),
-            height = c("calc(50vh - 110px)", TABLE_HEIGHT_MODAL),            
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "b",
             title = "Phenotype association",
@@ -248,11 +263,11 @@ DataViewUI <- function(id) {
           width = 1,
           dataview_table_samples_ui(
             ns("sampletable"),
-            height = c("calc(50vh - 100px)", TABLE_HEIGHT_MODAL),
+            height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             title = "Sample information",
             info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
-            caption = "Phenotype information about the samples." 
+            caption = "Phenotype information about the samples."
           )
         )
       )
@@ -261,14 +276,17 @@ DataViewUI <- function(id) {
     # contrasts tab #####
     shiny::tabPanel(
       "Contrasts",
+      bs_alert("The Contrasts panel shows information about the phenotype comparisons."),
       bslib::layout_column_wrap(
         width = 1,
+        height = fullH,
+        heights_equal = "row",
         dataview_table_contrasts_ui(
           ns("contrastTable"),
           title = "Contrast table",
-          info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.", 
+          info.text = "Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.",
           caption = "Table summarizing the contrasts of all comparisons.",
-          height = c("calc(100vh - 185px)", TABLE_HEIGHT_MODAL),
+          height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
       )
@@ -278,7 +296,8 @@ DataViewUI <- function(id) {
       "Resource info",
       bslib::layout_column_wrap(
         width = 1,
-        dataview_table_rescources_ui(ns("resources"))
+        height = fullH,
+        dataview_table_resources_ui(ns("resources"))
       )
     )
   )

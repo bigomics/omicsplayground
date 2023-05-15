@@ -73,7 +73,8 @@ TableModuleUI <- function(id,
     flex = c(NA,1,NA,NA,NA,NA),
     class="tablemodule-header",
     shiny::div(class='tablemodule-title', title=title, title),
-    label,
+    ##    label,
+    "",  ## no labels
     DropdownMenu(
       shiny::div(class='tablemodule-info', shiny::HTML(paste0("<b>", as.character(title),".", "</b>", "&nbsp;", as.character(info.text)))),
       width = "250px",

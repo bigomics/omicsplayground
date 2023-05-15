@@ -7,10 +7,12 @@ AuthenticationUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 }
 
+NoAuthenticationModule <- function( id,
+                                   show_modal = TRUE,
+                                   username = "",
+                                   email = "") {
+  shiny::moduleServer( id, function(input, output, session) {
 
-NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
-                                   username="", email="")
-{
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -71,7 +73,10 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE,
         href  = shiny::reactive('')
     )
     return(rt)
+  } ## end-of-server
+ )
 }
+
 
 ##================================================================================
 ## FirebaseAuthenticationModule
@@ -183,17 +188,17 @@ upgrade.dialog <- function(ns, current.plan) {
     )  ## modalDialog
 }
 
-FirebaseAuthenticationModule <- function(input, output, session)
-{
-    message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
+FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
+  shiny::moduleServer( id, function(input, output, session) {
+    message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
 
     dbg("[AuthenticationModule] getwd = ",getwd())
-    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))
+    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists(firebase.rds))
 
-    if(file.exists("firebase.rds")) {
-      firebase_config <- firebase:::read_config("firebase.rds")
+    if(file.exists(firebase.rds)) {
+      firebase_config <- firebase:::read_config(firebase.rds)
     } else {
-      stop("[ERROR] no firebase.rds file found. please create.")
+      stop("[FATAL ERROR] no firebase.rds file found. please create.")
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 
@@ -212,11 +217,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
     )
 
     firebase <- firebase::FirebaseSocial$
-        #        new(persistence = "local", analytics = TRUE)
         new(persistence = "local")
 
     firebase2 <- firebase::FirebaseEmailLink$
-        #        new(persistence = "local", analytics = TRUE)
         new(persistence = "local")
 
     observeEvent(input$launchGoogle, {
@@ -235,16 +238,17 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$limit <- ""
         USER$token <- ""
 
-        ## sign out
+        ## sign out (THIS LOOSES PERSISTENCE!)
         firebase$sign_out()
+        dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
 
         m <- splashLoginModal(
             ns = ns,
             with.email = FALSE,
             with.username = FALSE,
             with.password = FALSE,
-            with.register = FALSE,
-            with.firebase = TRUE,
+            with.firebase = FALSE,
+            with.firebase_emailonly = TRUE,
             alt = h5("Ready to explore your data?",style="color:white;"),
             login.text = "Sure I am!"
         )
@@ -256,7 +260,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     first_time = TRUE
     observeEvent(USER$logged, {
 
-        ## no need to show the modalif the user is logged this is due
+        ## no need to show the modal if the user is logged this is due
         ## to persistence. But if it is the first time of the session
         ## we force reset/logout to delete sleeping logins.
         if(USER$logged && !first_time) {
@@ -275,7 +279,15 @@ FirebaseAuthenticationModule <- function(input, output, session)
         resetUSER()
     })
 
+
+    email_waiter <- waiter::Waiter$new(
+        id = ns("emailSubmit"),
+        html = waiter::spin_3(),
+        color = waiter::transparent(.5)
+    )
+
     observeEvent( input$emailSubmit, {
+        email_waiter$show()
         if(input$emailInput == ""){
             session$sendCustomMessage(
                 "email-feedback",
@@ -286,6 +298,27 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
             return()
         }
+
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",input$emailInput)
+        if(FALSE && !authorized) {
+          shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
+          resetUSER()
+          email_waiter$hide()
+          return()
+        }
+
+        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",input$emailInput)
+        if(TRUE && is_personal_email) {
+          shinyalert::shinyalert("We're sorry...","No personal email allowed. Please log in with your business, academic or institutional email.")
+          shiny::updateTextInput(session, "emailInput", value="")
+          email_waiter$hide()
+          return()
+        }
+
+        ## >>> OK let's send auth request
         session$sendCustomMessage(
             "email-feedback",
             list(
@@ -294,6 +327,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
         )
         firebase2$send_email(input$emailInput)
+        email_waiter$hide()
     })
 
     observeEvent( firebase$get_signed_in(), {
@@ -308,40 +342,21 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
-            removeModal()
+            if(USER$logged) removeModal()
         })
 
-        for(i in 1:length(response$response)) {
-            dbg("[FirebaseAuthenticationModule] ",names(response$response)[i],"=",response$response[[i]])
-        }
+##        for(i in 1:length(response$response)) {
+##            dbg("[FirebaseAuthentication] ",names(response$response)[i],"=",response$response[[i]])
+##        }
 
-        t1=1637262031144
-        t0 <- response$response[['createdAt']]
-        t1 <- response$response[['lastLoginAt']]
-        if(is.null(t0)) t0 <- 0
-        if(is.null(t1)) t1 <- 0
-        t0 <- as.POSIXct(as.numeric(t0)/1000, origin="1970-01-01")
-        t1 <- as.POSIXct(as.numeric(t1)/1000, origin="1970-01-01")
-        dbg("[FirebaseAuthenticationModule] createdAt=",t0)
-        dbg("[FirebaseAuthenticationModule] lastLoginAt=",t1)
-        dbg("[FirebaseAuthenticationModule] TIMEOUT=",TIMEOUT)
-
-        delta.secs <- as.numeric(Sys.time() - t1 , units='secs')
-        delta.secs
-        WAIT_TIME = 3600
-        WAIT_TIME = TIMEOUT + 60*5
-        WAIT_TIME = 60*5
-
-        ## NEED RETHINK!!! Not working very well because lastLoginAt
-        ## is often the current login time. We would actually need the
-        ## last logout time instead.
-        ##
-        if( FALSE && TIMEOUT>0 && delta.secs < WAIT_TIME ) {
-            wait.mins <- format((WAIT_TIME - delta.secs)/60, digits=0)
-            msg <- paste("You need to wait",wait.mins,"minutes before you can login again.")
-            msg <- paste(msg,"\nLast login:",t1)
-            shinyalert::shinyalert("Bummer...", msg, callbackR = resetUSER)
-            return()
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",response$response$email)
+        if(FALSE && !authorized) {
+          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
+          USER$logged <- FALSE
+          return(NULL)
         }
 
         USER$logged <- TRUE
@@ -409,7 +424,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
         session$sendCustomMessage('manage-sub', content$url)
     })
 
-
     rt <- list(
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),
@@ -420,17 +434,224 @@ FirebaseAuthenticationModule <- function(input, output, session)
         href  = shiny::reactive(USER$href)
     )
     return(rt)
-}
+  }
+)}
 
+##================================================================================
+## EmailLinkeAuthenticationModule (using Firebase, no stripe)
+##================================================================================
+
+EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rds") {
+  shiny::moduleServer( id, function(input, output, session) {
+    message("[AuthenticationModule] >>>> using email link (using Firebase) authentication <<<<")
+
+    dbg("[AuthenticationModule] getwd = ",getwd())
+    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists(firebase.rds))
+
+    if(file.exists(firebase.rds)) {
+      firebase_config <- firebase:::read_config(firebase.rds)
+    } else {
+      stop("[FATAL ERROR] no firebase.rds file found. please create.")
+    }
+    Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
+
+    ns <- session$ns
+    USER <- shiny::reactiveValues(
+        logged = FALSE,
+        name = "",
+        password = "",
+        email = "",
+        level = "",
+        limit = "",
+        token = NULL,
+        uid = NULL,
+        stripe_id = NULL,
+        href = NULL
+    )
+
+    firebase <- firebase::FirebaseSocial$
+        new(persistence = "local")
+
+    firebase2 <- firebase::FirebaseEmailLink$
+        new(persistence = "local")
+
+    observeEvent(input$launchGoogle, {
+        firebase$launch_google(flow = "popup")
+    })
+
+    resetUSER <- function() {
+
+        message("[FirebaseAuthenticationModule] resetting USER... ")
+
+        USER$logged <- FALSE
+        USER$name <- ""
+        USER$password <- ""
+        USER$email <- ""
+        USER$level <- ""
+        USER$limit <- ""
+        USER$token <- ""
+
+        ## sign out (THIS LOOSES PERSISTENCE!)
+        firebase$sign_out()
+        dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
+
+        m <- splashLoginModal(
+            ns = ns,
+            with.email = FALSE,
+            with.username = FALSE,
+            with.password = FALSE,
+            with.firebase = FALSE,
+            with.firebase_emailonly = TRUE,
+            alt = h5("Ready to explore your data?",style="color:white;"),
+            login.text = "Sure I am!"
+        )
+
+        ## login modal
+        shiny::showModal(m)
+    }
+
+    first_time = TRUE
+    observeEvent(USER$logged, {
+
+        ## no need to show the modal if the user is logged this is due
+        ## to persistence. But if it is the first time of the session
+        ## we force reset/logout to delete sleeping logins.
+        if(USER$logged && !first_time) {
+            dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")
+            return()
+        }
+
+        first_time <<- FALSE
+        message("[FirebaseAuthenticationModule] USER not logged in!")
+        resetUSER()
+
+    })
+
+    observeEvent( input$userLogout, {
+        message("[FirebaseAuthenticationModule] userLogout triggered!")
+        resetUSER()
+    })
+
+    email_waiter <- waiter::Waiter$new(
+        id = ns("emailSubmit"),
+        html = waiter::spin_3(),
+        color = waiter::transparent(.5)
+    )
+
+    observeEvent( input$emailSubmit, {
+        email_waiter$show()
+        if(input$emailInput == ""){
+            session$sendCustomMessage(
+                "email-feedback",
+                list(
+                    type = "error",
+                    msg = "Missing email"
+                )
+            )
+            return()
+        }
+
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",input$emailInput)
+        if(FALSE && !authorized) {
+          shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
+          resetUSER()
+          email_waiter$hide()
+          return()
+        }
+
+        ## if it is a new user we ask for business email, old users can go
+        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",input$emailInput)
+        existing_user_dirs <- basename(list.dirs(pgx_dir))
+        new_user <- !(input$emailInput %in% existing_user_dirs)
+        if(TRUE && is_personal_email && new_user) {
+          shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
+          shiny::updateTextInput(session, "emailInput", value="")
+          email_waiter$hide()
+          return()
+        }
+
+        ## >>> OK let's send auth request
+        session$sendCustomMessage(
+            "email-feedback",
+            list(
+                type = "success",
+                msg = "Email sent, check your inbox."
+            )
+        )
+
+        firebase2$send_email(input$emailInput)
+
+        email_waiter$hide()
+    })
+
+    observeEvent( firebase$get_signed_in(), {
+
+        response <- firebase$get_signed_in()
+
+        if(!response$success) {
+            warning("[FirebaseAuthenticationModule] sign in NOT succesful")
+            resetUSER()
+            return()
+        }
+
+        on.exit({
+            dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
+            if(USER$logged) removeModal()
+        })
+
+##      for(i in 1:length(response$response)) {
+##          dbg("[FirebaseAuthentication] ",names(response$response)[i],"=",response$response[[i]])
+##      }
+
+        ## >>> We could check here for email validaty and intercept the
+        ## login process for not authorized people with wrong domain
+        ## or against a subscription list.
+        authorized <- grepl("@bigomics.ch$",response$response$email)
+        if(FALSE && !authorized) {
+          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
+          USER$logged <- FALSE
+          resetUSER()
+          return(NULL)
+        }
+
+        USER$logged <- TRUE
+        USER$uid <- as.character(response$response$uid)
+        USER$name  <- response$response$displayName
+        USER$email <- response$response$email
+
+        if(!is.null(USER$name))  USER$name  <- as.character(USER$name)
+        if(!is.null(USER$email)) USER$email <- as.character(USER$email)
+        if(is.null(USER$name))   USER$name  <- ""
+        if(is.null(USER$email))  USER$email <- ""
+
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
+
+        session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
+    })
+
+    rt <- list(
+        name   = shiny::reactive(USER$name),
+        email  = shiny::reactive(USER$email),
+        level  = shiny::reactive(USER$level),
+        logged = shiny::reactive(USER$logged),
+        limit  = shiny::reactive(USER$limit),
+        href   = shiny::reactive(USER$href)
+    )
+    return(rt)
+  }
+)}
 
 ##================================================================================
 ## PasswordAuthenticationModule (ask login.name + password)
 ##================================================================================
 
 credentials.file='CREDENTIALS'
-PasswordAuthenticationModule <- function(input, output, session,
-                                         credentials.file)
-{
+PasswordAuthenticationModule <- function(id, credentials.file) {
+  shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns
@@ -561,8 +782,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         limit  = shiny::reactive(USER$limit)
     )
     return(rt)
-}
-
+  }
+)}
 
 ##================================================================================
 ## HELPER FUNCTIONS
@@ -607,8 +828,9 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 }
 
 splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
-                             with.username=FALSE, with.register=FALSE,
+                             with.username=FALSE,
                              with.firebase=FALSE,
+                             with.firebase_emailonly=FALSE,
                              login.text="Login", alt=NULL)
 {
     if(is.null(ns)) ns <- function(e) return(e)
@@ -733,6 +955,35 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
             )
         )
     }
+    if(with.firebase_emailonly) {
+        div.firebase <- div(
+            class = "card",
+            div(
+                class = "card-body",
+                h1(
+                    "Sign in",
+                    class = "card-title pb-2"
+                ),
+                div(
+                    "Enter your email and we'll send you a link."
+                ),
+                textInput(
+                    ns("emailInput"),
+                    "",
+                    placeholder = "Your email",
+                    width = "100%"
+                ),
+                actionButton(
+                    ns("emailSubmit"),
+                    "Send link",
+                    class = "btn-warning"
+                ),
+                p(
+                    id = "emailFeedbackShow"
+                )
+            )
+        )
+    }
 
     div.alt <- div()
     if(!is.null(alt)) div.alt <- alt
@@ -744,16 +995,8 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
     )
 
-    if(with.register) {
-      div.button <- div(
-        id="splash-buttons",
-        actionButton(ns("login_btn"),login.text, class = "btn-outline-primary"),
-        actionButton(ns("register_btn"),"Register",class="btn-primary")
-      )
-    }
-
     ##splash.panel=div();ns=function(x)x
-    if(with.firebase) {
+    if(with.firebase || with.firebase_emailonly) {
         splash.content <- div.firebase
     } else {
         splash.content <- div(

@@ -32,7 +32,7 @@ singlecell_plot_phenoplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    plotlib = "plotly",      
+    plotlib = "plotly",
     label = label,
     info.text = info.text,
     title = title,
@@ -82,12 +82,12 @@ singlecell_plot_phenoplot_server <- function(id,
       ## if(!input$tsne.all) return(NULL)
       pd <- plot_data()
       shiny::req(pd)
-        
+
       sel <- pd[["sel"]]
-      pheno <- pd[["pheno"]]  
+      pheno <- pd[["pheno"]]
       Y <- pd[["pgx"]]$Y
       pos <- pd[["pos"]]
-        
+
       cex1 <- 1.2 * c(1.8, 1.3, 0.8, 0.5)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
       cex1 <- cex1 * ifelse(length(pheno) > 6, 0.8, 1)
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
@@ -116,11 +116,11 @@ singlecell_plot_phenoplot_server <- function(id,
           klr0 <- klrpal[ny]
         } else {
           y <- factor(as.character(y))
-          klrpal <- COLORS
+          klrpal <- playdata::COLORS
           klrpal <- paste0(gplots::col2hex(klrpal), "99")
           klr0 <- klrpal[y]
         }
-        
+
         ## jj <- which(is.na(klr0))
         ## if (length(jj)) klr0[jj] <- "#AAAAAA22"
         ## base::plot(pd[["pos"]],
@@ -128,11 +128,11 @@ singlecell_plot_phenoplot_server <- function(id,
         ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
         ## )
         ## title(, cex.main = 1.3, line = 0.5, col = "grey40")
-        
+
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = y,
-          type = "factor", ## always factor?  
+          type = "factor", ## always factor?
           col = klrpal,
           cex = 0.5*cex1*cex,
           xlab = NA,
@@ -160,9 +160,9 @@ singlecell_plot_phenoplot_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-      pd  <- plot_data()  
-      plt <- get_plots(cex=0.9) 
-      shiny::req(plt)        
+      pd  <- plot_data()
+      plt <- get_plots(cex=0.9)
+      shiny::req(plt)
       ## layout
       nr = 2
       if (length(plt) > 4) nr = 3
@@ -177,13 +177,13 @@ singlecell_plot_phenoplot_server <- function(id,
         plotly_default() %>%
         plotly::layout(
           margin = list(l=10,r=10,b=10,t=20) # lrbt
-        ) 
+        )
       return(fig)
     }
 
     plotly_modal.RENDER <- function() {
-      pd  <- plot_data()  
-      plt <- get_plots(cex=1.3) 
+      pd  <- plot_data()
+      plt <- get_plots(cex=1.3)
       ## layout
       nc = 2
       if (length(plt) > 4) nc = 3
@@ -194,15 +194,15 @@ singlecell_plot_phenoplot_server <- function(id,
         plt,
         nrows = nr,
         margin = c(0.01,0.01,0.01,0.045)
-      ) %>% 
+      ) %>%
         plotly_modal_default() %>%
         plotly::layout(
           margin = list(l=20,r=20,b=20,t=40) # lrbt
-        ) 
-      
+        )
+
       return(fig)
     }
-    
+
     PlotModuleServer(
       "plotmodule",
       func = plotly.RENDER,

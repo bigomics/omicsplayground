@@ -53,6 +53,7 @@ ExpressionBoard <- function(id, pgx) {
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      names(fam) <- sub(".*:","",fam)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
@@ -151,7 +152,7 @@ ExpressionBoard <- function(id, pgx) {
       ## is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
       is.sig <- 1 * (mx.q <= stars.fdr) * (abs(mx$meta.fx) >= lfc)
       ## stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]
-      stars <- sapply(rowSums(is.sig, na.rm = TRUE), star.symbols)
+      stars <- sapply(rowSums(is.sig, na.rm = TRUE), playbase::star.symbols)
 
       ## recalculate group averages???
       y0 <- pgx$model.parameters$exp.matrix[, comparison]
@@ -217,7 +218,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features <- input$gx_features
       if (gx_features != "<all>") {
         ## gset <- GSETS[[gx_features]]
-        gset <- unlist(getGSETS(gx_features))
+        gset <- unlist(playdata::getGSETS(gx_features))
         psel <- playbase::filterProbes(pgx$genes, gset)
       }
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]
@@ -431,7 +432,7 @@ ExpressionBoard <- function(id, pgx) {
       sel.row <- 1
       sel.row <- genetable_rows_selected()
       if (is.null(sel.row)) return(NULL)
-      
+
       gene0 <- rownames(res)[sel.row]
       gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
 
@@ -461,7 +462,7 @@ ExpressionBoard <- function(id, pgx) {
       id = "genetable",
       res = filteredDiffExprTable,
       height = c(tabH - 10, 700),
-      scrollY = "200px"      
+      scrollY = "200px"
     )
 
     gsettable <- expression_table_gsettable_server(

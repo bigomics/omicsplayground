@@ -91,11 +91,13 @@ connectivity_plot_scatterPlot_server <- function(id,
           df <- df[abs(df$score) > 0, , drop = FALSE]
           ct2 <- rownames(df)[sel.row]
           fc2 <- getConnectivityMatrix(sigdb, select = ct2)[, 1]
-                
+
           ## match with selection filter
           gg <- unique(c(names(fc1), names(fc2))) ## union or intersection??
           fc1 <- fc1[match(gg, names(fc1))]
           fc2 <- fc2[match(gg, names(fc2))]
+          names(fc1) <- gg
+          names(fc2) <- gg
           df <- data.frame(fc2, fc1)
           rownames(df) <- gg
           colnames(df) <- c(ct2, ct1)
@@ -117,7 +119,7 @@ connectivity_plot_scatterPlot_server <- function(id,
           na.zero <- rownames(df)[rowSums(df == 0) > 0] ## probably was missing
           sel.genes <- setdiff(sel.genes, c(na.fc, na.zero))
         }
-
+        
         ## Result object. Remember the first element of the list must
         ## be a dataframe for CSV download from the plotmodule UI.
         res <- list(

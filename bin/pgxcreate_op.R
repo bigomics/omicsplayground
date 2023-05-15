@@ -46,7 +46,7 @@ pgx <- playbase::pgx.computePGX(
   use.design = params$use.design,        ## no.design+prune are combined
   prune.samples = params$prune.samples,  ##
   do.cluster = params$do.cluster,
-  lib.dir = params$lib.dir
+  libx.dir = params$libx.dir
   )
 
 # annotate pgx
@@ -59,7 +59,7 @@ pgx$date <- params$date
 
 message("[ComputePgxServer:@compute] initialize object")
 
-# Save output to a CSV file
+# Save output to a PGX file
 save(pgx, file = file.path(temp_dir,"my.pgx"))
 
 message("[compute PGX process] : process finished, pgx is saved to my.pgx")

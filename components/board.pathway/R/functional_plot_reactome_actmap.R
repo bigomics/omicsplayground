@@ -83,7 +83,7 @@ functional_plot_reactome_actmap_server <- function(id,
             nterms = 50,
             nfc = 20,
             tl.cex = 0.82,
-            row.nchar = 60            
+            row.nchar = 50            
         )
       }
 

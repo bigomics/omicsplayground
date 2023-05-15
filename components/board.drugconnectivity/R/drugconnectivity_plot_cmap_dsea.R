@@ -23,25 +23,29 @@ drugconnectivity_plot_cmap_dsea_ui <- function(
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
-    tipifyL(
+    withTooltip(
       shiny::radioButtons(
         ns("cmap_labeltype"), "label type:",
         c("drugs", "MOA", "target"),
         inline = TRUE
       ),
-      "Label point with drugs, MOA terms or targets (if no drug selected)."
+      "Label point with drugs, MOA terms or targets (if no drug selected).",
+      placement = "left", options = list(container = "body")
     ),
-    tipifyL(
+    withTooltip(
       shiny::radioButtons(ns("cmap_nlabel"), "number of labels:", c(3, 10, 20, 100),
         selected = 10, inline = TRUE
       ),
-      "Number of labels to show."
+      "Number of labels to show.",
+      placement = "left", options = list(container = "body")
     ),
-    tipifyL(shiny::checkboxGroupInput(
+    withTooltip(shiny::checkboxGroupInput(
       ns("cmap_labeloptions"), "label options:",
       choices = c("show", "fixed"),
       selected = c("show"), inline = TRUE
-    ), "Other labels options.")
+    ), "Other labels options.",
+    placement = "left", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(ns("plot"),

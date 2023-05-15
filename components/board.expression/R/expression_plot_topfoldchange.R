@@ -130,6 +130,7 @@ expression_plot_topfoldchange_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
+      remove_margins = FALSE,
       # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots

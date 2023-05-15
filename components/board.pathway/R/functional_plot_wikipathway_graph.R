@@ -37,7 +37,7 @@ functional_plot_wikipathway_graph_ui <- function(
     info.width = info.width,
     options = NULL,
     download.fmt = NULL,
-    # download.fmt = c("png","csv"),    
+    # download.fmt = c("png","csv"),
     height = height,
     width = width
   )
@@ -60,8 +60,8 @@ functional_plot_wikipathway_graph_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
 
-      ## preload... takes few seconds... 
-      suppressMessages(require(SBGNview)) 
+      ## preload... takes few seconds...
+      suppressMessages(require(SBGNview))
 
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
@@ -84,7 +84,7 @@ functional_plot_wikipathway_graph_server <- function(id,
 
         res <- plot_data()
         shiny::req(res, res$df)
-        
+
         df <- res$df
         comparison <- res$fa_contrast
         wikipathway_table <- res$wikipathway_table
@@ -115,7 +115,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
         fc <- fc[order(-abs(fc))]
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
-                
+
         if (is.null(df)) {
           return(NULL.IMG)
         }
@@ -125,18 +125,18 @@ functional_plot_wikipathway_graph_server <- function(id,
           return(NULL.IMG)
         }
         sel.row <- as.integer(sel.row)
-        
+
         pathway.id <- "WP179"
         pathway.name <- pw.genes <- "x"
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
         }
         dbg("[functional_plot_wikipathway_graph.R] sel.row = ",sel.row)
-        
+
         if (!is.null(sel.row) && length(sel.row) > 0) {
           pathway.id   <- df[sel.row, "pathway.id"]
           pathway.name <- df[sel.row, "pathway"]
-          pw.genes <- unlist(getGSETS(as.character(pathway.name)))
+          pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
 
         dbg("[functional_plot_wikipathway_graph.R] rendering WikiPathway",pathway.id)
@@ -147,7 +147,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         tmpfile <- paste0(tempfile(),".svg")
-        svg <- wikipathview(wp=pathway.id, val=fc, dir=svg.dir) 
+        svg <- wikipathview(wp=pathway.id, val=fc, dir=svg.dir)
         fluctuator::write_svg(svg, file = tmpfile)
 
         list(
@@ -157,7 +157,7 @@ functional_plot_wikipathway_graph_server <- function(id,
           alt = "wikipathway SVG"
         )
       } #)
-      
+
       plot_RENDER <- function() {
         img <- getPathwayImage()
         shiny::req(img$width, img$height)
@@ -168,7 +168,7 @@ functional_plot_wikipathway_graph_server <- function(id,
           controlIconsEnabled = TRUE,
           zoomScaleSensitivity = 0.4,
           minZoom = 1,
-          maxZoom = 5,          
+          maxZoom = 5,
           viewBox = FALSE
         )
         return(pz)
