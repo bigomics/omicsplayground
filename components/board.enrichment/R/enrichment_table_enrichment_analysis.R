@@ -84,7 +84,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         extensions = c("Scroller"),
         plugins = 'scrollResize',
         fillContainer = TRUE,
-        selection = list(mode = selectmode, target = "row", selected = c(1,2,3,4)),
+        selection = list(mode = selectmode, target = "row", selected = c(1)),
         options = list(
           dom = "frtip",
           paging = TRUE,
@@ -118,7 +118,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       func = gseatable.RENDER,
       func2 = gseatable.RENDER_modal,
       csvFunc = table_data,
-      selector = "multiple"
+      selector = "single"
     )
 
     return(gseatable)
