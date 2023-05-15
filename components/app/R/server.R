@@ -196,7 +196,7 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        x <- tagList(
+        additional_ui_tabs <- tagList(
             bigdash::bigTabItem(
                 "dataview-tab",
                 DataViewInputs("dataview"),
@@ -286,7 +286,7 @@ app_server <- function(input, output, session) {
         shiny::insertUI(
             selector = '#big-tabs',
             where = 'beforeEnd',
-            ui = x,
+            ui = additional_ui_tabs,
             immediate = TRUE
         )
 
