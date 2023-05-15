@@ -216,7 +216,7 @@ enrichment_plot_compare_server <- function(id,
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
             ylim = c(0, ymax),
-            xlab = "difference  (log2FC)",
+            xlab = "difference  (log2FC)",base_size
             ylab = "significance  (-log10q)",
             hilight.lwd = 0,
             hilight.col = "#1e60bb",
@@ -231,7 +231,7 @@ enrichment_plot_compare_server <- function(id,
       return(plt)
     }
 
-    volcano.RENDER <- function() {
+    statscontrast.RENDER <- function() {
       plt <- get_ggplots(cex=0.4, base_size=12)
       shiny::req(plt)    
       ## ------------- layout ----------------
@@ -251,7 +251,7 @@ enrichment_plot_compare_server <- function(id,
     }
     
     plot_grid <- list(
-      list(plotlib = "grid", func = volcano.RENDER, card = 1),
+      list(plotlib = "grid", func = statscontrast.RENDER, card = 1),
       list(plotlib = "base", func = compare.RENDER, card = 2)
       )
     
