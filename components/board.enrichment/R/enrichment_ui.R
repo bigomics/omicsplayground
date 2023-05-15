@@ -100,7 +100,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_geneplot_ui(
           ns("subplot_geneplot"),
           title = "Expression geneplot",
-          info.text = "An expression barplot per sample group for the gene that is selected from the genes Table II. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
+          info.text = "An expression barplot per sample group for the gene that is selected from the genes table on the left. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
           caption = "Barplot of the selected gene in the phenotypic groups. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", 900)
@@ -108,7 +108,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_scatter_ui(
           ns("subplot_scatter"),
           title = "Enrichment vs. expression",
-          info.text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table I and the gene selected from the genes Table II.",
+          info.text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis table in the bottom, and the gene selected from the genes table on the left.",
           caption = "Scatter plot of the selected gene set enrichment scores versus the selected gene expression values by sample.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", 900)
@@ -136,9 +136,9 @@ EnrichmentUI <- function(id) {
         style = halfH,
         enrichment_plot_volcanomethods_ui(
           ns("volcanoMethods"),
-          title = "Volcano plots for all methods",
-          info.text = "The Volcano (methods) panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings.",
-          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods.",
+          title = "Group statistics",
+          info.text = "The Volcano panel displays the volcano plots provided by different enrichment calculation methods or contrasts. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings.",
+          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods or contrasts.",
           height = c("calc(50vh - 200px)", TABLE_HEIGHT_MODAL)
         )
       )
