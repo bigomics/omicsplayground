@@ -7,6 +7,7 @@ enrichment_plot_volcanomethods_ui <- function(
   id,
   title,
   info.text,
+  height,
   caption) {
   ns <- shiny::NS(id)
 
@@ -15,6 +16,7 @@ enrichment_plot_volcanomethods_ui <- function(
     plotlib = "grid",
     title = title,
     caption = caption,
+    height = height,
     info.text = info.text,
     card_names = c("Methods", "Contrasts"),
     cards = TRUE,

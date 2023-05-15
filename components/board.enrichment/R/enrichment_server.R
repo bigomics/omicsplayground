@@ -456,19 +456,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     # Top enriched gene sets
 
-    enrichment_plot_top_enrich_gsets_server(
-      "topEnriched",
-      pgx = pgx,
-      getFilteredGeneSetTable = getFilteredGeneSetTable,
-      gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable_rows_selected = gseatable_rows_selected,
-      watermark = WATERMARK
+    # Enrichment analysis
+
+    gseatable <- enrichment_table_enrichment_analysis_server(
+      "gseatable",
+      getFilteredGeneSetTable = getFilteredGeneSetTable
     )
 
-    # Frequency in top gene sets
 
-    enrichment_plot_freq_top_gsets_server(
-      "topEnrichedFreq",
+    enrichment_plot_top_enrich_gsets_server(
+      "topEnriched",
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
@@ -534,20 +531,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       selected_gsetmethods = selected_gsetmethods,
       watermark = WATERMARK
     )
-
-    # Volcano plots for all contrasts
-
-    # enrichment_plot_volcanoall_server(
-    #   "volcanoAll",
-    #   pgx = pgx,
-    #   gs_features = shiny::reactive(input$gs_features),
-    #   gs_statmethod = shiny::reactive(input$gs_statmethod),
-    #   gs_fdr = shiny::reactive(input$gs_fdr),
-    #   gs_lfc = shiny::reactive(input$gs_lfc),
-    #   calcGsetMeta = calcGsetMeta,
-    #   watermark = WATERMARK
-    # )
-
+    
     # Volcano plots for all methods
 
     enrichment_plot_volcanomethods_server(
@@ -560,13 +544,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       calcGsetMeta = calcGsetMeta,
       gs_statmethod = shiny::reactive(input$gs_statmethod),
       watermark = WATERMARK
-    )
-
-    # Enrichment analysis
-
-    gseatable <- enrichment_table_enrichment_analysis_server(
-      "gseatable",
-      getFilteredGeneSetTable = getFilteredGeneSetTable
     )
 
     # Genes in gene set
