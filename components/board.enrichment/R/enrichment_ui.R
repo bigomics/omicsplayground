@@ -94,7 +94,7 @@ EnrichmentUI <- function(id) {
     shiny::tabPanel(
       "Genes by pathway",
       bslib::layout_column_wrap(
-        width = 1/4,
+        width = 1/3,
         style = halfH,
         enrichment_table_genes_in_geneset_ui(
           ns("genetable"),
@@ -183,7 +183,7 @@ EnrichmentUI <- function(id) {
       "Table",
       bslib::layout_column_wrap(
         width = 1,
-        style = paste(halfH, htmltools::css(grid_template_columns = "2fr 1fr")),
+        style = paste(halfH, htmltools::css(grid_template_columns = "1fr")),
         enrichment_table_enrichment_analysis_ui(
           ns("gseatable"),
           title = "Enrichment analysis",
