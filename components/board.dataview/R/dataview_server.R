@@ -12,13 +12,21 @@
 #' @param pgx Reactive expression that provides the input pgx data object
 #'
 #' @export
-DataViewBoard <- function(id, pgx) {
+DataViewBoard <- function(id, pgx, user) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     rowH <- 355 ## row height of panels
     imgH <- 315 ## height of images
     fullH <- 750 ## full height of panel
     tabH <- 600 ## height of tables
+
+    ## bs alerts
+
+    output$bs_alert1 <- renderUI({
+        if (user$enable_tabinfo()) {
+            bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database.")
+        }
+    })
 
     ## ----------------------------------------------------------------------
     ## More Info (pop up window)

@@ -200,7 +200,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['dataview'])  {
             info("[server.R] calling module dataview")
-            DataViewBoard("dataview", pgx=PGX)
+            DataViewBoard("dataview", pgx=PGX, user=env$user)
           }
 
           if(ENABLED['clustersamples']) {
@@ -356,7 +356,7 @@ app_server <- function(input, output, session) {
             ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
             shinyjs::runjs("sidebarClose()")
             shinyjs::runjs("settingsClose()")
-            bigdash.selectTab(session, selected = 'welcome-tab')            
+            bigdash.selectTab(session, selected = 'welcome-tab')
             return(NULL)
         }
 
@@ -366,10 +366,10 @@ app_server <- function(input, output, session) {
 
         ## do we have libx libraries?
         has.libx <- dir.exists(file.path(OPG,"libx"))
-        
+
         ## Beta features
         info("[server.R] disabling beta features")
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets        
+        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
@@ -378,7 +378,7 @@ app_server <- function(input, output, session) {
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
         tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-        tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)        
+        tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
         tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
         tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
         tabRequire(PGX, session, "cell-tab", "deconv", TRUE)

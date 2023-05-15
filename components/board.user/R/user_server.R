@@ -101,6 +101,9 @@ UserBoard <- function(id, user) {
     res <- list(
       enable_beta = reactive({
         as.logical(input$enable_beta)
+      }),
+      enable_tabinfo = reactive({
+          as.logical(input$enable_tabinfo)
       })
     )
     return(res)

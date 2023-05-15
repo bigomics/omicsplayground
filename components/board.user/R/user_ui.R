@@ -24,7 +24,8 @@ UserUI <- function(id) {
                       height = "calc(100vh - 183px)",
                       width = 1,
                       tagList(
-                          shinyWidgets::prettySwitch(ns("enable_beta"), "enable beta features")
+                          shinyWidgets::prettySwitch(ns("enable_beta"), "enable beta features"),
+                          shinyWidgets::prettySwitch(ns("enable_tabinfo"), "enable tab info / alerts")
                       )
                   )
               ),
