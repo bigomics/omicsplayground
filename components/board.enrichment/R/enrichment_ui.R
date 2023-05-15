@@ -169,9 +169,7 @@ EnrichmentUI <- function(id) {
           ns("volcanoMethods"),
           title = "Volcano plots for all methods",
           info.text = "The Volcano (methods) panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings.",
-          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
+          caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods."
         )
       )
     )

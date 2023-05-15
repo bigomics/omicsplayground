@@ -529,11 +529,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     enrichment_plot_compare_server(
       "compare",
       pgx = pgx,
-      gs_features = shiny::reactive(input$gs_features),
-      gs_statmethod = shiny::reactive(input$gs_statmethod),
-      gs_fdr = shiny::reactive(input$gs_fdr),
-      gs_lfc = shiny::reactive(input$gs_lfc),
-      calcGsetMeta = calcGsetMeta,
       gs_contrast = shiny::reactive(input$gs_contrast),
       gset_selected = gset_selected,
       selected_gsetmethods = selected_gsetmethods,
@@ -562,6 +557,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      calcGsetMeta = calcGsetMeta,
+      gs_statmethod = shiny::reactive(input$gs_statmethod),
       watermark = WATERMARK
     )
 
