@@ -67,7 +67,7 @@ EnrichmentUI <- function(id) {
         style = halfH,
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
-          title = "Enriched genes in genset",
+          title = "Genes colored by geneset",
           info.text = "Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis Table I are highlighted in blue.",
           caption = "Volcano-plot showing significance versus fold-change with genes from the selected gene set highlighted.",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -91,7 +91,7 @@ EnrichmentUI <- function(id) {
         style = halfH,
         enrichment_table_genes_in_geneset_ui(
           ns("genetable"),
-          title = "Genes present in gene sets",
+          title = "Genes present in geneset",
           info.text = "By clicking on a gene set in the table I, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the Expression barplot and its correlation to the gene set in the Gene to gene set correlation scatter plot under the Plots section.",
           caption = "Table showing the fold-change, statistics and correlation of the genes overlapping all selected gene sets.",
           height = c("100%", TABLE_HEIGHT_MODAL),
