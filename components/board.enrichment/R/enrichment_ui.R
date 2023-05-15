@@ -61,7 +61,7 @@ EnrichmentUI <- function(id) {
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Enriched pathways",
+      "Enriched geneset",
       bslib::layout_column_wrap(
         width = 1/2,
         style = halfH,
@@ -180,7 +180,7 @@ EnrichmentUI <- function(id) {
   tabs2 <- shiny::tabsetPanel(
     id = ns("tabs2"),
     shiny::tabPanel(
-      "Table",
+      "Summary of results",
       bslib::layout_column_wrap(
         width = 1,
         style = paste(halfH, htmltools::css(grid_template_columns = "1fr")),
@@ -203,9 +203,10 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Enrichment (all)",
+      "Summary by contrast",
       bslib::layout_column_wrap(
         width = 1,
+        style = paste(halfH, htmltools::css(grid_template_columns = "1fr")),
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
           title = "Gene set enrichment for all contrasts",
@@ -220,6 +221,7 @@ EnrichmentUI <- function(id) {
       "FDR table",
       bslib::layout_column_wrap(
         width = 1,
+        style = paste(halfH, htmltools::css(grid_template_columns = "1fr")),
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
           title = "Number of significant gene sets",
