@@ -13,12 +13,11 @@ enrichment_plot_compare_ui <- function(
   ns <- shiny::NS(id)
 
   PlotModuleUI(
-    ns("plot"),
+    ns("pltmod"),
     title = title,
     caption = caption,
     info.text = info.text,
-    height = height,
-    width = width,
+    cards = TRUE,
     plotlib = c("grid", "base"),
     download.fmt = c("png", "pdf"),
     card_names = c("Volcano", "Ranking")
@@ -37,6 +36,7 @@ enrichment_plot_compare_server <- function(id,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     plot_data <- shiny::reactive({
 
@@ -56,8 +56,7 @@ enrichment_plot_compare_server <- function(id,
       lfc <- as.numeric(gs_lfc())
       sel.gsets <- NULL
       sel.gsets <- rownames(meta[[1]])
-      sel.gsets <- COLLECTIONS[[1]]
-      sel.gsets <- COLLECTIONS[[gs_features()]]
+      sel.gsets <- playdata::COLLECTIONS[[gs_features()]]
 
       i <- 1
       mx.list <- list()
@@ -223,9 +222,8 @@ enrichment_plot_compare_server <- function(id,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.8*cex,
-            base_size = base_size
-          ) + ggplot2::theme_bw(base_size = base_size)
+            cex.lab = 1.8*cex
+          ) + ggplot2::theme_bw()
           
           shiny::incProgress(1.0 / nplots)
         }

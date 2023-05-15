@@ -92,7 +92,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Genes by pathway",
+      "Genes by geneset",
       bslib::layout_column_wrap(
         width = 1/3,
         style = halfH,
@@ -134,7 +134,7 @@ EnrichmentUI <- function(id) {
       "Compare contrasts",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,          
+        style = halfH,
         enrichment_plot_compare_ui(
           ns("compare"),
           title = "Enrichment of geneset across multiple contrasts",
@@ -161,7 +161,7 @@ EnrichmentUI <- function(id) {
     #   )
     # ),
     shiny::tabPanel(
-      "Volcano (methods)",
+      "Compare statistics",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
