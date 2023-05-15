@@ -321,6 +321,9 @@ UploadBoard <- function(id,
                 df <- as.matrix(df0)
                 matname <- "counts.csv"
               }
+
+
+
             } else if (grepl("expression", fn1, ignore.case = TRUE)) {
               dbg("[upload_files] expression.csv : fn1 = ", fn1)
               ## allows duplicated rownames
@@ -394,19 +397,19 @@ UploadBoard <- function(id,
         }
       }
 
-      if ("counts.csv" %in% names(matlist)) {
-        ## Convert to gene names (need for biological effects)
-        dbg("[upload_files] converting probe names to symbols...")
-        X0 <- matlist[["counts.csv"]]
-        pp <- rownames(X0)
-        rownames(X0) <- playbase::probe2symbol(pp)
-        sel <- !(rownames(X0) %in% c(NA, "", "NA"))
-        X0 <- X0[sel, ]
-        xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
-        X0 <- do.call(rbind, xx)
-        dbg("[upload_files] ...done!")
-        matlist[["counts.csv"]] <- X0
-      }
+      #if ("counts.csv" %in% names(matlist)) {
+      #  ## Convert to gene names (need for biological effects)
+      #  dbg("[upload_files] converting probe names to symbols...")
+      #  X0 <- matlist[["counts.csv"]]
+      #  pp <- rownames(X0)
+      #  rownames(X0) <- playbase::probe2symbol(pp)
+      #  sel <- !(rownames(X0) %in% c(NA, "", "NA"))
+      #  X0 <- X0[sel, ]
+      #  xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
+      #  X0 <- do.call(rbind, xx)
+      #  dbg("[upload_files] ...done!")
+      #  matlist[["counts.csv"]] <- X0
+      #}
 
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
@@ -462,6 +465,42 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL
       }
+    })
+
+
+    ## DATA PREVIEW ##
+    observeEvent(uploaded$counts.csv, {
+        if (input$preview_data) {
+            shiny::showModal(shiny::modalDialog(
+                DT::dataTableOutput(session$ns("data_preview_table")),
+                footer = tagList(
+                    shiny::actionButton(
+                        session$ns('discard_data'),
+                        label = 'Discard',
+                        style = 'display: inline-block; margin-left: 15px;'
+                    ),
+                    shiny::actionButton(
+                        session$ns('approve_data'),
+                        label = 'Approve',
+                        style = 'display: inline-block'
+                    )
+                ),
+                size = 'xl'
+            ))
+        }
+    }, ignoreNULL = TRUE)
+
+    output$data_preview_table <- DT::renderDataTable({
+        uploaded$counts.csv
+    })
+
+    observeEvent(input$approve_data, {
+        shiny::removeModal()
+    })
+
+    observeEvent(input$discard_data, {
+        uploaded$counts.csv <- NULL
+        shiny::removeModal()
     })
 
     ## ------------------------------------------------------------------
