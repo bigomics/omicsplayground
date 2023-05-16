@@ -69,7 +69,8 @@ UploadBoard <- function(id,
 </ol>
 
 <br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
+    )
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
@@ -134,25 +135,25 @@ UploadBoard <- function(id,
         ##   btn_labels = NA
         ## )
         shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
-        playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+          playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
         })
         ##   shinyWidgets::closeSweetAlert()
 
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+        r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
       }
 
       ## shiny::removeModal()
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
-      load_my_dataset <- function(){
+      load_my_dataset <- function() {
         ## update Session PGX
         ## dbg("[upload_server:load_my_dataset] input$confirmload = ",input$confirmload)
         ## IK 24.4.2023: input$confirmload is empty... why???
         ##       if(input$confirmload)
         {
           dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
-          empty.slots <- setdiff(names(pgx),names(new_pgx))
+          empty.slots <- setdiff(names(pgx), names(new_pgx))
           isolate({
             for (e in empty.slots) {
               pgx[[e]] <- NULL
@@ -162,19 +163,19 @@ UploadBoard <- function(id,
             }
           })
           dbg("[UploadBoard@load_react] **** finished  ****")
-          bigdash.selectTab(session, selected = 'dataview-tab')
+          bigdash.selectTab(session, selected = "dataview-tab")
           ## r_global$loadedDataset <- r_global$loadedDataset+1
-          r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
         suppressWarnings(remove(new_pgx))
       }
 
-      if(r_global$loadedDataset > 0){
+      if (r_global$loadedDataset > 0) {
         # check if user already has a dataset loaded and have a different UX in that case
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
-          ##text = "What do you want to do next?",
-          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),
+          ## text = "What do you want to do next?",
+          text = paste("We finished computing your dataset", new_pgx$name, "and it's ready for visualization. Happy discoveries!"),
           confirmButtonText = "Show my new data!",
           # cancelButtonText = "Stay here",
           # showCancelButton = TRUE,
@@ -184,15 +185,14 @@ UploadBoard <- function(id,
         )
       } else {
         load_my_dataset()
-        bigdash.selectTab(session, selected = 'load-tab')
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-        r_global$loadedDataset <- r_global$loadedDataset+1
+        bigdash.selectTab(session, selected = "load-tab")
+        r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+        r_global$loadedDataset <- r_global$loadedDataset + 1
       }
 
       on.exit({
         ## suppressWarnings(remove(new_pgx))
       })
-
     })
 
     # Some 'global' reactive variables used in this file
@@ -209,18 +209,18 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Contrasts")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
+          # shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (all(has.upload(need2))) {
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
+          # shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
+        # shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Contrasts")
         shiny::hideTab("tabs", "Compute")
@@ -233,10 +233,10 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$advanced_mode, {
       if (input$advanced_mode) {
-        #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
+        # shiny::showTab("tabs", "Normalize") ## NOT YET!!!
         shiny::showTab("tabs", "BatchCorrect")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
+        # shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
@@ -253,10 +253,6 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
-      message("[upload_files] >>> reading uploaded files")
-      message("[upload_files] upload_files$name=", input$upload_files$name)
-      message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
-
       ## for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
@@ -266,19 +262,12 @@ UploadBoard <- function(id,
       matlist <- list()
 
       if (pgx.uploaded) {
-        message("[upload_files] PGX upload detected")
-
-        ## If the user uploaded a PGX file, we extract the matrix
-        ## dimensions from the given PGX/NGS object. Really?
-        ##
+        # USER UPLOADED A PGX FILE
         i <- grep("[.]pgx$", input$upload_files$name)
         pgxfile <- input$upload_files$datapath[i]
-        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0))) ## override any name
+        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
       } else {
-        ## If the user uploaded CSV files, we read in the data
-        ## from the files.
-        ##
-        message("[upload_files] getting matrices from CSV")
+        # USER UPLOADED CSV FILES
 
         ii <- grep("csv$", input$upload_files$name)
         ii <- grep("sample|count|contrast|expression",
@@ -292,18 +281,18 @@ UploadBoard <- function(id,
         inputnames <- input$upload_files$name[ii]
         uploadnames <- input$upload_files$datapath[ii]
 
+        # read in counts / expression / samples / contrasts files
         if (length(uploadnames) > 0) {
-          i <- 1
           for (i in 1:length(uploadnames)) {
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
             df <- NULL
             if (grepl("count", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] counts.csv : fn1 = ", fn1)
-              ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              if (TRUE && any(duplicated(rownames(df0)))) {
+
+              # DATACHECK 1 - duplicated row names
+              if (any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyWidgets::sendSweetAlert(
                   session = session,
@@ -314,21 +303,17 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
-              dbg("[upload_files] counts.csv : 1 : dim(df0) = ",paste(dim(df0), collapse="x")
-              )
 
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
                 matname <- "counts.csv"
               }
 
-
-
             } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] expression.csv : fn1 = ", fn1)
-              ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              if (TRUE && any(duplicated(rownames(df0)))) {
+
+              # DATACHECK 2 - duplicated row names
+              if (any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyWidgets::sendSweetAlert(
                   session = session,
@@ -341,13 +326,13 @@ UploadBoard <- function(id,
               }
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
-                message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
                 matname <- "counts.csv"
               }
             } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] samples.csv : fn1 = ", fn1)
               df0 <- playbase::read.as_matrix(fn2)
+
+              # DATACHECK 3 - duplicated row names
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -360,7 +345,6 @@ UploadBoard <- function(id,
                   text = msg,
                   type = "error",
                   btn_labels = "OK",
-                  ## btn_colors = "red",
                   closeOnClickOutside = FALSE,
                 )
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
@@ -368,8 +352,9 @@ UploadBoard <- function(id,
                 matname <- "samples.csv"
               }
             } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] contrasts.csv : fn1 = ", fn1)
               df0 <- playbase::read.as_matrix(fn2)
+
+              # DATACHECK 4 - duplicated row names
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -382,7 +367,6 @@ UploadBoard <- function(id,
                   text = msg,
                   type = "error",
                   btn_labels = "OK",
-                  ## btn_colors = "red",
                   closeOnClickOutside = FALSE,
                 )
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
@@ -397,20 +381,6 @@ UploadBoard <- function(id,
         }
       }
 
-      #if ("counts.csv" %in% names(matlist)) {
-      #  ## Convert to gene names (need for biological effects)
-      #  dbg("[upload_files] converting probe names to symbols...")
-      #  X0 <- matlist[["counts.csv"]]
-      #  pp <- rownames(X0)
-      #  rownames(X0) <- playbase::probe2symbol(pp)
-      #  sel <- !(rownames(X0) %in% c(NA, "", "NA"))
-      #  X0 <- X0[sel, ]
-      #  xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
-      #  X0 <- do.call(rbind, xx)
-      #  dbg("[upload_files] ...done!")
-      #  matlist[["counts.csv"]] <- X0
-      #}
-
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (length(matlist) > 0) {
@@ -421,13 +391,12 @@ UploadBoard <- function(id,
           if (names(matlist)[i] %in% c("counts.csv", "contrasts.csv")) {
             matlist[[i]] <- as.matrix(matlist[[i]])
           } else {
-            matlist[[i]] <- type.convert(matlist[[i]])
+            matlist[[i]] <- type.convert(matlist[[i]], as.is=TRUE)
           }
           m1 <- names(matlist)[i]
-          message("[upload_files] updating matrix ", m1)
           uploaded[[m1]] <- matlist[[i]]
         }
-        uploaded[["last_uploaded"]] <- names(matlist)
+        uploaded$last_uploaded <- names(matlist)
       }
 
       message("[upload_files] done!\n")
@@ -468,39 +437,70 @@ UploadBoard <- function(id,
     })
 
 
-    ## DATA PREVIEW ##
-    observeEvent(uploaded$counts.csv, {
-        if (input$preview_data) {
-            shiny::showModal(shiny::modalDialog(
-                DT::dataTableOutput(session$ns("data_preview_table")),
-                footer = tagList(
-                    shiny::actionButton(
-                        session$ns('discard_data'),
-                        label = 'Discard',
-                        style = 'display: inline-block; margin-left: 15px;'
-                    ),
-                    shiny::actionButton(
-                        session$ns('approve_data'),
-                        label = 'Approve',
-                        style = 'display: inline-block'
-                    )
-                ),
-                size = 'xl'
-            ))
+    # every time something is uploaded, it can be previewed
+    observeEvent(uploaded$last_uploaded, {
+
+        tabs <- list(
+            id = session$ns('preview_panel')
+        )
+
+        if ('counts.csv' %in% uploaded$last_uploaded) {
+            tabs <- c(
+                tabs,
+                list(tabPanel(
+                    'Counts',
+                    DT::dataTableOutput(session$ns("counts_preview"))
+                ))
+            )
         }
+        if ('samples.csv' %in% uploaded$last_uploaded) {
+            tabs <- c(
+                tabs,
+                list(tabPanel(
+                    'Samples',
+                    DT::dataTableOutput(session$ns("samples_preview"))
+                ))
+            )
+        }
+        if ('contrasts.csv' %in% uploaded$last_uploaded) {
+            tabs <- c(
+                tabs,
+                list(tabPanel(
+                    'Contrasts',
+                    DT::dataTableOutput(session$ns("contrasts_preview"))
+                ))
+            )
+        }
+
+        tab_panel <- do.call(tabsetPanel, tabs)
+        shiny::showModal(
+            shiny::modalDialog(
+                tab_panel,
+                size = 'xl'
+            )
+        )
+
     }, ignoreNULL = TRUE)
 
-    output$data_preview_table <- DT::renderDataTable({
-        uploaded$counts.csv
+    output$counts_preview <- DT::renderDataTable({
+      uploaded$counts.csv
+    })
+
+    output$samples_preview <- DT::renderDataTable({
+        uploaded$samples.csv
+    })
+
+    output$contrasts_preview <- DT::renderDataTable({
+        uploaded$contrasts.csv
     })
 
     observeEvent(input$approve_data, {
-        shiny::removeModal()
+      shiny::removeModal()
     })
 
     observeEvent(input$discard_data, {
-        uploaded$counts.csv <- NULL
-        shiny::removeModal()
+      uploaded$counts.csv <- NULL
+      shiny::removeModal()
     })
 
     ## ------------------------------------------------------------------
@@ -608,9 +608,9 @@ UploadBoard <- function(id,
 
           FUN.readPGX <- function() {
             dbg("[UploadModule:parseQueryString] *** loading PGX file = ", pgx_file, "***")
-            ##load(pgx_file) ## load NGS/PGX
-            uploaded$pgx <- local(get(load(pgx_file, verbose=0))) ## override any name
-            ##remove(ngs)
+            ## load(pgx_file) ## load NGS/PGX
+            uploaded$pgx <- local(get(load(pgx_file, verbose = 0))) ## override any name
+            ## remove(ngs)
             uploaded$meta <- NULL
           }
 
@@ -876,11 +876,11 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     ## correctedX <- shiny::reactive({
-    #normalized_counts <- NormalizeCountsServerRT(
+    # normalized_counts <- NormalizeCountsServerRT(
     #  id = "normalize",
     #  counts = shiny::reactive(uploaded$counts.csv),
     #  height = height
-    #)
+    # )
 
     ## correctedX <- shiny::reactive({
     correctedX <- BatchCorrectServer(
@@ -967,7 +967,6 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     output$countStats <- shiny::renderPlot({
-
       check <- checkTables()
       status.ok <- check["counts.csv", "status"]
       dbg("[countStats] status.ok = ", status.ok)
@@ -1019,7 +1018,7 @@ UploadBoard <- function(id,
       pheno <- uploaded[["samples.csv"]]
       px <- head(colnames(pheno), 20) ## show maximum??
 
-      df <- type.convert(pheno[, px, drop = FALSE])
+      df <- type.convert(pheno[, px, drop = FALSE], as.is=TRUE)
       vt <- df %>% inspectdf::inspect_types()
       vt
 
