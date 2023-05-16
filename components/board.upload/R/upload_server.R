@@ -437,14 +437,24 @@ UploadBoard <- function(id,
     })
 
 
+    rv_preview <- reactiveValues()
     # every time something is uploaded, it can be previewed
     observeEvent(uploaded$last_uploaded, {
+
+        rv_preview$counts_approval <- 'Not Approved'
+        rv_preview$samples_approval <- 'Not Approved'
+        rv_preview$contrasts_approval <- 'Not Approved'
+        rv_preview$tab_order <- c()
 
         tabs <- list(
             id = session$ns('preview_panel')
         )
+        has_counts <- 'counts.csv' %in% uploaded$last_uploaded
+        has_samples <- 'samples.csv' %in% uploaded$last_uploaded
+        has_contrasts <- ('contrasts.csv' %in% uploaded$last_uploaded) & (!is.null(uploaded$contrasts.csv))
 
-        if ('counts.csv' %in% uploaded$last_uploaded) {
+        if (has_counts) {
+            rv_preview$tab_order <- c(rv_preview$tab_order, 'Counts')
             tabs <- c(
                 tabs,
                 list(tabPanel(
@@ -467,7 +477,8 @@ UploadBoard <- function(id,
                 ))
             )
         }
-        if ('samples.csv' %in% uploaded$last_uploaded) {
+        if (has_samples) {
+            rv_preview$tab_order <- c(rv_preview$tab_order, 'Samples')
             tabs <- c(
                 tabs,
                 list(tabPanel(
@@ -490,7 +501,8 @@ UploadBoard <- function(id,
                 ))
             )
         }
-        if ('contrasts.csv' %in% uploaded$last_uploaded) {
+        if (has_contrasts) {
+            rv_preview$tab_order <- c(rv_preview$tab_order, 'Contrasts')
             tabs <- c(
                 tabs,
                 list(tabPanel(
@@ -518,15 +530,48 @@ UploadBoard <- function(id,
         # this could include any diagnostics / errors for the uploaded data
         # and could actively check which datasets have been approved/discarded
         # so users would have to go here to close the modal
+        summary_tab <- list()
+        rv_preview$tab_order <- c(rv_preview$tab_order, 'Summary')
+
+        if (has_counts) {
+            summary_tab <- c(
+                summary_tab,
+                tagList(
+                    'Counts:', shiny::textOutput(session$ns('counts_approval')),
+                    br()
+                )
+            )
+        }
+        if (has_samples) {
+            summary_tab <- c(
+                summary_tab,
+                tagList(
+                    'Samples:', shiny::textOutput(session$ns('samples_approval')),
+                    br()
+                )
+            )
+        }
+        if (has_contrasts) {
+            summary_tab <- c(
+                summary_tab,
+                tagList(
+                    'Contrasts:', shiny::textOutput(session$ns('contrasts_approval')),
+                    br()
+                )
+            )
+        }
+        summary_tab <- do.call(tagList, summary_tab)
         tabs <- c(
             tabs,
             list(tabPanel(
                 'Summary',
-                'This is a summary of the uploaded data.',
-                br(),
+                'This is a summary of the uploaded data:',
+                br(), br(),
+                summary_tab,
                 shiny::actionButton(
                     session$ns('finish_preview'),
-                    label = 'Finish Preview'
+                    label = 'Finish Preview',
+                    style = 'float: right;'
                 )
             ))
         )
@@ -545,30 +590,56 @@ UploadBoard <- function(id,
 
     }, ignoreNULL = TRUE)
 
-    output$counts_preview <- DT::renderDataTable({
-      uploaded$counts.csv
-    })
+    output$counts_preview <- DT::renderDataTable({ uploaded$counts.csv })
+    output$counts_approval <- shiny::renderText({ rv_preview$counts_approval })
+    observeEvent(input$discard_counts, {
+        rv_preview$counts_approval <- 'Discarded'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Counts')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Counts']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
+    observeEvent(input$approve_counts, {
+        rv_preview$counts_approval <- 'Approved'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Counts')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Counts']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
 
-    output$samples_preview <- DT::renderDataTable({
-        uploaded$samples.csv
-    })
+    output$samples_preview <- DT::renderDataTable({ uploaded$samples.csv })
+    output$samples_approval <- shiny::renderText({ rv_preview$samples_approval })
+    observeEvent(input$discard_samples, {
+        rv_preview$samples_approval <- 'Discarded'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Samples')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Samples']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
+    observeEvent(input$approve_samples, {
+        rv_preview$samples_approval <- 'Approved'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Samples')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Samples']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
 
-    output$contrasts_preview <- DT::renderDataTable({
-        uploaded$contrasts.csv
-    })
+    output$contrasts_preview <- DT::renderDataTable({ uploaded$contrasts.csv })
+    output$contrasts_approval <- shiny::renderText({ rv_preview$contrasts_approval })
+    observeEvent(input$discard_contrasts, {
+        rv_preview$contrasts_approval <- 'Discarded'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Contrasts')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Contrasts']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
+    observeEvent(input$approve_contrasts, {
+        rv_preview$contrasts_approval <- 'Approved'
+        shiny::hideTab(inputId = 'preview_panel', target = 'Contrasts')
+        rv_preview$tab_order <- rv_preview$tab_order[rv_preview$tab_order != 'Contrasts']
+        shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
+    }, ignoreInit = TRUE)
 
     observeEvent(input$finish_preview, {
         shiny::removeModal()
     })
 
-    observeEvent(input$approve_data, {
-      shiny::removeModal()
-    })
 
-    observeEvent(input$discard_data, {
-      uploaded$counts.csv <- NULL
-      shiny::removeModal()
-    })
 
     ## ------------------------------------------------------------------
     ## Observer for loading CSV from local folder on
