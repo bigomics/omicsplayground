@@ -449,7 +449,21 @@ UploadBoard <- function(id,
                 tabs,
                 list(tabPanel(
                     'Counts',
-                    DT::dataTableOutput(session$ns("counts_preview"))
+                    DT::dataTableOutput(session$ns("counts_preview")),
+                    br(),
+                    div(
+                        style = 'float: right',
+                        shiny::actionButton(
+                            session$ns('discard_counts'),
+                            label = 'Discard counts',
+                            style = 'display: inline-block; margin-left: 15px;'
+                        ),
+                        shiny::actionButton(
+                            session$ns('approve_counts'),
+                            label = 'Approve counts',
+                            style = 'display: inline-block'
+                        )
+                    )
                 ))
             )
         }
@@ -458,7 +472,21 @@ UploadBoard <- function(id,
                 tabs,
                 list(tabPanel(
                     'Samples',
-                    DT::dataTableOutput(session$ns("samples_preview"))
+                    DT::dataTableOutput(session$ns("samples_preview")),
+                    br(),
+                    div(
+                        style = 'float: right',
+                        shiny::actionButton(
+                            session$ns('discard_samples'),
+                            label = 'Discard samples',
+                            style = 'display: inline-block; margin-left: 15px;'
+                        ),
+                        shiny::actionButton(
+                            session$ns('approve_samples'),
+                            label = 'Approve samples',
+                            style = 'display: inline-block'
+                        )
+                    )
                 ))
             )
         }
@@ -467,15 +495,50 @@ UploadBoard <- function(id,
                 tabs,
                 list(tabPanel(
                     'Contrasts',
-                    DT::dataTableOutput(session$ns("contrasts_preview"))
+                    DT::dataTableOutput(session$ns("contrasts_preview")),
+                    br(),
+                    div(
+                        style = 'float: right',
+                        shiny::actionButton(
+                            session$ns('discard_contrasts'),
+                            label = 'Discard contrasts',
+                            style = 'display: inline-block; margin-left: 15px;'
+                        ),
+                        shiny::actionButton(
+                            session$ns('approve_contrasts'),
+                            label = 'Approve contrasts',
+                            style = 'display: inline-block'
+                        )
+                    )
                 ))
             )
         }
 
+        # add summary tab
+        # this could include any diagnostics / errors for the uploaded data
+        # and could actively check which datasets have been approved/discarded
+        # so users would have to go here to close the modal
+        tabs <- c(
+            tabs,
+            list(tabPanel(
+                'Summary',
+                'This is a summary of the uploaded data.',
+                br(),
+                shiny::actionButton(
+                    session$ns('finish_preview'),
+                    label = 'Finish Preview'
+                )
+            ))
+        )
+
         tab_panel <- do.call(tabsetPanel, tabs)
         shiny::showModal(
             shiny::modalDialog(
+                title = 'Data Upload Preview',
+                label = 'this is a label',
                 tab_panel,
+                footer = NULL,
+                easyClose = FALSE,
                 size = 'xl'
             )
         )
@@ -492,6 +555,10 @@ UploadBoard <- function(id,
 
     output$contrasts_preview <- DT::renderDataTable({
         uploaded$contrasts.csv
+    })
+
+    observeEvent(input$finish_preview, {
+        shiny::removeModal()
     })
 
     observeEvent(input$approve_data, {
