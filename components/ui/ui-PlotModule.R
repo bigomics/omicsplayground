@@ -202,16 +202,16 @@ PlotModuleUI <- function(id,
   }
 
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
+    shiny::div(class = "plotmodule-title", title = title, title),
     if (cards) {
-      shiny::div(
-        class = "plotmodule-title",
-        shiny::span(title, style = "float: left;"),
+#      shiny::div(
+#        class = "plotmodule-title",
+#        shiny::span(title, style = "float: left;"),
         plot_cards$navList
-      )
     } else {
-      shiny::div(class = "plotmodule-title", title = title, title)
+      div()
     },
     DropdownMenu(
       shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),

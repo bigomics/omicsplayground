@@ -108,7 +108,7 @@ clustering_plot_splitmap_ui <- function(
     width = width,
     height = height,
     cards = TRUE,
-    card_names = c("Dynamic", "Static")
+    card_names = c("dynamic", "static")
   )
 }
 
