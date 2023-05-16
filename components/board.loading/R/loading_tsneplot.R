@@ -70,6 +70,10 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
             ## 1: Make this fast as possible!!! (IK)
             ## 2: Should we calculate few layouts/methods?
             F[is.na(F)] <- 0 ## really??
+
+            ## get top 2000
+            sel <- head(order(-rowMeans(F**2)),2000)
+            F <- F[sel,]
             
             if(NCOL(F)==1) {
               pos <- matrix(0, 1, 2)
@@ -83,7 +87,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
               F[is.na(F)] <- 0 ## really??
               colnames(F) <- fnames  ## might be lost...
               
-              if(1) {
+              if(0) {
                 system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
                 corF <- abs(corF) ## negative corr is also good...
                 ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
