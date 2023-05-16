@@ -106,13 +106,10 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
           rl$delete_pgx <- input$delete_pgx;
       }, ignoreInit = TRUE)
 
-      df$actions <- menus
-      colnames(df)[ncol(df)] <- ' '
-
       DT::datatable(
         df,
         class = "compact hover",
-        rownames = TRUE,
+        rownames = menus,
         escape = FALSE,
         editable = list(
           target = 'cell',
