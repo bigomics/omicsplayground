@@ -161,6 +161,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.tcga/R/tcga_ui.R',encoding='UTF-8')
   source('board.upload/R/upload_plot_pcaplot.R',encoding='UTF-8')
   source('board.upload/R/upload_server.R',encoding='UTF-8')
+  source('board.upload/R/upload_table_preview.R',encoding='UTF-8')
   source('board.upload/R/upload_ui.R',encoding='UTF-8')
   source('board.user/R/user_server.R',encoding='UTF-8')
   source('board.user/R/user_ui.R',encoding='UTF-8')
