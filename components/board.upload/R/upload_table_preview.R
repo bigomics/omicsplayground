@@ -16,9 +16,9 @@ upload_table_preview_server <- function(id, uploaded) {
         # every time something is uploaded, it can be previewed
         observeEvent(uploaded$last_uploaded, {
 
-            rv_preview$counts_approval <- 'Not Approved'
-            rv_preview$samples_approval <- 'Not Approved'
-            rv_preview$contrasts_approval <- 'Not Approved'
+            rv_preview$counts_approval <- 'Not Handled Yet'
+            rv_preview$samples_approval <- 'Not Handled Yet'
+            rv_preview$contrasts_approval <- 'Not Handled Yet'
             rv_preview$tab_order <- c()
 
             tabs <- list(
@@ -154,7 +154,7 @@ upload_table_preview_server <- function(id, uploaded) {
                         label = 'Finish Preview',
                         style = 'float: right;',
                         class = 'btn-success'
-                    )
+                    ) %>% shinyjs::disabled()
                 ))
             )
 
@@ -260,6 +260,36 @@ upload_table_preview_server <- function(id, uploaded) {
                 uploaded$contrasts.csv <- NULL
             }
         })
+
+        # only enable finish-preview button when all datasets have been handled
+        observeEvent(c(
+            rv_preview$counts_approval,
+            rv_preview$samples_approval,
+            rv_preview$contrasts_approval
+        ), {
+            has_counts <- 'counts.csv' %in% uploaded$last_uploaded
+            has_samples <- 'samples.csv' %in% uploaded$last_uploaded
+            has_contrasts <- ('contrasts.csv' %in% uploaded$last_uploaded) & (!is.null(uploaded$contrasts.csv))
+
+            enable_button <- TRUE
+            if (has_counts) {
+                if (rv_preview$counts_approval == 'Not Handled Yet') {
+                    enable_button <- FALSE
+                }
+            }
+            if (has_samples) {
+                if (rv_preview$samples_approval == 'Not Handled Yet') {
+                    enable_button <- FALSE
+                }
+            }
+            if (has_contrasts) {
+                if (rv_preview$contrasts_approval == 'Not Handled Yet') {
+                    enable_button <- FALSE
+                }
+            }
+
+            if (enable_button) shinyjs::enable(id = 'finish_preview')
+        }, ignoreInit = TRUE)
 
 
     }
