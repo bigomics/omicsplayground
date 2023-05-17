@@ -244,8 +244,21 @@ upload_table_preview_server <- function(id, uploaded) {
             shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
         }, ignoreInit = TRUE)
 
+
+        # when the preview is finished, close the modal and NULLify any
+        # datasets that were discarded
         observeEvent(input$finish_preview, {
             shiny::removeModal()
+
+            if (rv_preview$counts_approval == 'Discarded') {
+                uploaded$counts.csv <- NULL
+            }
+            if (rv_preview$samples_approval == 'Discarded') {
+                uploaded$samples.csv <- NULL
+            }
+            if (rv_preview$contrasts_approval == 'Discarded') {
+                uploaded$contrasts.csv <- NULL
+            }
         })
 
 
