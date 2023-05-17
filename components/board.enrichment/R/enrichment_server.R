@@ -77,31 +77,12 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       shiny::updateSelectInput(session, "gs_features", choices = gsets.groups, selected = sel)
     })
 
-    gseatable_rows_selected <- reactiveVal()
-
-    observe({
-      req(gseatable)
-      req(genetable)
-      gseatable_rows_selected(gseatable$rows_selected())
-    })
-
-    genetable_rows_selected <- reactiveVal()
-
-    observe({
-      req(gseatable)
-      req(genetable)
-      genetable_rows_selected(genetable$rows_selected())
-    })
-
-
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
 
     selected_gsetmethods <- shiny::reactive({
       shiny::req(pgx)
-      req(gseatable)
-      req(genetable)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
       ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
       test <- input$gs_statmethod
@@ -158,8 +139,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     getFullGeneSetTable <- shiny::reactive({
       shiny::req(pgx)
-      req(gseatable)
-      req(genetable)
       comp <- 1
       comp <- input$gs_contrast
       if (is.null(comp)) {
@@ -300,8 +279,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
 
     getFilteredGeneSetTable <- shiny::reactive({
-      req(gseatable)
-      req(genetable)
       if (is.null(input$gs_showall) || length(input$gs_showall) == 0) {
         return(NULL)
       }
@@ -346,8 +323,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     metaQ <- shiny::reactive({
       req(pgx)
-      req(gseatable)
-      req(genetable)
       methods <- selected_gsetmethods()
       metaQ <- sapply(pgx$gset.meta$meta, function(m)
         apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
@@ -368,9 +343,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     gset_selected <- shiny::reactive({
-      req(gseatable)
-      req(genetable)
-      i <- as.integer(gseatable_rows_selected())
+      i <- as.integer(gseatable$rows_selected())
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
@@ -381,7 +354,12 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     geneDetails <- shiny::reactive({
       ## return details of the genes in the selected gene set
+      ##
+
       shiny::req(pgx, input$gs_contrast)
+      gs <- 1
+      comp <- 1
+
       comp <- input$gs_contrast
       gs <- gset_selected()
       if (is.null(gs) || length(gs) == 0) {
@@ -432,10 +410,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gene_selected <- shiny::reactive({
-      req(gseatable)
-      req(genetable)
       shiny::req(pgx)
-      i <- as.integer(genetable_rows_selected())
+      i <- as.integer(genetable$rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
@@ -456,20 +432,23 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     # Top enriched gene sets
 
-    # Enrichment analysis
-
-    gseatable <- enrichment_table_enrichment_analysis_server(
-      "gseatable",
-      getFilteredGeneSetTable = getFilteredGeneSetTable
-    )
-
-
     enrichment_plot_top_enrich_gsets_server(
       "topEnriched",
       pgx = pgx,
       getFilteredGeneSetTable = getFilteredGeneSetTable,
       gs_contrast = shiny::reactive(input$gs_contrast),
-      gseatable_rows_selected = gseatable_rows_selected,
+      gseatable = gseatable,
+      watermark = WATERMARK
+    )
+
+    # Frequency in top gene sets
+
+    enrichment_plot_freq_top_gsets_server(
+      "topEnrichedFreq",
+      pgx = pgx,
+      getFilteredGeneSetTable = getFilteredGeneSetTable,
+      gs_contrast = shiny::reactive(input$gs_contrast),
+      gseatable = gseatable,
       watermark = WATERMARK
     )
 
@@ -531,7 +510,20 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       selected_gsetmethods = selected_gsetmethods,
       watermark = WATERMARK
     )
-    
+
+    # Volcano plots for all contrasts
+
+    enrichment_plot_volcanoall_server(
+      "volcanoAll",
+      pgx = pgx,
+      gs_features = shiny::reactive(input$gs_features),
+      gs_statmethod = shiny::reactive(input$gs_statmethod),
+      gs_fdr = shiny::reactive(input$gs_fdr),
+      gs_lfc = shiny::reactive(input$gs_lfc),
+      calcGsetMeta = calcGsetMeta,
+      watermark = WATERMARK
+    )
+
     # Volcano plots for all methods
 
     enrichment_plot_volcanomethods_server(
@@ -541,9 +533,14 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
-      calcGsetMeta = calcGsetMeta,
-      gs_statmethod = shiny::reactive(input$gs_statmethod),
       watermark = WATERMARK
+    )
+
+    # Enrichment analysis
+
+    gseatable <- enrichment_table_enrichment_analysis_server(
+      "gseatable",
+      getFilteredGeneSetTable = getFilteredGeneSetTable
     )
 
     # Genes in gene set
