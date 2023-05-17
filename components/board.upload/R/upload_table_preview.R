@@ -177,36 +177,31 @@ upload_table_preview_server <- function(id, uploaded) {
 
             # callback for highlighting column instead of row
             js <- c("table.on('mouseenter', 'td', function () {
+                        // Remove highlight from all columns
+                        table
+                        .columns()
+                        .nodes()
+                        .flatten()  // Reduce to a 1D array
+                        .to$()      // Convert to a jQuery object
+                        .removeClass( 'highlight' );
 
-    // Remove highlight from all columns
-    table
-    .columns()
-    .nodes()
-    .flatten()  // Reduce to a 1D array
-    .to$()      // Convert to a jQuery object
-    .removeClass( 'highlight' );
+                                // Add highlight to mouseover column
+                        table
+                        .column( this )
+                        .nodes()
+                        .to$()      // Convert to a jQuery object
+                        .addClass( 'highlight' );
+                    });",
+                    "table.on('mouseleave', 'td', function () {
+                        // Remove highlight from all columns
+                        table
+                        .columns()
+                        .nodes()
+                        .flatten()  // Reduce to a 1D array
+                        .to$()      // Convert to a jQuery object
+                        .removeClass( 'highlight' );
+                    });")
 
-            // Add highlight to mouseover column
-    table
-    .column( this )
-    .nodes()
-    .to$()      // Convert to a jQuery object
-    .addClass( 'highlight' );
-    });",
-                    "
-                    table.on('mouseleave', 'td', function () {
-
-    // Remove highlight from all columns
-    table
-    .columns()
-    .nodes()
-    .flatten()  // Reduce to a 1D array
-    .to$()      // Convert to a jQuery object
-    .removeClass( 'highlight' );
-
-    });
-
-                    ")
             DT::datatable(tbl,
                           class = "compact",
                           rownames = TRUE,
