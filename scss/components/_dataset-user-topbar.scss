@@ -1,0 +1,26 @@
+html{
+    //hover on bigomics logo 
+    #logo-bigomics:hover  {
+        cursor: pointer;
+    }
+    
+    .current-section {
+        padding: 8px 0vw;
+        font-weight: 400;
+        font-size: 18px;
+        color: rgba(0, 0, 0, 100);
+        text-align: center;
+        min-width: 0vw;
+    }
+
+    .current-user {
+        position: fixed;
+        font-weight: 200;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 100);
+        color: rgba(0, 0, 0, 100);
+        top: 1px;
+        right: 20px;
+        z-index: 9999;
+      }
+}

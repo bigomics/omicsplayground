@@ -1,0 +1,31 @@
+html{
+    /* ---------- loading page ------------- */
+    
+    div#navheader-current-section {
+        font-size: 30px;
+        font-weight: 400;
+        margin: 15px 0 5px 0px;
+    }
+    
+    div#navheader-dataset-stats {
+        margin: 22px 0px 0px 40px;
+        font-size: 24px;
+        color: #3181DE;
+    }
+    
+    div#navheader-current-dataset {
+        margin: 35px 10px 0px 0px;
+        font-size: 14px;
+        color: black;
+    }
+
+    .current-dataset {
+        position: relative;
+        padding: 8px 0vw;
+        font-weight: 200;
+        font-size: 16px;
+        color: rgba(0, 0, 0, 100);
+        text-align: left;
+        min-width: 40vw;
+    }
+}
