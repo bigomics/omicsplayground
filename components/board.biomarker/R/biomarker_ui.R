@@ -17,6 +17,13 @@ BiomarkerInputs <- function(id) {
         placement = "top"
       ),
       withTooltip(
+        shiny::selectInput(ns("pdx_samplefilter"), "Filter samples:",
+          choices = NULL, multiple = TRUE
+        ),
+        "Filter samples for the analysis.",
+        placement = "top"
+      ),
+      withTooltip(
         shiny::selectInput(ns("pdx_filter"), "Feature filter:",
           choices = NULL
         ),
@@ -41,7 +48,7 @@ BiomarkerInputs <- function(id) {
       ),
       shiny::br(),
       withTooltip(
-        shiny::actionButton(ns("pdx_runbutton"), 
+        shiny::actionButton(ns("pdx_runbutton"),
           label = "Compute",
           class = "btn-outline-primary"
         ),
@@ -54,10 +61,10 @@ BiomarkerInputs <- function(id) {
 
 BiomarkerUI <- function(id) {
   ns <- shiny::NS(id)
-  
+
   imgH1 <- c("calc(40vh - 120px)", "70vh") ## heights for small and fullscreen image
-  imgH2 <- c("calc(60vh - 120px)", "70vh") 
-  
+  imgH2 <- c("calc(60vh - 120px)", "70vh")
+
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
     bslib::layout_column_wrap(

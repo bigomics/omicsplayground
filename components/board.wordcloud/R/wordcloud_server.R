@@ -67,8 +67,6 @@ WordCloudBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    WATERMARK <- FALSE
-
     # Enrichment plots
 
     wordcloud_plot_enrichment_server(

@@ -3,10 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-star.symbols <- function(n, pch="\u2605") {
-    if(n==0) return("")
-    paste(rep(pch,n),collapse="")
-}
+#star.symbols <- function(n, pch="\u2605") {
+#    if(n==0) return("")
+#    paste(rep(pch,n),collapse="")
+#}
 
 gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 {
@@ -14,7 +14,7 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
     ## applets for a single task that can be run from the R command
     ## line. It is not to be used inside Shiny programs themselves.
     ##
-    
+
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = miniUI::miniPage(
         ##shinyalert::useShinyalert(),
@@ -23,7 +23,7 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
     )
     server = function(input, output, session) {
         return_obj <- moduleSERVER(id, ...)
-        ##return_obj <- moduleSERVER(id)    
+        ##return_obj <- moduleSERVER(id)
         shiny::observeEvent( input$done, {
             shiny::stopApp(return_obj())
         })
@@ -41,8 +41,8 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     ## Creates modalDialog from a Shiny module similar as used inside
     ## Shiny programs.
     ##
-    
-    
+
+
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
         ##shinyalert::useShinyalert()
@@ -66,7 +66,7 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
             shiny::stopApp(return_obj())
         })
     }
-    
+
     pgx <- shiny::runGadget(ui, server)
     ## shiny::shinyApp(ui, server)
     cat(names(pgx))
@@ -101,7 +101,7 @@ pgx.randomCartoon <- function() {
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
         list(slogan="Your analysis doesn't take coffee breaks", img="gone-for-coffee.png"),
-        list(slogan="Too much data? Help yourself", img="cartoon-datahelp2.jpg"),    
+        list(slogan="Too much data? Help yourself", img="cartoon-datahelp2.jpg"),
         list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
         list(slogan="Big Data meets Biology", img="bigdata-meets.png")
     )
@@ -114,7 +114,7 @@ pgx.randomCartoon <- function() {
 }
 
 pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
-{    
+{
     cartoon_list <- list(
         list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
         list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
@@ -124,18 +124,18 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
         list(slogan="Your analysis doesn't take coffee breaks", img="gone-for-coffee.png"),
-        list(slogan="Too much data? Help yourself", img="cartoon-datahelp2.jpg"),    
+        list(slogan="Too much data? Help yourself", img="cartoon-datahelp2.jpg"),
         list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
         list(slogan="Big Data meets Biology", img="bigdata-meets.png")
     )
-    
+
     randomCartoon <- function() {
         cartoon <- sample(cartoon_list,1)[[1]]
         cartoon$img2 = paste0("static/cartoons/",cartoon$img)
         cartoon$img  = file.path(img.path,cartoon$img)
         cartoon
     }
-    
+
     toon <- randomCartoon()
     shiny::showModal(shiny::modalDialog(
         #title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
@@ -153,7 +153,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")
-{    
+{
     shiny::showModal(shiny::modalDialog(
         ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
         title = NULL,

@@ -10,7 +10,7 @@
     --hover-color: rgb(20,90,150);
     --main-color:  rgb(10,60,100);
     --accent-color:  rgb(255,140,0);
-    --canvas-color:rgb(255,255,255);    
+    --canvas-color:rgb(255,255,255);
     --light-color: #eeeeee;
 }
 
@@ -39,10 +39,14 @@ h1, .h1, h2, .h2, h3, .h3 {
 }
 
 
+.alert {
+    margin-bottom: 0 !important;
+}
+
 /* ---------------------------- template specfic -------------------------- */
 
 a {
-    color: var(--main-color); 
+    color: var(--main-color);
     text-decoration: none;
 }
 
@@ -56,7 +60,7 @@ a {
 /* space in innner tabpanes */
 .tabbable .tab-content {
     /* margin: -12px -12px -12px -12px; */
-    padding: 15px 20px; 
+    padding: 15px 20px;
 }
 
 .tabbable .nav-tabs {
@@ -114,11 +118,11 @@ a {
 /* tooltips */
 .tooltip-inner {
     background-color: #e0e0e0FF;
-    background-color: #fcfca0FF; 
-    color: #3f3f3fFF; 
+    background-color: #fcfca0FF;
+    color: #3f3f3fFF;
     border: 1px solid #9f9f9fFF;
     opacity: 1;
-    text-align: left;    
+    text-align: left;
 }
 
 .tooltip-arrow-inner {
@@ -127,7 +131,7 @@ a {
   border: 1px solid #e0e0e0;
 }
 
-.code { 
+.code {
   color: #1f1f1fFF;
   background-color: #F9F9F9FF;
   font-weight: 400;
@@ -162,7 +166,7 @@ a {
 }
 
 .fa, .fas {
-    line-height: 0px;  
+    line-height: 0px;
 }
 
 .fa-gear {
@@ -174,7 +178,7 @@ a {
     color: #FFFFFF;
     color: #EEE;
     color: #DDD;
-    text-shadow: 0 0 0px #ccc;    
+    text-shadow: 0 0 0px #ccc;
     border: 0px;
     border-radius: 3px !important;
 }
@@ -211,7 +215,7 @@ a {
 
 .caption2 {
     padding: 20px 0px 20px 0px;
-    font-size: 16px;    
+    font-size: 16px;
 }
 
 .table-caption {
@@ -235,7 +239,7 @@ a {
 
 /* text input area (e.g. signature module) */
 .form-control {
-    font-size: 12px !important; 
+    font-size: 12px !important;
     line-height: 1.1 !important;
     padding: 3px 5px;
 }
@@ -268,7 +272,7 @@ a {
 .shiny-input-panel .checkbox, .shiny-input-panel .input[type="checkbox"] {
     font-size: 10px !important;
     margin-top: -1px;
-    margin-bottom: 10px;    
+    margin-bottom: 10px;
 }
 
 .radio, .checkbox {
@@ -280,7 +284,7 @@ a {
 
 .radio label, .checkbox label {
     min-height: 20px;
-    margin: 2px 0 2px 0;    
+    margin: 2px 0 2px 0;
 }
 
 input[type="checkbox"], input[type="radio"] {
@@ -411,12 +415,12 @@ input[type="checkbox"], input[type="radio"] {
     color: white;
     background-color: #e45c00;
     background-image: none;
-    border: 0px; 
+    border: 0px;
     padding: 8px 12px;
 }
 
 .red-button:hover, .red-button:focus, .red-button:active, .red-button:active:hover {
-    background-color: #b44c00;    
+    background-color: #b44c00;
 }
 
 
@@ -444,7 +448,7 @@ input[type="checkbox"], input[type="radio"] {
     top: 0px;
     width: 100%;
     height: 500px;
-    background-color: var(--main-color);    
+    background-color: var(--main-color);
 }
 
 #splash-warning {

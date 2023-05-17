@@ -30,7 +30,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
         shiny::validate(shiny::need(nrow(rpt) > 0,
-        "Please select a geneset from the table on the left to view genes."))
+        "No overlapping genes across genesets or no geneset selected."))
         return(NULL)
       }
 

@@ -231,8 +231,8 @@ singlecell_plot_crosstabPlot_server <- function(id,
       if (gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1, ])]
-        grp.score2 <- grp.score2[, match(kk, colnames(grp.score2))]
-        grp.score1 <- grp.score1[, match(kk, colnames(grp.score1))]
+        grp.score2 <- grp.score2[, match(kk, colnames(grp.score2)), drop = F]
+        grp.score1 <- grp.score1[, match(kk, colnames(grp.score1)), drop = F]
       }
 
       jj <- match(colnames(grp.score1), names(grp.counts))
@@ -272,7 +272,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       ## middle plot (gene)
       if (!is.null(grp.score2)) {
-        klrpal2 <- COLORS[1:nrow(grp.score2)]
+        klrpal2 <- playdata::COLORS[1:nrow(grp.score2)]
         klrpal2 <- rev(grey.colors(nrow(grp.score2), start = 0.45))
         par(mar = c(0, 5, 0.3, 3), mgp = c(2.4, 0.9, 0))
         barplot(100 * grp.score2,
@@ -290,7 +290,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       if (1) {
         ## main proportion graph
-        klrpal1 <- COLORS[1:nrow(grp.score1)]
+        klrpal1 <- playdata::COLORS[1:nrow(grp.score1)]
         par(mar = c(4, 5, 0.3, 3), mgp = c(2.4, 0.9, 0))
         barplot(100 * grp.score1,
           col = klrpal1, las = 3, srt = 45, xlim = 1.3 * xlim,

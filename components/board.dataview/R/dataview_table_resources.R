@@ -4,16 +4,24 @@
 ##
 
 
-dataview_table_rescources_ui <- function(id) {
+dataview_table_resources_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::layout_column_wrap(
     width = 1,
     height = "100%",
-    heights_equal = "row",          
+    heights_equal = "row",
     style = htmltools::css(grid_template_columns = "4fr 4fr 4fr"),
-    tableWidget(ns("timings")),
-    tableWidget(ns("pgxobject")),
-    tableWidget(ns("objects"))    
+    TableModuleUI(ns("timings"),
+                  info.text = "The <b>timings</b> table reports more detailed
+                  information about the object dimensions, object sizes and
+                  execution times of the methods.",
+                  title = "Timings"),
+    TableModuleUI(ns("pgxobject"),
+                  info.text = "This table provides details about the pgx object.",
+                  title = "PGX slot sizes"),
+    TableModuleUI(ns("objects"),
+                  info.text = "This table provides size details about R objects.",
+                  title = "R object sizes")
   )
 }
 
@@ -50,13 +58,9 @@ dataview_table_resources_server <- function(id, pgx) {
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    timings_text <- "The <b>timings</b> table reports more detailed information about the object dimensions, object sizes and execution times of the methods."
-
-    datatable_timings <- shiny::callModule(
-      tableModule, "timings",
-      func = datatable_timings.RENDER,
-      info.text = timings_text,
-      options = NULL, title = "Timings"
+    datatable_timings <- TableModuleServer(
+      "timings",
+      func = datatable_timings.RENDER
     )
 
     ## ================================================================================
@@ -92,14 +96,9 @@ dataview_table_resources_server <- function(id, pgx) {
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    pgx_text <- "This table provides details about the pgx object."
-
-    datatable_pgxdims <- shiny::callModule(
-      tableModule, "pgxobject",
-      func = pgx.RENDER,
-      info.text = pgx_text,
-      options = NULL,
-      title = "PGX slot sizes"
+    datatable_pgxdims <- TableModuleServer(
+      "pgxobject",
+      func = pgx.RENDER
     )
 
     ## ================================================================================
@@ -128,15 +127,10 @@ dataview_table_resources_server <- function(id, pgx) {
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    object_text <- "This table provides size details about R objects."
-
-    shiny::callModule(
-      tableModule, "objects",
-      func = object.RENDER,
-      info.text = object_text,
-      options = NULL,
-      title = "R object sizes"
+    datatable_pgxdims <- TableModuleServer(
+      "objects",
+      func = object.RENDER
     )
-    
+
   }) ## end of moduleServer
 } ## end of server

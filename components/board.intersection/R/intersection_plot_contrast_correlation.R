@@ -92,9 +92,9 @@ contrast_correlation_server <- function(id,
 
     ctcorrplot.PLOTLY <- function() {
       R <- plot_data()
-      col <- BLUERED(16)
+      col <- playdata::BLUERED(16)
       col <- gplots::colorpanel(64, "royalblue3", "grey90", "indianred3")
-      ## col <- tail(BLUERED(16),8)
+      ## col <- tail(playdata::BLUERED(16),8)
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
       if (max(R, na.rm = TRUE) <= 0) col <- head(col, 32)
 
@@ -176,9 +176,9 @@ contrast_correlation_server <- function(id,
 #     if(nrow(R) > 30) { mar1=c(16,18)*0.9 }
 #     if(nrow(R) > 80) { mar1=c(16,18)*0.6 }
 #
-#     col <- BLUERED(16)
+#     col <- playdata::BLUERED(16)
 #     col <- gplots::colorpanel(64,"royalblue3","grey90","indianred3")
-#     ##col <- tail(BLUERED(16),8)
+#     ##col <- tail(playdata::BLUERED(16),8)
 #     if(min(R, na.rm=TRUE)>=0) col <- tail(col,32)
 #     if(max(R, na.rm=TRUE)<=0) col <- head(col,32)
 #     cellnote <- NULL

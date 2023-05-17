@@ -66,10 +66,26 @@ BiomarkerBoard <- function(id, pgx) {
 
     shiny::observe({
       shiny::req(pgx)
+      ## levels for sample filter
+      levels <- playbase::getLevels(pgx$Y)
+      shiny::updateSelectInput(session, "pdx_samplefilter", choices = levels)
+    })
 
+    ## get selected samples after sample filtering
+    selected_samples <- reactive({
+      shiny::req(pgx)      
+      samples <- colnames(pgx$X)
+      if (!is.null(input$pdx_samplefilter)) {
+        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$pdx_samplefilter)
+      }
+      samples
+    })
+    
+    shiny::observe({
+      shiny::req(pgx)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
-        ft <- names(COLLECTIONS)
-        nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
+        ft <- names(playdata::COLLECTIONS)
+        nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
         ft <- ft[nn >= 10]
       } else {
         ## gene level
@@ -114,12 +130,14 @@ BiomarkerBoard <- function(id, pgx) {
       }
       y0 <- as.character(pgx$Y[, ct])
       names(y0) <- rownames(pgx$Y)
+      y0 <- y0[names(y0) %in% selected_samples()]
       y <- y0[!is.na(y0)]
 
-
-      ## augment to 100 samples
-      if (length(y) < 100) y <- head(rep(y, 100), 100)
-
+      ## augment to at least 100 samples per level
+      ii <- unlist(tapply( 1:length(y), y, sample, size=100, replace=TRUE))
+      y <- y[ii]
+      ##if (length(y) < 100) y <- head(rep(y, 100), 100)
+      
       ## -------------------------------------------
       ## select features
       ## -------------------------------------------
@@ -141,7 +159,7 @@ BiomarkerBoard <- function(id, pgx) {
       }
       shiny::isolate(sel <- input_pdx_select())
 
-      is.family <- (ft %in% c(names(pgx$families), names(iGSETS)))
+      is.family <- (ft %in% c(names(pgx$families), names(playdata::iGSETS)))
 
       if (ft == "<custom>" && !is.null(sel) && length(sel) > 0) {
         ## ------------- filter with user selection
@@ -155,8 +173,8 @@ BiomarkerBoard <- function(id, pgx) {
         if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
           pp <- playbase::filterProbes(pgx$genes, gg)
-        } else if (ft %in% names(iGSETS)) {
-          gg <- unlist(getGSETS(ft))
+        } else if (ft %in% names(playdata::iGSETS)) {
+          gg <- unlist(playdata::getGSETS(ft))
           pp <- playbase::filterProbes(pgx$genes, gg)
         }
         pp <- intersect(pp, rownames(X))

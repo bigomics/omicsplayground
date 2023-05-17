@@ -13,12 +13,11 @@ enrichment_plot_compare_ui <- function(
   ns <- shiny::NS(id)
 
   PlotModuleUI(
-    ns("plot"),
+    ns("pltmod"),
     title = title,
     caption = caption,
     info.text = info.text,
-    height = height,
-    width = width,
+    plotlib = c("base"),
     download.fmt = c("png", "pdf")
   )
 }
@@ -30,6 +29,7 @@ enrichment_plot_compare_server <- function(id,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     render_compare <- function() {
       shiny::req(pgx, gs_contrast())
@@ -107,8 +107,6 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-#      p <- grDevices::recordPlot()
-#      p
     }
 
     compare.RENDER <- function() {
@@ -118,10 +116,9 @@ enrichment_plot_compare_server <- function(id,
     compare.RENDER2 <- function() {
       render_compare()
     }
-
     
     PlotModuleServer(
-      "plot",
+      "pltmod",
       func = compare.RENDER,
       func2 = compare.RENDER,      
       pdf.width = 5, pdf.height = 5,

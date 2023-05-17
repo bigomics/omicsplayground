@@ -19,7 +19,7 @@ dataview_module_geneinfo_ui <- function(
   a_OMIM <- "<a href='https://www.ncbi.nlm.nih.gov/omim/'> OMIM</a>"
   a_KEGG <- "<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
   a_GO <- "<a href='http://geneontology.org/'>Gene Ontology</a>"
-  
+
   PlotModuleUI(
     ns("mod"),
     title = title,
@@ -61,8 +61,8 @@ dataview_module_geneinfo_server <- function(id,
       if (length(eg) > 0 && !is.na(eg)) {
         info <- playbase::getHSGeneInfo(eg) ## defined in pgx-functions.R
         info$summary <- "(no info available)"
-        if (gene %in% names(GENE.SUMMARY)) {
-          info$summary <- GENE.SUMMARY[gene]
+        if (gene %in% names(playdata::GENE_SUMMARY)) {
+          info$summary <- playdata::GENE_SUMMARY[gene]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
 

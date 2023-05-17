@@ -5,15 +5,15 @@ let user;
 //$(document).ready(function() {
 $(document).on('shiny:connected', function() {
 
-    $(document).on('change', '.card-footer-checked', function(e) {	
+    $(document).on('change', '.card-footer-checked', function(e) {
 	// Set the "checked" property for all the card-footer-checked elements
 	var isChecked = $(this).prop("checked");
         $(".card-footer-checked").prop("checked", isChecked);
-	
+
 	if ($(this).prop("checked") === true) {
 	    $(".card-footer").show().animate({height: '3rem'}, 200);
 	};
-	
+
 	if ($(this).prop("checked") === false) {
 	    $(".card-footer").animate({height: '0px'}, 200, function() {
 		$(this).hide();
@@ -41,7 +41,7 @@ $(document).on('shiny:connected', function() {
 
 });  // end of on.shiny.connected
 
-    
+
 const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
@@ -56,7 +56,7 @@ const unloadSidebar = () => {
 
 			$(el).hide();
 		});
-        $('#sidebar-help-container').hide();    
+        $('#sidebar-help-container').hide();
 }
 
 const sidebarClose = () => {
@@ -109,11 +109,12 @@ $(function(){
 
 		$('.tab-sidebar')
 			.first()
-			.css('display', 'none');
+			.trigger('click');
+			//.css('display', 'none');
 		// on mouseover this does not work anymore, substitute by lock button option
 	        //$('.settings-label').click()
 	}, 250);
-    
+
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 })
@@ -414,7 +415,7 @@ Shiny.addCustomMessageHandler('bigdash-hide-menuitem', (msg) => {
 });
 
 Shiny.addCustomMessageHandler('bigdash-show-menuitem', (msg) => {
-    $(`.tab-trigger[data-target=${msg.value}]`).show();    
+    $(`.tab-trigger[data-target=${msg.value}]`).show();
 });
 
 Shiny.addCustomMessageHandler('bigdash-hide-tab', (msg) => {
@@ -440,13 +441,13 @@ $(document).ready(function() {
 	    var _hsq = window._hsq = window._hsq || [];
 	    var orginalTitle = document.title;
 	    document.title = orginalTitle + ' > ' + tabId ;
-	    _hsq.push(["identify", { email: user }]);  // set to current user	
-	    _hsq.push(['setPath', '#' + tabId]);	
+	    _hsq.push(["identify", { email: user }]);  // set to current user
+	    _hsq.push(['setPath', '#' + tabId]);
 	    _hsq.push(['trackPageView']);
 	    document.title = orginalTitle;
 	}
     });
-    
+
 });
 
 

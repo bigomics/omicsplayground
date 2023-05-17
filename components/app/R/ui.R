@@ -7,7 +7,6 @@ app_ui <- function() {
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
-    user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))
 
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {
@@ -40,23 +39,21 @@ app_ui <- function() {
             shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
             shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
             shinyjs::useShinyjs(),
+            waiter::use_waiter(),
             sever::useSever(),
             bigLoaders::addBigLoaderDeps(),
             firebase::useFirebase(firestore = TRUE, analytics = TRUE),
-            ##shiny::div(class='label label-info current-user',id='authentication-user'),
-            shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
+            shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
+            shinybusy::busy_start_up(
+              text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
+              background="#2780e3", color="#ffffff",
+              loader = shinybusy::spin_epic("orbit", color = "#FFF")
+            )
         )
 
         footer <- shiny::tagList(
             SocialMediaModuleUI("socialmodal"),
-            SendReferralModuleUI("sendreferral"),
-            shinybusy::busy_start_up(
-                text = "\nPrepping your personal playground...", mode = "auto",
-                background="#2780e3", color="#ffffff",
-                loader = shiny::img(
-                    src="static/ready.png"
-                )
-            )
+            SendReferralModuleUI("sendreferral")
         )
 
         logout.tab <- bigdash::navbarDropdownItem(
@@ -88,7 +85,7 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA (beta)"),
+            wgcna = "WGCNA"),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis"
@@ -330,7 +327,7 @@ app_ui <- function() {
                     ),
                     bigdash::navbarDropdownItem(
                         "Case studies",
-                        link = "https://bigomics.ch/category/case-study/",
+                        link = "https://bigomics.ch/blog/category/case-study/",
                         target = "_blank"
                     )
                 ),
@@ -338,7 +335,7 @@ app_ui <- function() {
                     ##"User",
                     shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
-                        "Settings",
+                        "Profile",
                         "userSettings"
                     ),
                     upgrade.tab,

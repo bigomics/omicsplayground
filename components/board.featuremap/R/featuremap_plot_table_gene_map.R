@@ -78,7 +78,7 @@ featuremap_plot_gene_map_server <- function(id,
     selGenes <- shiny::reactive({
       shiny::req(pgx)
       sel <- filter_genes()
-      selgenes <- FAMILIES[[sel]]
+      selgenes <- playdata::FAMILIES[[sel]]
       selgenes
     })
 
@@ -116,9 +116,9 @@ featuremap_plot_gene_map_server <- function(id,
         nlabel = nlabel,
         colorby = colorby
       )
-      
+
     })
-    
+
     render_geneUMAP <- function(cex=1, cex.label=1) {
 
       pd  <- plot_data()
@@ -163,7 +163,7 @@ featuremap_plot_gene_map_server <- function(id,
         plotly_modal_default()
       p
     }
-    
+
     PlotModuleServer(
       "gene_map",
       plotlib = "plotly",
@@ -256,6 +256,6 @@ featuremap_plot_gene_map_server <- function(id,
       func2 = geneTable.RENDER_modal,
       selector = "none"
     )
-      
+
   })  ## moduleServer
 }

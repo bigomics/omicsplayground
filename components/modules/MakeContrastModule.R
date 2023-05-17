@@ -393,7 +393,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
               inline = TRUE,
               icon = shiny::icon("trash-alt"),
               class = "btn-inline btn-outline-danger-hover",
-              style = "padding:2px; margin:2px; font-size:95%; color: #B22222;",
+              style = "padding:0px; margin:0px; font-size:95%; color: #B22222;",
               ## onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
               onclick = paste0('Shiny.onInputChange(\"', ns("contrast_delete"), '\",this.id)')
             )

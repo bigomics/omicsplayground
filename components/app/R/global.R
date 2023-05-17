@@ -150,12 +150,6 @@ if(file.exists("global.R")) {
 ##source(file.path(RDIR,"ggplot-theme.R"))
 
 message("\n************************************************")
-message("*************** LOADING SYSTEM DATA ************")
-message("************************************************")
-
-load(file.path(FILES,"sysdata.rda"),verbose=TRUE)
-
-message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
@@ -203,10 +197,6 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
-
-## Main tab titles
-MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","DEV")
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------

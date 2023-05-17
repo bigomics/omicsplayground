@@ -77,7 +77,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       } else {
         score <- fx[kk, , drop = FALSE]
       }
-      
+
       score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
       score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
       score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
@@ -105,7 +105,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       ))
       rownames(score2) <- gsub("(_.*$)", "", rownames(score2))    
       ##rownames(score2) <- substring(rownames(score2), 1, row.nchar)
-      rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)      
+      rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
       colnames(score2) <- paste0(colnames(score2), " ")
 
@@ -116,7 +116,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         score2,
         is.corr = FALSE,
         cl.pos = "n",
-        col = BLUERED(100),
+        col = playdata::BLUERED(100),
         tl.cex = 1.0*tl.cex,
         tl.col = "grey20",
         tl.srt = 90,
@@ -316,7 +316,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     ## assignInNamespace("geneannot.map", my.geneannot.map, ns = "pathview", as.environment("package:pathview"))
     ## assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
     ## lockBinding("geneannot.map", as.environment("package:pathview"))
-    
+
     ## functional_plot_kegg_graph_server(
     ##   "kegg_graph",
     ##   pgx,
@@ -403,20 +403,22 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       if (do.filter) df <- df[which(df$meta.q < 0.999), ]
       return(df)
     })
-    
+
     functional_plot_reactome_graph_server(
       "reactome_graph",
       pgx,
       getFilteredReactomeTable,
       reactome_table,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_reactome_actmap_server(
       "reactome_actmap",
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
-      plotActivationMatrix      
+      plotActivationMatrix,
+      WATERMARK
     )
 
     reactome_table <- functional_table_reactome_server(
@@ -425,13 +427,14 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       fa_contrast = reactive(input$fa_contrast),
       scrollY = 180
     )
-    
+
     functional_plot_enrichmap_server(
       "enrichment_map",
       pgx,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
-    
+
     ## ================================================================================
     ## GO module servers
     ## ================================================================================
@@ -439,12 +442,14 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     functional_plot_go_network_server(
       "GO_network",
       pgx,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_go_actmap_server(
       "GO_actmap",
-      pgx
+      pgx,
+      WATERMARK
     )
 
     functional_table_go_table_server(
@@ -509,8 +514,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       df <- df[!duplicated(df$pathway.id), ] ## take out duplicated gene sets...
       df <- df[order(-abs(df$logFC)), ]
 
-      dbg("[functional_server.R:getWikiPathwayTable] dim.df = ",dim(df))
-
       return(df)
     })
 
@@ -521,20 +524,22 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       if (do.filter) df <- df[which(df$meta.q < 0.999), ]
       return(df)
     })
-    
+
     functional_plot_wikipathway_graph_server(
       "wikipathway_graph",
       pgx,
       getFilteredWikiPathwayTable,
       wikipathway_table,
-      reactive(input$fa_contrast)
+      reactive(input$fa_contrast),
+      WATERMARK
     )
 
     functional_plot_wikipathway_actmap_server(
       "wikipathway_actmap",
       pgx,
       getWikiPathwayTable,
-      plotActivationMatrix      
+      plotActivationMatrix,
+      WATERMARK
     )
 
     wikipathway_table <- functional_table_wikipathway_server(
@@ -543,6 +548,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       getFilteredWikiPathwayTable,
       reactive(input$fa_contrast)
     )
-    
+
   }) ## end-of-moduleServer
 }
