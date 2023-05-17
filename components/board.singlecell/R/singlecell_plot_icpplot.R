@@ -89,8 +89,7 @@ singlecell_plot_icpplot_server <- function(id,
 
       shiny::req(pgx)
         
-      method <- "meta"
-      refset <- "LM22"
+      method="meta";refset="Immune cell (LM22)";layout="tsne2d";sortby="probability"
       method <- method() # input$dcmethod
       if (is.null(method)) {
         return(NULL)
@@ -107,25 +106,21 @@ singlecell_plot_icpplot_server <- function(id,
       results <- pmax(results, 0)
 
       clust.pos <- pfGetClusterPositions()
-
-      # alertDataLoaded(session,pgx)
-
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      pos <- pgx$tsne2d
-      pos <- clust.pos
-      score <- pgx$deconv[[1]][["meta"]]
+      ##pos=pgx$tsne2d;score=pgx$deconv[[1]][["meta"]]
+      pos <- clust.pos      
       score <- results
       if (is.null(score) || length(score) == 0) {
         return(NULL)
       }
 
       ## normalize
-      score <- score[rownames(pos), , drop = FALSE]
+      score <- score[rownames(pos),]
       score[is.na(score)] <- 0
       score <- pmax(score, 0)
-      score <- score / (1e-20 + rowSums(score))
+      score <- score / (1e-20 + rowSums(score,na.rm=TRUE))
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
       summary(as.vector(score))
@@ -215,7 +210,7 @@ singlecell_plot_icpplot_server <- function(id,
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
       klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66")
+      klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
 
       ntop <- 25
       if (pd[["layout"]] == "4x4") ntop <- 16
@@ -241,7 +236,10 @@ singlecell_plot_icpplot_server <- function(id,
         p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
           var = gx,
+          ##type = "factor",
+          ##col = klr0,
           col = klrpal,
+          zlim = c(0,16),
           cex = 0.6*cex1,
           xlab = "",
           ylab = "",
@@ -249,7 +247,7 @@ singlecell_plot_icpplot_server <- function(id,
           ylim = 1.2*range(pd[["pos"]][, 2]),
           axis = FALSE,
           title = tt,
-          cex.title = 0.95,
+          cex.title = 0.55,
           ##title.y = 0.85,
           ##cex.clust = cex*0.8,
           label.clusters = FALSE,
@@ -258,7 +256,6 @@ singlecell_plot_icpplot_server <- function(id,
           bgcolor = "#f8f8f8",          
           box = TRUE
         ) 
-
         plt[[i]] <- p
       }
       return(plt)
@@ -299,6 +296,7 @@ singlecell_plot_icpplot_server <- function(id,
           pos,
           var = gx,
           col = klrpal,
+          zlim = c(0,16),
           cex = 0.7*cex1,
           xlab = "",
           ylab = "",
@@ -306,7 +304,7 @@ singlecell_plot_icpplot_server <- function(id,
           ylim = 1.2*range(pd[["pos"]][, 2]),
           axis = FALSE,
           title = tt,
-          cex.title = cex1*0.5,
+          cex.title = 0.5,
           title.y = 0.9,
 #         cex.clust = cex1*0.8,
           label.clusters = FALSE,
