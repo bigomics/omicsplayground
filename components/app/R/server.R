@@ -180,6 +180,7 @@ app_server <- function(input, output, session) {
 
     ## Do not display "Welcome" tab on the menu
     bigdash.hideMenuItem(session, "welcome-tab")
+    shinyjs::runjs("sidebarClose()")
 
     ## Modules needed after dataset is loaded (deferred) --------------
     modules_loaded <- FALSE
@@ -292,7 +293,7 @@ app_server <- function(input, output, session) {
             CompareBoard("comp", pgx = PGX)
           }
 
-          info("[server.R] calling modules dweone!")
+          info("[server.R] calling modules done!")
         })
 
         ## remove modal from LoadingBoard
@@ -301,18 +302,18 @@ app_server <- function(input, output, session) {
         #show hidden tabs
         bigdash.showTabsGoToDataView(session)  # see ui-bigdashplus.R
 
-        shinyjs::onclick("logo-bigomics",{
-          shinyjs::runjs("console.info('logo-bigomics clicked')")
-          bigdash.selectTab(session, selected = 'welcome-tab')
-          shinyjs::runjs("sidebarClose()")
-          shinyjs::runjs("settingsClose()")
-        })
-
     })
 
     ##--------------------------------------------------------------------------
     ## Current navigation
     ##--------------------------------------------------------------------------
+
+    shinyjs::onclick("logo-bigomics",{
+      shinyjs::runjs("console.info('logo-bigomics clicked')")
+      bigdash.selectTab(session, selected = 'welcome-tab')
+      shinyjs::runjs("sidebarClose()")
+      shinyjs::runjs("settingsClose()")
+    })
 
     output$current_user <- shiny::renderText({
         ## trigger on change of user

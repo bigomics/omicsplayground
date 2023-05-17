@@ -76,8 +76,10 @@ html {
     }
 
     ul.nav.navbar-nav>li>a {
-        padding: 0 0 0 20px;
+        padding: 0px 10px 1px 10px;
         color: grey;
+	background-color: #e7eaed;
+	border-radius: 50px;
         font-size: calc(100% - 20%);
     }
 

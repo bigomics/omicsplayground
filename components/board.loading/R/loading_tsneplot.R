@@ -35,9 +35,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       pgx.dir <- pgx.dirRT()
       info.table <- info.table()
-      
-      dbg("[loading_tsne_server] reacted! id =",id)
-      
+            
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
       pgx.files <- info.table$dataset
@@ -55,69 +53,85 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
         }
       }
 
+      allfc.file <- file.path(pgx.dir, "datasets-allFC.csv")
+      if(!file.exists(allfc.file)) {
+        return(NULL)
+      }
+      
       ## if no t-SNE file exists, we need to calculate it
-      if (is.null(pos)) {
-        dbg("[loading_tsne_server] Calculating signature similarities...")
-        
+      if (is.null(pos) && file.exists(allfc.file)) {
+
         shiny::withProgress(
           message = "Calculating signature similarities...", value = 0.33, {
 
-            F <- data.table::fread(file.path(pgx.dir, "datasets-allFC.csv"))
+            F <- data.table::fread(allfc.file)
             F <- as.matrix(F[, -1], rownames = F[[1]])
-
+            fnames <- colnames(F)
             ## 1: Make this fast as possible!!! (IK)
             ## 2: Should we calculate few layouts/methods?
-            
             F[is.na(F)] <- 0 ## really??
-            ##F <- apply(F, 2, rank, na.last = "keep")
-            ##F <- scale(F) / sqrt(nrow(F)-1)
-            rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
-            ##F <- t(t(F) / rmsF)
-            F <- F %*% Matrix::Diagonal(x=1/rmsF)
 
-            F[is.na(F)] <- 0 ## really??
-            system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
-            corF <- abs(corF) ## negative corr is also good...
-            ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
-            corF[is.na(corF)] <- 0
-            distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]
+            ## get top 2000
+            sel <- head(order(-rowMeans(F**2)),2000)
+            F <- F[sel,]
             
-            ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
-            dbg("[loading_tsne_server] perplexity = ",ppx)
-            pos <- try( Rtsne::Rtsne( distF,
-              perplexity = ppx,
-              check_duplicates = FALSE,
-              is_distance = TRUE
-              )$Y )
-
-            ##plot(pos)
-            
-            if("try-error" %in% class(pos)) {
-              pos <- svd(distF)$u[,1:2]
+            if(NCOL(F)==1) {
+              pos <- matrix(0, 1, 2)
               rownames(pos) <- colnames(F)
-            }
-            
+              colnames(pos) <- c("x","y")
+            } else {            
+              ##F <- apply(F, 2, rank, na.last = "keep")
+              rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
+              F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
+              F <- as.matrix(F)
+              F[is.na(F)] <- 0 ## really??
+              colnames(F) <- fnames  ## might be lost...
+              
+              if(0) {
+                system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
+                corF <- abs(corF) ## negative corr is also good...
+                ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
+                corF[is.na(corF)] <- 0
+                distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]                        
+                ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
+                pos <- try( Rtsne::Rtsne( distF,
+                                         perplexity = ppx,
+                                         check_duplicates = FALSE,
+                                         is_distance = TRUE
+                                         )$Y )
+              } else {
+                ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
+                pos <- try( Rtsne::Rtsne( t(abs(F)),
+                                         perplexity = ppx,
+                                         check_duplicates = FALSE,
+                                         is_distance = FALSE
+                                         )$Y )
+              }
+              ## safe...
+              if("try-error" %in% class(pos)) {
+                dbg("[loading_tsne_server] t-SNE failed. trying svd... ")              
+                pos <- svd(F)$v[,1:2]
+              }
+            } 
+            colnames(pos) <- c("x","y")
+            rownames(pos) <- colnames(F)
         })
         
-        ## pos <- umap::umap(1-corF)$layout
+        ##plot(pos)
         pos <- round(pos, digits = 4)
-        rownames(pos) <- colnames(F)
         colnames(pos) <- c("x", "y")        
         write.csv(pos, file = tsne.file)
       }
 
       ## filter out non-existing entries
       pos.pgx <- gsub("^\\[|\\].*", "", rownames(pos))
-      table(pos.pgx %in% pgx.files)
-      setdiff(pos.pgx, pgx.files)
       pos <- pos[which(pos.pgx %in% pgx.files), , drop = FALSE]
-      dim(pos)
 
-      ##
       dset <- gsub("^\\[|\\].*", "", rownames(pos))
       comparison <- gsub("^.*\\]", "", rownames(pos))
+      colnames(pos) <- c("x", "y")
       df <- data.frame(pos, dataset = dset, comparison = comparison)
-
+      
       ## compute medioid of datasets
       dpos <- apply(pos, 2, function(x) tapply(x, dset, median, na.rm = TRUE))
       if (length(unique(dset)) == 1) {
@@ -219,8 +233,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      renderFunc = plotly::renderPlotly,
-      renderFunc2 = plotly::renderPlotly,
       ## res = c(100,300)*1,              ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       ## label = label, title = "t-SNE clustering",
