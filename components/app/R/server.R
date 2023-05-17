@@ -108,7 +108,6 @@ app_server <- function(input, output, session) {
         ##} else if(authentication == "none") {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
-    dbg("[LoadingBoard] names.auth = ",names(auth))
 
     ##-------------------------------------------------------------
     ## Call modules
@@ -284,13 +283,16 @@ app_server <- function(input, output, session) {
                 SingleCellUI("cell")
             )
         )
-        shiny::insertUI(
+
+        shiny::withProgress(message="Preparing your dashboard (UI)...", value=0, {
+          shiny::insertUI(
             selector = '#big-tabs',
             where = 'beforeEnd',
             ui = additional_ui_tabs,
             immediate = TRUE
-        )
-
+          )
+        })
+        
         # this is a function - like "handleSettings()" in bigdash- needed to
         # make the settings sidebar show up for the inserted tabs
         shinyjs::runjs(
@@ -306,10 +308,8 @@ app_server <- function(input, output, session) {
         )
         bigdash.selectTab(session, selected = 'dataview-tab')
         bigdash.openSettings()
-        shiny::withProgress(message="Preparing your dashboards...", value=0, {
 
-
-
+        shiny::withProgress(message="Preparing your dashboard (server)...", value=0, {
 
           if(ENABLED['dataview'])  {
             info("[server.R] calling module dataview")
