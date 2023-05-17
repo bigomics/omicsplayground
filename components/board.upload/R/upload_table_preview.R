@@ -34,6 +34,27 @@ upload_table_preview_server <- function(id, uploaded) {
                     tabs,
                     list(tabPanel(
                         'Counts',
+                        div(
+                            shiny::actionButton(
+                                session$ns('convert_coltype'),
+                                label = 'Convert column type',
+                                style = 'display: inline-block',
+                                class = 'btn-secondary btn-sm'
+                            ),
+                            shiny::actionButton(
+                                session$ns('set_rownames'),
+                                label = 'Set column as rownames',
+                                style = 'display: inline-block',
+                                class = 'btn-secondary btn-sm'
+                            ),
+                            shiny::actionButton(
+                                session$ns('remove_col'),
+                                label = 'Remove column',
+                                style = 'display: inline-block',
+                                class = 'btn-secondary btn-sm'
+                            )
+                        ),
+                        br(),
                         DT::dataTableOutput(session$ns("counts_preview")),
                         br(),
                         div(
@@ -206,14 +227,14 @@ upload_table_preview_server <- function(id, uploaded) {
                           class = "compact",
                           rownames = TRUE,
                           options = list(
-                              dom = "lrtp",
+                              dom = "rtp",
                               pageLength = 20
                           ),
                           callback = DT::JS(js),
-                          selection = list(target = 'column')
+                          selection = list(target = 'column', mode = 'single')
             ) %>%
                 DT::formatStyle(0, target = "row",
-                                fontSize = "11px", lineHeight = "70%")
+                                fontSize = "12px", lineHeight = "70%")
         }
 
         output$counts_preview <- DT::renderDataTable({
