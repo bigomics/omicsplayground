@@ -29,38 +29,40 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
                                                     getFilteredGeneSetTable,
                                                     gs_contrast,
-                                                    gseatable_rows_selected,
+                                                    gseatable,
                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
+    
     get_TopEnriched <- reactive({
-
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
-      shiny::req(pgx$X, gseatable_rows_selected())
+      shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
-  
       shiny::req(rpt, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()
-      
-      if(!(comp %in% names(pgx$gx.meta$meta))){
-        shiny::validate(shiny::need(comp %in% names(pgx$gx.meta$meta), "Please select geneset in the table below."))
+      if (!(comp %in% names(pgx$gx.meta$meta))) {
+        return(NULL)
       }
       
       ## selected
-      sel <- sort(as.integer(gseatable_rows_selected()))
-
+      sel <- as.integer(gseatable$rows_selected())
       sel.gs <- NULL
-      if (!is.null(sel) && length(sel) > 0) {
-        sel.gs <- rownames(rpt)[sel]
+      if (!is.null(sel) && length(sel) > 0) sel.gs <- rownames(rpt)[sel]
+
+      ii <- gseatable$rows_selected()
+      jj <- gseatable$rows_current()
+      shiny::req(jj)
+      
+      if (nrow(rpt) == 0) {
+        return(NULL)
       }
 
-      # ENPLOT TYPE
-      if (length(sel) == 0) {
-        shiny::validate(shiny::need(sel > 0, "Please select geneset in the table below."))
+      ## ENPLOT TYPE
+      if (length(ii) > 0) {
+        itop <- ii[1]
       } else {
-        itop <- sel
+        itop <- head(jj, 12)
       }
       rpt <- rpt[itop,]
       
@@ -78,7 +80,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       top <- rownames(rpt)
       top <- setdiff(top, c(NA, "NA"))
       if (is.null(top) || is.na(top[1])) {
-        shiny::validate(shiny::need(!(is.null(top) || is.na(top[1])), "Please select geneset in the table below."))
+        return(NULL)
       }
       
       gmt.genes <- list()
@@ -232,13 +234,10 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
     
     plotly.RENDER <- function() {
-
       plist <- get_plotly_plots(cex.text=0.7)
-
       ntop <- length(plist)
-      forced_nrows <- ifelse(ntop >= 3, 3,1)
       if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = forced_nrows,
+        plt <- plotly::subplot(plist, nrows = 3,
           shareX = TRUE, shareY = TRUE,
           ## titleX=FALSE, titleY=FALSE,
           titleX = TRUE, titleY = TRUE,          
@@ -255,11 +254,10 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
 
     plotly.RENDER2 <- function() {
-      plist <- get_plotly_plots(cex.title=1.2)
-      forced_nrows <- ifelse(ntop >= 3, 3,1)
+      plist <- get_plotly_plots(cex.text=1.1)
       ntop <- length(plist)
       if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = forced_nrows,
+        plt <- plotly::subplot(plist, nrows = 3,
           shareX = TRUE, shareY = TRUE,
           titleX=TRUE, titleY=TRUE,
           margin = c(0.0,0.0,0.02,0.02)
