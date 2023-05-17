@@ -47,7 +47,7 @@ app_ui <- function() {
             shinybusy::busy_start_up(
               text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
               background="#2780e3", color="#ffffff",
-              loader = shinybusy::spin_epic("orbit", color = "#FFF")
+              loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
             )
         )
 
