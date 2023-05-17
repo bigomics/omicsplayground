@@ -49,15 +49,15 @@ html {
     }
 
     // https://github.com/rstudio/DT/issues/951
-/*    .dataTables.html-widget.html-widget-static-bound { 
+/*    .dataTables.html-widget.html-widget-static-bound {
 	height: auto !important;
 	width: 90vw !important;
     }
     .dataTables_scrollBody {
 	height: unset !important;
-    }    
+    }
 */
-    
+
     table.dataTable {
 	border-collapse: collapse !important;
     }
@@ -75,6 +75,10 @@ html {
     table.dataTable>tbody>tr>td {
 	font-size: 13px;
 	padding: 5px;
+    }
+
+      .highlight {
+    background-color: #e9ecef !important;
     }
 
     .popup-table table.dataTable>thead>tr>th {

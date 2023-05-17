@@ -174,13 +174,48 @@ upload_table_preview_server <- function(id, uploaded) {
 
         # function to format datatable
         make_preview_table <- function(tbl) {
+
+            # callback for highlighting column instead of row
+            js <- c("table.on('mouseenter', 'td', function () {
+
+    // Remove highlight from all columns
+    table
+    .columns()
+    .nodes()
+    .flatten()  // Reduce to a 1D array
+    .to$()      // Convert to a jQuery object
+    .removeClass( 'highlight' );
+
+            // Add highlight to mouseover column
+    table
+    .column( this )
+    .nodes()
+    .to$()      // Convert to a jQuery object
+    .addClass( 'highlight' );
+    });",
+                    "
+                    table.on('mouseleave', 'td', function () {
+
+    // Remove highlight from all columns
+    table
+    .columns()
+    .nodes()
+    .flatten()  // Reduce to a 1D array
+    .to$()      // Convert to a jQuery object
+    .removeClass( 'highlight' );
+
+    });
+
+                    ")
             DT::datatable(tbl,
-                          class = "compact hover",
+                          class = "compact",
                           rownames = TRUE,
                           options = list(
                               dom = "lrtp",
                               pageLength = 20
-                          )
+                          ),
+                          callback = DT::JS(js),
+                          selection = list(target = 'column')
             ) %>%
                 DT::formatStyle(0, target = "row",
                                 fontSize = "11px", lineHeight = "70%")
