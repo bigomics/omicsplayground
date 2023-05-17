@@ -172,7 +172,23 @@ upload_table_preview_server <- function(id, uploaded) {
 
         }, ignoreNULL = TRUE)
 
-        output$counts_preview <- DT::renderDataTable({ uploaded$counts.csv })
+        # function to format datatable
+        make_preview_table <- function(tbl) {
+            DT::datatable(tbl,
+                          class = "compact hover",
+                          rownames = TRUE,
+                          options = list(
+                              dom = "lrtp",
+                              pageLength = 20
+                          )
+            ) %>%
+                DT::formatStyle(0, target = "row",
+                                fontSize = "11px", lineHeight = "70%")
+        }
+
+        output$counts_preview <- DT::renderDataTable({
+            make_preview_table(uploaded$counts.csv)
+        })
         output$counts_approval <- shiny::renderUI({
             txt <- rv_preview$counts_approval
             if (txt == 'Discarded') {
@@ -196,7 +212,9 @@ upload_table_preview_server <- function(id, uploaded) {
             shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
         }, ignoreInit = TRUE)
 
-        output$samples_preview <- DT::renderDataTable({ uploaded$samples.csv })
+        output$samples_preview <- DT::renderDataTable({
+            make_preview_table(uploaded$samples.csv)
+        })
         output$samples_approval <- shiny::renderUI({
             txt <- rv_preview$samples_approval
             if (txt == 'Discarded') {
@@ -220,7 +238,9 @@ upload_table_preview_server <- function(id, uploaded) {
             shiny::updateTabsetPanel(inputId = 'preview_panel', selected = rv_preview$tab_order[1])
         }, ignoreInit = TRUE)
 
-        output$contrasts_preview <- DT::renderDataTable({ uploaded$contrasts.csv })
+        output$contrasts_preview <- DT::renderDataTable({
+            make_preview_table(uploaded$contrasts.csv)
+        })
         output$contrasts_approval <- shiny::renderUI({
             txt <- rv_preview$contrasts_approval
             if (txt == 'Discarded') {
