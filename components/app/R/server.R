@@ -108,7 +108,6 @@ app_server <- function(input, output, session) {
         ##} else if(authentication == "none") {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
-    dbg("[LoadingBoard] names.auth = ",names(auth))
 
     ##-------------------------------------------------------------
     ## Call modules
@@ -197,7 +196,120 @@ app_server <- function(input, output, session) {
         }
         modules_loaded <<- TRUE
 
-        shiny::withProgress(message="Preparing your dashboards...", value=0, {
+        additional_ui_tabs <- tagList(
+            bigdash::bigTabItem(
+                "dataview-tab",
+                DataViewInputs("dataview"),
+                DataViewUI("dataview")
+            ),
+            bigdash::bigTabItem(
+                "clustersamples-tab",
+                ClusteringInputs("clustersamples"),
+                ClusteringUI("clustersamples")
+            ),
+            bigdash::bigTabItem(
+                "clusterfeatures-tab",
+                FeatureMapInputs("clusterfeatures"),
+                FeatureMapUI("clusterfeatures")
+            ),
+            bigdash::bigTabItem(
+                "wgcna-tab",
+                WgcnaInputs("wgcna"),
+                WgcnaUI("wgcna")
+            ),
+            bigdash::bigTabItem(
+                "diffexpr-tab",
+                ExpressionInputs("diffexpr"),
+                ExpressionUI("diffexpr")
+            ),
+            bigdash::bigTabItem(
+                "corr-tab",
+                CorrelationInputs("corr"),
+                CorrelationUI("corr")
+            ),
+            bigdash::bigTabItem(
+                "enrich-tab",
+                EnrichmentInputs("enrich"),
+                EnrichmentUI("enrich")
+            ),
+            bigdash::bigTabItem(
+                "pathway-tab",
+                FunctionalInputs("pathway"),
+                FunctionalUI("pathway")
+            ),
+            bigdash::bigTabItem(
+                "wordcloud-tab",
+                WordCloudInputs("wordcloud"),
+                WordCloudUI("wordcloud")
+            ),
+            bigdash::bigTabItem(
+                "drug-tab",
+                DrugConnectivityInputs("drug"),
+                DrugConnectivityUI("drug")
+            ),
+            bigdash::bigTabItem(
+                "isect-tab",
+                IntersectionInputs("isect"),
+                IntersectionUI("isect")
+            ),
+            bigdash::bigTabItem(
+                "sig-tab",
+                SignatureInputs("sig"),
+                SignatureUI("sig")
+            ),
+            bigdash::bigTabItem(
+                "bio-tab",
+                BiomarkerInputs("bio"),
+                BiomarkerUI("bio")
+            ),
+            bigdash::bigTabItem(
+                "cmap-tab",
+                ConnectivityInputs("cmap"),
+                ConnectivityUI("cmap")
+            ),
+            bigdash::bigTabItem(
+                "comp-tab",
+                CompareInputs("comp"),
+                CompareUI("comp")
+            ),
+            bigdash::bigTabItem(
+                "tcga-tab",
+                TcgaInputs("tcga"),
+                TcgaUI("tcga")
+            ),
+            bigdash::bigTabItem(
+                "cell-tab",
+                SingleCellInputs("cell"),
+                SingleCellUI("cell")
+            )
+        )
+
+        shiny::withProgress(message="Preparing your dashboard (UI)...", value=0, {
+          shiny::insertUI(
+            selector = '#big-tabs',
+            where = 'beforeEnd',
+            ui = additional_ui_tabs,
+            immediate = TRUE
+          )
+        })
+        
+        # this is a function - like "handleSettings()" in bigdash- needed to
+        # make the settings sidebar show up for the inserted tabs
+        shinyjs::runjs(
+            "  $('.big-tab')
+    .each((index, el) => {
+      let settings = $(el)
+        .find('.tab-settings')
+        .first();
+
+      $(settings).data('target', $(el).data('name'));
+      $(settings).appendTo('#settings-content');
+    });"
+        )
+        bigdash.selectTab(session, selected = 'dataview-tab')
+        bigdash.openSettings()
+
+        shiny::withProgress(message="Preparing your dashboard (server)...", value=0, {
 
           if(ENABLED['dataview'])  {
             info("[server.R] calling module dataview")
@@ -304,6 +416,8 @@ app_server <- function(input, output, session) {
 
     })
 
+
+
     ##--------------------------------------------------------------------------
     ## Current navigation
     ##--------------------------------------------------------------------------
@@ -357,7 +471,7 @@ app_server <- function(input, output, session) {
             ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
             shinyjs::runjs("sidebarClose()")
             shinyjs::runjs("settingsClose()")
-            bigdash.selectTab(session, selected = 'welcome-tab')            
+            bigdash.selectTab(session, selected = 'welcome-tab')
             return(NULL)
         }
 
@@ -367,10 +481,11 @@ app_server <- function(input, output, session) {
 
         ## do we have libx libraries?
         has.libx <- dir.exists(file.path(OPG,"libx"))
-        
+
         ## Beta features
         info("[server.R] disabling beta features")
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets        
+        bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
+        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
@@ -379,7 +494,7 @@ app_server <- function(input, output, session) {
         ## Dynamically show upon availability in pgx object
         info("[server.R] disabling extra features")
         tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-        tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)        
+        tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
         tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
         tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
         tabRequire(PGX, session, "cell-tab", "deconv", TRUE)

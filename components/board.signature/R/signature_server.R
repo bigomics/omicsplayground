@@ -69,10 +69,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       } else if (type == "hallmark") {
         ## collection
         gsets <- sort(grep("HALLMARK", names(playdata::iGSETS), value = TRUE))
+        names(gsets) <- tolower(gsub("_"," ",sub(".*HALLMARK_","",gsets)))
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "KEGG") {
         ## collection
         gsets <- sort(grep("KEGG", names(playdata::iGSETS), value = TRUE))
+        names(gsets) <- tolower(gsub("_"," ",sub(".*KEGG_","",gsets)))        
         shiny::updateSelectInput(session, "feature", choices = gsets, selected = gsets[1])
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)

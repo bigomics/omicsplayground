@@ -47,7 +47,7 @@ app_ui <- function() {
             shinybusy::busy_start_up(
               text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
               background="#2780e3", color="#ffffff",
-              loader = shinybusy::spin_epic("orbit", color = "#FFF")
+              loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
             )
         )
 
@@ -486,91 +486,6 @@ app_ui <- function() {
                     "upload-tab",
                     # UploadInputs("upload"),
                     UploadUI("upload")
-                ),
-                bigdash::bigTabItem(
-                    "dataview-tab",
-                    DataViewInputs("dataview"),
-                    DataViewUI("dataview")
-                ),
-                bigdash::bigTabItem(
-                    "clustersamples-tab",
-                    ClusteringInputs("clustersamples"),
-                    ClusteringUI("clustersamples")
-                ),
-                bigdash::bigTabItem(
-                    "clusterfeatures-tab",
-                    FeatureMapInputs("clusterfeatures"),
-                    FeatureMapUI("clusterfeatures")
-                ),
-                bigdash::bigTabItem(
-                    "wgcna-tab",
-                    WgcnaInputs("wgcna"),
-                    WgcnaUI("wgcna")
-                ),
-                bigdash::bigTabItem(
-                    "diffexpr-tab",
-                    ExpressionInputs("diffexpr"),
-                    ExpressionUI("diffexpr")
-                ),
-                bigdash::bigTabItem(
-                    "corr-tab",
-                    CorrelationInputs("corr"),
-                    CorrelationUI("corr")
-                ),
-                bigdash::bigTabItem(
-                    "enrich-tab",
-                    EnrichmentInputs("enrich"),
-                    EnrichmentUI("enrich")
-                ),
-                bigdash::bigTabItem(
-                    "pathway-tab",
-                    FunctionalInputs("pathway"),
-                    FunctionalUI("pathway")
-                ),
-                bigdash::bigTabItem(
-                    "wordcloud-tab",
-                    WordCloudInputs("wordcloud"),
-                    WordCloudUI("wordcloud")
-                ),
-                bigdash::bigTabItem(
-                    "drug-tab",
-                    DrugConnectivityInputs("drug"),
-                    DrugConnectivityUI("drug")
-                ),
-                bigdash::bigTabItem(
-                    "isect-tab",
-                    IntersectionInputs("isect"),
-                    IntersectionUI("isect")
-                ),
-                bigdash::bigTabItem(
-                    "sig-tab",
-                    SignatureInputs("sig"),
-                    SignatureUI("sig")
-                ),
-                bigdash::bigTabItem(
-                    "bio-tab",
-                    BiomarkerInputs("bio"),
-                    BiomarkerUI("bio")
-                ),
-                bigdash::bigTabItem(
-                    "cmap-tab",
-                    ConnectivityInputs("cmap"),
-                    ConnectivityUI("cmap")
-                ),
-                bigdash::bigTabItem(
-                    "comp-tab",
-                    CompareInputs("comp"),
-                    CompareUI("comp")
-                ),
-                bigdash::bigTabItem(
-                    "tcga-tab",
-                    TcgaInputs("tcga"),
-                    TcgaUI("tcga")
-                ),
-                bigdash::bigTabItem(
-                    "cell-tab",
-                    SingleCellInputs("cell"),
-                    SingleCellUI("cell")
                 ),
                 bigdash::bigTabItem(
                     "userSettings",
