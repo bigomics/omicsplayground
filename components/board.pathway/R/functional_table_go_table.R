@@ -132,7 +132,7 @@ functional_table_go_table_server <- function(id,
       "datasets",
       func = table_RENDER,
       func2 = table_RENDER_modal,
-      selector = "single"
+      selector = "none"
     )
   }) ## end of moduleServer
 } ## end of server
