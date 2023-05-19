@@ -19,50 +19,58 @@ addWatermark.PDF <- function(file) {
     unlink(tmp)
 }
 
-addWatermark.PNG <- function(file) {
+addWatermark.PNG2 <- function(file,
+                              w, h, mt=0.09, out=file,
+                              mark=file.path(FILES,"watermark-logo.png"),
+                              logo.scale=0.045) {
     if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp <- paste0(gsub("file","plot",tempfile()),".png")
-    cmd = "convert plot.png -font Helvetica -pointsize 36 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics from Ticino, Switzerland.' \"  plot_wmark.png"
-    cmd <- sub("plot.png",file,cmd)
-    cmd <- sub("plot_wmark.png",tmp,cmd)
-    system(cmd)
-    file.copy(tmp,file,overwrite=TRUE)
-    unlink(tmp)
-}
-
-file="plot.png";mark="logo.png"
-addWatermark.PNG2 <- function(file, w, h, mark=file.path(FILES,"watermark-logo.png")) {
-    if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
-    tmp <- paste0(gsub("file","plot",tempfile()),".png")
-    cmd.str = "convert %s \\( %s -thumbnail %.0fx%0.2f \\) -geometry +%.0f+%.0f -composite %s"
-    logo.scale = 0.05
     logo.height = max(logo.scale*h , logo.scale*w/3)
     logo.width = logo.height * 4
     logo.x = 0.2 * logo.width
-    logo.y = 0.2 * logo.height
+    logo.y = 0.3 * logo.height
+    top.margin = mt*h
+    if(top.margin>0) {
+      cmd.str = "convert %s -extent %.0fx%.0f+%.0f-%.0f %s"
+      cmd0 = sprintf( cmd.str, file, w, h+top.margin, 0, top.margin, file)
+      system(cmd0)
+    }
+    cmd.str = "convert %s \\( %s -thumbnail %.0fx%.0f \\) -geometry +%.0f+%.0f -composite %s"
     cmd = sprintf( cmd.str, file, mark, logo.width, logo.height, logo.x, logo.y, tmp)
     system(cmd)
-    file.copy(tmp,file,overwrite=TRUE)
+    file.copy(tmp,out,overwrite=TRUE)
     unlink(tmp)
 }
 
-
-w=8;h=6;file="plot.pdf";mark="logo.pdf"
-addWatermark.PDF2 <- function(file, w, h, mark=file.path(FILES,"watermark-logo.pdf")) {
+addWatermark.PDF2 <- function(file, w, h, out=file, mt=0.09,
+                              mark=file.path(FILES,"watermark-logo.pdf"),
+                              logo.scale=0.045 ) {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...    
     tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
     tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")    
     tmp3 <- paste0(gsub("file","plot",tempfile()),".pdf")    
-    logo.scale = 0.05
     logo.height = max(logo.scale*h , logo.scale*w/3) * 720    
     logo.width = logo.height * 4
-    scale.cmd = sprintf("gs -o %s -sDEVICE=pdfwrite  -dDEVICEWIDTH=%0.f -dDEVICEHEIGHT=%0.f -dPDFFitPage -dCompatibilityLevel=1.4 -f %s", tmp1, logo.width, logo.height, mark)
+    scale.cmd = sprintf("gs -o %s -sDEVICE=pdfwrite  -dDEVICEWIDTH=%0.f -dDEVICEHEIGHT=%0.f -dPDFFitPage -dAutoRotatePages=/None -f %s", tmp1, logo.width, logo.height, mark)
     system(scale.cmd, ignore.stdout=FALSE, ignore.stderr=FALSE)
-    cmd1 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -c '<</PageOffset [%.0f %.0f]>> setpagedevice' -f %s", tmp2, w*720, h*720, 0.15*logo.width/10, h*72-1.2*logo.height/10, tmp1)
+    ppi = 720
+    if(mt>0) {
+      ## add margin??      
+      h = h + h*mt
+      cmd0 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -dPDFFitPage -f -dAutoRotatePages=/None %s",tmp3, w*ppi, 1.03*h*ppi, file)      
+      system(cmd0, ignore.stdout=FALSE, ignore.stderr=FALSE)
+    } else {
+      file.copy(file,tmp3,overwrite=TRUE)
+    }
+    ## create empty page with same plot size and logo translated to topleft
+    cmd1 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -c '<</PageOffset [%.0f %.0f]>> setpagedevice' -f %s",
+      tmp2, w*720, h*720, 0.15*logo.width/10, h*72-1*logo.height/10, tmp1)
     system(cmd1, ignore.stdout=FALSE, ignore.stderr=FALSE)
-    cmd3 <- paste("pdftk",file,"stamp",tmp2,"output",tmp3) ## NEED pdftk installed!!!
+
+    ## merge: overlay logo and plot
+    cmd3 <- paste("pdftk",tmp3,"stamp",tmp2,"output",out) ## NEED pdftk installed!!!    
     system(cmd3)
-    file.copy(tmp3,file,overwrite=TRUE)
+   ## file.copy(tmp3,file,overwrite=TRUE)
     unlink(tmp1)
     unlink(tmp2)
     unlink(tmp3)    
