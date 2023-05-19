@@ -344,7 +344,8 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modaldialog.style)),
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
-        shiny::tags$head(shiny::tags$style(modalfooter.none))
+        shiny::tags$head(shiny::tags$style(modalfooter.none)),
+        shiny::tags$script(src = "dropdown-helper.js")
       )
     ),
     bslib::card_body(
@@ -508,13 +509,13 @@ PlotModuleServer <- function(id,
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
-            resx <- 4 ## upresolution            
+            resx <- 4 ## upresolution
             shiny::withProgress(
               {
                 ## unlink(PNGFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
-                  p$width <- png.width 
+                  p$width <- png.width
                   p$height <- png.height
                   plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale=resx)
                 } else if (plotlib == "iheatmapr") {
