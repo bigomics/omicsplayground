@@ -13,27 +13,7 @@
 
 colBL="#00448855"
 colRD="#88004455"
-addWatermark.PDF <- function(file) {
-    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
-    mark <- file.path(FILES,"watermark.pdf")
-    tmp <- paste0(gsub("file","plot",tempfile()),".pdf")
-    cmd <- paste("pdftk",file,"stamp",mark,"output",tmp) ## NEED pdftk installed!!!
-    cmd
-    system(cmd)
-    file.copy(tmp,file,overwrite=TRUE)
-    unlink(tmp)
-}
 
-addWatermark.PNG <- function(file) {
-    if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
-    tmp <- paste0(gsub("file","plot",tempfile()),".png")
-    cmd = "convert plot.png -font Helvetica -pointsize 36 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics from Ticino, Switzerland.' \"  plot_wmark.png"
-    cmd <- sub("plot.png",file,cmd)
-    cmd <- sub("plot_wmark.png",tmp,cmd)
-    system(cmd)
-    file.copy(tmp,file,overwrite=TRUE)
-    unlink(tmp)
-}
 
 ##================================================================================
 ##=================== Plotly Export function =====================================
@@ -42,7 +22,7 @@ addWatermark.PNG <- function(file) {
 ##;format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 ##p=plot_ly(1:10)
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
-                         scale = NULL, width = NULL, height = NULL, server=NULL)
+                         width = NULL, height = NULL, scale = 1, server=NULL)
 {
     is.docker <- file.exists("/.dockerenv")
     is.docker
@@ -59,7 +39,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     if(1 && !export.ok) {
         ## https://github.com/plotly/plotly.R/issues/2179
         reticulate::py_run_string("import sys")
-        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height, scale=4)))
+        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height, scale=scale)))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
         export.ok <- TRUE

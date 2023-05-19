@@ -296,7 +296,8 @@ ExpressionBoard <- function(id, pgx) {
       sel1 = genetable_rows_selected,
       df1 = filteredDiffExprTable,
       sel2 = gsettable_rows_selected,
-      df2 = gx_related_genesets
+      df2 = gx_related_genesets,
+      watermark = WATERMARK      
     )
 
     expression_plot_maplot_server(
@@ -312,7 +313,7 @@ ExpressionBoard <- function(id, pgx) {
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       fam.genes = res$gene_name,
-      watermark = FALSE
+      watermark = WATERMARK 
     )
 
     expression_plot_barplot_server(
@@ -321,7 +322,7 @@ ExpressionBoard <- function(id, pgx) {
       pgx = pgx,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
-      watermark = FALSE
+      watermark = WATERMARK 
     )
 
     expression_plot_topfoldchange_server(
@@ -330,7 +331,7 @@ ExpressionBoard <- function(id, pgx) {
       pgx = pgx,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
-      watermark = FALSE
+      watermark = WATERMARK 
     )
 
     # tab differential expression > Top genes ####
@@ -389,7 +390,7 @@ ExpressionBoard <- function(id, pgx) {
       pgx = pgx,
       res = filteredDiffExprTable,
       ii = genetable$rows_current,
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # tab differential expression > Volcano All ####
@@ -401,7 +402,7 @@ ExpressionBoard <- function(id, pgx) {
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # tab differential expression > Volcano Methods ####
@@ -413,7 +414,7 @@ ExpressionBoard <- function(id, pgx) {
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # tab differential expression > Volcano Methods ####
@@ -471,7 +472,7 @@ ExpressionBoard <- function(id, pgx) {
       height = c(tabH - 10, 700),
       width = c("100%", 800),
       scrollY = "200px",
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     expression_table_fctable_server(
@@ -482,7 +483,7 @@ ExpressionBoard <- function(id, pgx) {
       metaQ = metaQ,
       height = c(tabH, 700),
       scrollY = "200px",
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     expression_table_FDRtable_server(
@@ -491,7 +492,7 @@ ExpressionBoard <- function(id, pgx) {
       methods = shiny::reactive(input$gx_statmethod),
       height = c(tabH, 700),
       scrollY = "200px",
-      watermark = FALSE
+      watermark = WATERMARK
     )
 
     # reactive values to return to parent environment  #########

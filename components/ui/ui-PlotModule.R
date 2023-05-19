@@ -506,21 +506,20 @@ PlotModuleServer <- function(id,
         download.png <- shiny::downloadHandler(
           filename = "plot.png",
           content = function(file) {
-            pdf.width <- input$pdf_width
-            pdf.height <- input$pdf_height
-            resx <- 4 ## upresolution
-
+            png.width <- input$pdf_width * 80
+            png.height <- input$pdf_height * 80
+            resx <- 4 ## upresolution            
             shiny::withProgress(
               {
                 ## unlink(PNGFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
-                  p$width <- pdf.width * 80
-                  p$height <- pdf.height * 80
-                  plotlyExport(p, PNGFILE, width = p$width, height = p$height)
+                  p$width <- png.width 
+                  p$height <- png.height
+                  plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale=resx)
                 } else if (plotlib == "iheatmapr") {
                   p <- func()
-                  iheatmapr::save_iheatmap(p, vwidth = pdf.width * 80, vheight = pdf.height * 80, PNGFILE)
+                  iheatmapr::save_iheatmap(p, vwidth = png.width, vheight = png.height, PNGFILE)
                 } else if (plotlib == "visnetwork") {
                   # download will not work if phantomjs is not installed
                   # webshot::install_phantomjs() in case phantomjs is not installed
@@ -528,18 +527,20 @@ PlotModuleServer <- function(id,
                   dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=", HTMLFILE)
                   visNetwork::visSave(p, HTMLFILE)
                   dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ", PNGFILE)
-                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
+                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = png.width, vheight = png.height)
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
+                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = png.width, vheight = png.height)
                 } else if (plotlib %in% c("ggplot", "ggplot2")) {
-                  ggplot2::ggsave(PNGFILE, plot = func(), dpi = 300)
+                  ggplot2::ggsave(PNGFILE, plot = func(), dpi = 72*resx)
                 } else if (plotlib == "grid") {
                   p <- func()
                   png(PNGFILE,
-                    width = pdf.width * 100 * resx, height = pdf.height * 100 * resx,
-                    pointsize = 1.2 * pdf.pointsize, res = 72 * resx
+                    width = png.width * resx,
+                    height = png.height * resx,
+                    pointsize = 1.2 * pdf.pointsize,
+                    res = 72 * resx
                   )
                   grid::grid.draw(p)
                   dev.off()
@@ -553,12 +554,13 @@ PlotModuleServer <- function(id,
                 } else if (plotlib == "base") {
                   # Save original plot parameters
                   if (remove_margins == TRUE) {
-                    par(mar = c(0, 0, 0, 0))
+                    par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
                   }
-
                   png(PNGFILE,
-                    width = pdf.width * 100 * resx, height = pdf.height * 100 * resx,
-                    pointsize = 1.2 * pdf.pointsize, res = 72 * resx
+                    width = png.width * resx,
+                    height = png.height * resx,
+                    pointsize = 1.2 * pdf.pointsize,
+                    res = 72 * resx
                   )
                   print(func())
                   dev.off() ## important!!
@@ -576,7 +578,8 @@ PlotModuleServer <- function(id,
                 ## ImageMagick or pdftk
                 if (TRUE && add.watermark) {
                   message("[plotModule] adding watermark to PNG...")
-                  addWatermark.PNG(file)
+                  markfile = file.path(FILES, "watermark-logo.png")
+                  addWatermark.PNG2(file, w=png.width*resx, h=png.height*resx, mark=markfile)
                 }
               },
               message = "Exporting to PNG",
@@ -655,7 +658,9 @@ PlotModuleServer <- function(id,
                 ## ImageMagick or pdftk
                 if (TRUE && add.watermark) {
                   message("[plotModule] adding watermark to PDF...")
-                  addWatermark.PDF(file)
+                  ##addWatermark.PDF(file)
+                  markfile = file.path(FILES, "watermark-logo.pdf")
+                  addWatermark.PDF2(file, w=pdf.width, h=pdf.height, mark=markfile)
                 }
               },
               message = "Exporting to PDF",

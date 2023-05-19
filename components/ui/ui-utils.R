@@ -8,6 +8,66 @@
 #    paste(rep(pch,n),collapse="")
 #}
 
+addWatermark.PDF <- function(file) {
+    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    mark <- file.path(FILES,"watermark.pdf")
+    tmp <- paste0(gsub("file","plot",tempfile()),".pdf")
+    cmd <- paste("pdftk",file,"stamp",mark,"output",tmp) ## NEED pdftk installed!!!
+    cmd
+    system(cmd)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
+}
+
+addWatermark.PNG <- function(file) {
+    if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    tmp <- paste0(gsub("file","plot",tempfile()),".png")
+    cmd = "convert plot.png -font Helvetica -pointsize 36 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics from Ticino, Switzerland.' \"  plot_wmark.png"
+    cmd <- sub("plot.png",file,cmd)
+    cmd <- sub("plot_wmark.png",tmp,cmd)
+    system(cmd)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
+}
+
+file="plot.png";mark="logo.png"
+addWatermark.PNG2 <- function(file, w, h, mark=file.path(FILES,"watermark-logo.png")) {
+    if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    tmp <- paste0(gsub("file","plot",tempfile()),".png")
+    cmd.str = "convert %s \\( %s -thumbnail %.0fx%0.2f \\) -geometry +%.0f+%.0f -composite %s"
+    logo.scale = 0.05
+    logo.height = max(logo.scale*h , logo.scale*w/3)
+    logo.width = logo.height * 4
+    logo.x = 0.2 * logo.width
+    logo.y = 0.2 * logo.height
+    cmd = sprintf( cmd.str, file, mark, logo.width, logo.height, logo.x, logo.y, tmp)
+    system(cmd)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
+}
+
+
+w=8;h=6;file="plot.pdf";mark="logo.pdf"
+addWatermark.PDF2 <- function(file, w, h, mark=file.path(FILES,"watermark-logo.pdf")) {
+    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...    
+    tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
+    tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")    
+    tmp3 <- paste0(gsub("file","plot",tempfile()),".pdf")    
+    logo.scale = 0.05
+    logo.height = max(logo.scale*h , logo.scale*w/3) * 720    
+    logo.width = logo.height * 4
+    scale.cmd = sprintf("gs -o %s -sDEVICE=pdfwrite  -dDEVICEWIDTH=%0.f -dDEVICEHEIGHT=%0.f -dPDFFitPage -dCompatibilityLevel=1.4 -f %s", tmp1, logo.width, logo.height, mark)
+    system(scale.cmd, ignore.stdout=FALSE, ignore.stderr=FALSE)
+    cmd1 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -c '<</PageOffset [%.0f %.0f]>> setpagedevice' -f %s", tmp2, w*720, h*720, 0.15*logo.width/10, h*72-1.2*logo.height/10, tmp1)
+    system(cmd1, ignore.stdout=FALSE, ignore.stderr=FALSE)
+    cmd3 <- paste("pdftk",file,"stamp",tmp2,"output",tmp3) ## NEED pdftk installed!!!
+    system(cmd3)
+    file.copy(tmp3,file,overwrite=TRUE)
+    unlink(tmp1)
+    unlink(tmp2)
+    unlink(tmp3)    
+}
+
 gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 {
     ## Creates gadget from a Shiny module. Gadget are browser-based UI
