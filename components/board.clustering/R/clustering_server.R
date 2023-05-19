@@ -687,16 +687,5 @@ ClusteringBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    clustannot_caption <- "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
-
-    output$hm_annotateUI <- shiny::renderUI({
-      shiny::fillCol(
-        flex = c(1.4, 1, NA),
-        height = fullH,
-        plotWidget(ns("clustannot_plots")),
-        plotWidget(ns("clustannot_table")),
-        shiny::div(shiny::HTML(clustannot_caption), class = "caption"),
-      )
-    })
   }) ## end of moduleServer
 } ## end of Board

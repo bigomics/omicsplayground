@@ -20,27 +20,10 @@ WgcnaBoard <- function(id, pgx) {
 </ol>
 "
 
-    intra_caption <-
-      "<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules."
-
-    output$intra_UI <- shiny::renderUI({
-      shiny::fillCol(
-        flex = c(NA, 0.04, 2, 1),
-        height = fullH,
-        shiny::div(shiny::HTML(intra_caption), class = "caption"),
-        shiny::br(),
-        shiny::fillRow(
-          flex = c(1, 0.06, 2.5),
-          ## plotWidget(ns('eigenHeatmap')),
-          plotWidget(ns("intraHeatmap")),
-          shiny::br(),
-          plotWidget(ns("intraScatter"))
-        )
-      )
-    }) ## ================================================================================
+    ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
-    
+
     ## wgcna.compute <- shiny::reactive({
     wgcna.compute <- shiny::eventReactive(
       {
@@ -108,7 +91,7 @@ WgcnaBoard <- function(id, pgx) {
        '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
-    
+
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
@@ -122,104 +105,6 @@ WgcnaBoard <- function(id, pgx) {
     ## ================================================================================
     ## ======================= PLOTTING FUNCTIONS =====================================
     ## ================================================================================
-
-    ## ----------------------------------------
-    ## ------------ samples dendro ------------
-    ## ----------------------------------------
-
-    sampleDendro.RENDER <- shiny::reactive({
-
-      out <- wgcna.compute()
-      datExpr <- out$datExpr
-      pheno <- out$datTraits
-
-      sampleTree2 <- hclust(dist(datExpr), method = "average")
-      ipheno <- apply(pheno, 2, function(x) as.numeric(factor(x)))
-      colnames(ipheno) <- colnames(pheno)
-      rownames(ipheno) <- rownames(pheno)
-      traitColors <- WGCNA::numbers2colors(ipheno, signed = FALSE)
-      ## Plot the sample dendrogram and the colors underneath.
-      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0)
-      WGCNA::plotDendroAndColors(
-        sampleTree2, traitColors[, ],
-        groupLabels = colnames(ipheno),
-        cex.colorLabels = 0.8, cex.dendroLabels = 0.9, cex.rowText = 0.8,
-        marAll = c(0.2, 5, 0.2, 0.2),
-        ## main = "Sample dendrogram and trait heatmap"
-        main = NULL
-      )
-    })
-
-    sampleDendro_opts <- shiny::tagList()
-    sampleDendro_info <- "<b>WGCNA sample dendrogram and trait heatmap.</b>"
-
-    shiny::callModule(
-      plotModule,
-      id = "sampleDendro", ## ns=ns,
-      title = "Sample dendrogram and trait heatmap", label = "b",
-      func = sampleDendro.RENDER,
-      func2 = sampleDendro.RENDER,
-      download.fmt = c("png", "pdf"),
-      ## options = sampleDendro_opts,
-      info.text = sampleDendro_info,
-      height = c(rowH1, 650), width = c("auto", 1000),
-      pdf.width = 10, pdf.height = 5, res = c(72, 90),
-      add.watermark = WATERMARK
-    )
-
-    ## ----------------------------------------
-    ## --------- Eigengenes heatmap --------------
-    ## ----------------------------------------
-
-    eigenHeatmap.RENDER <- shiny::reactive({
-
-      out <- wgcna.compute()
-      net <- out$net
-      datExpr <- out$datExpr
-      datTraits <- out$datTraits
-
-      MEs <- net$MEs
-      rho <- cor(MEs, datExpr)
-      sdx <- apply(datExpr, 2, sd)
-      ## rho <- t(t(rho) * sdx**2)
-      dim(rho)
-
-      if (input$mask_markers) {
-        ME <- as.character(net$colors)
-        M <- t(model.matrix(~ 0 + ME))[rownames(rho), ]
-        rho <- rho * pmax(M, 0.33)
-      }
-
-      ntop <- floor(200 / ncol(MEs))
-      ntop
-      ii <- apply(rho, 1, function(x) head(order(-x), ntop))
-      ii <- unique(as.vector(t(ii)))
-      ii <- head(ii, 70)
-
-      playbase::gx.heatmap(t(rho[, ii]),
-        keysize = 0.2, mar = c(4, 5), key = FALSE,
-        cexRow = 0.85, cexCol = 1, scale = "none"
-      )
-    })
-
-    eigenHeatmap_opts <- shiny::tagList(
-      shiny::checkboxInput(ns("mask_markers"), "mask_markers", TRUE)
-    )
-    eigenHeatmap_info <- "<b>WGCNA Eigengene correlation heatmap.</b> The heatmap shows the correlation of genes to the module eigengenes."
-
-    shiny::callModule(
-      plotModule,
-      id = "eigenHeatmap", ## ns=ns,
-      title = "Eigengene correlation heatmap", label = "a",
-      func = eigenHeatmap.RENDER,
-      func2 = eigenHeatmap.RENDER,
-      download.fmt = c("png", "pdf"),
-      options = eigenHeatmap_opts,
-      info.text = eigenHeatmap_info,
-      height = c(fullH, 650), width = c("auto", 650),
-      pdf.width = 6, pdf.height = 10, res = c(72, 90),
-      add.watermark = WATERMARK
-    )
 
     ## ----------------------------------------
     ## --------- enrichment table -------------
