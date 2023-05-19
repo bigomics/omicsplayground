@@ -1,3 +1,18 @@
+# NOTES
+#SAMPLES
+#- all tabs should be the same size
+#- convert column types from numeric to categorical
+#- remove column
+#- convert columns to categorical via binning and cuts
+#
+#CONTRASTS
+#- make contrasts table editable
+#
+#- Save updated files
+#
+#- put the errors in the same tab
+#- make the modal the whole screen and put the errors on the side
+#
 
 # no ui right now because the preview is in a modal dialog
 upload_table_preview_ui <- function(id) {
