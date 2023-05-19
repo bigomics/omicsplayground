@@ -52,7 +52,7 @@ addWatermark.PDF2 <- function(file, w, h, out=file, mt=0.09,
     logo.height = max(logo.scale*h , logo.scale*w/3) * 720    
     logo.width = logo.height * 4
     scale.cmd = sprintf("gs -o %s -sDEVICE=pdfwrite  -dDEVICEWIDTH=%0.f -dDEVICEHEIGHT=%0.f -dPDFFitPage -dAutoRotatePages=/None -f %s", tmp1, logo.width, logo.height, mark)
-    system(scale.cmd, ignore.stdout=FALSE, ignore.stderr=FALSE)
+    system(scale.cmd, ignore.stdout=TRUE, ignore.stderr=FALSE)
     ppi = 720
     if(mt>0) {
       ## add margin??      
@@ -65,7 +65,7 @@ addWatermark.PDF2 <- function(file, w, h, out=file, mt=0.09,
     ## create empty page with same plot size and logo translated to topleft
     cmd1 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -c '<</PageOffset [%.0f %.0f]>> setpagedevice' -f %s",
       tmp2, w*720, h*720, 0.15*logo.width/10, h*72-1*logo.height/10, tmp1)
-    system(cmd1, ignore.stdout=FALSE, ignore.stderr=FALSE)
+    system(cmd1, ignore.stdout=TRUE, ignore.stderr=FALSE)
 
     ## merge: overlay logo and plot
     cmd3 <- paste("pdftk",tmp3,"stamp",tmp2,"output",out) ## NEED pdftk installed!!!    
