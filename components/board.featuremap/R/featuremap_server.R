@@ -172,7 +172,6 @@ FeatureMapBoard <- function(id, pgx) {
           cex.legend = 0.9,
           cex.lab = 1.2,
           bty = "n",
-          col = "grey70",
           dlim = c(0.05, 0.05),
           hilight = hmarks,
           hilight2 = NULL,
