@@ -19,7 +19,7 @@ MakeContrastUI <- function(id) {
   ns <- shiny::NS(id)
 
   shiny::fillCol(
-    height = 750,
+    height = c("calc(100vh - 330px)"),
     flex = c(1, NA, NA, 1),
     shiny::fillRow(
       flex = c(3, 0.06, 1.0),
