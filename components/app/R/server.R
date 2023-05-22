@@ -49,7 +49,6 @@ app_server <- function(input, output, session) {
                 "genes" = opt$MAX_GENES,
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
-    pgx_dir <- PGX.DIR
 
     ## Parse and show URL query string
     if(0 && ALLOW_URL_QUERYSTRING) {
@@ -71,7 +70,7 @@ app_server <- function(input, output, session) {
             }
 
         })
-        dbg("[server.R:parseQueryString] pgx_dir = ",pgx_dir)
+        dbg("[server.R:parseQueryString] PGX.DIR = ",PGX.DIR)
     }
 
     ##-------------------------------------------------------------
@@ -91,7 +90,7 @@ app_server <- function(input, output, session) {
     } else if(authentication == "firebase") {
         auth <- EmailLinkAuthenticationModule(
           id ="auth",
-          pgx_dir = pgx_dir,
+          pgx_dir = PGX.DIR,
         )
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -128,7 +127,7 @@ app_server <- function(input, output, session) {
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
-        pgx_dir = pgx_dir,
+        pgx_dir = PGX.DIR,
         pgx = PGX,
         limits = limits,
         auth = auth,
@@ -142,7 +141,7 @@ app_server <- function(input, output, session) {
     if(opt$ENABLE_UPLOAD) {
        env$upload <- UploadBoard(
          id = "upload",
-         pgx_dir = pgx_dir,
+         pgx_dir = PGX.DIR,
          pgx = PGX,
          auth = auth,
          limits = limits,
@@ -670,12 +669,11 @@ Upgrade today and experience advanced analysis features without the time limit.<
           session$user <- "nobody"
         }
 
-        dbg("[server.R] session.user = ",session$user)
-        dbg("[server.R] session.names(userData) = ",names(session$userData))
-
         ## This checks for personal email adress and asks to change to
         ## a business email adress. This will affect also old users.
-        check_personal_email(auth, pgx_dir)
+        if(opt$AUTHENTICATION=='firebase' && logged) {
+          check_personal_email(auth, PGX.DIR)
+        }
 
         ##--------- force logout callback??? --------------
         if(opt$AUTHENTICATION!='firebase' && !logged) {
