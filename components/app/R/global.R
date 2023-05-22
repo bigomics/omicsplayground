@@ -189,7 +189,7 @@ message("************************************************")
 
 BOARDS <- c("welcome","load","upload","dataview","clustersamples","clusterfeatures",
   "diffexpr","enrich","isect","pathway","wordcloud","drug","sig","cell","corr","bio","cmap",
-  "wgcna", "tcga","comp","user")
+  "wgcna", "tcga","comp","user","pcsf")
 if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
 ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))

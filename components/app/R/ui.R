@@ -85,7 +85,9 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA"),
+            wgcna = "WGCNA",
+            pcsf = "PCSF (beta)"
+          ),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis"
@@ -205,8 +207,12 @@ app_ui <- function() {
                      "clusterfeatures-tab"
                  ),
                  bigdash::sidebarMenuItem(
-                     "WGCNA (beta)",
+                     "WGCNA",
                      "wgcna-tab"
+                 ),
+                 bigdash::sidebarMenuItem(
+                     "PCSF (beta)",
+                     "pcsf-tab"
                  )
              ),
              bigdash::sidebarMenu(
@@ -382,10 +388,19 @@ app_ui <- function() {
                 bigdash::sidebarTabHelp(
                     "wgcna-tab",
                     "Weighted Correlation",
-                    "Weighted correlation network analysis (WGCNA) is a gene-level cluster analysis
-                    method based on pairwise correlations between genes. It allows one to define modules (clusters),
-                    intramodular hubs, and network nodes with regard to module membership, to study the relationships
-                    between co-expression modules."
+                    "Weighted correlation network analysis (WGCNA) is a gene-level cluster
+                     analysis method based on pairwise correlations between genes. It
+                     allows one to define modules (clusters), intramodular hubs, and
+                     network nodes with regard to module membership, to study the
+                     relationships between co-expression modules."
+                ),
+                bigdash::sidebarTabHelp(
+                    "pcsf-tab",
+                    "PCSF Network Analysis",
+                    "PCSF performs fast and user-friendly network analysis using
+                     interaction networks as a template, it determines high-confidence
+                     subnetworks relevant to the data, which potentially leads to
+                     predictions of functional units."
                 ),
                 bigdash::sidebarTabHelp(
                     "diffexpr-tab",

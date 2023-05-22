@@ -218,6 +218,11 @@ app_server <- function(input, output, session) {
                 WgcnaUI("wgcna")
             ),
             bigdash::bigTabItem(
+                "pcsf-tab",
+                PcsfInputs("pcsf"),
+                PcsfUI("pcsf")
+            ),
+            bigdash::bigTabItem(
                 "diffexpr-tab",
                 ExpressionInputs("diffexpr"),
                 ExpressionUI("diffexpr")
@@ -400,6 +405,11 @@ app_server <- function(input, output, session) {
             WgcnaBoard("wgcna", pgx = PGX)
           }
 
+          if(ENABLED['pcsf']) {
+            info("[server.R] calling PcsfBoard module")
+            PcsfBoard("pcsf", pgx = PGX)
+          }
+
           if(ENABLED['comp']) {
             info("[server.R] calling CompareBoard module")
             CompareBoard("comp", pgx = PGX)
@@ -484,7 +494,8 @@ app_server <- function(input, output, session) {
 
         ## Beta features
         info("[server.R] disabling beta features")
-        bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
+        ##bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
+        bigdash.toggleTab(session, "pcsf-tab", show.beta)  ## wgcna
         bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
