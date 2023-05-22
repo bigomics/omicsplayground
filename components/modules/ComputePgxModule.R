@@ -173,6 +173,11 @@ ComputePgxServer <- function(
                                     choiceValues = EXTRA.METHODS,
                                     choiceNames = EXTRA.NAMES,
                                     selected = EXTRA.SELECTED
+                                ),
+                                fileInput2(
+                                    ns("upload_custom_genesets"),
+                                    shiny::h4("Custom genesets file"),
+                                    multiple = FALSE, accept = c(".csv", ".txt")
                                 )
                             ),
                             shiny::wellPanel(
@@ -229,6 +234,21 @@ ComputePgxServer <- function(
             temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
+            custom_genesets <- list()
+
+            shiny::observeEvent(input$upload_custom_genesets, {
+
+                custom_genesets$gmt <- 1
+
+                # check file validity, can be csv or txt
+
+                # save contrasts and genesets info as a list (c)
+
+                # pass it params, and add gsets and  
+
+                # document in readdocs 
+            
+            })
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
