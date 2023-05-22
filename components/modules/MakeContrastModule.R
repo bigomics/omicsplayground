@@ -418,6 +418,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
             options = list(
               dom = "t",
               pageLength = 999,
+              lengthMenu = list(c(6, -1), c('6', 'All')),
               ## autoWidth = TRUE, ## scrollX=TRUE,
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),
