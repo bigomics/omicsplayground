@@ -409,7 +409,11 @@ ComputePgxServer <- function(
                 libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
+                
+                custom.geneset <- list(gmt = custom.genesets$gmt, info = custom.genesets$info)
+                
                 # Define create_pgx function arguments
+                
                 params <- list(
                     samples = samples,
                     counts = counts,
@@ -425,7 +429,7 @@ ComputePgxServer <- function(
                     cluster.contrasts = FALSE,
                     max.genes = max.genes,
                     max.genesets = max.genesets,
-                    custom.genesets = custom.genesets,
+                    custom.geneset = custom.geneset,
                     gx.methods = gx.methods,
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
