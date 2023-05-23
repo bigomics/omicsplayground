@@ -1,4 +1,9 @@
 
+list_files_safe <- function(path) {
+    filenames <- list.files(path = path)
+    filenames <- filenames[!stringr::str_ends(filenames, '.R~')]
+    filenames
+}
 # board_deps : vector of other board names that the main board depends on
 # e.g. `launch_board('board.enrichment', c('board.expression'))` because
 # board.enrichment takes input from board.expression. Any board deps need
@@ -64,7 +69,7 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options
   source(global_file)
   #
   ## ui files from component
-  ui_files <- list.files(path = 'components/ui/')
+  ui_files <- list_files_safe(path = 'components/ui/')
   for (ui_file in ui_files) {
     source(file.path('components/ui/', ui_file))
   }
@@ -75,7 +80,7 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options
   ### board specific files ###
   source(glue::glue('components/{board}/dev/app_ui.R'))
   source(glue::glue('components/{board}/dev/app_server.R'))
-  r_files <- list.files(path = glue::glue('components/{board}/R'))
+  r_files <- list_files_safe(path = glue::glue('components/{board}/R'))
   for (r_file in r_files) {
     source(file.path(glue::glue('components/{board}/R/'),r_file))
   }
@@ -83,7 +88,7 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options
   # load any other boards
   if (!is.null(board_deps)) {
     for (extra_board in board_deps) {
-      r_files <- list.files(path = glue::glue('components/{extra_board}/R'))
+      r_files <- list_files_safe(path = glue::glue('components/{extra_board}/R'))
       for (r_file in r_files) {
         source(file.path(glue::glue('components/{extra_board}/R/'),r_file))
       }
