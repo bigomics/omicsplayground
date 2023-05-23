@@ -42,6 +42,7 @@ pgx <- playbase::pgx.computePGX(
   max.genesets = params$max.genesets,
   gx.methods = params$gx.methods,
   gset.methods = params$gset.methods,
+  custom.genelists = params$custom.geneset,
   extra.methods = params$extra.methods,
   use.design = params$use.design,        ## no.design+prune are combined
   prune.samples = params$prune.samples,  ##
