@@ -234,11 +234,9 @@ ComputePgxServer <- function(
             temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
-            custom.genesets <- list()
+            custom.genesets <- reactiveValues(gmt = NULL, info = NULL)
 
             shiny::observeEvent(input$upload_custom_genesets, {
-
-                browser()
 
                 filePath <- input$upload_custom_genesets$datapath
 
@@ -247,6 +245,7 @@ ComputePgxServer <- function(
                 # check file validity, can be csv or txt
 
                 if(endsWith(filePath, ".txt")){
+                    
                     custom.genesets$gmt <- playbase::read.gmt(filePath)
 
 
@@ -254,11 +253,11 @@ ComputePgxServer <- function(
                     gmt.length <- length(custom.genesets$gmt)
                     gmt.is.list <- is.list(custom.genesets$gmt)
 
-
+                    
                     # tell user that custom genesets are "ok"
                     # we could perform an addicional check to verify that items in lists are genes
                     if(gmt.length > 0 && gmt.is.list){
-                        ?shinyWidgets::sendSweetAlert(
+                        shinyWidgets::sendSweetAlert(
                             session = session,
                             title = "Custom genesets uploaded!",
                             text = "Your genesets will be incorporated in the analysis.",
@@ -266,14 +265,14 @@ ComputePgxServer <- function(
                             btn_labels = "OK",
                             ## btn_colors = "red",
                             closeOnClickOutside = TRUE
-                            )
+                        )
 
                     }
 
                 }
 
                 # error message if custom genesets not detected
-                if(length(custom.genesets)==0){
+                if(is.null(custom.genesets$gmt)){
                     shinyWidgets::sendSweetAlert(
                         session = session,
                         title = "Invalid custom genesets",
@@ -409,7 +408,7 @@ ComputePgxServer <- function(
                 creator <- session$user
                 libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
-                
+                browser()
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
