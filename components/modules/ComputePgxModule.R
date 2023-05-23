@@ -234,15 +234,48 @@ ComputePgxServer <- function(
             temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
-            custom_genesets <- list()
+            custom.genesets <- list()
 
             shiny::observeEvent(input$upload_custom_genesets, {
 
-                custom_genesets$gmt <- 1
+                browser()
+
+                filePath <- input$upload_custom_genesets$datapath
+
+                fileName <- input$upload_custom_genesets$name
 
                 # check file validity, can be csv or txt
 
-                # save contrasts and genesets info as a list (c)
+                # check if file is csv
+
+                if(endsWith(filePath, ".csv")){
+                    custom.genesets$gmt <- read.csv(filePath, check.names = FALSE, stringsAsFactors = FALSE)
+                }
+
+                if(endsWith(filePath, ".txt")){
+                    custom.genesets$gmt <- playbase::read.gmt(filePath)
+                }
+
+                # error message if custom genesets not detected
+                if(length(custom.genesets)==0){
+                    shinyWidgets::sendSweetAlert(
+                        session = session,
+                        title = "Invalid custom genesets",
+                        text = "Please update a .csv or .txt file. See guidelines here <PLACEHOLDER>.",
+                        type = "error",
+                        btn_labels = "OK",
+                        ## btn_colors = "red",
+                        closeOnClickOutside = TRUE
+                    )
+                    custom.genesets <- list()
+                    return(NULL)
+                }
+
+                # compute custom geneset stats
+
+                custom.genesets$info <- custom.genesets$gmt[!duplicated(names(custom.genesets$gmt))]
+                
+                custom.genesets$info$GSET_SIZE <- sapply(custom.genesets$gmt,length)
 
                 # pass it params, and add gsets and  
 
@@ -381,6 +414,7 @@ ComputePgxServer <- function(
                     cluster.contrasts = FALSE,
                     max.genes = max.genes,
                     max.genesets = max.genesets,
+                    custom.genesets = custom.genesets,
                     gx.methods = gx.methods,
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
