@@ -177,7 +177,7 @@ ComputePgxServer <- function(
                                 fileInput2(
                                     ns("upload_custom_genesets"),
                                     shiny::h4("Custom genesets file"),
-                                    multiple = FALSE, accept = c(".csv", ".txt")
+                                    multiple = FALSE, accept = c(".txt")
                                 )
                             ),
                             shiny::wellPanel(
@@ -245,12 +245,6 @@ ComputePgxServer <- function(
                 fileName <- input$upload_custom_genesets$name
 
                 # check file validity, can be csv or txt
-
-                # check if file is csv
-
-                if(endsWith(filePath, ".csv")){
-                    custom.genesets$gmt <- read.csv(filePath, check.names = FALSE, stringsAsFactors = FALSE)
-                }
 
                 if(endsWith(filePath, ".txt")){
                     custom.genesets$gmt <- playbase::read.gmt(filePath)
