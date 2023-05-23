@@ -19,7 +19,7 @@ MakeContrastUI <- function(id) {
   ns <- shiny::NS(id)
 
   shiny::fillCol(
-    height = 750,
+    height = c("calc(100vh - 330px)"),
     flex = c(1, NA, NA, 1),
     shiny::fillRow(
       flex = c(3, 0.06, 1.0),
@@ -423,6 +423,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
             options = list(
               dom = "t",
               pageLength = 999,
+              lengthMenu = list(c(6, -1), c('6', 'All')),
               ## autoWidth = TRUE, ## scrollX=TRUE,
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),
