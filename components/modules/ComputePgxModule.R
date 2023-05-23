@@ -248,6 +248,28 @@ ComputePgxServer <- function(
 
                 if(endsWith(filePath, ".txt")){
                     custom.genesets$gmt <- playbase::read.gmt(filePath)
+
+
+                    # perform some basic checks
+                    gmt.length <- length(custom.genesets$gmt)
+                    gmt.is.list <- is.list(custom.genesets$gmt)
+
+
+                    # tell user that custom genesets are "ok"
+                    # we could perform an addicional check to verify that items in lists are genes
+                    if(gmt.length > 0 && gmt.is.list){
+                        ?shinyWidgets::sendSweetAlert(
+                            session = session,
+                            title = "Custom genesets uploaded!",
+                            text = "Your genesets will be incorporated in the analysis.",
+                            type = "success",
+                            btn_labels = "OK",
+                            ## btn_colors = "red",
+                            closeOnClickOutside = TRUE
+                            )
+
+                    }
+
                 }
 
                 # error message if custom genesets not detected
@@ -255,7 +277,7 @@ ComputePgxServer <- function(
                     shinyWidgets::sendSweetAlert(
                         session = session,
                         title = "Invalid custom genesets",
-                        text = "Please update a .csv or .txt file. See guidelines here <PLACEHOLDER>.",
+                        text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
                         type = "error",
                         btn_labels = "OK",
                         ## btn_colors = "red",
@@ -271,10 +293,6 @@ ComputePgxServer <- function(
                 
                 custom.genesets$info$GSET_SIZE <- sapply(custom.genesets$gmt,length)
 
-                # pass it params, and add gsets and  
-
-                # document in readdocs 
-            
             })
 
             shiny::observeEvent( input$compute, {
