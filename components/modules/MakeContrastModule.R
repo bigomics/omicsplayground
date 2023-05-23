@@ -76,7 +76,12 @@ MakeContrastUI <- function(id) {
         )
       ),
       shiny::br(),
-      plotWidget(ns("pcaplot"))
+      makecontrast_plot_pcaplot_ui(ns("pcaplot"),
+                                   title = "PCA/tSNE plot",
+                                   info.text = "",
+                                   caption = "",
+                                   height = c(320, 700),
+                                   width = c("auto", 800))
     ),
     shiny::h4("Contrast table"),
     shiny::fillRow(
@@ -431,58 +436,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
         server = FALSE
       )
 
-
-      pcaplot.RENDER <- shiny::reactive({
-        ## X <- ngs$X
-        pheno <- phenoRT()
-        counts <- countsRT()
-        if (is.null(pheno) || is.null(counts)) {
-          return(NULL)
-        }
-        if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
-          return(NULL)
-        }
-        shiny::req(pheno)
-        shiny::req(counts)
-
-        method <- input$pcaplot.method
-        X <- log2(1 + counts)
-        clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
-        names(clust)
-
-        cond <- sel.conditions()
-        if (length(cond) == 0 || is.null(cond)) {
-          return(NULL)
-        }
-        ## par(mar=c(4,1,1,1))
-        playbase::pgx.scatterPlotXY(
-          clust$pos2d,
-          var = cond, plotlib = "plotly",
-          legend = FALSE ## , labels=TRUE
-        )
-      })
-
-      pcaplot.opts <- shiny::tagList(
-        withTooltip(
-          shiny::selectInput(ns("pcaplot.method"), "Method:",
-            choices = c("pca", "tsne", "umap"),
-            width = "100%"
-          ), "Choose clustering method.",
-          placement = "right", options = list(container = "body")
-        )
-      )
-
-      shiny::callModule(
-        plotModule,
-        id = "pcaplot",
-        func = pcaplot.RENDER, ## ns=ns,
-        plotlib = "plotly",
-        options = pcaplot.opts,
-        height = c(320, 700), width = c("auto", 800),
-        pdf.width = 8, pdf.height = 8,
-        title = "PCA/tSNE plot",
-        ## info.text = hm_PCAplot_text
-        ## caption = pca_caption_static
+      makecontrast_plot_pcaplot_server(
+          "pcaplot",
+          phenoRT,
+          countsRT,
+          sel.conditions,
+          watermark = WATERMARK
       )
 
       return(
@@ -495,4 +454,101 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
       ) ## pointing to reactive
     } ## end-of-server
   )
+}
+
+
+# PlotModuleUI for pcaplot
+makecontrast_plot_pcaplot_ui <- function(
+        id,
+        title,
+        info.text,
+        caption,
+        label = "",
+        height,
+        width) {
+    ns <- shiny::NS(id)
+
+    options <- shiny::tagList(
+        withTooltip(
+            shiny::selectInput(ns("pcaplot.method"), "Method:",
+                               choices = c("pca", "tsne", "umap"),
+                               width = "100%"
+            ), "Choose clustering method.",
+            placement = "right", options = list(container = "body")
+        )
+    )
+
+    PlotModuleUI(ns("plot"),
+                 title = title,
+                 caption = caption,
+                 label = label,
+                 plotlib = "plotly",
+                 info.text = info.text,
+                 options = options,
+                 download.fmt = c("png", "pdf", "csv"),
+                 width = width,
+                 height = height
+    )
+}
+
+# PlotModuleServer for pcaplot
+makecontrast_plot_pcaplot_server <- function(id,
+                                             phenoRT,
+                                             countsRT,
+                                             sel.conditions,
+                                             watermark = FALSE) {
+    moduleServer(
+        id, function(input, output, session) {
+            plot_data <- shiny::reactive({
+                pheno <- phenoRT()
+                counts <- countsRT()
+                res <- list(
+                    pheno = pheno,
+                    counts = counts
+                )
+                return(res)
+            })
+
+            plot.RENDER <- function() {
+                res <- plot_data()
+                pheno <- res$pheno
+                counts <- res$counts
+
+                if (is.null(pheno) || is.null(counts)) {
+                    return(NULL)
+                }
+                if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
+                    return(NULL)
+                }
+                shiny::req(pheno)
+                shiny::req(counts)
+
+                method <- input$pcaplot.method
+                X <- log2(1 + counts)
+                clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
+
+                cond <- sel.conditions()
+                if (length(cond) == 0 || is.null(cond)) {
+                    return(NULL)
+                }
+                playbase::pgx.scatterPlotXY(
+                    clust$pos2d,
+                    var = cond,
+                    plotlib = "plotly",
+                    legend = FALSE
+                )
+            }
+
+            PlotModuleServer(
+                "plot",
+                plotlib = "plotly",
+                func = plot.RENDER,
+                func2 = plot.RENDER,
+                csvFunc = plot_data,
+                res = c(70, 140),
+                pdf.width = 8, pdf.height = 8,
+                add.watermark = watermark
+            )
+        }
+    )
 }
