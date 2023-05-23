@@ -408,7 +408,7 @@ ComputePgxServer <- function(
                 creator <- session$user
                 libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
-                browser()
+                
                 # Define create_pgx function arguments
                 params <- list(
                     samples = samples,
