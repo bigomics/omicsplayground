@@ -426,7 +426,7 @@ ComputePgxServer <- function(
                 
                 
                 # Define create_pgx function arguments
-                browser()
+                
                 params <- list(
                     samples = samples,
                     counts = counts,
