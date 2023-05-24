@@ -8,6 +8,45 @@
 #    paste(rep(pch,n),collapse="")
 #}
 
+
+visPrint <- function(visnet, file, width=3000, height=3000, delay=0, zoom=1) {
+    is.pdf <- grepl("pdf$",file)
+    if(is.pdf) {
+      width <- width * 600
+      height <- height * 600
+    }
+    vis2 <- htmlwidgets::createWidget(
+      name = "visNetwork",
+      x = visnet$x ,
+      width = width, height = height,
+      package = "visNetwork")
+    tmp.html <- paste0(tempfile(),"-visnet.html")
+    tmp.png <- paste0(tempfile(),"-webshot.png")
+    visNetwork::visSave(vis2, file=tmp.html)
+    dbg("[visPrint] width = ",width)
+    dbg("[visPrint] height = ",height)
+    webshot2::webshot(
+      url = tmp.html,
+      file = tmp.png,
+      selector = "#htmlwidget_container",
+      delay = delay,
+      zoom = zoom,
+      cliprect = "viewport",
+      vwidth = width,
+      vheight = height
+    )
+    dbg("[visPrint] tmp.png = ",tmp.png)
+    if(is.pdf) {
+      cmd <- paste("convert",tmp.png,"-density 600",file)
+      system(cmd)
+    } else {
+      file.copy(tmp.png,file,overwrite=TRUE)
+    }
+    unlink(tmp.html)
+    ##unlink(tmp.png)
+}
+
+
 addWatermark.PDF <- function(file) {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     mark <- file.path(FILES,"watermark.pdf")
@@ -19,22 +58,20 @@ addWatermark.PDF <- function(file) {
     unlink(tmp)
 }
 
+
 addWatermark.PNG2 <- function(file,
-                              w, h, mt=0.09, out=file,
+                              w, h, out=file,
                               mark=file.path(FILES,"watermark-logo.png"),
-                              logo.scale=0.045) {
+                              logo.scale=0.045, position="topright") {
     if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    if(position %in% c(FALSE,"none")) return
     tmp <- paste0(gsub("file","plot",tempfile()),".png")
     logo.height = max(logo.scale*h , logo.scale*w/3)
     logo.width = logo.height * 4
     logo.x = 0.2 * logo.width
     logo.y = 0.3 * logo.height
-    top.margin = mt*h
-    if(top.margin>0) {
-      cmd.str = "convert %s -extent %.0fx%.0f+%.0f-%.0f %s"
-      cmd0 = sprintf( cmd.str, file, w, h+top.margin, 0, top.margin, file)
-      system(cmd0)
-    }
+    if(grepl("right",position)) logo.x = w - 1.2 * logo.width
+    if(grepl("bottom",position)) logo.y = h - 0.3 * logo.height
     cmd.str = "convert %s \\( %s -thumbnail %.0fx%.0f \\) -geometry +%.0f+%.0f -composite %s"
     cmd = sprintf( cmd.str, file, mark, logo.width, logo.height, logo.x, logo.y, tmp)
     system(cmd)
@@ -42,35 +79,32 @@ addWatermark.PNG2 <- function(file,
     unlink(tmp)
 }
 
-addWatermark.PDF2 <- function(file, w, h, out=file, mt=0.09,
+addWatermark.PDF2 <- function(file, w, h, out=file, 
                               mark=file.path(FILES,"watermark-logo.pdf"),
-                              logo.scale=0.045 ) {
+                              logo.scale=0.045, position="topright" ) {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...    
+    if(position %in% c(FALSE,"none")) return
     tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
     tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")    
     tmp3 <- paste0(gsub("file","plot",tempfile()),".pdf")    
     logo.height = max(logo.scale*h , logo.scale*w/3) * 720    
     logo.width = logo.height * 4
+    logo.x = 0.2 * logo.width 
+    logo.y = h*720 - 1.66*logo.height
+    if(grepl("right",position)) logo.x = w*720 - 1.2 * logo.width
+    if(grepl("bottom",position)) logo.y = 0.66 * logo.height
+
     scale.cmd = sprintf("gs -o %s -sDEVICE=pdfwrite  -dDEVICEWIDTH=%0.f -dDEVICEHEIGHT=%0.f -dPDFFitPage -dAutoRotatePages=/None -f %s", tmp1, logo.width, logo.height, mark)
     system(scale.cmd, ignore.stdout=TRUE, ignore.stderr=FALSE)
-    ppi = 720
-    if(mt>0) {
-      ## add margin??      
-      h = h + h*mt
-      cmd0 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -dPDFFitPage -f -dAutoRotatePages=/None %s",tmp3, w*ppi, 1.03*h*ppi, file)      
-      system(cmd0, ignore.stdout=FALSE, ignore.stderr=FALSE)
-    } else {
-      file.copy(file,tmp3,overwrite=TRUE)
-    }
     ## create empty page with same plot size and logo translated to topleft
     cmd1 = sprintf("gs -o %s -sDEVICE=pdfwrite -g%.0fx%.0f -c '<</PageOffset [%.0f %.0f]>> setpagedevice' -f %s",
-      tmp2, w*720, h*720, 0.15*logo.width/10, h*72-1*logo.height/10, tmp1)
+      tmp2, w*720, h*720, logo.x/10, logo.y/10, tmp1)
     system(cmd1, ignore.stdout=TRUE, ignore.stderr=FALSE)
 
     ## merge: overlay logo and plot
-    cmd3 <- paste("pdftk",tmp3,"stamp",tmp2,"output",out) ## NEED pdftk installed!!!    
+    cmd3 <- paste("pdftk",file,"stamp",tmp2,"output",tmp3) ## NEED pdftk installed!!!    
     system(cmd3)
-   ## file.copy(tmp3,file,overwrite=TRUE)
+    file.copy(tmp3,out,overwrite=TRUE)
     unlink(tmp1)
     unlink(tmp2)
     unlink(tmp3)    

@@ -25,6 +25,7 @@ wgcna_plot_gdendogram_server <- function(id,
                                          labels2rainbow,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     geneDendro.RENDER <- shiny::reactive({
 
       out <- wgcna.compute()
