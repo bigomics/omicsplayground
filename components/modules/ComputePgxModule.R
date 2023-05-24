@@ -234,7 +234,7 @@ ComputePgxServer <- function(
             temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
-            custom.genesets <- reactiveValues(gmt = NULL, info = NULL)
+            custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
 
             shiny::observeEvent(input$upload_custom_genesets, {
 
@@ -246,14 +246,28 @@ ComputePgxServer <- function(
 
                 if(endsWith(filePath, ".txt")){
                     
-                    custom.genesets$gmt <- playbase::read.gmt(filePath)
+                    custom.geneset$gmt <- playbase::read.gmt(filePath)
 
 
                     # perform some basic checks
-                    gmt.length <- length(custom.genesets$gmt)
-                    gmt.is.list <- is.list(custom.genesets$gmt)
+                    gmt.length <- length(custom.geneset$gmt)
+                    gmt.is.list <- is.list(custom.geneset$gmt)
 
-                    
+                    # clean genesets
+
+                    custom.geneset$gmt <- list(CUSTOM = custom.geneset$gmt)
+
+                    # convert gmt to OPG standard
+                    # eventually we can add multiple files, but for now we only support one
+
+                    custom.geneset$gmt <- playbase::clean_gmt(custom.geneset$gmt,"CUSTOM")
+
+                    # compute custom geneset stats
+
+                    custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
+                
+                    custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt,length)
+                
                     # tell user that custom genesets are "ok"
                     # we could perform an addicional check to verify that items in lists are genes
                     if(gmt.length > 0 && gmt.is.list){
@@ -271,8 +285,10 @@ ComputePgxServer <- function(
 
                 }
 
+                
+
                 # error message if custom genesets not detected
-                if(is.null(custom.genesets$gmt)){
+                if(is.null(custom.geneset$gmt)){
                     shinyWidgets::sendSweetAlert(
                         session = session,
                         title = "Invalid custom genesets",
@@ -282,15 +298,9 @@ ComputePgxServer <- function(
                         ## btn_colors = "red",
                         closeOnClickOutside = TRUE
                     )
-                    custom.genesets <- list()
+                    custom.geneset <- list()
                     return(NULL)
                 }
-
-                # compute custom geneset stats
-
-                custom.genesets$info <- custom.genesets$gmt[!duplicated(names(custom.genesets$gmt))]
-                
-                custom.genesets$info$GSET_SIZE <- sapply(custom.genesets$gmt,length)
 
             })
 
@@ -410,10 +420,10 @@ ComputePgxServer <- function(
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
                 
-                custom.geneset <- list(gmt = custom.genesets$gmt, info = custom.genesets$info)
+                custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
                 
                 # Define create_pgx function arguments
-                
+                browser()
                 params <- list(
                     samples = samples,
                     counts = counts,
