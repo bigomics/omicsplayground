@@ -59,10 +59,9 @@ functional_plot_enrichmap_server <- function(id,
 
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
-        G <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
         res <- compute_enrichmentmap(
           pgx,
-          G,
+          playdata::GSET_SPARSEG_XL,
           qsig = 0.99,
           ntop = 120,
           wt = 1,

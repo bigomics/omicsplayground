@@ -247,8 +247,8 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
             with.email = FALSE,
             with.username = FALSE,
             with.password = FALSE,
-            with.firebase = FALSE,
-            with.firebase_emailonly = TRUE,
+            with.firebase = TRUE,
+            with.firebase_emailonly = FALSE,
             alt = h5("Ready to explore your data?",style="color:white;"),
             login.text = "Sure I am!"
         )
@@ -310,14 +310,6 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
           return()
         }
 
-        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",input$emailInput)
-        if(TRUE && is_personal_email) {
-          shinyalert::shinyalert("We're sorry...","No personal email allowed. Please log in with your business, academic or institutional email.")
-          shiny::updateTextInput(session, "emailInput", value="")
-          email_waiter$hide()
-          return()
-        }
-
         ## >>> OK let's send auth request
         session$sendCustomMessage(
             "email-feedback",
@@ -368,9 +360,6 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         if(!is.null(USER$email)) USER$email <- as.character(USER$email)
         if(is.null(USER$name))   USER$name  <- ""
         if(is.null(USER$email))  USER$email <- ""
-
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
 
         session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })

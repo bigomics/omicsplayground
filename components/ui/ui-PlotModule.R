@@ -3,6 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
 PlotModuleUI <- function(id,
                          info.text = "Figure",
                          title = "",
@@ -345,7 +346,8 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modaldialog.style)),
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
-        shiny::tags$head(shiny::tags$style(modalfooter.none))
+        shiny::tags$head(shiny::tags$style(modalfooter.none)),
+        shiny::tags$script(src = "dropdown-helper.js")
       )
     ),
     bslib::card_body(
@@ -510,13 +512,13 @@ PlotModuleServer <- function(id,
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
-            resx <- 4 ## upresolution            
+            resx <- 4 ## upresolution
             shiny::withProgress(
               {
                 ## unlink(PNGFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
-                  p$width <- png.width 
+                  p$width <- png.width
                   p$height <- png.height
                   plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale=resx)
                 } else if (plotlib == "iheatmapr") {
@@ -1060,6 +1062,60 @@ PlotModuleServer <- function(id,
       )
     }
   )
+}
+
+
+colBL="#00448855"
+colRD="#88004455"
+
+plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
+                         width = NULL, height = NULL, scale = 1, server=NULL)
+{
+    is.docker <- file.exists("/.dockerenv")
+    is.docker
+    export.ok <- FALSE
+
+    if(class(p)[1] != "plotly") {
+        message("[plotlyExport] ERROR : not a plotly object")
+        return(NULL)
+    }
+    ## remove old
+    unlink(file,force=TRUE)
+
+    ## See if Kaleido is available
+    if(1 && !export.ok) {
+        ## https://github.com/plotly/plotly.R/issues/2179
+        reticulate::py_run_string("import sys")
+        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height, scale=scale)))
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
+        export.ok <- TRUE
+    }
+    if(1 && !export.ok) {
+        ## works only for non-GL plots
+        err <- try(plotly::export(p, file, width=width, height=height))
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")
+    }
+    if(0 && !export.ok) {
+        tmp = paste0(tempfile(),".html")
+        htmlwidgets::saveWidget(p, tmp)
+        err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[plotlyExport] --> exported with webshot::webshot()")
+    }
+    if(!export.ok) {
+        message("[plotlyExport] WARNING: export failed!")
+        if(format=="png") png(file)
+        if(format=="pdf") pdf(file)
+        par(mfrow=c(1,1));frame()
+        text(0.5,0.5,"Plotly export error",cex=2)
+        dev.off()
+    }
+
+    message("[plotlyExport] file.exists(file)=",file.exists(file))
+    export.ok <- export.ok && file.exists(file)
+    return(export.ok)
 }
 
 

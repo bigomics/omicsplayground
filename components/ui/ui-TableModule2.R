@@ -131,7 +131,8 @@ TableModuleUI <- function(id,
               )
          ),
          shiny::tagList(
-           shiny::tags$head(shiny::tags$style(modalfooter.none))
+           shiny::tags$head(shiny::tags$style(modalfooter.none)),
+           shiny::tags$script(src = "dropdown-helper.js")
          )
       ),
       bslib::card_body(
@@ -225,9 +226,9 @@ TableModuleServer <- function(id,
       module <- list(
         data = shiny::reactive(func()$x$data),
         rows_current = shiny::reactive(input$datatable_rows_current),
-        rows_selected = shiny::reactive(input$datatable_rows_selected),        
+        rows_selected = shiny::reactive(input$datatable_rows_selected),
         rows_all = shiny::reactive(input$datatable_rows_all),
-        row_last_clicked = shiny::reactive(input$row_last_clicked),        
+        row_last_clicked = shiny::reactive(input$row_last_clicked),
         rownames_current = shiny::reactive({
           rns <- rownames(func()$x$data)
           if(is.null(rns)) rns <- 1:nrow(func()$x$data)

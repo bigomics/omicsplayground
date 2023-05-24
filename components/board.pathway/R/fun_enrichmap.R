@@ -3,7 +3,7 @@ if(0) {
   library(playbase)
   load("../pgx/example-data.pgx",verbose=1)
   pgx=ngs
-  G <- readRDS("../omicsplayground/lib/gset-sparseG-XL.rds")
+  G <- playdata::GSET_SPARSEG_XL
   dim(G)
   head(rownames(G))
   wt=1;rx=3;qsig=0.2

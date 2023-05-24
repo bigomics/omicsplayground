@@ -508,11 +508,7 @@ app_ui <- function() {
                     UserUI("user")
                 )
             ),
-            tagList(footer),
-            # This JS script is sourced at this point because if sourced before creating
-            # the UI elements, the snippet to prevent `dropdown-menu` to propagate clicks
-            # will not be applied
-            tags$script(src = "dropdown-helper.js")
+            tagList(footer)
         )
     }
 
