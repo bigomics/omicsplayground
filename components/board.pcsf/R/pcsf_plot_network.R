@@ -58,8 +58,10 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
 pcsf_plot_network_server <- function(id,
                                      pgx,
                                      pcsf_compute,
+                                     pcsf_beta = reactive(1),
                                      colorby = reactive("gene.cluster"),
                                      contrast = reactive(NULL),
+                                     show.centrality = reactive(TRUE),
                                      watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
@@ -70,30 +72,49 @@ pcsf_plot_network_server <- function(id,
     observeEvent(input$physics, {
       #Update the network
       do.physics <- input$physics
-      dbg("[pcsf_plot_network.R] do.physics =",do.physics)      
       visNetwork::visNetworkProxy("plotmodule-renderfigure") %>%
         visNetwork::visPhysics(enabled = do.physics)
     })
     
     get_network <- reactive({
+
       res <-  pcsf_compute()
-      net <- res$net
+      shiny::req(res)
+            
+      ppi <- res$ppi
+      terminals <- res$terminals      
+      idx <- res$idx
+      
+      beta <- as.numeric(pcsf_beta()) - 1      
+      net <- PCSF::PCSF(ppi, terminals, w=2, b=exp(beta))
+      igraph::V(net)$group <- idx[igraph::V(net)$name]
+
+      ## remove small clusters...
+      cmp <- igraph::components(net)
+      sel.kk <- which(cmp$csize > 0.10 * max(cmp$csize))
+      net <- igraph::subgraph(net, cmp$membership %in% sel.kk)
+      class(net) <- c("PCSF","igraph")
+      net
+    })
+    
+    visnetwork.RENDER <- function() {
+
+      res <- pcsf_compute()      
+      net <- get_network()
+
+      dbg("[pcsf_plot_network.R:visnetwork.RENDER] reacted!")
+      dbg("[pcsf_plot_network.R:get_network] 2")
+
       .colorby <- colorby()
       .contrast <- contrast()
-      if(.colorby=='gene.cluster') {
+      if(.colorby == 'gene.cluster') {
         igraph::V(net)$type <- igraph::V(net)$group
       } else {
         fx <- res$meta[,.contrast]
         vv <- igraph::V(net)$name
         igraph::V(net)$type <- c("down","up")[1 + 1*(sign(fx[vv])>0)]
       }
-      net
-    })
-
-    visnetwork.RENDER <- function() {
-      net <- get_network()
-      dbg("[pcsf_plot_network.R:visnetwork.RENDER] reacted!")
-
+      
       do.physics <- input$physics
       if(input$layout=="hierarchical") {
         layout <- "hierarchical"
@@ -101,12 +122,23 @@ pcsf_plot_network_server <- function(id,
         layout <- paste0("layout_with_",input$layout)
       }
       
+      label_cex = 30
+      if(show.centrality()) {
+        ewt <- 1.0 / igraph::E(net)$weight
+        bc <- igraph::page_rank(net, weights=ewt)$vector
+        ##bc <- igraph::betweenness(net)
+        label_cex <- 30 + 80 * (bc / max(bc))**2
+      }
+      
       ##E(net)$weight <- 1/(E(net)$weight+1e-10)
       visnet <- visplot.PCSF(
         net, style = 1,
-        node_size=30, node_label_cex = 30,
-        invert.weight = TRUE, edge_width=3,
-        Steiner_node_color = "lightblue", Terminal_node_color = "lightgreen",
+        node_size = 30,
+        node_label_cex = label_cex,
+        invert.weight = TRUE,
+        edge_width = 4,
+        Steiner_node_color = "lightblue",
+        Terminal_node_color = "lightgreen",
         extra_node_colors = list("down"="blue", "up"="red"),
         width = '100%', height=900,
         layout = layout,
@@ -115,8 +147,6 @@ pcsf_plot_network_server <- function(id,
       dbg("[pcsf_plot_network.R:visnetwork.RENDER] done!")
       visnet
     }
-
-    
     
     PlotModuleServer(
       "plotmodule",

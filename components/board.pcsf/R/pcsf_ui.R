@@ -12,14 +12,18 @@ PcsfInputs <- function(id) {
     withTooltip(
       radioButtons(
         ns("colorby"),
-        "Color by:",
+        "Color nodes by:",
         choices = c("gene.cluster", "contrast"),
         selected = "gene.cluster",
         inline = TRUE
       ),
       "Choose how to color the nodes",
-      placement = "right",
-      options = list(container = "body")
+      placement = "right"
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("show.centrality"), "highlight hubs", TRUE),
+      "Highlight hub genes by scaling gene names with centrality score.",
+      placement = "top"
     ),
     conditionalPanel(
       "input.colorby == 'contrast'",
@@ -27,51 +31,60 @@ PcsfInputs <- function(id) {
       withTooltip(
         selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
         "Select contrast.",
-        placement = "right",
-        options = list(container = "body")
-      ),
+        placement = "right"
+      )
+    ),
+    br(),
+    withTooltip(    
+      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, 0, 0.5),
+      "Select contrast.",
+      placement = "right"
     ),
     br(),
     withTooltip(
-      actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
+      actionLink(ns("adv_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
-      placement = "top",
-      options = list(container = "body")
+      placement = "top"
+    ),
+    shiny::conditionalPanel(
+      "input.adv_options % 2 == 1",
+      ns = ns,
+      shiny::tagList(
+        withTooltip(shiny::checkboxInput(ns("check1"), "check1", TRUE),
+          "Some check.",
+          placement = "top")
+      )
     )
   )
 }
 
-pcsf_module_info <- "PCSF Network Analysis. Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."
+pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-confidence subnetworks of highly correlated and highly differentially expressed genes. The STRING protein-protein interaction network is used as backbone for creating the network."
 
 pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone."
 
 PcsfUI <- function(id) {
   ns <- NS(id)
 
-  div(
+  tagList(
     boardHeader(
-      title = "PCSF",
-      info_link = ns("pcsf_info")
+      title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
-    tabsetPanel(
+    shiny::tabsetPanel(
       id = ns("tabs1"),
-      tabPanel(
+      shiny::tabPanel(
         "PCSF network",
         bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
           heights_equal = "row",
-          ## bs_alert(pcsf_module_info),
           bslib::layout_column_wrap(
             width = 1,
-            height = "100%",
-            heights_equal = "row",            
+            ##height = "100%",
+            ##heights_equal = "row",            
             style = htmltools::css(grid_template_columns = "5fr 7fr"),
             pcsf_plot_heatmap_ui(
-              ns("pcsf_heatmap"),
-              caption = paste(
-                "PCSF gene modules",
-                ""),
+              id = ns("pcsf_heatmap"),
+              caption = "PCSF gene modules",
               info.text = "",
               height = c("100%", "75vh"),
               width = c("auto", "100%")
@@ -85,10 +98,12 @@ PcsfUI <- function(id) {
               height = c("100%", "75vh"),
               width = c("auto", "100%")
             )
-          )
+          ),
+          "Hello"
+          ##bs_alert(pcsf_module_info)
         )
       )
     )
   )
-
+  
 }

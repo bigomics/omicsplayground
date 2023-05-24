@@ -15,9 +15,9 @@ app_ui <- function(request) {
     sidebar <- bigdash::sidebar(
         "Menu",
         bigdash::sidebarMenu(
-            "Signature",
+            "Clustering",
             bigdash::sidebarMenuItem(
-                "PCSF Network Analysis (beta)",
+                "PCSF (beta)",
                 "pcsf-tab"
             )
         )

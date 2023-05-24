@@ -57,34 +57,17 @@ pcsf_plot_heatmap_ui <- function(id, caption, info.text, height, width) {
 pcsf_plot_heatmap_server <- function(id,
                                      pgx,
                                      pcsf_compute,
-                                     colorby = reactive("cluster"),
-                                     contrast = reactive(NULL),
                                      watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    get_network <- reactive({
-      colorby <- input$colorby
-      res <-  pcsf_compute()
-      net <- res$net
-      fx <- res$meta[,1]
-      vv <- igraph::V(net)$name
-      igraph::V(net)$type <- c("down","up")[1 + 1*(sign(fx[vv])>0)]
-      net
-    })
-
     heatmap.RENDER <- function() {
       shiny::req(pgx$X)
-      net <- get_network()
-      dbg("[pcsf_plot_heatmap.R:heatmap.RENDER] reacted!")
-      dbg("[pcsf_plot_heatmap.R:heatmap.RENDER] names.pgx=",names(pgx))      
+      res <-  pcsf_compute()
       
-      idx <- igraph::V(net)$group
-      genes <- igraph::V(net)$name
-
-      dbg("[pcsf_plot_heatmap.R:heatmap.RENDER] head.genes=",head(genes))
-      dbg("[pcsf_plot_heatmap.R:heatmap.RENDER] head.idx=",head(idx))
+      idx <- res$idx
+      genes <- res$genes
       
       playbase::gx.splitmap(
         pgx$X[genes,],
@@ -99,8 +82,6 @@ pcsf_plot_heatmap_server <- function(id,
         show_legend = FALSE,
         key.offset = c(0.05, 0.96)
       )
-      
-      dbg("[pcsf_plot_heatmap.R:heatmap.RENDER] done!")
     }
     
     PlotModuleServer(

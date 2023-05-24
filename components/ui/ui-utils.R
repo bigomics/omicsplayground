@@ -9,19 +9,24 @@
 #}
 
 
-visPrint <- function(visnet, file, width=3000, height=3000,
-                     delay=0, zoom=1) {
+visPrint <- function(visnet, file, width=3000, height=3000, delay=0, zoom=1) {
+    is.pdf <- grepl("pdf$",file)
+    if(is.pdf) {
+      width <- width * 600
+      height <- height * 600
+    }
     vis2 <- htmlwidgets::createWidget(
       name = "visNetwork",
       x = visnet$x ,
       width = width, height = height,
       package = "visNetwork")
-    tmp.html <- paste0(tempfile(),".html")
-    tmp.png <- paste0(tempfile(),".png")
+    tmp.html <- paste0(tempfile(),"-visnet.html")
+    tmp.png <- paste0(tempfile(),"-webshot.png")
     visNetwork::visSave(vis2, file=tmp.html)
+    dbg("[visPrint] width = ",width)
+    dbg("[visPrint] height = ",height)
     webshot2::webshot(
       url = tmp.html,
-      #url = "file://./visnet.html",    
       file = tmp.png,
       selector = "#htmlwidget_container",
       delay = delay,
@@ -30,15 +35,15 @@ visPrint <- function(visnet, file, width=3000, height=3000,
       vwidth = width,
       vheight = height
     )
-    if(grepl("pdf$",file)) {
-      cmd <- paste("convert",tmp.png,file)
+    dbg("[visPrint] tmp.png = ",tmp.png)
+    if(is.pdf) {
+      cmd <- paste("convert",tmp.png,"-density 600",file)
       system(cmd)
     } else {
-      file.copy(tmp.png,file)
+      file.copy(tmp.png,file,overwrite=TRUE)
     }
     unlink(tmp.html)
-    unlink(tmp.png)
-    ##cat(paste("saved to ",file,"\n"))
+    ##unlink(tmp.png)
 }
 
 

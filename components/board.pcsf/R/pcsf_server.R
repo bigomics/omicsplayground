@@ -60,8 +60,6 @@ PcsfBoard <- function(id, pgx) {
       meta <- playbase::pgx.getMetaMatrix(pgx)$fc
       mx <- rowMeans(meta**2)**0.5
       genes <- head(names(mx)[order(-abs(mx))], NTOP)
-      genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
-      genes <- genes[order(-abs(mx[genes]))]
       
       gsmeta <- playbase::pgx.getMetaMatrix(pgx, level="geneset")$fc
       rx <- rowMeans(gsmeta**2)**0.5
@@ -81,39 +79,32 @@ PcsfBoard <- function(id, pgx) {
 
       ## balance number of gene per group??
       table(idx)
-      genes <- unlist(tapply(genes, idx[genes], function(gg) head(gg,400)))
+      genes <- unlist(tapply(genes, idx[genes], function(gg) head(gg,800)))
       table(idx[genes])
       
-      ## ------------ create igraph network --------------
+      ## ------------ create edge table --------------
       sel <- (STRING$from %in% genes & STRING$to %in% genes)
       table(sel)
       ee <- STRING[sel,]
+      genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
       rho <- cor(t(pgx$X[genes,]))
       ##rho.ee <- abs(rho[cbind(ee$from, ee$to)])
       rho.ee <- pmax(rho[cbind(ee$from, ee$to)],0.001)
       ee$cost <- ee$cost**1 / rho.ee  ## balance PPI with experiment
-      ##ee$cost <- (1 / rho.ee)**1
+      ##ee$cost <- ee$cost**1 * (1 - rho.ee)**1
+
+      ## ------------ create igraph network --------------      
       ppi <- PCSF::construct_interactome(ee)
       gset.wt <- (ngmt[genes]/max(ngmt[genes]))  ## gene set weighting
       terminals <- abs(mx[genes])**1 * (0.1 + gset.wt)**1
-      net <- PCSF::PCSF(ppi, terminals, w=2, b=1)
-
-      ## remove small clusters...
-      cmp <- igraph::components(net)
-      sel.kk <- which(cmp$csize > 0.10 * max(cmp$csize))
-      net <- igraph::subgraph(net, cmp$membership %in% sel.kk)
-      class(net) <- c("PCSF","igraph")
-      
-      igraph::V(net)$group <- idx[igraph::V(net)$name]
-      igraph::V(net)$type  <- idx[igraph::V(net)$name]
-
-      dbg("[pcsf_server.R:pcsf_compute] done!")
       
       list(
         genes = genes,
         meta = meta[genes,],
+        idx = idx[genes],
         clust = clust,
-        net = net
+        ppi = ppi,
+        terminals = terminals
       )
       
     })
@@ -123,8 +114,10 @@ PcsfBoard <- function(id, pgx) {
       "pcsf_network",
       pgx,
       pcsf_compute = pcsf_compute,
+      pcsf_beta = shiny::reactive(input$pcsf_beta),
       colorby = shiny::reactive(input$colorby),
       contrast = shiny::reactive(input$contrast),
+      show.centrality = shiny::reactive(input$show.centrality),      
       watermark = WATERMARK
     )
 
@@ -132,8 +125,6 @@ PcsfBoard <- function(id, pgx) {
       "pcsf_heatmap",
       pgx,
       pcsf_compute = pcsf_compute,
-      colorby = shiny::reactive(input$colorby),
-      contrast = shiny::reactive(input$contrast),
       watermark = WATERMARK
     )
     

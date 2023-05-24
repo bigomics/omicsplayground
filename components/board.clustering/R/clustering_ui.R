@@ -53,17 +53,17 @@ ClusteringInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(),
-    withTooltip(
-      shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-        c("tsne", "pca", "umap"),
-        inline = TRUE
-      ),
-      "Choose the layout method for clustering plots.",
-    ),
     shiny::conditionalPanel(
       "input.hm_options % 2 == 1",
       ns = ns,
       shiny::tagList(
+        withTooltip(
+          shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
+            c("tsne", "pca", "umap"),
+            inline = TRUE
+          ),
+          "Choose the layout method for clustering plots.",
+        ),
         withTooltip(shiny::selectInput(ns("hm_level"), "Level:", choices = c("gene", "geneset")),
           "Specify the level analysis: gene or geneset level.",
           placement = "top", options = list(container = "body")
