@@ -58,49 +58,44 @@ PcsfInputs <- function(id) {
   )
 }
 
-pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-confidence subnetworks of highly correlated and highly differentially expressed genes. The STRING protein-protein interaction network is used as backbone for creating the network."
+pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-confidence subnetworks of highly correlated and highly differentially expressed genes. The STRING protein-protein interaction network is used as backbone for creating the network. The PCSF solution may be used to identify 'driver' genes that appear as hubs in the network computed using a page-rank centrality measure."
 
-pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone."
+pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone. 'Driver' genes appear as hubs in the network computed using a page-rank centrality measure."
 
 PcsfUI <- function(id) {
   ns <- NS(id)
-
   tagList(
     boardHeader(
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
+    ## "Hello",
+    ##bs_alert(pcsf_module_info),
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
         "PCSF network",
+        div(bs_alert(pcsf_module_info), style="margin-bottom:15px;"),
         bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
-          heights_equal = "row",
-          bslib::layout_column_wrap(
-            width = 1,
-            ##height = "100%",
-            ##heights_equal = "row",            
-            style = htmltools::css(grid_template_columns = "5fr 7fr"),
-            pcsf_plot_heatmap_ui(
-              id = ns("pcsf_heatmap"),
-              caption = "PCSF gene modules",
-              info.text = "",
-              height = c("100%", "75vh"),
-              width = c("auto", "100%")
-            ),
-            pcsf_plot_network_ui(
-              ns("pcsf_network"),
-              caption = paste(
-                "PCSF network analysis",
-                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."),
-              info.text = pcsf_graph_info,
-              height = c("100%", "75vh"),
-              width = c("auto", "100%")
-            )
+          ##heights_equal = "row",            
+          style = htmltools::css(grid_template_columns = "5fr 7fr"),
+          pcsf_plot_heatmap_ui(
+            id = ns("pcsf_heatmap"),
+            caption = "PCSF gene modules",
+            info.text = "",
+            height = c("100%", "75vh"),
+            width = c("auto", "100%")
           ),
-          "Hello"
-          ##bs_alert(pcsf_module_info)
+          pcsf_plot_network_ui(
+            ns("pcsf_network"),
+            caption = paste(
+              "PCSF network analysis",
+              "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."),
+            info.text = pcsf_graph_info,
+            height = c("100%", "75vh"),
+            width = c("auto", "100%")
+          )
         )
       )
     )
