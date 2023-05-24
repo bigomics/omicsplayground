@@ -298,7 +298,7 @@ ComputePgxServer <- function(
                         ## btn_colors = "red",
                         closeOnClickOutside = TRUE
                     )
-                    custom.geneset <- list()
+                    custom.geneset <- list(gmt = NULL, info = NULL)
                     return(NULL)
                 }
 
@@ -420,7 +420,10 @@ ComputePgxServer <- function(
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
                 
-                custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
+                if(!is.null(custom.geneset$gmt)){
+                    custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
+                }
+                
                 
                 # Define create_pgx function arguments
                 browser()
