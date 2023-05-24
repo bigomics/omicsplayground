@@ -28,8 +28,7 @@ functional_table_wikipathway_ui <- function(
 functional_table_wikipathway_server <- function(id,
                                                pgx,
                                                getFilteredWikipathwayTable,
-                                               fa_contrast,
-                                               scrollY ) {
+                                               fa_contrast) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -38,7 +37,7 @@ functional_table_wikipathway_server <- function(id,
       res <- list(
         pgx = pgx,
         df = getFilteredWikipathwayTable(),
-        fa_contrast = fa_contrast
+        fa_contrast = fa_contrast()
       )
       return(res)
     })

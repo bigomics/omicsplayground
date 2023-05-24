@@ -103,7 +103,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         rownames(score2),
         ignore.case = TRUE
       ))
-
+      rownames(score2) <- gsub("(_.*$)", "", rownames(score2))    
       ##rownames(score2) <- substring(rownames(score2), 1, row.nchar)
       rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
@@ -477,7 +477,9 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       svg.dir <- pgx.system.file("svg/",package="board.pathway")
       wp.available <- sub("_[0-9]+.svg","",gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
       wp.gsets <- grep("_WP",rownames(pgx$gsetX),value=TRUE)
+      # extract wp.ids from string
       wp.ids <- gsub(".*_WP","WP",wp.gsets)
+      wp.ids <-  gsub("(_.*$)", "", wp.ids)
       ## sometimes no WIKIPATHWAY in genesets...
       if (length(wp.ids) == 0) {
         shinyWidgets::sendSweetAlert(
@@ -502,7 +504,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
-
       df <- data.frame(
         pathway.id = wp.ids,
         pathway = wp.gsets,
@@ -545,8 +546,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       "wikipathway_table",
       pgx,
       getFilteredWikiPathwayTable,
-      reactive(input$fa_contrast),
-      scrollY = 180
+      reactive(input$fa_contrast)
     )
 
   }) ## end-of-moduleServer
