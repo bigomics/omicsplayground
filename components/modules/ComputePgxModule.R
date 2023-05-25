@@ -285,8 +285,6 @@ ComputePgxServer <- function(
 
                 }
 
-                
-
                 # error message if custom genesets not detected
                 if(is.null(custom.geneset$gmt)){
                     shinyWidgets::sendSweetAlert(
@@ -420,9 +418,8 @@ ComputePgxServer <- function(
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
                 
-                if(!is.null(custom.geneset$gmt)){
-                    custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
-                }
+                # get rid of reactive container
+                custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
                 
                 
                 # Define create_pgx function arguments
@@ -457,8 +454,9 @@ ComputePgxServer <- function(
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
-                saveRDS(params, file=path_to_params)
 
+                saveRDS(params, file=path_to_params)
+                
                 # Normalize paths
                 script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
                 tmpdir <- normalizePath(temp_dir())
