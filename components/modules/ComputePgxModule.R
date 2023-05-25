@@ -173,14 +173,14 @@ ComputePgxServer <- function(
                                     choiceValues = EXTRA.METHODS,
                                     choiceNames = EXTRA.NAMES,
                                     selected = EXTRA.SELECTED
-                                ),
+                                )
+                            ),
+                            shiny::wellPanel(
                                 fileInput2(
                                     ns("upload_custom_genesets"),
                                     shiny::h4("Custom genesets file"),
                                     multiple = FALSE, accept = c(".txt")
-                                )
-                            ),
-                            shiny::wellPanel(
+                                ),
                                 shiny::checkboxGroupInput(
                                     ns('dev_options'),
                                     shiny::HTML('<h4>Developer options:</h4><br/>'),
