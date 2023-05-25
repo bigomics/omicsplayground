@@ -203,7 +203,11 @@ upload_table_preview_server <- function(id, uploaded) {
                     footer = NULL,
                     easyClose = FALSE,
                     size = 'xl'
-                )
+                ) %>%
+                    tagAppendAttributes(
+                        style = 'min-height: 90%; min-width: 90%',
+                        .cssSelector = '.modal-dialog'
+                    )
             )
 
         }, ignoreNULL = TRUE)
