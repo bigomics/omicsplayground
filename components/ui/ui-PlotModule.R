@@ -173,7 +173,8 @@ PlotModuleUI <- function(id,
   if (show.maximize) {
     zoom.button <- modalTrigger(ns("zoombutton"),
       ns("plotPopup"),
-      icon("window-maximize"),
+      ##      icon("window-maximize"),
+      icon("up-right-and-down-left-from-center"),      
       class = "btn-circle-xs"
     )
   }
@@ -388,6 +389,7 @@ PlotModuleServer <- function(id,
                              pdf.pointsize = 12,
                              add.watermark = FALSE,
                              remove_margins = TRUE,
+                             vis.delay = 0,
                              card = NULL) {
   moduleServer(
     id,
@@ -526,10 +528,11 @@ PlotModuleServer <- function(id,
                   # download will not work if phantomjs is not installed
                   # webshot::install_phantomjs() in case phantomjs is not installed
                   p <- func()
-                  dbg("[PlotModule] visnetwork download PNG : visSave : HTMLFILE=", HTMLFILE)
-                  visNetwork::visSave(p, HTMLFILE)
-                  dbg("[PlotModule] visnetwork download PNG : webshot : PNGFILE = ", PNGFILE)
-                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = png.width, vheight = png.height)
+                  #dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=", HTMLFILE)
+                  #visNetwork::visSave(p, HTMLFILE)
+                  #dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ", PNGFILE)
+                  #webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = png.width, vheight = png.height)
+                  visPrint(p, file=PNGFILE, width=png.width*resx*2, height=png.height*resx*2, delay=vis.delay, zoom=1) 
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -578,10 +581,11 @@ PlotModuleServer <- function(id,
                 dbg("[downloadHandler.PNG] copy PNGFILE", PNGFILE, "to download file", file)
                 file.copy(PNGFILE, file, overwrite = TRUE)
                 ## ImageMagick or pdftk
-                if (TRUE && add.watermark) {
-                  message("[PlotModule] adding watermark to PNG...")
+                if (TRUE && !add.watermark %in% c("none",FALSE) ) {
+                  message("[plotModule] adding watermark to PNG...")
                   markfile = file.path(FILES, "watermark-logo.png")
-                  addWatermark.PNG2(file, w=png.width*resx, h=png.height*resx, mark=markfile)
+                  addWatermark.PNG2(file, w=png.width*resx, h=png.height*resx,
+                                    mark=markfile, position=add.watermark)
                 }
               },
               message = "Exporting to PNG",
@@ -613,10 +617,11 @@ PlotModuleServer <- function(id,
                   iheatmapr::save_iheatmap(p, vwidth = pdf.width * 80, vheight = pdf.height * 80, PDFFILE)
                 } else if (plotlib == "visnetwork") {
                   p <- func()
-                  dbg("[PlotModule] visnetwork :: download PDF : visSave : HTMLFILE=", HTMLFILE)
-                  visNetwork::visSave(p, HTMLFILE)
-                  dbg("[PlotModule] visnetwork :: download PDF : webshot ; PDFFILE=", PDFFILE)
-                  webshot::webshot(url = HTMLFILE, file = PDFFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
+                  #dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=", HTMLFILE)
+                  #visNetwork::visSave(p, HTMLFILE)
+                  #dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=", PDFFILE)
+                  #webshot::webshot(url = HTMLFILE, file = PDFFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
+                  visPrint(p, file=PDFFILE, width=pdf.width, height=pdf.height, delay=vis.delay, zoom=1)                   
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -658,8 +663,8 @@ PlotModuleServer <- function(id,
                 file.copy(PDFFILE, file, overwrite = TRUE)
 
                 ## ImageMagick or pdftk
-                if (TRUE && add.watermark) {
-                  message("[PlotModule] adding watermark to PDF...")
+                if (TRUE && !add.watermark %in% c(FALSE,"none")) {
+                  message("[plotModule] adding watermark to PDF...")
                   ##addWatermark.PDF(file)
                   markfile = file.path(FILES, "watermark-logo.pdf")
                   addWatermark.PDF2(file, w=pdf.width, h=pdf.height, mark=markfile)

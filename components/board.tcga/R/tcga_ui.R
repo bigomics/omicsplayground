@@ -24,7 +24,7 @@ TcgaInputs <- function(id) {
         selected = "contrast",
         inline = TRUE
       ),
-      "number of top genes to show",
+      "Choose the type of signature as input",
       placement = "right",
       options = list(container = "body")
     ),
