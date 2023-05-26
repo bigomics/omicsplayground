@@ -181,8 +181,15 @@ ComputePgxServer <- function(
                                 fileInput2(
                                     ns("upload_custom_genesets"),
                                     shiny::tagList(
-                                        tags$h4("Custom genesets (.gmt) file:"),
-                                        tags$h6("A GMT file as described", tags$a("here", href = path_gmt))
+                                        shiny::tags$h4("Custom genesets (.gmt) file:"),
+                                        shiny::tags$h6(
+                                            "A GMT file as described", 
+                                            tags$a(
+                                                "here.",
+                                                href = path_gmt,
+                                                target = "_blank"
+                                            )
+                                        )
                                     ),
                                     multiple = FALSE,
                                     accept = c(".txt", ".gmt")
