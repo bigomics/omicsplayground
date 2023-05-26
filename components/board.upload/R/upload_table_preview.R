@@ -49,28 +49,37 @@ upload_table_preview_server <- function(id, uploaded) {
                     tabs,
                     list(tabPanel(
                         'Counts',
-                        div(
-                            shiny::actionButton(
-                                session$ns('convert_coltype'),
-                                label = 'Convert column type',
-                                style = 'display: inline-block',
-                                class = 'btn-secondary btn-sm'
+                        fluidRow(
+                            column(
+                                width = 8,
+                                div(
+                                    shiny::actionButton(
+                                        session$ns('convert_coltype'),
+                                        label = 'Convert column type',
+                                        style = 'display: inline-block',
+                                        class = 'btn-secondary btn-sm'
+                                    ),
+                                    shiny::actionButton(
+                                        session$ns('set_rownames'),
+                                        label = 'Set column as rownames',
+                                        style = 'display: inline-block',
+                                        class = 'btn-secondary btn-sm'
+                                    ),
+                                    shiny::actionButton(
+                                        session$ns('remove_col'),
+                                        label = 'Remove column',
+                                        style = 'display: inline-block',
+                                        class = 'btn-secondary btn-sm'
+                                    )
+                                ),
+                                br(),
+                                DT::dataTableOutput(session$ns("counts_preview"))
                             ),
-                            shiny::actionButton(
-                                session$ns('set_rownames'),
-                                label = 'Set column as rownames',
-                                style = 'display: inline-block',
-                                class = 'btn-secondary btn-sm'
-                            ),
-                            shiny::actionButton(
-                                session$ns('remove_col'),
-                                label = 'Remove column',
-                                style = 'display: inline-block',
-                                class = 'btn-secondary btn-sm'
+                            column(
+                                width = 4,
+                                'Summary:'
                             )
                         ),
-                        br(),
-                        DT::dataTableOutput(session$ns("counts_preview")),
                         br(),
                         div(
                             style = 'float: right',
@@ -96,7 +105,16 @@ upload_table_preview_server <- function(id, uploaded) {
                     tabs,
                     list(tabPanel(
                         'Samples',
-                        DT::dataTableOutput(session$ns("samples_preview")),
+                        fluidRow(
+                            column(
+                                width = 8,
+                                DT::dataTableOutput(session$ns("samples_preview"))
+                            ),
+                            column(
+                                width = 4,
+                                'Summary:'
+                            )
+                        ),
                         br(),
                         div(
                             style = 'float: right',
@@ -122,23 +140,38 @@ upload_table_preview_server <- function(id, uploaded) {
                     tabs,
                     list(tabPanel(
                         'Contrasts',
-                        DT::dataTableOutput(session$ns("contrasts_preview")),
-                        br(),
-                        div(
-                            style = 'float: right',
-                            shiny::actionButton(
-                                session$ns('discard_contrasts'),
-                                label = 'Discard contrasts',
-                                style = 'display: inline-block; margin-left: 15px;',
-                                class = 'btn-danger'
+                        fluidRow(
+                            column(
+                                width = 8,
+                                DT::dataTableOutput(session$ns("contrasts_preview"))
                             ),
-                            shiny::actionButton(
-                                session$ns('approve_contrasts'),
-                                label = 'Approve contrasts',
-                                style = 'display: inline-block',
-                                class = 'btn-info'
+                            column(
+                                width = 4,
+                                'Summary:'
                             )
+                        ),
+                        fluidRow(
+                           column(
+                               width = 12,
+                               br(),
+                               div(
+                                   style = 'float: right',
+                                   shiny::actionButton(
+                                       session$ns('discard_contrasts'),
+                                       label = 'Discard contrasts',
+                                       style = 'display: inline-block; margin-left: 15px;',
+                                       class = 'btn-danger'
+                                   ),
+                                   shiny::actionButton(
+                                       session$ns('approve_contrasts'),
+                                       label = 'Approve contrasts',
+                                       style = 'display: inline-block',
+                                       class = 'btn-info'
+                                   )
+                               )
+                           )
                         )
+
                     ))
                 )
             }
