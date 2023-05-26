@@ -187,7 +187,8 @@ ComputePgxServer <- function(
                                             tags$a(
                                                 "here.",
                                                 href = path_gmt,
-                                                target = "_blank"
+                                                target = "_blank",
+                                                style = "text-decoration: underline;"
                                             )
                                         )
                                     ),
