@@ -61,6 +61,8 @@ ComputePgxServer <- function(
             DEV.NAMES = c("noLM + prune")
             DEV.SELECTED = c()
 
+            path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/"
+
             output$UI <- shiny::renderUI({
                 shiny::fillCol(
                     height = height,
@@ -178,9 +180,10 @@ ComputePgxServer <- function(
                             shiny::wellPanel(
                                 fileInput2(
                                     ns("upload_custom_genesets"),
-                                    shiny::h4("Custom genesets file"),
-                                    multiple = FALSE, accept = c(".txt")
+                                    shiny::h4("Custom genesets (.gmt) file:"),
+                                    multiple = FALSE, accept = c(".txt", ".gmt")
                                 ),
+                                tags$h6("A GMT file as described", tags$a("here", href = path_gmt)),
                                 shiny::checkboxGroupInput(
                                     ns('dev_options'),
                                     shiny::HTML('<h4>Developer options:</h4><br/>'),
@@ -242,30 +245,24 @@ ComputePgxServer <- function(
 
                 fileName <- input$upload_custom_genesets$name
 
-                # check file validity, can be csv or txt
-
-                if(endsWith(filePath, ".txt")){
+                if(endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")){
                     
                     custom.geneset$gmt <- playbase::read.gmt(filePath)
-
-
                     # perform some basic checks
                     gmt.length <- length(custom.geneset$gmt)
                     gmt.is.list <- is.list(custom.geneset$gmt)
 
                     # clean genesets
 
+                    # eventually we can add multiple files, but for now we only support one
+                    # just add more gmts to the list below
                     custom.geneset$gmt <- list(CUSTOM = custom.geneset$gmt)
 
                     # convert gmt to OPG standard
-                    # eventually we can add multiple files, but for now we only support one
-
                     custom.geneset$gmt <- playbase::clean_gmt(custom.geneset$gmt,"CUSTOM")
 
                     # compute custom geneset stats
-
                     custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
-                
                     custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt,length)
                 
                     # tell user that custom genesets are "ok"
