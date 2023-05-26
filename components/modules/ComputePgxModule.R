@@ -180,10 +180,13 @@ ComputePgxServer <- function(
                             shiny::wellPanel(
                                 fileInput2(
                                     ns("upload_custom_genesets"),
-                                    shiny::h4("Custom genesets (.gmt) file:"),
-                                    multiple = FALSE, accept = c(".txt", ".gmt")
+                                    shiny::tagList(
+                                        tags$h4("Custom genesets (.gmt) file:"),
+                                        tags$h6("A GMT file as described", tags$a("here", href = path_gmt))
+                                    ),
+                                    multiple = FALSE,
+                                    accept = c(".txt", ".gmt")
                                 ),
-                                tags$h6("A GMT file as described", tags$a("here", href = path_gmt)),
                                 shiny::checkboxGroupInput(
                                     ns('dev_options'),
                                     shiny::HTML('<h4>Developer options:</h4><br/>'),
