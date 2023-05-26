@@ -17,6 +17,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.biomarker/R/biomarker_ui.R',encoding='UTF-8')
   source('board.clustering/R/clustering_plot_clustannot.R',encoding='UTF-8')
   source('board.clustering/R/clustering_plot_featurerank.R',encoding='UTF-8')
+  source('board.clustering/R/clustering_plot_genemodule.R',encoding='UTF-8')
   source('board.clustering/R/clustering_plot_PCAplot.R',encoding='UTF-8')
   source('board.clustering/R/clustering_plot_phenoplot.R',encoding='UTF-8')
   source('board.clustering/R/clustering_plot_splitmap.R',encoding='UTF-8')

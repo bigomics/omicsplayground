@@ -96,4 +96,6 @@ push.version:
 BOARD = dataview
 board:
 	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
+board2:
+	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
 

@@ -126,7 +126,6 @@ clustering_plot_clusterannot_server <- function(id,
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
         names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
-
         y <- names(x)
         y <- factor(y, levels = y)
         anntitle <- function(tt) {
@@ -198,9 +197,9 @@ clustering_plot_clusterannot_server <- function(id,
             showlegend = FALSE,
             annotations = anntitle(colnames(rho)[i]),
             bargap = .2,
-            margin = list(l = 5, r = 0, b = 15, t = 22)
+            margin = list(l = 5, r = 0, b = 15, t = 42)
           ) %>%
-          plotly_default()
+          plotly_default() 
       }
 
       if (length(plot_list) <= 4) {
@@ -209,13 +208,19 @@ clustering_plot_clusterannot_server <- function(id,
         nrows <- ceiling(length(plot_list) / 3)
       }
 
-      plotly::subplot(
+      p <- plotly::subplot(
         plot_list,
         nrows = nrows,
         shareX = TRUE,
-        margin = c(0, 0, .05, .05)
-      ) %>%
+        margin = c(0.01, 0.01, .05, .05)
+      )
+
+      p <- p %>%
+        plotly::layout(
+          margin = list(l = 5, r = 0, b = 15, t = 20)
+        ) %>%
         plotly::config(displayModeBar = FALSE)
+      p
     }
 
     clustannot_plots.PLOTLY <- function() {
@@ -233,6 +238,7 @@ clustering_plot_clusterannot_server <- function(id,
       func2 = clustannot_plots.PLOTLY_modal,
       csvFunc = plot_data,   ##  *** downloadable data as CSV
       res = 80, ## resolution of plots
+      remove_margins = FALSE,
       pdf.width = 8, pdf.height = 5,
       add.watermark = watermark
     )
