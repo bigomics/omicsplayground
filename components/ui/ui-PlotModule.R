@@ -55,6 +55,7 @@ PlotModuleUI <- function(id,
       iheatmapr = iheatmapr::iheatmaprOutput,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
+      svgPanZoom = svgPanZoom::svgPanZoomOutput,
       shiny::plotOutput
     )
     FUN
@@ -569,6 +570,10 @@ PlotModuleServer <- function(id,
                   )
                   print(func())
                   dev.off() ## important!!
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  htmlwidgets::saveWidget(p, HTMLFILE)
+                  webshot::webshot(url = HTMLFILE, file = PNGFILE, vwidth = png.width, vheight = png.height)
                 } else { ## end base
 
                   png(PNGFILE, pointsize = pdf.pointsize)
@@ -651,6 +656,10 @@ PlotModuleServer <- function(id,
                   )
                   print(func())
                   dev.off() ## important!!
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  htmlwidgets::saveWidget(p, HTMLFILE)
+                  webshot::webshot(url = HTMLFILE, file = PDFFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
                   plot.new()
@@ -702,6 +711,9 @@ PlotModuleServer <- function(id,
           ##
         } else if (plotlib == "base") {
           write("<body>R base plots cannot export to HTML</body>", HTMLFILE)
+        } else if (plotlib == "svgPanZoom") {
+          p <- func()
+          htmlwidgets::saveWidget(p, HTMLFILE)
         } else { ## end base
           write("<body>HTML export error</body>", file = HTMLFILE)
         }
@@ -886,6 +898,7 @@ PlotModuleServer <- function(id,
           iheatmapr = iheatmapr::renderIheatmap,
           image = shiny::renderImage,
           base = shiny::renderPlot,
+          svgPanZoom = svgPanZoom::renderSvgPanZoom,
           shiny::renderPlot
         )
       }
