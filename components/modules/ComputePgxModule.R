@@ -279,13 +279,11 @@ ComputePgxServer <- function(
                     # tell user that custom genesets are "ok"
                     # we could perform an addicional check to verify that items in lists are genes
                     if(gmt.length > 0 && gmt.is.list){
-                        shinyWidgets::sendSweetAlert(
-                            session = session,
+
+                      shinyalert::shinyalert(
                             title = "Custom genesets uploaded!",
                             text = "Your genesets will be incorporated in the analysis.",
                             type = "success",
-                            btn_labels = "OK",
-                            ## btn_colors = "red",
                             closeOnClickOutside = TRUE
                         )
 
@@ -295,13 +293,10 @@ ComputePgxServer <- function(
 
                 # error message if custom genesets not detected
                 if(is.null(custom.geneset$gmt)){
-                    shinyWidgets::sendSweetAlert(
-                        session = session,
+                      shinyalert::shinyalert(                  
                         title = "Invalid custom genesets",
                         text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
                         type = "error",
-                        btn_labels = "OK",
-                        ## btn_colors = "red",
                         closeOnClickOutside = TRUE
                     )
                     custom.geneset <- list(gmt = NULL, info = NULL)
