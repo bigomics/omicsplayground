@@ -72,12 +72,12 @@ counts.file  <- opt$counts
 samples.file <- opt$samples
 contrasts.file <- NULL
 if(!is.null(opt$contrasts) && opt$contrasts!="auto") {
-    contrast.file <- opt$contrasts
+    contrasts.file <- opt$contrasts
 }
 extra <- opt$extra
 
 pgx <- pgx.createFromFiles(
-    count.file,
+    counts.file,
     samples.file,
     contrasts.file,
     gxmethods = opt$gxmethods,

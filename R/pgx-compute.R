@@ -18,7 +18,7 @@ if(0) {
     contrasts <- ngs$contrasts
 }
 
-pgx.createFromFiles <- function(count.file, samples.file, contrasts.file=NULL,
+pgx.createFromFiles <- function(counts.file, samples.file, contrasts.file=NULL,
                                 gxmethods = "trend.limma,edger.qlf,edger.lrt",
                                 gsetmethods = "fisher,gsva,fgsea",
                                 extra = "meta.go,deconv,infer,drugs,wordcloud")
