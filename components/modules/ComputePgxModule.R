@@ -61,6 +61,8 @@ ComputePgxServer <- function(
             DEV.NAMES = c("noLM + prune")
             DEV.SELECTED = c()
 
+            path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/"
+
             output$UI <- shiny::renderUI({
                 shiny::fillCol(
                     height = height,
@@ -176,6 +178,23 @@ ComputePgxServer <- function(
                                 )
                             ),
                             shiny::wellPanel(
+                                fileInput2(
+                                    ns("upload_custom_genesets"),
+                                    shiny::tagList(
+                                        shiny::tags$h4("Custom genesets (.gmt) file:"),
+                                        shiny::tags$h6(
+                                            "A GMT file as described", 
+                                            tags$a(
+                                                "here.",
+                                                href = path_gmt,
+                                                target = "_blank",
+                                                style = "text-decoration: underline;"
+                                            )
+                                        )
+                                    ),
+                                    multiple = FALSE,
+                                    accept = c(".txt", ".gmt")
+                                ),
                                 shiny::checkboxGroupInput(
                                     ns('dev_options'),
                                     shiny::HTML('<h4>Developer options:</h4><br/>'),
@@ -229,6 +248,62 @@ ComputePgxServer <- function(
             temp_dir     <- reactiveVal(NULL)
             process_counter <- reactiveVal(0)
             reactive_timer  <- reactiveTimer(20000)  # Triggers every 10000 milliseconds (20 second)
+            custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
+
+            shiny::observeEvent(input$upload_custom_genesets, {
+
+                filePath <- input$upload_custom_genesets$datapath
+
+                fileName <- input$upload_custom_genesets$name
+
+                if(endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")){
+                    
+                    custom.geneset$gmt <- playbase::read.gmt(filePath)
+                    # perform some basic checks
+                    gmt.length <- length(custom.geneset$gmt)
+                    gmt.is.list <- is.list(custom.geneset$gmt)
+
+                    # clean genesets
+
+                    # eventually we can add multiple files, but for now we only support one
+                    # just add more gmts to the list below
+                    custom.geneset$gmt <- list(CUSTOM = custom.geneset$gmt)
+
+                    # convert gmt to OPG standard
+                    custom.geneset$gmt <- playbase::clean_gmt(custom.geneset$gmt,"CUSTOM")
+
+                    # compute custom geneset stats
+                    custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
+                    custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt,length)
+                
+                    # tell user that custom genesets are "ok"
+                    # we could perform an addicional check to verify that items in lists are genes
+                    if(gmt.length > 0 && gmt.is.list){
+
+                      shinyalert::shinyalert(
+                            title = "Custom genesets uploaded!",
+                            text = "Your genesets will be incorporated in the analysis.",
+                            type = "success",
+                            closeOnClickOutside = TRUE
+                        )
+
+                    }
+
+                }
+
+                # error message if custom genesets not detected
+                if(is.null(custom.geneset$gmt)){
+                      shinyalert::shinyalert(                  
+                        title = "Invalid custom genesets",
+                        text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
+                        type = "error",
+                        closeOnClickOutside = TRUE
+                    )
+                    custom.geneset <- list(gmt = NULL, info = NULL)
+                    return(NULL)
+                }
+
+            })
 
             shiny::observeEvent( input$compute, {
                 ## shiny::req(input$upload_hugo,input$upload_filtergenes)
@@ -345,7 +420,13 @@ ComputePgxServer <- function(
                 libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
                 
+                
+                # get rid of reactive container
+                custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
+                
+                
                 # Define create_pgx function arguments
+                
                 params <- list(
                     samples = samples,
                     counts = counts,
@@ -361,6 +442,7 @@ ComputePgxServer <- function(
                     cluster.contrasts = FALSE,
                     max.genes = max.genes,
                     max.genesets = max.genesets,
+                    custom.geneset = custom.geneset,
                     gx.methods = gx.methods,
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
@@ -375,8 +457,9 @@ ComputePgxServer <- function(
                     this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
                     date = this.date
                 )
-                saveRDS(params, file=path_to_params)
 
+                saveRDS(params, file=path_to_params)
+                
                 # Normalize paths
                 script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
                 tmpdir <- normalizePath(temp_dir())
