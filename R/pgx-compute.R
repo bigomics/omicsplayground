@@ -27,11 +27,12 @@ pgx.createFromFiles <- function(counts.file, samples.file, contrasts.file=NULL,
     samples <- fread(samples.file, header=TRUE)
     samples <- data.frame(samples, check.names=FALSE, row.names=1)
 
-    ## read counts table
-    counts <- fread(counts.file)
-    counts <- as.matrix(data.frame(counts, check.names=FALSE, row.names=1))
-    head(counts)
-    
+    ## read counts table (allow dup rownames)
+    counts <- data.table::fread(counts.file)
+    counts.rownames <- counts[[1]]
+    counts <- as.matrix(counts[,-1])
+    rownames(counts) <- counts.rownames
+  
     ## undo logarithm if necessary
     if(max(counts) < 100) {
         cat("assuming counts were log2 values. undoing logarithm...")

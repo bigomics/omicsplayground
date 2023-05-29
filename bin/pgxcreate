@@ -12,12 +12,12 @@ if(!require(optparse, quietly=TRUE)) install.packages("optparse")
 
 option_list = list(
     optparse::make_option(c("-c", "--counts"), type="character", default="counts.csv", 
-        help="counts file name", metavar="character"),
+        help="counts file name [default= %default]", metavar="character"),
     optparse::make_option(c("-s", "--samples"), type="character", default="samples.csv", 
         help="samples file name [default= %default]", metavar="character"),
-    optparse::make_option(c("-p", "--contrasts"), type="character", default="auto", 
-        help="specify contrasts file (or auto) for comparisons [default= %default]", metavar="character"),
-    optparse::make_option(c("-o", "--out"), type="character", default=NULL, 
+    optparse::make_option(c("-p", "--contrasts"), type="character", default="contrasts.csv", 
+        help="specify contrasts file for comparisons [default= %default]", metavar="character"),
+    optparse::make_option(c("-o", "--out"), type="character", default="out.pgx", 
         help="output PGX file name [default= %default]", metavar="character"),
     optparse::make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
         help="omicsplayground root folder [default= %default]", metavar="character"),      
@@ -70,9 +70,12 @@ library(data.table)
 
 counts.file  <- opt$counts
 samples.file <- opt$samples
-contrasts.file <- NULL
-if(!is.null(opt$contrasts) && opt$contrasts!="auto") {
+contrasts.file <- NULL  
+if(!is.null(opt$contrasts) && file.exists(opt$contrasts)) {
     contrasts.file <- opt$contrasts
+} else {
+  cat("No contrasts.csv file specified. Creating auto-contrasts.\n")
+  contrasts.file <- NULL  ## will default to auto contrasts
 }
 extra <- opt$extra
 
