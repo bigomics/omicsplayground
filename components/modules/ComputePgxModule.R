@@ -325,20 +325,32 @@ ComputePgxServer <- function(
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
                     msg <- sub("NUMPGX",numpgx,msg)
                     msg <- sub("LIMIT",max.datasets,msg)
-                    shinyalert::shinyalert("WARNING",msg)
+                    shinyalert::shinyalert(
+                      title = "WARNING",
+                      text = msg,
+                      type = "warning"
+                    )
                     return(NULL)
                 }
 
                 has.contrasts <- !is.null(contrastsRT()) && NCOL(as.matrix(contrastsRT()))>0
                 if(!has.contrasts) {
-                    shinyalert::shinyalert("ERROR","You must define at least 1 contrast")
+                    shinyalert::shinyalert(
+                      title = "ERROR",
+                      text = "You must define at least 1 contrast",
+                      type = "error"                      
+                    )
                     return(NULL)
                 }
 
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {
-                    shinyalert::shinyalert("ERROR","You must give a dataset name and description")
+                    shinyalert::shinyalert(
+                      title = "ERROR",
+                      text = "You must give a dataset name and description",
+                      type = "error"
+                    )
                     return(NULL)
                 }
 
@@ -367,11 +379,19 @@ ComputePgxServer <- function(
                 extra.methods <- input$extra_methods
 
                 if(length(gx.methods)==0) {
-                    shinyalert::shinyalert("ERROR","You must select at least one gene test method")
+                    shinyalert::shinyalert(
+                      title = "ERROR",
+                      text = "You must select at least one gene test method",
+                      type = "error"
+                    )
                     return(NULL)
                 }
                 if(length(gset.methods)==0) {
-                    shinyalert::shinyalert("ERROR","You must select at least one geneset test method")
+                    shinyalert::shinyalert(
+                      title = "ERROR",
+                      text = "You must select at least one geneset test method",
+                      type = "error"                      
+                    )
                     return(NULL)
                 }
 
@@ -467,7 +487,8 @@ ComputePgxServer <- function(
                 # Start the process and store it in the reactive value
                 shinyalert::shinyalert(
                     title = "Crunching your data!",
-                    text = paste0("Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.")
+                    text = "Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.",
+                    type = "info"
                     ## timer = 8000
                 )
                 bigdash.selectTab(

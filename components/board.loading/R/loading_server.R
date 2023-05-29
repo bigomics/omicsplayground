@@ -172,13 +172,11 @@ LoadingBoard <- function(id,
 
       # if not found, throw error modal that example-data doesnt exist
       if (is.na(example_row)) {
-        shinyWidgets::sendSweetAlert(
-          session = session,
+        shinyalert::shinyalert(
           title = "No example data found",
           text ='Sorry, the example dataset cannot be found. You may have deleted
             it in a previous session.',
           type = "warning",
-          btn_labels = "OK",
           closeOnClickOutside = FALSE
         )
         #r_global$load_example_trigger <- NULL
@@ -344,12 +342,7 @@ LoadingBoard <- function(id,
 
       ## update meta files
       shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
-##      shinyWidgets::sendSweetAlert(
-##          title="Wow! So many new datasets!",
-##          text = "Please wait while scanning available datasets...",
-##          btn_labels = NA )
-      playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
-##      shinyWidgets::closeSweetAlert()
+        playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
       })
 
       info <- NULL
