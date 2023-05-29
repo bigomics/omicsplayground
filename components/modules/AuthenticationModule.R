@@ -304,7 +304,9 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         ## or against a subscription list.
         authorized <- grepl("@bigomics.ch$",input$emailInput)
         if(FALSE && !authorized) {
-          shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
+          shinyalert::shinyalert(
+            title = "We're sorry...",
+            text = "You are not authorized to log in. Please contact your systems administrator.")
           resetUSER()
           email_waiter$hide()
           return()
