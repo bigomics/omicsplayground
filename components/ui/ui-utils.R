@@ -59,12 +59,14 @@ addWatermark.PDF <- function(file) {
 }
 
 
-addWatermark.PNG2 <- function(file,
-                              w, h, out=file,
+addWatermark.PNG2 <- function(file, out=file,
                               mark=file.path(FILES,"watermark-logo.png"),
                               logo.scale=0.045, position="topright") {
     if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     if(position %in% c(FALSE,"none")) return
+    img=png::readPNG(file)
+    w=dim(img)[2]
+    h=dim(img)[1]
     tmp <- paste0(gsub("file","plot",tempfile()),".png")
     logo.height = max(logo.scale*h , logo.scale*w/3)
     logo.width = logo.height * 4
