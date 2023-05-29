@@ -963,7 +963,10 @@ PlotModuleServer <- function(id,
           render <- renderFunc({
             # By default remove plotly logo from all plots
             plot <- func() %>%
-              plotly::config(displaylogo = FALSE) %>%
+              plotly::config(
+                displaylogo = FALSE,
+                scrollZoom = TRUE
+              ) %>%
               plotly::plotly_build()
 
             if (remove_margins == TRUE) {
@@ -1004,7 +1007,10 @@ PlotModuleServer <- function(id,
           render2 <- renderFunc2({
             # By default remove plotly logo from all plots
             plot <- func2() %>%
-              plotly::config(displaylogo = FALSE) %>%
+              plotly::config(
+                displaylogo = FALSE,
+                scrollZoom = TRUE
+              ) %>%
               plotly::plotly_build()
             # If there is already custom buttons, append the edit one
             # (issue #2210 plotly/plotly.R)
