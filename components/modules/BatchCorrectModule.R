@@ -10,9 +10,7 @@
 
 if(0) {
   load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-
   BatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
-
   out <- gadgetize2(
     BatchCorrectUI, BatchCorrectServer,
     title = "UploadGadget", height=640, size="l",
@@ -60,10 +58,12 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
       ## Counts matrix but with genes annotated for correcting
       ## unwanted biological effects (mito,ribo,gender)
       geneX <- reactive({
+        shiny::req(X())
         X0 <- X()
-        ii <- which(rowSums(X)>0)  ## bit faster
-        pp <- rownames(X0)
-        gg <- playbase::probe2symbol(pp[ii])
+        ii <- which(rowSums(X0)>0)  ## bit faster
+        shiny::withProgress(message="Batch-correction (converting probes)...", value=0, {
+          gg <- playbase::probe2symbol(rownames(X0)[ii])
+        })
         rownames(X0)[ii] <- gg
         #sel <- !(rownames(X0) %in% c(NA, "", "NA"))
         #X0 <- X0[sel, ]
@@ -143,10 +143,9 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           return(NULL)
         }
 
-        shiny::req(geneX())
+        shiny::req(X())
 
         mp <- shiny::isolate(input$bc_modelpar)
-
         if(is.null(mp) || length(mp)==0) {
           warning("[BatchCorrect::canvas] WARNING :: mp = ",mp)
         }
@@ -154,12 +153,10 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         p1 <- NULL
         if(!is.null(mp)) p1 <- mp[1]
 
-        X0 <- geneX()
+        X0 <- X()
         if(is.count) {
           X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
         }
-        nmax <- as.integer(input$bc_nmax)
-
         cX <- out$X
         rownames(X0) <- sub("[;|,].*","",rownames(X0))
         rownames(cX) <- sub("[;|,].*","",rownames(cX))
@@ -171,6 +168,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         req(ncol(X0) == ncol(cX))
 
         do.pca <- (input$bc_maptype == "PCA")
+        nmax <- as.integer(input$bc_nmax)
         show_row <- (nmax < 50)
 
         viz.BatchCorrectionMatrix(
@@ -260,22 +258,12 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
         shiny::req(geneX())
         req(uiOK())
-
+        
         mp="";bp="Chemotherapy"
         mp="dlbcl.type";bp="*"
         mp <- input$bc_modelpar
         bp <- input$bc_batchpar
         bc <- input$bc_methods
-
-        if(0) {
-          mp <- intersect(mp, colnames(pheno()))  ## check
-          ##shiny::req(mp)
-          validate( need(length(mp)>0, "need valid model parameters"))
-          if(is.null(mp) || length(mp)==0) {
-            warning("[event:outobj] ***WARNING*** no model parameter mp = ",mp)
-            return(NULL)
-          }
-        }
 
         lib.correct <- FALSE
         bio.correct <- c()
