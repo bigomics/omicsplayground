@@ -127,16 +127,10 @@ UploadBoard <- function(id,
         pgx <- new_pgx
         save(pgx, file = fn)
         remove(pgx)
-        message("[UploadBoard::@savedata] updating PGXINFO")
-        ## shinyWidgets::sendSweetAlert(
-        ##   title="Wow! So many new datasets",
-        ##   text = "Please wait while scanning your new datasets...",
-        ##   btn_labels = NA
-        ## )
-        shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
+
+        shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
         playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
         })
-        ##   shinyWidgets::closeSweetAlert()
 
         r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       }
@@ -305,17 +299,14 @@ UploadBoard <- function(id,
               df0 <- playbase::read.as_matrix(fn2)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
-                shinyWidgets::sendSweetAlert(
-                  session = session,
+                shinyalert::shinyalert(
                   title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup, "duplicated gene names.\nCounts of those genes will be merged."),
+                  text = paste("Your counts matrix has", ndup,
+                    "duplicated gene names.\nCounts of those genes will be merged."),
                   type = "warning",
-                  btn_labels = "OK",
                   closeOnClickOutside = FALSE,
                 )
               }
-              dbg("[upload_files] counts.csv : 1 : dim(df0) = ",paste(dim(df0), collapse="x")
-              )
 
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
@@ -327,12 +318,11 @@ UploadBoard <- function(id,
               df0 <- playbase::read.as_matrix(fn2)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
-                shinyWidgets::sendSweetAlert(
-                  session = session,
+                shinyalert::shinyalert(
                   title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup, "duplicated gene names.\nCounts of those genes will be merged."),
+                  text = paste("Your counts matrix has", ndup,
+                    "duplicated gene names.\nCounts of those genes will be merged."),
                   type = "warning",
-                  btn_labels = "OK",
                   closeOnClickOutside = FALSE,
                 )
               }
@@ -351,13 +341,10 @@ UploadBoard <- function(id,
                   "Your samples file has duplicated entries: ",
                   dup.rows, ". This is not allowed, please correct."
                 )
-                shinyWidgets::sendSweetAlert(
-                  session = session,
+                shinyalert::shinyalert(
                   title = "Duplicated sample name",
                   text = msg,
                   type = "error",
-                  btn_labels = "OK",
-                  ## btn_colors = "red",
                   closeOnClickOutside = FALSE,
                 )
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
@@ -373,13 +360,10 @@ UploadBoard <- function(id,
                   "Your contrasts file has duplicated entries: ",
                   dup.rows, ". This is not allowed, please correct."
                 )
-                shinyWidgets::sendSweetAlert(
-                  session = session,
+                shinyalert::shinyalert(
                   title = "Duplicated contrast name",
                   text = msg,
                   type = "error",
-                  btn_labels = "OK",
-                  ## btn_colors = "red",
                   closeOnClickOutside = FALSE,
                 )
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
