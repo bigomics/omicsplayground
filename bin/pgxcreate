@@ -19,17 +19,19 @@ option_list = list(
         help="specify contrasts file for comparisons [default= %default]", metavar="character"),
     optparse::make_option(c("-o", "--out"), type="character", default="out.pgx", 
         help="output PGX file name [default= %default]", metavar="character"),
+    optparse::make_option(c("-f", "--folder"), type="character", default=".", 
+        help="input/output folder [default= %default]", metavar="character"),      
     optparse::make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
         help="omicsplayground root folder [default= %default]", metavar="character"),      
     optparse::make_option(c("-g", "--maxgenes"), type="integer", default=25000, 
         help="maximum number of genes [default= %default]", metavar="integer"),      
     optparse::make_option(c("-z", "--maxgenesets"), type="integer", default=5000, 
         help="maximum number of genesets [default= %default]", metavar="integer"),      
-    optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,edger.qlf,edger.lrt", 
+    optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,deseq2.wald,edger.qlf", 
         help="gene testing methods [default= %default]", metavar="character"),      
     optparse::make_option(c("-d", "--gsetmethods"), type="character", default="fisher,gsva,fgsea", 
         help="geneset testing methods [default= %default]", metavar="character"),
-    optparse::make_option(c("-x", "--extra"), type="character", default="meta.go,deconv,infer,drugs,wordcloud", 
+    optparse::make_option(c("-x", "--extra"), type="character", default="meta.go,infer,deconv,drugs,wordcloud", 
         help="compute extra methods [default= %default]", metavar="character")
 )
 
@@ -64,6 +66,7 @@ if(!dir.exists(opt$root))     stop("could not find Playground root folder\n", ca
 
 RDIR  = file.path(opt$root,"R")
 FILES = file.path(opt$root,"lib")
+if(dir.exists(opt$folder)) setwd(opt$folder)
 
 source(file.path(RDIR,"pgx-include.R"))
 library(data.table)
