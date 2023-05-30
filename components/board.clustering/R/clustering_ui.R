@@ -234,15 +234,6 @@ ClusteringUI <- function(id) {
             width = c("100%", "100%"),
             height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL)
           )
-          ## clustering_plot_featurerank_ui(
-          ##   id = ns("clust_featureRank"),
-          ##   title = "Feature-set ranking",
-          ##   info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminative power of the feature set (or gene family) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
-          ##   caption = "Ranked discriminant score for top feature sets.",
-          ##   label = "",
-          ##   height = c(fullH, TABLE_HEIGHT_MODAL),
-          ##   width = c("auto", "100%")
-          ## )
         )
       )
     )

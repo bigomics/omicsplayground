@@ -768,15 +768,6 @@ ClusteringBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    clustering_plot_featurerank_server(
-      id = "clust_featureRank",
-      pgx = pgx,
-      hm_level = shiny::reactive(input$hm_level),
-      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
-      hm_samplefilter = shiny::reactive(input$hm_samplefilter),
-      watermark = WATERMARK
-    )
-
     clusterannot <- clustering_plot_clusterannot_server(
       id = "plots_clustannot",
       pgx,

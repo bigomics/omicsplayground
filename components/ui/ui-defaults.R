@@ -26,6 +26,7 @@ plotly_default <- function(e) {
   e %>%
     plotly::layout(
       font = list(family = DEFAULT_FONT),
+      margin = list(l=0, r=0, t=0, b=0),  ## remove margins
       legend = list(
         font = list(family = DEFAULT_FONT)
       )
@@ -42,6 +43,7 @@ plotly_modal_default <- function(e) {
   e %>%
     plotly::layout(
       font = list(family = DEFAULT_FONT, size = 18),
+      margin = list(l=0, r=0, t=0, b=0),  ## remove margins      
       legend = list(
         font = list(family = DEFAULT_FONT, size = 18)
       )
