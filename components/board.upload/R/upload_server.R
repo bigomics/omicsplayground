@@ -294,9 +294,10 @@ UploadBoard <- function(id,
             matname <- NULL
             df <- NULL
             if (grepl("count", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] counts.csv : fn1 = ", fn1)
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
+              pass <- TRUE
+              ## check for duplicated rownames (but pass)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyalert::shinyalert(
@@ -307,15 +308,25 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
-
-              if (nrow(df0) > 1 && NCOL(df0) > 1) {
+              if (TRUE && any(colSums(df0)==0)) {
+                nzero <- sum(colSums(df0)==0)
+                pass <- FALSE
+                shinyalert::shinyalert(
+                  title = "Zero samples",
+                  text = paste("Your counts matrix has", nzero,
+                    "sample(s) with all zeros. Please remove."),
+                  type = "error",
+                  closeOnClickOutside = FALSE
+                )
+              }
+              if (pass && nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
                 matname <- "counts.csv"
               }
             } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] expression.csv : fn1 = ", fn1)
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
+              pass <- TRUE
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyalert::shinyalert(
@@ -324,6 +335,17 @@ UploadBoard <- function(id,
                     "duplicated gene names.\nCounts of those genes will be merged."),
                   type = "warning",
                   closeOnClickOutside = FALSE,
+                )
+              }
+              if (TRUE && any(apply(df0,1,sd)==0)) {
+                nzero <- sum(apply(df0,1,sd)==0)
+                pass <- FALSE
+                shinyalert::shinyalert(
+                  title = "Zero samples",
+                  text = paste("Your expression matrix has", nzero,
+                    "sample(s) with zero SD. Please remove."),
+                  type = "error",
+                  closeOnClickOutside = FALSE
                 )
               }
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
@@ -333,7 +355,6 @@ UploadBoard <- function(id,
                 matname <- "counts.csv"
               }
             } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] samples.csv : fn1 = ", fn1)
               df0 <- playbase::read.as_matrix(fn2)
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
@@ -352,7 +373,6 @@ UploadBoard <- function(id,
                 matname <- "samples.csv"
               }
             } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] contrasts.csv : fn1 = ", fn1)
               df0 <- playbase::read.as_matrix(fn2)
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
@@ -380,15 +400,14 @@ UploadBoard <- function(id,
 
       if ("counts.csv" %in% names(matlist)) {
         ## Convert to gene names (need for biological effects)
-        dbg("[upload_files] converting probe names to symbols...")
+        ##dbg("[upload_files] converting probe names to symbols...")
         X0 <- matlist[["counts.csv"]]
-        pp <- rownames(X0)
-        rownames(X0) <- playbase::probe2symbol(pp)
-        sel <- !(rownames(X0) %in% c(NA, "", "NA"))
-        X0 <- X0[sel, ]
-        xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
-        X0 <- do.call(rbind, xx)
-        dbg("[upload_files] ...done!")
+        ## pp <- rownames(X0)
+        ## rownames(X0) <- playbase::probe2symbol(pp)
+        ## sel <- !(rownames(X0) %in% c(NA, "", "NA"))
+        ## X0 <- X0[sel, ]
+        ## xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
+        ## X0 <- do.call(rbind, xx)
         matlist[["counts.csv"]] <- X0
       }
 

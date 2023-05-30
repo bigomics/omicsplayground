@@ -11,6 +11,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app/R/utils/utils.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_boxplots.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_decisiontree.R',encoding='UTF-8')
+  source('board.biomarker/R/biomarker_plot_featurerank.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_heatmap.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_plot_importance.R',encoding='UTF-8')
   source('board.biomarker/R/biomarker_server.R',encoding='UTF-8')

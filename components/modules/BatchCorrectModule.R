@@ -57,6 +57,21 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
     id,
     function(input, output, session) {
 
+      ## Counts matrix but with genes annotated for correcting
+      ## unwanted biological effects (mito,ribo,gender)
+      geneX <- reactive({
+        X0 <- X()
+        ii <- which(rowSums(X)>0)  ## bit faster
+        pp <- rownames(X0)
+        gg <- playbase::probe2symbol(pp[ii])
+        rownames(X0)[ii] <- gg
+        #sel <- !(rownames(X0) %in% c(NA, "", "NA"))
+        #X0 <- X0[sel, ]
+        #xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
+        #X0 <- do.call(rbind, xx)
+        X0
+      })
+
       max.rho=0.5
       getNotCorrelatedBatchPars <- function(pheno, model.par, max.rho=0.5) {
 
@@ -128,18 +143,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           return(NULL)
         }
 
-        shiny::req(X())
-
-
-        ## is.valid <- all(dim(out$X)==dim(X()) &&
-        ##                 nrow(out$Y)==ncol(X()))
-        ## if(!is.valid) {
-        ##     message("[BatchCorrectServer] dim(out$X)=",dim(out$X))
-        ##     message("[BatchCorrectServer] dim(out$Y)=",dim(out$Y))
-        ##     message("[BatchCorrectServer] dim(X())=",dim(X()))
-        ##     message("[BatchCorrectServer] WARNING: matrices not valid!!")
-        ##     return(NULL)
-        ## }
+        shiny::req(geneX())
 
         mp <- shiny::isolate(input$bc_modelpar)
 
@@ -150,7 +154,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         p1 <- NULL
         if(!is.null(mp)) p1 <- mp[1]
 
-        X0 <- X()
+        X0 <- geneX()
         if(is.count) {
           X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
         }
@@ -254,7 +258,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         list(input$bc_compute_button, X(), pheno())
       } , {
 
-        shiny::req(X())
+        shiny::req(geneX())
         req(uiOK())
 
         mp="";bp="Chemotherapy"
@@ -295,15 +299,10 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             }
         }
 
-        X0 <- X()
+        X0 <- geneX()
         if(is.count) {
           X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
         }
-
-        dbg("[event:outobj] dim(X0) = ",dim(X0))
-        dbg("[event:outobj] dim(pheno) = ",dim(pheno()))
-        dbg("[event:outobj] mp = ",mp)
-        dbg("[event:outobj] bp = ",bp)
 
         out <- playbase::pgx.superBatchCorrect(
           X = X0,
@@ -320,6 +319,9 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           nnm.correct = nnm.correct
         )
 
+        ## restore original feature names
+        rownames(out$X) <- rownames(X())
+        
         out$params <- list(
           model.par = mp,
           batch.par = bp,
