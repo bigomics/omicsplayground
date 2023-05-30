@@ -71,7 +71,8 @@ featuremap_plot_gene_sig_server <- function(id,
 
       nc <- ceiling(sqrt(ncol(F)))
       nr <- ceiling(ncol(F) / nc)
-      nr2 <- ifelse(nr <= 3, nc, nr)
+      ##nr2 <- ifelse(nr <= 3, nc, nr)
+      nr2 <- max(nr,2)
       par(mfrow = c(nr2, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)
       progress <- NULL
       if (!interactive()) {

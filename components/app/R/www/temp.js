@@ -412,10 +412,12 @@ Shiny.addCustomMessageHandler('bigdash-select-tab', (msg) => {
 
 Shiny.addCustomMessageHandler('bigdash-hide-menuitem', (msg) => {
     $(`.tab-trigger[data-target=${msg.value}]`).hide();
+    $(`.tab-trigger-hr[data-target=${msg.value}]`).hide();
 });
 
 Shiny.addCustomMessageHandler('bigdash-show-menuitem', (msg) => {
     $(`.tab-trigger[data-target=${msg.value}]`).show();
+	$(`.tab-trigger-hr[data-target=${msg.value}]`).show();
 });
 
 Shiny.addCustomMessageHandler('bigdash-hide-tab', (msg) => {

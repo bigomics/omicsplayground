@@ -360,8 +360,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       reactome.ids <- gsub(".*R-HSA","R-HSA",reactome.gsets)
       ## sometimes no REACTOME in genesets...
       if (length(reactome.ids) == 0) {
-        shinyWidgets::sendSweetAlert(
-          session = session,
+        shinyalert::shinyalert(
           title = "No REACTOME terms in enrichment results",
           text = "",
           type = "warning"
@@ -482,8 +481,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       wp.ids <-  gsub("(_.*$)", "", wp.ids)
       ## sometimes no WIKIPATHWAY in genesets...
       if (length(wp.ids) == 0) {
-        shinyWidgets::sendSweetAlert(
-          session = session,
+        shinyalert::shinyalert(
           title = "No WIKIPATHWAY terms in enrichment results",
           text = "",
           type = "warning"

@@ -33,12 +33,11 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
         bigdash.openSidebar()
         bigdash.selectTab( session, "upload-tab" )
       } else {
-        shinyWidgets::sendSweetAlert(
-          session = session,
+        shinyalert::shinyalert(
           title = "Upload disabled",          
           text ='Sorry, upload of new data is disabled for this account.',
           type = "warning",
-          btn_labels = "OK",
+          ##btn_labels = "OK",
           closeOnClickOutside = FALSE
         )
       }
