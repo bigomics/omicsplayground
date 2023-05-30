@@ -410,11 +410,6 @@ UploadBoard <- function(id,
         }
       }
 
-      if ("counts.csv" %in% names(matlist)) {
-        X0 <- matlist[["counts.csv"]]
-        matlist[["counts.csv"]] <- X0
-      }
-
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (length(matlist) > 0) {
