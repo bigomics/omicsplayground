@@ -70,6 +70,7 @@ featuremap_plot_gene_map_server <- function(id,
                                             plotUMAP,
                                             sigvar,
                                             filter_genes,
+                                            r_fulltable,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -192,26 +193,36 @@ featuremap_plot_gene_map_server <- function(id,
       if (!is.null(b) & length(b) > 0) {
         sel <- b$key
         sel.genes <- rownames(pos)[rownames(pos) %in% sel]
+      } else {
+        sel.genes <- rownames(pos)
       }
 
+      if(!r_fulltable()) {
+        if(!is.null(sel.genes)) {
+          filt.genes <- selGenes()
+          sel.genes <- intersect(sel.genes, filt.genes)
+        } else {
+          sel.genes <- selGenes()
+        }
+      }
+      
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
       if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$X - rowMeans(pgx$X)
+        gg <- intersect(sel.genes,rownames(pgx$X))
+        X <- pgx$X[gg,,drop=FALSE]
+        X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, i, drop = FALSE])
+          rowMeans(X[,i,drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
+        gg <- intersect(sel.genes,rownames(F))
+        F <- F[gg,,drop=FALSE]
         is.fc <- TRUE
-      }
-
-      if (!is.null(sel.genes)) {
-        sel.genes <- intersect(sel.genes, rownames(F))
-        F <- F[sel.genes,, drop = FALSE]
       }
       F <- F[order(-rowMeans(F**2)),,drop=FALSE]
 

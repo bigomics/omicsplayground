@@ -70,6 +70,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                                      plotUMAP,
                                                      filter_gsets,
                                                      sigvar,
+                                                     r_fulltable,
                                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## In this setup, PlotModule and TableModule servers are combined
@@ -85,7 +86,9 @@ featuremap_plot_table_geneset_map_server <- function(id,
       shiny::req(pgx)
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
-      gsets <- grep(paste0("^", db, ":"), gsets, value = TRUE)
+      if(db != "<all>") {
+        gsets <- grep(paste0("^", db, ":"), gsets, value = TRUE)
+      }
       gsets
     })
 
@@ -197,13 +200,26 @@ featuremap_plot_table_geneset_map_server <- function(id,
       if (!is.null(b) & length(b)) {
         sel <- b$key
         sel.gsets <- rownames(pos)[rownames(pos) %in% sel]
+      } else {
+        sel.gsets <- rownames(pos)
       }
 
+      if(!r_fulltable()) {
+        if (!is.null(sel.gsets)) {
+          filt.gsets <- selGsets()
+          sel.gsets <- intersect(sel.gsets, filt.gsets)
+        } else {
+          sel.gsets <- selGsets()
+        }
+      }
+      
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
       if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$gsetX - rowMeans(pgx$gsetX,na.rm=TRUE)
+        gg <- intersect(sel.gsets,rownames(pgx$gsetX))
+        X <- pgx$gsetX[gg,,drop=FALSE]
+        X <- X - rowMeans(X,na.rm=TRUE)
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
           rowMeans(X[, c(i,i), drop = FALSE])
@@ -211,14 +227,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
         is.fc <- FALSE
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+        gg <- intersect(sel.gsets, rownames(F))
+        F <- F[gg,,drop=FALSE]
         is.fc <- TRUE
       }
-      
-      if (!is.null(sel.gsets)) {
-        sel.gsets <- intersect(sel.gsets, rownames(F))
-        F <- F[sel.gsets,,drop=FALSE]
-      }
-      
+            
       F <- F[order(-rowMeans(F**2)),,drop=FALSE ]      
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"

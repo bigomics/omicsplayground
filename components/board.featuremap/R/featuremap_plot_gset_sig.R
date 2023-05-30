@@ -70,12 +70,12 @@ featuremap_plot_gset_sig_server <- function(id,
       dt <- gsetSigPlots.plot_data()
       F <- dt[[1]]
       pos <- dt[[2]]
-
+      dbg("[gsetSigPlots.RENDER] dim.F = ",dim(F))
       ntop <- 15
       nc <- ceiling(sqrt(ncol(F)))
       nr <- ceiling(ncol(F) / nc)
-      nr2 <- ifelse(nr <= 3, nc, nr)
-      par(mfrow = c(nr2, nc), mar = c(3, 2, 1.5, 2), mgp = c(1.6, 0.6, 0))
+      nr2 <- ifelse(nr <= 2, nc, nr)
+      nr2 <- max(nr,2)
       par(mfrow = c(nr2, nc), mar = c(3, 1, 1, 0.5), mgp = c(1.6, 0.55, 0))
       progress <- NULL
       if (!interactive()) {
