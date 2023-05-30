@@ -54,6 +54,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             icon = shiny::icon('download'),
             class = "btn btn-outline-dark",
             style = "border: none;",
+            width = '100%',
             onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id,{priority: "event"})')
           )
         }
@@ -64,6 +65,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             icon = shiny::icon('share-nodes'),
             class = "btn btn-outline-info",
             style = 'border: none;',
+            width = '100%',
             onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id,{priority: "event"})')
           )
         }
@@ -79,6 +81,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
                 icon = shiny::icon("file-archive"),
                 class = "btn btn-outline-dark",
                 style = "border: none;",
+                width = '100%',
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_zip"),'\",this.id,{priority: "event"})')
                 ),
               share_dataset_menuitem,
@@ -88,6 +91,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
                 icon = shiny::icon("trash"),
                 class = "btn btn-outline-danger",
                 style = 'border: none;',
+                width = '100%',
                 onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
               )
             )

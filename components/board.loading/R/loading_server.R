@@ -147,8 +147,24 @@ LoadingBoard <- function(id,
         if (input$share_user == "") {
           share_dir <- pgx_shared_dir
         } else {
-          share_dir <- input$share_user
-          print(pgx_dir)
+          # user has to be logged in for them to share with other users
+          # this prevents sharing in a local deployment
+          if (auth$email() == "") {
+            shinyalert::shinyalert(
+              title = "Oops! You're not logged in...",
+              paste(
+                "You need to be logged into OmicsPlayground with a valid
+                email address to share pgx files with other users."
+              )
+            )
+            return()
+          }
+          # replace the current user's pgx directory with the shared user's
+          share_dir <- stringr::str_replace_all(
+            pgx_dir,
+            auth$email(),
+            input$share_user
+          )
         }
 
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
