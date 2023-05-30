@@ -6,11 +6,31 @@
 FeatureMapInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    shiny::br(),
     ## data set parameters
     withTooltip(shiny::selectInput(ns("sigvar"), "Show phenotype:", choices = NULL, multiple = FALSE),
       "Select the phenotype to show in the signatures plot.",
       placement = "top"
+    ),
+    hr(),        
+    withTooltip(
+      shiny::selectInput(ns("filter_genes"), "Annotate genes:",
+        choices = NULL, multiple = FALSE
+      ),
+      "Filter the genes to highlight on the map.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::selectInput(ns("filter_gsets"), "Annotate genesets:",
+        choices = NULL, multiple = FALSE
+      ),
+      "Filter the genesets to highlight on the map.",
+      placement = "right", options = list(container = "body")
+    ),
+    shiny::hr(),
+    withTooltip(
+      shiny::checkboxInput(ns("show_fulltable"), "Show full table", FALSE),
+      "Show full table. Not filtered."
     ),
     shiny::br(),
     shiny::br(),
@@ -28,25 +48,12 @@ FeatureMapInputs <- function(id) {
           "Reference group. If no group is selected the average is used as reference.",
           placement = "right", options = list(container = "body")
         ),
+        hr(),
         withTooltip(
           shiny::radioButtons(ns("umap_type"), "UMAP datatype:",
             choices = c("logCPM", "logFC"), inline = TRUE
           ),
           "The UMAP can be computed from the normalized log-expression (logCPM), or from the log-foldchange matrix (logFC). Clustering based on logCPM is the default, but when batch/tissue effects are present the logFC might be better.",
-          placement = "right", options = list(container = "body")
-        ),
-        withTooltip(
-          shiny::selectInput(ns("filter_genes"), "Show genes:",
-            choices = NULL, multiple = FALSE
-          ),
-          "Filter the genes to highlight on the map.",
-          placement = "right", options = list(container = "body")
-        ),
-        withTooltip(
-          shiny::selectInput(ns("filter_gsets"), "Show genesets:",
-            choices = NULL, multiple = FALSE
-          ),
-          "Filter the genesets to highlight on the map.",
           placement = "right", options = list(container = "body")
         )
       )
@@ -62,6 +69,7 @@ FeatureMapUI <- function(id) {
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
+    bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

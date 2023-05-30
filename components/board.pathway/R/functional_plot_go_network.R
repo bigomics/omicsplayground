@@ -86,8 +86,7 @@ functional_plot_go_network_server <- function(id,
 
         sub2 <- go <- pgx$meta.go$graph
         if (is.null(go)) {
-          shinyWidgets::sendSweetAlert(
-            session = session,
+          shinyalert::shinyalert(
             title = "No GO graph in enrichment results",
             text = "",
             type = "warning"

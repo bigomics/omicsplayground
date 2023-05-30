@@ -165,8 +165,8 @@ TableModuleServer <- function(id,
         filename = filename,
         content = function(file) {
           if(!is.null(csvFunc)) {
-            dt <- csvFunc()
-            if(is.list(dt)) dt <- dt[[1]]
+            dt <- csvFunc()   ## data.frame or matrix
+            if(is.list(dt) && !is.data.frame(dt)) dt <- dt[[1]]
           } else {
             dt <- func()$x$data
           }

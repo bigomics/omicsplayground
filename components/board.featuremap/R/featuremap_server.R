@@ -39,6 +39,7 @@ FeatureMapBoard <- function(id, pgx) {
       )
 
       gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
+      gsetcats <- c("<all>",gsetcats)
       shiny::updateSelectInput(session, "filter_gsets",
         choices = gsetcats,
         selected = "H"
@@ -111,7 +112,7 @@ FeatureMapBoard <- function(id, pgx) {
         title = title,
         ## legend.pos = 'bottomright',
         source = source,
-        ## key = rownames(pos)
+        key = rownames(pos)
       )
 
       p
@@ -255,6 +256,7 @@ FeatureMapBoard <- function(id, pgx) {
       plotUMAP     = plotUMAP,
       sigvar       = shiny::reactive(input$sigvar),
       filter_genes = shiny::reactive(input$filter_genes),
+      r_fulltable  = shiny::reactive(input$show_fulltable),
       watermark    = WATERMARK
     )
 
@@ -279,6 +281,7 @@ FeatureMapBoard <- function(id, pgx) {
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
       sigvar = shiny::reactive(input$sigvar),
+      r_fulltable  = shiny::reactive(input$show_fulltable),
       watermark = WATERMARK
     )
 

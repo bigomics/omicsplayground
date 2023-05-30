@@ -28,16 +28,11 @@ functional_plot_wikipathway_graph_ui <- function(
     id = ns("plotmodule"),
     title = title,
     label = label,
-    ##    plotlib = "image",
-    plotlib = "generic",
-    plotlib2 = "generic",
-    outputFunc = svgPanZoom::svgPanZoomOutput,
-    outputFunc2 = svgPanZoom::svgPanZoomOutput,
+    plotlib = "svgPanZoom",
     info.text = info.text,
     info.width = info.width,
     options = NULL,
-    download.fmt = NULL,
-    # download.fmt = c("png","csv"),
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )
@@ -176,12 +171,8 @@ functional_plot_wikipathway_graph_server <- function(id,
 
       PlotModuleServer(
         "plotmodule",
-        plotlib = "generic",
+        plotlib = "svgPanZoom",
         func = plot_RENDER,
-        func2 = plot_RENDER,
-        renderFunc = svgPanZoom::renderSvgPanZoom,
-        renderFunc2 = svgPanZoom::renderSvgPanZoom,
-        ## csvFunc = plot_data,
         add.watermark = watermark
       )
 
