@@ -623,8 +623,6 @@ pgx.computePGX <- function(ngs,
         ngs, max.features = max.genesets,
         test.methods = gset.methods,
         lib.dir = lib.dir )
-    Matrix::head(ngs$gset.meta$meta[[1]])
-
     
     if(do.cluster) {
         message("[pgx.computePGX] clustering genes...")
