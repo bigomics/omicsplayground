@@ -69,6 +69,7 @@ FeatureMapUI <- function(id) {
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
+    bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
