@@ -117,13 +117,13 @@ expression_plot_topgenes_server <- function(id,
     })
 
     
-    render_plotly <- function(annot.y=1.05, xaxis.fontsize=10, title.cex=1) {
+    render_plotly <- function(annot.y=1.05, xaxis.fontsize=10) {
       pd <- plot_data()
       shiny::req(pd)
 
       nplots <- min(8, nrow(pd[["res"]]))
       if(pd$grouped) {
-        nplots <- min(18, nrow(pd[["res"]]))
+        nplots <- min(16, nrow(pd[["res"]]))
       }
       
       plts <- list()
@@ -137,7 +137,6 @@ expression_plot_topgenes_server <- function(id,
           x = 0.5,
           y = annot.y,
           text = gene,
-          font = list(size=10*title.cex),
           xref = "paper",
           yref = "paper",
           xanchor = "bottom",
@@ -166,7 +165,7 @@ expression_plot_topgenes_server <- function(id,
         )
 
         p  <- p %>% plotly::layout(
-          plot_bgcolor = "#f2f2f2",
+          plot_bgcolor = "#f8f8f8",
           xaxis = list(tickfont = list(size=xaxis.fontsize))          
         )
         
@@ -178,15 +177,14 @@ expression_plot_topgenes_server <- function(id,
 
     plotly.RENDER <- function() {
       ## layout in subplots
-      plts <- render_plotly(annot.y=1.00, xaxis.fontsize=10, title.cex=1) 
-      plts <- head(plts,16)
+      plts <- render_plotly(annot.y=1.05, xaxis.fontsize=10) 
       pd <- plot_data()
       ncols <- ifelse( pd[["grouped"]], 8, 4)
       nrows <- ceiling(length(plts) / ncols)
       plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.010,0.010,0.04,0.04),  ## lrtb
+        margin = c(0.012,0.012,0.04,0.04),  ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,
@@ -199,15 +197,14 @@ expression_plot_topgenes_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      plts <- render_plotly(annot.y=1.00, xaxis.fontsize=14, title.cex=1.4)
-      plts <- head(plts,18)
+      plts <- render_plotly(annot.y=0.95, xaxis.fontsize=14)
       pd <- plot_data()
-      ncols <- ifelse( pd[["grouped"]], 6, 4)
+      ncols <- ifelse( pd[["grouped"]], 8, 4)
       nrows <- ceiling(length(plts) / ncols)
       fig <- plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.011,0.011,0.04,0.03),  ## lrtb
+        margin = c(0.014,0.014,0.05,0.04),  ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,

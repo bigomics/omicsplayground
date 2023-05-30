@@ -117,7 +117,7 @@ PcsfBoard <- function(id, pgx) {
       pcsf_beta = shiny::reactive(input$pcsf_beta),
       colorby = shiny::reactive(input$colorby),
       contrast = shiny::reactive(input$contrast),
-      highlightby = shiny::reactive(input$highlightby),
+      show.centrality = shiny::reactive(input$show.centrality),      
       watermark = WATERMARK
     )
 

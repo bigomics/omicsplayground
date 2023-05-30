@@ -73,10 +73,10 @@ connectivity_plot_enrichmentGraph_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      
       getEnrichmentGraph <- shiny::reactive({
         ## get enrichment scores
         F <- cumEnrichmentTable()
+
         shiny::req(F)
 
         if (input$enrichGraph_oddweighting) {

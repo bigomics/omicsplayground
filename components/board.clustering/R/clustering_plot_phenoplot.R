@@ -114,7 +114,7 @@ clustering_plot_phenoplot_server <- function(id,
           xlab = "",
           ylab = "",
           title = tt,
-          cex.title = cex*1.2,
+          cex.title = cex*1.1,
           cex.clust = cex*1.1,
           label.clusters = showlabels
         ) %>% plotly::layout(
@@ -164,7 +164,7 @@ clustering_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = c(0.03,0.03,0.05,0.05)
+        margin = 0.06
       ) %>% plotly_modal_default() %>%
           plotly::layout(
             margin = list(l=0,r=0,b=0,t=30) # lrbt

@@ -21,14 +21,8 @@ PcsfInputs <- function(id) {
       placement = "right"
     ),
     withTooltip(
-      radioButtons(
-        ns("highlightby"),
-        "Highlight labels by:",
-        choices = c("none", "FC", "centrality"),
-        selected = "none",
-        inline = TRUE
-      ),
-      "Highlight labels by scaling with selection.",
+      shiny::checkboxInput(ns("show.centrality"), "highlight hubs", TRUE),
+      "Highlight hub genes by scaling gene names with centrality score.",
       placement = "top"
     ),
     conditionalPanel(

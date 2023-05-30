@@ -61,7 +61,7 @@ pcsf_plot_network_server <- function(id,
                                      pcsf_beta = reactive(1),
                                      colorby = reactive("gene.cluster"),
                                      contrast = reactive(NULL),
-                                     highlightby = reactive("none"),
+                                     show.centrality = reactive(TRUE),
                                      watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
@@ -123,22 +123,11 @@ pcsf_plot_network_server <- function(id,
       }
       
       label_cex = 30
-      if(highlightby()=="centrality") {
+      if(show.centrality()) {
         ewt <- 1.0 / igraph::E(net)$weight
         bc <- igraph::page_rank(net, weights=ewt)$vector
         ##bc <- igraph::betweenness(net)
         label_cex <- 30 + 80 * (bc / max(bc))**2
-      }
-      if(highlightby()=="FC") {
-        vv <- igraph::V(net)$name        
-        if(.colorby=="contrast") {
-          fx <- res$meta[,.contrast]
-          fx <- fx[vv]
-        } else {
-          fx <- rowMeans(res$meta**2)
-          fx <- fx[vv]
-        }
-        label_cex <- 30 + 80 * (abs(fx) / max(abs(fx)))**2
       }
       
       ##E(net)$weight <- 1/(E(net)$weight+1e-10)
