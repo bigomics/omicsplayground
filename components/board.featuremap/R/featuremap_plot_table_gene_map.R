@@ -137,7 +137,7 @@ featuremap_plot_gene_map_server <- function(id,
         cex = cex,
         cex.label = cex.label,
         plotlib = "plotly",
-        source = ns("gene_filter")
+        source = ns("gene_umap")
       ) %>%
         plotly::layout(
           dragmode = "select",
@@ -188,7 +188,7 @@ featuremap_plot_gene_map_server <- function(id,
 
       ## detect brush
       sel.genes <- NULL
-      b <- plotly::event_data("plotly_selected", source = ns("gene_filter"))
+      b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
       if (!is.null(b) & length(b) > 0) {
         sel <- b$key
         sel.genes <- rownames(pos)[rownames(pos) %in% sel]
@@ -211,9 +211,9 @@ featuremap_plot_gene_map_server <- function(id,
 
       if (!is.null(sel.genes)) {
         sel.genes <- intersect(sel.genes, rownames(F))
-        F <- F[sel.genes, , drop = FALSE]
+        F <- F[sel.genes,, drop = FALSE]
       }
-      F <- F[order(-rowMeans(F**2)), ]
+      F <- F[order(-rowMeans(F**2)),,drop=FALSE]
 
       tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)

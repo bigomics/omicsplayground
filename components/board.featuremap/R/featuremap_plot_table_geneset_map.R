@@ -142,7 +142,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         title = colorby,
         cex = cex,
         cex.label = cex.label,
-        source =  ns("geneset_filter"),
+        source =  ns("geneset_umap"),
         plotlib = "plotly"
       ) %>%
         plotly::layout(
@@ -189,11 +189,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
       }
 
       pos <- getGsetUMAP()
-
+      
       ## detect brush
       sel.gsets <- NULL
-      b <- plotly::event_data("plotly_selected", source = ns("geneset_filter"))
-
+      b <- plotly::event_data("plotly_selected", source = ns("geneset_umap"))
+      
       if (!is.null(b) & length(b)) {
         sel <- b$key
         sel.gsets <- rownames(pos)[rownames(pos) %in% sel]
@@ -203,23 +203,23 @@ featuremap_plot_table_geneset_map_server <- function(id,
       pheno <- sigvar()
       is.fc <- FALSE
       if (pheno %in% colnames(pgx$samples)) {
-        X <- pgx$gsetX - rowMeans(pgx$gsetX)
+        X <- pgx$gsetX - rowMeans(pgx$gsetX,na.rm=TRUE)
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, i, drop = FALSE])
+          rowMeans(X[, c(i,i), drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
         is.fc <- TRUE
       }
-
+      
       if (!is.null(sel.gsets)) {
         sel.gsets <- intersect(sel.gsets, rownames(F))
-        F <- F[sel.gsets, ]
+        F <- F[sel.gsets,,drop=FALSE]
       }
-      F <- F[order(-rowMeans(F**2)), ]
-
+      
+      F <- F[order(-rowMeans(F**2)),,drop=FALSE ]      
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"
       F <- round(F, digits = 3)

@@ -111,7 +111,7 @@ FeatureMapBoard <- function(id, pgx) {
         title = title,
         ## legend.pos = 'bottomright',
         source = source,
-        ## key = rownames(pos)
+        key = rownames(pos)
       )
 
       p
