@@ -65,10 +65,6 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           gg <- playbase::probe2symbol(rownames(X0)[ii])
         })
         rownames(X0)[ii] <- gg
-        #sel <- !(rownames(X0) %in% c(NA, "", "NA"))
-        #X0 <- X0[sel, ]
-        #xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
-        #X0 <- do.call(rbind, xx)
         X0
       })
 
