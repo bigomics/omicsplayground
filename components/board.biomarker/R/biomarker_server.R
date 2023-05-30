@@ -342,5 +342,17 @@ BiomarkerBoard <- function(id, pgx) {
       calcVariableImportance,
       watermark = WATERMARK
     )
+
+    biomarker_plot_featurerank_server(
+      id = "featurerank",
+      pgx = pgx,
+      ##ft_level = shiny::reactive(input$ft_level),
+      ft_level = shiny::reactive("gene"),      
+      ##selected_phenotypes = shiny::reactive(NULL),
+      samplefilter = shiny::reactive(input$pdx_samplefilter),
+      watermark = WATERMARK
+    )
+
+    
   })
 } ## end-of-Board
