@@ -114,7 +114,7 @@ pkg.extra <- c(
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
-  'iheatmapr','RcppZiggurat','Rfast'
+  'iheatmapr','RcppZiggurat','Rfast','BH','topGO'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -171,7 +171,9 @@ install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
+install.github('bigomics/PCSF')
 install.github('m-jahn/fluctuator')
+install.github('ropensci/iheatmapr')
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
