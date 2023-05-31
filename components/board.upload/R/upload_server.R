@@ -661,9 +661,6 @@ UploadBoard <- function(id,
             status["counts.csv"] <- "ERROR: colnames do not match (with samples)"
             status["samples.csv"] <- "ERROR: rownames do not match (with counts)"
           }
-
-          dbg("[UploadModule::checkTables] dim(samples.csv) = ", dim(uploaded$samples.csv))
-          dbg("[UploadModule::checkTables] dim(counts.csv) = ", dim(uploaded$counts.csv))
         }
 
         if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
@@ -672,7 +669,7 @@ UploadBoard <- function(id,
           group.col <- grep("group", tolower(colnames(samples1)))
           old1 <- (length(group.col) > 0 &&
             nrow(contrasts1) < nrow(samples1) &&
-            all(rownames(contrasts1) %in% samples1[, group.col])
+            all(rownames(contrasts1) %in% samples1[, group.col[1]])
           )
           old2 <- all(rownames(contrasts1) == rownames(samples1)) &&
             all(unique(as.vector(contrasts1)) %in% c(-1, 0, 1, NA))
@@ -687,11 +684,6 @@ UploadBoard <- function(id,
               new.contrasts <- new.contrasts[grp, , drop = FALSE]
               rownames(new.contrasts) <- rownames(samples1)
             }
-            dbg("[UploadModule] old.ct1 = ", paste(contrasts1[, 1], collapse = " "))
-            dbg("[UploadModule] old.nn = ", paste(rownames(contrasts1), collapse = " "))
-            dbg("[UploadModule] new.ct1 = ", paste(new.contrasts[, 1], collapse = " "))
-            dbg("[UploadModule] new.nn = ", paste(rownames(new.contrasts), collapse = " "))
-
             contrasts1 <- new.contrasts
           }
           if (old.style && old2) {
