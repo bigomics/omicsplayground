@@ -10,9 +10,7 @@
 
 if(0) {
   load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-
   BatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
-
   out <- gadgetize2(
     BatchCorrectUI, BatchCorrectServer,
     title = "UploadGadget", height=640, size="l",
@@ -56,6 +54,19 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
+
+      ## Counts matrix but with genes annotated for correcting
+      ## unwanted biological effects (mito,ribo,gender)
+      geneX <- reactive({
+        shiny::req(X())
+        X0 <- X()
+        ii <- which(rowSums(X0)>0)  ## bit faster
+        shiny::withProgress(message="Batch-correction (converting probes)...", value=0, {
+          gg <- playbase::probe2symbol(rownames(X0)[ii])
+        })
+        rownames(X0)[ii] <- gg
+        X0
+      })
 
       max.rho=0.5
       getNotCorrelatedBatchPars <- function(pheno, model.par, max.rho=0.5) {
@@ -130,19 +141,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
         shiny::req(X())
 
-
-        ## is.valid <- all(dim(out$X)==dim(X()) &&
-        ##                 nrow(out$Y)==ncol(X()))
-        ## if(!is.valid) {
-        ##     message("[BatchCorrectServer] dim(out$X)=",dim(out$X))
-        ##     message("[BatchCorrectServer] dim(out$Y)=",dim(out$Y))
-        ##     message("[BatchCorrectServer] dim(X())=",dim(X()))
-        ##     message("[BatchCorrectServer] WARNING: matrices not valid!!")
-        ##     return(NULL)
-        ## }
-
         mp <- shiny::isolate(input$bc_modelpar)
-
         if(is.null(mp) || length(mp)==0) {
           warning("[BatchCorrect::canvas] WARNING :: mp = ",mp)
         }
@@ -154,8 +153,6 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         if(is.count) {
           X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
         }
-        nmax <- as.integer(input$bc_nmax)
-
         cX <- out$X
         rownames(X0) <- sub("[;|,].*","",rownames(X0))
         rownames(cX) <- sub("[;|,].*","",rownames(cX))
@@ -167,6 +164,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         req(ncol(X0) == ncol(cX))
 
         do.pca <- (input$bc_maptype == "PCA")
+        nmax <- as.integer(input$bc_nmax)
         show_row <- (nmax < 50)
 
         viz.BatchCorrectionMatrix(
@@ -254,24 +252,14 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         list(input$bc_compute_button, X(), pheno())
       } , {
 
-        shiny::req(X())
+        shiny::req(geneX())
         req(uiOK())
-
+        
         mp="";bp="Chemotherapy"
         mp="dlbcl.type";bp="*"
         mp <- input$bc_modelpar
         bp <- input$bc_batchpar
         bc <- input$bc_methods
-
-        if(0) {
-          mp <- intersect(mp, colnames(pheno()))  ## check
-          ##shiny::req(mp)
-          validate( need(length(mp)>0, "need valid model parameters"))
-          if(is.null(mp) || length(mp)==0) {
-            warning("[event:outobj] ***WARNING*** no model parameter mp = ",mp)
-            return(NULL)
-          }
-        }
 
         lib.correct <- FALSE
         bio.correct <- c()
@@ -295,15 +283,10 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             }
         }
 
-        X0 <- X()
+        X0 <- geneX()
         if(is.count) {
           X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
         }
-
-        dbg("[event:outobj] dim(X0) = ",dim(X0))
-        dbg("[event:outobj] dim(pheno) = ",dim(pheno()))
-        dbg("[event:outobj] mp = ",mp)
-        dbg("[event:outobj] bp = ",bp)
 
         out <- playbase::pgx.superBatchCorrect(
           X = X0,
@@ -320,6 +303,9 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
           nnm.correct = nnm.correct
         )
 
+        ## restore original feature names
+        rownames(out$X) <- rownames(X())
+        
         out$params <- list(
           model.par = mp,
           batch.par = bp,
