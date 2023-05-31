@@ -155,7 +155,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pos <- pdata[['pos']]
       df <- pdata[['df']]
       
-      marker_size <- ifelse( nrow(df) > 50, 5, 10)
+      marker_size <- ifelse( nrow(df) > 50, 8, 11)
+      marker_size <- ifelse( nrow(df) > 100, 5, marker_size)
       
       fig <- plotly::plot_ly(
         data = df,
@@ -214,7 +215,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pdata <- plot_data()
       shiny::req(pdata)
       df <- pdata[['df']]
-      marker_size <- ifelse( nrow(df) > 50, 6, 12)
+      marker_size <- ifelse( nrow(df) > 50, 9, 13)
+      marker_size <- ifelse( nrow(df) > 100, 6, marker_size)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,
