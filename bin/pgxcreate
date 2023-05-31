@@ -34,7 +34,7 @@ option_list = list(
     optparse::make_option(c("-f", "--folder"), type="character", default=".", 
         help="Input/output working folder [default= %default]", metavar="character"),        
     optparse::make_option(c("-e", "--description"), type="character", default="OmicsPlayground dataset", 
-        help="Dataset description [default= %default]", metavar="character"),
+        help="Dataset description or file name [default= %default]", metavar="character"),
     optparse::make_option(c("-y", "--datatype"), type="character", default="RNA-seq", 
         help="Data type [default= %default]", metavar="character")  
 )
@@ -94,7 +94,16 @@ pgx <- pgx.createFromFiles(
     extra = opt$extra)
 cat("pgx.createFromFiles finished\n")
 
-pgx$description <- opt$description
+if(file.exists(opt$description)) {
+  ## read description from file
+  cat("reading description from file",opt$description,"\n")
+  dd <- readLines(opt$description)
+  dd <- paste(dd, collapse=" ")
+  pgx$description <- substring(dd, 1, 1000)
+} else {
+  pgx$description <- opt$description
+}
+
 pgx$datatype <- opt$datatype
 
 cat("saving PGX object to",opt$out,"\n")
