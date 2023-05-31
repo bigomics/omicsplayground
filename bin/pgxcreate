@@ -3,7 +3,7 @@
 ##
 ## Make PGX file from CSV files
 ##
-## (c) 2020 BigOmics Analytics 
+## (c) 2023 BigOmics Analytics 
 ##
 
 
@@ -12,27 +12,31 @@ if(!require(optparse, quietly=TRUE)) install.packages("optparse")
 
 option_list = list(
     optparse::make_option(c("-c", "--counts"), type="character", default="counts.csv", 
-        help="counts file name [default= %default]", metavar="character"),
+        help="Counts file name", metavar="character"),
     optparse::make_option(c("-s", "--samples"), type="character", default="samples.csv", 
-        help="samples file name [default= %default]", metavar="character"),
-    optparse::make_option(c("-p", "--contrasts"), type="character", default="contrasts.csv", 
-        help="specify contrasts file for comparisons [default= %default]", metavar="character"),
+        help="Samples file name [default= %default]", metavar="character"),
+    optparse::make_option(c("-t", "--contrasts"), type="character", default="auto", 
+        help="Specify contrasts file (or auto) for comparisons [default= %default]", metavar="character"),
     optparse::make_option(c("-o", "--out"), type="character", default="out.pgx", 
-        help="output PGX file name [default= %default]", metavar="character"),
-    optparse::make_option(c("-f", "--folder"), type="character", default=".", 
-        help="input/output folder [default= %default]", metavar="character"),      
+        help="Output PGX file name [default= %default]", metavar="character"),
     optparse::make_option(c("-r", "--root"), type="character", default="/omicsplayground", 
-        help="omicsplayground root folder [default= %default]", metavar="character"),      
+        help="Omicsplayground root folder [default= %default]", metavar="character"),      
     optparse::make_option(c("-g", "--maxgenes"), type="integer", default=25000, 
-        help="maximum number of genes [default= %default]", metavar="integer"),      
+        help="Maximum number of genes [default= %default]", metavar="integer"),      
     optparse::make_option(c("-z", "--maxgenesets"), type="integer", default=5000, 
-        help="maximum number of genesets [default= %default]", metavar="integer"),      
-    optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,deseq2.wald,edger.qlf", 
-        help="gene testing methods [default= %default]", metavar="character"),      
+        help="Maximum number of genesets [default= %default]", metavar="integer"),      
+    optparse::make_option(c("-m", "--gxmethods"), type="character", default="trend.limma,edger.qlf,deseq2.wald", 
+        help="Gene testing methods [default= %default]", metavar="character"),      
     optparse::make_option(c("-d", "--gsetmethods"), type="character", default="fisher,gsva,fgsea", 
-        help="geneset testing methods [default= %default]", metavar="character"),
-    optparse::make_option(c("-x", "--extra"), type="character", default="meta.go,infer,deconv,drugs,wordcloud", 
-        help="compute extra methods [default= %default]", metavar="character")
+        help="Geneset testing methods [default= %default]", metavar="character"),
+    optparse::make_option(c("-x", "--extra"), type="character", default="meta.go,deconv,infer,drugs,wordcloud", 
+        help="Compute extra methods [default= %default]", metavar="character"),
+    optparse::make_option(c("-f", "--folder"), type="character", default=".", 
+        help="Input/output working folder [default= %default]", metavar="character"),        
+    optparse::make_option(c("-e", "--description"), type="character", default="OmicsPlayground dataset", 
+        help="Dataset description [default= %default]", metavar="character"),
+    optparse::make_option(c("-y", "--datatype"), type="character", default="RNA-seq", 
+        help="Data type [default= %default]", metavar="character")  
 )
 
 opt_parser = optparse::OptionParser(option_list=option_list)
@@ -45,7 +49,7 @@ if(0) {
     opt$contrasts = "human/contrasts.csv"
 #   opt$contrasts = "auto"
     opt$out = "human_example.pgx"    
-    opt$root = "~/Playground/omicsplayground-master"
+    opt$root = "~/Playground/omicsplayground"
     opt$gxmethods = "trend.limma,edger.qlf,edger.lrt"
     opt$gsetmethods = "fisher,gsva,fgsea"
     opt$extramethods = "meta.go,infer,drugs,wordcloud"
@@ -59,26 +63,25 @@ if(is.null(opt$counts) || is.null(opt$samples) || is.null(opt$out)){
      stop("incomplete or invalid options\n", call.=FALSE)
 }
 
+if(dir.exists(opt$folder)) {
+  cat("set working folder to",opt$folder,"\n")
+  setwd(opt$folder)
+}
 if(!file.exists(opt$counts))  stop("could not find counts file\n", call.=FALSE)
 if(!file.exists(opt$samples)) stop("could not find samples file\n", call.=FALSE)
 if(!dir.exists(opt$root))     stop("could not find Playground root folder\n", call.=FALSE)
 
-
+##RDIR  = file.path(opt$root,"components/00SourceAll.R")
 RDIR  = file.path(opt$root,"R")
 FILES = file.path(opt$root,"lib")
-if(dir.exists(opt$folder)) setwd(opt$folder)
-
-source(file.path(RDIR,"pgx-include.R"))
+source(file.path(opt$root,"R/pgx-include.R"),chdir=TRUE)
 library(data.table)
 
 counts.file  <- opt$counts
 samples.file <- opt$samples
-contrasts.file <- NULL  
-if(!is.null(opt$contrasts) && file.exists(opt$contrasts)) {
+contrasts.file <- NULL
+if(!is.null(opt$contrasts) && opt$contrasts!="auto") {
     contrasts.file <- opt$contrasts
-} else {
-  cat("No contrasts.csv file specified. Creating auto-contrasts.\n")
-  contrasts.file <- NULL  ## will default to auto contrasts
 }
 extra <- opt$extra
 
@@ -90,6 +93,9 @@ pgx <- pgx.createFromFiles(
     gsetmethods = opt$gsetmethods,
     extra = opt$extra)
 cat("pgx.createFromFiles finished\n")
+
+pgx$description <- opt$description
+pgx$datatype <- opt$datatype
 
 cat("saving PGX object to",opt$out,"\n")
 ngs.save(pgx, file=opt$out)

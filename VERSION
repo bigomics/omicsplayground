@@ -1,3 +1,6 @@
+v2.8.21
+- add datatype and description to pgxcompute script
+
 v2.8.20
 - correct pgxcompute script
 
