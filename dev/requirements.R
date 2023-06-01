@@ -70,7 +70,7 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 install.github <- function(repo, force=FALSE) {
     pkg <- sub(".*/","",repo)
     if(!require(pkg, character.only=TRUE) || force) {
-      devtools::install_github(repo, upgrad="never", build_vignettes=FALSE, force=TRUE)
+      devtools::install_github(repo, upgrade="never", build_vignettes=FALSE, force=force)
     } else {
         cat("package",repo,"already installed\n")
     }
