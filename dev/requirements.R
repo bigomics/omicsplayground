@@ -163,7 +163,6 @@ install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src
 ## Install latest from GITHUB (overwriting any other version)
 ##---------------------------------------------------------------------
 install.github("GfellerLab/EPIC")
-##install.github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 install.github('linxihui/NNLM')
 install.github("Coolgenome/iTALK")
 install.github('wt2015-github/FastGGM', force=TRUE)
