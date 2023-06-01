@@ -122,7 +122,7 @@ LoadingBoard <- function(id,
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, ".pgx"))
 
         alert_val <- shinyalert::shinyalert(
-          inputId = "share_confirm",
+          inputId = "initial_share_confirm",
           title = "Share this dataset?",
           tagList(
             paste("Your dataset", pgx_name, "will be shared with the user whose
@@ -138,6 +138,30 @@ LoadingBoard <- function(id,
       },
       ignoreNULL = TRUE
     )
+
+    observeEvent(input$initial_share_confirm, {
+      if (input$initial_share_confirm == FALSE) {
+        rl$share_pgx <- NULL
+        return()
+      }
+
+      selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
+      pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+      new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, ".pgx"))
+
+      alert_val <- shinyalert::shinyalert(
+        inputId = "share_confirm",
+        title = "Are you sure?",
+        tagList(
+          paste("The dataset", pgx_name, "will be shared with the user", input$share_user,
+          " as specified. The user you share a dataset with will have to accept
+          the shared dataset. Please ensure that this information is correct before confirming.")
+        ),
+        html = TRUE,
+        showCancelButton = TRUE,
+        showConfirmButton = TRUE
+      )
+    })
 
     observeEvent(input$share_confirm, {
       pgx_dir <- getPGXDIR()
