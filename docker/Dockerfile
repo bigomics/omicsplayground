@@ -33,9 +33,8 @@ WORKDIR /
 #RUN pip3 install umap-learn
 #RUN R -e "devtools::install_github('m-jahn/fluctuator')"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-#RUN R -e "BiocManager::install(c('topGO'))"
-#RUN R -e "install.packages(c('BH'))"  ## for PCSF
-#RUN R -e "install.packages(c('RcppZiggurat','Rfast'))"
+RUN R -e "BiocManager::install(c('topGO'))"
+RUN R -e "install.packages(c('BH'))"  ## for PCSF
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)

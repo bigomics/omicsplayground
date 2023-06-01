@@ -40,6 +40,13 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN apt install -y r-base r-base-dev r-recommended
 
 #------------------------------------------------------------
+# Set GitHub PAT??
+#------------------------------------------------------------
+WORKDIR /
+#COPY .Renviron .Renviron
+#RUN R -e "usethis::git_sitrep()"
+
+#------------------------------------------------------------
 # Install R packages that are required
 #------------------------------------------------------------
 
