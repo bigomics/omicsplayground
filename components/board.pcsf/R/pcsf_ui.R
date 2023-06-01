@@ -25,7 +25,7 @@ PcsfInputs <- function(id) {
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("none", "FC", "centrality"),
-        selected = "none",
+        selected = "centrality",
         inline = TRUE
       ),
       "Highlight labels by scaling with selection.",

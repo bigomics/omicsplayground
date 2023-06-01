@@ -67,8 +67,6 @@ pcsf_plot_network_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    dbg("[pcsf_plot_network.R] ns =",ns("???"))
-    
     observeEvent(input$physics, {
       #Update the network
       do.physics <- input$physics
@@ -101,9 +99,6 @@ pcsf_plot_network_server <- function(id,
 
       res <- pcsf_compute()      
       net <- get_network()
-
-      dbg("[pcsf_plot_network.R:visnetwork.RENDER] reacted!")
-      dbg("[pcsf_plot_network.R:get_network] 2")
 
       .colorby <- colorby()
       .contrast <- contrast()
@@ -155,7 +150,6 @@ pcsf_plot_network_server <- function(id,
         layout = layout,
         physics = do.physics)
 
-      dbg("[pcsf_plot_network.R:visnetwork.RENDER] done!")
       visnet
     }
     
