@@ -35,6 +35,7 @@ LoadingBoard <- function(id,
       delete_pgx = NULL,
       delete_trigger = 0
     )
+    renewSharedPGXINFO <- reactiveVal(0)
 
     ## static, not changing
     pgx_shared_dir <- stringr::str_replace_all(pgx_dir, c("data" = "data_shared"))
@@ -139,6 +140,8 @@ LoadingBoard <- function(id,
     )
 
     observeEvent(input$share_confirm, {
+      pgx_dir <- getPGXDIR()
+
       # if confirmed, then share the data
       if (input$share_confirm) {
 
@@ -159,12 +162,20 @@ LoadingBoard <- function(id,
             )
             return()
           }
-          # replace the current user's pgx directory with the shared user's
+
+          # get the data directory that the file will be shared to
           share_dir <- stringr::str_replace_all(
             pgx_dir,
             auth$email(),
             input$share_user
           )
+
+          # if the new directory doesnt exist, then create it
+          # this will happen if the user I am sharing with has no OMP acct
+          if (!dir.exists(share_dir)) {
+            dir.create(share_dir)
+            file.copy(file.path(pgx_dir, "example-data.pgx"), share_dir)
+          }
         }
 
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
@@ -172,7 +183,11 @@ LoadingBoard <- function(id,
         pgx_name <- sub("[.]pgx$", "", pgx_name)
         pgx_path <- getPGXDIR()
         pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
-        new_pgx_file <- file.path(share_dir, paste0(pgx_name, ".pgx"))
+
+        new_pgx_file <- file.path(
+          share_dir,
+          paste0(pgx_name, ".pgx", '__from__', auth$email())
+        )
 
         ## abort if file exists
         if (file.exists(new_pgx_file)) {
@@ -417,6 +432,126 @@ LoadingBoard <- function(id,
         info
       }
     )
+
+    makebuttonInputs2 <- function(FUN, len, id, ...) {
+      inputs <- character(length(len))
+      for (i in seq_along(len)) {
+        inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
+      }
+      inputs
+    }
+
+    # when user enters load tab, check if there are any shared datasets
+    # awaiting confirmation and show them if so
+    observeEvent(c(r_global$nav, renewSharedPGXINFO()),  {
+      req(r_global$nav == 'load-tab')
+      shared_pgx_names <- getRequestedSharedPGXINFO()
+
+      accept_btns <- makebuttonInputs2(
+        FUN = actionButton,
+        len = shared_pgx_names,
+        id = "accept_pgx__",
+        label = "",
+        width = "50px",
+        inline = TRUE,
+        icon = shiny::icon("check"),
+        class = "btn-inline btn-success",
+        style = "padding:0px; margin:0px; font-size:95%;",
+        onclick = paste0('Shiny.onInputChange(\"', ns("accept_pgx"), '\",this.id)')
+      )
+
+      decline_btns <- makebuttonInputs2(
+        FUN = actionButton,
+        len = shared_pgx_names,
+        id = "decline_pgx__",
+        label = "",
+        width = "50px",
+        inline = TRUE,
+        icon = shiny::icon("x"),
+        class = "btn-inline btn-danger",
+        style = "padding:0px; margin:0px; font-size:95%;",
+        onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\",this.id)')
+      )
+
+      shared_pgx_df <- data.frame(stringr::str_split(shared_pgx_names, '__from__'))
+      df <- data.frame(
+        Dataset = as.character(shared_pgx_df[1,]),
+        From = as.character(shared_pgx_df[2,]),
+        Actions = paste(accept_btns, decline_btns)
+      )
+
+      if (length(shared_pgx_names) > 0) {
+        shiny::showModal(shiny::modalDialog(
+          title = shiny::HTML("<strong>A user has shared data with you!</strong>"),
+          DT::datatable(
+            df,
+            rownames = FALSE,
+            escape = FALSE,
+            selection = "none",
+            class = "compact cell-border",
+            options = list(
+              dom = "t",
+              pageLength = 999
+            )
+          ) %>%
+            DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "99%"),
+          easyClose = TRUE, size = "xl"
+        ) %>%
+          tagAppendAttributes(
+            style = 'min-height: 50%; min-width: 50%',
+            .cssSelector = '.modal-dialog'
+          ))
+      } else {
+        shiny::removeModal()
+      }
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+
+    # event when a shared pgx is accepted by a user
+    observeEvent(input$accept_pgx, {
+      # get pgx name and remove the __from__* tag
+      pgx_name <- stringr::str_split(input$accept_pgx, 'accept_pgx__')[[1]][2]
+      new_pgx_name <- stringr::str_split(pgx_name, '__from__')[[1]][1]
+
+      # rename the file to be a valid pgx file
+      pgdir <- getPGXDIR()
+      file.rename(from = file.path(pgdir, pgx_name), to = file.path(pgdir, new_pgx_name))
+
+      # reload pgx dir so the newly accepted pgx files are registered in user table
+      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+
+      # remove the accepted pgx from the table
+      renewSharedPGXINFO(renewSharedPGXINFO() + 1)
+    })
+
+    # event when a shared pgx is declined by a user
+    observeEvent(input$decline_pgx, {
+      pgx_name <- stringr::str_split(input$decline_pgx, 'decline_pgx__')[[1]][2]
+      pgdir <- getPGXDIR()
+      file.remove(file.path(pgdir, pgx_name))
+
+      # remove the declined pgx from the table
+      renewSharedPGXINFO(renewSharedPGXINFO() + 1)
+    })
+
+    getRequestedSharedPGXINFO <- shiny::reactive({
+      req(auth)
+
+      # allow trigger for when a shared pgx is accepted / decline
+      renewSharedPGXINFO()
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
+                    not showing table!")
+        return(NULL)
+      }
+      df <- getPGXINFO()
+      if (is.null(df)) {
+        return(NULL)
+      }
+
+      pgxdir <- getPGXDIR()
+      pgxfiles <- dir(pgxdir, pattern = '__from__')
+      pgxfiles
+    })
 
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets

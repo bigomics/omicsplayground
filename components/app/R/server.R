@@ -124,6 +124,12 @@ app_server <- function(input, output, session) {
         loadedDataset = 0
     )
 
+    # store the active tab location globally
+    observeEvent(input$nav, {
+      r_global$nav <- input$nav
+    })
+
+
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
@@ -296,7 +302,7 @@ app_server <- function(input, output, session) {
             immediate = TRUE
           )
         })
-        
+
         # this is a function - like "handleSettings()" in bigdash- needed to
         # make the settings sidebar show up for the inserted tabs
         shinyjs::runjs(
