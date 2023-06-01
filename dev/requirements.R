@@ -126,7 +126,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview",
+    "infercnv","pathview","PCSF",
     "mygene","diptest","edgeR","DESeq2"
   )
 
@@ -170,7 +170,7 @@ install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
-install.github('bigomics/PCSF')
+install.github('bigomics/PCSF', force=TRUE)
 install.github('m-jahn/fluctuator')
 install.github('ropensci/iheatmapr')
 
@@ -214,8 +214,6 @@ reticulate::use_miniconda('r-reticulate')
 ##---------------------------------------------------------------------
 BIG.NOTUSED <- c(
     "reactome.db", ## >2GB!!!
-    "BH",
-    "PCSF",
     "terra",
     ## "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
