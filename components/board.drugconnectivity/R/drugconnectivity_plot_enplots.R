@@ -94,9 +94,7 @@ drugconnectivity_plot_enplots_server <- function(id,
 
       ##plot.RENDER <- shiny::reactive({
       plot.RENDER <- function() {
-        browser()
         res <- plot_data()
-
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
