@@ -75,7 +75,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         res <- list(
           pgx = pgx,
           dsea_contrast = dsea_contrast,
-          dsea_method = dsea_method
+          dsea_method = dsea_method,
+          dsea_table = dsea_table
         )
 
         return(res)
@@ -84,16 +85,18 @@ drugconnectivity_plot_enplots_server <- function(id,
       ##plot.RENDER <- shiny::reactive({
       plot.RENDER <- function() {
         res <- plot_data()
+        browser()
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
 
         dsea <- getActiveDSEA()
-        dt <- dsea$table
+        
+        dt <- res$dsea_table
 
         ## filter with table selection/search
-        ii <- dsea_table$rows_selected()
-        jj <- dsea_table$rows_all()
+        ii <- dt$rows_selected()
+        jj <- dt$rows_all()
         shiny::req(jj) ## must have non-empty table
 
         if (length(ii) > 0) {
