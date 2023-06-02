@@ -32,6 +32,7 @@ LoadingBoard <- function(id,
       download_pgx = NULL,
       download_zip = NULL,
       share_pgx = NULL,
+      share_public_pgx = NULL,
       delete_pgx = NULL,
       delete_trigger = 0
     )
@@ -113,41 +114,57 @@ LoadingBoard <- function(id,
       }
     )
 
-    # put user dataset into shared folder
+    share_dialog <- shiny::modalDialog(
+      tagList(
+        paste("Your dataset will be shared with the user whose
+                    email you enter below."),
+        br(), br(),
+        shiny::textOutput(ns('error_alert')) %>% tagAppendAttributes(
+          style = 'color: red;'
+        ),
+        shiny::textInput(ns("share_user"), "User email who will receive the pgx:"),
+        shiny::textInput(ns("share_user2"), "Re-enter use email:")
+      ),
+      title = "Share this dataset?",
+      footer = tagList(
+        actionButton(ns("initial_share_cancel"), "Cancel"),
+        actionButton(ns("initial_share_confirm"), "Confirm")
+      )
+    )
+
+    # share a pgx with another user
     observeEvent(
       rl$share_pgx,
       {
-        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
-        pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
-        new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, ".pgx"))
-
-        alert_val <- shinyalert::shinyalert(
-          inputId = "initial_share_confirm",
-          title = "Share this dataset?",
-          tagList(
-            paste("Your dataset", pgx_name, "will be shared with the user whose
-                    email you enter below, or if you do not enter any email then the
-                    dataset will be shared to the public folder for all users."),
-            br(), br(),
-            shiny::textInput(ns("share_user"), "User email who will receive the pgx:")
-          ),
-          html = TRUE,
-          showCancelButton = TRUE,
-          showConfirmButton = TRUE
-        )
+        shiny::showModal(share_dialog)
       },
       ignoreNULL = TRUE
     )
 
+
+    observeEvent(input$initial_share_cancel, {
+      rl$share_pgx <- NULL
+      output$error_alert <- renderText({''})
+      shiny::removeModal()
+    })
+
     observeEvent(input$initial_share_confirm, {
-      if (input$initial_share_confirm == FALSE) {
-        rl$share_pgx <- NULL
+
+      if (input$share_user == '') {
+        output$error_alert <- renderText({'Please enter an email.'})
+        return()
+      }
+      if (input$share_user != input$share_user2) {
+        output$error_alert <- renderText({'Emails do not match.'})
         return()
       }
 
+      output$error_alert <- renderText({''})
+
+      shiny::removeModal()
+
       selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
       pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
-      new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, ".pgx"))
 
       alert_val <- shinyalert::shinyalert(
         inputId = "share_confirm",
@@ -155,7 +172,7 @@ LoadingBoard <- function(id,
         tagList(
           paste("The dataset", pgx_name, "will be shared with the user", input$share_user,
           " as specified. The user you share a dataset with will have to accept
-          the shared dataset. Please ensure that this information is correct before confirming.")
+          this request. Please ensure that this information is correct before confirming.")
         ),
         html = TRUE,
         showCancelButton = TRUE,
@@ -169,37 +186,31 @@ LoadingBoard <- function(id,
       # if confirmed, then share the data
       if (input$share_confirm) {
 
-        # if user wants to make the dataset public, save to the shared dir
-        # otherwise share to the share user's dir
-        if (input$share_user == "") {
-          share_dir <- pgx_shared_dir
-        } else {
-          # user has to be logged in for them to share with other users
-          # this prevents sharing in a local deployment
-          if (auth$email() == "") {
-            shinyalert::shinyalert(
-              title = "Oops! You're not logged in...",
-              paste(
-                "You need to be logged into OmicsPlayground with a valid
+        # user has to be logged in for them to share with other users
+        # this prevents sharing in a local deployment
+        if (auth$email() == "") {
+          shinyalert::shinyalert(
+            title = "Oops! You're not logged in...",
+            paste(
+              "You need to be logged into OmicsPlayground with a valid
                 email address to share pgx files with other users."
-              )
             )
-            return()
-          }
-
-          # get the data directory that the file will be shared to
-          share_dir <- stringr::str_replace_all(
-            pgx_dir,
-            auth$email(),
-            input$share_user
           )
+          return()
+        }
 
-          # if the new directory doesnt exist, then create it
-          # this will happen if the user I am sharing with has no OMP acct
-          if (!dir.exists(share_dir)) {
-            dir.create(share_dir)
-            file.copy(file.path(pgx_dir, "example-data.pgx"), share_dir)
-          }
+        # get the data directory that the file will be shared to
+        share_dir <- stringr::str_replace_all(
+          pgx_dir,
+          auth$email(),
+          input$share_user
+        )
+
+        # if the new directory doesnt exist, then create it
+        # this will happen if the user I am sharing with has no OMP acct
+        if (!dir.exists(share_dir)) {
+          dir.create(share_dir)
+          file.copy(file.path(pgx_dir, "example-data.pgx"), share_dir)
         }
 
         selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
@@ -237,6 +248,85 @@ LoadingBoard <- function(id,
           playbase::pgx.save(pgx0, file = new_pgx_file)
         }
 
+        shinyalert::shinyalert(
+          title = "Successfully shared!",
+          paste(
+            "Your dataset", pgx_name, "has now been successfully",
+            "been shared. Thank you!"
+          )
+        )
+      }
+
+      rl$share_pgx <- NULL
+    })
+
+    # make a pgx public
+    observeEvent(
+      rl$share_public_pgx,
+      {
+        selected_row <- as.numeric(stringr::str_split(rl$share_public_pgx, "_row_")[[1]][2])
+        pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+
+        alert_val <- shinyalert::shinyalert(
+          inputId = "share_public_confirm",
+          title = "Are you sure?",
+          tagList(
+            paste("The dataset", pgx_name, "will be made public and shared with all users on
+                  the platform. This action can be undone in the future.")
+          ),
+          html = TRUE,
+          showCancelButton = TRUE,
+          showConfirmButton = TRUE
+        )
+
+      },
+      ignoreNULL = TRUE
+    )
+
+    observeEvent(input$share_public_confirm, {
+      pgx_dir <- getPGXDIR()
+
+      # if confirmed, then share the data
+      if (input$share_public_confirm) {
+
+        # get the data directory that the file will be shared to
+        share_dir <- pgx_shared_dir
+
+        selected_row <- as.numeric(stringr::str_split(rl$share_public_pgx, "_row_")[[1]][2])
+        pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+        pgx_name <- sub("[.]pgx$", "", pgx_name)
+        pgx_path <- getPGXDIR()
+        pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
+
+        new_pgx_file <- file.path(
+          share_dir,
+          paste0(pgx_name, ".pgx")
+        )
+
+        ## abort if file exists
+        if (file.exists(new_pgx_file)) {
+          shinyalert::shinyalert(
+            title = "Oops! File exists...",
+            paste(
+              "There is already a dataset called", pgx_name,
+              "that has been shared. Sorry about that! Please rename your file
+              if you still want to share it."
+            )
+          )
+          return()
+        }
+
+        # load and save the pgx file to new directory
+        pgx0 <- playbase::pgx.load(pgx_file)
+        unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
+        if ("creator" %in% names(pgx0) && !unknown.creator) {
+          file.copy(from = pgx_file, to = new_pgx_file)
+        } else {
+          pgx0$creator <- session$user ## really?
+          if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
+          playbase::pgx.save(pgx0, file = new_pgx_file)
+        }
+
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
 
         shinyalert::shinyalert(
@@ -248,7 +338,7 @@ LoadingBoard <- function(id,
         )
       }
 
-      rl$share_pgx <- NULL
+      rl$share_public_pgx <- NULL
     })
 
     observeEvent(r_global$load_example_trigger, {
