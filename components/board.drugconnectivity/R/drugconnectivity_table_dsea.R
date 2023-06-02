@@ -55,7 +55,7 @@ drugconnectivity_table_dsea_server <- function(id,
         selection = list(
           mode = "single",
           target = "row",
-          selected = 1
+          selected = NULL
         ),
         fillContainer = TRUE,
         options = list(
