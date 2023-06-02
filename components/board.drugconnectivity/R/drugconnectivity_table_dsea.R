@@ -32,6 +32,8 @@ drugconnectivity_table_dsea_server <- function(id,
     ns <- session$ns
 
     table_data <- shiny::reactive({
+      
+      browser()
       dsea <- getActiveDSEA()
       shiny::req(dsea)
 
@@ -54,7 +56,7 @@ drugconnectivity_table_dsea_server <- function(id,
         selection = list(
           mode = "single",
           target = "row",
-          selected = NULL
+          selected = 1
         ),
         fillContainer = TRUE,
         options = list(
