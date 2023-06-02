@@ -148,6 +148,12 @@ LoadingBoard <- function(id,
       shiny::removeModal()
     })
 
+    is_valid_email <- function(email) {
+      is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
+      valid_email <- grepl(".*@.*[.].*",email)
+      return((!is_personal) & valid_email)
+    }
+
     observeEvent(input$initial_share_confirm, {
 
       if (input$share_user == '') {
@@ -156,6 +162,11 @@ LoadingBoard <- function(id,
       }
       if (input$share_user != input$share_user2) {
         output$error_alert <- renderText({'Emails do not match.'})
+        return()
+      }
+      if (!is_valid_email(input$share_user)) {
+        output$error_alert <- renderText({'Email is not valid. Please use
+          only work or business emails.'})
         return()
       }
 
