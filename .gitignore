@@ -1,6 +1,6 @@
 libx/
-data/nick1
-data/nick2
+data/nick1@test.com
+data/nick2@test.com
 
 # R data
 ######################
