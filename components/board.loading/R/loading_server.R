@@ -142,15 +142,6 @@ LoadingBoard <- function(id,
     )
 
 
-    share_email <-
-      blastula::compose_email(
-        body = blastula::md(glue::glue(
-          "Hello,
-      Someone has shared a dataset with you on OmicsPlayground! Login to
-      access your new dataset.
-      ")),
-        footer = blastula::md(glue::glue("Email sent on {blastula::add_readable_time()}."))
-      )
 
     observeEvent(input$initial_share_cancel, {
       rl$share_pgx <- NULL
@@ -278,14 +269,27 @@ LoadingBoard <- function(id,
         )
 
         # send email to user
-        blastula::smtp_send(
-          email,
-          from = "nicholas.cullen@bigomics.ch",
-          to = input$share_user,
-          subject = "Someone sent you data on OmicsPlayground",
-          credentials = blastula::creds_file("gmail_creds") # path to gmail_creds file
-        )
-
+        path_to_creds <- 'gmail_creds'
+        if (file.exists(path_to_creds)) {
+          blastula::smtp_send(
+            blastula::compose_email(
+              body = blastula::md(
+                glue::glue(
+                  "Hello,
+      Someone has shared a dataset with you on OmicsPlayground! Login to
+      access your new dataset.
+      ")
+              ),
+              footer = blastula::md(
+                glue::glue("Email sent on {blastula::add_readable_time()}.")
+              )
+            ),
+            from = "nicholas.cullen@bigomics.ch",
+            to = input$share_user,
+            subject = "Someone sent you data on OmicsPlayground",
+            credentials = blastula::creds_file(path_to_creds)
+          )
+        }
       }
 
       rl$share_pgx <- NULL
