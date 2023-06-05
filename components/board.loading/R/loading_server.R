@@ -520,6 +520,8 @@ LoadingBoard <- function(id,
 
     getPGXINFO <- shiny::reactive({
       req(auth)
+      r_global$reload_pgxdir
+
       if (!auth$logged()) {
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
@@ -708,6 +710,8 @@ LoadingBoard <- function(id,
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets
       req(auth)
+      r_global$reload_pgxdir
+
       if (!auth$logged()) {
         warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
                     not showing table!")
