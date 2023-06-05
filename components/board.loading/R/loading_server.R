@@ -233,7 +233,7 @@ LoadingBoard <- function(id,
 
         new_pgx_file <- file.path(
           share_dir,
-          paste0(pgx_name, ".pgx", '__from__', auth$email())
+          paste0(pgx_name, ".pgx", '__from__', auth$email(), '__')
         )
 
         ## abort if file exists
@@ -622,7 +622,10 @@ LoadingBoard <- function(id,
         onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\",this.id)')
       )
 
+      # split the file name into user who shared and file name
       shared_pgx_df <- data.frame(stringr::str_split(shared_pgx_names, '__from__'))
+      # remove the last '__' from the file name
+      shared_pgx_df[2,] <- stringr::str_sub(shared_pgx_df[2,], end=-3)
       df <- data.frame(
         Dataset = as.character(shared_pgx_df[1,]),
         From = as.character(shared_pgx_df[2,]),
