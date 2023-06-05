@@ -1,5 +1,8 @@
-v2.8.21
+v2.8.22
 - fix fread pgx.scanInfoFile() bug with datasets-info.csv growing humongous
+
+v2.8.21
+- add datatype and description to pgxcompute script
 
 v2.8.20
 - correct pgxcompute script
