@@ -175,7 +175,7 @@ PlotModuleUI <- function(id,
     zoom.button <- modalTrigger(ns("zoombutton"),
       ns("plotPopup"),
       ##      icon("window-maximize"),
-      icon("up-right-and-down-left-from-center"),      
+      icon("up-right-and-down-left-from-center"),
       class = "btn-circle-xs"
     )
   }
@@ -185,7 +185,7 @@ PlotModuleUI <- function(id,
     tabs <- lapply(1:length(card_names), function(x) {
       bslib::nav(
         card_names[x],
-        bslib::card_body_fill(
+        bslib::card_body(
           outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
             bigLoaders::useSpinner()
         )
@@ -237,7 +237,7 @@ PlotModuleUI <- function(id,
       bslib::nav(
         card_names[x],
         id = card_names[x],
-        bslib::card_body_fill(
+        bslib::card_body(
           outputFunc[[x]](ns(paste0("renderpopup", x)),
             width = width.2, height = height.2
           ) %>%
@@ -300,7 +300,7 @@ PlotModuleUI <- function(id,
     full_screen = FALSE,
     style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
-    bslib::card_body_fill(
+    bslib::card_body(
       if (cards) {
         plot_cards$content
       } else {
@@ -531,7 +531,7 @@ PlotModuleServer <- function(id,
                     width = png.width*resx*2,
                     height = png.height*resx*2,
                     delay = vis.delay,
-                    zoom = 1) 
+                    zoom = 1)
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -621,7 +621,7 @@ PlotModuleServer <- function(id,
                   iheatmapr::save_iheatmap(p, vwidth = pdf.width * 80, vheight = pdf.height * 80, PDFFILE)
                 } else if (plotlib == "visnetwork") {
                   p <- func()
-                  visPrint(p, file=PDFFILE, width=pdf.width, height=pdf.height, delay=vis.delay, zoom=1)                   
+                  visPrint(p, file=PDFFILE, width=pdf.width, height=pdf.height, delay=vis.delay, zoom=1)
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
