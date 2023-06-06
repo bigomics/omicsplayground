@@ -651,6 +651,15 @@ LoadingBoard <- function(id,
       (!is.null(btn) || !is.null(query[["pgx"]])) && logged
     })
 
+    observeEvent(r_global$load_data_from_upload, {
+        data_names <- as.character(pgxtable$data()$dataset)
+        load_row <- which(data_names == r_global$load_data_from_upload)[1]
+        rl$selected_row <- load_row
+        rl$found_example_trigger <- rl$found_example_trigger+1
+
+        r_global$load_data_from_upload <- NULL
+    }, ignoreNULL = TRUE)
+
     shiny::observeEvent(load_react(), {
       if (!load_react()) {
         return(NULL)
@@ -830,6 +839,8 @@ LoadingBoard <- function(id,
       remove(pgx)
 
     }, ignoreInit = TRUE)
+
+
 
     ## ------------------------------------------------
     ## Board return object

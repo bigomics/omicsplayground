@@ -139,6 +139,13 @@ UploadBoard <- function(id,
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
+      load_my_dataset <- function() {
+          if (input$confirmload) {
+              r_global$load_data_from_upload <- new_pgx$name
+              bigdash.selectTab(session, selected = 'load-tab')
+          }
+      }
+
       shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
           text = paste("Your dataset",new_pgx$name,"is ready for visualization. Happy discoveries!"),
@@ -146,9 +153,9 @@ UploadBoard <- function(id,
           showCancelButton = TRUE,
           cancelButtonText = "Stay here.",
           inputId = 'confirmload',
-          closeOnEsc = FALSE
+          closeOnEsc = FALSE,
+          callbackR = load_my_dataset
       )
-
     })
 
     # Some 'global' reactive variables used in this file
