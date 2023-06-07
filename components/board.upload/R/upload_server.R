@@ -266,6 +266,9 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
               pass <- TRUE
+              
+              # PGX CHECK HERE #TODO
+
               ## check for duplicated rownames (but pass)
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
@@ -277,6 +280,9 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
+
+              # PGX CHECK HERE #TODO
+              
               if (TRUE && any(rowSums(df0)==0)) {
                 nzero <- sum(rowSums(df0)==0)
                 shinyalert::shinyalert(
@@ -288,6 +294,9 @@ UploadBoard <- function(id,
                 )
                 df0 <- df0[rowSums(df0)>0,,drop=FALSE]
               }
+
+              # PGX CHECK HERE #TODO
+              
               if (TRUE && any(colSums(df0)==0)) {
                 nzero <- sum(colSums(df0)==0)
                 ##pass <- pass && FALSE
@@ -300,6 +309,9 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE
                 )
               }
+              
+              # PGX CHECK HERE #TODO
+              
               if (pass && nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
                 matname <- "counts.csv"
@@ -308,6 +320,9 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
               pass <- TRUE
+
+              # PGX CHECK HERE #TODO
+              
               if (TRUE && any(duplicated(rownames(df0)))) {
                 ndup <- sum(duplicated(rownames(df0)))
                 shinyalert::shinyalert(
@@ -318,6 +333,9 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE,
                 )
               }
+              
+              # PGX CHECK HERE #TODO
+              
               if (TRUE && any(apply(df0,1,sd)==0)) {
                 nzero <- sum(apply(df0,1,sd)==0)
                 pass <- FALSE
@@ -329,6 +347,9 @@ UploadBoard <- function(id,
                   closeOnClickOutside = FALSE
                 )
               }
+              
+              # PGX CHECK HERE #TODO
+              
               if (nrow(df0) > 1 && NCOL(df0) > 1) {
                 df <- as.matrix(df0)
                 message("[UploadModule::upload_files] converting expression to counts...")
@@ -337,6 +358,9 @@ UploadBoard <- function(id,
               }
             } else if (grepl("sample", fn1, ignore.case = TRUE)) {
               df0 <- playbase::read.as_matrix(fn2)
+              
+              # PGX CHECK HERE #TODO
+              
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -349,12 +373,18 @@ UploadBoard <- function(id,
                   type = "error",
                   closeOnClickOutside = FALSE,
                 )
+                
+              # PGX CHECK HERE #TODO
+
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
                 df <- as.data.frame(df0)
                 matname <- "samples.csv"
               }
             } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
               df0 <- playbase::read.as_matrix(fn2)
+              
+              # PGX CHECK HERE #TODO
+              
               if (any(duplicated(rownames(df0)))) {
                 dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                 msg <- paste(
@@ -367,6 +397,9 @@ UploadBoard <- function(id,
                   type = "error",
                   closeOnClickOutside = FALSE,
                 )
+
+                # PGX CHECK HERE #TODO
+                
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
                 df <- as.matrix(df0)
                 matname <- "contrasts.csv"
