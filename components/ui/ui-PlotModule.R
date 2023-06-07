@@ -174,7 +174,6 @@ PlotModuleUI <- function(id,
   if (show.maximize) {
     zoom.button <- modalTrigger(ns("zoombutton"),
       ns("plotPopup"),
-      ##      icon("window-maximize"),
       icon("up-right-and-down-left-from-center"),
       class = "btn-circle-xs"
     )
@@ -209,9 +208,6 @@ PlotModuleUI <- function(id,
     class = "plotmodule-header",
     shiny::div(class = "plotmodule-title", title = title, title),
     if (cards) {
-#      shiny::div(
-#        class = "plotmodule-title",
-#        shiny::span(title, style = "float: left;"),
         plot_cards$navList
     } else {
       div()
@@ -490,7 +486,6 @@ PlotModuleServer <- function(id,
       do.html <- "html" %in% download.fmt
       do.obj <- "obj" %in% download.fmt
 
-      ## do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
       do.csv <- !is.null(csvFunc)
 
       PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- NULL
@@ -504,8 +499,6 @@ PlotModuleServer <- function(id,
       ## ============================================================
       ## =============== Download Handlers ==========================
       ## ============================================================
-      ## download.pdf = NULL
-      ## download.png = download.html = NULL
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
@@ -612,9 +605,6 @@ PlotModuleServer <- function(id,
                   p <- func()
                   p$width <- pdf.width * 80
                   p$height <- pdf.height * 80
-                  ## err <- try(plotly::export(p, PDFFILE))  ## deprecated
-                  ## err <- try(plotly::orca(p, PDFFILE))
-                  ## err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
                   plotlyExport(p, PDFFILE, width = p$width, height = p$height)
                 } else if (plotlib == "iheatmapr") {
                   p <- func()
@@ -638,7 +628,6 @@ PlotModuleServer <- function(id,
                   dev.off()
                 } else if (plotlib == "image") {
                   p <- func()
-                  ## p$src  ## PNG image file
                   ## generic function should produce PDF inside plot func()
                   ##
                 } else if (plotlib == "generic") {
@@ -697,7 +686,6 @@ PlotModuleServer <- function(id,
           visNetwork::visSave(p, HTMLFILE)
         } else if (plotlib %in% c("ggplot", "ggplot2")) {
           p <- func()
-          ## ggsave(PDFFILE, width=pdf.width, height=pdf.height)
           htmlwidgets::saveWidget(plotly::ggplotly(p), file = HTMLFILE)
         } else if (plotlib == "image") {
           write("<body>image cannot export to HTML</body>", HTMLFILE)
@@ -736,7 +724,6 @@ PlotModuleServer <- function(id,
                   visNetwork::visSave(p, HTMLFILE)
                 } else if (plotlib %in% c("ggplot", "ggplot2")) {
                   p <- func()
-                  ## ggsave(PDFFILE, width=pdf.width, height=pdf.height)
                   htmlwidgets::saveWidget(plotly::ggplotly(p), file = HTMLFILE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
@@ -768,7 +755,6 @@ PlotModuleServer <- function(id,
                   p <- func()
                   ## we need to strip away unnecessary environment to prevent save bloat
                   b <- plotly::plotly_build(p)$x[c("data", "layout", "config")]
-                  # b <- plotly_build(p); $x$attr <- NULL; b$x$visdat <- NULL
                   b <- plotly::as_widget(b) ## from JSON back to R object
                   saveRDS(b, file = file)
                 },
@@ -869,8 +855,6 @@ PlotModuleServer <- function(id,
 
       ## width and height should actually be speficied in UI, not here.
       ifnotchar.int <- function(s) ifelse(grepl("[%]$|auto|vmin|vh|vw|vmax", s), s, as.integer(s))
-      ## width = c(800,800)
-      ## height = c(400,800)
       width.1 <- ifnotchar.int(width[1])
       width.2 <- ifnotchar.int(width[2])
       height.1 <- ifnotchar.int(height[1])
@@ -884,8 +868,6 @@ PlotModuleServer <- function(id,
           generic = NULL,
           htmlwidget = NULL,
           plotly = plotly::renderPlotly,
-          ##  echarts4r = echarts4r::renderEcharts4r,
-          ##  scatterD3 = scatterD3::renderScatterD3,
           pairsD3 = pairsD3::renderPairsD3,
           visnetwork = visNetwork::renderVisNetwork,
           ggplot = shiny::renderPlot,
@@ -916,7 +898,6 @@ PlotModuleServer <- function(id,
             },
             res = res.1
           )
-          ## render <- shiny::renderPlot({ func() }, res=res.1, width=width.1, height=height.1)
         }
         if (!is.null(func2) && plotlib2 == "base") {
           render2 <- shiny::renderPlot(
@@ -925,7 +906,6 @@ PlotModuleServer <- function(id,
             },
             res = res.2
           )
-          ## render2 <- shiny::renderPlot({ func2() }, res=res.2, width=width.2, height=height.2)
         }
         if (plotlib == "image") {
           render <- shiny::renderImage(func(), deleteFile = FALSE)
@@ -934,7 +914,6 @@ PlotModuleServer <- function(id,
           render2 <- shiny::renderImage(func2(), deleteFile = FALSE)
         }
 
-        ## if(grepl("renderCachedPlot",deparse(substitute(renderFunc)))) {
         if (grepl("cacheKeyExpr", head(renderFunc, 1))) {
           render <- shiny::renderCachedPlot(
             func(),
@@ -944,7 +923,6 @@ PlotModuleServer <- function(id,
             res = res.1
           )
         }
-        ## if(grepl("renderCachedPlot",deparse(substitute(renderFunc2)))) {
         if (grepl("cacheKeyExpr", head(renderFunc2, 1))) {
           render2 <- shiny::renderCachedPlot(
             func2(),
@@ -973,8 +951,6 @@ PlotModuleServer <- function(id,
               plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
             }
 
-            #                plot <- plot %>%
-            #                  plotly_default()
             # If there is already custom buttons, append the edit one
             # (issue #2210 plotly/plotly.R)
             if (inherits(plot$x$config$modeBarButtons, "list")) {
@@ -1069,9 +1045,7 @@ PlotModuleServer <- function(id,
         download.png = download.png,
         download.html = download.html,
         download.csv = download.csv,
-        ## getCaption = caption.fun,
         saveHTML = saveHTML,
-        ## outputFunc = outputFunc,
         renderFunc = renderFunc
       )
     }
