@@ -183,7 +183,7 @@ PlotModuleUI <- function(id,
   # Build cards or single plot
   if (cards) {
     tabs <- lapply(1:length(card_names), function(x) {
-      bslib::nav(
+      bslib::nav_panel(
         card_names[x],
         bslib::card_body(
           outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
@@ -234,7 +234,7 @@ PlotModuleUI <- function(id,
 
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
-      bslib::nav(
+      bslib::nav_panel(
         card_names[x],
         id = card_names[x],
         bslib::card_body(
@@ -247,7 +247,7 @@ PlotModuleUI <- function(id,
     })
     tabs_modal <- c(tabs_modal, id = "card_selector_modal", bg = "transparent", inverse = FALSE)
     plot_cards_modal <- do.call(
-      bslib::navs_bar,
+      bslib::navset_bar,
       tabs_modal
     )
   } else {
