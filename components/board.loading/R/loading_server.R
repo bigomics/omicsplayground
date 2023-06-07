@@ -655,7 +655,7 @@ LoadingBoard <- function(id,
         data_names <- as.character(pgxtable$data()$dataset)
         load_row <- which(data_names == r_global$load_data_from_upload)[1]
         rl$selected_row <- load_row
-        rl$found_example_trigger <- rl$found_example_trigger+1
+        shinyjs::click('loadbutton')
 
         r_global$load_data_from_upload <- NULL
     }, ignoreNULL = TRUE)
