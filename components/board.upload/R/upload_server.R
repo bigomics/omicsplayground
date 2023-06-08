@@ -889,138 +889,23 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
-    output$countStats <- shiny::renderPlot({
+    upload_plot_countstats_server(
+        "countStats",
+        checkTables,
+        uploaded
+    )
 
-      check <- checkTables()
-      status.ok <- check["counts.csv", "status"]
-      dbg("[countStats] status.ok = ", status.ok)
+    upload_plot_phenostats_server(
+        "phenoStats",
+        checkTables,
+        uploaded
+    )
 
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["counts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'counts.csv'",
-          tolower(status.ds)
-        )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      }
-
-      counts <- uploaded[["counts.csv"]]
-      xx <- log2(1 + counts)
-      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
-      ## dc <- reshape::melt(xx)
-      suppressWarnings(dc <- data.table::melt(xx))
-      dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
-      ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
-        ggplot2::geom_density() +
-        ggplot2::xlab("log2(1+counts)") +
-        ggplot2::theme(legend.position = "none") +
-        ggplot2::ggtitle("COUNTS", subtitle = tt2)
-    })
-
-    output$phenoStats <- shiny::renderPlot({
-      dbg("[phenoStats] renderPlot called \n")
-      ## req(uploaded$samples.csv)
-
-      check <- checkTables()
-      status.ok <- check["samples.csv", "status"]
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["samples.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'samples.csv'",
-          tolower(status.ds)
-        )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      }
-
-      pheno <- uploaded[["samples.csv"]]
-      px <- head(colnames(pheno), 20) ## show maximum??
-
-      df <- type.convert(pheno[, px, drop = FALSE])
-      vt <- df %>% inspectdf::inspect_types()
-      vt
-
-      ## discretized continuous variable into 10 bins
-      ii <- unlist(vt$col_name[c("numeric", "integer")])
-      ii
-      if (!is.null(ii) && length(ii)) {
-        cat("[UploadModule::phenoStats] discretizing variables:", ii, "\n")
-        df[, ii] <- apply(df[, ii, drop = FALSE], 2, function(x) {
-          if (any(is.infinite(x))) x[which(is.infinite(x))] <- NA
-          cut(x, breaks = 10)
-        })
-      }
-
-      p1 <- df %>%
-        inspectdf::inspect_cat() %>%
-        inspectdf::show_plot()
-      tt2 <- paste(nrow(pheno), "samples x", ncol(pheno), "phenotypes")
-      ## tt2 <- paste(ncol(pheno),"phenotypes")
-      p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle = tt2) +
-        ggplot2::theme(
-          ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
-          axis.text.y = ggplot2::element_text(
-            size = 12,
-            margin = ggplot2::margin(0, 0, 0, 25),
-            hjust = 1
-          )
-        )
-
-      p1
-    })
-
-    output$contrastStats <- shiny::renderPlot({
-      ## req(uploaded$contrasts.csv)
-      ct <- uploaded$contrasts.csv
-      has.contrasts <- !is.null(ct) && NCOL(ct) > 0
-      check <- checkTables()
-      status.ok <- check["contrasts.csv", "status"]
-
-      if (status.ok != "OK" || !has.contrasts) {
-        frame()
-        status.ds <- check["contrasts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Optional) Upload 'contrasts.csv'",
-          tolower(status.ds)
-        )
-        ## text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      }
-
-      contrasts <- uploaded$contrasts.csv
-
-      ## contrasts <- sign(contrasts)
-      ## df <- playbase::contrastAsLabels(contrasts)
-      df <- contrasts
-      px <- head(colnames(df), 20) ## maximum to show??
-      df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
-      tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "contrasts")
-      ## tt2 <- paste(ncol(contrasts),"contrasts")
-
-      p1 <- df %>%
-        inspectdf::inspect_cat() %>%
-        inspectdf::show_plot()
-
-      p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle = tt2) +
-        ggplot2::theme(
-          ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
-          axis.text.y = ggplot2::element_text(
-            size = 12,
-            margin = ggplot2::margin(0, 0, 0, 25),
-            hjust = 1
-          )
-        )
-
-      p1
-    })
+    upload_plot_contraststats_server(
+        "contrastStats",
+        checkTables,
+        uploaded
+    )
 
     buttonInput <- function(FUN, len, id, ...) {
       inputs <- character(len)

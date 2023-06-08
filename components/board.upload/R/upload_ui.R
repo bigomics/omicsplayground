@@ -72,15 +72,36 @@ UploadUI <- function(id) {
         class = "row",
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("countStats")) %>% bigLoaders::useSpinner()
+          upload_plot_countstats_ui(
+              id = ns("countStats"),
+              title = "Count Stats",
+              info.text = "Information about the uploaded counts.",
+              caption = "Information about the uploaded counts.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("phenoStats")) # %>% bigLoaders::useSpinner()
+          upload_plot_phenostats_ui(
+              id = ns("phenoStats"),
+              title = "Pheno Stats",
+              info.text = "Information about the uploaded samples",
+              caption = "Information about the uploaded samples.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("contrastStats")) # %>% bigLoaders::useSpinner()
+          upload_plot_contraststats_ui(
+              id = ns("contrastStats"),
+              title = "Contrast Stats",
+              info.text = "Information about the uploaded contrasts",
+              caption = "Information about the uploaded contrasts.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         )
       )
     ),
