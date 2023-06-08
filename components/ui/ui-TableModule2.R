@@ -116,7 +116,7 @@ TableModuleUI <- function(id,
       full_screen = FALSE, #full_screen = TRUE breaks reactivity
       style = paste0("height:",height.1,";overflow:visible;"),
       bslib::as.card_item(div(header)),
-      bslib::card_body(
+      bslib::card_body_fill( #TODO card_body_fill will be deprecated soon, switch to card_body after dev bslib install
         ##height = height.1,
           ##  DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
           DT::DTOutput(ns("datatable"),height="100%") %>% bigLoaders::useSpinner(),
