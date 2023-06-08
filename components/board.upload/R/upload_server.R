@@ -903,7 +903,7 @@ UploadBoard <- function(id,
           tolower(status.ds)
         )
         graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
+        graphics::box(lty = 1, col = "grey60")
         return(NULL)
       }
 
@@ -935,7 +935,7 @@ UploadBoard <- function(id,
           tolower(status.ds)
         )
         graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
+        graphics::box(lty = 1, col = "grey60")
         return(NULL)
       }
 
@@ -991,7 +991,7 @@ UploadBoard <- function(id,
         )
         ## text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
         graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
+        graphics::box(lty = 1, col = "grey60")
         return(NULL)
       }
 
