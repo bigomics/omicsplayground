@@ -111,14 +111,14 @@ UploadUI <- function(id) {
       br(),
       shiny::fillCol(
         height = height,
-        BatchCorrectUI(ns("batchcorrect"))
+        upload_module_batchcorrect_ui(ns("batchcorrect"))
       )
     ),
     shiny::tabPanel(
       "Contrasts",
       bs_alert("Here, you can interactively create your comparisons (or so-called 'contrasts'). Choose a phenotype on the left, then create groups by dragging the conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'add auto-contrasts'."),
       br(),
-      MakeContrastUI(ns("makecontrast"))
+      upload_module_makecontrast_ui(ns("makecontrast"))
     ),
     shiny::tabPanel(
       "Compute",
@@ -126,7 +126,7 @@ UploadUI <- function(id) {
       br(),
       shiny::fillCol(
         height = height, ## width = 1200,
-        ComputePgxUI(ns("compute"))
+        upload_module_computepgx_ui(ns("compute"))
       )
     )
   )

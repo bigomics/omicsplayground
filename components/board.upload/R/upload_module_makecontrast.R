@@ -15,7 +15,7 @@ MakeContrastGadget <- function(X, pheno, height = 720) {
   )
 }
 
-MakeContrastUI <- function(id) {
+upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
   shiny::fillCol(
@@ -107,7 +107,7 @@ MakeContrastUI <- function(id) {
   )
 }
 
-MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height = 720) {
+upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {

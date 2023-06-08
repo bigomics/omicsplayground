@@ -807,7 +807,7 @@ UploadBoard <- function(id,
     #)
 
     ## correctedX <- shiny::reactive({
-    correctedX <- BatchCorrectServer(
+    correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
       ## X = normalized_counts,  ## NOT YET!!!!
@@ -829,7 +829,7 @@ UploadBoard <- function(id,
       counts
     })
 
-    modified_ct <- MakeContrastServerRT(
+    modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
       contrRT = shiny::reactive(uploaded$contrasts.csv),
@@ -857,7 +857,7 @@ UploadBoard <- function(id,
       correctedX()$B
     })
 
-    computed_pgx <- ComputePgxServer(
+    computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
