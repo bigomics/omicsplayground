@@ -32,6 +32,7 @@ drugconnectivity_table_dsea_server <- function(id,
     ns <- session$ns
 
     table_data <- shiny::reactive({
+      
       dsea <- getActiveDSEA()
       shiny::req(dsea)
 

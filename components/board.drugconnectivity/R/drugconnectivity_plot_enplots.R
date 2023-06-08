@@ -60,6 +60,13 @@ drugconnectivity_plot_enplots_server <- function(id,
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx, dsea_contrast, dsea_method)
+        dsea <- getActiveDSEA()
+
+        dt <- dsea_table$data()
+        ii <- dsea_table$rows_selected()
+        jj <- dsea_table$rows_all()
+        shiny::req(jj) ## must have non-empty table
+
         shiny::validate(shiny::need(
           "drugs" %in% names(pgx),
           "no 'drugs' in object."
@@ -75,7 +82,11 @@ drugconnectivity_plot_enplots_server <- function(id,
         res <- list(
           pgx = pgx,
           dsea_contrast = dsea_contrast,
-          dsea_method = dsea_method
+          dsea_method = dsea_method,
+          dt = dt,
+          ii = ii,
+          jj = jj,
+          dsea = getActiveDSEA()
         )
 
         return(res)
@@ -87,14 +98,11 @@ drugconnectivity_plot_enplots_server <- function(id,
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
-
-        dsea <- getActiveDSEA()
-        dt <- dsea$table
-
+        dt <- res$dt
         ## filter with table selection/search
-        ii <- dsea_table$rows_selected()
-        jj <- dsea_table$rows_all()
-        shiny::req(jj) ## must have non-empty table
+        ii <- res$ii
+        jj <- res$jj
+        dsea <- res$dsea
 
         if (length(ii) > 0) {
           dt <- dt[ii, , drop = FALSE]
