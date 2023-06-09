@@ -25,7 +25,7 @@ BatchCorrectGadget <- function(X, pheno, height=720) {
             X=reactive(X), pheno=reactive(pheno), height=height)
 }
 
-BatchCorrectUI <- function(id, height=720) {
+upload_module_batchcorrect_ui <- function(id, height=720) {
   ns <- shiny::NS(id)
   shiny::sidebarLayout(
     shiny::sidebarPanel(
@@ -49,7 +49,7 @@ BatchCorrectCanvas <- function(id, height=720) {
   shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
 }
 
-BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
+upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, height=720) {
 
   shiny::moduleServer(
     id,
@@ -213,14 +213,14 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings.",
             placement = "top", options = list(container = "body")
           ),
-          
+
           withTooltip(
             shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                selected=batch.par, multiple=TRUE),
             "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
             placement="left", options=list(container="body")
           ),
-          
+
           withTooltip(
             ##shiny::checkboxGroupInput(
             shiny::radioButtons(
@@ -254,7 +254,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
         shiny::req(geneX())
         req(uiOK())
-        
+
         mp="";bp="Chemotherapy"
         mp="dlbcl.type";bp="*"
         mp <- input$bc_modelpar
@@ -305,7 +305,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
         ## restore original feature names
         rownames(out$X) <- rownames(X())
-        
+
         out$params <- list(
           model.par = mp,
           batch.par = bp,
