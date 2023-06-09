@@ -255,6 +255,8 @@ UploadBoard <- function(id,
         inputnames <- input$upload_files$name[ii]
         uploadnames <- input$upload_files$datapath[ii]
 
+        error_list <- playbase::PGX_CHECKS
+
         if (length(uploadnames) > 0) {
           i <- 1
           for (i in 1:length(uploadnames)) {
@@ -262,100 +264,43 @@ UploadBoard <- function(id,
             fn2 <- uploadnames[i]
             matname <- NULL
             df <- NULL
-            if (grepl("count", fn1, ignore.case = TRUE)) {
+            IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
+            IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
+            
+            if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              pass <- TRUE
               
-              # PGX CHECK HERE #TODO
+              COUNTS_check <- playbase::pgx.checkPGX(df0, "COUNTS")
 
-              ## check for duplicated rownames (but pass)
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of these genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
+              if(length(COUNTS_check$check)>0) {
+                lapply(1:length(COUNTS_check$check), function(idx){
+                  error_id <- names(COUNTS_check$check)[idx]
+                  error_log <- COUNTS_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
               }
 
-              # PGX CHECK HERE #TODO
-              
-              if (TRUE && any(rowSums(df0)==0)) {
-                nzero <- sum(rowSums(df0)==0)
-                shinyalert::shinyalert(
-                  title = "Zero rows",
-                  text = paste("Your counts matrix has", nzero,
-                    "rows with all zeros. These will be removed."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE
-                )
-                df0 <- df0[rowSums(df0)>0,,drop=FALSE]
-              }
-
-              # PGX CHECK HERE #TODO
-              
-              if (TRUE && any(colSums(df0)==0)) {
-                nzero <- sum(colSums(df0)==0)
-                ##pass <- pass && FALSE
-                df0 <- df0[,colSums(df0)>0]
-                shinyalert::shinyalert(
-                  title = "Zero samples",
-                  text = paste("Your counts matrix has", nzero,
-                    "samples with all zeros. These will be removed."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE
-                )
-              }
-              
-              # PGX CHECK HERE #TODO
-              
-              if (pass && nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+              if (COUNTS_check$PASS && IS_COUNT) {
+                df <- as.matrix(df0$df)
                 matname <- "counts.csv"
               }
-            } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-              ## allows duplicated rownames
-              df0 <- playbase::read.as_matrix(fn2)
-              pass <- TRUE
 
-              # PGX CHECK HERE #TODO
-              
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of those genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
-              }
-              
-              # PGX CHECK HERE #TODO
-              
-              if (TRUE && any(apply(df0,1,sd)==0)) {
-                nzero <- sum(apply(df0,1,sd)==0)
-                pass <- FALSE
-                shinyalert::shinyalert(
-                  title = "Zero samples",
-                  text = paste("Your expression matrix has", nzero,
-                    "sample(s) with zero SD. Please remove."),
-                  type = "error",
-                  closeOnClickOutside = FALSE
-                )
-              }
-              
-              # PGX CHECK HERE #TODO
-              
-              if (nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+              if (COUNTS_check$PASS && IS_EXPRESSION) {
+                df <- as.matrix(df0$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
                 matname <- "counts.csv"
               }
+              }
+
             } else if (grepl("sample", fn1, ignore.case = TRUE)) {
               df0 <- playbase::read.as_matrix(fn2)
               
@@ -399,7 +344,7 @@ UploadBoard <- function(id,
                 )
 
                 # PGX CHECK HERE #TODO
-                
+
               } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
                 df <- as.matrix(df0)
                 matname <- "contrasts.csv"
