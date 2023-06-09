@@ -267,7 +267,6 @@ UploadBoard <- function(id,
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
             IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
             IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
-            
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
@@ -291,12 +290,12 @@ UploadBoard <- function(id,
             }
 
             if (COUNTS_check$PASS && IS_COUNT) {
-                df <- as.matrix(df0$df)
+                df <- as.matrix(COUNTS_check$df)
                 matname <- "counts.csv"
               }
 
               if (COUNTS_check$PASS && IS_EXPRESSION) {
-                df <- as.matrix(df0$df)
+                df <- as.matrix(COUNTS_check$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
                 matname <- "counts.csv"
@@ -324,7 +323,7 @@ UploadBoard <- function(id,
             }
 
             if (SAMPLES_check$PASS && IS_SAMPLE) {
-                df <- as.data.frame(df0$df)
+                df <- as.data.frame(SAMPLE_check$df)
                 matname <- "samples.csv"
               }
             
@@ -350,7 +349,7 @@ UploadBoard <- function(id,
             }
 
             if (CONTRAST_check$PASS && IS_CONTRAST) {
-                df <- as.matrix(df0)
+                df <- as.matrix(CONTRAST_check$df)
                 matname <- "contrasts.csv"
               }
 
@@ -361,6 +360,8 @@ UploadBoard <- function(id,
           }
         }
       }
+
+      browser()
 
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
