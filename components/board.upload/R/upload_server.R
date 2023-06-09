@@ -266,6 +266,8 @@ UploadBoard <- function(id,
             df <- NULL
             IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
+            IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
             
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
@@ -299,57 +301,35 @@ UploadBoard <- function(id,
                 df <- 2**df
                 matname <- "counts.csv"
               }
-              }
+            }
 
-            } else if (grepl("sample", fn1, ignore.case = TRUE)) {
+            if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              # PGX CHECK HERE #TODO
-              
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your samples file has duplicated entries: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated sample name",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
-                
-              # PGX CHECK HERE #TODO
+              SAMPLE_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
 
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.data.frame(df0)
+              if(length(SAMPLES_check$check)>0) {
+                lapply(1:length(SAMPLES_check$check), function(idx){
+                  error_id <- names(SAMPLES_check$check)[idx]
+                  error_log <- SAMPLES_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (SAMPLES_check$PASS && IS_SAMPLE) {
+                df <- as.data.frame(df0$df)
                 matname <- "samples.csv"
               }
-            } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-              df0 <- playbase::read.as_matrix(fn2)
-              
-              # PGX CHECK HERE #TODO
-              
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your contrasts file has duplicated rows: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated contrast row",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
 
-                # PGX CHECK HERE #TODO
-
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.matrix(df0)
-                matname <- "contrasts.csv"
-              }
             }
+            
             if (!is.null(matname)) {
               matlist[[matname]] <- df
             }
