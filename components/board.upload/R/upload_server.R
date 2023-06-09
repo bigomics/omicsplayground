@@ -330,6 +330,31 @@ UploadBoard <- function(id,
 
             }
             
+            if (IS_CONTRAST) {
+              df0 <- playbase::read.as_matrix(fn2)
+              
+              CONTRAST_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+
+              if(length(CONTRAST_check$check)>0) {
+                lapply(1:length(CONTRAST_check$check), function(idx){
+                  error_id <- names(CONTRAST_check$check)[idx]
+                  error_log <- CONTRAST_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (CONTRAST_check$PASS && IS_CONTRAST) {
+                df <- as.matrix(df0)
+                matname <- "contrasts.csv"
+              }
+            }
             if (!is.null(matname)) {
               matlist[[matname]] <- df
             }
