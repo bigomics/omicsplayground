@@ -4,7 +4,7 @@
 ##
 
 
-ConnectivityBoard <- function(id, pgx) {
+ConnectivityBoard <- function(id, pgx, getPgxDir) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns ## NAMESPACE
@@ -22,7 +22,7 @@ ConnectivityBoard <- function(id, pgx) {
       frameborder='0' allow='accelerometer; autoplay; encrypted-media;
       gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
     )
-
+    
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -44,11 +44,15 @@ ConnectivityBoard <- function(id, pgx) {
         choices = comparisons,
         selected = head(comparisons, 1)
       )
-
+      
       sigdb <- c("A", "B", "C")
-      sigdb0 <- dir(SIGDB.DIR, pattern = "sigdb-.*h5")
-      sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
-      sigdb <- sort(intersect(sigdb, sigdb0))
+      sigdb <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$")
+      ##sigdb1 <- file.path(getPgxDir(),"datasets-sigdb.h5")
+      sigdb1 <- "datasets-sigdb.h5"
+      ##if(file.exists(sigdb1)) sigdb <- c(sigdb, sigdb1)
+      sigdb <- c(sigdb, sigdb1)      
+      computed.sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
+      ## sigdb <- sort(intersect(sigdb, computed.sigdb))
       sel <- sigdb[1]
       shiny::updateSelectInput(session, "sigdb", choices = sigdb, selected = sel)
     })
@@ -125,153 +129,53 @@ ConnectivityBoard <- function(id, pgx) {
       F
     })
 
-    getConnectivityFullPath <- function(sigdb) {
-      db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d, sigdb)))
-      db.dir <- names(which(db.exists))[1]
-      file.path(db.dir, sigdb)
+    getConnectivityFilename <- function(sigdb) {
+      db1 <- file.path(SIGDB.DIR, sigdb)
+      db2 <- file.path(getPgxDir(), sigdb)
+      if( file.exists(db1)) return(db1)
+      if( file.exists(db2)) return(db2)
+      return(NULL)
+    }
+
+    #' Get the path/folder to the signature database file. 
+    #'
+    #' @param sigdb signature h5 file  
+    getConnectivityPath <- function(sigdb) {
+      db1 <- file.path(SIGDB.DIR, sigdb)
+      db2 <- file.path(getPgxDir(), sigdb)
+      if( file.exists(db1)) return(SIGDB.DIR)
+      if( file.exists(db2)) return(getPgxDir())
+      return(NULL)
     }
 
     getConnectivityContrasts <- function(sigdb) {
       if (length(sigdb) == 0 || is.null(sigdb) || sigdb == "") {
         return(NULL)
       }
-
-      db <- getConnectivityFullPath(sigdb)
-      cn <- NULL
-      if (file.exists(db)) {
-        cn <- rhdf5::h5read(db, "data/colnames")
-      }
-      cn
+      cpath <- getConnectivityPath(sigdb)
+      playbase::sigdb.getConnectivityContrasts(sigdb, path=cpath)
     }
 
     getConnectivityMatrix <- function(sigdb, select = NULL, genes = NULL) {
-      if (sigdb == "" || is.null(sigdb)) {
-        warning("[getConnectivityMatrix] ***WARNING*** sigdb=", sigdb)
-        return(NULL)
-      }
-
-      db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d, sigdb)))
-      X <- NULL
-      if (any(db.exists)) {
-        db.dir <- names(which(db.exists))[1]
-        if (grepl("csv$", sigdb)) {
-          X <- read.csv(file.path(db.dir, sigdb), row.names = 1, check.names = FALSE)
-          X <- as.matrix(X)
-          X <- X[, colMeans(is.na(X)) < 0.99, drop = FALSE] ## omit empty columns
-          if (!is.null(genes)) X <- X[intersect(genes, rownames(X)), , drop = FALSE]
-          if (!is.null(select)) X <- X[, intersect(select, colnames(X))]
-        }
-        if (grepl("h5$", sigdb)) {
-          h5.file <- file.path(db.dir, sigdb)
-          cn <- rhdf5::h5read(h5.file, "data/colnames")
-          rn <- rhdf5::h5read(h5.file, "data/rownames")
-          rowidx <- 1:length(rn)
-          colidx <- 1:length(cn)
-          if (!is.null(genes)) rowidx <- match(intersect(genes, rn), rn)
-          if (!is.null(select)) colidx <- match(intersect(select, cn), cn)
-
-          nr <- length(rowidx)
-          nc <- length(colidx)
-
-          X <- rhdf5::h5read(h5.file, "data/matrix", index = list(rowidx, colidx))
-          rownames(X) <- rn[rowidx]
-          colnames(X) <- cn[colidx]
-        }
-      }
-      return(X)
+      cpath <- getConnectivityPath(sigdb)
+      playbase::sigdb.getConnectivityMatrix(sigdb, select=select, genes=genes, path=cpath) 
     }
 
     getEnrichmentMatrix <- function(sigdb, select = NULL, nc = -1) {
-      if (sigdb == "" || is.null(sigdb)) {
-        warning("[getEnrichmentMatrix] ***WARNING*** sigdb=", sigdb)
-        return(NULL)
-      }
-      if (!grepl("h5$", sigdb)) {
-        stop("getEnrichmentMatrix:: only for H5 database files")
-        return(NULL)
-      }
-
-      h5exists <- function(h5.file, obj) {
-        xobjs <- apply(rhdf5::h5ls(h5.file)[, 1:2], 1, paste, collapse = "/")
-        obj %in% gsub("^/|^//", "", xobjs)
-      }
-
-      db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d, sigdb)))
-      Y <- NULL
-      if (any(db.exists)) {
-        db.dir <- names(which(db.exists))[1]
-        db.dir
-        h5.file <- file.path(db.dir, sigdb)
-        cn <- rhdf5::h5read(h5.file, "data/colnames")
-
-        has.gs <- playbase::h5exists(h5.file, "enrichment/genesets")
-        has.gsea <- playbase::h5exists(h5.file, "enrichment/GSEA")
-        if (!has.gs && has.gsea) {
-          return(NULL)
-        }
-
-        rn <- rhdf5::h5read(h5.file, "enrichment/genesets")
-        rowidx <- 1:length(rn)
-        colidx <- 1:length(cn)
-        if (!is.null(select)) colidx <- match(intersect(select, cn), cn)
-        Y <- rhdf5::h5read(h5.file, "enrichment/GSEA", index = list(rowidx, colidx))
-        rownames(Y) <- rn[rowidx]
-        colnames(Y) <- cn[colidx]
-        sdy <- apply(Y, 1, sd)
-        Y <- Y[order(-sdy), ]
-      }
-
-      ## cluster genesets into larger groups
-      if (nc > 0) {
-        hc <- hclust(dist(Y[, ]))
-        idx <- paste0("h", cutree(hc, nc))
-        Y2 <- tapply(1:nrow(Y), idx, function(i) colMeans(Y[i, , drop = FALSE]))
-        Y2 <- do.call(rbind, Y2)
-        idx.names <- tapply(rownames(Y), idx, paste, collapse = ",")
-        idx.names <- gsub("H:HALLMARK_", "", idx.names)
-        idx.names <- gsub("C2:KEGG_", "", idx.names)
-        rownames(Y2) <- as.character(idx.names[rownames(Y2)])
-        Y <- Y2
-      }
-
-      if (nrow(Y) == 0) {
-        return(NULL)
-      }
-
-      return(Y)
+        cpath <- getConnectivityPath(sigdb)
+        playbase::sigdb.getEnrichmentMatrix( sigdb, select=select, path=cpath,
+                                             which=c("gsea","rankcor"))
     }
-
+    
     getSignatureMatrix <- function(sigdb) {
-      if (sigdb == "" || is.null(sigdb)) {
-        warning("[getSignatureMatrix] ***WARNING*** sigdb=", sigdb)
-        return(NULL)
-      }
-
-      if (!grepl("h5$", sigdb)) {
-        stop("getEnrichmentMatrix:: only for H5 database files")
-      }
-
-      db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d, sigdb)))
-      up <- dn <- NULL
-      if (any(db.exists)) {
-        db.dir <- names(which(db.exists))[1]
-        h5.file <- file.path(db.dir, sigdb)
-        rhdf5::h5ls(h5.file)
-        cn <- rhdf5::h5read(h5.file, "data/colnames")
-        dn <- rhdf5::h5read(h5.file, "signature/sig100.dn")
-        up <- rhdf5::h5read(h5.file, "signature/sig100.up")
-        colnames(dn) <- cn
-        colnames(up) <- cn
-      }
-      list(up = up, dn = dn)
+        cpath <- getConnectivityPath(sigdb)
+        playbase::sigdb.getSignatureMatrix(sigdb, path=cpath)
     }
 
     getConnectivityScores <- shiny::reactive({
-      # browser()
       shiny::req(pgx, pgx$connectivity, input$contrast)
-      shiny::validate(shiny::need("connectivity" %in% names(pgx), "no 'connectivity' in object."))
+      shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
 
-      ntop <- 1000
       sigdb <- input$sigdb
       shiny::req(sigdb)
 
@@ -280,7 +184,14 @@ ConnectivityBoard <- function(id, pgx) {
         all.scores <- pgx$connectivity[[sigdb]]
       } else {
         warning("[getConnectivityScores] ERROR : could not get scores")
-        return(NULL)
+        ## COMPUTE HERE???  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        sigdb.file = "/home/kwee/Playground/omicsplayground/data/datasets-sigdb.h5"
+        sigdb.file = file.path(getPgxDir(),"datasets-sigdb.h5")
+        all.scores <- playbase::pgx.computeConnectivityScores(
+          pgx, sigdb.file, ntop = 50, contrasts = NULL,
+          remove.le = TRUE, inmemory = FALSE
+        )
+        ## return(NULL)
       }
 
       ct <- input$contrast
@@ -309,24 +220,25 @@ ConnectivityBoard <- function(id, pgx) {
       }
 
       ## only those in existing database
-      cts <- getConnectivityContrasts(sigdb)
+      ##cts <- getConnectivityContrasts(sigdb)
+      sigpath <- getConnectivityPath(sigdb)
+      cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path=sigpath)
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
 
       ## filter on significance
-      qsig <- input$connectivityScoreTable_qsig
+      qsig <- as.numeric(input$connectivityScoreTable_qsig)      
       scores <- scores[which(scores$padj <= qsig), , drop = FALSE]
       scores <- scores[order(-scores$score), , drop = FALSE]
-
+      
       no.le <- !("leadingEdge" %in% colnames(scores))
       abs_score <- input$abs_score
       ntop <- 100
 
       if (no.le && abs_score == TRUE) {
         ## recreate "leadingEdge" list
-        sig <- getSignatureMatrix(sigdb)
+        sig <- playbase::sigdb.getSignatureMatrix(sigdb, path=sigpath)
         fc <- getCurrentContrast()$fc
         fc <- fc[order(-abs(fc))]
-
         fc.up <- head(names(fc[fc > 0]), ntop)
         fc.dn <- head(names(fc[fc < 0]), ntop)
         ff <- c(fc.up, fc.dn)
@@ -336,6 +248,7 @@ ConnectivityBoard <- function(id, pgx) {
         ee <- ee[match(scores$pathway, names(ee))]
         scores$leadingEdge <- ee
       }
+      
       if (no.le && abs_score == FALSE) {
         ## recreate "leadingEdge" list
         sig <- getSignatureMatrix(sigdb)
@@ -360,12 +273,12 @@ ConnectivityBoard <- function(id, pgx) {
         ee[neg.rho] <- nn[match(scores$pathway[neg.rho], names(nn))]
         scores$leadingEdge <- ee
       }
-
+      
       ## bail out
       if (nrow(scores) == 0) {
         return(NULL)
       }
-
+      
       return(scores)
     })
 
@@ -373,31 +286,22 @@ ConnectivityBoard <- function(id, pgx) {
     ## Correlation score table
     ## ================================================================================
 
-    PERTINFO <- NULL
-    pert_info.file <- file.path(FILESX, "GSE92742_Broad_LINCS_pert_info.txt")
-    if (file.exists(pert_info.file)) {
-      PERTINFO <- read.csv(pert_info.file, sep = "\t", row.names = 1)
-    }
-
     getTopProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
       ##
       ##
       df <- getConnectivityScores()
 
-      ii <- 1:100
-      sigdb <- "sigdb-archs4.h5"
-
+##    ii=1:100;sigdb="sigdb-archs4.h5"
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii, input$sigdb)
-      ii <- head(ii, 50) ## 50??
+      ii <- head(ii, 100) ## 50??
       pw <- df$pathway[ii]
 
       sigdb <- input$sigdb
       shiny::req(sigdb)
 
       fc <- getCurrentContrast()$fc
-      ngenes <- 1000
       ngenes <- 500
       var.genes <- head(names(sort(-abs(fc))), ngenes)
       var.genes <- unique(c(var.genes, sample(names(fc), ngenes))) ## add some random
@@ -461,7 +365,7 @@ ConnectivityBoard <- function(id, pgx) {
     connectivity_plot_connectivityMap_server(
       "connectivityMap",
       pgx,
-      reactive(input$sigdb),
+      reactive(getConnectivityFilename(input$sigdb)),
       getConnectivityScores,
       getEnrichmentMatrix
     )

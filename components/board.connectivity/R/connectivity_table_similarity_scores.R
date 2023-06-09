@@ -29,6 +29,7 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
+    
     connectivityScoreTable.RENDER <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
@@ -50,13 +51,16 @@ connectivity_table_similarity_scores_server <- function(id,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
+        plugins = 'scrollResize',
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           pageLength = 99999,
           scrollX = TRUE,
           scrollY = height,
-          scroller = TRUE, deferRender = TRUE
+          scrollResize = TRUE,          
+          scroller = TRUE,
+          deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numcols, 3) %>%

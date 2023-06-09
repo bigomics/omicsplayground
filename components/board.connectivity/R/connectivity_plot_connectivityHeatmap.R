@@ -23,24 +23,41 @@ connectivity_plot_connectivityHeatmap_ui <- function(
   ns <- shiny::NS(id)
   
   plot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
-      "Take the absolute foldchange for calculating the cumulative sum.",
-      placement = "right", options = list(container = "body")
-    ),
+    withTooltip(shiny::radioButtons(ns("ngenes"), "Number of genes",
+      choices=c(50,200,500), inline=TRUE),
+      "Number of genes to show."
+      ),
+    hr(),
+    withTooltip(shiny::radioButtons(ns("nsig"), "Number of signatures",
+      choices=c(20,40,100), inline=TRUE),
+      "Number of nearest signatures to show."
+      ),
+    hr(),
+    withTooltip(shiny::checkboxInput(ns("clusterx"), "Cluster genes"),
+      "Cluster genes or sort by expression.."
+      ),
+    hr(),
     withTooltip(
-      shiny::radioButtons(ns("cumFCplot_order"), "Order:",
-        choiceValues = c("FC", "cumFC"),
-        choiceNames = c("this FC", "cumFC"),
-        selected = "cumFC", inline = TRUE
+      shiny::radioButtons(ns("orderx"), "Order by:",
+        choiceValues = c("thisFC", "avgFC"),
+        choiceNames = c("this FC", "avgFC"),
+        selected = "avgFC", inline = TRUE
       ),
       "How to order the cumulative barplot.",
       placement = "right", options = list(container = "body")
+    ),
+    hr(),    
+    withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Use absolute foldchange", FALSE),
+      "Take the absolute foldchange for calculating the cumulative sum.",
+      placement = "right", options = list(container = "body")
     )
   )
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(ns("plotmodule"),
     title = title,
     label = label,
-    plotlib = "base",
+    ## plotlib = "base",
+    plotlib = "plotly",
+    ##plotlib = "iheatmapr",
     info.text = info.text,
     options = plot_opts,
     height = height,
@@ -65,7 +82,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
       
-      cumulativeFCtable <- shiny::reactive({
+      plot_data <- shiny::reactive({
         F <- getTopProfiles()
         F[is.na(F)] <- 0
 
@@ -82,17 +99,26 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
         colnames(F)[1] <- cc$name
-
+        colnames(F)[1] <- paste("********",cc$name,"********")
+        rho2 <- c(1, rho1)
+        names(rho2) <- colnames(F)
+        
         if (input$cumFCplot_absfc) {
           F <- abs(F)
         }
-        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-        F
+        F <- F[order(-rowMeans(F**2)),, drop = FALSE]
+        F <- scale(F, center=FALSE)
+        
+        list(
+          F = F,
+          score = rho2
+        )
+        
       })
 
-      plotFCheatmap <- function(F, maxfc, maxgenes=60) {
+      plot_heatmap <- function(F, maxfc, maxgenes=60) {
         F <- F[, 1:min(NCOL(F), maxfc), drop = FALSE]
-        if (input$cumFCplot_order == "FC") {
+        if (input$orderx == "thisFC") {
           F <- F[order(-abs(F[, 1])), ]
         }
         F1 <- head(F, maxgenes)
@@ -103,7 +129,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           cluster_columns = TRUE,
           cluster_rows = TRUE,
           rowlab.maxlen = 80,
-          ## zsym = TRUE,
           symm.scale = TRUE,
           mar = c(15, 0, 0, 110),
           key.offset = c(0.85, 0.15),
@@ -112,33 +137,83 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         )
       }
 
-      plot_RENDER <- shiny::reactive({
-        ##
-        F <- cumulativeFCtable()
-        shiny::req(F)
-        ## maximum rows
-        plotFCheatmap(F, maxfc=20, maxgenes=60)
-        p <- grDevices::recordPlot()
-        p
-      })
+      create_iheatmap <- function(F, score, maxfc=20, maxgenes=60) {
 
-      plot_RENDER2 <- shiny::reactive({
-        ##
-        F <- cumulativeFCtable()
-        shiny::req(F)
-        ## maximum rows
-        plotFCheatmap(F, maxfc=40, maxgenes=60)
-        p <- grDevices::recordPlot()
-        p
-      })
+        sel <- 1:min(NCOL(F), maxfc)
+        F <- F[,sel, drop = FALSE]
+        score <- score[colnames(F)]          
+        F <- head(F, maxgenes)        
+        if(input$orderx=="avgFC") {
+          ii <- order(rowMeans(F,na.rm=TRUE))
+          F <- F[ii,]
+        } else {
+          ii <- order(F[,1]) ## this FC
+          F <- F[ii,]
+        }
 
+        plt <- iheatmapr::main_heatmap(
+          data = t(F),
+          layout = list(margin = list(r=0))) %>% 
+          iheatmapr::add_row_clustering() %>% 
+          iheatmapr::add_row_labels(size=0.5) %>%
+          iheatmapr::add_col_labels() 
+
+        if(input$clusterx) {
+          plt <- plt %>%
+            iheatmapr::add_col_clustering() 
+        }
+
+        ## add average logFC barplot on top
+        avgF <- rowMeans(F,na.rm=TRUE)
+        plt <- plt %>%
+          iheatmapr::add_col_barplot(
+                       y = avgF,
+                       layout = list(title="avg logFC"),
+                       buffer = 0.10,
+                       size = 0.30
+                     ) %>%
+          iheatmapr::add_row_barplot(
+                       x = score,
+                       layout = list(title="similarity"),
+                       size = 0.10
+                     )
+
+        plt <- plt %>% iheatmapr::to_plotly_list()
+        plt <- plotly::as_widget(plt) %>%
+          plotly::layout(
+                    margin = list(l=0,r=0,t=0,b=40)
+                  )
+        plt
+      }
+
+      plot_RENDER <- function(){
+        pd <- plot_data()
+        F <- pd$F
+        score <- pd$score
+        shiny::req(F)
+        ngenes <- as.numeric(input$ngenes)
+        nsig <- as.numeric(input$nsig)
+        create_iheatmap(F, score, maxfc=nsig, maxgenes=ngenes)
+      }
+
+      plot_RENDER2 <- function(){
+        pd <- plot_data()
+        F <- pd$F
+        score <- pd$score
+        shiny::req(F)
+        ngenes <- as.numeric(input$ngenes) * 1.5
+        nsig <- as.numeric(input$nsig) * 2
+        create_iheatmap(F, score, maxfc=nsig, maxgenes=ngenes)
+      }
       
       PlotModuleServer(
-        "plot",
-        plotlib = "base",
+        "plotmodule",
+        ##plotlib = "base",
+        plotlib = "plotly",
+        ##plotlib = "iheatmapr",
         func = plot_RENDER,
         func2 = plot_RENDER2,
-        csvFunc = cumulativeFCtable,
+        csvFunc = plot_data,
         pdf.width = 14, pdf.height = 5.5,
         res = c(90, 90),
         add.watermark = watermark

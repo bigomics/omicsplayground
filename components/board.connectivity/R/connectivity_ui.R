@@ -63,8 +63,8 @@ ConnectivityUI <- function(id) {
               ns("FCFCplots"),
               label = "a",
               title = "FC scatter plots",
-              info.text = "The FC-FC scatter plot provides a pairwise scatterplot of logFC fold-change profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The scatter plot is interactive and shows information of each gene by hovering over it with the mouse.",
-              caption = "Foldchange scatterplot of the selected contrast against a selected pairwise comparison from the public database.",
+              info.text = "Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings.",
+              caption = "Scatter plots displaying the public profiles most correlated to the selected contrast by fold-change.",
               height = c("50%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
@@ -81,8 +81,8 @@ ConnectivityUI <- function(id) {
           connectivity_plot_scatterPlot_ui(
             ns("scatterPlot"),
             title = "FC-FC scatterplot",
-            info.text = "Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings.",
-            caption = "Scatter plots displaying the public profiles most correlated to the selected contrast by fold-change.",
+            info.text = "The FC-FC scatter plot provides a pairwise scatterplot of logFC fold-change profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The scatter plot is interactive and shows information of each gene by hovering over it with the mouse.",
+            caption = "Foldchange scatterplot of the selected contrast against a selected pairwise comparison from the public database.",
             label = "c",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
@@ -126,7 +126,7 @@ ConnectivityUI <- function(id) {
               id = ns("connectivityHeatmap"),
               title = "Connectivity Heatmap",
               info.text = "Contrasts that are similar will be clustered close together.",
-              caption = "Heatmap displaying the similarity of the selected contrast with gene expression profiles from public datasets",
+              caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
               label = "c",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
@@ -185,8 +185,11 @@ ConnectivityUI <- function(id) {
         )
       )
     )
+
+  ## returned UI object
   div(
     boardHeader(title = "Similar experiments", info_link = ns("info")),
+    bs_alert("In this board you can compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
     tabs
   )
 }

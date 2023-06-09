@@ -83,8 +83,8 @@ connectivity_plot_cumFCplot_server <- function(id,
         fc[is.na(fc)] <- 0
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
-        colnames(F)[1] <- cc$name
-
+        colnames(F)[1] <- paste("********",cc$name,"********")
+        
         if (input$cumFCplot_absfc) {
           F <- abs(F)
         }
@@ -92,20 +92,20 @@ connectivity_plot_cumFCplot_server <- function(id,
         F
       })
 
-      plot_RENDER <- shiny::reactive({
+      render_stackedbar <- function(ngenes) {
         F <- cumulativeFCtable()
         shiny::req(F)
 
         MAXF <- 10
-        NGENES <- 50
+        ##NGENES <- 50
 
         F <- F[, 1:min(MAXF, ncol(F)), drop = FALSE]
         if (input$cumFCplot_order == "FC") {
           F <- F[order(-abs(F[, 1])), ]
-          F1 <- head(F, NGENES)
+          F1 <- head(F, ngenes)
           F1 <- F1[order(F1[, 1]), , drop = FALSE]
         } else {
-          F1 <- head(F, NGENES)
+          F1 <- head(F, ngenes)
           F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
         }
 
@@ -114,11 +114,17 @@ connectivity_plot_cumFCplot_server <- function(id,
           ylab = "cumulative logFC", xlab="",
           showlegend = FALSE
         )
-      })
+      }
 
-      plot_RENDER2 <- shiny::reactive({
-        plot_RENDER() %>% plotly::layout(showlegend = TRUE)
-      })
+      plot_RENDER <- function() {
+        render_stackedbar(40) %>%
+          plotly::layout(showlegend = FALSE)
+      }
+      
+      plot_RENDER2 <- function() {
+        render_stackedbar(60) %>%
+          plotly::layout(showlegend = TRUE)
+      }
 
       PlotModuleServer(
         "plot",

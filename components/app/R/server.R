@@ -169,7 +169,17 @@ app_server <- function(input, output, session) {
         has_data
     })
 
-    ## Default boards
+    getPgxDir <- reactive({
+        if(!auth$logged()) return(NULL)
+        if(opt$ENABLE_USERDIR &&
+             authentication %in% c("firebase","firebase.full","password")) {
+          return(file.path(PGX.DIR, auth@email() ))
+        } else {
+          return(PGX.DIR)
+        }
+    })
+
+    ## Default boards ------------------------------------------
     WelcomeBoard("welcome",
       auth = auth,
       enable_upload = opt$ENABLE_UPLOAD,
@@ -385,7 +395,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['cmap'])  {
             info("[server.R] calling ConnectivityBoard module")
-            ConnectivityBoard("cmap", pgx = PGX)
+            ConnectivityBoard("cmap", pgx = PGX, getPgxDir=getPgxDir)
           }
 
           if(ENABLED['cell']) {

@@ -116,6 +116,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
           disable = list(columns = c(1,3:ncol(df)))
         ),
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
@@ -123,6 +124,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
           pageLength = 9999,
           scrollX = FALSE,
           scrollY = "55vh",
+          scrollResize = TRUE,          
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(
