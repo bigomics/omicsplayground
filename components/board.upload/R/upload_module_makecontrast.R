@@ -86,10 +86,12 @@ upload_module_makecontrast_ui <- function(id) {
                                        width = c("auto", 800))
       ),
       bslib::card(
+          fill = FALSE,
           style = "border-width: 0px;",
           bslib::card_body(
               shiny::h4("Contrast table"),
               shiny::fillRow(
+                  height = 24,
                   flex = c(NA, 0.05, NA, NA, 1),
                   withTooltip(
                       shiny::actionButton(ns("autocontrast"),
@@ -105,8 +107,10 @@ upload_module_makecontrast_ui <- function(id) {
                   shiny::selectInput(ns("strata"), NULL, choices = NULL, width = "120px"),
                   shiny::br()
               ),
-              shiny::div(DT::dataTableOutput(ns("contrastTable")),
-                         style = "font-size:13px; height: 300px; margin-top: 20px;overflow-y: scroll;"
+              bslib::layout_column_wrap(
+                  width = 1,
+                  DT::dataTableOutput(ns("contrastTable")),
+                  style = "font-size:13px; height: 300px; margin-top: 20px;overflow-y: scroll;"
               )
           )
       )
@@ -422,6 +426,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
           DT::datatable(
             df,
+            fillContainer = FALSE,
             rownames = FALSE,
             escape = c(-1),
             selection = "none",
