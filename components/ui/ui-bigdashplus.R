@@ -21,32 +21,39 @@ bigdash.showTabsGoToDataView <- function(session) {
 }
 
 ## ------------------- sideBar ---------------------------
-bigdash.openSidebar <- function() {
-  shinyjs::runjs("sidebarOpen()")  ## in app/R/www/temp.js
+bigdash.openSidebar <- function(session) {
+  # shinyjs::runjs("sidebarOpen()")  ## in app/R/www/temp.js
+  session$sendCustomMessage("sidebar-open", list())
 }
 
-bigdash.closeSidebar <- function() {
-  shinyjs::runjs("sidebarClose()")  ## in app/R/www/temp.js
+bigdash.closeSidebar <- function(session) {
+  session$sendCustomMessage("sidebar-close", list())
+  # shinyjs::runjs("sidebarClose()")  ## in app/R/www/temp.js
 }
 
-bigdash.toggleSidebar <- function(state) {
-  if(state) bigdash.openSidebar()
+bigdash.toggleSidebar <- function(state, session) {
+  if(state) bigdash.openSidebar(session)
   if(!state) bigdash.closeSidebar()
 }
 
 ## ------------------- settingsBar ---------------------------
-bigdash.openSettings <- function(lock=TRUE) {
-  shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js
-  shinyjs::runjs("settingsOpen()")  ## in app/R/www/temp.js
+bigdash.openSettings <- function(lock=TRUE, session) {
+  # shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js
+  session$sendCustomMessage("unlock-settings", list())
+  # shinyjs::runjs("settingsOpen()")  ## in app/R/www/temp.js
+  session$sendCustomMessage("open-settings", list())
   if(lock) {
     Sys.sleep(0.1)
-    shinyjs::runjs("settingsLock()")  ## in app/R/www/temp.js
+    # shinyjs::runjs("settingsLock()")  ## in app/R/www/temp.js
+    session$sendCustomMessage("lock-settings", list())
   }
 }
 
-bigdash.closeSettings <- function() {
-  shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js  
-  shinyjs::runjs("settingsClose()")  ## in app/R/www/temp.js
+bigdash.closeSettings <- function(session) {
+  session$sendCustomMessage("unlock-settings", list())
+  # shinyjs::runjs("settingsUnlock()")  ## in app/R/www/temp.js  
+  # shinyjs::runjs("settingsClose()")  ## in app/R/www/temp.js
+  session$sendCustomMessage("close-settings", list())
 }
 
 ## --------------------menuItem --------------------------
@@ -59,7 +66,7 @@ bigdash.showMenuItem <- function(session, item) {
 bigdash.hideMenuItem <- function(session, item) {
   shiny:::validate_session_object(session)
   msg <- shiny:::dropNulls(list(value = item))
-  session$sendCustomMessage("bigdash-hide-menuitem", msg)  ## in app/R/www/temp.js
+  session$sendCustomMessage("bigdash-hide-menuitem", msg)  ## in app/R/www/temp.js 
 }
 
 bigdash.toggleMenuItem <- function(session, item, state) {

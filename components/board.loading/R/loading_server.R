@@ -190,9 +190,9 @@ LoadingBoard <- function(id,
         #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
 
         # open the left & right sidebar
-        bigdash.openSettings(lock=TRUE)
+        bigdash.openSettings(lock=TRUE, session)
         shinyjs::runjs("$('#settings-container').trigger('mouseenter');")
-        bigdash.openSidebar()
+        bigdash.openSidebar(session)
 
         # go to dataview
         bigdash.selectTab(session, selected = 'dataview-tab')

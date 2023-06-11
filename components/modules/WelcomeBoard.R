@@ -30,7 +30,7 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
 
     observeEvent(input$btn_upload_data, {
       if(enable_upload) {
-        bigdash.openSidebar()
+        bigdash.openSidebar(session)
         bigdash.selectTab( session, "upload-tab" )
       } else {
         shinyWidgets::sendSweetAlert(
@@ -49,9 +49,9 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
       #shinyjs::runjs("$('#settings-container').trigger('click');")
       #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
 
-      bigdash.openSettings(lock=TRUE)
+      bigdash.openSettings(lock=TRUE, session)
       shinyjs::runjs("$('#settings-container').trigger('mouseenter');")      
-      bigdash.openSidebar()
+      bigdash.openSidebar(session)
 
       bigdash.selectTab( session, "load-tab" )
     })

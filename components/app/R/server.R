@@ -304,8 +304,10 @@ app_server <- function(input, output, session) {
         shinyjs::onclick("logo-bigomics",{
           shinyjs::runjs("console.info('logo-bigomics clicked')")
           bigdash.selectTab(session, selected = 'welcome-tab')
-          shinyjs::runjs("sidebarClose()")
-          shinyjs::runjs("settingsClose()")
+          # shinyjs::runjs("sidebarClose()")
+          bigdash.closeSidebar(session)
+          # shinyjs::runjs("settingsClose()")
+          bigdash.closeSettings(session)
         })
 
     })
@@ -354,15 +356,19 @@ app_server <- function(input, output, session) {
             warning("[server.R] !!! no data. hiding menu.")
             ##toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
             ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
-            shinyjs::runjs("sidebarClose()")
-            shinyjs::runjs("settingsClose()")
+            # shinyjs::runjs("sidebarClose()")
+            bigdash.closeSidebar(session)
+            # shinyjs::runjs("settingsClose()")
+            bigdash.closeSettings(session)
             bigdash.selectTab(session, selected = 'welcome-tab')            
             return(NULL)
         }
 
         ## show all main tabs
-        shinyjs::runjs("sidebarOpen()")
-        shinyjs::runjs("settingsOpen()")
+        # shinyjs::runjs("sidebarOpen()")
+        bigdash.openSidebar(session)
+        # shinyjs::runjs("settingsOpen()")
+        bigdash.openSettings(lock = TRUE, session)
 
         ## do we have libx libraries?
         has.libx <- dir.exists(file.path(OPG,"libx"))
@@ -571,16 +577,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
     })
 
-    ## logout helper function
-    logout.JScallback = "logout()"
-    if(opt$AUTHENTICATION=="shinyproxy") {
-        logout.JScallback = "function(x){logout();quit();window.location.assign('/logout');}"
-    }
-
     ## This will be called upon user logout *after* the logout() JS call
     observeEvent( input$userLogout, {
       reset_timer()
       run_timer(FALSE)
+      session$sendCustomMessage("sidebar-unload", list())
+      session$sendCustomMessage("sidebar-close", list())
     })
 
     ## This code listens to the JS quit signal

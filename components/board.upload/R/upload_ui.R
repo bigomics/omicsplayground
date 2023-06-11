@@ -72,14 +72,17 @@ UploadUI <- function(id) {
         class = "row",
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("countStats")) %>% bigLoaders::useSpinner()
+          style = "position: relative;"
+          shiny::plotOutput(ns("countStats")) # %>% shinycssloaders::withSpinner()
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("phenoStats")) # %>% bigLoaders::useSpinner()
+          style = "position: relative;"
+          shiny::plotOutput(ns("phenoStats")) %>% bigLoaders::useSpinner()
         ),
         div(
           class = "col-md-4",
+          style = "position: relative;"
           shiny::plotOutput(ns("contrastStats")) # %>% bigLoaders::useSpinner()
         )
       )

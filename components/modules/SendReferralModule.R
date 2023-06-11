@@ -37,9 +37,6 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
         emails  = c()
     )
 
-    ## JS logout callback
-    js.cb = "function(x){logout();}"
-
     ## -------------------- modal UI --------------------------
     email_modal <- eventReactive( r.show(), {
 
