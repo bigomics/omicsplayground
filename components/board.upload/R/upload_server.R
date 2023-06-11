@@ -259,6 +259,7 @@ UploadBoard <- function(id,
 
         if (length(uploadnames) > 0) {
           for (i in 1:length(uploadnames)) {
+            browser()
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
@@ -304,7 +305,7 @@ UploadBoard <- function(id,
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              SAMPLE_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
+              SAMPLES_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
 
               if(length(SAMPLES_check$check)>0) {
                 lapply(1:length(SAMPLES_check$check), function(idx){
@@ -323,19 +324,19 @@ UploadBoard <- function(id,
             }
 
             if (SAMPLES_check$PASS && IS_SAMPLE) {
-                df <- as.data.frame(SAMPLE_check$df)
+                df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
             
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              CONTRAST_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+              CONTRASTS_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
 
-              if(length(CONTRAST_check$check)>0) {
-                lapply(1:length(CONTRAST_check$check), function(idx){
-                  error_id <- names(CONTRAST_check$check)[idx]
-                  error_log <- CONTRAST_check$check[[idx]]
+              if(length(CONTRASTS_check$check)>0) {
+                lapply(1:length(CONTRASTS_check$check), function(idx){
+                  error_id <- names(CONTRASTS_check$check)[idx]
+                  error_log <- CONTRASTS_check$check[[idx]]
                   error_detail <- error_list[error_list$error == error_id,]
                   
                   shinyalert::shinyalert(
@@ -348,8 +349,8 @@ UploadBoard <- function(id,
               }
             }
 
-            if (CONTRAST_check$PASS && IS_CONTRAST) {
-                df <- as.matrix(CONTRAST_check$df)
+            if (CONTRASTS_check$PASS && IS_CONTRAST) {
+                df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
 
@@ -360,8 +361,6 @@ UploadBoard <- function(id,
           }
         }
       }
-
-      browser()
 
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
