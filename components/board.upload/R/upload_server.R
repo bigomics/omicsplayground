@@ -259,7 +259,6 @@ UploadBoard <- function(id,
 
         if (length(uploadnames) > 0) {
           for (i in 1:length(uploadnames)) {
-            browser()
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
@@ -288,9 +287,8 @@ UploadBoard <- function(id,
                   )
                 })
               }
-            }
 
-            if (COUNTS_check$PASS && IS_COUNT) {
+              if (COUNTS_check$PASS && IS_COUNT) {
                 df <- as.matrix(COUNTS_check$df)
                 matname <- "counts.csv"
               }
@@ -301,6 +299,7 @@ UploadBoard <- function(id,
                 df <- 2**df
                 matname <- "counts.csv"
               }
+            }
 
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
@@ -321,12 +320,12 @@ UploadBoard <- function(id,
                   )
                 })
               }
-            }
 
-            if (SAMPLES_check$PASS && IS_SAMPLE) {
+              if (SAMPLES_check$PASS && IS_SAMPLE) {
                 df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
+            }
             
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
@@ -347,13 +346,13 @@ UploadBoard <- function(id,
                   )
                 })
               }
-            }
 
-            if (CONTRASTS_check$PASS && IS_CONTRAST) {
+              if (CONTRASTS_check$PASS && IS_CONTRAST) {
                 df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
 
+            }
 
             if (!is.null(matname)) {
               matlist[[matname]] <- df
