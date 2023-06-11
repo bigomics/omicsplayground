@@ -84,7 +84,6 @@ featuremap_plot_gene_map_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
-
       ## pos <- pgx$cluster.genes$pos[['umap2d']]
       pos <- getGeneUMAP()
       colnames(pos) <- c("x","y")
@@ -200,12 +199,14 @@ featuremap_plot_gene_map_server <- function(id,
       if(!r_fulltable()) {
         if(!is.null(sel.genes)) {
           filt.genes <- selGenes()
-          sel.genes <- intersect(sel.genes, filt.genes)
+          sel.genes_aux <- match(filt.genes |> stringr::str_to_upper(), sel.genes |> stringr::str_to_upper())
+          sel.genes_aux <- sel.genes_aux[!is.na(sel.genes_aux)]
+          sel.genes <- sel.genes[sel.genes_aux]
         } else {
           sel.genes <- selGenes()
         }
       }
-      
+
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
