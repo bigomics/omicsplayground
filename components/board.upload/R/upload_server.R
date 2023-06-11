@@ -278,7 +278,8 @@ UploadBoard <- function(id,
                   error_id <- names(COUNTS_check$check)[idx]
                   error_log <- COUNTS_check$check[[idx]]
                   error_detail <- error_list[error_list$error == error_id,]
-                  
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
                   shinyalert::shinyalert(
                     title = error_detail$title,
                     text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
@@ -311,6 +312,7 @@ UploadBoard <- function(id,
                   error_id <- names(SAMPLES_check$check)[idx]
                   error_log <- SAMPLES_check$check[[idx]]
                   error_detail <- error_list[error_list$error == error_id,]
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
                   
                   shinyalert::shinyalert(
                     title = error_detail$title,
@@ -337,7 +339,8 @@ UploadBoard <- function(id,
                   error_id <- names(CONTRASTS_check$check)[idx]
                   error_log <- CONTRASTS_check$check[[idx]]
                   error_detail <- error_list[error_list$error == error_id,]
-                  
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
                   shinyalert::shinyalert(
                     title = error_detail$title,
                     text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
