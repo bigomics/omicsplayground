@@ -235,9 +235,13 @@ LoadingBoard <- function(id,
           share_dir,
           paste0(pgx_name, ".pgx", '__from__', auth$email(), '__')
         )
+        new_pgx_file2 <- file.path(
+          share_dir,
+          paste0(pgx_name, ".pgx")
+        )
 
         ## abort if file exists
-        if (file.exists(new_pgx_file)) {
+        if (file.exists(new_pgx_file) || file.exists(new_pgx_file2)) {
           shinyalert::shinyalert(
             title = "Oops! File exists...",
             paste(
