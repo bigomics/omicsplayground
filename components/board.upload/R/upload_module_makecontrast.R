@@ -54,7 +54,7 @@ upload_module_makecontrast_ui <- function(id) {
                           ),
                           shiny::br(),
                           withTooltip(
-                              shiny::textInput(ns("newname"),
+                              shiny::textAreaInput(ns("newname"),
                                                "Comparison name:",
                                                placeholder = "e.g. MAIN_vs_CONTROL"
                               ),
