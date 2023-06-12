@@ -30,7 +30,7 @@ upload_module_makecontrast_ui <- function(id) {
                   shiny::h4("Create comparisons"),
                   bslib::layout_column_wrap(
                     width = NULL,
-                    style = htmltools::css(grid_template_columns = "4fr 8fr"),
+                    style = htmltools::css(grid_template_columns = "3fr 8fr"),
                     shiny::fillCol(
                           flex = c(NA, NA, NA, NA, 1),
                           withTooltip(
