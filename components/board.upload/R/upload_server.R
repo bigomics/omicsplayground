@@ -278,11 +278,12 @@ UploadBoard <- function(id,
                   error_id <- names(COUNTS_check$check)[idx]
                   error_log <- COUNTS_check$check[[idx]]
                   error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
                   ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message,"\n", paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
