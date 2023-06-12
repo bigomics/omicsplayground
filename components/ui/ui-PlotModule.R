@@ -297,6 +297,7 @@ PlotModuleUI <- function(id,
     style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
+      gap = "0px",
       if (cards) {
         plot_cards$content
       } else {
