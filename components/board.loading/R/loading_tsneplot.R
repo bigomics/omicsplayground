@@ -35,6 +35,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       pgx.dir <- pgx.dirRT()
       info.table <- info.table()
+      validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
             
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
@@ -57,7 +58,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       if(!file.exists(allfc.file)) {
         return(NULL)
       }
-      
+
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos) && file.exists(allfc.file)) {
 
@@ -109,7 +110,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
               }
               ## safe...
               if("try-error" %in% class(pos)) {
-                dbg("[loading_tsne_server] t-SNE failed. trying svd... ")              
                 pos <- svd(F)$v[,1:2]
               }
             } 
@@ -131,7 +131,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       comparison <- gsub("^.*\\]", "", rownames(pos))
       colnames(pos) <- c("x", "y")
       df <- data.frame(pos, dataset = dset, comparison = comparison)
-      
+
       ## compute medioid of datasets
       dpos <- apply(pos, 2, function(x) tapply(x, dset, median, na.rm = TRUE))
       if (length(unique(dset)) == 1) {
