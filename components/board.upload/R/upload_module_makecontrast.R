@@ -24,13 +24,14 @@ upload_module_makecontrast_ui <- function(id) {
           fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr"),
           bslib::card(
-              max_height = "calc(100vh - 330px)",
+              max_height = "330px",
               style = "border-width: 0px;",
               bslib::card_body(
                   shiny::h4("Create comparisons"),
-                  shiny::fillRow(
-                      flex = c(1, 4),
-                      shiny::fillCol(
+                  bslib::layout_column_wrap(
+                    width = NULL,
+                    style = htmltools::css(grid_template_columns = "4fr 8fr"),
+                    shiny::fillCol(
                           flex = c(NA, NA, NA, NA, 1),
                           withTooltip(
                               shiny::selectInput(ns("param"),
