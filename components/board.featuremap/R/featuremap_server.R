@@ -69,11 +69,10 @@ FeatureMapBoard <- function(id, pgx) {
     ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
-
       if (!is.null(hilight)) {
-
-          hilight <- intersect(hilight, rownames(pos))
-          hilight <- intersect(hilight, names(var))
+          hilight <- match(hilight |> stringr::str_to_upper(), names(var) |> stringr::str_to_upper())
+          hilight <- hilight[!is.na(hilight)]
+          hilight <- names(var)[hilight]
           hilight <- hilight[order(-var[hilight])]
 
           if (min(var, na.rm = TRUE) < 0) {
