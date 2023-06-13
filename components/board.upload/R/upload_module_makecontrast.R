@@ -17,14 +17,18 @@ MakeContrastGadget <- function(X, pheno, height = 720) {
 
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
+  
 
   shiny::tagList(
+    bslib::layout_column_wrap(
+      width = 1,
+      height = "calc(100vh - 200px)",
       bslib::layout_column_wrap(
-          width = NULL, fill = FALSE,
-          fixed_width = TRUE,
+          width = 1, #fill = FALSE,
+          #fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr"),
           bslib::card(
-              max_height = "330px",
+              # max_height = "330px",
               style = "border-width: 0px;",
               bslib::card_body(
                   shiny::h4("Create comparisons"),
@@ -83,38 +87,38 @@ upload_module_makecontrast_ui <- function(id) {
                                        title = "PCA/tSNE plot",
                                        info.text = "",
                                        caption = "",
-                                       height = c(320, 700),
+                                       height = c("100%", 700),
                                        width = c("auto", 800))
-      ),
-      bslib::card(
-          fill = FALSE,
-          style = "border-width: 0px;",
-          bslib::card_body(
-              shiny::h4("Contrast table"),
-              shiny::fillRow(
-                  height = 24,
-                  flex = c(NA, 0.05, NA, NA, 1),
-                  withTooltip(
-                      shiny::actionButton(ns("autocontrast"),
-                                          "add auto-contrasts",
-                                          icon = icon("plus"),
-                                          class = "small-button btn-outline-primary"
+          ),
+          bslib::card(
+              fill = TRUE,
+              style = "border-width: 0px;",
+              bslib::card_body(
+                  shiny::h4("Contrast table"),
+                  shiny::fillRow(
+                      height = 24,
+                      flex = c(NA, 0.05, NA, NA, 1),
+                      withTooltip(
+                          shiny::actionButton(ns("autocontrast"),
+                                              "add auto-contrasts",
+                                              icon = icon("plus"),
+                                              class = "small-button btn-outline-primary"
+                          ),
+                          "If you are feeling lucky, try this to automatically create contrasts.",
+                          placement = "top", options = list(container = "body")
                       ),
-                      "If you are feeling lucky, try this to automatically create contrasts.",
-                      placement = "top", options = list(container = "body")
+                      shiny::br(),
+                      shiny::div(shiny::HTML("<b>Strata:</b>"), style = "padding: 4px 4px;"),
+                      shiny::selectInput(ns("strata"), NULL, choices = NULL, width = "120px"),
+                      shiny::br()
                   ),
-                  shiny::br(),
-                  shiny::div(shiny::HTML("<b>Strata:</b>"), style = "padding: 4px 4px;"),
-                  shiny::selectInput(ns("strata"), NULL, choices = NULL, width = "120px"),
-                  shiny::br()
-              ),
-              bslib::layout_column_wrap(
-                  width = 1,
-                  DT::dataTableOutput(ns("contrastTable")),
-                  style = "font-size:13px; height: 300px; margin-top: 20px;overflow-y: scroll;"
+                  bslib::layout_column_wrap(
+                      width = 1,
+                      DT::dataTableOutput(ns("contrastTable"))
+                  )
               )
-          )
-      )
+        )
+    )
   )
 }
 
@@ -427,16 +431,18 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
           DT::datatable(
             df,
-            fillContainer = FALSE,
+            fillContainer = TRUE,
             rownames = FALSE,
             escape = c(-1),
             selection = "none",
             class = "compact cell-border",
+            plugins = 'scrollResize',
             options = list(
               dom = "t",
+              scrollResize = TRUE,
               pageLength = 999,
-              lengthMenu = list(c(6, -1), c('6', 'All')),
               ## autoWidth = TRUE, ## scrollX=TRUE,
+              scrollY = "300px", 
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),
                 list(width = "150px", targets = c(1)),
