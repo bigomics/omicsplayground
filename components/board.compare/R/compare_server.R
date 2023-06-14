@@ -109,6 +109,9 @@ CompareBoard <- function(id, pgx) {
       pgx1 <- pgx
       pgx2 <- dataset2()
 
+      rownames(pgx1$X) <- toupper(rownames(pgx1$X))
+      rownames(pgx2$X) <- toupper(rownames(pgx2$X))
+
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
@@ -126,7 +129,7 @@ CompareBoard <- function(id, pgx) {
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
-      F1 <- F1[match(gg, rownames(F1)), , drop = FALSE]
+      F1 <- F1[match(gg, toupper(rownames(F1)),), , drop = FALSE]
       F2 <- F2[match(gg, rownames(F2)), , drop = FALSE]
       rownames(F1) <- gg
       rownames(F2) <- gg
