@@ -3,18 +3,17 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserBoard <- function(id, user) {
+UserProfileBoard <- function(id, user) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-    dbg("[UserBoard] >>> initializing UserBoard...")
+    dbg("[UserProfileBoard] >>> initializing UserBoard...")
 
     shiny::observeEvent(input$board_info, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>User Profile</strong>"),
             shiny::HTML(
-                'The User Profile page allows you to change overall settings
-                that will alter how the app looks, to view and change your
-                subscription plan, and to view the latest news about application
+                'The User Profile page allows you to view and change your
+                subscription plan and to view the latest news about application
                 development.'
             ),
             easyClose = TRUE, size = "l"
@@ -95,14 +94,5 @@ UserBoard <- function(id, user) {
       HTML(news)
     })
 
-    ## ------------------------------------------------
-    ## Board return object
-    ## ------------------------------------------------
-    res <- list(
-      enable_beta = reactive({
-        as.logical(input$enable_beta)
-      })
-    )
-    return(res)
   })
 }
