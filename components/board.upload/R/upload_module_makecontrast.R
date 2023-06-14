@@ -35,9 +35,9 @@ upload_module_makecontrast_ui <- function(id) {
                     width = 1,
                     # style = htmltools::css(grid_template_columns = "3fr 8fr"),
                     bslib::layout_column_wrap(
-                      width = 1/5,
-                      shiny::h4("Create comparisons"),
-
+                      width = 1,
+                      style = htmltools::css(grid_template_columns = "2fr 3fr 3fr 2fr 2fr"),
+                      shiny::h4("Create comparisons:"),
                       withTooltip(
                           shiny::selectInput(ns("param"),
                                               "Phenotype:",
@@ -96,7 +96,7 @@ upload_module_makecontrast_ui <- function(id) {
               fill = TRUE,
               style = "border-width: 0px;",
               bslib::card_body(
-                  shiny::h4("Contrast table"),
+                  shiny::h4("Contrast table:"),
                   shiny::fillRow(
                       height = 24,
                       flex = c(NA, 0.05, NA, NA, 1),
