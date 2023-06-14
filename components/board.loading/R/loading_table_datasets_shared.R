@@ -28,8 +28,6 @@ loading_table_datasets_shared_server <- function(id, table) {
     pgxTable_DT <- reactive({
       df <- table()
       shiny::req(df)
-      dbg("[loading_table_datasets_shared_server] pgxTable_DT reacted!")
-      dbg("[loading_table_datasets_shared_server] df.dataset = ",df$dataset)
       
       # need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
@@ -46,7 +44,7 @@ loading_table_datasets_shared_server <- function(id, table) {
         rownames = TRUE,
         editable = FALSE,
         extensions = c("Scroller"),
-        plugins = 'scrollResize',        
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(

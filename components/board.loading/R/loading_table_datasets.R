@@ -28,14 +28,24 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
     ns <- session$ns
 
     pgxTable_DT <- reactive({
-      df <- rl$pgxTable_data
-      shiny::req(df)
 
-      # need this, otherwise there is an error on user logout
+      df <- rl$pgxTable_data      
+      shiny::req(df)      
+
+      if (nrow(df) == 0) {
+        shinyalert::shinyalert(
+          title = "Empty?",
+          text = paste("Your dataset library seems empty. Please upload new data or import",
+            "a dataset from the shared folder."
+            )
+        )
+      }
+      validate(need(nrow(df)>0, 'Need at least one dataset!'))      
+
+      ## need this, otherwise there is an error on user logout
       if (length(df$dataset) == 0) df <- NULL
-
+      
       df$creator <- NULL
-
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))
@@ -119,6 +129,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
         plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
+        plugins = "scrollResize",
         options = list(
           dom = "ft",
           pageLength = 9999,

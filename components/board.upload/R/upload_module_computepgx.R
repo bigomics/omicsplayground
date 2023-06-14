@@ -13,12 +13,12 @@ ComputePgxGadget <- function(counts, samples, contrasts, height=720) {
     )
 }
 
-ComputePgxUI <- function(id) {
+upload_module_computepgx_ui <- function(id) {
     ns <- shiny::NS(id)
     shiny::uiOutput(ns("UI"))
 }
 
-ComputePgxServer <- function(
+upload_module_computepgx_server <- function(
     id,
     countsRT,
     samplesRT,
@@ -183,7 +183,7 @@ ComputePgxServer <- function(
                                     shiny::tagList(
                                         shiny::tags$h4("Custom genesets (.gmt) file:"),
                                         shiny::tags$h6(
-                                            "A GMT file as described", 
+                                            "A GMT file as described",
                                             tags$a(
                                                 "here.",
                                                 href = path_gmt,
@@ -257,7 +257,7 @@ ComputePgxServer <- function(
                 fileName <- input$upload_custom_genesets$name
 
                 if(endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")){
-                    
+
                     custom.geneset$gmt <- playbase::read.gmt(filePath)
                     # perform some basic checks
                     gmt.length <- length(custom.geneset$gmt)
@@ -275,7 +275,7 @@ ComputePgxServer <- function(
                     # compute custom geneset stats
                     custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
                     custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt,length)
-                
+
                     # tell user that custom genesets are "ok"
                     # we could perform an addicional check to verify that items in lists are genes
                     if(gmt.length > 0 && gmt.is.list){
@@ -293,7 +293,7 @@ ComputePgxServer <- function(
 
                 # error message if custom genesets not detected
                 if(is.null(custom.geneset$gmt)){
-                      shinyalert::shinyalert(                  
+                      shinyalert::shinyalert(
                         title = "Invalid custom genesets",
                         text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
                         type = "error",
@@ -338,7 +338,7 @@ ComputePgxServer <- function(
                     shinyalert::shinyalert(
                       title = "ERROR",
                       text = "You must define at least 1 contrast",
-                      type = "error"                      
+                      type = "error"
                     )
                     return(NULL)
                 }
@@ -390,7 +390,7 @@ ComputePgxServer <- function(
                     shinyalert::shinyalert(
                       title = "ERROR",
                       text = "You must select at least one geneset test method",
-                      type = "error"                      
+                      type = "error"
                     )
                     return(NULL)
                 }
@@ -439,14 +439,14 @@ ComputePgxServer <- function(
                 creator <- session$user
                 libx.dir <- paste0(sub("/$","",lib.dir),"x") ## set to .../libx
                 dbg("[ComputePgxModule.R] libx.dir = ",libx.dir)
-                
-                
+
+
                 # get rid of reactive container
                 custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
-                
-                
+
+
                 # Define create_pgx function arguments
-                
+
                 params <- list(
                     samples = samples,
                     counts = counts,
@@ -479,7 +479,7 @@ ComputePgxServer <- function(
                 )
 
                 saveRDS(params, file=path_to_params)
-                
+
                 # Normalize paths
                 script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
                 tmpdir <- normalizePath(temp_dir())
@@ -498,8 +498,8 @@ ComputePgxServer <- function(
 
                 process_counter(process_counter() + 1)
                 dbg("[compute PGX process] : starting processx nr: ", process_counter())
-                dbg("[compute PGX process] : process tmpdir = ", tmpdir)                
-                
+                dbg("[compute PGX process] : process tmpdir = ", tmpdir)
+
                 ## append to process list
                 process_obj(
                   append(
@@ -518,7 +518,7 @@ ComputePgxServer <- function(
                         dataset_name = gsub("[ ]","_",input$upload_name),
                         temp_dir = temp_dir(),
                         stderr = c(),
-                        stdout = c()                  
+                        stdout = c()
                       )
                     )
                   )
@@ -544,7 +544,7 @@ ComputePgxServer <- function(
                     process_status <- current_process$get_exit_status()
                     process_alive  <- current_process$is_alive()
                     nr <- active_obj$number
-                  
+
                     ## [https://processx.r-lib.org/] Always
                     ## make sure that you read out the standard
                     ## output and/or error of the pipes, otherwise
@@ -553,15 +553,15 @@ ComputePgxServer <- function(
                     active_obj$stderr <- c(active_obj$stderr, stderr_output)
                     stdout_output <- current_process$read_output_lines()
                     active_obj$stdout <- c(active_obj$stdout, stdout_output)
-                      
+
                     errlog <- file.path(temp_dir,"processx-error.log")
-                    outlog <- file.path(temp_dir,"processx-output.log")                      
+                    outlog <- file.path(temp_dir,"processx-output.log")
                     ## dbg("[compute PGX process] : writing stderr to ", logfile)
                     cat(paste(stderr_output,collapse='\n'), file=errlog, append=TRUE)
-                    cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)                      
-                  
+                    cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)
+
                     if (!is.null(process_status)) {
-                      if (process_status == 0) {                    
+                      if (process_status == 0) {
                         # Process completed successfully
                         dbg("[compute PGX process] : process completed")
                         on_process_completed(temp_dir = temp_dir, nr=nr)
@@ -577,16 +577,16 @@ ComputePgxServer <- function(
                         ##for (line in stderr_output) { message(line) }
                         err <- paste0("[processx.",nr,":stderr] ", active_obj$stderr)
                         writeLines(err, con = stderr())
-                      } 
+                      }
                       if (length(active_obj$stdout) > 0) {
                         ## Copy the error to the stderr of main app
                         cat("Standard output from processx:")
                         ##for (line in stderr_output) { message(line) }
                         out <- paste0("[processx.",nr,":stdout] ", active_obj$stdout)
                         writeLines(out, con = stdout())
-                      } 
+                      }
 
-                      
+
                     } else {
                         # Process is still running, do nothing
                         dbg("[compute PGX process] : process still running")

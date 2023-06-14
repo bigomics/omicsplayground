@@ -85,7 +85,6 @@ LoadingBoard <- function(id,
         }
 
         file.copy(from = pgx_file, to = new_pgx_file)
-        ## rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         shinyalert::shinyalert(
           "Dataset imported",
@@ -139,16 +138,18 @@ LoadingBoard <- function(id,
         new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
 
         ## file.copy(from = pgx_file, to = new_pgx_file)
-        pgx0  <- playbase::pgx.load(pgx_file)
-        unknown.creator <- pgx0$creator %in% c(NA,"","user","anonymous","unknown")
-        if("creator" %in% names(pgx0) && !unknown.creator) {
-          file.copy(from = pgx_file, to = new_pgx_file)
-        } else {
-          pgx0$creator <- session$user  ## really?
-          if(pgx0$creator %in% c(NA,"","user","anonymous","unknown"))  pgx0$creator <- "unknown"
-          playbase::pgx.save(pgx0, file = new_pgx_file)
-        }
-
+        shiny::withProgress(message = "Copying file to shared folder...", value = 0.33, {
+          pgx0  <- playbase::pgx.load(pgx_file)
+          unknown.creator <- pgx0$creator %in% c(NA,"","user","anonymous","unknown")
+          if("creator" %in% names(pgx0) && !unknown.creator) {
+            file.copy(from = pgx_file, to = new_pgx_file)
+          } else {
+            pgx0$creator <- session$user  ## really?
+            if(pgx0$creator %in% c(NA,"","user","anonymous","unknown"))  pgx0$creator <- "unknown"
+            playbase::pgx.save(pgx0, file = new_pgx_file)
+          }
+        })
+        
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         ## r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
@@ -311,13 +312,16 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
-
       info <- NULL
-      pdir <- getPGXDIR()
-      info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      pdir <- getPGXDIR()      
+      shiny::withProgress(message = "Updating library...", value = 0.33, {
+        dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
+        ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
+        info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      })
+      
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-
       if (is.null(info)) {
         aa <- rep(NA, length(info.colnames))
         names(aa) <- info.colnames
@@ -341,16 +345,15 @@ LoadingBoard <- function(id,
       }
 
       ## update meta files
-      shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
-        playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
+      shiny::withProgress(message = "Updating shared library...", value = 0.33, {
+        dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")            
+        ## playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
+        info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       })
-
-      info <- NULL
-      info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
-      info.colnames <- c(
-        "dataset", "datatype", "description", "nsamples",
+      
+      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
-        )
+      )
       if (is.null(info)) {
         aa <- rep(NA, length(info.colnames))
         colnames(aa) <- info.colnames
@@ -591,7 +594,6 @@ LoadingBoard <- function(id,
 
     shiny::observeEvent(rl$delete_pgx, {
       row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
-
       df <- getFilteredPGXINFO()
       pgxfile <- as.character(df$dataset[row_idx])
       pgxname <- sub("[.]pgx$", "", pgxfile)
@@ -605,7 +607,14 @@ LoadingBoard <- function(id,
         if (input$confirmdelete) {
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
-##        playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
+          ## !!!! we should also delete entry in PGXINFO and allFC !!!
+          ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
+          info <- read.csv(file.path(pgx.path,"datasets-info.csv"),row.names=1)
+          idx <- match(pgxname,info$dataset)
+          if(length(idx)) {
+            info <- info[-idx,]
+            write.csv(info, file.path(pgx.path,"datasets-info.csv"))
+          }
           r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
       }
@@ -655,7 +664,7 @@ LoadingBoard <- function(id,
         data_names <- as.character(pgxtable$data()$dataset)
         load_row <- which(data_names == r_global$load_data_from_upload)[1]
         rl$selected_row <- load_row
-        rl$found_example_trigger <- rl$found_example_trigger+1
+        shinyjs::click('loadbutton')
 
         r_global$load_data_from_upload <- NULL
     }, ignoreNULL = TRUE)
@@ -672,12 +681,12 @@ LoadingBoard <- function(id,
       pgxfile <- NULL
 
       ## Observe URL query
-      query <- parseQueryString(session$clientData$url_search)
-      if (!is.null(query[["pgx"]])) {
-        pgxfile <- query[["pgx"]]
-        pgxfile <- basename(pgxfile) ## for security
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      }
+      ## query <- parseQueryString(session$clientData$url_search)
+      ## if (!is.null(query[["pgx"]])) {
+      ##   pgxfile <- query[["pgx"]]
+      ##   pgxfile <- basename(pgxfile) ## for security
+      ##   pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
+      ## }
 
       ## Observe button press (over-rides URL query)
       btn <- input$loadbutton
@@ -727,12 +736,9 @@ LoadingBoard <- function(id,
       ## the updated object.
       slots1 <- names(loaded_pgx)
       if(length(slots1) != length(slots0)) {
-        dbg("[loading_server.R@load_react] pgx has been updated: resaving pgx... \n")
+        dbg("[loading_server.R] saving updated PGX")        
         new_slots <- setdiff(slots1, slots0)
-        dbg("[loading_server.R@load_react] new slots = ",new_slots)
         savePGX(loaded_pgx, file=pgxfile)
-      } else {
-        dbg("[loading_server.R@load_react] not re-saving pgx")
       }
 
       ## ----------------- update input --------------------------------------
@@ -752,6 +758,7 @@ LoadingBoard <- function(id,
       })
       ## ----------------- remove modal on exit?? -------------------------
       remove(loaded_pgx)
+      dbg("[loading_server.R] copying pgx done!")      
       gc()
     })
 

@@ -46,6 +46,7 @@ RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
+RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)

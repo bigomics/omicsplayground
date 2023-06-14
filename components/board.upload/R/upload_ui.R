@@ -72,15 +72,36 @@ UploadUI <- function(id) {
         class = "row",
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("countStats")) %>% bigLoaders::useSpinner()
+          upload_plot_countstats_ui(
+              id = ns("countStats"),
+              title = "Count Stats",
+              info.text = "Information about the uploaded counts.",
+              caption = "Information about the uploaded counts.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("phenoStats")) # %>% bigLoaders::useSpinner()
+          upload_plot_phenostats_ui(
+              id = ns("phenoStats"),
+              title = "Pheno Stats",
+              info.text = "Information about the uploaded samples",
+              caption = "Information about the uploaded samples.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         ),
         div(
           class = "col-md-4",
-          shiny::plotOutput(ns("contrastStats")) # %>% bigLoaders::useSpinner()
+          upload_plot_contraststats_ui(
+              id = ns("contrastStats"),
+              title = "Contrast Stats",
+              info.text = "Information about the uploaded contrasts",
+              caption = "Information about the uploaded contrasts.",
+              height = c("75%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+          )
         )
       )
     ),
@@ -90,14 +111,14 @@ UploadUI <- function(id) {
       br(),
       shiny::fillCol(
         height = height,
-        BatchCorrectUI(ns("batchcorrect"))
+        upload_module_batchcorrect_ui(ns("batchcorrect"))
       )
     ),
     shiny::tabPanel(
       "Contrasts",
       bs_alert("Here, you can interactively create your comparisons (or so-called 'contrasts'). Choose a phenotype on the left, then create groups by dragging the conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'add auto-contrasts'."),
       br(),
-      MakeContrastUI(ns("makecontrast"))
+      upload_module_makecontrast_ui(ns("makecontrast"))
     ),
     shiny::tabPanel(
       "Compute",
@@ -105,7 +126,7 @@ UploadUI <- function(id) {
       br(),
       shiny::fillCol(
         height = height, ## width = 1200,
-        ComputePgxUI(ns("compute"))
+        upload_module_computepgx_ui(ns("compute"))
       )
     )
   )

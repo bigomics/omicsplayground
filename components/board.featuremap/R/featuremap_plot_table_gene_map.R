@@ -76,19 +76,18 @@ featuremap_plot_gene_map_server <- function(id,
 
     ns <- session$ns
 
-    selGenes <- shiny::reactive({
+    filteredGenes <- shiny::reactive({
       shiny::req(pgx)
       sel <- filter_genes()
-      selgenes <- playdata::FAMILIES[[sel]]
-      selgenes
+      filtgenes <- playdata::FAMILIES[[sel]]
+      filtgenes
     })
 
     plot_data <- shiny::reactive({
-
       ## pos <- pgx$cluster.genes$pos[['umap2d']]
       pos <- getGeneUMAP()
       colnames(pos) <- c("x","y")
-      hilight <- selGenes()
+      hilight <- filteredGenes()
       colgamma <- as.numeric(input$umap_gamma)
       colorby <- input$umap_colorby
       nlabel <- as.integer(input$umap_nlabel)
@@ -199,13 +198,15 @@ featuremap_plot_gene_map_server <- function(id,
 
       if(!r_fulltable()) {
         if(!is.null(sel.genes)) {
-          filt.genes <- selGenes()
-          sel.genes <- intersect(sel.genes, filt.genes)
+          filt.genes <- filteredGenes()
+          sel.genes_aux <- match(filt.genes |> stringr::str_to_upper(), sel.genes |> stringr::str_to_upper())
+          sel.genes_aux <- sel.genes_aux[!is.na(sel.genes_aux)]
+          sel.genes <- sel.genes[sel.genes_aux]
         } else {
-          sel.genes <- selGenes()
+          sel.genes <- filteredGenes()
         }
       }
-      
+
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
