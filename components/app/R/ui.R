@@ -351,7 +351,11 @@ app_ui <- function() {
                     shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
                         "Profile",
-                        "userSettings"
+                        "userprofile-tab"
+                    ),
+                    bigdash::navbarDropdownTab(
+                        "Settings",
+                        "usersettings-tab"
                     ),
                     upgrade.tab,
                     logout.tab
@@ -508,13 +512,17 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "upload-tab",
-                    # UploadInputs("upload"),
                     UploadUI("upload")
                 ),
                 bigdash::bigTabItem(
-                    "userSettings",
-                    UserInputs("user"),
-                    UserUI("user")
+                    "userprofile-tab",
+                    UserProfileInputs("user_profile"),
+                    UserProfileUI("user_profile")
+                ),
+                bigdash::bigTabItem(
+                    "usersettings-tab",
+                    UserSettingsInputs("user_settings"),
+                    UserSettingsUI("user_settings")
                 )
             ),
             tagList(footer)
