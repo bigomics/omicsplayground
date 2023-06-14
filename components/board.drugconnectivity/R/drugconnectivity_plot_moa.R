@@ -26,6 +26,10 @@ drugconnectivity_plot_moa_ui <- function(
     withTooltip(
       shiny::radioButtons(ns("dsea_moatype"), "Plot type:", c("drug class", "target gene"), inline = TRUE),
       "Select plot type of MOA analysis: by class description or by target gene."
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("qweight"), "q-weighting", FALSE),
+      "Apply q-value weighting for NES score values."
     )
   )
   PlotModuleUI(ns("plot"),
@@ -57,7 +61,7 @@ drugconnectivity_plot_moa_server <- function(id,
   moduleServer(
     id, function(input, output, session) {
 
-      getMOA <- shiny::reactive({
+      plot_data <- shiny::reactive({
         moatype <- input$dsea_moatype
         if (moatype == "target gene") {
           res <- getMOA.target()
@@ -69,18 +73,18 @@ drugconnectivity_plot_moa_server <- function(id,
         res
       })
 
-      plot_data <- shiny::reactive({
-        res <- getMOA()
-        shiny::req(res)
-        return(res)
-      })
-
       plotTopBarplot <- function(ntop) {
         res <- plot_data()
         shiny::req(res)
-
-        jj <- unique(c(head(order(-res$NES), ntop), tail(order(-res$NES), ntop)))
-        moa.top <- res$NES[jj]
+        
+        res$score <- res$NES
+        yaxistitle <- "score (NES)"
+        if(input$qweight) {
+          res$score <- res$NES * (1 - res$padj) * (1- 1/res$size**1)
+          yaxistitle <- "score (qNES)"          
+        }
+        jj <- unique(c(head(order(-res$score), ntop), tail(order(-res$score), ntop)))
+        moa.top <- res$score[jj]
         names(moa.top) <- res$pathway[jj]
         
         p <- playbase::pgx.barplot.PLOTLY(
@@ -90,11 +94,11 @@ drugconnectivity_plot_moa_server <- function(id,
           ),
           x = "x",
           y = "y",
-          yaxistitle = "Enrichment (NES)",
+          yaxistitle = yaxistitle,
           xaxistitle = "",
           grouped = FALSE,  ## not really...
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top))),
-          xlen = 25
+          xlen = 30
         )
         
         return(p)
