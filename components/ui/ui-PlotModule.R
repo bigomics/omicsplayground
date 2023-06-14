@@ -886,7 +886,6 @@ PlotModuleServer <- function(id,
       }
 
       if (is.null(renderFunc2)) {
-          print(plotlib2)
         renderFunc2 <- getRenderFunc(plotlib2)
       }
 
