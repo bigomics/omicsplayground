@@ -31,55 +31,57 @@ upload_module_makecontrast_ui <- function(id) {
               # max_height = "330px",
               style = "border-width: 0px;",
               bslib::card_body(
-                  shiny::h4("Create comparisons"),
                   bslib::layout_column_wrap(
-                    width = NULL,
-                    style = htmltools::css(grid_template_columns = "3fr 8fr"),
-                    shiny::fillCol(
-                          flex = c(NA, NA, NA, NA, 1),
-                          withTooltip(
-                              shiny::selectInput(ns("param"),
-                                                 "Phenotype:",
-                                                 choices = NULL,
-                                                 selected = NULL,
-                                                 multiple = TRUE
-                              ),
-                              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                              placement = "left", options = list(container = "body")
+                    width = 1,
+                    # style = htmltools::css(grid_template_columns = "3fr 8fr"),
+                    bslib::layout_column_wrap(
+                      width = 1/5,
+                      shiny::h4("Create comparisons"),
+
+                      withTooltip(
+                          shiny::selectInput(ns("param"),
+                                              "Phenotype:",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
                           ),
-                          shiny::conditionalPanel(
-                              "input.param == '<gene>'",
-                              ns = ns,
-                              shiny::selectizeInput(ns("gene"),
-                                                    "Gene:",
-                                                    choices = NULL,
-                                                    multiple = FALSE
-                              )
-                          ),
-                          shiny::br(),
-                          withTooltip(
-                              shiny::textAreaInput(ns("newname"),
-                                               "Comparison name:",
-                                               placeholder = "e.g. MAIN_vs_CONTROL"
-                              ),
-                              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                              placement = "left", options = list(container = "body")
-                          ),
-                          shiny::br(),
-                          shiny::actionButton(ns("addcontrast"),
-                                              "add comparison",
-                                              icon = icon("plus"),
-                                              class = "btn-outline-primary"
-                          ),
-                          shiny::br()
+                          "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+                          placement = "left", options = list(container = "body")
+                      ),
+                      shiny::conditionalPanel(
+                          "input.param == '<gene>'",
+                          ns = ns,
+                          shiny::selectizeInput(ns("gene"),
+                                                "Gene:",
+                                                choices = NULL,
+                                                multiple = FALSE
+                          )
                       ),
                       withTooltip(
+                          shiny::textAreaInput(ns("newname"),
+                                            "Comparison name:",
+                                            placeholder = "e.g. MAIN_vs_CONTROL"
+                          ),
+                          "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                          placement = "left", options = list(container = "body")
+                      ),
+                      shiny::actionButton(ns("addcontrast"),
+                                          "add comparison",
+                                          icon = icon("plus"),
+                                          class = "btn-outline-primary"
+                      )
+                  )
+                  ),
+                  bslib::layout_column_wrap(
+                    width = 1,
+                    withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
                                           style = "font-size:13px; height: 280px; overflow-y: scroll;"
                           ),
                           "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                           placement = "top", options = list(container = "body")
                       )
+
                   )
               )
           ),
