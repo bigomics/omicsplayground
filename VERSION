@@ -1,3 +1,6 @@
+v2.8.23
+- increase NPRUNE=1000 in drugconnectivity
+
 v2.8.22
 - fix fread pgx.scanInfoFile() bug with datasets-info.csv growing humongous
 
