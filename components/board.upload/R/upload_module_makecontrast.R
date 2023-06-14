@@ -27,10 +27,6 @@ upload_module_makecontrast_ui <- function(id) {
           width = 1, #fill = FALSE,
           #fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr"),
-          bslib::card(
-              # max_height = "330px",
-              style = "border-width: 0px;",
-              bslib::card_body(
                   bslib::layout_column_wrap(
                     width = 1,
                     # style = htmltools::css(grid_template_columns = "3fr 8fr"),
@@ -70,10 +66,7 @@ upload_module_makecontrast_ui <- function(id) {
                                           icon = icon("plus"),
                                           class = "btn-outline-primary"
                       )
-                  )
                   ),
-                  bslib::layout_column_wrap(
-                    width = 1,
                     withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
                                           style = "font-size:13px; height: 280px; overflow-y: scroll;"
@@ -81,10 +74,7 @@ upload_module_makecontrast_ui <- function(id) {
                           "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                           placement = "top", options = list(container = "body")
                       )
-
-                  )
-              )
-          ),
+              ),
           makecontrast_plot_pcaplot_ui(ns("pcaplot"),
                                        title = "PCA/tSNE plot",
                                        info.text = "",
