@@ -127,15 +127,17 @@ UploadBoard <- function(id,
         remove(pgx)
 
         shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
-        playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+          playbase::pgx.initDatasetFolder(
+            pgxdir,
+            new.pgx = pgxname,  ## force update
+            force = FALSE,
+            verbose = FALSE)
         })
 
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+##      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       }
 
       r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
-
-      ## shiny::removeModal()
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 

@@ -385,9 +385,6 @@ ConnectivityBoard <- function(id, pgx) {
       ##
       df <- getConnectivityScores()
 
-      ii <- 1:100
-      sigdb <- "sigdb-archs4.h5"
-
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii, input$sigdb)
       ii <- head(ii, 50) ## 50??
