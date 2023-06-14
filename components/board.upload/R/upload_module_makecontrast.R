@@ -32,10 +32,11 @@ upload_module_makecontrast_ui <- function(id) {
                     bslib::layout_column_wrap(
                       width = 1,
                       height = "100px",
-                      style = htmltools::css(grid_template_columns = "3fr 3fr 3fr 3fr"),
+                      style = htmltools::css(grid_template_columns = "1fr 2fr 3fr 1fr 2fr 3fr"),
+                      shiny::HTML("<b>Phenotype:</b>"),
                       withTooltip(
                           shiny::selectInput(ns("param"),
-                                              "Phenotype:",
+                                              NULL,
                                               choices = NULL,
                                               selected = NULL,
                                               multiple = TRUE
@@ -46,15 +47,17 @@ upload_module_makecontrast_ui <- function(id) {
                       shiny::conditionalPanel(
                           "input.param == '<gene>'",
                           ns = ns,
+                          shiny::HTML("<b>Gene:</b>"),
                           shiny::selectizeInput(ns("gene"),
                                                 "Gene:",
                                                 choices = NULL,
                                                 multiple = FALSE
                           )
                       ),
+                      shiny::HTML("<b>Comparison name:</b>"),
                       withTooltip(
                           shiny::textAreaInput(ns("newname"),
-                                            "Comparison name:",
+                                            NULL,
                                             placeholder = "e.g. MAIN_vs_CONTROL"
                           ),
                           "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
