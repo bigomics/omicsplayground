@@ -172,28 +172,36 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         playbase::sigdb.getSignatureMatrix(sigdb, path=cpath)
     }
 
-    getConnectivityScores <- shiny::reactive({
-      shiny::req(pgx, pgx$connectivity, input$contrast)
+
+    get_pgx_connectivity <- shiny::reactive({
+      shiny::req(pgx, pgx$connectivity)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
 
-      sigdb <- input$sigdb
-      shiny::req(sigdb)
-
-      all.scores <- NULL
-      if (sigdb %in% names(pgx$connectivity)) {
-        all.scores <- pgx$connectivity[[sigdb]]
-      } else {
+      pgx.connectivity <- pgx$connectivity
+      if(!"datasets-sigdb" %in% names(pgx.connectivity)) {
         warning("[getConnectivityScores] ERROR : could not get scores")
+        dbg("[connectivity_server.R] computing for datasets-sigdb.h5")
         ## COMPUTE HERE???  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         sigdb.file = "/home/kwee/Playground/omicsplayground/data/datasets-sigdb.h5"
         sigdb.file = file.path(getPgxDir(),"datasets-sigdb.h5")
-        all.scores <- playbase::pgx.computeConnectivityScores(
+        user.scores <- playbase::pgx.computeConnectivityScores(
           pgx, sigdb.file, ntop = 50, contrasts = NULL,
           remove.le = TRUE, inmemory = FALSE
-        )
-        ## return(NULL)
+          )
+        pgx.connectivity[["datasets-sigdb.h5"]] <- user.scores
       }
+      pgx.connectivity
+    })
 
+    getConnectivityScores <- shiny::reactive({
+      sigdb <- input$sigdb
+      shiny::req(sigdb)
+      shiny::req(get_pgx_connectivity())
+
+      pgx.connectivity <- get_pgx_connectivity()
+      dbg("[connectivity_server.R] names(pgx.connectivity) = ",names(pgx.connectivity))
+      all.scores <- pgx.connectivity[[sigdb]]
+      
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
         warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
