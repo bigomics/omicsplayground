@@ -26,13 +26,12 @@ upload_module_makecontrast_ui <- function(id) {
       bslib::layout_column_wrap(
           width = 1, #fill = FALSE,
           #fixed_width = TRUE,
-          style = htmltools::css(grid_template_columns = "9fr 3fr"),
-                  bslib::layout_column_wrap(
-                    width = 1,
-                    # style = htmltools::css(grid_template_columns = "3fr 8fr"),
+          style = htmltools::css(grid_template_columns = "9fr 3fr;"),
+                  div(
                     bslib::layout_column_wrap(
                       width = 1,
-                      style = htmltools::css(grid_template_columns = "2fr 3fr 3fr 2fr 2fr"),
+                      height = "100px",
+                      style = htmltools::css(grid_template_columns = "2fr 3fr 3fr 2fr 2fr;", "overflow-y:"="auto;"),
                       shiny::h4("Create comparisons:"),
                       withTooltip(
                           shiny::selectInput(ns("param"),
@@ -67,14 +66,14 @@ upload_module_makecontrast_ui <- function(id) {
                                           class = "btn-outline-primary"
                       )
                   ),
-                    withTooltip(
+                  withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
                                           style = "font-size:13px; height: 280px; overflow-y: scroll;"
                           ),
                           "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                           placement = "top", options = list(container = "body")
                       )
-              ),
+                ),
           makecontrast_plot_pcaplot_ui(ns("pcaplot"),
                                        title = "PCA/tSNE plot",
                                        info.text = "",
