@@ -28,11 +28,11 @@ upload_module_makecontrast_ui <- function(id) {
           #fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr;"),
                   div(
+                    shiny::h4("Create comparisons:"),
                     bslib::layout_column_wrap(
                       width = 1,
                       height = "100px",
-                      style = htmltools::css(grid_template_columns = "2fr 3fr 3fr 2fr 2fr;", "overflow-y:"="auto;"),
-                      shiny::h4("Create comparisons:"),
+                      style = htmltools::css(grid_template_columns = "3fr 3fr 3fr 3fr"),
                       withTooltip(
                           shiny::selectInput(ns("param"),
                                               "Phenotype:",
