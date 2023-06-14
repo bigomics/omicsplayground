@@ -384,7 +384,7 @@ compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
         dim(X)
         
         NPRUNE=-1
-        NPRUNE=250
+        NPRUNE=1000
         out1 <- pgx.computeDrugEnrichment(
             ngs, X, xdrugs, methods=c("GSEA","cor"),
             nmin=10, nprune=NPRUNE, contrast=NULL )
@@ -435,10 +435,10 @@ compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
     dim(X)
 
     NPRUNE=-1
-    NPRUNE=250
+    NPRUNE=1000
     res <- pgx.computeDrugEnrichment(
         ngs, X, xdrugs, methods=c("GSEA","cor"),
-        nmin=3, nprune=NPRUNE, contrast=NULL )
+        nmin=10, nprune=NPRUNE, contrast=NULL )
 
     if(is.null(res)) {
         cat("[compute.genePerturbationEnrichment] WARNING:: computing failed!\n")
