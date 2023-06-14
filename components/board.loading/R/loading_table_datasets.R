@@ -128,11 +128,13 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
+        plugins = "scrollResize",
         options = list(
           dom = "ft",
           pageLength = 9999,
           scrollX = FALSE,
           scrollY = "55vh",
+          scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(

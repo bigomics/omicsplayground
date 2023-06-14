@@ -44,6 +44,7 @@ loading_table_datasets_shared_server <- function(id, table) {
         rownames = TRUE,
         editable = FALSE,
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
@@ -51,6 +52,7 @@ loading_table_datasets_shared_server <- function(id, table) {
           pageLength = 9999,
           scrollX = FALSE,
           scrollY = "55vh",
+          scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(

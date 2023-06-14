@@ -314,7 +314,7 @@ LoadingBoard <- function(id,
       }
       info <- NULL
       pdir <- getPGXDIR()      
-      shiny::withProgress(message = "Scanning datasets...", value = 0.33, {
+      shiny::withProgress(message = "Updating library...", value = 0.33, {
         dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
         ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
         info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
@@ -345,7 +345,7 @@ LoadingBoard <- function(id,
       }
 
       ## update meta files
-      shiny::withProgress(message = "Scanning shared datasets...", value = 0.33, {
+      shiny::withProgress(message = "Updating shared library...", value = 0.33, {
         dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")            
         ## playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
         info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
