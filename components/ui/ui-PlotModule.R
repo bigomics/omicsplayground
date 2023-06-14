@@ -206,7 +206,9 @@ PlotModuleUI <- function(id,
   header <- shiny::fillRow(
     flex = c(1, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
-    shiny::div(class = "plotmodule-title", title = title, title),
+    shiny::div(class = "plotmodule-title",
+               style = 'white-space: nowrap; overflow: hidden; text-overflow: clip;',
+               title = title, title),
     if (cards) {
         plot_cards$navList
     } else {
