@@ -76,7 +76,7 @@ upload_module_makecontrast_ui <- function(id) {
                     ),
                   withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
-                                          style = "font-size:13px; height: 280px; overflow-y: scroll;"
+                                          style = "font-size:13px; height: 280px;"
                           ),
                           "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                           placement = "top", options = list(container = "body")
