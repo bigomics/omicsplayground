@@ -60,13 +60,15 @@ CompareBoard <- function(id, pgx) {
       pgx2 <- dataset2()
       shiny::req(pgx1)
       shiny::req(pgx2)
+      shiny::req(input$contrast1)
+      shiny::req(input$contrast2)
+
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
-      shiny::req(ct1)
-      shiny::req(ct2)
+      ct1 <- input$contrast1
+      ct2 <- input$contrast2
+      
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
@@ -108,11 +110,14 @@ CompareBoard <- function(id, pgx) {
       pgx2 <- dataset2()
       shiny::req(pgx1)
       shiny::req(pgx2)
+      shiny::req(input$contrast1)
+      shiny::req(input$contrast2)
+
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
+      ct1 <- input$contrast1
+      ct2 <- input$contrast2
       shiny::req(ct1)
       shiny::req(ct2)
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
@@ -160,14 +165,7 @@ CompareBoard <- function(id, pgx) {
       gsub("[ ]", "", genes)
     })
 
-    input.contrast1 <- shiny::reactive({
-      input$contrast1
-    })
-
-    input.contrast2 <- shiny::reactive({
-      input$contrast2
-    })
-
+  
     ## ============================================================================
     ## ScatterPlot 1
     ## ============================================================================
@@ -236,7 +234,7 @@ CompareBoard <- function(id, pgx) {
     compare_plot_compare1_server(
       "dt1",
       pgx = pgx,
-      input.contrast1 = input.contrast1,
+      input.contrast1 = shiny::reactive(input$contrast1),
       hilightgenes = hilightgenes,
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
@@ -249,7 +247,7 @@ CompareBoard <- function(id, pgx) {
     compare_plot_compare2_server(
       "dt2",
       pgx = pgx,
-      input.contrast2 = input.contrast2,
+      input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
@@ -264,8 +262,8 @@ CompareBoard <- function(id, pgx) {
       pgx = pgx,
       dataset2 = dataset2,
       hilightgenes = hilightgenes,
-      input.contrast1 = input.contrast1,
-      input.contrast2 = input.contrast2,
+      input.contrast1 = reactive(input$contrast1),
+      input.contrast2 = reactive(input$contrast2),
       watermark = WATERMARK
     )
 
@@ -276,8 +274,8 @@ CompareBoard <- function(id, pgx) {
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      input.contrast1 = input.contrast1,
-      input.contrast2 = input.contrast2,
+      input.contrast1 = shiny::reactive(input$contrast1),
+      input.contrast2 = shiny::reactive(input$contrast2),
       watermark = WATERMARK
     )
 
@@ -286,8 +284,8 @@ CompareBoard <- function(id, pgx) {
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      input.contrast1 = input.contrast1,
-      input.contrast2 = input.contrast2,
+      input.contrast1 = shiny::reactive(input$contrast1),
+      input.contrast2 = shiny::reactive(input$contrast2),
       watermark = WATERMARK
     )
 
@@ -305,8 +303,8 @@ CompareBoard <- function(id, pgx) {
       "multibarplot",
       pgx = pgx,
       dataset2 = dataset2,
-      input.contrast1 = input.contrast1,
-      input.contrast2 = input.contrast2,
+      input.contrast1 = shiny::reactive(input$contrast1),
+      input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
@@ -319,8 +317,8 @@ CompareBoard <- function(id, pgx) {
       "genecorr",
       pgx = pgx,
       dataset2 = dataset2,
-      input.contrast1 = input.contrast1,
-      input.contrast2 = input.contrast2,
+      input.contrast1 = shiny::reactive(input$contrast1),
+      input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
