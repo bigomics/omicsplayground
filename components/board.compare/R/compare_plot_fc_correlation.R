@@ -48,18 +48,23 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
+      
+      shiny::req(pgx)
+      shiny::req(dataset2)
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
+      
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
+      browser()
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
+        shiny::validate(shiny::need(all(ct1 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
       }
       if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
+        shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
       }
 
