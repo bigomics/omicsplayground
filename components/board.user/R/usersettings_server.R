@@ -22,6 +22,9 @@ UserSettingsBoard <- function(id, user) {
         res <- list(
             enable_beta = reactive({
                 as.logical(input$enable_beta)
+            }),
+            enable_info = reactive({
+                as.logical(input$enable_info)
             })
         )
         return(res)
