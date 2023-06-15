@@ -32,10 +32,10 @@ upload_module_makecontrast_ui <- function(id) {
                     style = "overflow: hidden;",
                     shiny::h4("Create comparisons:"),
                     shiny::div(
-                        style = "display: flex; justify-content: space-between;",
+                        style = "display: flex; justify-content: space-between; height: 50px; align-items: baseline;",
                         shiny::div(
-                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;;
-                            padding: 10px; margin: 5px;",
+                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                            padding: 0px; margin-right: 5px; margin-left 5px; margin-top 10px; padding-top: 10px;",
                             shiny::HTML("<b>Phenotype:</b>"),
                             withTooltip(
                                 shiny::selectInput(ns("param"),
