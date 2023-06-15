@@ -740,6 +740,14 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
     })
 
+    # this function sets 'input.enable_info' based on the user settings
+    # and is used by all the bs_alert functions in a conditionalPanel
+    observeEvent(env$user_settings$enable_info(), {
+        session$sendCustomMessage('enableInfo',
+                                  list(id="enable_info",
+                                       value=env$user_settings$enable_info()))
+    })
+
     ##-------------------------------------------------------------
     ## report server times
     ##-------------------------------------------------------------
