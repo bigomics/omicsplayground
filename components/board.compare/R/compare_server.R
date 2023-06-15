@@ -58,6 +58,8 @@ CompareBoard <- function(id, pgx) {
     cum_fc <- shiny::reactive({
       pgx1 <- pgx
       pgx2 <- dataset2()
+      shiny::req(pgx1)
+      shiny::req(pgx2)
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
@@ -152,6 +154,7 @@ CompareBoard <- function(id, pgx) {
     })
 
     hilightgenes <- shiny::reactive({
+      shiny::req(input$genelist)
       genes <- as.character(input$genelist)
       genes <- strsplit(genes, split = "[\t, \n]")[[1]]
       gsub("[ ]", "", genes)
@@ -159,11 +162,11 @@ CompareBoard <- function(id, pgx) {
 
     input.contrast1 <- shiny::reactive({
       input$contrast1
-    }) %>% shiny::debounce(2500)
+    })
 
     input.contrast2 <- shiny::reactive({
       input$contrast2
-    }) %>% shiny::debounce(2500)
+    })
 
     ## ============================================================================
     ## ScatterPlot 1
