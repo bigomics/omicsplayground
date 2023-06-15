@@ -111,6 +111,7 @@ upload_module_makecontrast_ui <- function(id) {
               bslib::card_body(
                   shiny::h4("Contrast table:"),
                   shiny::fillRow(
+                      height = 24,
                       flex = c(NA, 0.05, NA, NA, 1),
                       withTooltip(
                           shiny::actionButton(ns("autocontrast"),
