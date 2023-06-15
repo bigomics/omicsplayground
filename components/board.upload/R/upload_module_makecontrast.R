@@ -28,78 +28,82 @@ upload_module_makecontrast_ui <- function(id) {
           width = 1, #fill = FALSE,
           #fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr;"),
+          bslib::card(
+            style = "border-width: 0px;",
+            bslib::card_body(
+              shiny::h4("Create comparisons:"),
+              shiny::div(
+                  style = "display: flex; justify-content: space-between; height: 50px; align-items: baseline;",
                   shiny::div(
-                    style = "overflow: hidden;",
-                    shiny::h4("Create comparisons:"),
-                    shiny::div(
-                        style = "display: flex; justify-content: space-between; height: 50px; align-items: baseline;",
-                        shiny::div(
-                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
-                            padding: 0px; margin-right: 5px; margin-left 5px; margin-top 10px; padding-top: 10px;",
-                            shiny::HTML("<b>Phenotype:</b>"),
-                            withTooltip(
-                                shiny::selectInput(ns("param"),
-                                                   NULL,
-                                                   choices = NULL,
-                                                   selected = NULL,
-                                                   multiple = TRUE
-                                ),
-                                "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                                placement = "left", options = list(container = "body")
-                            )
-                        ),
-                        shiny::div(
-                            shiny::conditionalPanel(
-                                style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
-                                padding: 10px; margin: 5px;",
-                                "input.param == '<gene>'",
-                                ns = ns,
-                                shiny::HTML("<b>Gene:</b>"),
-                                shiny::selectizeInput(ns("gene"),
-                                                      NULL,
-                                                      choices = NULL,
-                                                      multiple = FALSE
-                                )
-                            )
-                        ),
-                        shiny::div(
-                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
-                            padding: 10px; margin: 5px;",
-                            shiny::HTML("<b>Comparison name:</b>"),
-                            withTooltip(
-                                shiny::textInput(ns("newname"),
-                                                     NULL,
-                                                     placeholder = "e.g. MAIN_vs_CONTROL"
-                                ),
-                                "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                                placement = "left", options = list(container = "body")
-                            )
-                        )
-                    ),
-                  shiny::div(
-                     style = "overflow: auto;",
-                     withTooltip(
-                          shiny::uiOutput(ns("createcomparison"),
-                                          style = "font-size:13px; height: 280px;"
+                      style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                      padding: 0px; margin-right: 5px; margin-left 5px; margin-top 10px; padding-top: 10px;",
+                      shiny::HTML("<b>Phenotype:</b>"),
+                      withTooltip(
+                          shiny::selectInput(ns("param"),
+                                            NULL,
+                                            choices = NULL,
+                                            selected = NULL,
+                                            multiple = TRUE
                           ),
-                          "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
-                          placement = "top", options = list(container = "body")
+                          "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+                          placement = "left", options = list(container = "body")
                       )
+                  ),
+                  shiny::div(
+                      shiny::conditionalPanel(
+                          style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                          padding: 10px; margin: 5px;",
+                          "input.param == '<gene>'",
+                          ns = ns,
+                          shiny::HTML("<b>Gene:</b>"),
+                          shiny::selectizeInput(ns("gene"),
+                                                NULL,
+                                                choices = NULL,
+                                                multiple = FALSE
+                          )
+                      )
+                  ),
+                  shiny::div(
+                      style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                      padding: 10px; margin: 5px;",
+                      shiny::HTML("<b>Comparison name:</b>"),
+                      withTooltip(
+                          shiny::textInput(ns("newname"),
+                                              NULL,
+                                              placeholder = "e.g. MAIN_vs_CONTROL"
+                          ),
+                          "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                          placement = "left", options = list(container = "body")
+                      )
+                    )
+                  ),
+              shiny::div(
+                style = "overflow: auto;",
+                withTooltip(
+                  shiny::uiOutput(ns("createcomparison"),
+                  style = "font-size:13px; height: 280px;"
+                  ),
+                  "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
+                  placement = "top", options = list(container = "body")
                   )
-                ),
-          makecontrast_plot_pcaplot_ui(ns("pcaplot"),
-                                       title = "PCA/tSNE plot",
-                                       info.text = "",
-                                       caption = "",
-                                       height = c("100%", 700),
-                                       width = c("auto", 800))
+                )
+              )
           ),
+          makecontrast_plot_pcaplot_ui(
+            ns("pcaplot"),
+            title = "PCA/tSNE plot",
+            info.text = "",
+            caption = "",
+            height = c("100%", 700),
+            width = c("auto", 800)
+            )
+            ),
           shiny::div(
               shiny::actionButton(ns("addcontrast"),
                                   "add comparison",
                                   icon = icon("plus"),
                                   class = "btn-outline-primary"
-              )
+                                  )
           ),
           bslib::card(
               fill = TRUE,
