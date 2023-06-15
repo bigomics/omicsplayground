@@ -23,6 +23,7 @@ upload_module_makecontrast_ui <- function(id) {
     bslib::layout_column_wrap(
       width = 1,
       height = "calc(100vh - 200px)",
+      heights_equal = "row",
       bslib::layout_column_wrap(
           width = 1, #fill = FALSE,
           #fixed_width = TRUE,
@@ -88,6 +89,13 @@ upload_module_makecontrast_ui <- function(id) {
                                        caption = "",
                                        height = c("100%", 700),
                                        width = c("auto", 800))
+          ),
+          div(
+              shiny::actionButton(ns("addcontrast"),
+                                  "add comparison",
+                                  icon = icon("plus"),
+                                  class = "btn-outline-primary"
+              )
           ),
           bslib::card(
               fill = TRUE,
