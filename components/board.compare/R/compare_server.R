@@ -56,23 +56,24 @@ CompareBoard <- function(id, pgx) {
     ## ================================================================================
 
     cum_fc <- shiny::reactive({
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      shiny::req(pgx1)
-      shiny::req(pgx2)
+      shiny::req(pgx)
+      shiny::req(dataset2)
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
-
-
+      
+      pgx1 <- pgx
+      pgx2 <- dataset2()
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
       ct2 <- input$contrast2
       
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
+        shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
       }
       if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
+        shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
       }
 
@@ -274,8 +275,6 @@ CompareBoard <- function(id, pgx) {
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast2 = shiny::reactive(input$contrast2),
       watermark = WATERMARK
     )
 
@@ -284,8 +283,6 @@ CompareBoard <- function(id, pgx) {
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast2 = shiny::reactive(input$contrast2),
       watermark = WATERMARK
     )
 
