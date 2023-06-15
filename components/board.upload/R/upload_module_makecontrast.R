@@ -28,12 +28,13 @@ upload_module_makecontrast_ui <- function(id) {
           width = 1, #fill = FALSE,
           #fixed_width = TRUE,
           style = htmltools::css(grid_template_columns = "9fr 3fr;"),
-                  div(
+                  shiny::div(
+                    style = "overflow: hidden;",
                     shiny::h4("Create comparisons:"),
                     shiny::div(
                         style = "display: flex; justify-content: space-between;",
                         shiny::div(
-                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;;
                             padding: 10px; margin: 5px;",
                             shiny::HTML("<b>Phenotype:</b>"),
                             withTooltip(
@@ -75,13 +76,16 @@ upload_module_makecontrast_ui <- function(id) {
                             )
                         )
                     ),
-                  withTooltip(
+                  shiny::div(
+                     style = "overflow: auto;",
+                     withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
                                           style = "font-size:13px; height: 280px;"
                           ),
                           "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                           placement = "top", options = list(container = "body")
                       )
+                  )
                 ),
           makecontrast_plot_pcaplot_ui(ns("pcaplot"),
                                        title = "PCA/tSNE plot",
@@ -90,7 +94,7 @@ upload_module_makecontrast_ui <- function(id) {
                                        height = c("100%", 700),
                                        width = c("auto", 800))
           ),
-          div(
+          shiny::div(
               shiny::actionButton(ns("addcontrast"),
                                   "add comparison",
                                   icon = icon("plus"),
