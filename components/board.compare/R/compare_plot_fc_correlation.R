@@ -56,7 +56,7 @@ compare_plot_fc_correlation_server <- function(id,
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      browser()
+  
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
