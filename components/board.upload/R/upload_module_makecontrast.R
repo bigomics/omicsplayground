@@ -17,7 +17,7 @@ MakeContrastGadget <- function(X, pheno, height = 720) {
 
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
-  
+
 
   shiny::tagList(
     bslib::layout_column_wrap(
@@ -29,46 +29,51 @@ upload_module_makecontrast_ui <- function(id) {
           style = htmltools::css(grid_template_columns = "9fr 3fr;"),
                   div(
                     shiny::h4("Create comparisons:"),
-                    bslib::layout_column_wrap(
-                      width = 1,
-                      height = "100px",
-                      style = htmltools::css(grid_template_columns = "1fr 2fr 3fr 1fr 2fr 3fr"),
-                      shiny::HTML("<b>Phenotype:</b>"),
-                      withTooltip(
-                          shiny::selectInput(ns("param"),
-                                              NULL,
-                                              choices = NULL,
-                                              selected = NULL,
-                                              multiple = TRUE
-                          ),
-                          "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                          placement = "left", options = list(container = "body")
-                      ),
-                      shiny::conditionalPanel(
-                          "input.param == '<gene>'",
-                          ns = ns,
-                          shiny::HTML("<b>Gene:</b>"),
-                          shiny::selectizeInput(ns("gene"),
-                                                "Gene:",
-                                                choices = NULL,
-                                                multiple = FALSE
-                          )
-                      ),
-                      shiny::HTML("<b>Comparison name:</b>"),
-                      withTooltip(
-                          shiny::textAreaInput(ns("newname"),
-                                            NULL,
-                                            placeholder = "e.g. MAIN_vs_CONTROL"
-                          ),
-                          "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                          placement = "left", options = list(container = "body")
-                      ),
-                      shiny::actionButton(ns("addcontrast"),
-                                          "add comparison",
-                                          icon = icon("plus"),
-                                          class = "btn-outline-primary"
-                      )
-                  ),
+                    shiny::div(
+                        style = "display: flex; justify-content: space-between;",
+                        shiny::div(
+                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                            padding: 10px; margin: 5px;",
+                            shiny::HTML("<b>Phenotype:</b>"),
+                            withTooltip(
+                                shiny::selectInput(ns("param"),
+                                                   NULL,
+                                                   choices = NULL,
+                                                   selected = NULL,
+                                                   multiple = TRUE
+                                ),
+                                "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+                                placement = "left", options = list(container = "body")
+                            )
+                        ),
+                        shiny::div(
+                            shiny::conditionalPanel(
+                                style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                                padding: 10px; margin: 5px;",
+                                "input.param == '<gene>'",
+                                ns = ns,
+                                shiny::HTML("<b>Gene:</b>"),
+                                shiny::selectizeInput(ns("gene"),
+                                                      NULL,
+                                                      choices = NULL,
+                                                      multiple = FALSE
+                                )
+                            )
+                        ),
+                        shiny::div(
+                            style = "display: grid; grid-template-columns: auto auto; grid-gap: 10px;
+                            padding: 10px; margin: 5px;",
+                            shiny::HTML("<b>Comparison name:</b>"),
+                            withTooltip(
+                                shiny::textInput(ns("newname"),
+                                                     NULL,
+                                                     placeholder = "e.g. MAIN_vs_CONTROL"
+                                ),
+                                "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                                placement = "left", options = list(container = "body")
+                            )
+                        )
+                    ),
                   withTooltip(
                           shiny::uiOutput(ns("createcomparison"),
                                           style = "font-size:13px; height: 280px; overflow-y: scroll;"
@@ -436,7 +441,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
               scrollResize = TRUE,
               pageLength = 999,
               ## autoWidth = TRUE, ## scrollX=TRUE,
-              scrollY = "300px", 
+              scrollY = "300px",
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),
                 list(width = "150px", targets = c(1)),
