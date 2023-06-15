@@ -107,20 +107,23 @@ CompareBoard <- function(id, pgx) {
     })
 
     getOmicsScoreTable <- shiny::reactive({
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      shiny::req(pgx1)
-      shiny::req(pgx2)
+      
+      shiny::req(pgx)
+      shiny::req(dataset2())
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
 
+      pgx1 <- pgx
+      pgx2 <- dataset2()
+
+      rownames(pgx1$X) <- toupper(rownames(pgx1$X))
+      rownames(pgx2$X) <- toupper(rownames(pgx2$X))
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
       ct2 <- input$contrast2
-      shiny::req(ct1)
-      shiny::req(ct2)
+      
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
@@ -131,8 +134,8 @@ CompareBoard <- function(id, pgx) {
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
-      gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
-      F1 <- F1[match(gg, rownames(F1)), , drop = FALSE]
+      gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
+      F1 <- F1[match(gg, toupper(rownames(F1)),), , drop = FALSE]
       F2 <- F2[match(gg, rownames(F2)), , drop = FALSE]
       rownames(F1) <- gg
       rownames(F2) <- gg
