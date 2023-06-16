@@ -41,13 +41,14 @@ compare_plot_cum_fc1_server <- function(id,
                                         pgx,
                                         dataset2,
                                         cum_fc,
-                                        input.contrast1,
-                                        input.contrast2,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     cumfcplot.RENDER <- shiny::reactive({
+      shiny::req(pgx)
+      shiny::req(dataset2)
+      shiny::req(cum_fc)
       F <- cum_fc()
       indexes <- substr(colnames(F), 1, 1)
       F1 <- F[, indexes == 1, drop = FALSE]

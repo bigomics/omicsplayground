@@ -40,14 +40,15 @@ compare_plot_cum_fc2_ui <- function(id,
 compare_plot_cum_fc2_server <- function(id,
                                         pgx,
                                         dataset2,
-                                        input.contrast1,
-                                        input.contrast2,
                                         cum_fc,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     cumfcplot.RENDER <- shiny::reactive({
+      shiny::req(pgx)
+      shiny::req(dataset2)
+      shiny::req(cum_fc)
       F <- cum_fc()
       indexes <- substr(colnames(F), 1, 1)
       F1 <- F[, indexes == 1, drop = FALSE]
@@ -57,6 +58,7 @@ compare_plot_cum_fc2_server <- function(id,
       ii <- ii[order(rowMeans(F[ii, ]))]
       F <- F[ii, , drop = FALSE]
       F1 <- F1[ii, , drop = FALSE]
+      
       F2 <- F2[ii, , drop = FALSE]
 
       fig <- playbase::pgx.barplot.PLOTLY(

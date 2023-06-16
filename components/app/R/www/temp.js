@@ -39,7 +39,10 @@ $(document).on('shiny:connected', function() {
 	}
     });
 
+
 });  // end of on.shiny.connected
+
+
 
 
 const unloadSidebar = () => {
@@ -121,6 +124,11 @@ $(function(){
 
 Shiny.addCustomMessageHandler('manage-sub', (msg) => {
 	window.location.assign(msg);
+});
+
+
+Shiny.addCustomMessageHandler('enableInfo', (data) => {
+  Shiny.setInputValue(data.id, data.value);
 });
 
 Shiny.addCustomMessageHandler('get-permissions', (msg) => {
