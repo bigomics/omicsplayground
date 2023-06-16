@@ -312,11 +312,11 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
         is.drug <- grepl("activity",f)
         
         NPRUNE=-1
-        NPRUNE=250
+        NPRUNE=1000
         fname <- names(ref.db)[i]
         out1 <- pgx.computeDrugEnrichment(
             ngs, X, xdrugs, methods=c("GSEA","cor"),
-            nmin=3, nprune=NPRUNE, contrast=NULL )
+            nmin=10, nprune=NPRUNE, contrast=NULL )
 
         if(is.null(out1)) {
             message("[compute.drugActivityEnrichment] WARNING:: pgx.computeDrugEnrichment failed!")
