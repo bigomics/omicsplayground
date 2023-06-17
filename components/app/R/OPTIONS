@@ -1,8 +1,8 @@
 TITLE           = 'Omics Playground'
 #AUTHENTICATION  = firebase
 #AUTHENTICATION  = firebase.full
-#AUTHENTICATION  = none
-AUTHENTICATION  = password
+AUTHENTICATION  = none
+#AUTHENTICATION  = password
 ENABLE_USERDIR  = TRUE
 ENABLE_UPLOAD   = TRUE
 ENABLE_SAVE     = TRUE

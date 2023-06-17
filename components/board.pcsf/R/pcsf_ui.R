@@ -20,6 +20,16 @@ PcsfInputs <- function(id) {
       "Choose how to color the nodes",
       placement = "right"
     ),
+    conditionalPanel(
+      "input.colorby == 'contrast'",
+      ns = ns,
+      withTooltip(
+        selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
+        "Select contrast.",
+        placement = "right"
+      )
+    ),
+    hr(),
     withTooltip(
       radioButtons(
         ns("highlightby"),
@@ -31,16 +41,7 @@ PcsfInputs <- function(id) {
       "Highlight labels by scaling with selection.",
       placement = "top"
     ),
-    conditionalPanel(
-      "input.colorby == 'contrast'",
-      ns = ns,
-      withTooltip(
-        selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
-        "Select contrast.",
-        placement = "right"
-      )
-    ),
-    br(),
+    hr(),
     withTooltip(    
       shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, 0, 0.5),
       "Select contrast.",
