@@ -600,7 +600,7 @@ LoadingBoard <- function(id,
     # awaiting confirmation and show them if so
     observeEvent(c(r_global$nav, renewSharedPGXINFO()),  {
       req(r_global$nav == 'load-tab')
-      shared_pgx_names <- getRequestedSharedPGXINFO()
+      shared_pgx_names <- getReceivedPGXfiles()
 
       accept_btns <- makebuttonInputs2(
         FUN = actionButton,
@@ -691,21 +691,19 @@ LoadingBoard <- function(id,
       renewSharedPGXINFO(renewSharedPGXINFO() + 1)
     })
 
-    getRequestedSharedPGXINFO <- shiny::reactive({
-      req(auth)
-
-      # allow trigger for when a shared pgx is accepted / decline
-      renewSharedPGXINFO()
-      if (!auth$logged()) {
-        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
-                    not showing table!")
-        return(NULL)
-      }
-      df <- getPGXINFO()
-      if (is.null(df)) {
-        return(NULL)
-      }
-
+    getReceivedPGXfiles <- shiny::reactive({
+      ## req(auth)
+      ## # allow trigger for when a shared pgx is accepted / decline
+      ## renewSharedPGXINFO()
+      ## if (!auth$logged()) {
+      ##   warning("[getReceivedPGXfiles] user not logged in!
+      ##               not showing table!")
+      ##   return(NULL)
+      ## }
+      ## df <- getPGXINFO()
+      ## if (is.null(df)) {
+      ##   return(NULL)
+      ## }
       pgxdir <- getPGXDIR()
       pgxfiles <- dir(pgxdir, pattern = '__from__')
       pgxfiles
