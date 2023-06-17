@@ -245,12 +245,13 @@ dataview_plot_tsne_server <- function(id,
           ticklen = 6,
           len = 0.4,
           thickness = 20
-        ) %>%
-        plotly_default() ## %>% toWebGL()
+        )  ## %>% toWebGL()
     }
    
     plotly.RENDER <- function() {
-      fig <- plotly.RENDER0() %>% plotly::hide_colorbar()
+      fig <- plotly.RENDER0() %>%
+        plotly_default() %>%
+        plotly::hide_colorbar()
       fig
     }
 

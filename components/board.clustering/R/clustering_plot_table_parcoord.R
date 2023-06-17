@@ -18,9 +18,10 @@ clustering_plot_parcoord_ui <- function(
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("hm_pcaverage"), "Average by gene module", FALSE),
+      "Average gene by gene module"),
     withTooltip(shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
-      "Scale expression values to mean=0 and SD=1.",
-      placement = "right", options = list(container = "body")
+      "Scale expression values to mean=0 and SD=1."
     )
   )
 
@@ -62,11 +63,13 @@ clustering_table_parcoord_ui <- function(
 }
 
 clustering_plot_table_parcoord_server <- function(id,
-                                                     parcoord.matrix,
-                                                     watermark = FALSE,
-                                                     getTopMatrix) {
+                                                  getTopMatrix,
+                                                  watermark = FALSE
+                                                  ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    parcoord.ranges <- shiny::reactiveValues()
 
     shiny::observeEvent(plotly::event_data("plotly_restyle", source = "pcoords"), {
       ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
@@ -97,15 +100,19 @@ clustering_plot_table_parcoord_server <- function(id,
       }
     })
 
-
-    parcoord.ranges <- shiny::reactiveValues()
-
     parcoord.matrix <- shiny::reactive({
       filt <- getTopMatrix()
       shiny::req(filt)
       zx <- filt$mat[, ]
       if (input$hm_pcscale) {
         zx <- t(scale(t(zx)))
+      }
+      if(input$hm_pcaverage) {
+        idx <- filt$idx
+        zx.mean  <- tapply(1:nrow(zx),idx,function(ii) colMeans(zx[c(ii,ii),]))
+        zx  <- do.call(rbind,zx.mean)
+        rownames(zx) <- names(zx.mean)
+        filt$idx <- names(zx.mean)
       }
       rr <- shiny::isolate(shiny::reactiveValuesToList(parcoord.ranges))
       nrange <- length(rr)
@@ -128,7 +135,7 @@ clustering_plot_table_parcoord_server <- function(id,
             rng <- range_[[j]]
             keep_var <- keep_var | dplyr::between(mat[, i], min(rng), max(rng))
           }
-          keep <- keep & keep_var
+          keep <- (keep & keep_var)
         }
       }
       list(mat = mat[keep, , drop = FALSE], clust = clust[keep])
@@ -167,17 +174,18 @@ clustering_plot_table_parcoord_server <- function(id,
           line = list(
             color = ~clust.id,
             colorscale = klrpal2,
-            cmin = min(clust.id), cmax = max(clust.id),
-            showscale = FALSE
+            cmin = min(clust.id),
+            cmax = max(clust.id),
+            showscale = FALSE,
+            width = 10
             ## reversescale = TRUE
           ),
           dimensions = dimensions
         )
       plt <- plt %>%
         plotly::layout(margin = list(l = 60, r = 60, t = 0, b = 30)) %>%
-        ## config(displayModeBar = FALSE) %>%
-        ## config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
-        plotly::config(toImageButtonOptions = list(format = "svg", width = 900, height = 350, scale = 1.2)) %>%
+        plotly::config(toImageButtonOptions = list(format = "svg",
+                                                   width = 900, height = 350, scale = 1.2)) %>%
         plotly::config(displaylogo = FALSE) %>%
         plotly::event_register("plotly_restyle")
 
@@ -207,7 +215,7 @@ clustering_plot_table_parcoord_server <- function(id,
 
       mat <- parcoord$mat
       clust <- parcoord$clust
-      df <- data.frame(cluster = clust, mat, check.names = FALSE)
+      df <- data.frame(gene.module = clust, mat, check.names = FALSE)
       numeric.cols <- 2:ncol(df)
       DT::datatable(
         df,

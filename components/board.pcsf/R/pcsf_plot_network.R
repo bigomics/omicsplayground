@@ -61,14 +61,12 @@ pcsf_plot_network_server <- function(id,
                                      pcsf_beta = reactive(1),
                                      colorby = reactive("gene.cluster"),
                                      contrast = reactive(NULL),
-                                     show.centrality = reactive(TRUE),
+                                     highlightby = reactive("none"),
                                      watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    dbg("[pcsf_plot_network.R] ns =",ns("???"))
-    
     observeEvent(input$physics, {
       #Update the network
       do.physics <- input$physics
@@ -102,9 +100,6 @@ pcsf_plot_network_server <- function(id,
       res <- pcsf_compute()      
       net <- get_network()
 
-      dbg("[pcsf_plot_network.R:visnetwork.RENDER] reacted!")
-      dbg("[pcsf_plot_network.R:get_network] 2")
-
       .colorby <- colorby()
       .contrast <- contrast()
       if(.colorby == 'gene.cluster') {
@@ -123,11 +118,22 @@ pcsf_plot_network_server <- function(id,
       }
       
       label_cex = 30
-      if(show.centrality()) {
+      if(highlightby()=="centrality") {
         ewt <- 1.0 / igraph::E(net)$weight
         bc <- igraph::page_rank(net, weights=ewt)$vector
         ##bc <- igraph::betweenness(net)
         label_cex <- 30 + 80 * (bc / max(bc))**2
+      }
+      if(highlightby()=="FC") {
+        vv <- igraph::V(net)$name        
+        if(.colorby=="contrast") {
+          fx <- res$meta[,.contrast]
+          fx <- fx[vv]
+        } else {
+          fx <- rowMeans(res$meta**2)
+          fx <- fx[vv]
+        }
+        label_cex <- 30 + 80 * (abs(fx) / max(abs(fx)))**2
       }
       
       ##E(net)$weight <- 1/(E(net)$weight+1e-10)
@@ -144,7 +150,6 @@ pcsf_plot_network_server <- function(id,
         layout = layout,
         physics = do.physics)
 
-      dbg("[pcsf_plot_network.R:visnetwork.RENDER] done!")
       visnet
     }
     

@@ -8,6 +8,8 @@ app_ui <- function() {
     ## Build USERMENU
     #-------------------------------------------------------
 
+    VERSION <- scan(file.path(OPG,"VERSION"), character())[1]
+
     upgrade.tab <- NULL
     if(opt$AUTHENTICATION == "firebase") {
         upgrade.tab <- bigdash::navbarDropdownItem(
@@ -297,7 +299,14 @@ app_ui <- function() {
                     src = "assets/img/bigomics.png",
                     width = "110",
                 ),
-                shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
+                shiny::conditionalPanel(
+                    condition = "input.nav == 'welcome-tab'",
+                    shiny::div(paste("Omics Playground",VERSION), class='current-dataset'),
+                ),
+                shiny::conditionalPanel(
+                    condition = "input.nav != 'welcome-tab'",
+                    shiny::div(shiny::textOutput("current_dataset"), class='current-dataset'),
+                ),
                 bigdash::navbarDropdown(
                     "Support",
                     bigdash::navbarDropdownItem(
@@ -342,7 +351,11 @@ app_ui <- function() {
                     shiny::textOutput("current_user", inline = TRUE),
                     bigdash::navbarDropdownTab(
                         "Profile",
-                        "userSettings"
+                        "userprofile-tab"
+                    ),
+                    bigdash::navbarDropdownTab(
+                        "Settings",
+                        "usersettings-tab"
                     ),
                     upgrade.tab,
                     logout.tab
@@ -499,13 +512,17 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "upload-tab",
-                    # UploadInputs("upload"),
                     UploadUI("upload")
                 ),
                 bigdash::bigTabItem(
-                    "userSettings",
-                    UserInputs("user"),
-                    UserUI("user")
+                    "userprofile-tab",
+                    UserProfileInputs("user_profile"),
+                    UserProfileUI("user_profile")
+                ),
+                bigdash::bigTabItem(
+                    "usersettings-tab",
+                    UserSettingsInputs("user_settings"),
+                    UserSettingsUI("user_settings")
                 )
             ),
             tagList(footer)

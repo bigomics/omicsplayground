@@ -32,9 +32,9 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 WORKDIR /
 #RUN pip3 install umap-learn
 #RUN R -e "devtools::install_github('m-jahn/fluctuator')"
-#RUN R -e "BiocManager::install(c('iheatmapr'))"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-RUN R -e "install.packages(c('RcppZiggurat','Rfast'))"
+RUN R -e "BiocManager::install(c('topGO'))"
+RUN R -e "install.packages(c('BH'))"  ## for PCSF
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
@@ -42,9 +42,11 @@ RUN R -e "install.packages(c('RcppZiggurat','Rfast'))"
 
 WORKDIR /
 RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
+RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)

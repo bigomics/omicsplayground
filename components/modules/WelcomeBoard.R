@@ -44,14 +44,8 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
     })
 
     observeEvent(input$btn_load_data, {
-      # close the right sidebar
-      #shinyjs::runjs("$('#settings-container').trigger('click');")
-      #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
-
       bigdash.openSettings(lock=TRUE)
-      shinyjs::runjs("$('#settings-container').trigger('mouseenter');")      
       bigdash.openSidebar()
-
       bigdash.selectTab( session, "load-tab" )
     })
 
