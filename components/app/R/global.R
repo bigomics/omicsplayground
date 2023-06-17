@@ -71,7 +71,7 @@ pgx.system.file <- function(file='.', package) {
     file.path(dir,file)
 }
 
-AUTHENTICATION = "none"
+AUTHENTICATION = "password"
 WATERMARK = FALSE
 DEV       = FALSE
 DEBUG     = TRUE

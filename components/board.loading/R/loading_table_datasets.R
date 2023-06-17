@@ -55,8 +55,9 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
       menus <- c()
       for (i in 1:nrow(df)) {
 
-        download_pgx_menuitem = NULL
-        share_dataset_menuitem = NULL
+        download_pgx_menuitem <- NULL
+        share_public_menuitem <- NULL
+        share_dataset_menuitem <- NULL
         if(enable_pgxdownload) {
           download_pgx_menuitem <- shiny::actionButton(
             ns(paste0("download_pgx_row_",i)),
@@ -64,16 +65,27 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             icon = shiny::icon('download'),
             class = "btn btn-outline-dark",
             style = "border: none;",
+            width = '100%',
             onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id,{priority: "event"})')
           )
         }
         if(enable_share) {
-          share_dataset_menuitem <- shiny::actionButton(
-            ns(paste0("share_dataset_row_", i)),
-            label = "Share Dataset",
+          share_public_menuitem <- shiny::actionButton(
+            ns(paste0("share_public_row_", i)),
+            label = "Share Public",
             icon = shiny::icon('share-nodes'),
             class = "btn btn-outline-info",
             style = 'border: none;',
+            width = '100%',
+            onclick=paste0('Shiny.onInputChange(\"',ns("share_public_pgx"),'\",this.id,{priority: "event"})')
+          )
+          share_dataset_menuitem <- shiny::actionButton(
+            ns(paste0("share_dataset_row_", i)),
+            label = "Share with User",
+            icon = shiny::icon('share-nodes'),
+            class = "btn btn-outline-info",
+            style = 'border: none;',
+            width = '100%',
             onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id,{priority: "event"})')
           )
         }
@@ -89,8 +101,10 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
                 icon = shiny::icon("file-archive"),
                 class = "btn btn-outline-dark",
                 style = "border: none;",
+                width = '100%',
                 onclick=paste0('Shiny.onInputChange(\"',ns("download_zip"),'\",this.id,{priority: "event"})')
                 ),
+              share_public_menuitem,
               share_dataset_menuitem,
               shiny::actionButton(
                 ns(paste0("delete_dataset_row_",i)),
@@ -98,6 +112,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
                 icon = shiny::icon("trash"),
                 class = "btn btn-outline-danger",
                 style = 'border: none;',
+                width = '100%',
                 onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
               )
             )
@@ -111,6 +126,8 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
       observeEvent(input$download_pgx, { rl$download_pgx <- input$download_pgx })
       observeEvent(input$download_zip, { rl$download_zip <- input$download_zip })
       observeEvent(input$share_pgx, { rl$share_pgx <- input$share_pgx },
+                   ignoreInit = TRUE)
+      observeEvent(input$share_public_pgx, { rl$share_public_pgx <- input$share_public_pgx },
                    ignoreInit = TRUE)
       observeEvent(input$delete_pgx, {
           rl$delete_pgx <- input$delete_pgx;
