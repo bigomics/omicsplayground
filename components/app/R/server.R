@@ -124,12 +124,6 @@ app_server <- function(input, output, session) {
         loadedDataset = 0
     )
 
-    # store the active tab location globally
-    observeEvent(input$nav, {
-      r_global$nav <- input$nav
-    })
-
-
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
