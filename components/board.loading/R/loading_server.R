@@ -182,8 +182,7 @@ LoadingBoard <- function(id,
         title = "Are you sure?",
         tagList(
           paste("The dataset", pgx_name, "will be shared with the user", input$share_user,
-          " as specified. The user you share a dataset with will have to accept
-          this request. Please ensure that this information is correct before confirming.")
+          ". Please check the email address before confirming.")
         ),
         html = TRUE,
         showCancelButton = TRUE,
@@ -964,33 +963,34 @@ LoadingBoard <- function(id,
           }
           r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
-
-        not.anonymous <- (!is.na(auth$name()) && auth$name() != "")
-        allow.delete <- !not.anonymous
-        allow.delete <- TRUE
-        if (!allow.delete) {
-          warning(
-            "[LoadingBoard::@deletebutton] WARNING:: ", pgxfile,
-            " not owned by ", auth$name(), " \n"
-          )
-          shinyalert::shinyalert(
-            title = "Error!",
-            text = "You do not have permission to delete this dataset",
-            type = "error"
-          )
-        } else {
-          shinyalert::shinyalert(
-            "Delete this dataset?",
-            paste("Are you sure you want\nto delete '", pgxfile, "'?"),
-            confirmButtonText = "Delete",
-            showCancelButton = TRUE,
-            callbackR = deletePGX,
-            inputId = "confirmdelete"
-          )
-        }
-
-        rl$delete_pgx <- NULL
-      },
+      }
+      
+      not.anonymous <- (!is.na(auth$name()) && auth$name() != "")
+      allow.delete <- !not.anonymous
+      allow.delete <- TRUE
+      if (!allow.delete) {
+        warning(
+          "[LoadingBoard::@deletebutton] WARNING:: ", pgxfile,
+          " not owned by ", auth$name(), " \n"
+        )
+        shinyalert::shinyalert(
+          title = "Error!",
+          text = "You do not have permission to delete this dataset",
+          type = "error"
+        )
+      } else {
+        shinyalert::shinyalert(
+          "Delete this dataset?",
+          paste("Are you sure you want\nto delete '", pgxfile, "'?"),
+          confirmButtonText = "Delete",
+          showCancelButton = TRUE,
+          callbackR = deletePGX,
+          inputId = "confirmdelete"
+        )
+      }
+      
+      rl$delete_pgx <- NULL
+    },
       ignoreNULL = TRUE,
       ignoreInit = TRUE
     )
