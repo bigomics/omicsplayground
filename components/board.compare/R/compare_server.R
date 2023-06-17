@@ -116,8 +116,8 @@ CompareBoard <- function(id, pgx) {
       pgx1 <- pgx
       pgx2 <- dataset2()
 
-      rownames(pgx1$X) <- toupper(rownames(pgx1$X))
-      rownames(pgx2$X) <- toupper(rownames(pgx2$X))
+      # rownames(pgx1$X) <- toupper(rownames(pgx1$X)) # BREAKS EXPRESSION AND OTHER BOARDS
+      # rownames(pgx2$X) <- toupper(rownames(pgx2$X)) # BREAKS EXPRESSION AND OTHER BOARDS
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
@@ -134,8 +134,10 @@ CompareBoard <- function(id, pgx) {
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
-      gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
-      F1 <- F1[match(gg, toupper(rownames(F1)),), , drop = FALSE]
+      # gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X))) # BREAKS EXPRESSION AND OTHER BOARDS
+      gg <- intersect(c(rownames(pgx1$X)), c(rownames(pgx2$X)))
+      # F1 <- F1[match(gg, toupper(rownames(F1)),), , drop = FALSE] # BREAKS EXPRESSION AND OTHER BOARDS
+      F1 <- F1[match(gg, c(rownames(F1)),), , drop = FALSE] 
       F2 <- F2[match(gg, rownames(F2)), , drop = FALSE]
       rownames(F1) <- gg
       rownames(F2) <- gg
