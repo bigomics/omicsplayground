@@ -8,8 +8,9 @@
 ##
 
 
-bs_alert <- function(m="alert!") {
-  shiny::tags$div(
+bs_alert <- function(m="alert!", conditional = TRUE) {
+
+  alert_tag <- shiny::tags$div(
     class = "alert alert-primary alert-dismissible fade show",
     role = "alert",
     m,
@@ -23,6 +24,18 @@ bs_alert <- function(m="alert!") {
       )
     )
   )
+
+  if (conditional) {
+      return(
+          shiny::conditionalPanel(
+              condition = "input.enable_info",
+              alert_tag
+          )
+      )
+  } else {
+      return(alert_tag)
+  }
+
 }
 
 
@@ -50,7 +63,7 @@ bs_carousel2 <- function(id, contents, interval=4000, autostart=TRUE, wrap=TRUE,
     if(i==1) {
       div1 <- paste0('<div class="carousel-item active" data-bs-interval="',interval[i],'">')
     } else {
-      div1 <- paste0('<div class="carousel-item" data-bs-interval="',interval[i],'">')      
+      div1 <- paste0('<div class="carousel-item" data-bs-interval="',interval[i],'">')
     }
     items[[i]] <- paste0(div1, contents[[i]],'</div>')
   }
@@ -60,7 +73,7 @@ bs_carousel2 <- function(id, contents, interval=4000, autostart=TRUE, wrap=TRUE,
 
 
 bs_carousel <- function(id, contents, img.src=NULL) {
-    
+
   cbutton <- function(n) {
     shiny::tags$button(
       type = "button",
@@ -93,8 +106,8 @@ bs_carousel <- function(id, contents, img.src=NULL) {
       items   <- lapply(1:len, function(i) citem(contents[[i]], img.src[i], active=(i==1)))
   } else {
       items   <- lapply(1:len, function(i) citem(contents[[i]], active=(i==1)))
-  }     
-  
+  }
+
   shiny::div(
       id = id,
       class = "carousel slide",
@@ -127,7 +140,7 @@ bs_carousel <- function(id, contents, img.src=NULL) {
 }
 
 ##contents=list("hello","world");id="id"
-##bs_carousel(id=id, contents) 
+##bs_carousel(id=id, contents)
 
 modal_carousel <- function(id, contents) {
     modalUI(

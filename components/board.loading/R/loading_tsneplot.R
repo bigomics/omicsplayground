@@ -35,6 +35,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       pgx.dir <- pgx.dirRT()
       info.table <- info.table()
+      validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
             
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
@@ -57,7 +58,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       if(!file.exists(allfc.file)) {
         return(NULL)
       }
-      
+
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos) && file.exists(allfc.file)) {
 
@@ -109,7 +110,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
               }
               ## safe...
               if("try-error" %in% class(pos)) {
-                dbg("[loading_tsne_server] t-SNE failed. trying svd... ")              
                 pos <- svd(F)$v[,1:2]
               }
             } 
@@ -131,7 +131,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       comparison <- gsub("^.*\\]", "", rownames(pos))
       colnames(pos) <- c("x", "y")
       df <- data.frame(pos, dataset = dset, comparison = comparison)
-      
+
       ## compute medioid of datasets
       dpos <- apply(pos, 2, function(x) tapply(x, dset, median, na.rm = TRUE))
       if (length(unique(dset)) == 1) {
@@ -155,7 +155,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pos <- pdata[['pos']]
       df <- pdata[['df']]
       
-      marker_size <- ifelse( nrow(df) > 50, 5, 10)
+      marker_size <- ifelse( nrow(df) > 50, 8, 11)
+      marker_size <- ifelse( nrow(df) > 100, 5, marker_size)
       
       fig <- plotly::plot_ly(
         data = df,
@@ -214,7 +215,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pdata <- plot_data()
       shiny::req(pdata)
       df <- pdata[['df']]
-      marker_size <- ifelse( nrow(df) > 50, 6, 12)
+      marker_size <- ifelse( nrow(df) > 50, 9, 13)
+      marker_size <- ifelse( nrow(df) > 100, 6, marker_size)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,

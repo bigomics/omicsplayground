@@ -3,6 +3,16 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+
+##' Clustering board server module
+##'
+##' .. content for \details{} ..
+##' @title 
+##' @param id 
+##' @param pgx 
+##' @return 
+##' @author kwee
 ClusteringBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -22,8 +32,9 @@ ClusteringBoard <- function(id, pgx) {
       ))
     })
 
-    # modules ########
-    # observe functions ########
+    ##===================================================================================
+    ##======================== OBSERVERS ================================================
+    ##===================================================================================
 
     shiny::observe({
       shiny::req(pgx$Y)
@@ -55,7 +66,7 @@ ClusteringBoard <- function(id, pgx) {
 
       groupings <- sort(groupings)
 
-      shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
+      ##shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
@@ -76,14 +87,45 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     # reactive functions ##############
-    shiny::observeEvent(input$hm_samplefilter, {
-      dbg("[clustering_server.R] observeEvent.hm_samplefilter = ",input$hm_samplefilter)
+
+    shiny::observeEvent(input$hm_splitby, {
+      shiny::req(pgx$X, pgx$samples)
+      if (input$hm_splitby == "none") {
+        return()
+      }
+      if (input$hm_splitby == "gene") {
+        xgenes <- sort(rownames(pgx$X))
+        shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
+      }
+      if (input$hm_splitby == "phenotype") {
+        cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
+        sel <- cvar[1]
+        cvar0 <- grep("^[.]", cvar, value = TRUE, invert = TRUE) ## no estimated vars
+        sel <- head(c(
+          grep("type|family|class|stat", cvar0, ignore.case = TRUE, value = TRUE),
+          cvar0, cvar
+        ), 1)
+        shiny::updateSelectInput(session, "hm_splitvar", choices = cvar, selected = sel)
+      }
     })
 
+    ## update filter choices upon change of data set
+    shiny::observe({
+      shiny::req(pgx$X)
+      shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
+    })
 
-    ## Returns filtered matrix ready for clustering. Filtering based
-    ## on user selected geneset/features or custom list of genes.
-    ##
+    ##===================================================================================
+    ##============================= REACTIVES ===========================================
+    ##===================================================================================
+    
+    ##' Returns filtered matrix ready for clustering. Filtering based
+    ##' on user selected geneset/features or custom list of genes.
+    ##'
+    ##' @title 
+    ##' @param id 
+    ##' @param pgx 
+    ##' @return 
     getFilteredMatrix <- shiny::reactive({
 
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
@@ -212,12 +254,22 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
-      input$hm_group,
+      ## input$hm_group,
       splitmap$hm_ntop()
     )
 
+    
+    ##' .. content for \description{} (no empty lines) ..
+    ##'
+    ##' .. content for \details{} ..
+    ##' @title 
+    ##' @param id 
+    ##' @param pgx 
+    ##' @return 
+    ##' @author kwee
     getTopMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
+##      shiny::req(input$splitby)
 
       flt <- getFilteredMatrix()
       zx <- flt$zx
@@ -232,8 +284,8 @@ ClusteringBoard <- function(id, pgx) {
       nmax <- as.integer(splitmap$hm_ntop())
       idx <- NULL
       splitvar <- "none"
-      splitvar <- splitmap$hm_splitvar()
-      splitby <- splitmap$hm_splitby()
+      splitvar <- input$hm_splitvar
+      splitby <- input$hm_splitby
       do.split <- splitby != "none"
 
       if (splitby == "gene" && !splitvar %in% rownames(pgx$X)) {
@@ -246,7 +298,6 @@ ClusteringBoard <- function(id, pgx) {
       grp <- NULL
       ## split on a phenotype variable
       if (do.split && splitvar %in% colnames(pgx$samples)) {
-        dbg("[ClusteringBoard:getTopMatrix] splitting by phenotype: ", splitvar)
         grp <- pgx$samples[colnames(zx), splitvar]
         table(grp)
       }
@@ -263,7 +314,6 @@ ClusteringBoard <- function(id, pgx) {
           km$tot.withinss / km$totss
         })
         within.ssratio
-        diff(within.ssratio)
         k.est <- min(which(within.ssratio < 0.10))
         k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
         k.est
@@ -289,16 +339,14 @@ ClusteringBoard <- function(id, pgx) {
         grp <- paste0(splitvar, ":", grp)
         names(grp) <- colnames(zx)
       }
+
       ## if(length(grp)==0) splitby <- 'none'
       if (do.split && length(grp) == 0) {
         return(NULL)
       }
 
-
       ## Any BMC scaling?? ##########
-
       if (do.split && splitmap$hm_scale() == "BMC") {
-        dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")
         for (g in unique(grp)) {
           jj <- which(grp == g)
           zx1 <- zx[, jj, drop = FALSE]
@@ -307,11 +355,13 @@ ClusteringBoard <- function(id, pgx) {
       }
 
       ## Create reduced matrix according to topmode #######
-
-      topmode <- "specific"
+      topmode <- "marker"
       topmode <- "sd"
       topmode <- splitmap$hm_topmode()
-      if (topmode == "specific" && length(table(grp)) <= 1) {
+      if (topmode == "marker" && length(table(grp)) <= 1) {
+        topmode <- "sd"
+      }
+      if (!do.split && topmode == "marker") {
         topmode <- "sd"
       }
 
@@ -321,12 +371,9 @@ ClusteringBoard <- function(id, pgx) {
         }
         gg
       }
-
-      if (!do.split && topmode == "specific") topmode <- "sd"
+      
       grp.zx <- NULL
       if (topmode == "pca") {
-        dbg("[ClusteringBoard:getTopMatrix] splitting by PCA")
-
         NPCA <- 5
         svdres <- irlba::irlba(zx - rowMeans(zx), nv = NPCA)
         ntop <- 12
@@ -345,9 +392,9 @@ ClusteringBoard <- function(id, pgx) {
         ## idx <- paste0("PC",sub(":.*","",sv.top1))
         idx <- sub(":.*", "", sv.top1)
         table(idx)
-      } else if (topmode == "specific" && splitby != "none") {
+      } else if (topmode == "marker" && splitby != "none") {
         ##
-        ## sample cluster specifice gene prioritazion
+        ## sample cluster marker gene prioritazion
         ##
         ## grp <- pgx$samples[colnames(zx),"cluster"]
         grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
@@ -374,14 +421,11 @@ ClusteringBoard <- function(id, pgx) {
       } else {
         ## Order by SD
         ##
-        dbg("[ClusteringBoard:getTopMatrix] order by SD")
-        ii <- order(-apply(zx, 1, sd, na.rm = TRUE))
-        zx <- zx[ii, , drop = FALSE] ## order
-        zx <- head(zx, nmax)
-        ## gg <- addsplitgene(rownames(zx))
-        ## zx = zx[gg,,drop=FALSE]
+        gg <- rownames(zx)[order(-apply(zx, 1, sd, na.rm = TRUE))]
+        gg <- head(gg, nmax)
+        gg <- addsplitgene(gg)        
+        zx <- zx[gg, , drop = FALSE] ## order
       }
-      ## zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
 
       ## ------------- cluster the genes???
       if (!is.null(flt$idx)) {
@@ -411,17 +455,16 @@ ClusteringBoard <- function(id, pgx) {
       ## ----------------------------------------------------
       grp.zx <- NULL
       grp.var <- "group"
-      grp.var <- input$hm_group
-
-      if (grp.var %in% colnames(pgx$samples)) {
-        gg.grp <- pgx$samples[colnames(zx), grp.var]
-        ## take most frequent term as group annotation value
-        grp.zx <- tapply(colnames(zx), gg.grp, function(k) {
+      grp.average <- input$hm_average_group
+      is.grouped = FALSE
+      
+      if (grp.average && input$hm_splitby!="none") {
+        grp.zx <- tapply(colnames(zx), grp, function(k) {
           rowMeans(zx[, k, drop = FALSE], na.rm = TRUE)
         })
         grp.zx <- do.call(cbind, grp.zx)
         most.freq <- function(x) names(sort(-table(x)))[1]
-        grp.annot <- tapply(rownames(annot), gg.grp, function(k) {
+        grp.annot <- tapply(rownames(annot), grp, function(k) {
           f <- apply(annot[k, , drop = FALSE], 2, function(x) most.freq(x))
           w.null <- sapply(f, is.null)
           if (any(w.null)) f[which(w.null)] <- NA
@@ -429,6 +472,8 @@ ClusteringBoard <- function(id, pgx) {
         })
         grp.annot <- data.frame(do.call(rbind, grp.annot))
         grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
+        grp <- colnames(grp.zx)
+        is.grouped = TRUE
       } else {
         grp.zx <- zx
         grp.annot <- annot
@@ -436,16 +481,74 @@ ClusteringBoard <- function(id, pgx) {
 
       ## input$top_terms
       filt <- list(
-        ## mat=zx, annot=annot,
         mat = grp.zx,
         annot = grp.annot,
-        grp = grp,
-        idx = idx,
-        samples = samples
+        grp = grp,   ## sample grouping
+        idx = idx,   ## gene grouping
+        samples = samples,
+        is.grouped = is.grouped
       )
+
       return(filt)
     })  ## end of getTopMatrix
 
+
+    ##' Same as getTopMatrix but always averaged by group
+    ##'
+    ##' .. content for \details{} ..
+    ##' @title 
+    ##' @param id 
+    ##' @param pgx 
+    ##' @return 
+    ##' @author kwee
+    getTopMatrixGrouped <- shiny::reactive({
+
+      topmat <- getTopMatrix()
+      shiny::req(topmat$mat)
+      
+      if(topmat$is.grouped || is.null(topmat$grp) ) {
+        return(topmat)
+      }
+
+      ## ----------------------------------------------------
+      ## ------------ calculate group summarized ------------
+      ## ----------------------------------------------------
+      
+      grp <- topmat$grp
+      zx <- topmat$mat
+      annot <- topmat$annot
+      idx <- topmat$idx
+      samples <- topmat$samples
+
+      ## take most frequent term as group annotation value
+      grp.zx <- tapply(colnames(zx), grp, function(k) {
+        rowMeans(zx[, k, drop = FALSE], na.rm = TRUE)
+      })
+      grp.zx <- do.call(cbind, grp.zx)
+      most.freq <- function(x) names(sort(-table(x)))[1]
+      grp.annot <- tapply(rownames(annot), grp, function(k) {
+        f <- apply(annot[k, , drop = FALSE], 2, function(x) most.freq(x))
+        w.null <- sapply(f, is.null)
+        if (any(w.null)) f[which(w.null)] <- NA
+        unlist(f)
+      })
+      grp.annot <- data.frame(do.call(rbind, grp.annot))
+      grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
+      grp <- colnames(grp.zx)
+
+      res <- list(
+        mat = grp.zx,
+        annot = grp.annot,
+        grp = grp,   ## sample grouping
+        idx = idx,   ## gene grouping
+        samples = samples,
+        is.grouped = TRUE
+      )
+      return(res)
+
+    })    
+
+    
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
@@ -558,8 +661,6 @@ ClusteringBoard <- function(id, pgx) {
       ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-      dbg("[clustering_server.R:hm_getClusterPositions] L558 : samplefilter changed??? sel.samples = ",head(sel.samples))
-
       clustmethod <- "tsne"
       pdim <- 2
       do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!!
@@ -649,8 +750,13 @@ ClusteringBoard <- function(id, pgx) {
 
     clustering_plot_table_parcoord_server(
       id = "parcoord",
-      parcoord.matrix = parcoord.matrix,
-      getTopMatrix = getTopMatrix,
+      getTopMatrix = getTopMatrixGrouped,
+      watermark = WATERMARK
+    )
+
+    clustering_plot_genemodule_server(
+      id = "genemodule",
+      getTopMatrix = getTopMatrixGrouped,
       watermark = WATERMARK
     )
 
@@ -659,15 +765,6 @@ ClusteringBoard <- function(id, pgx) {
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_getClusterPositions = hm_getClusterPositions,
-      watermark = WATERMARK
-    )
-
-    clustering_plot_featurerank_server(
-      id = "clust_featureRank",
-      pgx = pgx,
-      hm_level = shiny::reactive(input$hm_level),
-      selected_phenotypes = shiny::reactive(input$selected_phenotypes),
-      hm_samplefilter = shiny::reactive(input$hm_samplefilter),
       watermark = WATERMARK
     )
 

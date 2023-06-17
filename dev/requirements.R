@@ -70,7 +70,7 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 install.github <- function(repo, force=FALSE) {
     pkg <- sub(".*/","",repo)
     if(!require(pkg, character.only=TRUE) || force) {
-      devtools::install_github(repo, upgrad="never", build_vignettes=FALSE, force=TRUE)
+      devtools::install_github(repo, upgrade="never", build_vignettes=FALSE, force=force)
     } else {
         cat("package",repo,"already installed\n")
     }
@@ -114,7 +114,7 @@ pkg.extra <- c(
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
-  'iheatmapr','RcppZiggurat','Rfast'
+  'iheatmapr','RcppZiggurat','Rfast','BH','topGO'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -126,7 +126,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview",
+    "infercnv","pathview","PCSF",
     "mygene","diptest","edgeR","DESeq2"
   )
 
@@ -163,7 +163,6 @@ install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src
 ## Install latest from GITHUB (overwriting any other version)
 ##---------------------------------------------------------------------
 install.github("GfellerLab/EPIC")
-##install.github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 install.github('linxihui/NNLM')
 install.github("Coolgenome/iTALK")
 install.github('wt2015-github/FastGGM', force=TRUE)
@@ -171,7 +170,9 @@ install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
+install.github('bigomics/PCSF', force=TRUE)
 install.github('m-jahn/fluctuator')
+install.github('ropensci/iheatmapr')
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
@@ -213,8 +214,6 @@ reticulate::use_miniconda('r-reticulate')
 ##---------------------------------------------------------------------
 BIG.NOTUSED <- c(
     "reactome.db", ## >2GB!!!
-    "BH",
-    "PCSF",
     "terra",
     ## "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
@@ -228,6 +227,9 @@ BIG.NOTUSED <- c(
 )
 remove.pkgs(BIG.NOTUSED)
 
+## --------------------------------------------------
+## Write license file of the used/installed packages
+## --------------------------------------------------
 if(1) {
     ## Write license file of the used/installed packages
     lisc <- installed.packages(fields = "License")
@@ -242,6 +244,4 @@ if(1) {
     lisc.text <- apply(lisc2, 1, function(s) paste0(s,collapse=''))
     write(lisc.text, "RPackageLicenses.txt")
 ##  lisc2[grep("LGPL|AGPL|GPL-3",lisc2[,"License"]),]
-
-
 }

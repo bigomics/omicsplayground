@@ -82,7 +82,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ##
     ns <- session$ns
 
-    selGsets <- shiny::reactive({
+    filteredGsets <- shiny::reactive({
       shiny::req(pgx)
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
@@ -96,7 +96,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       pos <- getGsetUMAP()
       colnames(pos) <- c("x","y")
 
-      hilight <- selGsets()
+      hilight <- filteredGsets()
       colgamma <- as.numeric(input$gsmap_gamma)
       nlabel <- as.integer(input$gsmap_nlabel)
       colorby <- input$gsmap_colorby
@@ -206,10 +206,10 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       if(!r_fulltable()) {
         if (!is.null(sel.gsets)) {
-          filt.gsets <- selGsets()
+          filt.gsets <- filteredGsets()
           sel.gsets <- intersect(sel.gsets, filt.gsets)
         } else {
-          sel.gsets <- selGsets()
+          sel.gsets <- filteredGsets()
         }
       }
       

@@ -158,6 +158,12 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## DRUG CONNECTIVITY TAB
     ## =========================================================================
 
+    ## -------- DSEA table
+    dsea_table <- drugconnectivity_table_dsea_server(
+      "dsea_table",
+      getActiveDSEA
+    )
+
     ## --------- DSEA enplot plotting module
     drugconnectivity_plot_enplots_server(
       "dsea_enplots",
@@ -189,11 +195,7 @@ DrugConnectivityBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    ## -------- DSEA table
-    dsea_table <- drugconnectivity_table_dsea_server(
-      "dsea_table",
-      getActiveDSEA
-    )
+
 
     ## =======================================================================================
     ## CONNECTIVITY MAP TAB

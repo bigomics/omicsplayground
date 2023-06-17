@@ -51,6 +51,12 @@ docker.base: FORCE
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204 .
 
+docker.base2: FORCE
+	@echo building docker BASE
+	docker build --no-cache \
+		-f docker/Dockerfile.base \
+	  	-t bigomics/omicsplayground-base:ub2204 .
+
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
@@ -75,7 +81,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION := "v3.0-RC11."$(BRANCH)""$(DATE)
+VERSION := "v3.0-RC14."$(BRANCH)""$(DATE)
 
 tag.version:
 	@echo "new version ->" $(VERSION)
@@ -96,4 +102,6 @@ push.version:
 BOARD = dataview
 board:
 	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
+board2:
+	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
 

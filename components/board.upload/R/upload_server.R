@@ -115,12 +115,10 @@ UploadBoard <- function(id,
         pgxname <- sub("[.]pgx$", "", new_pgx$name)
         pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
         pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-        pgxname
 
         pgxdir <- getPGXDIR()
         fn <- file.path(pgxdir, pgxname)
         fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-
         ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ## switch 'pgx' as standard name. Actually saving as RDS
         ## would have been better...
@@ -129,64 +127,37 @@ UploadBoard <- function(id,
         remove(pgx)
 
         shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
-        playbase::pgx.initDatasetFolder(pgxdir, force = FALSE, verbose = TRUE)
+          playbase::pgx.initDatasetFolder(
+            pgxdir,
+            new.pgx = pgxname,  ## force update
+            force = FALSE,
+            verbose = FALSE)
         })
 
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
+##      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
       }
 
-      ## shiny::removeModal()
+      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
-      load_my_dataset <- function(){
-        ## update Session PGX
-        ## dbg("[upload_server:load_my_dataset] input$confirmload = ",input$confirmload)
-        ## IK 24.4.2023: input$confirmload is empty... why???
-        ##       if(input$confirmload)
-        {
-          dbg("[UploadBoard@load_react] **** copying current pgx to session.pgx  ****")
-          empty.slots <- setdiff(names(pgx),names(new_pgx))
-          isolate({
-            for (e in empty.slots) {
-              pgx[[e]] <- NULL
-            }
-            for (i in 1:length(new_pgx)) {
-              pgx[[names(new_pgx)[i]]] <- new_pgx[[i]]
-            }
-          })
-          dbg("[UploadBoard@load_react] **** finished  ****")
-          bigdash.selectTab(session, selected = 'dataview-tab')
-          ## r_global$loadedDataset <- r_global$loadedDataset+1
-          r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-        }
-        suppressWarnings(remove(new_pgx))
+      load_my_dataset <- function() {
+          if (input$confirmload) {
+              r_global$load_data_from_upload <- new_pgx$name
+              bigdash.selectTab(session, selected = 'load-tab')
+          }
       }
 
-      if(r_global$loadedDataset > 0){
-        # check if user already has a dataset loaded and have a different UX in that case
-        shinyalert::shinyalert(
+      shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
-          ##text = "What do you want to do next?",
-          text = paste("We finished computing your dataset",new_pgx$name,"and it's ready for visualization. Happy discoveries!"),
-          confirmButtonText = "Show my new data!",
-          # cancelButtonText = "Stay here",
-          # showCancelButton = TRUE,
-          callbackR = load_my_dataset,
-          inputId = "confirmload"
-          ## immediate = TRUE
-        )
-      } else {
-        load_my_dataset()
-        bigdash.selectTab(session, selected = 'load-tab')
-        r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-        r_global$loadedDataset <- r_global$loadedDataset+1
-      }
-
-      on.exit({
-        ## suppressWarnings(remove(new_pgx))
-      })
-
+          text = paste("Your dataset",new_pgx$name,"is ready for visualization. Happy discoveries!"),
+          confirmButtonText = "Load my new data!",
+          showCancelButton = TRUE,
+          cancelButtonText = "Stay here.",
+          inputId = 'confirmload',
+          closeOnEsc = FALSE,
+          callbackR = load_my_dataset
+      )
     })
 
     # Some 'global' reactive variables used in this file
@@ -286,110 +257,116 @@ UploadBoard <- function(id,
         inputnames <- input$upload_files$name[ii]
         uploadnames <- input$upload_files$datapath[ii]
 
+        error_list <- playbase::PGX_CHECKS
+
         if (length(uploadnames) > 0) {
-          i <- 1
           for (i in 1:length(uploadnames)) {
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
             df <- NULL
-            if (grepl("count", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] counts.csv : fn1 = ", fn1)
+            IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
+            IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
+            IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
+            if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of those genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
+              
+              COUNTS_check <- playbase::pgx.checkPGX(df0, "COUNTS")
+
+              if(length(COUNTS_check$check)>0) {
+                lapply(1:length(COUNTS_check$check), function(idx){
+                  error_id <- names(COUNTS_check$check)[idx]
+                  error_log <- COUNTS_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
               }
 
-              if (nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+              if (COUNTS_check$PASS && IS_COUNT) {
+                df <- as.matrix(COUNTS_check$df)
                 matname <- "counts.csv"
               }
-            } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] expression.csv : fn1 = ", fn1)
-              ## allows duplicated rownames
-              df0 <- playbase::read.as_matrix(fn2)
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of those genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
-              }
-              if (nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+
+              if (COUNTS_check$PASS && IS_EXPRESSION) {
+                df <- as.matrix(COUNTS_check$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
                 matname <- "counts.csv"
               }
-            } else if (grepl("sample", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] samples.csv : fn1 = ", fn1)
+            }
+
+            if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your samples file has duplicated entries: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated sample name",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.data.frame(df0)
+              
+              SAMPLES_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
+
+              if(length(SAMPLES_check$check)>0) {
+                lapply(1:length(SAMPLES_check$check), function(idx){
+                  error_id <- names(SAMPLES_check$check)[idx]
+                  error_log <- SAMPLES_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+                  
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (SAMPLES_check$PASS && IS_SAMPLE) {
+                df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
-            } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
-              dbg("[upload_files] contrasts.csv : fn1 = ", fn1)
+            }
+            
+            if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your contrasts file has duplicated entries: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated contrast name",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.matrix(df0)
+              
+              CONTRASTS_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+
+              if(length(CONTRASTS_check$check)>0) {
+                lapply(1:length(CONTRASTS_check$check), function(idx){
+                  error_id <- names(CONTRASTS_check$check)[idx]
+                  error_log <- CONTRASTS_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (CONTRASTS_check$PASS && IS_CONTRAST) {
+                df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
+
             }
+
             if (!is.null(matname)) {
               matlist[[matname]] <- df
             }
           }
         }
-      }
-
-      if ("counts.csv" %in% names(matlist)) {
-        ## Convert to gene names (need for biological effects)
-        dbg("[upload_files] converting probe names to symbols...")
-        X0 <- matlist[["counts.csv"]]
-        pp <- rownames(X0)
-        rownames(X0) <- playbase::probe2symbol(pp)
-        sel <- !(rownames(X0) %in% c(NA, "", "NA"))
-        X0 <- X0[sel, ]
-        xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i, , drop = FALSE]))
-        X0 <- do.call(rbind, xx)
-        dbg("[upload_files] ...done!")
-        matlist[["counts.csv"]] <- X0
       }
 
       ## put the matrices in the reactive values 'uploaded'
@@ -643,9 +620,6 @@ UploadBoard <- function(id,
             status["counts.csv"] <- "ERROR: colnames do not match (with samples)"
             status["samples.csv"] <- "ERROR: rownames do not match (with counts)"
           }
-
-          dbg("[UploadModule::checkTables] dim(samples.csv) = ", dim(uploaded$samples.csv))
-          dbg("[UploadModule::checkTables] dim(counts.csv) = ", dim(uploaded$counts.csv))
         }
 
         if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
@@ -654,7 +628,7 @@ UploadBoard <- function(id,
           group.col <- grep("group", tolower(colnames(samples1)))
           old1 <- (length(group.col) > 0 &&
             nrow(contrasts1) < nrow(samples1) &&
-            all(rownames(contrasts1) %in% samples1[, group.col])
+            all(rownames(contrasts1) %in% samples1[, group.col[1]])
           )
           old2 <- all(rownames(contrasts1) == rownames(samples1)) &&
             all(unique(as.vector(contrasts1)) %in% c(-1, 0, 1, NA))
@@ -669,11 +643,6 @@ UploadBoard <- function(id,
               new.contrasts <- new.contrasts[grp, , drop = FALSE]
               rownames(new.contrasts) <- rownames(samples1)
             }
-            dbg("[UploadModule] old.ct1 = ", paste(contrasts1[, 1], collapse = " "))
-            dbg("[UploadModule] old.nn = ", paste(rownames(contrasts1), collapse = " "))
-            dbg("[UploadModule] new.ct1 = ", paste(new.contrasts[, 1], collapse = " "))
-            dbg("[UploadModule] new.nn = ", paste(rownames(new.contrasts), collapse = " "))
-
             contrasts1 <- new.contrasts
           }
           if (old.style && old2) {
@@ -828,7 +797,7 @@ UploadBoard <- function(id,
     #)
 
     ## correctedX <- shiny::reactive({
-    correctedX <- BatchCorrectServer(
+    correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
       ## X = normalized_counts,  ## NOT YET!!!!
@@ -850,7 +819,7 @@ UploadBoard <- function(id,
       counts
     })
 
-    modified_ct <- MakeContrastServerRT(
+    modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
       contrRT = shiny::reactive(uploaded$contrasts.csv),
@@ -878,7 +847,7 @@ UploadBoard <- function(id,
       correctedX()$B
     })
 
-    computed_pgx <- ComputePgxServer(
+    computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
@@ -900,7 +869,6 @@ UploadBoard <- function(id,
     uploaded_pgx <- shiny::reactive({
       if (!is.null(uploaded$pgx)) {
         pgx <- uploaded$pgx
-        ## pgx <- playbase::pgx.initialize(pgx)
       } else {
         pgx <- computed_pgx()
       }
@@ -911,138 +879,23 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
-    output$countStats <- shiny::renderPlot({
+    upload_plot_countstats_server(
+        "countStats",
+        checkTables,
+        uploaded
+    )
 
-      check <- checkTables()
-      status.ok <- check["counts.csv", "status"]
-      dbg("[countStats] status.ok = ", status.ok)
+    upload_plot_phenostats_server(
+        "phenoStats",
+        checkTables,
+        uploaded
+    )
 
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["counts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'counts.csv'",
-          tolower(status.ds)
-        )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
-        return(NULL)
-      }
-
-      counts <- uploaded[["counts.csv"]]
-      xx <- log2(1 + counts)
-      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
-      ## dc <- reshape::melt(xx)
-      suppressWarnings(dc <- data.table::melt(xx))
-      dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
-      ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
-        ggplot2::geom_density() +
-        ggplot2::xlab("log2(1+counts)") +
-        ggplot2::theme(legend.position = "none") +
-        ggplot2::ggtitle("COUNTS", subtitle = tt2)
-    })
-
-    output$phenoStats <- shiny::renderPlot({
-      dbg("[phenoStats] renderPlot called \n")
-      ## req(uploaded$samples.csv)
-
-      check <- checkTables()
-      status.ok <- check["samples.csv", "status"]
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["samples.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'samples.csv'",
-          tolower(status.ds)
-        )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
-        return(NULL)
-      }
-
-      pheno <- uploaded[["samples.csv"]]
-      px <- head(colnames(pheno), 20) ## show maximum??
-
-      df <- type.convert(pheno[, px, drop = FALSE])
-      vt <- df %>% inspectdf::inspect_types()
-      vt
-
-      ## discretized continuous variable into 10 bins
-      ii <- unlist(vt$col_name[c("numeric", "integer")])
-      ii
-      if (!is.null(ii) && length(ii)) {
-        cat("[UploadModule::phenoStats] discretizing variables:", ii, "\n")
-        df[, ii] <- apply(df[, ii, drop = FALSE], 2, function(x) {
-          if (any(is.infinite(x))) x[which(is.infinite(x))] <- NA
-          cut(x, breaks = 10)
-        })
-      }
-
-      p1 <- df %>%
-        inspectdf::inspect_cat() %>%
-        inspectdf::show_plot()
-      tt2 <- paste(nrow(pheno), "samples x", ncol(pheno), "phenotypes")
-      ## tt2 <- paste(ncol(pheno),"phenotypes")
-      p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle = tt2) +
-        ggplot2::theme(
-          ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
-          axis.text.y = ggplot2::element_text(
-            size = 12,
-            margin = ggplot2::margin(0, 0, 0, 25),
-            hjust = 1
-          )
-        )
-
-      p1
-    })
-
-    output$contrastStats <- shiny::renderPlot({
-      ## req(uploaded$contrasts.csv)
-      ct <- uploaded$contrasts.csv
-      has.contrasts <- !is.null(ct) && NCOL(ct) > 0
-      check <- checkTables()
-      status.ok <- check["contrasts.csv", "status"]
-
-      if (status.ok != "OK" || !has.contrasts) {
-        frame()
-        status.ds <- check["contrasts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Optional) Upload 'contrasts.csv'",
-          tolower(status.ds)
-        )
-        ## text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 2, col = "grey60")
-        return(NULL)
-      }
-
-      contrasts <- uploaded$contrasts.csv
-
-      ## contrasts <- sign(contrasts)
-      ## df <- playbase::contrastAsLabels(contrasts)
-      df <- contrasts
-      px <- head(colnames(df), 20) ## maximum to show??
-      df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
-      tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "contrasts")
-      ## tt2 <- paste(ncol(contrasts),"contrasts")
-
-      p1 <- df %>%
-        inspectdf::inspect_cat() %>%
-        inspectdf::show_plot()
-
-      p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle = tt2) +
-        ggplot2::theme(
-          ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
-          axis.text.y = ggplot2::element_text(
-            size = 12,
-            margin = ggplot2::margin(0, 0, 0, 25),
-            hjust = 1
-          )
-        )
-
-      p1
-    })
+    upload_plot_contraststats_server(
+        "contrastStats",
+        checkTables,
+        uploaded
+    )
 
     buttonInput <- function(FUN, len, id, ...) {
       inputs <- character(len)

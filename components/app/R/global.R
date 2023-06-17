@@ -46,8 +46,11 @@ TABLE_HEIGHT_MODAL <<- "75vh"
 reticulate::use_miniconda('r-reticulate')
 
 get_opg_root <- function() {
-    pwd <- strsplit(getwd(),split='/')[[1]]
-    paste(pwd[1:max(grep("omicsplayground",pwd))],collapse='/')
+  pwd <- getwd() 
+  dirs <- unlist(strsplit(pwd, "/"))
+  root_dirs <- head(dirs, -3)
+  root <- paste(root_dirs, collapse = "/")
+  return(root)
 }
 
 ## Set folders
