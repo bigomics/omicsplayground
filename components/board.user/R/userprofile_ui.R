@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserInputs <- function(id) {
+UserProfileInputs <- function(id) {
   ns <- shiny::NS(id)
   bigdash::tabSettings()
 }
 
-UserUI <- function(id) {
+UserProfileUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   div(
@@ -18,16 +18,6 @@ UserUI <- function(id) {
           class = "col-md-7",
           shiny::tabsetPanel(
               id = ns("tabs1"),
-              shiny::tabPanel(
-                  "App Settings",
-                  bslib::layout_column_wrap(
-                      height = "calc(100vh - 183px)",
-                      width = 1,
-                      tagList(
-                          shinyWidgets::prettySwitch(ns("enable_beta"), "enable beta features")
-                      )
-                  )
-              ),
               shiny::tabPanel(
                   "Subscription",
                   bslib::layout_column_wrap(

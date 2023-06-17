@@ -257,123 +257,111 @@ UploadBoard <- function(id,
         inputnames <- input$upload_files$name[ii]
         uploadnames <- input$upload_files$datapath[ii]
 
+        error_list <- playbase::PGX_CHECKS
+
         if (length(uploadnames) > 0) {
-          i <- 1
           for (i in 1:length(uploadnames)) {
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
             df <- NULL
-            if (grepl("count", fn1, ignore.case = TRUE)) {
+            IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
+            IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
+            IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
+            if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              pass <- TRUE
-              ## check for duplicated rownames (but pass)
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of these genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
+              
+              COUNTS_check <- playbase::pgx.checkPGX(df0, "COUNTS")
+
+              if(length(COUNTS_check$check)>0) {
+                lapply(1:length(COUNTS_check$check), function(idx){
+                  error_id <- names(COUNTS_check$check)[idx]
+                  error_log <- COUNTS_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
               }
-              if (TRUE && any(rowSums(df0)==0)) {
-                nzero <- sum(rowSums(df0)==0)
-                shinyalert::shinyalert(
-                  title = "Zero rows",
-                  text = paste("Your counts matrix has", nzero,
-                    "rows with all zeros. These will be removed."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE
-                )
-                df0 <- df0[rowSums(df0)>0,,drop=FALSE]
-              }
-              if (TRUE && any(colSums(df0)==0)) {
-                nzero <- sum(colSums(df0)==0)
-                ##pass <- pass && FALSE
-                df0 <- df0[,colSums(df0)>0]
-                shinyalert::shinyalert(
-                  title = "Zero samples",
-                  text = paste("Your counts matrix has", nzero,
-                    "samples with all zeros. These will be removed."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE
-                )
-              }
-              if (pass && nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+
+              if (COUNTS_check$PASS && IS_COUNT) {
+                df <- as.matrix(COUNTS_check$df)
                 matname <- "counts.csv"
               }
-            } else if (grepl("expression", fn1, ignore.case = TRUE)) {
-              ## allows duplicated rownames
-              df0 <- playbase::read.as_matrix(fn2)
-              pass <- TRUE
-              if (TRUE && any(duplicated(rownames(df0)))) {
-                ndup <- sum(duplicated(rownames(df0)))
-                shinyalert::shinyalert(
-                  title = "Duplicated gene names",
-                  text = paste("Your counts matrix has", ndup,
-                    "duplicated gene names.\nCounts of those genes will be merged."),
-                  type = "warning",
-                  closeOnClickOutside = FALSE,
-                )
-              }
-              if (TRUE && any(apply(df0,1,sd)==0)) {
-                nzero <- sum(apply(df0,1,sd)==0)
-                pass <- FALSE
-                shinyalert::shinyalert(
-                  title = "Zero samples",
-                  text = paste("Your expression matrix has", nzero,
-                    "sample(s) with zero SD. Please remove."),
-                  type = "error",
-                  closeOnClickOutside = FALSE
-                )
-              }
-              if (nrow(df0) > 1 && NCOL(df0) > 1) {
-                df <- as.matrix(df0)
+
+              if (COUNTS_check$PASS && IS_EXPRESSION) {
+                df <- as.matrix(COUNTS_check$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
                 matname <- "counts.csv"
               }
-            } else if (grepl("sample", fn1, ignore.case = TRUE)) {
+            }
+
+            if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your samples file has duplicated entries: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated sample name",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.data.frame(df0)
+              
+              SAMPLES_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
+
+              if(length(SAMPLES_check$check)>0) {
+                lapply(1:length(SAMPLES_check$check), function(idx){
+                  error_id <- names(SAMPLES_check$check)[idx]
+                  error_log <- SAMPLES_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+                  
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (SAMPLES_check$PASS && IS_SAMPLE) {
+                df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
-            } else if (grepl("contrast", fn1, ignore.case = TRUE)) {
+            }
+            
+            if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
-              if (any(duplicated(rownames(df0)))) {
-                dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                msg <- paste(
-                  "Your contrasts file has duplicated rows: ",
-                  dup.rows, ". This is not allowed, please correct."
-                )
-                shinyalert::shinyalert(
-                  title = "Duplicated contrast row",
-                  text = msg,
-                  type = "error",
-                  closeOnClickOutside = FALSE,
-                )
-              } else if (nrow(df0) > 1 && NCOL(df0) >= 1) {
-                df <- as.matrix(df0)
+              
+              CONTRASTS_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+
+              if(length(CONTRASTS_check$check)>0) {
+                lapply(1:length(CONTRASTS_check$check), function(idx){
+                  error_id <- names(CONTRASTS_check$check)[idx]
+                  error_log <- CONTRASTS_check$check[[idx]]
+                  error_detail <- error_list[error_list$error == error_id,]
+                  error_length <- length(error_log)
+                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+                  shinyalert::shinyalert(
+                    title = error_detail$title,
+                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    type = error_detail$warning_type,
+                    closeOnClickOutside = FALSE
+                  )
+                })
+              }
+
+              if (CONTRASTS_check$PASS && IS_CONTRAST) {
+                df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
+
             }
+
             if (!is.null(matname)) {
               matlist[[matname]] <- df
             }
@@ -437,136 +425,6 @@ UploadBoard <- function(id,
       }
     })
 
-    ## ------------------------------------------------------------------
-    ## Observer for loading CSV from local folder on
-    ## host/server using URL. Reads the CSV files from folder
-    ## and puts in the reactive values object 'uploaded'.
-    ## ------------------------------------------------------------------
-
-    if (ALLOW_URL_QUERYSTRING) {
-      shiny::observeEvent(session$clientData$url_search, {
-        ## -------------------------------------------------------------
-        ## Parse URL query string
-        ## -------------------------------------------------------------
-        query <- parseQueryString(session$clientData$url_search)
-        if (length(query) > 0) {
-          dbg("[UploadModule:parseQueryString] names.query =", names(query))
-          for (i in 1:length(query)) {
-            dbg("[UploadModule:parseQueryString]", names(query)[i], "=>", query[[i]])
-          }
-        } else {
-          dbg("[UploadModule:parseQueryString] no queryString!")
-        }
-
-        if (!is.null(query[["csv"]])) {
-          qdir <- query[["csv"]]
-          dbg("[UploadModule:parseQueryString] *** parseQueryString ***")
-          dbg("[UploadModule:parseQueryString] qdir = ", qdir)
-
-          counts_file <- file.path(qdir, "counts.csv")
-          samples_file <- file.path(qdir, "samples.csv")
-          if (!file.exists(counts_file)) {
-            dbg("[SERVER:parseQueryString] ***ERROR*** missing counts.csv in dir = ", qdir)
-          }
-          if (!file.exists(samples_file)) {
-            dbg("[SERVER:parseQueryString] ***ERROR*** missing samples.csv in dir = ", qdir)
-          }
-          if (!file.exists(counts_file) || !file.exists(samples_file)) {
-            return(NULL)
-          }
-
-          FUN.readfromdir <- function() {
-            dbg("[UploadModule:parseQueryString] *** loading CSV from dir = ", qdir, "***")
-
-            readfromdir1 <- function(file) {
-              read.csv(file,
-                check.names = FALSE, stringsAsFactors = FALSE,
-                row.names = 1
-              )
-            }
-            readfromdir2 <- function(file) {
-              ## allows for duplicated names
-              df0 <- read.csv(file, check.names = FALSE, stringsAsFactors = FALSE)
-              mat <- as.matrix(df0[, -1])
-              rownames(mat) <- as.character(df0[, 1])
-              mat
-            }
-
-            dbg("[UploadModule:parseQueryString] reading samples_csv = ", samples_file)
-            uploaded$samples.csv <- readfromdir1(samples_file)
-
-            dbg("[UploadModule:parseQueryString] reading samples_csv = ", samples_file)
-            uploaded$counts.csv <- readfromdir2(counts_file)
-            uploaded$contrasts.csv <- NULL
-
-            meta_file <- file.path(qdir, "meta.txt")
-            uploaded$meta <- NULL
-            if (file.exists(meta_file)) {
-              dbg("[UploadModule:parseQueryString] reading meta file = ", meta_file)
-              ## meta <- read.table(meta_file,sep='\t',header=TRUE,row.names=1)
-              meta <- read.table(meta_file, sep = "", header = TRUE, row.names = 1)
-              meta <- as.list(array(meta[, 1], dimnames = list(rownames(meta))))
-              uploaded$meta <- meta
-            }
-          }
-
-          shinyalert::shinyalert(
-            title = "Load CSV data from folder?",
-            text = paste0("folder = ", qdir),
-            callbackR = FUN.readfromdir,
-            confirmButtonText = "Load!",
-            type = "info"
-          )
-
-          dbg("[UploadModule:parseQueryString] dim(samples) = ", dim(uploaded$samples.csv))
-          dbg("[UploadModule:parseQueryString] dim(counts) = ", dim(uploaded$counts.csv))
-
-          ## focus on this tab
-          updateTabsetPanel(session, "tabs", selected = "Upload data")
-        }
-
-        if (0 && !is.null(query[["pgx"]])) {
-          qdir <- query[["pgx"]]
-          dbg("[UploadModule:parseQueryString] pgx =>", qdir)
-
-          pgx_file <- query[["pgx"]]
-          pgx_file <- paste0(sub("[.]pgx$", "", pgx_file), ".pgx")
-          dbg("[UploadModule:parseQueryString] pgx_file = ", pgx_file)
-
-          if (!file.exists(pgx_file)) {
-            dbg("[SERVER:parseQueryString] ***ERROR*** missing pgx_file", pgx_file)
-            return(NULL)
-          }
-
-          dbg("[UploadModule:parseQueryString] 1:")
-
-          FUN.readPGX <- function() {
-            dbg("[UploadModule:parseQueryString] *** loading PGX file = ", pgx_file, "***")
-            ##load(pgx_file) ## load NGS/PGX
-            uploaded$pgx <- local(get(load(pgx_file, verbose=0))) ## override any name
-            ##remove(ngs)
-            uploaded$meta <- NULL
-          }
-
-          dbg("[UploadModule:parseQueryString] 2:")
-
-          shinyalert::shinyalert(
-            title = "Load PGX data from folder?",
-            text = paste0("folder = ", qdir),
-            callbackR = FUN.readPGX,
-            confirmButtonText = "Load!",
-            type = "info"
-          )
-
-          dbg("[UploadModule:parseQueryString] 3:")
-
-          ## focus on this tab
-          updateTabsetPanel(session, "tabs", selected = "Upload data")
-
-          dbg("[UploadModule:parseQueryString] 4:")
-        }
-      })
-    }
 
     ## =====================================================================
     ## ===================== checkTables ===================================

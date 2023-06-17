@@ -206,7 +206,9 @@ PlotModuleUI <- function(id,
   header <- shiny::fillRow(
     flex = c(1, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
-    shiny::div(class = "plotmodule-title", title = title, title),
+    shiny::div(class = "plotmodule-title",
+               style = 'white-space: nowrap; overflow: hidden; text-overflow: clip;',
+               title = title, title),
     if (cards) {
         plot_cards$navList
     } else {
@@ -234,7 +236,7 @@ PlotModuleUI <- function(id,
         card_names[x],
         id = card_names[x],
         bslib::card_body(
-          outputFunc[[x]](ns(paste0("renderpopup", x)),
+          outputFunc2[[x]](ns(paste0("renderpopup", x)),
             width = width.2, height = height.2
           ) %>%
             bigLoaders::useSpinner()
@@ -247,7 +249,7 @@ PlotModuleUI <- function(id,
       tabs_modal
     )
   } else {
-    plot_cards_modal <- outputFunc(ns("renderpopup"), width = width.2, height = height.2) %>%
+    plot_cards_modal <- outputFunc2(ns("renderpopup"), width = width.2, height = height.2) %>%
       bigLoaders::useSpinner()
   }
 

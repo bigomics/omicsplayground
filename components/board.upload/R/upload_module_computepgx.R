@@ -333,16 +333,6 @@ upload_module_computepgx_server <- function(
                     return(NULL)
                 }
 
-                has.contrasts <- !is.null(contrastsRT()) && NCOL(as.matrix(contrastsRT()))>0
-                if(!has.contrasts) {
-                    shinyalert::shinyalert(
-                      title = "ERROR",
-                      text = "You must define at least 1 contrast",
-                      type = "error"
-                    )
-                    return(NULL)
-                }
-
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {

@@ -180,17 +180,10 @@ LoadingBoard <- function(id,
           type = "warning",
           closeOnClickOutside = FALSE
         )
-        #r_global$load_example_trigger <- NULL
         return(NULL)
       } else {
-
-        # close the right sidebar
-        #shinyjs::runjs("$('#settings-container').trigger('click');")
-        #shinyjs::runjs("$('#settings-container').trigger('mouseleave');")
-
         # open the left & right sidebar
         bigdash.openSettings(lock=TRUE)
-        shinyjs::runjs("$('#settings-container').trigger('mouseenter');")
         bigdash.openSidebar()
 
         # go to dataview
@@ -655,17 +648,19 @@ LoadingBoard <- function(id,
     load_react <- reactive({
       btn <- input$loadbutton
       btn2 <- rl$found_example_trigger
-      query <- parseQueryString(session$clientData$url_search)
       logged <- isolate(auth$logged()) ## avoid reloading when logout/login
-      (!is.null(btn) || !is.null(query[["pgx"]])) && logged
+      !is.null(btn) && logged
     })
 
     observeEvent(r_global$load_data_from_upload, {
         data_names <- as.character(pgxtable$data()$dataset)
-        load_row <- which(data_names == r_global$load_data_from_upload)[1]
+        data_names <- sub("[.]pgx$","",data_names)
+        upload_pgx <- sub("[.]pgx$","",r_global$load_data_from_upload)
+        dbg("[loading_server.R] data_names = ",data_names)
+        dbg("[loading_server.R] upload_pgx = ",upload_pgx)        
+        load_row <- which(data_names == upload_pgx)[1]
         rl$selected_row <- load_row
         shinyjs::click('loadbutton')
-
         r_global$load_data_from_upload <- NULL
     }, ignoreNULL = TRUE)
 
@@ -707,9 +702,18 @@ LoadingBoard <- function(id,
       ## During loading show loading pop-up modal
       pgx.showCartoonModal()
 
-      ## ---------------------------------------------------------------------
-      ## ----------------- Loaded PGX object ---------------------------------
-      ## ---------------------------------------------------------------------
+      activatePGX(pgxfile)
+
+      ## notify new data uploaded
+      r_global$loadedDataset <- r_global$loadedDataset + 1 
+      
+    })
+
+
+    ## ---------------------------------------------------------------------
+    ## ----------------- Load and activate PGX object ----------------------
+    ## ---------------------------------------------------------------------
+    activatePGX <- function(pgxfile) {
 
       loaded_pgx <- loadPGX(pgxfile)
       if (is.null(loaded_pgx)) {
@@ -741,9 +745,6 @@ LoadingBoard <- function(id,
         savePGX(loaded_pgx, file=pgxfile)
       }
 
-      ## ----------------- update input --------------------------------------
-      r_global$loadedDataset <- r_global$loadedDataset + 1 ## notify new data uploaded
-
       ## Copying to pgx list to reactiveValues in
       ## session environment.
       dbg("[loading_server.R] copying pgx object to global environment")
@@ -760,7 +761,7 @@ LoadingBoard <- function(id,
       remove(loaded_pgx)
       dbg("[loading_server.R] copying pgx done!")      
       gc()
-    })
+    }
 
 
     ## ================================================================================
