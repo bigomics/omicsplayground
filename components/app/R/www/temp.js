@@ -78,7 +78,7 @@ const sidebarOpen = () => {
 
 const settingsClose = () => {
 	if($('#settings-container').hasClass('settings-expanded'))
-		$('#settings-container').trigger('mouseenter');
+		$('#settings-container').trigger('mouseleave');
 
 }
 
