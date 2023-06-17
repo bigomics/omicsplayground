@@ -139,7 +139,6 @@ CompareBoard <- function(id, pgx) {
       colnames(F1) <- paste0("1:", colnames(F1))
       colnames(F2) <- paste0("2:", colnames(F2))
       rho <- 1
-      browser()
 
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
       if (length(kk) >= 10) {
