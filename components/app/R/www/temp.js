@@ -78,12 +78,13 @@ const sidebarOpen = () => {
 
 const settingsClose = () => {
 	if($('#settings-container').hasClass('settings-expanded'))
-	    $('.setting-label').trigger('click');
+		$('#settings-container').trigger('mouseleave');
+
 }
 
 const settingsOpen = () => {
-	if($('#settings-container').hasClass('sidebar-collapsed'))
-	    $('.settings-label').trigger('click');
+	if($('#settings-container').hasClass('settings-collapsed'))
+		$('#settings-container').trigger('mouseenter');
 }
 
 const settingsLock = () => {
