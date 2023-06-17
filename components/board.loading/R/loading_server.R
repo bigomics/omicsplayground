@@ -97,15 +97,12 @@ LoadingBoard <- function(id,
 
     # put user dataset into shared folder
     observeEvent(
-<<<<<<< HEAD
       rl$share_pgx,
       {
         shiny::showModal(share_dialog)
       },
       ignoreNULL = TRUE
     )
-
-
 
     observeEvent(input$initial_share_cancel, {
       rl$share_pgx <- NULL
@@ -202,12 +199,6 @@ LoadingBoard <- function(id,
           share_dir,
           paste0(pgx_name, ".pgx")
         )
-=======
-      rl$share_pgx, {
-        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, '_row_')[[1]][2])
-        pgx_name <- rl$pgxTable_data[selected_row, 'dataset']
-        new_pgx_file <- file.path(pgx_shared_dir, paste0(pgx_name, '.pgx'))
->>>>>>> master
 
         ## abort if file exists
         if(file.exists(new_pgx_file)) {
@@ -844,11 +835,7 @@ LoadingBoard <- function(id,
           r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
       }
-<<<<<<< HEAD
       
-=======
-
->>>>>>> master
       not.anonymous <- (!is.na(auth$name()) && auth$name() != "")
       allow.delete <- !not.anonymous
       allow.delete <- TRUE
@@ -872,20 +859,9 @@ LoadingBoard <- function(id,
           inputId = "confirmdelete"
         )
       }
-<<<<<<< HEAD
-      
-      rl$delete_pgx <- NULL
-    },
-      ignoreNULL = TRUE,
-      ignoreInit = TRUE
-    )
-=======
-
       rl$delete_pgx <- NULL
 
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
->>>>>>> master
-
 
     ## ================================================================================
     ## ========================== LOAD DATA FROM LIST =================================
