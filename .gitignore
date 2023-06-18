@@ -1,5 +1,6 @@
 libx/
 gmail_creds
+data/datasets-sigdb.h5
 
 # R data
 ######################
