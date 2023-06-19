@@ -3,6 +3,8 @@ gmail_creds
 data/nick1@test.com
 data/nick2@test.com
 
+data/datasets-sigdb.h5
+
 # R data
 ######################
 .RData
