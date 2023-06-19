@@ -247,7 +247,7 @@ LoadingBoard <- function(id,
             playbase::pgx.save(pgx0, file = new_pgx_file)
           }
         })
-        
+
         rl$reload_pgxdir_shared <- rl$reload_pgxdir_shared + 1
         ## r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
@@ -404,13 +404,13 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       info <- NULL
-      pdir <- getPGXDIR()      
+      pdir <- getPGXDIR()
       shiny::withProgress(message = "Updating library...", value = 0.33, {
         dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
         ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
         info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       })
-      
+
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator" )
       if (is.null(info)) {
@@ -488,6 +488,15 @@ LoadingBoard <- function(id,
         class = "btn-inline btn-success",
         style = "padding:0px; margin:0px; font-size:95%;",
         onclick = paste0('Shiny.onInputChange(\"', ns("accept_pgx"), '\",this.id)')
+      ## update meta files
+      shiny::withProgress(message = "Updating shared library...", value = 0.33, {
+        dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")
+        ## playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
+        info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      })
+
+      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+        "ngenes", "nsets", "conditions", "organism", "date", "creator"
       )
 
       decline_btns <- makebuttonInputs2(
@@ -874,17 +883,22 @@ LoadingBoard <- function(id,
       !is.null(btn) && logged
     })
 
+    loadRowManual <- reactiveVal(0)
     observeEvent(r_global$load_data_from_upload, {
         data_names <- as.character(pgxtable$data()$dataset)
         data_names <- sub("[.]pgx$","",data_names)
         upload_pgx <- sub("[.]pgx$","",r_global$load_data_from_upload)
         dbg("[loading_server.R] data_names = ",data_names)
-        dbg("[loading_server.R] upload_pgx = ",upload_pgx)        
+        dbg("[loading_server.R] upload_pgx = ",upload_pgx)
         load_row <- which(data_names == upload_pgx)[1]
         rl$selected_row <- load_row
-        shinyjs::click('loadbutton')
+        loadRowManual(loadRowManual() + 1)
         r_global$load_data_from_upload <- NULL
     }, ignoreNULL = TRUE)
+
+    observeEvent(loadRowManual(), {
+        shinyjs::click('loadbutton')
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(load_react(), {
       if (!load_react()) {
@@ -927,8 +941,8 @@ LoadingBoard <- function(id,
       activatePGX(pgxfile)
 
       ## notify new data uploaded
-      r_global$loadedDataset <- r_global$loadedDataset + 1 
-      
+      r_global$loadedDataset <- r_global$loadedDataset + 1
+
     })
 
 
@@ -962,7 +976,7 @@ LoadingBoard <- function(id,
       ## the updated object.
       slots1 <- names(loaded_pgx)
       if(length(slots1) != length(slots0)) {
-        dbg("[loading_server.R] saving updated PGX")        
+        dbg("[loading_server.R] saving updated PGX")
         new_slots <- setdiff(slots1, slots0)
         savePGX(loaded_pgx, file=pgxfile)
       }
@@ -981,7 +995,7 @@ LoadingBoard <- function(id,
       })
       ## ----------------- remove modal on exit?? -------------------------
       remove(loaded_pgx)
-      dbg("[loading_server.R] copying pgx done!")      
+      dbg("[loading_server.R] copying pgx done!")
       gc()
     }
 
