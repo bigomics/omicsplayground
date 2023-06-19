@@ -3,6 +3,7 @@ gmail_creds
 data/datasets-sigdb.h5
 data_shared/datasets-sigdb.h5
 data/demo@demo.com
+data/test@test.com
 
 # R data
 ######################
