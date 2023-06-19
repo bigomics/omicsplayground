@@ -139,40 +139,42 @@ CorrelationBoard <- function(id, pgx) {
       if (is.null(gene)) {
         return(NULL)
       }
-
+      
       ## corr always in log.scale and restricted to selected samples subset
       zx <- pgx$X
       zx <- getFilteredExpression()
       dim(zx)
+      
       zx.genes0 <- rownames(zx)
       ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
       zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
+      
       xref <- list(
         "cor" = 2**zx,
         "cor.HPA" = as.matrix(playdata::TISSUE),
         "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
-
       R <- playbase::pgx.getGeneCorrelation(gene0, xref = xref)
       if (is.null(R)) {
         return(NULL)
       }
       R <- R[rownames(zx), , drop = FALSE]
-
+      
       zx <- zx - rowMeans(zx, na.rm = TRUE)
-      sdx <- sqrt(rowMeans(zx**2))
-      R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
-
+      sdx <- sqrt(rowMeans(zx**2))      
+      R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene0])
+      
       rho.genes <- rownames(zx)
       if ("hgnc_symbol" %in% colnames(pgx$genes)) {
         rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
       }
+      
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
       rownames(R) <- zx.genes0
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
-
+      
       R
     })
 
@@ -196,7 +198,6 @@ CorrelationBoard <- function(id, pgx) {
         "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       gene0 <- toupper(gene) ## uppercase mouse
-
       R <- playbase::pgx.getGeneCorrelation(gene0, xref = xref)
       if (is.null(R)) {
         return(NULL)
@@ -205,7 +206,7 @@ CorrelationBoard <- function(id, pgx) {
 
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2))
-      R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
+      R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene0])
 
       rho.genes <- rownames(zx)
       if ("hgnc_symbol" %in% colnames(pgx$genes)) {

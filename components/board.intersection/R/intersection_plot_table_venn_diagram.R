@@ -62,6 +62,7 @@ intersection_table_venn_diagram_ui <- function(
   venntable_opts <- shiny::tagList(
     shiny::selectInput(ns("venntable_intersection"), "Filter intersection:", choices = NULL)
   )
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
@@ -87,7 +88,6 @@ intersection_plot_venn_diagram_server <- function(id,
     plot_data <- shiny::reactive({
       dt <- getSignificanceCalls()
       shiny::req(dt)
-
       if (is.null(dt) || nrow(dt) == 0) {
         return(NULL)
       }
@@ -95,7 +95,7 @@ intersection_plot_venn_diagram_server <- function(id,
       dt1 <- dt[, 2:ncol(dt), drop = FALSE]
       label <- LETTERS[1:ncol(dt1)]
       colnames(dt1) <- label
-      list(dt1, colnames(dt)[-1])
+      return(list(dt1, colnames(dt)[-1]))
     })
 
     venndiagram.RENDER <- function() {
@@ -136,7 +136,8 @@ intersection_plot_venn_diagram_server <- function(id,
           inset = c(0.04, -0.01), xpd = TRUE
         )
       } else {
-        x <- apply(dt1, 2, function(x) rownames(dt1)[which(x != 0)])
+        # convert matrix to list, simplify = FALSE will avoid apply function to simplify the result to a matrix
+        x <- apply(dt1, 2, function(x) rownames(dt1)[which(x != 0)], simplify = FALSE)
 
         xlen <- sapply(x, length)
 
@@ -169,6 +170,7 @@ intersection_plot_venn_diagram_server <- function(id,
 
           p$layers[[4]]$data$both <- count_both
         } else {
+          # convert matrix x to a list of vectors
           p <- ggVennDiagram::ggVennDiagram(
             x,
             label = "count",

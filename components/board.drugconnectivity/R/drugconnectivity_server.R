@@ -148,7 +148,8 @@ DrugConnectivityBoard <- function(id, pgx) {
       rnk <- dt$NES
       names(rnk) <- rownames(dt)
       suppressWarnings(
-        moa.class <- fgsea::fgsea(gmt, rnk, nperm = 20000)
+        ## moa.class <- fgsea::fgsea(gmt, rnk, nperm = 20000)
+        moa.class <- fgsea::fgsea(gmt, rnk)        
       )
       moa.class <- moa.class[order(-abs(moa.class$NES)), ]
       return(moa.class)
@@ -157,6 +158,12 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## =========================================================================
     ## DRUG CONNECTIVITY TAB
     ## =========================================================================
+
+    ## -------- DSEA table
+    dsea_table <- drugconnectivity_table_dsea_server(
+      "dsea_table",
+      getActiveDSEA
+    )
 
     ## --------- DSEA enplot plotting module
     drugconnectivity_plot_enplots_server(
@@ -189,11 +196,7 @@ DrugConnectivityBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    ## -------- DSEA table
-    dsea_table <- drugconnectivity_table_dsea_server(
-      "dsea_table",
-      getActiveDSEA
-    )
+
 
     ## =======================================================================================
     ## CONNECTIVITY MAP TAB

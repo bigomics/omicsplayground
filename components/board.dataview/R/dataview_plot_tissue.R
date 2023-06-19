@@ -61,6 +61,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
         tx <- tx[jj]
         tissue.klr <- tissue.klr[jj]
+      } else {
+        return(NULL)
       }
       df <- data.frame(
         tissue = names(tx),
@@ -111,7 +113,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
       ## plot as regular bar plot
       df <- dplyr::mutate(
-        df, tissue = forcats::fct_reorder(stringr::str_to_title(paste(tissue, " ")), x))
+        df, tissue = forcats::fct_reorder(
+              stringr::str_to_title(paste(tissue, " ")),x))
 
       # df$tissue <- factor(df$tissue, levels = df$tissue)
       plotly::plot_ly(
@@ -149,8 +152,6 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       plotlib = "plotly",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
-      ##          renderFunc = shiny::renderCachedPlot,
-      ##          renderFunc2 = shiny::renderCachedPlot,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 4,

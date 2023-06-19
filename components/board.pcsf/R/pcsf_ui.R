@@ -20,11 +20,6 @@ PcsfInputs <- function(id) {
       "Choose how to color the nodes",
       placement = "right"
     ),
-    withTooltip(
-      shiny::checkboxInput(ns("show.centrality"), "highlight hubs", TRUE),
-      "Highlight hub genes by scaling gene names with centrality score.",
-      placement = "top"
-    ),
     conditionalPanel(
       "input.colorby == 'contrast'",
       ns = ns,
@@ -34,7 +29,19 @@ PcsfInputs <- function(id) {
         placement = "right"
       )
     ),
-    br(),
+    hr(),
+    withTooltip(
+      radioButtons(
+        ns("highlightby"),
+        "Highlight labels by:",
+        choices = c("none", "FC", "centrality"),
+        selected = "centrality",
+        inline = TRUE
+      ),
+      "Highlight labels by scaling with selection.",
+      placement = "top"
+    ),
+    hr(),
     withTooltip(    
       shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, 0, 0.5),
       "Select contrast.",

@@ -124,12 +124,6 @@ app_server <- function(input, output, session) {
         loadedDataset = 0
     )
 
-    # store the active tab location globally
-    observeEvent(input$nav, {
-      r_global$nav <- input$nav
-    })
-
-
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
@@ -180,7 +174,8 @@ app_server <- function(input, output, session) {
       auth = auth,
       enable_upload = opt$ENABLE_UPLOAD,
       r_global = r_global)
-    env$user <- UserBoard("user", user=auth)
+    env$user_profile <- UserProfileBoard("user_profile", user=auth)
+    env$user_settings <- UserSettingsBoard("user_settings", user=auth)
 
     ## Do not display "Welcome" tab on the menu
     bigdash.hideMenuItem(session, "welcome-tab")
@@ -467,7 +462,7 @@ app_server <- function(input, output, session) {
 
     shiny::observeEvent({
         auth$logged()
-        env$user$enable_beta()
+        env$user_settings$enable_beta()
         PGX$name
     }, {
 
@@ -475,7 +470,7 @@ app_server <- function(input, output, session) {
         dbg("[server.R] trigger on change dataset")
 
         ## show beta feauture
-        show.beta <- env$user$enable_beta()
+        show.beta <- env$user_settings$enable_beta()
         if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
         is.logged <- auth$logged()
 
@@ -743,6 +738,14 @@ Upgrade today and experience advanced analysis features without the time limit.<
             session$sendCustomMessage("shinyproxy-logout", list())
         }
 
+    })
+
+    # this function sets 'input.enable_info' based on the user settings
+    # and is used by all the bs_alert functions in a conditionalPanel
+    observeEvent(env$user_settings$enable_info(), {
+        session$sendCustomMessage('enableInfo',
+                                  list(id="enable_info",
+                                       value=env$user_settings$enable_info()))
     })
 
     ##-------------------------------------------------------------
