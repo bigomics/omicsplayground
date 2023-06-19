@@ -27,7 +27,7 @@ expression_plot_volcanoAll_ui <- function(
     id = ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "grid",
+    plotlib = "base",
     info.text = info.text,
     caption = caption,
     options = NULL,
@@ -197,7 +197,7 @@ expression_plot_volcanoAll_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "grid",
+      plotlib = "base",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
