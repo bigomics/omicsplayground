@@ -910,6 +910,22 @@ PlotModuleServer <- function(id,
             res = res.2
           )
         }
+          if (!is.null(func) && plotlib == "grid") {
+              render <- shiny::renderPlot(
+                  {
+                      grid::grid.draw(func(), recording = FALSE)
+                  },
+                  res = res.1
+              )
+          }
+          if (!is.null(func2) && plotlib2 == "grid") {
+              render2 <- shiny::renderPlot(
+                  {
+                      grid::grid.draw(func2(), recording = FALSE)
+                  },
+                  res = res.2
+              )
+          }
         if (plotlib == "image") {
           render <- shiny::renderImage(func(), deleteFile = FALSE)
         }
