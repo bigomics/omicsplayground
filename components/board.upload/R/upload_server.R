@@ -448,6 +448,8 @@ UploadBoard <- function(id,
         }
       }
 
+      browser()
+
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
       if (has.pgx == TRUE) {
@@ -469,81 +471,81 @@ UploadBoard <- function(id,
 
         ## check files: matching dimensions
         if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          nsamples <- max(ncol(uploaded[["counts.csv"]]), nrow(uploaded[["samples.csv"]]))
-          ok.samples <- intersect(
-            rownames(uploaded$samples.csv),
-            colnames(uploaded$counts.csv)
-          )
-          n.ok <- length(ok.samples)
-          message("[UploadModule::checkTables] n.ok = ", n.ok)
-          if (n.ok > 0 && n.ok < nsamples) {
-            ## status["counts.csv"]  = "WARNING: some samples with missing annotation)"
-          }
+          # nsamples <- max(ncol(uploaded[["counts.csv"]]), nrow(uploaded[["samples.csv"]]))
+          # ok.samples <- intersect(
+          #   rownames(uploaded$samples.csv),
+          #   colnames(uploaded$counts.csv)
+          # )
+          # n.ok <- length(ok.samples)
+          # message("[UploadModule::checkTables] n.ok = ", n.ok)
+          # if (n.ok > 0 && n.ok < nsamples) {
+          #   ## status["counts.csv"]  = "WARNING: some samples with missing annotation)"
+          # }
 
-          if (n.ok > 0) {
-            message("[UploadModule::checkTables] conforming samples/counts...")
-            uploaded[["samples.csv"]] <- uploaded$samples.csv[ok.samples, , drop = FALSE]
-            uploaded[["counts.csv"]] <- uploaded$counts.csv[, ok.samples, drop = FALSE]
-          }
+          # if (n.ok > 0) {
+          #   message("[UploadModule::checkTables] conforming samples/counts...")
+          #   uploaded[["samples.csv"]] <- uploaded$samples.csv[ok.samples, , drop = FALSE]
+          #   uploaded[["counts.csv"]] <- uploaded$counts.csv[, ok.samples, drop = FALSE]
+          # }
 
-          if (n.ok == 0) {
-            status["counts.csv"] <- "ERROR: colnames do not match (with samples)"
-            status["samples.csv"] <- "ERROR: rownames do not match (with counts)"
-          }
+          # if (n.ok == 0) {
+          #   status["counts.csv"] <- "ERROR: colnames do not match (with samples)"
+          #   status["samples.csv"] <- "ERROR: rownames do not match (with counts)"
+          # }
         }
 
         if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          contrasts1 <- uploaded[["contrasts.csv"]]
-          group.col <- grep("group", tolower(colnames(samples1)))
-          old1 <- (length(group.col) > 0 &&
-            nrow(contrasts1) < nrow(samples1) &&
-            all(rownames(contrasts1) %in% samples1[, group.col[1]])
-          )
-          old2 <- all(rownames(contrasts1) == rownames(samples1)) &&
-            all(unique(as.vector(contrasts1)) %in% c(-1, 0, 1, NA))
+          # samples1 <- uploaded[["samples.csv"]]
+          # contrasts1 <- uploaded[["contrasts.csv"]]
+          # group.col <- grep("group", tolower(colnames(samples1)))
+          # old1 <- (length(group.col) > 0 &&
+          #   nrow(contrasts1) < nrow(samples1) &&
+          #   all(rownames(contrasts1) %in% samples1[, group.col[1]])
+          # )
+          # old2 <- all(rownames(contrasts1) == rownames(samples1)) &&
+          #   all(unique(as.vector(contrasts1)) %in% c(-1, 0, 1, NA))
 
-          old.style <- (old1 || old2)
-          if (old.style && old1) {
-            message("[UploadModule] WARNING: converting old1 style contrast to new format")
-            new.contrasts <- samples1[, 0]
-            if (NCOL(contrasts1) > 0) {
-              new.contrasts <- playbase::contrastAsLabels(contrasts1)
-              grp <- as.character(samples1[, group.col])
-              new.contrasts <- new.contrasts[grp, , drop = FALSE]
-              rownames(new.contrasts) <- rownames(samples1)
-            }
-            contrasts1 <- new.contrasts
-          }
-          if (old.style && old2) {
-            message("[UploadModule] WARNING: converting old2 style contrast to new format")
-            new.contrasts <- samples1[, 0]
-            if (NCOL(contrasts1) > 0) {
-              new.contrasts <- playbase::contrastAsLabels(contrasts1)
-              rownames(new.contrasts) <- rownames(samples1)
-            }
-            contrasts1 <- new.contrasts
-          }
+          # old.style <- (old1 || old2)
+          # if (old.style && old1) {
+          #   message("[UploadModule] WARNING: converting old1 style contrast to new format")
+          #   new.contrasts <- samples1[, 0]
+          #   if (NCOL(contrasts1) > 0) {
+          #     new.contrasts <- playbase::contrastAsLabels(contrasts1)
+          #     grp <- as.character(samples1[, group.col])
+          #     new.contrasts <- new.contrasts[grp, , drop = FALSE]
+          #     rownames(new.contrasts) <- rownames(samples1)
+          #   }
+          #   contrasts1 <- new.contrasts
+          # }
+          # if (old.style && old2) {
+          #   message("[UploadModule] WARNING: converting old2 style contrast to new format")
+          #   new.contrasts <- samples1[, 0]
+          #   if (NCOL(contrasts1) > 0) {
+          #     new.contrasts <- playbase::contrastAsLabels(contrasts1)
+          #     rownames(new.contrasts) <- rownames(samples1)
+          #   }
+          #   contrasts1 <- new.contrasts
+        #   # }
 
-          dbg("[UploadModule] 1 : dim.contrasts1 = ", dim(contrasts1))
-          dbg("[UploadModule] 1 : dim.samples1   = ", dim(samples1))
+        #   dbg("[UploadModule] 1 : dim.contrasts1 = ", dim(contrasts1))
+        #   dbg("[UploadModule] 1 : dim.samples1   = ", dim(samples1))
 
-          ok.contrast <- length(intersect(rownames(samples1), rownames(contrasts1))) > 0
-          if (ok.contrast && NCOL(contrasts1) > 0) {
-            ## always clean up
-            contrasts1 <- apply(contrasts1, 2, as.character)
-            rownames(contrasts1) <- rownames(samples1)
-            for (i in 1:ncol(contrasts1)) {
-              isz <- (contrasts1[, i] %in% c(NA, "NA", "NA ", "", " ", "  ", "   ", " NA"))
-              if (length(isz)) contrasts1[isz, i] <- NA
-            }
-            uploaded[["contrasts.csv"]] <- contrasts1
-            status["contrasts.csv"] <- "OK"
-          } else {
-            uploaded[["contrasts.csv"]] <- NULL
-            status["contrasts.csv"] <- "ERROR: dimension mismatch"
-          }
-        }
+        #   ok.contrast <- length(intersect(rownames(samples1), rownames(contrasts1))) > 0
+        #   if (ok.contrast && NCOL(contrasts1) > 0) {
+        #     ## always clean up
+        #     contrasts1 <- apply(contrasts1, 2, as.character)
+        #     rownames(contrasts1) <- rownames(samples1)
+        #     for (i in 1:ncol(contrasts1)) {
+        #       isz <- (contrasts1[, i] %in% c(NA, "NA", "NA ", "", " ", "  ", "   ", " NA"))
+        #       if (length(isz)) contrasts1[isz, i] <- NA
+        #     }
+        #     uploaded[["contrasts.csv"]] <- contrasts1
+        #     status["contrasts.csv"] <- "OK"
+        #   } else {
+        #     uploaded[["contrasts.csv"]] <- NULL
+        #     status["contrasts.csv"] <- "ERROR: dimension mismatch"
+        #   }
+        # }
 
         MAXSAMPLES <- 25
         MAXCONTRASTS <- 5
@@ -568,13 +570,13 @@ UploadBoard <- function(id,
         }
 
         ## check samples.csv: must have group column defined
-        if (status["samples.csv"] == "OK" && status["contrasts.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          contrasts1 <- uploaded[["contrasts.csv"]]
-          if (!all(rownames(contrasts1) %in% rownames(samples1))) {
-            status["contrasts.csv"] <- "ERROR: contrasts do not match samples"
-          }
-        }
+        # if (status["samples.csv"] == "OK" && status["contrasts.csv"] == "OK") {
+        #   samples1 <- uploaded[["samples.csv"]]
+        #   contrasts1 <- uploaded[["contrasts.csv"]]
+        #   # if (!all(rownames(contrasts1) %in% rownames(samples1))) {
+        #   #   status["contrasts.csv"] <- "ERROR: contrasts do not match samples"
+        #   # }
+        # }
       } ## end-if-from-pgx
 
       e1 <- grepl("ERROR", status["samples.csv"])
