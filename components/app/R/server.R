@@ -176,6 +176,22 @@ app_server <- function(input, output, session) {
       info
     })
 
+    shiny::observeEvent(auth$logged(), {
+        ## trigger on login
+        logged <- auth$logged()
+
+        if (!logged) {
+          warning("[SERVER:getPGXINFO] user not logged in!")
+          return(NULL)
+        }
+        
+        info("[SERVER:getPGXINFO] updating datasets-info.csv")
+        pgx.showCartoonModal()
+        getPGXINFO()
+        shiny::removeModal()
+        
+    })
+
 
     ## Global reactive values for app-wide triggering
     r_global <- reactiveValues(
