@@ -448,7 +448,6 @@ UploadBoard <- function(id,
         }
       }
 
-      # browser()
 
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
@@ -457,13 +456,32 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
-          
-          
-          
+
           FILES_check <- playbase::pgx.checkPGX_all(
             SAMPLES = uploaded[["samples.csv"]],
-            COUNTS = counts1 <- uploaded[["counts.csv"]]
+            COUNTS = uploaded[["counts.csv"]]
             )
+
+          if(length(FILES_check$check)>0) {
+            lapply(1:length(FILES_check$check), function(idx){
+              error_id <- names(FILES_check$check)[idx]
+              error_log <- FILES_check$check[[idx]]
+              error_detail <- error_list[error_list$error == error_id,]
+              error_length <- length(error_log)
+              ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+              shinyalert::shinyalert(
+                title = error_detail$title,
+                text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                type = error_detail$warning_type,
+                closeOnClickOutside = FALSE
+              )
+            })
+          }
+
+          uploaded[["samples.csv"]] <- FILES_check$samples
+          uploaded[["counts.csv"]] <- FILES_check$counts
+
 
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
@@ -476,10 +494,17 @@ UploadBoard <- function(id,
             rownames(samples1) <- samples1[, 1]
             uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
           }
+          
+          if(FILES_check$PASS == FALSE) {
+            status["samples.csv"] <- "Error, please check your samples files."
+            status["counts.csv"] <- "Error, please check your counts files."
+            uploaded[["counts.csv"]] <- NULL
+            uploaded[["samples.csv"]] <- NULL
+          }
         }
 
         ## check files: matching dimensions
-        if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        
           # nsamples <- max(ncol(uploaded[["counts.csv"]]), nrow(uploaded[["samples.csv"]]))
           # ok.samples <- intersect(
           #   rownames(uploaded$samples.csv),
@@ -504,6 +529,43 @@ UploadBoard <- function(id,
         }
 
         if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+
+
+          FILES_check <- playbase::pgx.checkPGX_all(
+            SAMPLES = uploaded[["samples.csv"]],
+            CONTRASTS = uploaded[["contrasts.csv"]]
+            )
+          
+          uploaded[["samples.csv"]] <- FILES_check$samples
+          uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
+
+          if(length(FILES_check$check)>0) {
+            lapply(1:length(FILES_check$check), function(idx){
+              error_id <- names(FILES_check$check)[idx]
+              error_log <- FILES_check$check[[idx]]
+              error_detail <- error_list[error_list$error == error_id,]
+              error_length <- length(error_log)
+              ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+              shinyalert::shinyalert(
+                title = error_detail$title,
+                text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                type = error_detail$warning_type,
+                closeOnClickOutside = FALSE
+              )
+            })
+          }
+
+
+
+          if(FILES_check$PASS == FALSE) {
+            status["samples.csv"] <- "Error, please check your samples files."
+            status["counts.csv"] <- "Error, please check your counts files."
+            uploaded[["counts.csv"]] <- NULL
+            uploaded[["contrasts.csv"]] <- NULL
+          }
+
+          
           # samples1 <- uploaded[["samples.csv"]]
           # contrasts1 <- uploaded[["contrasts.csv"]]
           # group.col <- grep("group", tolower(colnames(samples1)))
