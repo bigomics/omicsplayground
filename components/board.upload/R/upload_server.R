@@ -448,7 +448,7 @@ UploadBoard <- function(id,
         }
       }
 
-      browser()
+      # browser()
 
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
@@ -457,8 +457,17 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          counts1 <- uploaded[["counts.csv"]]
+          
+          
+          
+          FILES_check <- playbase::pgx.checkPGX_all(
+            SAMPLES = uploaded[["samples.csv"]],
+            COUNTS = counts1 <- uploaded[["counts.csv"]]
+            )
+
+          samples1 <- FILES_check$SAMPLES
+          counts1 <- FILES_check$COUNTS
+          
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
           a2 <- mean(samples1[, 1] %in% colnames(counts1))
 
@@ -546,6 +555,7 @@ UploadBoard <- function(id,
         #     status["contrasts.csv"] <- "ERROR: dimension mismatch"
         #   }
         # }
+        }
 
         MAXSAMPLES <- 25
         MAXCONTRASTS <- 5
