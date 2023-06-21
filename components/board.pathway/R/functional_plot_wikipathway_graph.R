@@ -52,11 +52,7 @@ functional_plot_wikipathway_graph_server <- function(id,
                                               wikipathway_table,
                                               fa_contrast,
                                               watermark = FALSE) {
-  moduleServer(
-    id, function(input, output, session) {
-
-      ## preload... takes few seconds...
-      suppressMessages(require(SBGNview))
+  moduleServer( id, function(input, output, session) {
 
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
@@ -79,7 +75,7 @@ functional_plot_wikipathway_graph_server <- function(id,
 
         res <- plot_data()
         shiny::req(res, res$df)
-
+        
         df <- res$df
         comparison <- res$fa_contrast
         wikipathway_table <- res$wikipathway_table

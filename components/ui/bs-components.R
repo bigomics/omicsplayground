@@ -8,21 +8,21 @@
 ##
 
 
-bs_alert <- function(m="alert!", conditional = TRUE) {
+bs_alert <- function(m="alert!", conditional = TRUE, style="primary") {
 
-  alert_tag <- shiny::tags$div(
-    class = "alert alert-primary alert-dismissible fade show",
-    role = "alert",
-    m,
-    shiny::tags$button(
-      type = "button",
-      class = "btn-close",
-      `data-bs-dismiss` = "alert",
-      `aria-label` = "Close",
-      shiny::tags$span(
-        `aria-hidden` = "true"
-      )
-    )
+   alert_tag <- shiny::tags$div(
+       class = paste0("alert alert-",style," alert-dismissible fade show"),
+       role = "alert",
+       m,
+       shiny::tags$button(
+          type = "button",
+          class = "btn-close",
+          `data-bs-dismiss` = "alert",
+          `aria-label` = "Close",
+          shiny::tags$span(
+              `aria-hidden` = "true"
+          )
+       )
   )
 
   if (conditional) {
