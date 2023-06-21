@@ -117,7 +117,8 @@ LoadingBoard <- function(id,
                 rownames = FALSE,
                 escape = FALSE,
                 selection = "none",
-                class = "compact cell-border",
+                ## class = "compact cell-border",
+                class = "compact row-border",                
                 options = list(
                     dom = "t",
                     pageLength = 999
@@ -157,7 +158,19 @@ LoadingBoard <- function(id,
 
     # put user dataset into shared folder
     observeEvent(rl$share_pgx, {
-        shiny::showModal(share_dialog)
+        pp <- "__from__tarzan@demo.com__$"
+        pp <- paste0("__from__",auth$email(),"__$")
+        num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
+        if(num_shared_queue>3) {
+          shinyalert::shinyalert(
+            title = "Oops! Too many shared...",
+            text = paste("You have too many shared datasets in the queue.",
+              "Please contact your administrator.")
+          )
+        } else {
+          shiny::showModal(share_dialog)
+        }
+
     }, ignoreNULL = TRUE)
 
     observeEvent(input$initial_share_cancel, {
@@ -169,6 +182,7 @@ LoadingBoard <- function(id,
     is_valid_email <- function(email) {
         is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
         valid_email <- grepl(".*@.*[.].*",email)
+        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars       
         return((!is_personal) & valid_email)
     }
 
@@ -246,10 +260,9 @@ LoadingBoard <- function(id,
             ## }
             share_dir <- pgx_shared_dir
             if(!dir.exists(share_dir)) {
-                dbg("[loading_server.R] share_confirm : share_dir = ",share_dir)
                 shinyalert::shinyalert(
                     title = "Oops! Cannot share...",
-                    paste('This server does not allow sharing.', 
+                    paste('This server does not support sharing.', 
                           'Please contact your administrator.')
                     )
                 return()
@@ -771,39 +784,6 @@ LoadingBoard <- function(id,
         )
         df
     })
-##    }, ignoreNULL = TRUE, ignoreInit = TRUE)
-    
-    ## observeEvent( receivedPGXtable(), {
-
-    ##     df <- receivedPGXtable()
-    ##     dbg("[loading_server.R:receivedPGXtable] reacted! dim(df)=", dim(df))
-        
-    ##     if (nrow(df) > 0) {
-    ##         shiny::showModal(shiny::modalDialog(
-    ##             title = shiny::HTML("<strong>A user has shared data with you!</strong>"),
-    ##             DT::datatable(
-    ##                 df,
-    ##                 rownames = FALSE,
-    ##                 escape = FALSE,
-    ##                 selection = "none",
-    ##                 class = "compact cell-border",
-    ##                 options = list(
-    ##                     dom = "t",
-    ##                     pageLength = 999
-    ##                 )
-    ##             ) %>%
-    ##                 DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "99%"),
-    ##             easyClose = TRUE, size = "xl"
-    ##         ) %>%
-    ##             tagAppendAttributes(
-    ##                 style = 'min-height: 50%; min-width: 50%',
-    ##                 .cssSelector = '.modal-dialog'
-    ##             ))
-    ##     } else {
-    ##         shiny::removeModal()
-    ##     }
-    ##     ##    }, ignoreNULL = TRUE, ignoreInit = TRUE)
-    ## })
 
     # event when a shared pgx is accepted by a user
     observeEvent(input$accept_pgx, {
@@ -816,8 +796,6 @@ LoadingBoard <- function(id,
         pgdir <- getPGXDIR()
         file_from <- file.path(pgx_shared_dir, pgx_name)
         file_to   <- file.path(pgdir, new_pgx_name)
-        dbg("[loading_server.R] accept_pgx : file_from = ",file_from)
-        dbg("[loading_server.R] accept_pgx : file_to = ",file_to)
 
         if(file.exists(file_to)) {
             shinyalert::shinyalert(
@@ -1051,12 +1029,11 @@ LoadingBoard <- function(id,
     })
 
     loadRowManual <- reactiveVal(0)
+    
     observeEvent(r_global$load_data_from_upload, {
         data_names <- as.character(pgxtable$data()$dataset)
         data_names <- sub("[.]pgx$","",data_names)
         upload_pgx <- sub("[.]pgx$","",r_global$load_data_from_upload)
-        dbg("[loading_server.R] data_names = ",data_names)
-        dbg("[loading_server.R] upload_pgx = ",upload_pgx)
         load_row <- which(data_names == upload_pgx)[1]
         rl$selected_row <- load_row
         loadRowManual(loadRowManual() + 1)
