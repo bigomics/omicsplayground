@@ -109,9 +109,7 @@ LoadingBoard <- function(id,
         dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
       
         if(length(pgx_received)>0) {
-            dbg("[loading_server.R:receive_pgx_alert] len.pgx_received=", length(pgx_received))
             df <- receivedPGXtable()
-            dbg("[loading_server.R:receive_pgx_alert] reacted! dim(df)=", dim(df))
             dt <- DT::datatable(
                 df,
                 rownames = FALSE,
@@ -124,7 +122,7 @@ LoadingBoard <- function(id,
                     pageLength = 999
                 )
              ) %>%
-                DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "99%")
+                DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
 
             bs_alert(
                style = "danger",
@@ -133,8 +131,6 @@ LoadingBoard <- function(id,
                    dt
                )
             )
-        } else {
-            bs_alert("This tab shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button.")
         }
     })
 
@@ -753,7 +749,7 @@ LoadingBoard <- function(id,
             inline = TRUE,
             icon = shiny::icon("check"),
             class = "btn-inline btn-success",
-            style = "padding:0px; margin:0px; font-size:95%;",
+            style = "padding:0px; margin:0px; font-size:85%;",
             onclick = paste0('Shiny.onInputChange(\"', ns("accept_pgx"), '\",this.id)')
         )
 
@@ -766,7 +762,7 @@ LoadingBoard <- function(id,
             inline = TRUE,
             icon = shiny::icon("x"),
             class = "btn-inline btn-danger",
-            style = "padding:0px; margin:0px; font-size:95%;",
+            style = "padding:0px; margin:0px; font-size:85%;",
             onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\",this.id)')
         )
 
