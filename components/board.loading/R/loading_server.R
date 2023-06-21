@@ -500,6 +500,8 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
+
+      pgx.showSmallModal()
       info <- NULL
       pdir <- getPGXDIR()
       shiny::withProgress(message = "Updating library...", value = 0.33, {
@@ -520,6 +522,7 @@ LoadingBoard <- function(id,
       for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
       ii <- match(info.colnames,colnames(info))
       info <- info[,ii]
+      removeModal(session)
       info
     })
 
