@@ -187,7 +187,7 @@ app_server <- function(input, output, session) {
         
         info("[SERVER:getPGXINFO] updating datasets-info.csv")
         pgx.showCartoonModal()
-        getPGXINFO()
+        try(getPGXINFO())
         shiny::removeModal()
         
     })
@@ -694,17 +694,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         info("[server.R & TIMEOUT>0] change in user log status : logged = ",logged)
-        
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        info("CALLING PGX INFO FUNCTION")
-        
-        getPGXINFO()
+
         ##--------- start timer --------------
         if(TIMEOUT>0 && logged) {
           info("[server.R] starting session timer!!!")
