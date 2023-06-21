@@ -43,7 +43,7 @@ LoadingUI <- function(id) {
       id = ns('tabs'),
       shiny::tabPanel(
         'User',
-        bs_alert("This tab shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button."),
+        uiOutput(ns("receive_pgx_alert")),
         br(),
         div(
           class = "row",
