@@ -286,8 +286,8 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
         color = waiter::transparent(.5)
     )
 
+    sendEmailLink <- reactiveVal(NULL)
     observeEvent( input$emailSubmit, {
-        email_waiter$show()
         if(input$emailInput == ""){
             session$sendCustomMessage(
                 "email-feedback",
@@ -320,9 +320,13 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
                 msg = "Email sent, check your inbox."
             )
         )
-        firebase2$send_email(input$emailInput)
-        email_waiter$hide()
+        sendEmailLink(input$emailInput)
     })
+
+    observeEvent(sendEmailLink(), {
+        firebase2$send_email(sendEmailLink())
+        sendEmailLink(NULL)
+    }, ignoreNULL = TRUE)
 
     observeEvent( firebase$get_signed_in(), {
 
@@ -529,8 +533,8 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         color = waiter::transparent(.5)
     )
 
+    sendEmailLink <- reactiveVal(NULL)
     observeEvent( input$emailSubmit, {
-        email_waiter$show()
         if(input$emailInput == ""){
             session$sendCustomMessage(
                 "email-feedback",
@@ -572,11 +576,13 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
                 msg = "Email sent, check your inbox."
             )
         )
-
-        firebase2$send_email(input$emailInput)
-
-        email_waiter$hide()
+        sendEmailLink(input$emailInput)
     })
+
+    observeEvent(sendEmailLink(), {
+        firebase2$send_email(sendEmailLink())
+        sendEmailLink(NULL)
+    }, ignoreNULL = TRUE)
 
     observeEvent( firebase$get_signed_in(), {
 
