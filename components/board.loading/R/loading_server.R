@@ -7,6 +7,8 @@ LoadingBoard <- function(id,
                          pgx_dir,
                          pgx,
                          auth,
+                         getPGXINFO,
+                         getPGXDIR,
                          limits = c(
                            "samples" = 1000, "comparisons" = 20,
                            "genes" = 20000, "genesets" = 10000,
@@ -18,6 +20,7 @@ LoadingBoard <- function(id,
                          r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
+
 
     ## reactive variables used only within this module
     rl <- reactiveValues(
@@ -471,58 +474,7 @@ LoadingBoard <- function(id,
     ## READ initial PGX file info
     ## -----------------------------------------------------------------------------
 
-    ## Get the pgx folder. If user folders are enabled, the user email
-    ## is appended to the pgx dirname.
-    getPGXDIR <- shiny::reactive({
-      r_global$reload_pgxdir ## force reload
-
-      email <- auth$email()
-      email <- gsub(".*\\/", "", email)  ##??
-      pdir  <- pgx_dir ## from module input
-
-      ## Append email to the pgx path.
-      if (enable_userdir) {
-        pdir <- paste0(pdir, "/", email)
-        if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
-
-        #If dir not exists, create and copy example pgx file
-        if (!dir.exists(pdir)) {
-          dir.create(pdir)
-          file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
-        }
-      }
-      pdir
-    })
-
-    getPGXINFO <- shiny::reactive({
-      req(auth)
-      if (!auth$logged()) {
-        warning("[LoadingBoard:getPGXINFO] user not logged in!")
-        return(NULL)
-      }
-      info <- NULL
-      pdir <- getPGXDIR()
-      shiny::withProgress(message = "Updating library...", value = 0.33, {
-        dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
-        ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
-        info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
-      })
-
-      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
-        "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-      if (is.null(info)) {
-        aa <- rep(NA, length(info.colnames))
-        names(aa) <- info.colnames
-        info <- data.frame(rbind(aa))[0, ]
-      }
-      ## add missing columns fields
-      missing.cols <- setdiff(info.colnames,colnames(info))
-      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
-      ii <- match(info.colnames,colnames(info))
-      info <- info[,ii]
-      info
-    })
-
+  
     getPGXINFO_SHARED <- shiny::eventReactive({
       rl$reload_pgxdir_shared
     }, {
@@ -564,6 +516,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       df <- getPGXINFO()
+      req(df)
       if (is.null(df)) {
         return(NULL)
       }
@@ -676,9 +629,8 @@ LoadingBoard <- function(id,
         info <- data.frame(rbind(aa))[0, ]
       }
       df <- getPGXINFO()
-      if (is.null(df)) {
-        return(NULL)
-      }
+      req(df)
+      
       ## add missing columns fields
       missing.cols <- setdiff(info.colnames,colnames(info))
       for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
@@ -700,6 +652,7 @@ LoadingBoard <- function(id,
     }
     observeEvent(c(r_global$nav, renewSharedPGXINFO()),  {
         req(r_global$nav == 'load-tab')
+        
         shared_pgx_names <- getRequestedSharedPGXINFO()
 
         accept_btns <- makebuttonInputs2(
@@ -1031,7 +984,7 @@ LoadingBoard <- function(id,
         pgxfile <- selectedPGX()
       }
       ## Observe "try example dataset" press
-      if (!is.null(rl$found_example_trigger)) {
+      if (!is.null(rl$found_example_trigger)) { 
         pgxfile <- selectedPGX()
       }
 
@@ -1144,6 +1097,7 @@ LoadingBoard <- function(id,
     observeEvent(
       c(getFilteredPGXINFO(), r_global$reload_pgxdir), {
         df <- getFilteredPGXINFO()
+        req(df)
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
         df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)

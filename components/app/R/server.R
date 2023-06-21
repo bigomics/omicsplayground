@@ -108,6 +108,8 @@ app_server <- function(input, output, session) {
         auth <- NoAuthenticationModule(id = "auth", show_modal=TRUE)
     }
 
+    
+
     ##-------------------------------------------------------------
     ## Call modules
     ##-------------------------------------------------------------
@@ -116,6 +118,64 @@ app_server <- function(input, output, session) {
 
     ## Global reactive value for PGX object
     PGX <- reactiveValues()
+
+    ## Get the pgx folder. If user folders are enabled, the user email
+    ## is appended to the pgx dirname.
+    
+    
+    getPGXDIR <- shiny::reactive({
+      r_global$reload_pgxdir ## force reload
+
+      email <- auth$email()
+      email <- gsub(".*\\/", "", email)  ##??
+      pdir  <- PGX.DIR ## from module input
+
+      ## Append email to the pgx path.
+      if (opt$ENABLE_USERDIR) {
+        pdir <- paste0(pdir, "/", email)
+        if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
+
+        #If dir not exists, create and copy example pgx file
+        if (!dir.exists(pdir)) {
+          dir.create(pdir)
+          file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
+        }
+      }
+      pdir
+    })
+
+
+    getPGXINFO <- shiny::reactive({
+
+      # do not continue if r_global$reload_pgxdir == 0
+      req(auth)
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getPGXINFO] user not logged in!")
+        return(NULL)
+      }
+      info <- NULL
+      pdir <- getPGXDIR()
+      shiny::withProgress(message = "Updating library...", value = 0.33, {
+        dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
+        ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
+        info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      })
+
+      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+        "ngenes", "nsets", "conditions", "organism", "date", "creator" )
+      if (is.null(info)) {
+        aa <- rep(NA, length(info.colnames))
+        names(aa) <- info.colnames
+        info <- data.frame(rbind(aa))[0, ]
+      }
+      ## add missing columns fields
+      missing.cols <- setdiff(info.colnames,colnames(info))
+      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
+      ii <- match(info.colnames,colnames(info))
+      info <- info[,ii]
+      info
+    })
+
 
     ## Global reactive values for app-wide triggering
     r_global <- reactiveValues(
@@ -132,6 +192,8 @@ app_server <- function(input, output, session) {
         id = "load",
         pgx_dir = PGX.DIR,
         pgx = PGX,
+        getPGXINFO = getPGXINFO,
+        getPGXDIR = getPGXDIR,
         limits = limits,
         auth = auth,
         enable_userdir = opt$ENABLE_USERDIR,
@@ -616,7 +678,17 @@ Upgrade today and experience advanced analysis features without the time limit.<
         ## trigger on change of USER
         logged <- auth$logged()
         info("[server.R & TIMEOUT>0] change in user log status : logged = ",logged)
-
+        
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        info("CALLING PGX INFO FUNCTION")
+        
+        getPGXINFO()
         ##--------- start timer --------------
         if(TIMEOUT>0 && logged) {
           info("[server.R] starting session timer!!!")
