@@ -5,6 +5,7 @@
 
 WelcomeBoard <- function(id, auth, enable_upload, r_global) {
   moduleServer(id, function(input, output, session) {
+    shiny::removeModal()
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({

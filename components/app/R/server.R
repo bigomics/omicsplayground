@@ -186,12 +186,10 @@ app_server <- function(input, output, session) {
         }
         
         info("[SERVER:getPGXINFO] updating datasets-info.csv")
-        pgx.showCartoonModal()
-        try(getPGXINFO())
-        shiny::removeModal()
-        
+        pgx.showSmallModal()
+        getPGXINFO()
+        shiny::removeModal(session)
     })
-
 
     ## Global reactive values for app-wide triggering
     r_global <- reactiveValues(
