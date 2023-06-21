@@ -473,7 +473,6 @@ LoadingBoard <- function(id,
     ## -----------------------------------------------------------------------------
     ## READ initial PGX file info
     ## -----------------------------------------------------------------------------
-
   
     getPGXINFO_SHARED <- shiny::eventReactive({
       rl$reload_pgxdir_shared
@@ -504,6 +503,7 @@ LoadingBoard <- function(id,
       for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
       ii <- match(info.colnames,colnames(info))
       info <- info[,ii]
+
       info
     })
 
@@ -557,6 +557,7 @@ LoadingBoard <- function(id,
                     not showing table!")
         return(NULL)
       }
+      pgx.showSmallModal()
       df <- getPGXINFO_SHARED()
       shiny::req(df)
 
@@ -583,6 +584,8 @@ LoadingBoard <- function(id,
       ))
       kk <- intersect(kk, colnames(df))
       df <- df[, kk, drop = FALSE]
+
+      shiny::removeModal(session)
       df
     })
 
@@ -613,6 +616,9 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
+      # add modal
+      pgx.showSmallModal()
+
       ## update meta files
       shiny::withProgress(message = "Updating shared library...", value = 0.33, {
         dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")
@@ -640,6 +646,9 @@ LoadingBoard <- function(id,
 
       pgxdir <- getPGXDIR()
       pgxfiles <- dir(pgxdir, pattern = '__from__')
+
+      # remove modal
+      shiny::removeModal(session)
       pgxfiles
     })
 
