@@ -273,7 +273,7 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
               
-              COUNTS_check <- playbase::pgx.checkPGX(df0, "COUNTS")
+              COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
               if(length(COUNTS_check$check)>0) {
                 lapply(1:length(COUNTS_check$check), function(idx){
@@ -308,7 +308,7 @@ UploadBoard <- function(id,
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              SAMPLES_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
+              SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
               if(length(SAMPLES_check$check)>0) {
                 lapply(1:length(SAMPLES_check$check), function(idx){
@@ -336,7 +336,7 @@ UploadBoard <- function(id,
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              CONTRASTS_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+              CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
               if(length(CONTRASTS_check$check)>0) {
                 lapply(1:length(CONTRASTS_check$check), function(idx){
@@ -425,7 +425,6 @@ UploadBoard <- function(id,
       }
     })
 
-
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
@@ -457,7 +456,7 @@ UploadBoard <- function(id,
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
 
-          FILES_check <- playbase::pgx.checkPGX_all(
+          FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = uploaded[["samples.csv"]],
             COUNTS = uploaded[["counts.csv"]]
             )
@@ -506,7 +505,7 @@ UploadBoard <- function(id,
 
         if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
           
-          FILES_check <- playbase::pgx.checkPGX_all(
+          FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = uploaded[["samples.csv"]],
             CONTRASTS = uploaded[["contrasts.csv"]]
             )
