@@ -138,20 +138,19 @@ LoadingBoard <- function(id,
         tagList(
             paste("Your dataset",pgxname,"will be shared with the user below."),
             br(), br(),
-            shiny::textOutput(ns('error_alert')) %>% tagAppendAttributes(
-                style = 'color: red;'
-            ),
             shiny::textInput(ns("share_user"),
               label = "Enter email who will receive the dataset:",
               placeholder = "Type email..."
             ),
             select_user,
             ##shiny::textInput(ns("share_user2"), "Re-enter use email:")
+            shiny::textOutput(ns('error_alert')) %>%
+              tagAppendAttributes(style = 'color: red;')
         ),
         title = "Share this dataset?",
         footer = tagList(
             actionButton(ns("initial_share_cancel"), "Cancel"),
-            actionButton(ns("initial_share_confirm"), "Confirm")
+            actionButton(ns("initial_share_confirm"), "Share")
         )
       )
     }
@@ -164,6 +163,13 @@ LoadingBoard <- function(id,
       } 
       share_user
     })
+
+    observeEvent(input$share_user2,{
+        if(input$share_user2!="") {
+            updateTextInput(session, "share_user", value='')
+        }
+    })
+
     
     selectedPGX2 <- reactive({
       selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
