@@ -41,7 +41,7 @@ loading_table_datasets_server <- function(id,
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste("Your dataset library seems empty. Please upload new data or import",
-            "a dataset from the shared folder."
+            "a dataset from the public datasets folder."
             )
         )
       }
