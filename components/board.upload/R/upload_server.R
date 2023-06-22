@@ -430,6 +430,7 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     checkTables <- shiny::reactive({
+
       ## check dimensions
       status <- rep("please upload", 3)
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
@@ -497,64 +498,76 @@ UploadBoard <- function(id,
             status["counts.csv"] <- "Error, please check your counts files."
             uploaded[["counts.csv"]] <- NULL
             uploaded[["samples.csv"]] <- NULL
-            }
+          }
+
+          if(FILES_check$PASS == TRUE) {
+            status["samples.csv"] <- "OK"
+            status["counts.csv"] <- "OK"
           }
         }
+      }
 
-        if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          
-          FILES_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = uploaded[["samples.csv"]],
-            CONTRASTS = uploaded[["contrasts.csv"]]
-          )
-          
-          uploaded[["samples.csv"]] <- FILES_check$samples
-          uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
+      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        
+        FILES_check <- playbase::pgx.crosscheckINPUT(
+          SAMPLES = uploaded[["samples.csv"]],
+          CONTRASTS = uploaded[["contrasts.csv"]]
+        )
+        
+        uploaded[["samples.csv"]] <- FILES_check$samples
+        uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
-          if(length(FILES_check$check)>0) {
-            lapply(1:length(FILES_check$check), function(idx){
-              error_id <- names(FILES_check$check)[idx]
-              error_log <- FILES_check$check[[idx]]
-              error_detail <- error_list[error_list$error == error_id,]
-              error_length <- length(error_log)
-              ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+        if(length(FILES_check$check)>0) {
+          lapply(1:length(FILES_check$check), function(idx){
+            error_id <- names(FILES_check$check)[idx]
+            error_log <- FILES_check$check[[idx]]
+            error_detail <- error_list[error_list$error == error_id,]
+            error_length <- length(error_log)
+            ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
-              shinyalert::shinyalert(
-                title = error_detail$title,
-                text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-                type = error_detail$warning_type,
-                closeOnClickOutside = FALSE
-              )
-            })
-          }
-
-          if(FILES_check$PASS == FALSE) {
-            status["samples.csv"] <- "Error, please check your samples files."
-            status["counts.csv"] <- "Error, please check your counts files."
-            uploaded[["counts.csv"]] <- NULL
-            uploaded[["contrasts.csv"]] <- NULL
-          }
+            shinyalert::shinyalert(
+              title = error_detail$title,
+              text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+              type = error_detail$warning_type,
+              closeOnClickOutside = FALSE
+            )
+          })
         }
 
-        MAXSAMPLES <- 25
-        MAXCONTRASTS <- 5
-        MAXSAMPLES <- as.integer(limits["samples"])
-        MAXCONTRASTS <- as.integer(limits["comparisons"])
-
-        ## check files: maximum contrasts allowed
-        if (status["contrasts.csv"] == "OK") {
-          if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
-            status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
-          }
+        if(FILES_check$PASS == FALSE) {
+          status["samples.csv"] <- "Error, please check your samples files."
+          status["counts.csv"] <- "Error, please check your counts files."
+          uploaded[["counts.csv"]] <- NULL
+          uploaded[["contrasts.csv"]] <- NULL
         }
 
-        ## check files: maximum samples allowed
-        if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
-            status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+        if(FILES_check$PASS == TRUE) {
+            status["samples.csv"] <- "OK"
+            status["counts.csv"] <- "OK"
           }
-          if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
-            status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
+      }
+
+      browser()
+
+      MAXSAMPLES <- 25
+      MAXCONTRASTS <- 5
+      MAXSAMPLES <- as.integer(limits["samples"])
+      MAXCONTRASTS <- as.integer(limits["comparisons"])
+
+      ## check files: maximum contrasts allowed
+      if (status["contrasts.csv"] == "OK") {
+        if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
+          status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
+        }
+      }
+
+      ## check files: maximum samples allowed
+      if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
+          status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+        }
+        if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
+          status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
         }
       }
 
