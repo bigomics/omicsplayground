@@ -447,6 +447,7 @@ UploadBoard <- function(id,
         }
       }
 
+      error_list <- playbase::PGX_CHECKS
 
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
@@ -480,11 +481,8 @@ UploadBoard <- function(id,
 
           uploaded[["samples.csv"]] <- FILES_check$samples
           uploaded[["counts.csv"]] <- FILES_check$counts
-
-
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
-          
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
           a2 <- mean(samples1[, 1] %in% colnames(counts1))
 
@@ -508,7 +506,7 @@ UploadBoard <- function(id,
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = uploaded[["samples.csv"]],
             CONTRASTS = uploaded[["contrasts.csv"]]
-            )
+          )
           
           uploaded[["samples.csv"]] <- FILES_check$samples
           uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
@@ -557,18 +555,8 @@ UploadBoard <- function(id,
           }
           if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
             status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
-          }
         }
-
-        ## check samples.csv: must have group column defined
-        # if (status["samples.csv"] == "OK" && status["contrasts.csv"] == "OK") {
-        #   samples1 <- uploaded[["samples.csv"]]
-        #   contrasts1 <- uploaded[["contrasts.csv"]]
-        #   # if (!all(rownames(contrasts1) %in% rownames(samples1))) {
-        #   #   status["contrasts.csv"] <- "ERROR: contrasts do not match samples"
-        #   # }
-        # }
-      } ## end-if-from-pgx
+      }
 
       e1 <- grepl("ERROR", status["samples.csv"])
       e2 <- grepl("ERROR", status["contrasts.csv"])
