@@ -96,16 +96,16 @@ app_ui <- function() {
           ),
           "Enrichment" = c(
             enrich = "Geneset Enrichment",
+            sig = "Test geneset",
             pathway = "Pathway analysis",
             wordcloud = "Word cloud",
             drug = "Drug connectivity"
           ),
           "Signature" = c(
             isect = "Compare signatures",
-            sig = "Test signatures",
+            comp = "Compare datasets",
             bio = "Find biomarkers",
             cmap = "Similar experiments",
-            comp = "Compare datasets (beta)",
             tcga = "TCGA survival (beta)"
           ),
           "CellProfiling" = c(
