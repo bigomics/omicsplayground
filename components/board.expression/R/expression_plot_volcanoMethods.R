@@ -27,7 +27,7 @@ expression_plot_volcanoMethods_ui <- function(
     ns("pltmod"),
     title = "Volcano plots for all methods",
     label = label,
-    plotlib = "ggplot",
+    plotlib = "grid",
     info.text = info.text,
     caption = caption,
     options = NULL,
@@ -193,7 +193,7 @@ expression_plot_volcanoMethods_server <- function(id,
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
       ## csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(80, 170), ## resolution of plots
+      res = c(80, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
     )

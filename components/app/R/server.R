@@ -124,6 +124,9 @@ app_server <- function(input, output, session) {
         loadedDataset = 0
     )
 
+    # set the active tab and share it globally
+    observeEvent(input$nav, { r_global$nav <- input$nav })
+
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
@@ -308,22 +311,6 @@ app_server <- function(input, output, session) {
           )
         })
 
-        # this is a function - like "handleSettings()" in bigdash- needed to
-        # make the settings sidebar show up for the inserted tabs
-        shinyjs::runjs(
-            "  $('.big-tab')
-    .each((index, el) => {
-      let settings = $(el)
-        .find('.tab-settings')
-        .first();
-
-      $(settings).data('target', $(el).data('name'));
-      $(settings).appendTo('#settings-content');
-    });"
-        )
-        bigdash.selectTab(session, selected = 'dataview-tab')
-        bigdash.openSettings()
-
         shiny::withProgress(message="Preparing your dashboard (server)...", value=0, {
 
           if(ENABLED['dataview'])  {
@@ -428,6 +415,22 @@ app_server <- function(input, output, session) {
           info("[server.R] calling modules done!")
         })
 
+        # this is a function - like "handleSettings()" in bigdash- needed to
+        # make the settings sidebar show up for the inserted tabs
+        shinyjs::runjs(
+            "  $('.big-tab')
+    .each((index, el) => {
+      let settings = $(el)
+        .find('.tab-settings')
+        .first();
+
+      $(settings).data('target', $(el).data('name'));
+      $(settings).appendTo('#settings-content');
+    });"
+        )
+        bigdash.selectTab(session, selected = 'dataview-tab')
+        bigdash.openSettings()
+
         ## remove modal from LoadingBoard
         shiny::removeModal()
 
@@ -504,9 +507,7 @@ app_server <- function(input, output, session) {
 
         ## Beta features
         info("[server.R] disabling beta features")
-        ##bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
         bigdash.toggleTab(session, "pcsf-tab", show.beta)  ## wgcna
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow

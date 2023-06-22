@@ -56,7 +56,7 @@ functional_plot_reactome_graph_server <- function(id,
     id, function(input, output, session) {
 
       ## preload... takes few seconds...
-      suppressMessages(require(SBGNview))
+      ##suppressMessages(require(SBGNview))
 
       ## reactive or function? that's the question...
       ## plot_data <- shiny::reactive({
@@ -129,7 +129,7 @@ functional_plot_reactome_graph_server <- function(id,
         tmpdir <- tempdir()
         setwd(tmpdir)
 
-        ##require(SBGNview)
+        suppressMessages(require(SBGNview)) ## slow!! but needed!!!       
         ##data("mapped.ids","pathways.info", "sbgn.xmls")
         ##data("sbgn.xmls", package="SBGNview.data",verbose=1)  ### BIG 700MB!!!
         ##object.size(sbgn.xmls)
