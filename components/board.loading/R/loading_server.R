@@ -4,7 +4,7 @@
 ##
 
 LoadingBoard <- function(id,
-                         pgx_dir,
+                         pgx_topdir,
                          pgx,
                          auth,
                          limits = c(
@@ -41,8 +41,8 @@ LoadingBoard <- function(id,
     renewReceivedTable <- reactiveVal(0)
 
     ## static, not changing
-    pgx_shared_dir = stringr::str_replace_all(pgx_dir, c('data'='data_shared'))
-    pgx_public_dir = stringr::str_replace_all(pgx_dir, c('data'='data_public'))
+    pgx_shared_dir = stringr::str_replace_all(pgx_topdir, c('data'='data_shared'))
+    pgx_public_dir = stringr::str_replace_all(pgx_topdir, c('data'='data_public'))
     enable_public_tabpanel <- dir.exists(pgx_public_dir)
 
     ## only enable if folder exists
@@ -68,6 +68,25 @@ LoadingBoard <- function(id,
         shinyjs::enable(id = 'loadbutton')
       }
     }, ignoreNULL = FALSE)
+
+
+    ##-------------------------------------------------------------------
+    ## util functions
+    ##-------------------------------------------------------------------    
+
+    is_valid_email <- function(email) {
+        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
+        valid_email <- grepl(".*@.*[.].*",email)
+        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars       
+        return(!is_personal && valid_email)
+    }
+
+    get_coworkers <- function(pgxdir, email) {
+        domain <- sub(".*@","",email)
+        cow <- dir(pgxdir, pattern=paste0(domain,"$"))
+        cow <- setdiff(cow, email)
+        cow
+    }
 
     ##-------------------------------------------------------------------
     ## share dataset with specific user
@@ -103,24 +122,55 @@ LoadingBoard <- function(id,
         }
     })
 
-    share_dialog <- shiny::modalDialog(
+    share_dialog <- function(pgxname, choices=NULL) {
+
+      select_user <- NULL
+      if(!is.null(choices) && length(choices)>0) {
+        select_user <- tagList(
+          shiny::selectizeInput(ns("share_user2"),
+            "Or select a coworker from the list:",
+            choices = c("Choose coworker..."="",choices), 
+            options=list(create=TRUE))
+        )
+      }
+      
+      shiny::modalDialog(
         tagList(
-            paste("Your dataset will be shared with the user whose
-                    email you enter below."),
+            paste("Your dataset",pgxname,"will be shared with the user below."),
             br(), br(),
             shiny::textOutput(ns('error_alert')) %>% tagAppendAttributes(
                 style = 'color: red;'
             ),
-            shiny::textInput(ns("share_user"), "User email who will receive the pgx:"),
-            shiny::textInput(ns("share_user2"), "Re-enter use email:")
+            shiny::textInput(ns("share_user"),
+              label = "Enter email who will receive the dataset:",
+              placeholder = "Type email..."
+            ),
+            select_user,
+            ##shiny::textInput(ns("share_user2"), "Re-enter use email:")
         ),
         title = "Share this dataset?",
         footer = tagList(
             actionButton(ns("initial_share_cancel"), "Cancel"),
             actionButton(ns("initial_share_confirm"), "Confirm")
         )
-    )
+      )
+    }
 
+    #' will either take free-form or selected email
+    input_share_user <- reactive({
+      share_user <- input$share_user
+      if(!is.null(input$share_user2) && input$share_user2 != '') {
+        share_user <- input$share_user2
+      } 
+      share_user
+    })
+    
+    selectedPGX2 <- reactive({
+      selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
+      pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+      pgx_name
+    })
+    
     # put user dataset into shared folder
     observeEvent(rl$share_pgx, {
         pp <- "__from__tarzan@demo.com__$"
@@ -133,7 +183,11 @@ LoadingBoard <- function(id,
               "Please contact your administrator.")
           )
         } else {
-          shiny::showModal(share_dialog)
+          coworkers <- get_coworkers( pgx_topdir, auth$email())
+          pgxname <- sub("[.]pgx$","",selectedPGX2())
+          dbg("[loading_server.R] pgxname =", pgxname)
+          if(length(coworkers)==0) coworkers <- NULL
+          shiny::showModal(share_dialog(pgxname, choices=coworkers))
         }
 
     }, ignoreNULL = TRUE)
@@ -143,30 +197,25 @@ LoadingBoard <- function(id,
         output$error_alert <- renderText({''})
         shiny::removeModal()
     })
-
-    is_valid_email <- function(email) {
-        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
-        valid_email <- grepl(".*@.*[.].*",email)
-        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars       
-        return((!is_personal) & valid_email)
-    }
-
+    
     observeEvent(input$initial_share_confirm, {
 
-        if (input$share_user == '') {
+        share_user <- input_share_user()
+        if (share_user == '') {
             output$error_alert <- renderText({'Please enter an email.'})
             return()
         }
-        if (input$share_user != input$share_user2) {
-            output$error_alert <- renderText({'Emails do not match.'})
-            return()
-        }
-        if (!is_valid_email(input$share_user)) {
+        ## if (input$share_user != input$share_user2) {
+        ##     output$error_alert <- renderText({'Emails do not match.'})
+        ##     return()
+        ## }
+        
+        if (!is_valid_email(share_user)) {
             output$error_alert <- renderText({'Email is not valid. Please use
           only work or business emails.'})
             return()
         }
-        if (input$share_user==auth$email()) {
+        if (share_user==auth$email()) {
             output$error_alert <- renderText({'Error. You cannot share with yourself...'})
             return()
         }
@@ -175,15 +224,14 @@ LoadingBoard <- function(id,
 
         shiny::removeModal()
 
-        selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
-        pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+        pgx_name <- selectedPGX2()
 
         alert_val <- shinyalert::shinyalert(
             inputId = "share_confirm",
-            title = "Are you sure?",
+            title = "Please confirm",
             tagList(
                 paste("Your dataset", pgx_name, "will be shared with user",
-                      input$share_user,". Please confirm.")
+                      share_user,". Are you sure?")
             ),
             html = TRUE,
             showCancelButton = TRUE,
@@ -220,8 +268,7 @@ LoadingBoard <- function(id,
                 return()
             }
           
-            selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
-            pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
+            pgx_name <- selectedPGX2()
             pgx_name <- sub("[.]pgx$", "", pgx_name)
             pgx_path <- getPGXDIR()
             pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
@@ -229,9 +276,10 @@ LoadingBoard <- function(id,
             ## The shared file will be copied to the data_shared
             ## folder with the name of the sender and receiver in the
             ## file name.
+            share_user <- input_share_user()
             new_pgx_file <- file.path(
                 share_dir,
-                paste0(pgx_name, ".pgx", '__to__', input$share_user,
+                paste0(pgx_name, ".pgx", '__to__', share_user,
                      '__from__', auth$email(), '__')
             )
 
@@ -257,12 +305,12 @@ LoadingBoard <- function(id,
               }
             })
 
-          
+            share_user <- input_share_user()          
             shinyalert::shinyalert(
                 title = "Successfully shared!",
                 paste(
                   "Your dataset", pgx_name, "has now been successfully",
-                  "been shared with", input$share_user
+                  "been shared with", share_user
                 )
             )
 
@@ -282,7 +330,7 @@ LoadingBoard <- function(id,
                         )
                     ),
                     from = "app@bigomics.ch",
-                    to = input$share_user,
+                    to = share_user,
                     subject = paste("Your friend",sender,"shared data on OmicsPlayground"),
                     credentials = blastula::creds_file(path_to_creds)
                 )
@@ -387,7 +435,7 @@ LoadingBoard <- function(id,
 
           alert_val <- shinyalert::shinyalert(
             inputId = 'share_public_confirm',
-            title = "Share this dataset?",
+            title = paste("Share this dataset?"),
             paste('Your dataset', pgx_name, 'will be copied',
               'to the public folder. Other users will be able import and explore',
               'this dataset. Are you sure?'),
@@ -555,7 +603,7 @@ LoadingBoard <- function(id,
 
       email <- auth$email()
       email <- gsub(".*\\/", "", email)  ##??
-      pdir  <- pgx_dir ## from module input
+      pdir  <- pgx_topdir ## from module input
 
       ## Append email to the pgx path.
       if (enable_userdir) {
@@ -565,7 +613,7 @@ LoadingBoard <- function(id,
         #If dir not exists, create and copy example pgx file
         if (!dir.exists(pdir)) {
           dir.create(pdir)
-          file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
+          file.copy(file.path(pgx_topdir, "example-data.pgx"), pdir)
         }
       }
       pdir

@@ -130,7 +130,7 @@ app_server <- function(input, output, session) {
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
-        pgx_dir = PGX.DIR,
+        pgx_topdir = PGX.DIR,
         pgx = PGX,
         limits = limits,
         auth = auth,
