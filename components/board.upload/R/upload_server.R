@@ -273,7 +273,7 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
               
-              COUNTS_check <- playbase::pgx.checkPGX(df0, "COUNTS")
+              COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
               if(length(COUNTS_check$check)>0) {
                 lapply(1:length(COUNTS_check$check), function(idx){
@@ -308,7 +308,7 @@ UploadBoard <- function(id,
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              SAMPLES_check <- playbase::pgx.checkPGX(df0, "SAMPLES")
+              SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
               if(length(SAMPLES_check$check)>0) {
                 lapply(1:length(SAMPLES_check$check), function(idx){
@@ -336,7 +336,7 @@ UploadBoard <- function(id,
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
               
-              CONTRASTS_check <- playbase::pgx.checkPGX(df0, "CONTRASTS")
+              CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
               if(length(CONTRASTS_check$check)>0) {
                 lapply(1:length(CONTRASTS_check$check), function(idx){
@@ -425,12 +425,12 @@ UploadBoard <- function(id,
       }
     })
 
-
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
 
     checkTables <- shiny::reactive({
+
       ## check dimensions
       status <- rep("please upload", 3)
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
@@ -448,6 +448,8 @@ UploadBoard <- function(id,
         }
       }
 
+      error_list <- playbase::PGX_CHECKS
+
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
       if (has.pgx == TRUE) {
@@ -455,8 +457,33 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          counts1 <- uploaded[["counts.csv"]]
+
+          FILES_check <- playbase::pgx.crosscheckINPUT(
+            SAMPLES = uploaded[["samples.csv"]],
+            COUNTS = uploaded[["counts.csv"]]
+            )
+
+          if(length(FILES_check$check)>0) {
+            lapply(1:length(FILES_check$check), function(idx){
+              error_id <- names(FILES_check$check)[idx]
+              error_log <- FILES_check$check[[idx]]
+              error_detail <- error_list[error_list$error == error_id,]
+              error_length <- length(error_log)
+              ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+
+              shinyalert::shinyalert(
+                title = error_detail$title,
+                text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                type = error_detail$warning_type,
+                closeOnClickOutside = FALSE
+              )
+            })
+          }
+
+          uploaded[["samples.csv"]] <- FILES_check$SAMPLES
+          uploaded[["counts.csv"]] <- FILES_check$COUNTS
+          samples1 <- FILES_check$SAMPLES
+          counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
           a2 <- mean(samples1[, 1] %in% colnames(counts1))
 
@@ -465,117 +492,79 @@ UploadBoard <- function(id,
             rownames(samples1) <- samples1[, 1]
             uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
           }
-        }
-
-        ## check files: matching dimensions
-        if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          nsamples <- max(ncol(uploaded[["counts.csv"]]), nrow(uploaded[["samples.csv"]]))
-          ok.samples <- intersect(
-            rownames(uploaded$samples.csv),
-            colnames(uploaded$counts.csv)
-          )
-          n.ok <- length(ok.samples)
-          message("[UploadModule::checkTables] n.ok = ", n.ok)
-          if (n.ok > 0 && n.ok < nsamples) {
-            ## status["counts.csv"]  = "WARNING: some samples with missing annotation)"
+          
+          if(FILES_check$PASS == FALSE) {
+            status["samples.csv"] <- "Error, please check your samples files."
+            status["counts.csv"] <- "Error, please check your counts files."
+            uploaded[["counts.csv"]] <- NULL
+            uploaded[["samples.csv"]] <- NULL
           }
 
-          if (n.ok > 0) {
-            message("[UploadModule::checkTables] conforming samples/counts...")
-            uploaded[["samples.csv"]] <- uploaded$samples.csv[ok.samples, , drop = FALSE]
-            uploaded[["counts.csv"]] <- uploaded$counts.csv[, ok.samples, drop = FALSE]
-          }
-
-          if (n.ok == 0) {
-            status["counts.csv"] <- "ERROR: colnames do not match (with samples)"
-            status["samples.csv"] <- "ERROR: rownames do not match (with counts)"
+          if(FILES_check$PASS == TRUE) {
+            status["samples.csv"] <- "OK"
+            status["counts.csv"] <- "OK"
           }
         }
+      }
 
-        if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          contrasts1 <- uploaded[["contrasts.csv"]]
-          group.col <- grep("group", tolower(colnames(samples1)))
-          old1 <- (length(group.col) > 0 &&
-            nrow(contrasts1) < nrow(samples1) &&
-            all(rownames(contrasts1) %in% samples1[, group.col[1]])
-          )
-          old2 <- all(rownames(contrasts1) == rownames(samples1)) &&
-            all(unique(as.vector(contrasts1)) %in% c(-1, 0, 1, NA))
+      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        
+        FILES_check <- playbase::pgx.crosscheckINPUT(
+          SAMPLES = uploaded[["samples.csv"]],
+          CONTRASTS = uploaded[["contrasts.csv"]]
+        )
 
-          old.style <- (old1 || old2)
-          if (old.style && old1) {
-            message("[UploadModule] WARNING: converting old1 style contrast to new format")
-            new.contrasts <- samples1[, 0]
-            if (NCOL(contrasts1) > 0) {
-              new.contrasts <- playbase::contrastAsLabels(contrasts1)
-              grp <- as.character(samples1[, group.col])
-              new.contrasts <- new.contrasts[grp, , drop = FALSE]
-              rownames(new.contrasts) <- rownames(samples1)
-            }
-            contrasts1 <- new.contrasts
-          }
-          if (old.style && old2) {
-            message("[UploadModule] WARNING: converting old2 style contrast to new format")
-            new.contrasts <- samples1[, 0]
-            if (NCOL(contrasts1) > 0) {
-              new.contrasts <- playbase::contrastAsLabels(contrasts1)
-              rownames(new.contrasts) <- rownames(samples1)
-            }
-            contrasts1 <- new.contrasts
-          }
+        uploaded[["samples.csv"]] <- FILES_check$SAMPLES
+        uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
-          dbg("[UploadModule] 1 : dim.contrasts1 = ", dim(contrasts1))
-          dbg("[UploadModule] 1 : dim.samples1   = ", dim(samples1))
+        if(length(FILES_check$check)>0) {
+          lapply(1:length(FILES_check$check), function(idx){
+            error_id <- names(FILES_check$check)[idx]
+            error_log <- FILES_check$check[[idx]]
+            error_detail <- error_list[error_list$error == error_id,]
+            error_length <- length(error_log)
+            ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
-          ok.contrast <- length(intersect(rownames(samples1), rownames(contrasts1))) > 0
-          if (ok.contrast && NCOL(contrasts1) > 0) {
-            ## always clean up
-            contrasts1 <- apply(contrasts1, 2, as.character)
-            rownames(contrasts1) <- rownames(samples1)
-            for (i in 1:ncol(contrasts1)) {
-              isz <- (contrasts1[, i] %in% c(NA, "NA", "NA ", "", " ", "  ", "   ", " NA"))
-              if (length(isz)) contrasts1[isz, i] <- NA
-            }
-            uploaded[["contrasts.csv"]] <- contrasts1
-            status["contrasts.csv"] <- "OK"
-          } else {
-            uploaded[["contrasts.csv"]] <- NULL
-            status["contrasts.csv"] <- "ERROR: dimension mismatch"
-          }
+            shinyalert::shinyalert(
+              title = error_detail$title,
+              text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+              type = error_detail$warning_type,
+              closeOnClickOutside = FALSE
+            )
+          })
         }
 
-        MAXSAMPLES <- 25
-        MAXCONTRASTS <- 5
-        MAXSAMPLES <- as.integer(limits["samples"])
-        MAXCONTRASTS <- as.integer(limits["comparisons"])
-
-        ## check files: maximum contrasts allowed
-        if (status["contrasts.csv"] == "OK") {
-          if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
-            status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
-          }
+        if(FILES_check$PASS == FALSE) {
+          status["samples.csv"] <- "Error, please check your samples files."
+          status["contrasts.csv"] <- "Error, please check your contrasts files."
+          uploaded[["samples.csv"]] <- NULL
+          uploaded[["contrasts.csv"]] <- NULL
         }
 
-        ## check files: maximum samples allowed
-        if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
-          if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
-            status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
-          }
-          if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
-            status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
-          }
-        }
+        
+      }
 
-        ## check samples.csv: must have group column defined
-        if (status["samples.csv"] == "OK" && status["contrasts.csv"] == "OK") {
-          samples1 <- uploaded[["samples.csv"]]
-          contrasts1 <- uploaded[["contrasts.csv"]]
-          if (!all(rownames(contrasts1) %in% rownames(samples1))) {
-            status["contrasts.csv"] <- "ERROR: contrasts do not match samples"
-          }
+      MAXSAMPLES <- 25
+      MAXCONTRASTS <- 5
+      MAXSAMPLES <- as.integer(limits["samples"])
+      MAXCONTRASTS <- as.integer(limits["comparisons"])
+
+      ## check files: maximum contrasts allowed
+      if (status["contrasts.csv"] == "OK") {
+        if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
+          status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
         }
-      } ## end-if-from-pgx
+      }
+
+      ## check files: maximum samples allowed
+      if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
+          status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+        }
+        if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
+          status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
+        }
+      }
 
       e1 <- grepl("ERROR", status["samples.csv"])
       e2 <- grepl("ERROR", status["contrasts.csv"])
@@ -602,7 +591,6 @@ UploadBoard <- function(id,
           status["counts.csv"] <- "please upload"
         }
       }
-
 
       if (!is.null(uploaded$contrasts.csv) &&
         (is.null(uploaded$counts.csv) ||
