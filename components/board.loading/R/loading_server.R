@@ -71,7 +71,7 @@ LoadingBoard <- function(id,
 
     ##-------------------------------------------------------------------
     ## import shared dataset into user folder
-    ##-------------------------------------------------------------------    
+    ##-------------------------------------------------------------------
     observeEvent(
       input$importbutton, {
         selected_row <- rl$selected_row_shared
@@ -102,12 +102,12 @@ LoadingBoard <- function(id,
 
     ##-------------------------------------------------------------------
     ## share dataset with specific user
-    ##-------------------------------------------------------------------    
+    ##-------------------------------------------------------------------
     output$receive_pgx_alert <- renderUI({
 
         pgx_received <- getReceivedFiles()
         dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
-      
+
         if(length(pgx_received)>0) {
             df <- receivedPGXtable()
             dt <- DT::datatable(
@@ -116,7 +116,7 @@ LoadingBoard <- function(id,
                 escape = FALSE,
                 selection = "none",
                 ## class = "compact cell-border",
-                class = "compact row-border",                
+                class = "compact row-border",
                 options = list(
                     dom = "t",
                     pageLength = 999
@@ -178,7 +178,7 @@ LoadingBoard <- function(id,
     is_valid_email <- function(email) {
         is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
         valid_email <- grepl(".*@.*[.].*",email)
-        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars       
+        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars
         return((!is_personal) & valid_email)
     }
 
@@ -258,12 +258,12 @@ LoadingBoard <- function(id,
             if(!dir.exists(share_dir)) {
                 shinyalert::shinyalert(
                     title = "Oops! Cannot share...",
-                    paste('This server does not support sharing.', 
+                    paste('This server does not support sharing.',
                           'Please contact your administrator.')
                     )
                 return()
             }
-          
+
             selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
             pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
             pgx_name <- sub("[.]pgx$", "", pgx_name)
@@ -287,7 +287,7 @@ LoadingBoard <- function(id,
                     )
                 return()
             }
-          
+
             # load and save the pgx file to new directory
             pgx0 <- playbase::pgx.load(pgx_file)
             unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
@@ -335,7 +335,7 @@ LoadingBoard <- function(id,
 
     ##-------------------------------------------------------------------
     ## make a pgx public (i.e. share publicly)
-    ##-------------------------------------------------------------------    
+    ##-------------------------------------------------------------------
     observeEvent(
         rl$share_public_pgx,
         {
@@ -733,7 +733,7 @@ LoadingBoard <- function(id,
         }
         inputs
     }
-    
+
     receivedPGXtable <- shiny::eventReactive(
         c(r_global$nav, renewSharedPGXINFO()),
     {
@@ -750,7 +750,7 @@ LoadingBoard <- function(id,
             icon = shiny::icon("check"),
             class = "btn-inline btn-success",
             style = "padding:0px; margin:0px; font-size:85%;",
-            onclick = paste0('Shiny.onInputChange(\"', ns("accept_pgx"), '\",this.id)')
+            onclick=paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
         )
 
         decline_btns <- makebuttonInputs2(
@@ -763,7 +763,7 @@ LoadingBoard <- function(id,
             icon = shiny::icon("x"),
             class = "btn-inline btn-danger",
             style = "padding:0px; margin:0px; font-size:85%;",
-            onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\",this.id)')
+            onclick=paste0('Shiny.onInputChange(\"',ns("decline_pgx"),'\", this.id, {priority: "event"})')
         )
 
         # split the file name into user who shared and file name
@@ -772,7 +772,7 @@ LoadingBoard <- function(id,
         #shared_pgx_df[2,] <- stringr::str_sub(shared_pgx_df[2,], end=-3)
         shared_dataset <- sub("__to__.*","",shared_pgx_names)
         shared_from <- gsub(".*__from__|__$","",shared_pgx_names)
-        
+
         df <- data.frame(
             Dataset = shared_dataset,
             From = shared_from,
@@ -787,7 +787,7 @@ LoadingBoard <- function(id,
         pgx_name <- stringr::str_split(input$accept_pgx, 'accept_pgx__')[[1]][2]
         new_pgx_name <- stringr::str_split(pgx_name, '__from__')[[1]][1]
         new_pgx_name <- sub("__to__.*","",pgx_name)
-        
+
         # rename the file to be a valid pgx file
         pgdir <- getPGXDIR()
         file_from <- file.path(pgx_shared_dir, pgx_name)
@@ -806,13 +806,13 @@ LoadingBoard <- function(id,
             dbg("[loading_server.R] accept_pgx : renaming file from = ",file_from,"to = ",file_to)
             file.rename(file_from, file_to)
         }
-        
+
         # reload pgx dir so the newly accepted pgx files are registered in user table
         r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
         # remove the accepted pgx from the table
         renewSharedPGXINFO(renewSharedPGXINFO() + 1)
-    })
+    }, ignoreInit = TRUE)
 
     # event when a shared pgx is declined by a user
     observeEvent(input$decline_pgx, {
@@ -824,7 +824,7 @@ LoadingBoard <- function(id,
 
         # remove the declined pgx from the table
         renewSharedPGXINFO(renewSharedPGXINFO() + 1)
-    })
+    }, ignoreInit = TRUE)
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -1025,7 +1025,7 @@ LoadingBoard <- function(id,
     })
 
     loadRowManual <- reactiveVal(0)
-    
+
     observeEvent(r_global$load_data_from_upload, {
         data_names <- as.character(pgxtable$data()$dataset)
         data_names <- sub("[.]pgx$","",data_names)
