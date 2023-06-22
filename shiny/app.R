@@ -86,16 +86,6 @@ source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
 source("app-init.R")
 
-if(0) {    
-    ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/bojkova2020-sarscov2-RC2.pgx")
-    load("../data/gtex-aging-n40svaNnm.pgx")
-    load("../data/axel-test3.pgx")        
-    ngs <- pgx.initialize(ngs)
-}
-
 message("\n************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
@@ -845,10 +835,14 @@ server = function(input, output, session) {
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
-
-
-    ## log(NULL)  ## force crash!!
-
+    ## Startup Message
+    if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
+      shinyalert::shinyalert(
+        title = paste(opt$STARTUP_TITLE,collapse=" "),
+        text = h4(paste(opt$STARTUP_MESSAGE,collapse=" ")),
+        size = 'm', html = TRUE)
+      ## log(NULL)  ## force crash!!
+    }
     
 }
 

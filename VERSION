@@ -1,3 +1,6 @@
+v2.8.24
+- Add startup message in OPTIONS
+
 v2.8.23
 - increase NPRUNE=1000 in drugconnectivity
 
