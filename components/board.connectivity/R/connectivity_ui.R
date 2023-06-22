@@ -46,7 +46,7 @@ ConnectivityInputs <- function(id) {
 }
 
 ConnectivityUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
+    ns <- shiny::NS(id) ## namespace
 
     tabs <- shiny::tabsetPanel(
       id = ns("tabs1"), 
@@ -55,37 +55,43 @@ ConnectivityUI <- function(id) {
       shiny::tabPanel(
         "FC correlation",
         bslib::layout_column_wrap(
-          width = 1/2,
+          width = 1,
           height = "calc(100vh - 180px)",
+          heights_equal = "row",
+          bs_alert("In this board you can compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
           bslib::layout_column_wrap(
-            width = 1,
-            connectivity_plot_FCFCplots_ui(
-              ns("FCFCplots"),
-              label = "a",
-              title = "FC scatter plots",
-              info.text = "Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings.",
-              caption = "Scatter plots displaying the public profiles most correlated to the selected contrast by fold-change.",
-              height = c("50%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            width = 1/2,
+            height = "calc(100vh - 180px)",
+            bslib::layout_column_wrap(
+              width = 1,
+              connectivity_plot_FCFCplots_ui(
+                ns("FCFCplots"),
+                label = "a",
+                title = "FC scatter plots",
+                info.text = "Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings.",
+                caption = "Scatter plots displaying the public profiles most correlated to the selected contrast by fold-change.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              connectivity_table_similarity_scores_ui(
+                ns("connectivityScoreTable"),
+                title = "Similarity scores",
+                info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. Highlighting a specific dataset will change the FC-FC scatterplot accordingly.",
+                caption = "Table displaying the most correlated gene expression profiles from public datasets to the selected contrast. Select a profile to visualise the corresponding scatter plot.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%"),
+                label = "b"
+              )
             ),
-            connectivity_table_similarity_scores_ui(
-              ns("connectivityScoreTable"),
-              title = "Similarity scores",
-              info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. Highlighting a specific dataset will change the FC-FC scatterplot accordingly.",
-              caption = "Table displaying the most correlated gene expression profiles from public datasets to the selected contrast. Select a profile to visualise the corresponding scatter plot.",
-              height = c("50%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "b"
+            connectivity_plot_scatterPlot_ui(
+              ns("scatterPlot"),
+              title = "FC-FC scatterplot",
+              info.text = "The FC-FC scatter plot provides a pairwise scatterplot of logFC fold-change profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The scatter plot is interactive and shows information of each gene by hovering over it with the mouse.",
+              caption = "Foldchange scatterplot of the selected contrast against a selected pairwise comparison from the public database.",
+              label = "c",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             )
-          ),
-          connectivity_plot_scatterPlot_ui(
-            ns("scatterPlot"),
-            title = "FC-FC scatterplot",
-            info.text = "The FC-FC scatter plot provides a pairwise scatterplot of logFC fold-change profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The scatter plot is interactive and shows information of each gene by hovering over it with the mouse.",
-            caption = "Foldchange scatterplot of the selected contrast against a selected pairwise comparison from the public database.",
-            label = "c",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
           )
         )
       ),
@@ -97,24 +103,33 @@ ConnectivityUI <- function(id) {
           width = 1,
           height = "calc(100vh - 180px)",
           bslib::layout_column_wrap(
-            width = 1,
+            width = 1/2,
             height = "35%",
-            style = htmltools::css(grid_template_columns = "7fr 5fr"),
-            connectivity_plot_cumFCplot_ui(
-              id = ns("cumFCplot"),
-              title = "Cumulative foldchange",
-              info.text = "The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options.",
-              caption = "Barplot visualising the most dysregulated genes across the 10 most similar gene expression profiles to the queried contrast.",
+            ##style = htmltools::css(grid_template_columns = "7fr 5fr"),
+            ## connectivity_plot_cumFCplot_ui(
+            ##   id = ns("cumFCplot"),
+            ##   title = "Cumulative foldchange",
+            ##   info.text = "The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options.",
+            ##   caption = "Barplot visualising the most dysregulated genes across the 10 most similar gene expression profiles to the queried contrast.",
+            ##   label = "a",
+            ##   height = c("100%", TABLE_HEIGHT_MODAL),
+            ##   width = c("auto", "100%")
+            ## ),
+            connectivity_plot_connectivityMap_ui(
+              ns("connectivityMap"),
+              title = "Connectivity map",
+              info.text = "The Connectivity Map shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
+              caption = "Connectivity map placing a selected pairwise comparison expression profile in the context of  collected public datasets.",
               label = "a",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            connectivity_plot_cumEnrichmentPlot_ui(
-              id = ns("cumEnrichmentPlot"),
-              title = "Cumulative enrichment",
-              info.text = "Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options.",
-              caption = "The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
-              label = "b",
+            connectivity_plot_leadingEdgeGraph_ui(
+              id = ns("leadingEdgeGraph"),
+              title = "Leading-edge graph",
+              info.text = "The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes. ",
+              caption = "Network of shared leading-edge genes between top-N most similar signatures.",
+              label = "a",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -136,16 +151,16 @@ ConnectivityUI <- function(id) {
       ),
       ## ----------------------------- panel 3 -------------------------
       shiny::tabPanel(
-        "Meta-graph",
+        "Meta-Enrichment",
         bslib::layout_column_wrap(
           width = 1/2,
           height = "calc(100vh - 180px)",
-          connectivity_plot_leadingEdgeGraph_ui(
-            id = ns("leadingEdgeGraph"),
-            title = "Leading-edge graph",
-            info.text = "The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes. ",
-            caption = "Network of shared leading-edge genes between top-N most similar signatures.",
-            label = "a",
+          connectivity_plot_cumEnrichmentPlot_ui(
+            id = ns("cumEnrichmentPlot"),
+            title = "Cumulative enrichment",
+            info.text = "Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options.",
+            caption = "The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
+            label = "b",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
@@ -161,20 +176,21 @@ ConnectivityUI <- function(id) {
         )
       ),
       shiny::tabPanel(
-        "Experiment clustering",
+        "Meta-FC table",
         bslib::layout_column_wrap(
-          width = 1/2,
+          width = 1,
           height = "calc(100vh - 180px)",
-          connectivity_plot_connectivityMap_ui(
-            ns("connectivityMap"),
-            title = "Connectivity map",
-            info.text = "The Connectivity Map shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away.",
-            caption = "Connectivity map placing a selected pairwise comparison expression profile in the context of  collected public datasets.",
-            label = "a",
+          heights_equal = "row",          
+          bs_alert("Compare the fold-change of genes across different experiments. Select the genes you want to compare in the 'select genes' box. Select the datasets you want to include in the comparison in the 'select datasets' box."),
+          connectivity_plot_connectivityHeatmap_ui(
+            id = ns("connectivityHeatmap2"),
+            title = "Connectivity Heatmap",
+            info.text = "Contrasts that are similar will be clustered close together.",
+            caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
-          ),
-          connectivity_table_similarity_scores_ui(
+          ),          
+          connectivity_table_similarity2_ui(
             ns("connectivityScoreTable2"),
             title = "Similarity scores",
             info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES.",
@@ -186,10 +202,9 @@ ConnectivityUI <- function(id) {
       )
     )
 
-  ## returned UI object
-  div(
-    boardHeader(title = "Similar experiments", info_link = ns("info")),
-    bs_alert("In this board you can compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
-    tabs
-  )
+    ## returned UI object
+    div(
+      boardHeader(title = "Similar experiments", info_link = ns("info")),
+      tabs
+    )
 }

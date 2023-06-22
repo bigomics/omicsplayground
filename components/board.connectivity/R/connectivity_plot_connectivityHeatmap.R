@@ -29,7 +29,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
       ),
     hr(),
     withTooltip(shiny::radioButtons(ns("nsig"), "Number of signatures",
-      choices=c(20,40,100), inline=TRUE),
+      choices=c(10,20,40,100), selected=20, inline=TRUE),
       "Number of nearest signatures to show."
       ),
     hr(),
@@ -60,6 +60,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     ##plotlib = "iheatmapr",
     info.text = info.text,
     options = plot_opts,
+    download.fmt = c("pdf", "png", "csv"),    
     height = height,
     width = width,
     caption = caption
@@ -86,27 +87,26 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F <- getTopProfiles()
         F[is.na(F)] <- 0
 
-        ## multiply with sign of rho
+        ## get correlation
         df <- getConnectivityScores()
         rho1 <- df$rho[match(colnames(F), df$pathway)]
-        F <- t(t(F) * sign(rho1))
-
+        
         ## add current contrast
         cc <- getCurrentContrast()
         shiny::req(cc)
-        fc <- cc$fc[rownames(F)]
-        fc[is.na(fc)] <- 0
+        fc <- cc$fc[match(rownames(F),names(cc$fc))]
+        names(fc) <- rownames(F)
+        ## fc[is.na(fc)] <- 0
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
         colnames(F)[1] <- cc$name
         colnames(F)[1] <- paste("********",cc$name,"********")
         rho2 <- c(1, rho1)
-        names(rho2) <- colnames(F)
-        
+        names(rho2) <- colnames(F)        
         if (input$cumFCplot_absfc) {
           F <- abs(F)
         }
-        F <- F[order(-rowMeans(F**2)),, drop = FALSE]
+        F <- F[order(-rowMeans(F**2,na.rm=TRUE)),, drop = FALSE]
         F <- scale(F, center=FALSE)
         
         list(

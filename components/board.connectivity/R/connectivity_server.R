@@ -47,9 +47,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       
       sigdb <- c("A", "B", "C")
       sigdb <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$")
-      ##sigdb1 <- file.path(getPgxDir(),"datasets-sigdb.h5")
       sigdb1 <- "datasets-sigdb.h5"
-      ##if(file.exists(sigdb1)) sigdb <- c(sigdb, sigdb1)
       sigdb <- c(sigdb, sigdb1)      
       computed.sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
       ## sigdb <- sort(intersect(sigdb, computed.sigdb))
@@ -318,6 +316,23 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       return(F)
     })
 
+    
+    getSelectedProfiles <- shiny::reactive({
+      shiny::req(input$sigdb)
+      df <- getConnectivityScores()
+      pw <- connectivityScoreTable2$rownames_all()
+      sigdb <- input$sigdb
+      table.genes <- colnames(connectivityScoreTable2$data())
+      fc <- getCurrentContrast()$fc
+      sel.genes <- intersect(names(fc), table.genes)
+      dbg("[getSelectedProfiles] sel.genes = ",sel.genes)
+      F <- getConnectivityMatrix(sigdb, select = pw, genes = sel.genes)
+      pw <- intersect(pw, colnames(F))
+      F <- F[, pw, drop = FALSE]
+      return(F)
+
+    })
+    
     ## ============================================================================
     ## FC correlation/scatter plots
     ## ============================================================================
@@ -365,7 +380,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       watermark = WATERMARK
     )
 
-
     ## =============================================================================
     ## CONNECTIVITY MAP
     ## =============================================================================
@@ -376,16 +390,14 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       getConnectivityScores,
       getEnrichmentMatrix
     )
-
-#   connectivityScoreTable2 <- connectivity_table_similarity_scores2_server(
-#     "connectivityScoreTable2",
-#     getConnectivityScores = getConnectivityScores
-#   )
-
-    connectivityScoreTable2<- connectivity_table_similarity_scores_server(
-      "connectivityScoreTable2",
+    
+    connectivityScoreTable2<- connectivity_table_similarity2_server(
+      id = "connectivityScoreTable2",
+      pgx = pgx,
       getConnectivityScores = getConnectivityScores,
-      columns = c("score", "pathway", "rho", "NES", "padj"),
+      columns = c("pathway", "score", "rho", "NES", "padj"),
+      getConnectivityMatrix = getConnectivityMatrix,
+      sigdb = reactive(input$sigdb),
       height = "550px"
     )
 
@@ -444,5 +456,14 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       getConnectivityScores,
       getCurrentContrast
     )
+
+    connectivity_plot_connectivityHeatmap_server(
+      "connectivityHeatmap2",
+      getSelectedProfiles,
+      getConnectivityScores,
+      getCurrentContrast
+    )
+
+
   })
 } ## end-of-Board

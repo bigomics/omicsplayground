@@ -143,8 +143,6 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
           frame()
           return(NULL)
         }
-
-        dbg("[plot_stackedbar] 1 : dim(F) =",dim(F))
         
         ##NSETS <- 20
         if (input$cumgsea_order == "FC") {
@@ -156,18 +154,11 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
           F <- head(F, nsets)
           F <- F[order(rowMeans(F,na.rm=TRUE)), , drop = FALSE]
         }
-
-        dbg("[plot_stackedbar] 2 : dim(F) =",dim(F))
         
         ## strip comments/prefixes to shorten names
         rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
         rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
         rownames(F) <- playbase::shortstring(rownames(F), 72)
-
-        dbg("[plot_stackedbar] class.F = ",class(F))
-        dbg("[plot_stackedbar] dim.F = ",dim(F))
-        dbg("[plot_stackedbar] dupcols.F = ",sum(duplicated(colnames(F))))
-        dbg("[plot_stackedbar] duprows.F = ",sum(duplicated(rownames(F))))
         
         playbase::pgx.stackedBarplot(
           x = data.frame(F, check.names=FALSE),

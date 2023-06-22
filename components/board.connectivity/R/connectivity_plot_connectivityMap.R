@@ -59,7 +59,7 @@ connectivity_plot_connectivityMap_ui <- function(
           "show label", "group by dataset", "3D plot", "dark mode",
           "larger points"
         ),
-        selected = c("label", "3D")
+        selected = c()
       ),
       "Show labels, group by dataset, show 3D plot, dark mode.",
       placement = "top", options = list(container = "body")

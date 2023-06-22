@@ -14,7 +14,7 @@ connectivity_table_similarity_scores_ui <- function(
   ns <- shiny::NS(id)
 
   TableModuleUI(
-    ns("datasets"),
+    id = ns("datasets"),
     info.text = info.text,
     width = width,
     caption = caption,
@@ -22,6 +22,7 @@ connectivity_table_similarity_scores_ui <- function(
     title = title,
     label = label
   )
+  
 }
 
 connectivity_table_similarity_scores_server <- function(id,
