@@ -480,8 +480,8 @@ UploadBoard <- function(id,
             })
           }
 
-          uploaded[["samples.csv"]] <- FILES_check$samples
-          uploaded[["counts.csv"]] <- FILES_check$counts
+          uploaded[["samples.csv"]] <- FILES_check$SAMPLES
+          uploaded[["counts.csv"]] <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -513,8 +513,8 @@ UploadBoard <- function(id,
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
         )
-        
-        uploaded[["samples.csv"]] <- FILES_check$samples
+
+        uploaded[["samples.csv"]] <- FILES_check$SAMPLES
         uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
         if(length(FILES_check$check)>0) {
@@ -536,18 +536,13 @@ UploadBoard <- function(id,
 
         if(FILES_check$PASS == FALSE) {
           status["samples.csv"] <- "Error, please check your samples files."
-          status["counts.csv"] <- "Error, please check your counts files."
-          uploaded[["counts.csv"]] <- NULL
+          status["contrasts.csv"] <- "Error, please check your contrasts files."
+          uploaded[["samples.csv"]] <- NULL
           uploaded[["contrasts.csv"]] <- NULL
         }
 
-        if(FILES_check$PASS == TRUE) {
-            status["samples.csv"] <- "OK"
-            status["counts.csv"] <- "OK"
-          }
+        
       }
-
-      browser()
 
       MAXSAMPLES <- 25
       MAXCONTRASTS <- 5
@@ -596,7 +591,6 @@ UploadBoard <- function(id,
           status["counts.csv"] <- "please upload"
         }
       }
-
 
       if (!is.null(uploaded$contrasts.csv) &&
         (is.null(uploaded$counts.csv) ||
