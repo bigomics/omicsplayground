@@ -97,6 +97,34 @@ ConnectivityUI <- function(id) {
       ),
 
       ## ---------------------------- panel2 ------------------------------------------
+
+      shiny::tabPanel(
+        "Meta-FC table",
+        bslib::layout_column_wrap(
+          width = 1,
+          height = "calc(100vh - 180px)",
+          heights_equal = "row",          
+          bs_alert("Compare the fold-change of genes across different experiments. Select the genes you want to compare in the 'select genes' box. Select the datasets you want to include in the comparison in the 'select datasets' box."),
+          connectivity_plot_connectivityHeatmap_ui(
+            id = ns("connectivityHeatmap2"),
+            title = "Connectivity Heatmap",
+            info.text = "Contrasts that are similar will be clustered close together.",
+            caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          ),          
+          connectivity_table_similarity2_ui(
+            ns("connectivityScoreTable2"),
+            title = "Similarity scores",
+            info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES.",
+            caption = "Table showing the similarity scores of the gene expression profile of the selected contrast with those obtained from public reference datasets.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
+        )
+      ),
+      
+      ## ---------------------------- panel3 ------------------------------------------
       shiny::tabPanel(
         "FC heatmap",
         bslib::layout_column_wrap(
@@ -149,7 +177,8 @@ ConnectivityUI <- function(id) {
           )
         )
       ),
-      ## ----------------------------- panel 3 -------------------------
+
+      ## ----------------------------- panel4 -------------------------
       shiny::tabPanel(
         "Meta-Enrichment",
         bslib::layout_column_wrap(
@@ -174,32 +203,8 @@ ConnectivityUI <- function(id) {
             width = c("auto", "100%")
           )
         )
-      ),
-      shiny::tabPanel(
-        "Meta-FC table",
-        bslib::layout_column_wrap(
-          width = 1,
-          height = "calc(100vh - 180px)",
-          heights_equal = "row",          
-          bs_alert("Compare the fold-change of genes across different experiments. Select the genes you want to compare in the 'select genes' box. Select the datasets you want to include in the comparison in the 'select datasets' box."),
-          connectivity_plot_connectivityHeatmap_ui(
-            id = ns("connectivityHeatmap2"),
-            title = "Connectivity Heatmap",
-            info.text = "Contrasts that are similar will be clustered close together.",
-            caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          ),          
-          connectivity_table_similarity2_ui(
-            ns("connectivityScoreTable2"),
-            title = "Similarity scores",
-            info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES.",
-            caption = "Table showing the similarity scores of the gene expression profile of the selected contrast with those obtained from public reference datasets.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
-        )
       )
+      
     )
 
     ## returned UI object

@@ -172,11 +172,12 @@ app_server <- function(input, output, session) {
         has_data
     })
 
+    #' Get user-pgx folder
     getPgxDir <- reactive({
         if(!auth$logged()) return(NULL)
         if(opt$ENABLE_USERDIR &&
              authentication %in% c("firebase","firebase.full","password")) {
-          return(file.path(PGX.DIR, auth@email() ))
+          return(file.path(PGX.DIR, auth$email() ))
         } else {
           return(PGX.DIR)
         }
