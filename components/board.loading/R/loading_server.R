@@ -511,26 +511,25 @@ LoadingBoard <- function(id,
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating library...", value = 0.33, {
-        info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          ## before reading the info file, we need to update for new files
+          info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+            "ngenes", "nsets", "conditions", "organism", "date", "creator" )
+          if (is.null(info)) {
+            aa <- rep(NA, length(info.colnames))
+            names(aa) <- info.colnames
+            info <- data.frame(rbind(aa))[0, ]
+          }
+          ## add missing columns fields
+          missing.cols <- setdiff(info.colnames,colnames(info))
+          for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
+          ii <- match(info.colnames,colnames(info))
+          info <- info[,ii]
+          removeModal(session)
+          return(info)
         }
       }
-
-      ## before reading the info file, we need to update for new files
-
-      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
-        "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-      if (is.null(info)) {
-        aa <- rep(NA, length(info.colnames))
-        names(aa) <- info.colnames
-        info <- data.frame(rbind(aa))[0, ]
-      }
-      ## add missing columns fields
-      missing.cols <- setdiff(info.colnames,colnames(info))
-      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
-      ii <- match(info.colnames,colnames(info))
-      info <- info[,ii]
-      removeModal(session)
-      info
+      return(NULL)
     })
 
     getPGXINFO_SHARED <- shiny::eventReactive({
