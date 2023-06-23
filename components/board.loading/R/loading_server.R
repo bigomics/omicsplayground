@@ -516,6 +516,8 @@ LoadingBoard <- function(id,
         shiny::withProgress(message = "Updating library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
             pgx_dir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
             pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
             pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
@@ -552,6 +554,8 @@ LoadingBoard <- function(id,
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
             pgx_shared_dir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
             pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
             pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
@@ -615,6 +619,7 @@ LoadingBoard <- function(id,
                     not showing table!")
         return(NULL)
       }
+      
       df <- getPGXINFO_SHARED()
       shiny::req(df)
 
@@ -681,6 +686,8 @@ LoadingBoard <- function(id,
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
             pgx_shared_dir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
             pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
             pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
