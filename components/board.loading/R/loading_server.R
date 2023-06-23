@@ -508,13 +508,18 @@ LoadingBoard <- function(id,
       
       dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
-      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(pgx.dir,verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(
+            pgx_dir,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            verbose=TRUE
+            )
+          
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
           return(info)
@@ -537,13 +542,16 @@ LoadingBoard <- function(id,
 
       ## update meta files
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       })
 
-      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(
+            pgx_shared_dir,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            verbose=TRUE)
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
           return(info)
@@ -661,13 +669,16 @@ LoadingBoard <- function(id,
 
       ## update meta files
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       })
 
-      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(
+            pgx_shared_dir,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            verbose=TRUE)  
           shiny::removeModal(session)
           return(info)
         })
