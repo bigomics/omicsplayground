@@ -516,7 +516,7 @@ LoadingBoard <- function(id,
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info)) {
+          if (is.null(info())) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
@@ -569,7 +569,7 @@ LoadingBoard <- function(id,
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info)) {
+          if (is.null(info())) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
@@ -719,7 +719,7 @@ LoadingBoard <- function(id,
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info)) {
+          if (is.null(info())) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
