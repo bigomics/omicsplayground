@@ -18,10 +18,6 @@ ConnectivityInputs <- function(id) {
       "Select reference signature database.",
       placement = "right", options = list(container = "body")
     ),
-    shiny::selectInput(ns("connectivityScoreTable_qsig"), "threshold (padj)",
-      c(0.01, 0.05, 0.2, 1),
-      selected = 1
-    ),
     shiny::br(),
     withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
@@ -99,14 +95,14 @@ ConnectivityUI <- function(id) {
       ## ---------------------------- panel2 ------------------------------------------
 
       shiny::tabPanel(
-        "Meta-FC table",
+        "FC Heatmap",
         bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 180px)",
           heights_equal = "row",          
           bs_alert("Compare the fold-change of genes across different experiments. Select the genes you want to compare in the 'select genes' box. Select the datasets you want to include in the comparison in the 'select datasets' box."),
           connectivity_plot_connectivityHeatmap_ui(
-            id = ns("connectivityHeatmap2"),
+            id = ns("connectivityHeatmap"),
             title = "Connectivity Heatmap",
             info.text = "Contrasts that are similar will be clustered close together.",
             caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
@@ -126,23 +122,13 @@ ConnectivityUI <- function(id) {
       
       ## ---------------------------- panel3 ------------------------------------------
       shiny::tabPanel(
-        "FC heatmap",
+        "Meta-network",
         bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 180px)",
           bslib::layout_column_wrap(
-            width = 1/2,
+            width = 1/3,
             height = "35%",
-            ##style = htmltools::css(grid_template_columns = "7fr 5fr"),
-            ## connectivity_plot_cumFCplot_ui(
-            ##   id = ns("cumFCplot"),
-            ##   title = "Cumulative foldchange",
-            ##   info.text = "The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options.",
-            ##   caption = "Barplot visualising the most dysregulated genes across the 10 most similar gene expression profiles to the queried contrast.",
-            ##   label = "a",
-            ##   height = c("100%", TABLE_HEIGHT_MODAL),
-            ##   width = c("auto", "100%")
-            ## ),
             connectivity_plot_connectivityMap_ui(
               ns("connectivityMap"),
               title = "Connectivity map",
@@ -160,47 +146,37 @@ ConnectivityUI <- function(id) {
               label = "a",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )
-          ),
-          bslib::layout_column_wrap(
-            width = 1,
-            height = "65%",
-            connectivity_plot_connectivityHeatmap_ui(
-              id = ns("connectivityHeatmap"),
-              title = "Connectivity Heatmap",
-              info.text = "Contrasts that are similar will be clustered close together.",
-              caption = "Heatmap displaying the logFC of the selected contrast with most similar gene expression profiles from public datasets",
-              label = "c",
+            ),
+            connectivity_plot_enrichmentGraph_ui(
+              id = ns("enrichmentGraph"),
+              title = "Enrichment graph",
+              info.text = "The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets. In the plot options you can set the threshold the edges.",
+              caption = "Network of shared enriched genesets between top-N most similar signatures.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-          )
-        )
-      ),
-
-      ## ----------------------------- panel4 -------------------------
-      shiny::tabPanel(
-        "Meta-Enrichment",
-        bslib::layout_column_wrap(
-          width = 1/2,
-          height = "calc(100vh - 180px)",
-          connectivity_plot_cumEnrichmentPlot_ui(
-            id = ns("cumEnrichmentPlot"),
-            title = "Cumulative enrichment",
-            info.text = "Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options.",
-            caption = "The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
-            label = "b",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          ),
-          connectivity_plot_enrichmentGraph_ui(
-            id = ns("enrichmentGraph"),
-            title = "Enrichment graph",
-            info.text = "The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets. In the plot options you can set the threshold the edges.",
-            caption = "Network of shared enriched genesets between top-N most similar signatures.",
-            label = "b",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
+          ),            
+          bslib::layout_column_wrap(
+            width = 1/3,
+            height = "35%",
+            connectivity_plot_cumFCplot_ui(
+              id = ns("cumFCplot"),
+              title = "Cumulative foldchange",
+              info.text = "The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options.",
+              caption = "Barplot visualising the most dysregulated genes across the 10 most similar gene expression profiles to the queried contrast.",
+              label = "a",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            connectivity_plot_cumEnrichmentPlot_ui(
+              id = ns("cumEnrichmentPlot"),
+              title = "Cumulative enrichment",
+              info.text = "Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options.",
+              caption = "The barplot visualizes the cumulative enrichment of the top-10 most similar profiles.",
+              label = "b",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )
           )
         )
       )

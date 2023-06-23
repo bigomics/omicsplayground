@@ -179,7 +179,7 @@ LoadingBoard <- function(id,
     
     # put user dataset into shared folder
     observeEvent(rl$share_pgx, {
-        pp <- "__from__tarzan@demo.com__$"
+
         pp <- paste0("__from__",auth$email(),"__$")
         num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
         if(num_shared_queue > opt$MAX_SHARED_QUEUE) {

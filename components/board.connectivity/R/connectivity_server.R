@@ -232,7 +232,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
 
       ## filter on significance
-      qsig <- as.numeric(input$connectivityScoreTable_qsig)      
+      qsig <- 0.20
       scores <- scores[which(scores$padj <= qsig), , drop = FALSE]
       scores <- scores[order(-scores$score), , drop = FALSE]
       

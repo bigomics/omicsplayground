@@ -27,12 +27,21 @@ connectivity_table_similarity2_ui <- function(
       label = label
     ),
     shiny::wellPanel(    
-      
-      selectizeInput(
-        inputId = ns("genes"),
-        label = "Select genes:",
-        choices = NULL,
-        multiple = TRUE
+      shiny::radioButtons(
+          inputId = ns("select_genes:"),
+          label = "Select genes",
+          choices = c("50","200","<custom>"),
+          inline = TRUE,
+      ),             
+      shiny::conditionalPanel(
+          "input.select_genes == '<custom>'",
+          ns = ns,
+          selectizeInput(
+            inputId = ns("genes"),
+            label = "Select genes:",
+            choices = NULL,
+            multiple = TRUE
+          )
       ),
       selectizeInput(
         inputId = ns("datasets"),
