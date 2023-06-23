@@ -33,7 +33,7 @@ SingleCellUI <- function(id) {
 
   ns <- shiny::NS(id) ## namespace
   div(
-    boardHeader(title = "Single Cell Board", info_link = ns("infotext")),
+    boardHeader(title = "Cell Profiling", info_link = ns("infotext")),
     div(
       shiny::fillCol(
         flex = c(1),
