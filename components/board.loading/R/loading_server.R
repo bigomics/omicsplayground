@@ -529,7 +529,21 @@ LoadingBoard <- function(id,
           return(info)
         }
       }
-      return(NULL)
+      ## before reading the info file, we need to update for new files
+      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+        "ngenes", "nsets", "conditions", "organism", "date", "creator" )
+      if (is.null(info)) {
+        aa <- rep(NA, length(info.colnames))
+        names(aa) <- info.colnames
+        info <- data.frame(rbind(aa))[0, ]
+      }
+      ## add missing columns fields
+      missing.cols <- setdiff(info.colnames,colnames(info))
+      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
+      ii <- match(info.colnames,colnames(info))
+      info <- info[,ii]
+      removeModal(session)
+      return(info)
     })
 
     getPGXINFO_SHARED <- shiny::eventReactive({
