@@ -501,7 +501,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-      # browser()
+      browser()
 
       pdir <- getPGXDIR()
       info <- NULL
@@ -517,6 +517,8 @@ LoadingBoard <- function(id,
           info <- playbase::pgx.initDatasetFolder(
             pgx_dir,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
             verbose=TRUE
             )
           
@@ -551,6 +553,8 @@ LoadingBoard <- function(id,
           info <- playbase::pgx.initDatasetFolder(
             pgx_shared_dir,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
             verbose=TRUE)
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
@@ -678,6 +682,8 @@ LoadingBoard <- function(id,
           info <- playbase::pgx.initDatasetFolder(
             pgx_shared_dir,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
             verbose=TRUE)  
           shiny::removeModal(session)
           return(info)
