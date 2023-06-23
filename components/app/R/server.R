@@ -763,10 +763,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
     shiny::removeUI(selector = ".current-dataset > #spinner-container")
 
     ## Startup Message
-    shinyalert::shinyalert(
-        title = "Welcome to Version 3!",
-        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
-    )
+    if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
+        shinyalert::shinyalert(
+            title = opt$STARTUP_TITLE,
+            text  = opt$STARTUP_MESSAGE
+        )
+    }
 
 
 }
