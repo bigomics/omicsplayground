@@ -501,14 +501,21 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-      pgx.showSmallModal()
-      info <- NULL
       pdir <- getPGXDIR()
-      shiny::withProgress(message = "Updating library...", value = 0.33, {
-        dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
-        ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
-        info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
-      })
+      info <- NULL
+      dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      }
+
+      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating library...", value = 0.33, {
+        info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+        }
+      }
+
+      ## before reading the info file, we need to update for new files
 
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator" )
