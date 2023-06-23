@@ -45,15 +45,19 @@ TABLE_HEIGHT_MODAL <<- "75vh"
 
 reticulate::use_miniconda('r-reticulate')
 
+# Get the OPG root folder. Works only from inside the repo as it looks
+# up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
   pwd <- getwd() 
   dirs <- unlist(strsplit(pwd, "/"))
-  root_dirs <- head(dirs, -3)
+  ## root_dirs <- head(dirs, -3)
+  root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
   root <- paste(root_dirs, collapse = "/")
   return(root)
 }
 
 ## Set folders
+##OPG       = normalizePath("../../..")
 OPG       = get_opg_root()
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")
