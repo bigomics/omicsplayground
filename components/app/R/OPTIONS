@@ -16,6 +16,7 @@ MAX_COMPARISONS     = 20
 MAX_GENES           = 20000
 MAX_GENESETS        = 5000
 MAX_DS_PROCESS      = 1
+MAX_SHARED_QUEUE    = 3
 WATERMARK           = TRUE
 TIMEOUT             = 0
 #TIMEOUT            = 2400

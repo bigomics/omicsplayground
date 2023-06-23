@@ -182,7 +182,7 @@ LoadingBoard <- function(id,
         pp <- "__from__tarzan@demo.com__$"
         pp <- paste0("__from__",auth$email(),"__$")
         num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
-        if(num_shared_queue>3) {
+        if(num_shared_queue > opt$MAX_SHARED_QUEUE) {
           shinyalert::shinyalert(
             title = "Oops! Too many shared...",
             text = paste("You have too many shared datasets in the queue.",
