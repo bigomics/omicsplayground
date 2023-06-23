@@ -556,9 +556,10 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
         return(NULL)
       }
+
       ## update meta files
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
@@ -586,9 +587,9 @@ LoadingBoard <- function(id,
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
       )
-      if (is.null(info)) {
+      if (is.null(info())) {
         aa <- rep(NA, length(info.colnames))
-        colnames(aa) <- info.colnames
+        names(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
       }
       ## add missing columns fields
@@ -649,7 +650,7 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       
-
+      
       df <- getPGXINFO_SHARED()
       shiny::req(df)
 
@@ -708,13 +709,13 @@ LoadingBoard <- function(id,
 
       ## update meta files
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          info <- pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
