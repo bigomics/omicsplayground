@@ -503,7 +503,7 @@ LoadingBoard <- function(id,
 
       pdir <- getPGXDIR()
       info <- NULL
-      browser()
+      
       dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
       REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
@@ -556,13 +556,32 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
         return(NULL)
       }
-
       ## update meta files
-      shiny::withProgress(message = "Updating shared library...", value = 0.33, {
-        dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")
-        ## playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
-        info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       })
+
+      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
+          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          ## before reading the info file, we need to update for new files
+          info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+            "ngenes", "nsets", "conditions", "organism", "date", "creator" )
+          if (is.null(info)) {
+            aa <- rep(NA, length(info.colnames))
+            names(aa) <- info.colnames
+            info <- data.frame(rbind(aa))[0, ]
+          }
+          ## add missing columns fields
+          missing.cols <- setdiff(info.colnames,colnames(info))
+          for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
+          ii <- match(info.colnames,colnames(info))
+          info <- info[,ii]
+          shiny::removeModal(session)
+          return(info)
+        })
+      }
 
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
@@ -629,7 +648,8 @@ LoadingBoard <- function(id,
                     not showing table!")
         return(NULL)
       }
-      pgx.showSmallModal()
+      
+
       df <- getPGXINFO_SHARED()
       shiny::req(df)
 
@@ -656,7 +676,6 @@ LoadingBoard <- function(id,
       ))
       kk <- intersect(kk, colnames(df))
       df <- df[, kk, drop = FALSE]
-      shiny::removeModal(session)
       df
     })
 
@@ -687,15 +706,32 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-            # add modal
-      pgx.showSmallModal()
-
       ## update meta files
-      shiny::withProgress(message = "Updating shared library...", value = 0.33, {
-        dbg("[loading_server.R:getPGXINFO_SHARED] calling scanInfoFile()")
-        ## playbase::pgx.initDatasetFolder(pgx_shared_dir, verbose=TRUE)
-        info <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       })
+
+      if(REQUIRE_INFOFILE_UPDATE == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
+          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          ## before reading the info file, we need to update for new files
+          info.colnames <- c( "dataset", "datatype", "description", "nsamples",
+            "ngenes", "nsets", "conditions", "organism", "date", "creator" )
+          if (is.null(info)) {
+            aa <- rep(NA, length(info.colnames))
+            names(aa) <- info.colnames
+            info <- data.frame(rbind(aa))[0, ]
+          }
+          ## add missing columns fields
+          missing.cols <- setdiff(info.colnames,colnames(info))
+          for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
+          ii <- match(info.colnames,colnames(info))
+          info <- info[,ii]
+          shiny::removeModal(session)
+          return(info)
+        })
+      }
 
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
