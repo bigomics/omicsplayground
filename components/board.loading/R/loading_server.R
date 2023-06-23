@@ -737,9 +737,9 @@ LoadingBoard <- function(id,
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
       )
-      if (is.null(info)) {
+      if (is.null(info())) {
         aa <- rep(NA, length(info.colnames))
-        colnames(aa) <- info.colnames
+        names(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
       }
       df <- getPGXINFO()
@@ -1227,6 +1227,7 @@ LoadingBoard <- function(id,
     observeEvent(
       ## c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
       c(getFilteredPGXINFO_SHARED()), {
+        browser()
         df <- getFilteredPGXINFO_SHARED()
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
