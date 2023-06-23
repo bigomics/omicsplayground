@@ -498,9 +498,7 @@ app_server <- function(input, output, session) {
 
         ## Beta features
         info("[server.R] disabling beta features")
-        ##bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
         bigdash.toggleTab(session, "pcsf-tab", show.beta)  ## wgcna
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
