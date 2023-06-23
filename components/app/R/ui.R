@@ -87,7 +87,6 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA",
             pcsf = "PCSF (beta)"            
           ),
           "Expression" = c(
@@ -106,9 +105,10 @@ app_ui <- function() {
             comp = "Compare datasets",
             cmap = "Similar experiments"
           ),
-          "Systems Biology" = c(
+          "SystemsBio" = c(
+            drug = "Drug connectivity",
             cell = "Cell profiling",
-            drug = "Drug connectivity",            
+            wgcna = "WGCNA",            
             tcga = "TCGA survival (beta)"            
           )
           ## "DEV" = c("corsa","system","multi")
