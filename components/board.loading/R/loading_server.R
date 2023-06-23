@@ -512,7 +512,7 @@ LoadingBoard <- function(id,
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating library...", value = 0.33, {
-          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
           return(info)
@@ -541,7 +541,7 @@ LoadingBoard <- function(id,
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
           return(info)
@@ -666,7 +666,7 @@ LoadingBoard <- function(id,
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
+          info <- playbase::pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
           shiny::removeModal(session)
           return(info)
         })
