@@ -516,7 +516,7 @@ LoadingBoard <- function(id,
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info())) {
+          if (is.null(info)) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
@@ -531,6 +531,11 @@ LoadingBoard <- function(id,
         })
         
       }
+
+
+      info <- playbase::pgxinfo.read(pdir, file = "datasets-info.csv")
+      info$path <- pdir
+      
       ## before reading the info file, we need to update for new files
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator" )
@@ -557,6 +562,8 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
+      browser()
+
       ## update meta files
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
       REQUIRE_INFOFILE_UPDATE <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
@@ -565,11 +572,11 @@ LoadingBoard <- function(id,
       if(REQUIRE_INFOFILE_UPDATE == TRUE) {
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- pgx.initDatasetFolder(pgx.dir, force=force, verbose=TRUE)  
+          info <- pgx.initDatasetFolder(pgx_shared_dir, force=force, verbose=TRUE)  
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info())) {
+          if (is.null(info)) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
@@ -584,10 +591,13 @@ LoadingBoard <- function(id,
         })
       }
 
+      info <- playbase::pgxinfo.read(pgx_shared_dir, file = "datasets-info.csv")
+      info$path <- pgx_shared_dir
+
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
       )
-      if (is.null(info())) {
+      if (is.null(info)) {
         aa <- rep(NA, length(info.colnames))
         names(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
@@ -649,7 +659,6 @@ LoadingBoard <- function(id,
                     not showing table!")
         return(NULL)
       }
-      
       
       df <- getPGXINFO_SHARED()
       shiny::req(df)
@@ -719,7 +728,7 @@ LoadingBoard <- function(id,
           ## before reading the info file, we need to update for new files
           info.colnames <- c( "dataset", "datatype", "description", "nsamples",
             "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-          if (is.null(info())) {
+          if (is.null(info)) {
             aa <- rep(NA, length(info.colnames))
             names(aa) <- info.colnames
             info <- data.frame(rbind(aa))[0, ]
@@ -734,10 +743,13 @@ LoadingBoard <- function(id,
         })
       }
 
+      info <- playbase::pgxinfo.read(pgx_shared_dir, file = "datasets-info.csv")
+      info$path <- pgx_shared_dir
+
       info.colnames <- c( "dataset", "datatype", "description", "nsamples",
         "ngenes", "nsets", "conditions", "organism", "date", "creator"
       )
-      if (is.null(info())) {
+      if (is.null(info)) {
         aa <- rep(NA, length(info.colnames))
         names(aa) <- info.colnames
         info <- data.frame(rbind(aa))[0, ]
@@ -1227,7 +1239,6 @@ LoadingBoard <- function(id,
     observeEvent(
       ## c(getFilteredPGXINFO_SHARED(), rl$reload_pgxdir_shared), {
       c(getFilteredPGXINFO_SHARED()), {
-        browser()
         df <- getFilteredPGXINFO_SHARED()
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
