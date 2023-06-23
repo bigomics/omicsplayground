@@ -62,10 +62,11 @@ TableModuleUI <- function(id,
 
   zoom.button <- NULL
   if(show.maximize) {
-    zoom.button <- modalTrigger(ns("zoombutton"),
-                                ns("datatablePopup"),
-                                icon("window-maximize"),
-                                class="btn-circle-xs"
+    zoom.button <- modalTrigger(
+      ns("zoombutton"),
+      ns("datatablePopup"),
+      icon("up-right-and-down-left-from-center"),      
+      class="btn-circle-xs"
     )
   }
 

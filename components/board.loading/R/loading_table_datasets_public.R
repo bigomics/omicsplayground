@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-loading_table_datasets_shared_ui <- function(
+loading_table_datasets_public_ui <- function(
   id,
   title,
   info.text,
@@ -22,7 +22,7 @@ loading_table_datasets_shared_ui <- function(
   )
 }
 
-loading_table_datasets_shared_server <- function(id, table) {
+loading_table_datasets_public_server <- function(id, table) {
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- reactive({

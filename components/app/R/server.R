@@ -130,13 +130,14 @@ app_server <- function(input, output, session) {
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
-        pgx_dir = PGX.DIR,
+        pgx_topdir = PGX.DIR,
         pgx = PGX,
         limits = limits,
         auth = auth,
         enable_userdir = opt$ENABLE_USERDIR,
         enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-        enable_share = opt$ENABLE_SHARE,
+        enable_user_share = opt$ENABLE_USER_SHARE,
+        enable_public_share = opt$ENABLE_PUBLIC_SHARE,        
         r_global = r_global
     )
 
@@ -773,10 +774,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
     shiny::removeUI(selector = ".current-dataset > #spinner-container")
 
     ## Startup Message
-    shinyalert::shinyalert(
-        title = "Welcome to Version 3!",
-        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
-    )
+    if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
+        shinyalert::shinyalert(
+            title = opt$STARTUP_TITLE,
+            text  = opt$STARTUP_MESSAGE
+        )
+    }
 
 
 }

@@ -172,7 +172,8 @@ PlotModuleUI <- function(id,
 
   zoom.button <- NULL
   if (show.maximize) {
-    zoom.button <- modalTrigger(ns("zoombutton"),
+    zoom.button <- modalTrigger(
+      ns("zoombutton"),
       ns("plotPopup"),
       icon("up-right-and-down-left-from-center"),
       class = "btn-circle-xs"
