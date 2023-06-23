@@ -22,7 +22,12 @@ loading_table_datasets_ui <- function(
   )
 }
 
-loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enable_share=TRUE) {
+loading_table_datasets_server <- function(id,
+                                          rl,
+                                          enable_pgxdownload = FALSE,
+                                          enable_public_share = TRUE,
+                                          enable_user_share = TRUE
+                                          ) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -36,7 +41,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste("Your dataset library seems empty. Please upload new data or import",
-            "a dataset from the shared folder."
+            "a dataset from the public datasets folder."
             )
         )
       }
@@ -69,7 +74,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id,{priority: "event"})')
           )
         }
-        if(enable_share) {
+        if(enable_public_share) {
           share_public_menuitem <- shiny::actionButton(
               ns(paste0("share_public_row_", i)),
               label = "Share Public",
@@ -79,7 +84,8 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
               width = '100%',
               onclick=paste0('Shiny.onInputChange(\"',ns("share_public_pgx"),'\",this.id,{priority: "event"})')
           )
-
+        }
+        if(enable_user_share) {          
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
             label = "Share with User",
