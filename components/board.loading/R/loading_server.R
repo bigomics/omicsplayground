@@ -93,6 +93,7 @@ LoadingBoard <- function(id,
     ##-------------------------------------------------------------------
     output$receive_pgx_alert <- renderUI({
 
+        if(auth$email()=="") return(NULL)        
         pgx_received <- getReceivedFiles()
         dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
 
@@ -785,7 +786,8 @@ LoadingBoard <- function(id,
     getReceivedFiles <- shiny::reactive({
       req(auth)
       if (!auth$logged()) return(NULL)
-      
+      if(auth$email()=="") return(NULL)
+          
       ## allow trigger for when a shared pgx is accepted / decline
       renewReceivedTable()
 
