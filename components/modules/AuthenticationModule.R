@@ -311,7 +311,7 @@ FirebaseAuthenticationModule <- function(id,
         if(!is.null(domain) && domain!="") {
             authorized_domain <- grepl(domain,input$emailInput)
         }
-        if(TRUE && !authorized_domain) {
+        if(!authorized_domain) {
             js.emailFeedbackMessage(session, "Invalid domain", "error")         
             ## resetUSER()
             email_waiter$hide()
@@ -536,7 +536,7 @@ EmailAuthenticationModule <- function(id,
         if(!is.null(domain) && domain!="") {
             authorized_domain <- grepl(domain,input$emailInput)
         }
-        if(TRUE && !authorized_domain) {
+        if(!authorized_domain) {
             ##shinyalert::shinyalert("","Invalid email domain")
             js.emailFeedbackMessage(session, "domain not authorized", "error")
             ## resetUSER()
@@ -549,7 +549,7 @@ EmailAuthenticationModule <- function(id,
         is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud|msn",input$emailInput)
         existing_user_dirs <- basename(list.dirs(pgx_dir))
         new_user <- !(input$emailInput %in% existing_user_dirs)
-        if(TRUE && is_personal_email && new_user) {
+        if(is_personal_email && new_user) {
             ## shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
             js.emailFeedbackMessage(session, "No personal email allowed. Please provide your business, academic or institutional email.", "error")            
             shiny::updateTextInput(session, "emailInput", value="")
