@@ -66,7 +66,7 @@ ConnectivityUI <- function(id) {
           width = 1,
           height = "calc(100vh - 180px)",
           heights_equal = "row",
-          bs_alert("In this board you can compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
+          bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
           bslib::layout_column_wrap(
             width = 1/2,
             height = "calc(100vh - 180px)",
