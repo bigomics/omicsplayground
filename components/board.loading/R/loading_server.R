@@ -745,7 +745,7 @@ LoadingBoard <- function(id,
         })
       }
 
-      info <- playbase::pgxinfo.read(pgx_shared_dir, file = "datasets-info.csv")
+      info <- playbase::pgxinfo.read(pgx_public_dir, file = "datasets-info.csv")
       return(info)
       })
 
