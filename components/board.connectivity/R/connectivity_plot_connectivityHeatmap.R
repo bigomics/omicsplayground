@@ -35,13 +35,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     hr(),
     withTooltip(shiny::checkboxInput(ns("clusterx"), "Cluster genes"),
       "Cluster genes or sort by expression.."
-      ),
-    hr(),
-    withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Use absolute foldchange", FALSE),
-      "Take the absolute foldchange for calculating the cumulative sum.",
-      placement = "right", options = list(container = "body")
     ),
-    hr(),    
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Use absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
       placement = "right", options = list(container = "body")

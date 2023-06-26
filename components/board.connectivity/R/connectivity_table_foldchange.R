@@ -18,7 +18,7 @@ connectivity_table_foldchange_ui <- function(
     height = "35%",
     ##style = htmltools::css(grid_template_columns = "5fr 1fr"),
     TableModuleUI(
-      id = ns("datasets"),
+      id = ns("table"),
       info.text = info.text,
       width = width,
       caption = caption,
@@ -44,15 +44,17 @@ connectivity_table_foldchange_server <- function(id,
 
       F <- getTopProfiles()
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- head(F,50)
+      F <- head(F,20)
+      F <- F[order(rownames(F)),]
+
       S <- getConnectivityScores()
       S1 <- S[match(colnames(F), S$pathway),c("score","rho")]
-
+      
       df <- data.frame(signature=colnames(F), S1, t(F))
       df
     })
     
-    connectivityScoreTable.RENDER <- function() {
+    foldchangeTable.RENDER <- function() {
 
       df <- get_table()
       
@@ -89,19 +91,19 @@ connectivity_table_foldchange_server <- function(id,
         )
     }
 
-    connectivityScoreTable.RENDER_modal <- function() {
-      dt <- connectivityScoreTable.RENDER()
+    foldchangeTable.RENDER_modal <- function() {
+      dt <- foldchangeTable.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }
 
-    connectivityScoreTable <- TableModuleServer(
-      "datasets",
-      func = connectivityScoreTable.RENDER,
-      func2 = connectivityScoreTable.RENDER_modal,
+    foldchangeTable <- TableModuleServer(
+      "table",
+      func = foldchangeTable.RENDER,
+      func2 = foldchangeTable.RENDER_modal,
       selector = "single"
     )
 
-    return(connectivityScoreTable)
+    return(foldchangeTable)
   })
 }

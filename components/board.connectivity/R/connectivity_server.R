@@ -198,7 +198,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         user.scores <- playbase::pgx.computeConnectivityScores(
           pgx, sigdb.file, ntop = 50, contrasts = NULL,
           remove.le = TRUE, inmemory = FALSE
-          )
+        )
         pgx.connectivity[["datasets-sigdb.h5"]] <- user.scores
       }
       pgx.connectivity

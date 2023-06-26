@@ -43,7 +43,7 @@ ConnectivityInputs <- function(id) {
     ##     multiple = TRUE
     ## ),
     shiny::br(),shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
+    withTooltip(shiny::actionLink(ns("options"), "Advanced options", icon=icon("cog", lib="glyphicon")),
       "Toggle advanced options.",
       placement = "right", options = list(container = "body")
     ),
@@ -120,12 +120,12 @@ ConnectivityUI <- function(id) {
 
       shiny::tabPanel(
         "FC Heatmap",
-        layout_column_wrap_visible(
+        bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 180px)",
           heights_equal = "row",          
           bs_alert("Compare the fold-change of similar signatures across different experiments."),
-          layout_column_wrap_visible(
+          bslib::layout_column_wrap(
             width = 1,
             style = htmltools::css(grid_template_columns = "3fr 9fr"),
             connectivity_plot_connectivityMap_ui(
