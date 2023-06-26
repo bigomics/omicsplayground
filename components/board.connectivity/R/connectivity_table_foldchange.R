@@ -45,11 +45,7 @@ connectivity_table_foldchange_server <- function(id,
       F <- getTopProfiles()
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
       F <- head(F,50)
-      dbg("[connectivity_table_foldchange.R] dim(F) = ",dim(F))
-
       S <- getConnectivityScores()
-      dbg("[connectivity_table_foldchange.R] dim(S) = ",dim(S))
-      dbg("[connectivity_table_foldchange.R] colnames(S) = ",colnames(S))              
       S1 <- S[match(colnames(F), S$pathway),c("score","rho")]
 
       df <- data.frame(signature=colnames(F), S1, t(F))

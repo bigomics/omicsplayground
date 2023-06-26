@@ -392,7 +392,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       pgx = pgx,
       getConnectivityScores = getConnectivityScores,
       columns = c("pathway", "score", "rho", "NES", "padj"),
-      getTopProfiles,
+      getTopProfiles = getTopProfiles,
       getConnectivityMatrix = getConnectivityMatrix,
       sigdb = reactive(input$sigdb),
       height = "550px"
@@ -453,6 +453,5 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       getConnectivityScores,
       getCurrentContrast
     )
-
   })
 } ## end-of-Board
