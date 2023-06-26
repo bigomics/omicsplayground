@@ -14,6 +14,7 @@ LoadingBoard <- function(id,
                          ),
                          enable_userdir = TRUE,
                          enable_pgxdownload = TRUE,
+                         enable_delete = TRUE,
                          enable_user_share = TRUE,
                          enable_public_share = TRUE,
                          r_global) {
@@ -93,6 +94,7 @@ LoadingBoard <- function(id,
     ##-------------------------------------------------------------------
     output$receive_pgx_alert <- renderUI({
 
+        if(auth$email()=="") return(NULL)        
         pgx_received <- getReceivedFiles()
         dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
 
@@ -530,6 +532,7 @@ LoadingBoard <- function(id,
       id = "pgxtable",
       rl = rl,
       enable_pgxdownload = enable_pgxdownload,
+      enable_delete = enable_delete,
       enable_public_share = enable_public_share,
       enable_user_share = enable_user_share      
     )
@@ -630,29 +633,41 @@ LoadingBoard <- function(id,
         warning("[LoadingBoard:getPGXINFO] user not logged in!")
         return(NULL)
       }
-      info <- NULL
+
       pdir <- getPGXDIR()
-      shiny::withProgress(message = "Updating library...", value = 0.33, {
-        dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
-        ## playbase::pgx.initDatasetFolder(pdir, verbose=TRUE)
-        info <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+      info <- NULL
+      
+      dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
-      info.colnames <- c( "dataset", "datatype", "description", "nsamples",
-        "ngenes", "nsets", "conditions", "organism", "date", "creator" )
-      if (is.null(info)) {
-        aa <- rep(NA, length(info.colnames))
-        names(aa) <- info.colnames
-        info <- data.frame(rbind(aa))[0, ]
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating library...", value = 0.33, {
+          info <- playbase::pgx.initDatasetFolder(
+            pdir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
+            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
+            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
+            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
+            verbose=TRUE
+          )
+          
+          ## before reading the info file, we need to update for new files
+          shiny::removeModal(session)
+          return(info)
+        })
+        
       }
-      ## add missing columns fields
-      missing.cols <- setdiff(info.colnames,colnames(info))
-      for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
-      ii <- match(info.colnames,colnames(info))
-      info <- info[,ii]
-      info
+      info <- playbase::pgxinfo.read(pdir, file = "datasets-info.csv")
+      shiny::removeModal(session)
+      return(info)
     })
-
 
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets
@@ -705,27 +720,33 @@ LoadingBoard <- function(id,
           return(NULL)
         }
 
-        ## update meta files
-        shiny::withProgress(message = "Updating public library...", value = 0.33, {
-          dbg("[loading_server.R:getPGXINFO_PUBLIC] calling scanInfoFile()")
-          ## playbase::pgx.initDatasetFolder(pgx_public_dir, verbose=TRUE)
-          info <- playbase::pgx.scanInfoFile(pgx_public_dir, file = "datasets-info.csv", verbose = TRUE)
-        })
+         ## update meta files
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_public_dir, file = "datasets-info.csv", verbose = TRUE)
+      })
 
-        info.colnames <- c( "dataset", "datatype", "description", "nsamples",
-          "ngenes", "nsets", "conditions", "organism", "date", "creator"
-        )
-        if (is.null(info)) {
-          aa <- rep(NA, length(info.colnames))
-          colnames(aa) <- info.colnames
-          info <- data.frame(rbind(aa))[0, ]
-        }
-        ## add missing columns fields
-        missing.cols <- setdiff(info.colnames,colnames(info))
-        for(s in missing.cols) info[[s]] <- rep(NA,nrow(info))
-        ii <- match(info.colnames,colnames(info))
-        info <- info[,ii]
-        info
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
+          info <- playbase::pgx.initDatasetFolder(
+            pgx_public_dir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
+            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
+            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
+            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
+            verbose=TRUE)
+          ## before reading the info file, we need to update for new files
+          shiny::removeModal(session)
+          return(info)
+        })
+      }
+
+      info <- playbase::pgxinfo.read(pgx_public_dir, file = "datasets-info.csv")
+      return(info)
       })
 
       getFilteredPGXINFO_PUBLIC <- shiny::reactive({
@@ -736,6 +757,7 @@ LoadingBoard <- function(id,
                     not showing table!")
           return(NULL)
         }
+        
         df <- getPGXINFO_PUBLIC()
         shiny::req(df)
 
@@ -785,13 +807,54 @@ LoadingBoard <- function(id,
     getReceivedFiles <- shiny::reactive({
       req(auth)
       if (!auth$logged()) return(NULL)
-      
+      if(auth$email()=="") return(NULL)
+          
       ## allow trigger for when a shared pgx is accepted / decline
       renewReceivedTable()
 
-      ## return list of received pgx files
+      # allow trigger for when a shared pgx is accepted / decline
+      renewSharedPGXINFO()
+      if (!auth$logged()) {
+        warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
+        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
+                    not showing table!")
+        return(NULL)
+      }
+
+      ## update meta files
+      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
+      })
+
+      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+        pgx.showSmallModal()
+        shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
+          info <- playbase::pgx.initDatasetFolder(
+            pgx_shared_dir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
+            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
+            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
+            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
+            verbose=TRUE)  
+          shiny::removeModal(session)
+          return(info)
+        })
+      }
+
+      info <- playbase::pgxinfo.read(pgx_shared_dir, file = "datasets-info.csv")
+      
+      df <- getPGXINFO()
+      if (is.null(df)) {
+        return(NULL)
+      }
+      pgxdir <- getPGXDIR()
       pgxfiles <- dir(pgx_shared_dir, pattern = paste0('__to__',auth$email()))
-      pgxfiles
+      shiny::removeModal()
+      return(pgxfiles)
     })
 
     makebuttonInputs2 <- function(FUN, len, id, ...) {

@@ -43,14 +43,14 @@ options(DT.options = list(
 SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 
-reticulate::use_miniconda('r-reticulate')
+## reticulate::use_miniconda('r-reticulate')
 
 # Get the OPG root folder. Works only from inside the repo as it looks
 # up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
   pwd <- getwd() 
   dirs <- unlist(strsplit(pwd, "/"))
-  ## root_dirs <- head(dirs, -3)
+  ## root_dirs <- head(dirs, -3)  ## this breaks single board launch
   root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
   root <- paste(root_dirs, collapse = "/")
   return(root)
@@ -83,7 +83,7 @@ TIMEOUT   = 0
 
 ## Allow API like calls
 ALLOW_URL_QUERYSTRING = FALSE
-ALLOW_URL_QUERYSTRING = TRUE
+#ALLOW_URL_QUERYSTRING = TRUE
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
