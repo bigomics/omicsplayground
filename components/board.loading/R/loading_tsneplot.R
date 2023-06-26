@@ -157,6 +157,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       
       marker_size <- ifelse( nrow(df) > 50, 8, 11)
       marker_size <- ifelse( nrow(df) > 100, 5, marker_size)
+      font_size <- marker_size**0.55 * 5
       
       fig <- plotly::plot_ly(
         data = df,
@@ -182,6 +183,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
           x = pos[,"x"],
           y = pos[,"y"],
           text = rownames(pos),
+          font = list( size=font_size ),
           xref = "x",
           yref = "y",          
           ## textposition = 'top',

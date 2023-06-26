@@ -87,29 +87,29 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            wgcna = "WGCNA",
-            pcsf = "PCSF (beta)"
+            pcsf = "PCSF (beta)"            
           ),
           "Expression" = c(
             diffexpr = "Differential expression",
-            corr = "Correlation analysis"
+            corr = "Correlation analysis",
+            bio = "Find biomarkers"            
           ),
-          "Enrichment" = c(
+          "GeneSets" = c(
             enrich = "Geneset Enrichment",
+            sig = "Test geneset",
             pathway = "Pathway analysis",
-            wordcloud = "Word cloud",
-            drug = "Drug connectivity"
+            wordcloud = "Word cloud"
           ),
-          "Signature" = c(
+          "Compare" = c(
             isect = "Compare signatures",
-            sig = "Test signatures",
-            bio = "Find biomarkers",
-            cmap = "Similar experiments",
-            comp = "Compare datasets (beta)",
-            tcga = "TCGA survival (beta)"
+            comp = "Compare datasets",
+            cmap = "Similar experiments"
           ),
-          "CellProfiling" = c(
-            cell = "Cell profiling"
+          "SystemsBio" = c(
+            drug = "Drug connectivity",
+            cell = "Cell profiling",
+            wgcna = "WGCNA",            
+            tcga = "TCGA survival (beta)"            
           )
           ## "DEV" = c("corsa","system","multi")
         )

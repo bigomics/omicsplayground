@@ -188,12 +188,21 @@ upgrade.dialog <- function(ns, current.plan) {
     )  ## modalDialog
 }
 
-FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
+js.emailFeedbackMessage <- function(session, msg, type="error") {
+    session$sendCustomMessage(
+        "email-feedback",
+        list(
+            type = type,
+            msg = msg
+        )
+    )
+}
+
+FirebaseAuthenticationModule <- function(id,
+                                         domain = NULL,
+                                         firebase.rds = "firebase.rds") {
   shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
-
-    dbg("[AuthenticationModule] getwd = ",getwd())
-    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists(firebase.rds))
 
     if(file.exists(firebase.rds)) {
       firebase_config <- firebase:::read_config(firebase.rds)
@@ -287,39 +296,30 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
     )
 
     sendEmailLink <- reactiveVal(NULL)
+    
     observeEvent( input$emailSubmit, {
         if(input$emailInput == ""){
-            session$sendCustomMessage(
-                "email-feedback",
-                list(
-                    type = "error",
-                    msg = "Missing email"
-                )
-            )
+            js.emailFeedbackMessage(session, "Missing email", "error")
+            email_waiter$hide()            
             return()
         }
 
         ## >>> We could check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         ## or against a subscription list.
-        authorized <- grepl("@bigomics.ch$",input$emailInput)
-        if(FALSE && !authorized) {
-          shinyalert::shinyalert(
-            title = "We're sorry...",
-            text = "You are not authorized to log in. Please contact your systems administrator.")
-          resetUSER()
-          email_waiter$hide()
-          return()
+        authorized_domain <- TRUE
+        if(!is.null(domain) && domain!="") {
+            authorized_domain <- grepl(domain,input$emailInput)
+        }
+        if(!authorized_domain) {
+            js.emailFeedbackMessage(session, "Invalid domain", "error")         
+            ## resetUSER()
+            email_waiter$hide()
+            return()
         }
 
         ## >>> OK let's send auth request
-        session$sendCustomMessage(
-            "email-feedback",
-            list(
-                type = "success",
-                msg = "Email sent, check your inbox."
-            )
-        )
+        js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")         
         sendEmailLink(input$emailInput)
     })
 
@@ -342,20 +342,6 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
             if(USER$logged) removeModal()
         })
-
-##        for(i in 1:length(response$response)) {
-##            dbg("[FirebaseAuthentication] ",names(response$response)[i],"=",response$response[[i]])
-##        }
-
-        ## >>> We could check here for email validaty and intercept the
-        ## login process for not authorized people with wrong domain
-        ## or against a subscription list.
-        authorized <- grepl("@bigomics.ch$",response$response$email)
-        if(FALSE && !authorized) {
-          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
-          USER$logged <- FALSE
-          return(NULL)
-        }
 
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
@@ -433,20 +419,21 @@ FirebaseAuthenticationModule <- function(id, firebase.rds="firebase.rds") {
 )}
 
 ##================================================================================
-## EmailLinkeAuthenticationModule (using Firebase, no stripe)
+## EmailAuthenticationModule (using Firebase, no stripe!!!)
 ##================================================================================
 
-EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rds") {
+EmailAuthenticationModule <- function(id,
+                                      pgx_dir,
+                                      domain = NULL,
+                                      firebase.rds="firebase.rds"
+                                      ) {
   shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using email link (using Firebase) authentication <<<<")
 
-    dbg("[AuthenticationModule] getwd = ",getwd())
-    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists(firebase.rds))
-
     if(file.exists(firebase.rds)) {
-      firebase_config <- firebase:::read_config(firebase.rds)
+        firebase_config <- firebase:::read_config(firebase.rds)
     } else {
-      stop("[FATAL ERROR] no firebase.rds file found. please create.")
+        stop("[FATAL ERROR] no firebase.rds file found. please create.")
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 
@@ -534,48 +521,44 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
     )
 
     sendEmailLink <- reactiveVal(NULL)
+
     observeEvent( input$emailSubmit, {
+        
         if(input$emailInput == ""){
-            session$sendCustomMessage(
-                "email-feedback",
-                list(
-                    type = "error",
-                    msg = "Missing email"
-                )
-            )
+            js.emailFeedbackMessage(session, "Missing email", "error")             
             return()
         }
 
         ## >>> We could check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         ## or against a subscription list.
-        authorized <- grepl("@bigomics.ch$",input$emailInput)
-        if(FALSE && !authorized) {
-          shinyalert::shinyalert("We're sorry...","You are not authorized to log in. Please contact your systems administrator.")
-          resetUSER()
-          email_waiter$hide()
-          return()
+        authorized_domain <- TRUE
+        if(!is.null(domain) && domain!="") {
+            authorized_domain <- grepl(domain,input$emailInput)
+        }
+        if(!authorized_domain) {
+            ##shinyalert::shinyalert("","Invalid email domain")
+            js.emailFeedbackMessage(session, "domain not authorized", "error")
+            ## resetUSER()
+            shiny::updateTextInput(session, "emailInput", value="")            
+            email_waiter$hide()
+            return()
         }
 
         ## if it is a new user we ask for business email, old users can go
-        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud",input$emailInput)
+        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud|msn",input$emailInput)
         existing_user_dirs <- basename(list.dirs(pgx_dir))
         new_user <- !(input$emailInput %in% existing_user_dirs)
-        if(TRUE && is_personal_email && new_user) {
-          shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
-          shiny::updateTextInput(session, "emailInput", value="")
-          email_waiter$hide()
-          return()
+        if(is_personal_email && new_user) {
+            ## shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
+            js.emailFeedbackMessage(session, "No personal email allowed. Please provide your business, academic or institutional email.", "error")            
+            shiny::updateTextInput(session, "emailInput", value="")
+            email_waiter$hide()
+            return()
         }
 
         ## >>> OK let's send auth request
-        session$sendCustomMessage(
-            "email-feedback",
-            list(
-                type = "success",
-                msg = "Email sent, check your inbox."
-            )
-        )
+        js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
         sendEmailLink(input$emailInput)
     })
 
@@ -599,20 +582,6 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
             if(USER$logged) removeModal()
         })
 
-##      for(i in 1:length(response$response)) {
-##          dbg("[FirebaseAuthentication] ",names(response$response)[i],"=",response$response[[i]])
-##      }
-
-        ## >>> We could check here for email validaty and intercept the
-        ## login process for not authorized people with wrong domain
-        ## or against a subscription list.
-        authorized <- grepl("@bigomics.ch$",response$response$email)
-        if(FALSE && !authorized) {
-          shinyalert::shinyalert("We're sorry","You are not authorized to log in. Please contact your systems administrator.")
-          USER$logged <- FALSE
-          resetUSER()
-          return(NULL)
-        }
 
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
@@ -623,9 +592,6 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
         if(!is.null(USER$email)) USER$email <- as.character(USER$email)
         if(is.null(USER$name))   USER$name  <- ""
         if(is.null(USER$email))  USER$email <- ""
-
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
 
         session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -646,10 +612,10 @@ EmailLinkAuthenticationModule <- function(id, pgx_dir, firebase.rds="firebase.rd
 ## PasswordAuthenticationModule (ask login.name + password)
 ##================================================================================
 
-credentials.file='CREDENTIALS'
-PasswordAuthenticationModule <- function(id, credentials.file) {
+PasswordAuthenticationModule <- function(id,
+                                         credentials.file) {
   shiny::moduleServer( id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
+    message("[AuthenticationModule] >>>> using password authentication <<<<")
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -705,34 +671,40 @@ PasswordAuthenticationModule <- function(id, credentials.file) {
         login_email    <- input$login_email
         login_password <- input$login_password
 
-        if( is.null(login_email) || is.null(login_password)) return(NULL)
-        if( login_email=="" || login_password=="") return(NULL)
-        sel <- tail(which( CREDENTIALS$email == login_email),1)
-        dbg("[AuthenticationModule:input$login_btn] CREDENTIALS$email = ",CREDENTIALS$email)
-        dbg("[AuthenticationModule:input$login_btn] sel = ",sel)
+        if( is.null(login_email) || login_email=="") {
+            output$login_warning = shiny::renderText("missing email")
+            shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
+            return(NULL)
+        }
+        if(is.null(login_password)  || login_password=="") {
+            output$login_warning = shiny::renderText("missing password")
+            shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
+            return(NULL)
+        }
 
+        sel <- tail(which( CREDENTIALS$email == login_email),1)
         valid.user <- isTRUE(CREDENTIALS$email[sel] == login_email) && length(sel)>0
         valid.pw   <- isTRUE(CREDENTIALS[sel,"password"] == input$login_password)
         valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
-        login.OK = (valid.user && valid.pw && valid.date)
+        login.OK   <- (valid.user && valid.pw && valid.date)
 
-        message("--------- password login ---------")
-        ##message("input.username = ",input$login_username)
-        message("input.email    = ",input$login_email)
-        message("input.password = ",input$login_password)
-        message("user.password  = ",CREDENTIALS[sel,"password"])
-        message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
-        message("user.email     = ",CREDENTIALS[sel,"email"])
-        message("user.limit     = ",CREDENTIALS[sel,"limit"])
-        message("valid.user     = ",valid.user)
-        message("valid.date     = ",valid.date)
-        message("valid.pw       = ",valid.pw)
-        message("----------------------------------")
-
+        if(1) {
+            message("--------- password login ---------")
+            ##message("input.username = ",input$login_username)
+            message("input.email    = ",input$login_email)
+            message("input.password = ",input$login_password)
+            message("user.password  = ",CREDENTIALS[sel,"password"])
+            message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
+            message("user.email     = ",CREDENTIALS[sel,"email"])
+            message("user.limit     = ",CREDENTIALS[sel,"limit"])
+            message("valid.user     = ",valid.user)
+            message("valid.date     = ",valid.date)
+            message("valid.pw       = ",valid.pw)
+            message("----------------------------------")
+        }
+        
         if (login.OK) {
-
             message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
-
             output$login_warning = shiny::renderText("")
             shiny::removeModal()
             ##USER$name   <- input$login_username
@@ -751,7 +723,7 @@ PasswordAuthenticationModule <- function(id, credentials.file) {
             session$sendCustomMessage("set-user", list(user = USER$email))
 
         } else {
-            message("[PasswordAuthenticationModule::login] REFUSED : invalid login! ")
+            message("[PasswordAuthenticationModule::login] login invalid!")
             if(!valid.date) {
                 output$login_warning = shiny::renderText("Registration expired")
             }
@@ -1157,7 +1129,7 @@ splashScreen <- function(title, body, ns=NULL, easyClose=FALSE, fade=FALSE,
             shiny::div(
                 id="splash-panel",
                 body,
-                textOutput(ns("login_warning")),
+                div( textOutput(ns("login_warning")), style="color: white;"),
             ),
         )
     ),
