@@ -116,6 +116,7 @@ app_server <- function(input, output, session) {
         enable_userdir = opt$ENABLE_USERDIR,
         enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
         enable_user_share = opt$ENABLE_USER_SHARE,
+        enable_delete = opt$ENABLE_DELETE,
         enable_public_share = opt$ENABLE_PUBLIC_SHARE,        
         r_global = r_global
     )

@@ -14,6 +14,7 @@ LoadingBoard <- function(id,
                          ),
                          enable_userdir = TRUE,
                          enable_pgxdownload = TRUE,
+                         enable_delete = TRUE,
                          enable_user_share = TRUE,
                          enable_public_share = TRUE,
                          r_global) {
@@ -531,6 +532,7 @@ LoadingBoard <- function(id,
       id = "pgxtable",
       rl = rl,
       enable_pgxdownload = enable_pgxdownload,
+      enable_delete = enable_delete,
       enable_public_share = enable_public_share,
       enable_user_share = enable_user_share      
     )

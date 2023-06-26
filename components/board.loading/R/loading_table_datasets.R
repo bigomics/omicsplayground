@@ -25,6 +25,7 @@ loading_table_datasets_ui <- function(
 loading_table_datasets_server <- function(id,
                                           rl,
                                           enable_pgxdownload = FALSE,
+                                          enable_delete = FALSE,
                                           enable_public_share = TRUE,
                                           enable_user_share = TRUE
                                           ) {
@@ -63,6 +64,8 @@ loading_table_datasets_server <- function(id,
         download_pgx_menuitem <- NULL
         share_public_menuitem <- NULL
         share_dataset_menuitem <- NULL
+        delete_pgx_menuitem <- NULL
+        
         if(enable_pgxdownload) {
           download_pgx_menuitem <- shiny::actionButton(
             ns(paste0("download_pgx_row_",i)),
@@ -97,6 +100,18 @@ loading_table_datasets_server <- function(id,
           )
         }
 
+        if(enable_delete) {
+          delete_pgx_menuitem <- shiny::actionButton(
+            ns(paste0("delete_dataset_row_",i)),
+            label = "Delete Dataset",
+            icon = shiny::icon("trash"),
+            class = "btn btn-outline-danger",
+            style = 'border: none;',
+            width = '100%',
+            onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
+          )
+        }
+
         new_menu <- actionMenu(  ## ui-DrowDownMenu.R
           div(
             style = "width: 160px;",
@@ -113,15 +128,7 @@ loading_table_datasets_server <- function(id,
                 ),
               share_public_menuitem,
               share_dataset_menuitem,
-              shiny::actionButton(
-                ns(paste0("delete_dataset_row_",i)),
-                label = "Delete Dataset",
-                icon = shiny::icon("trash"),
-                class = "btn btn-outline-danger",
-                style = 'border: none;',
-                width = '100%',
-                onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
-              )
+              delete_pgx_menuitem              
             )
           ),
           size = "sm",
