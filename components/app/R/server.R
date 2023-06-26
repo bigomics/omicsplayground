@@ -23,7 +23,7 @@ app_server <- function(input, output, session) {
     dbg("[server.R] 0: SESSION = ",session$token)
 
     has.honcho <- FALSE
-    if(!is.null(opt$HONCHO_URL) && opt$HONCHO_URL!="") {
+    if(has.honcho && !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!="") {
         ## Determine is Honcho is alive
         curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
         honcho.responding <- grepl("Swagger", curl.resp)
