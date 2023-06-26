@@ -632,8 +632,6 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-      browser()
-
       pdir <- getPGXDIR()
       info <- NULL
       
