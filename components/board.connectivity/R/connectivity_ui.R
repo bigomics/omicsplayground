@@ -3,6 +3,18 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+## if you put a card(style = "overflow: visible") in a parent element
+## that has overflow:auto set (e.g., layout_column_wrap()) you'll run
+## into this issue (because the parent's overflow setting will
+## overrule the child's property). You can currently work around the
+## problem by making sure the layout containers also have overflow:
+## visible,
+layout_column_wrap_visible <- function(...) {
+  res <- bslib::layout_column_wrap(..., style = "overflow:visible;")
+  htmltools::tagQuery(res)$children()$addAttrs(style = "overflow:visible;")$allTags()
+}
+
 ConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -108,12 +120,12 @@ ConnectivityUI <- function(id) {
 
       shiny::tabPanel(
         "FC Heatmap",
-        bslib::layout_column_wrap(
+        layout_column_wrap_visible(
           width = 1,
           height = "calc(100vh - 180px)",
           heights_equal = "row",          
           bs_alert("Compare the fold-change of similar signatures across different experiments."),
-          bslib::layout_column_wrap(
+          layout_column_wrap_visible(
             width = 1,
             style = htmltools::css(grid_template_columns = "3fr 9fr"),
             connectivity_plot_connectivityMap_ui(

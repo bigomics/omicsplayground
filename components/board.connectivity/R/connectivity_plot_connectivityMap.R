@@ -54,9 +54,9 @@ connectivity_plot_connectivityMap_ui <- function(
     withTooltip(
       shiny::checkboxGroupInput(
         ns("plotoptions"), "Other options:",
-        choiceValues = c("label", "grouped", "3D", "dark", "large"),
+        choiceValues = c("label", "3D", "dark", "large"),
         choiceNames = c(
-          "show label", "group by dataset", "3D plot", "dark mode",
+          "show label", "3D plot", "dark mode",
           "larger points"
         ),
         selected = c()
@@ -174,21 +174,6 @@ connectivity_plot_connectivityMap_server <- function(id,
         }
         res <- res[sel, , drop = FALSE]
 
-        ## rownames(res) <- res$pathway
-        grouped <- "grouped" %in% input$plotoptions
-        if (grouped) {
-          res <- res[order(-res$score), ]
-          dset <- sub("].*", "]", res$pathway)
-          names(dset) <- res$pathway
-          idx <- which(!duplicated(dset))
-          resx <- res[idx, , drop = FALSE]
-          tt <- table(dset)[dset[resx$pathway]]
-          resx$pathway <- paste0(resx$pathway, " (+", tt, " contrasts)")
-          resx$datasets <- sub("].*", "]", resx$pathway)
-          rownames(resx) <- resx$datasets
-          res <- resx
-        }
-
         return(res)
       })
 
@@ -210,11 +195,6 @@ connectivity_plot_connectivityMap_server <- function(id,
           return(NULL)
         }
 
-        grouped <- "grouped" %in% input$plotoptions
-        if (grouped) {
-          pset <- sub("].*", "]", rownames(pos0))
-          pos0 <- apply(pos0, 2, function(x) tapply(x, pset, mean))
-        }
         if (is.null(res0) || nrow(res0) == 0) {
           return(NULL)
         }
