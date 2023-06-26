@@ -126,12 +126,27 @@ UploadBoard <- function(id,
         save(pgx, file = fn)
         remove(pgx)
 
+        FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
+          pgxdir,
+          file = "datasets-info.csv",
+          new.pgx = pgxname,  ## force update
+          verbose = TRUE)
+
         shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
-          playbase::pgx.initDatasetFolder(
+          info <- playbase::pgx.initDatasetFolder(
             pgxdir,
+            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
+            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
+            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
+            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
+            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
+            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
+            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
+            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
             new.pgx = pgxname,  ## force update
             force = FALSE,
-            verbose = FALSE)
+            verbose=FALSE
+          )
         })
 
 ##      r_global$reload_pgxdir <- r_global$reload_pgxdir+1

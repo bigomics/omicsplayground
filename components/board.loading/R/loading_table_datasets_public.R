@@ -28,9 +28,10 @@ loading_table_datasets_public_server <- function(id, table) {
     pgxTable_DT <- reactive({
       df <- table()
       shiny::req(df)
-      
       # need this, otherwise there is an error on user logout
-      if (length(df$dataset) == 0) df <- NULL
+      
+      validate(need(nrow(df)>0, 'Need at least one dataset!'))
+      
       df$creator <- sub("@.*","",df$creator)  ## hide full email
 
       target1 <- grep("date", colnames(df))
