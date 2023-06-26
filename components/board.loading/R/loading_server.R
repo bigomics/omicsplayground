@@ -644,7 +644,7 @@ LoadingBoard <- function(id,
         pgx.showSmallModal()
         shiny::withProgress(message = "Updating library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
-            pgx_dir,
+            pdir,
             pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
             pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
             pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
