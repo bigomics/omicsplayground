@@ -147,15 +147,15 @@ loading_table_datasets_server <- function(id,
           disable = list(columns = c(1,3:ncol(df)))
         ),
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
-        plugins = "scrollResize",
         options = list(
           dom = "ft",
           pageLength = 9999,
           scrollX = FALSE,
           scrollY = "55vh",
-          scrollResize = TRUE,
+          scrollResize = TRUE,          
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(
