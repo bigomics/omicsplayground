@@ -137,7 +137,8 @@ connectivity_plot_FCFCplots_server <- function(id,
         pos <- pgx$cluster.genes$pos$umap2d
         gg <- intersect(gg, rownames(pos))
 
-        F <- cbind( fc[gg], F[gg,])          
+        F <- cbind( fc[gg], F[gg,])
+        colnames(F)[1] <- "SIGNATURE"
         pos <- pos[gg,]  
           
         ## Set layout
@@ -171,7 +172,7 @@ connectivity_plot_FCFCplots_server <- function(id,
             ylab = "",
             col = fcol(f1),
             main = ct1x,
-            cex.main = 1
+            cex.main = 0.9
           )
           abline(v = 0, h = 0, lty = 2, lwd = 0.5)
           if (i %% mfplots[2] == 1) {

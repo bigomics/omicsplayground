@@ -86,20 +86,25 @@ CompareUI <- function(id) {
     id = ns("tabs1"),
     shiny::tabPanel(
       "Compare expression",
-      bslib::layout_column_wrap(
-        width = 1/2,
-        height = fullH,
-        compare_plot_compare1_ui(
-          id = ns("dt1"),
-          width = c("auto", "100%"),
-          height = c("100%", "70vh")
-        ),
-        compare_plot_compare2_ui(
-          id = ns("dt2"),
-          width = c("auto", "100%"),
-          height = c("100%", "70vh")
-        )
-      )
+        bslib::layout_column_wrap(
+          width = 1,
+          height = fullH,
+          heights_equal = "row",                 
+          bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
+          bslib::layout_column_wrap(
+            width = 1/2,
+            compare_plot_compare1_ui(
+              id = ns("dt1"),
+              width = c("auto", "100%"),
+              height = c("100%", "70vh")
+            ),
+            compare_plot_compare2_ui(
+              id = ns("dt2"),
+              width = c("auto", "100%"),
+              height = c("100%", "70vh")
+            )
+          )
+       )          
     ),
     shiny::tabPanel(
       "Foldchange",

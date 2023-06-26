@@ -639,7 +639,8 @@ LoadingBoard <- function(id,
       
       dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+          FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
+              pdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {

@@ -190,16 +190,22 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
       pgx.connectivity <- pgx$connectivity
       if(!"datasets-sigdb" %in% names(pgx.connectivity)) {
-        warning("[getConnectivityScores] ERROR : could not get scores")
+        dbg("[getConnectivityScores] WARNING : no scores in PGX")
         dbg("[connectivity_server.R] computing for datasets-sigdb.h5")
         ## COMPUTE HERE???  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         sigdb.file = "/home/kwee/Playground/omicsplayground/data/datasets-sigdb.h5"
         sigdb.file = file.path(getPgxDir(),"datasets-sigdb.h5")
+        dbg("[connectivity_server.R] sigdb.file = ",sigdb.file)        
+        if(!file.exists(sigdb.file)) {
+            dbg("[connectivity_server.R] sigdb.file missing!!! initDatasetFolder")
+            playbase::pgxinfo.updateDatasetFolder(getPgxDir())
+        }
         user.scores <- playbase::pgx.computeConnectivityScores(
           pgx, sigdb.file, ntop = 50, contrasts = NULL,
           remove.le = TRUE, inmemory = FALSE
         )
         pgx.connectivity[["datasets-sigdb.h5"]] <- user.scores
+        dbg("[connectivity_server.R] user sigdb score computed!")                
       }
       pgx.connectivity
     })
