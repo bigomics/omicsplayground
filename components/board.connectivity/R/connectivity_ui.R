@@ -51,6 +51,7 @@ ConnectivityInputs <- function(id) {
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,
+      shiny::br(),      
       withTooltip(
         shiny::checkboxInput(ns("hideclustcontrasts"), "hide cluster contrasts", TRUE),
         "Hide cluster contrasts.",
@@ -151,7 +152,7 @@ ConnectivityUI <- function(id) {
             ## style = htmltools::css(grid_template_columns = "9fr 3fr"),
             connectivity_table_foldchange_ui(
               ns("connectivityFoldchangeTable"),
-              title = "Fold change table",
+              title = "Fold-change table",
               info.text = "Gene expression fold-changes (log2FC) of similar signatures across different experiments.",
               caption = "Gene expression fold-changes (log2FC) of similar signatures across different experiments.",
               height = c("100%", TABLE_HEIGHT_MODAL),
