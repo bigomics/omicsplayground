@@ -291,8 +291,9 @@ FirebaseAuthenticationModule <- function(id,
 
     email_waiter <- waiter::Waiter$new(
         id = ns("emailSubmit"),
-        html = waiter::spin_3(),
-        color = waiter::transparent(.5)
+        html = div(waiter::spin_3(),
+                   style = 'transform: scale(0.6);'),
+        color = waiter::transparent(.8)
     )
 
     sendEmailLink <- reactiveVal(NULL)
@@ -519,8 +520,9 @@ EmailAuthenticationModule <- function(id,
 
     email_waiter <- waiter::Waiter$new(
         id = ns("emailSubmit"),
-        html = waiter::spin_3(),
-        color = waiter::transparent(.5)
+        html = div(waiter::spin_3(),
+                   style = 'transform: scale(0.6);'),
+        color = waiter::transparent(.8)
     )
 
     sendEmailLink <- reactiveVal(NULL)
