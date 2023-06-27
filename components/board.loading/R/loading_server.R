@@ -515,6 +515,7 @@ LoadingBoard <- function(id,
       id = "tsne",
       pgx.dir = getPGXDIR,
       info.table = getFilteredPGXINFO,
+      r_selected = reactive(pgxtable$rows_all()),
       watermark = WATERMARK
     )
 
@@ -528,11 +529,14 @@ LoadingBoard <- function(id,
     )
 
     if(enable_public_tabpanel) {
+
       loading_tsne_server(
         id = "tsne_public",
         pgx.dir = reactive(pgx_public_dir),
         info.table = getFilteredPGXINFO_PUBLIC,
-        watermark = WATERMARK)
+        r_selected = reactive(pgxtable_public$rows_all()),        
+        watermark = WATERMARK
+      )
 
       pgxtable_public <- loading_table_datasets_public_server(
         id = "pgxtable_public",
@@ -635,7 +639,7 @@ LoadingBoard <- function(id,
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
         pgx.showSmallModal("Updating your library<br>Please wait...")
-        shiny::withProgress(message = "Updating library...", value = 0.33, {
+        shiny::withProgress(message = "Updating your library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
             pgxdir,
             pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
@@ -719,7 +723,7 @@ LoadingBoard <- function(id,
         })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
-        pgx.showSmallModal()
+        pgx.showSmallModal("Updating datasets library<br>Please wait...")
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
             pgx_public_dir,

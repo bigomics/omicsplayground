@@ -97,7 +97,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      bs_alert("This tab shows all public datasets. You can select a public dataset and import that to your library for further analysis. You can also share any of your datasets to this public folder from your library in the previous tab. Remember: sharing is caring!"),
+      bs_alert("This panel shows all <b>public datasets</b>. You can select a public dataset and import that to your library for further analysis."),
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),
