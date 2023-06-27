@@ -93,7 +93,7 @@ CompareUI <- function(id) {
           bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
           bslib::layout_column_wrap(
             width = 1/2,
-            height = "100%",
+            height = fullH,
             compare_plot_compare1_ui(
               id = ns("dataset1"),
               width = c("auto", "100%"),

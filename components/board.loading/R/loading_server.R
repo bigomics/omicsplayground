@@ -625,19 +625,19 @@ LoadingBoard <- function(id,
         return(NULL)
       }
 
-      pdir <- getPGXDIR()
+      pgxdir <- getPGXDIR()
       info <- NULL
 
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
         FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
-                     pdir, file = "datasets-info.csv", verbose = TRUE)
+                     pgxdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
-        pgx.showSmallModal()
+        pgx.showSmallModal("Updating your library<br>Please wait...")
         shiny::withProgress(message = "Updating library...", value = 0.33, {
           info <- playbase::pgx.initDatasetFolder(
-            pdir,
+            pgxdir,
             pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
             pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
             pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
@@ -646,7 +646,8 @@ LoadingBoard <- function(id,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
             pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
             pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            verbose=TRUE
+            update.sigdb = FALSE, ## we do it later
+            verbose = TRUE
           )
 
           ## before reading the info file, we need to update for new files
@@ -655,7 +656,7 @@ LoadingBoard <- function(id,
         })
 
       }
-      info <- playbase::pgxinfo.read(pdir, file = "datasets-info.csv")
+      info <- playbase::pgxinfo.read(pgxdir, file = "datasets-info.csv")
       shiny::removeModal(session)
       return(info)
     })
@@ -730,7 +731,8 @@ LoadingBoard <- function(id,
             pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
             pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
             pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            verbose=TRUE)
+            update.sigdb = FALSE,  ## we do it later
+            verbose = TRUE)
           ## before reading the info file, we need to update for new files
           shiny::removeModal(session)
           return(info)
@@ -745,8 +747,6 @@ LoadingBoard <- function(id,
         ## get the filtered table of pgx datasets
         req(auth)
         if (!auth$logged()) {
-          warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
-                    not showing table!")
           return(NULL)
         }
 
@@ -1293,13 +1293,13 @@ LoadingBoard <- function(id,
     # re-write datasets-info.csv when pgxTable_edited
     # also edit the pgx files
     observeEvent(rl$pgxTable_edited, {
-      pdir <- getPGXDIR()
-      fname <- file.path(pdir, 'datasets-info.csv')
+      pgxdir <- getPGXDIR()
+      fname <- file.path(pgxdir, 'datasets-info.csv')
       write.csv(rl$pgxTable_data, fname)
 
       ## also rewrite description in actual pgx file
       pgx_name <- rl$pgxTable_data[rl$pgxTable_edited_row, 'dataset']
-      pgx_file <- file.path(pdir, paste0(pgx_name, '.pgx'))
+      pgx_file <- file.path(pgxdir, paste0(pgx_name, '.pgx'))
       pgx <- local(get(load(pgx_file, verbose = 0))) ## override any name
 
       col_edited <- colnames(rl$pgxTable_data)[rl$pgxTable_edited_col]
