@@ -296,11 +296,13 @@ FirebaseAuthenticationModule <- function(id,
     )
 
     sendEmailLink <- reactiveVal(NULL)
-    
+
     observeEvent( input$emailSubmit, {
+        email_waiter$show()
+
         if(input$emailInput == ""){
             js.emailFeedbackMessage(session, "Missing email", "error")
-            email_waiter$hide()            
+            email_waiter$hide()
             return()
         }
 
@@ -312,20 +314,21 @@ FirebaseAuthenticationModule <- function(id,
             authorized_domain <- grepl(domain,input$emailInput)
         }
         if(!authorized_domain) {
-            js.emailFeedbackMessage(session, "Invalid domain", "error")         
+            js.emailFeedbackMessage(session, "Invalid domain", "error")
             ## resetUSER()
             email_waiter$hide()
             return()
         }
 
         ## >>> OK let's send auth request
-        js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")         
+        js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
         sendEmailLink(input$emailInput)
     })
 
     observeEvent(sendEmailLink(), {
         firebase2$send_email(sendEmailLink())
         sendEmailLink(NULL)
+        email_waiter$hide()
     }, ignoreNULL = TRUE)
 
     observeEvent( firebase$get_signed_in(), {
@@ -523,9 +526,11 @@ EmailAuthenticationModule <- function(id,
     sendEmailLink <- reactiveVal(NULL)
 
     observeEvent( input$emailSubmit, {
-        
+        email_waiter$show()
+
         if(input$emailInput == ""){
-            js.emailFeedbackMessage(session, "Missing email", "error")             
+            js.emailFeedbackMessage(session, "Missing email", "error")
+            email_waiter$hide()
             return()
         }
 
@@ -540,7 +545,7 @@ EmailAuthenticationModule <- function(id,
             ##shinyalert::shinyalert("","Invalid email domain")
             js.emailFeedbackMessage(session, "domain not authorized", "error")
             ## resetUSER()
-            shiny::updateTextInput(session, "emailInput", value="")            
+            shiny::updateTextInput(session, "emailInput", value="")
             email_waiter$hide()
             return()
         }
@@ -551,7 +556,7 @@ EmailAuthenticationModule <- function(id,
         new_user <- !(input$emailInput %in% existing_user_dirs)
         if(is_personal_email && new_user) {
             ## shinyalert::shinyalert("We're sorry...","No personal email allowed. Please provide your business, academic or institutional email.")
-            js.emailFeedbackMessage(session, "No personal email allowed. Please provide your business, academic or institutional email.", "error")            
+            js.emailFeedbackMessage(session, "No personal email allowed. Please provide your business, academic or institutional email.", "error")
             shiny::updateTextInput(session, "emailInput", value="")
             email_waiter$hide()
             return()
@@ -565,6 +570,7 @@ EmailAuthenticationModule <- function(id,
     observeEvent(sendEmailLink(), {
         firebase2$send_email(sendEmailLink())
         sendEmailLink(NULL)
+        email_waiter$hide()
     }, ignoreNULL = TRUE)
 
     observeEvent( firebase$get_signed_in(), {
@@ -702,7 +708,7 @@ PasswordAuthenticationModule <- function(id,
             message("valid.pw       = ",valid.pw)
             message("----------------------------------")
         }
-        
+
         if (login.OK) {
             message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
             output$login_warning = shiny::renderText("")
