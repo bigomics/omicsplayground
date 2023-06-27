@@ -44,6 +44,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.connectivity/R/connectivity_plot_leadingEdgeGraph.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_plot_scatterPlot.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_server.R',encoding='UTF-8')
+  source('board.connectivity/R/connectivity_table_foldchange.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_table_similarity_scores.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_ui.R',encoding='UTF-8')
   source('board.correlation/R/correlation_plot_barplot.R',encoding='UTF-8')

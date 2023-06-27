@@ -8,5 +8,6 @@ app_server <- function(input, output, session) {
 
   # Your application server logic
   load('data/example-data.pgx')
-  server <- ConnectivityBoard('cmap', pgx)
+  getPgxDir <- reactive("data")
+  server <- ConnectivityBoard('cmap', pgx, getPgxDir)
 }

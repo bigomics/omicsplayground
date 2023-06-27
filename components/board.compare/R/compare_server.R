@@ -235,7 +235,7 @@ CompareBoard <- function(id, pgx) {
     # Dataset 1
 
     compare_plot_compare1_server(
-      "dt1",
+      "dataset1",
       pgx = pgx,
       input.contrast1 = shiny::reactive(input$contrast1),
       hilightgenes = hilightgenes,
@@ -248,7 +248,7 @@ CompareBoard <- function(id, pgx) {
     # Dataset 2
 
     compare_plot_compare2_server(
-      "dt2",
+      "dataset2",
       pgx = pgx,
       input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,

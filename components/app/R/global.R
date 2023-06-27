@@ -57,6 +57,7 @@ get_opg_root <- function() {
 }
 
 ## Set folders
+##OPG       = normalizePath("../../..")
 OPG       = get_opg_root()
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")

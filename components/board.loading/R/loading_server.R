@@ -181,7 +181,7 @@ LoadingBoard <- function(id,
     
     # put user dataset into shared folder
     observeEvent(rl$share_pgx, {
-        pp <- "__from__tarzan@demo.com__$"
+
         pp <- paste0("__from__",auth$email(),"__$")
         num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
         if(num_shared_queue > opt$MAX_SHARED_QUEUE) {
@@ -639,7 +639,8 @@ LoadingBoard <- function(id,
       
       dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pdir, file = "datasets-info.csv", verbose = TRUE)
+          FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
+              pdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
