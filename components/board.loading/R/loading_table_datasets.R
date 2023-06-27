@@ -38,7 +38,8 @@ loading_table_datasets_server <- function(id,
       df <- rl$pgxTable_data
       shiny::req(df)
 
-      if (nrow(df) == 0) {
+      is.dt <- is.data.frame(df)      
+      if (!is.dt || nrow(df) == 0) {
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste("Your dataset library seems empty. Please upload new data or import",

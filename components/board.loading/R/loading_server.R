@@ -97,8 +97,6 @@ LoadingBoard <- function(id,
 
         if(auth$email()=="") return(NULL)
         pgx_received <- getReceivedFiles()
-        dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
-        dbg("[loading_server.R:receive_pgx_alert] length(pgx_received)=", length(pgx_received))
 
         if(length(pgx_received)>0) {
             df <- receivedPGXtable()
@@ -586,6 +584,7 @@ LoadingBoard <- function(id,
 
     observeEvent(getPGXINFO(), {
       df <- getPGXINFO()
+      if(is.null(df)) return()
       datatypes <- sort(setdiff(df$datatype, c(NA, "")))
       organisms <- sort(setdiff(df$organism, c(NA, "")))
       shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
@@ -629,10 +628,9 @@ LoadingBoard <- function(id,
       pdir <- getPGXDIR()
       info <- NULL
 
-      dbg("[loading_server.R:getPGXINFO] calling scanInfoFile()")
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-          FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
-              pdir, file = "datasets-info.csv", verbose = TRUE)
+        FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
+                     pdir, file = "datasets-info.csv", verbose = TRUE)
       })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
@@ -713,10 +711,11 @@ LoadingBoard <- function(id,
           return(NULL)
         }
 
-         ## update meta files
-      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_public_dir, file = "datasets-info.csv", verbose = TRUE)
-      })
+        ## update meta files
+        info <- NULL        
+        shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+          FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_public_dir, file = "datasets-info.csv", verbose = TRUE)
+        })
 
       if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
         pgx.showSmallModal()
@@ -886,7 +885,7 @@ LoadingBoard <- function(id,
         } else {
             dbg("[loading_server.R] accept_pgx : renaming file from = ",file_from,"to = ",file_to)
             if(!file.rename(file_from, file_to)) {
-              dbg("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
+              info("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
               ## file.rename does not allow "cross-device link"
               file.copy(file_from, file_to)
               file.remove(file_from)
@@ -1202,14 +1201,14 @@ LoadingBoard <- function(id,
       ## the updated object.
       slots1 <- names(loaded_pgx)
       if(length(slots1) != length(slots0)) {
-        dbg("[loading_server.R] saving updated PGX")
+        info("[loading_server.R] saving updated PGX")
         new_slots <- setdiff(slots1, slots0)
         savePGX(loaded_pgx, file=pgxfile)
       }
 
       ## Copying to pgx list to reactiveValues in
       ## session environment.
-      dbg("[loading_server.R] copying pgx object to global environment")
+      info("[loading_server.R] copying pgx object to global environment")
       empty.slots <- setdiff(names(pgx),names(loaded_pgx))
       isolate({
         for (e in empty.slots) {
@@ -1221,7 +1220,7 @@ LoadingBoard <- function(id,
       })
       ## ----------------- remove modal on exit?? -------------------------
       remove(loaded_pgx)
-      dbg("[loading_server.R] copying pgx done!")
+      info("[loading_server.R] copying pgx done!")
       gc()
     }
 
