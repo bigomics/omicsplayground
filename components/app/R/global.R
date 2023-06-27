@@ -162,7 +162,7 @@ message("************************************************")
 
 opt.file <- file.path(APPDIR,"OPTIONS")
 if(!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
-opt <- playbase::pgx.readOptions(file=opt.file)
+opt <- playbase::pgx.readOptions(file=opt.file)  ## THIS IS GLOBAL!!!
 
 ## Check and set authentication method
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
