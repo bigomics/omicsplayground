@@ -1,6 +1,6 @@
 TITLE               = 'Omics Playground'
-AUTHENTICATION      = none
-#AUTHENTICATION      = password
+#AUTHENTICATION      = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = email
 #AUTHENTICATION     = firebase
 #DOMAIN              = @bigomics.ch$|@demo.com$

@@ -84,6 +84,7 @@ LoadingBoard <- function(id,
 
     get_coworkers <- function(pgxdir, email) {
         domain <- sub(".*@","",email)
+        if(email=="" || domain=="") return(NULL)
         cow <- dir(pgxdir, pattern=paste0(domain,"$"))
         cow <- setdiff(cow, email)
         cow
@@ -97,6 +98,7 @@ LoadingBoard <- function(id,
         if(auth$email()=="") return(NULL)
         pgx_received <- getReceivedFiles()
         dbg("[loading_server.R:receive_pgx_alert] reacted! pgx_received=", pgx_received)
+        dbg("[loading_server.R:receive_pgx_alert] length(pgx_received)=", length(pgx_received))
 
         if(length(pgx_received)>0) {
             df <- receivedPGXtable()
@@ -807,53 +809,11 @@ LoadingBoard <- function(id,
 
     getReceivedFiles <- shiny::reactive({
       req(auth)
-      if (!auth$logged()) return(NULL)
-      if(auth$email()=="") return(NULL)
-
+      if (!auth$logged()) return(c())
+      if(auth$email()=="") return(c())      
       ## allow trigger for when a shared pgx is accepted / decline
       renewReceivedTable()
-
-      # allow trigger for when a shared pgx is accepted / decline
-      if (!auth$logged()) {
-        warning("[LoadingBoard:getPGXINFO_SHARED] user not logged in!")
-        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!
-                    not showing table!")
-        return(NULL)
-      }
-
-      ## update meta files
-      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-      FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_shared_dir, file = "datasets-info.csv", verbose = TRUE)
-      })
-
-      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
-        pgx.showSmallModal()
-        shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(
-            pgx_shared_dir,
-            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
-            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
-            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
-            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
-            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
-            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
-            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
-            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            verbose=TRUE)
-          shiny::removeModal(session)
-          return(info)
-        })
-      }
-
-      info <- playbase::pgxinfo.read(pgx_shared_dir, file = "datasets-info.csv")
-
-      df <- getPGXINFO()
-      if (is.null(df)) {
-        return(NULL)
-      }
-      pgxdir <- getPGXDIR()
       pgxfiles <- dir(pgx_shared_dir, pattern = paste0('__to__',auth$email()))
-      shiny::removeModal()
       return(pgxfiles)
     })
 
