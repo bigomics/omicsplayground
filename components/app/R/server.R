@@ -18,9 +18,9 @@ app_server <- function(input, output, session) {
 
     VERSION <- scan(file.path(OPG,"VERSION"), character())[1]
 
-    dbg("[server.R] 0: getwd = ",getwd())
-    dbg("[server.R] 0: HONCHO_URL = ",opt$HONCHO_URL)
-    dbg("[server.R] 0: SESSION = ",session$token)
+    info("[server.R] getwd = ",getwd())
+    info("[server.R] HONCHO_URL = ",opt$HONCHO_URL)
+    info("[server.R] SESSION = ",session$token)
 
     has.honcho <- FALSE
     if(has.honcho && !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!="") {

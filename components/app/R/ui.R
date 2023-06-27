@@ -53,6 +53,7 @@ app_ui <- function() {
             )
         )
 
+        ## Put some hidden UI in footer
         footer <- shiny::tagList(
             SocialMediaModuleUI("socialmodal"),
             SendReferralModuleUI("sendreferral")

@@ -803,7 +803,7 @@ LoadingBoard <- function(id,
       if(auth$email()=="") return(c())      
       ## allow trigger for when a shared pgx is accepted / decline
       renewReceivedTable()
-      pgxfiles <- dir(pgx_shared_dir, pattern = paste0('__to__',auth$email()))
+      pgxfiles <- dir(pgx_shared_dir, pattern = paste0('__to__',auth$email(),'__from__'))
       return(pgxfiles)
     })
 
@@ -885,7 +885,12 @@ LoadingBoard <- function(id,
             return(NULL)
         } else {
             dbg("[loading_server.R] accept_pgx : renaming file from = ",file_from,"to = ",file_to)
-            file.rename(file_from, file_to)
+            if(!file.rename(file_from, file_to)) {
+              dbg("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
+              ## file.rename does not allow "cross-device link"
+              file.copy(file_from, file_to)
+              file.remove(file_from)
+            }
         }
 
         # reload pgx dir so the newly accepted pgx files are registered in user table
