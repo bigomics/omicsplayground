@@ -41,5 +41,16 @@ for (r_file in r_files) {
   source(file.path(glue::glue('components/{board}/R/'),r_file))
 }
 
-# Run the application
-run_app(options=options)
+onStart = NULL  
+enableBookmarking = NULL
+uiPattern = "/"
+app = shinyApp(
+  ui = app_ui,
+  server = app_server,
+  onStart = onStart,
+  options = options,
+  enableBookmarking = enableBookmarking,
+  uiPattern = uiPattern
+)
+
+shiny::runApp(app)
