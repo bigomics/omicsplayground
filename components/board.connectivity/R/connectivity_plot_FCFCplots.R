@@ -55,7 +55,7 @@ connectivity_plot_FCFCplots_ui <- function(
 #' @export
 connectivity_plot_FCFCplots_server <- function(id,
                                                pgx,
-                                               contrast,
+                                               r_contrast,
                                                getCurrentContrast,
                                                getTopProfiles,
                                                getConnectivityScores,
@@ -190,7 +190,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         
         res <- list(
           F = F,          
-          contrast = contrast(),
+          contrast = r_contrast(),
           fc = res1$fc,
           ct = res1$name
         )

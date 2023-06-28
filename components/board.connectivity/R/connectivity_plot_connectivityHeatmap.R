@@ -65,7 +65,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
 #' @return
 #' @export
 connectivity_plot_connectivityHeatmap_server <- function(id,
-                                                         getTopProfiles,
+                                                         getProfiles,
                                                          getConnectivityScores,
                                                          getCurrentContrast,
                                                          watermark = FALSE) {
@@ -73,7 +73,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
     id, function(input, output, session) {
       
       plot_data <- shiny::reactive({
-        F <- getTopProfiles()
+        F <- getProfiles()
         F[is.na(F)] <- 0
 
         ## get correlation

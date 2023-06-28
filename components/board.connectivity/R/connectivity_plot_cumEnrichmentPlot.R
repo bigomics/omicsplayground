@@ -76,30 +76,19 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         if (!grepl(".h5$", sigdb)) {
           return(NULL)
         }
-
-        dbg("[getEnrichmentTable] 0 :")
         
         df <- getConnectivityScores()
         if (is.null(df)) {
           return(NULL)
         }
         ii <- connectivityScoreTable$rows_all()
-        shiny::req(ii)
-
-        dbg("[getEnrichmentTable] 1 : dim.df = ",dim(df))
-        
+        shiny::req(ii)        
         sel <- head(df$pathway[ii], 10)
-        dbg("[getEnrichmentTable] 1b : sel = ",sel)
-        
         F <- getEnrichmentMatrix(sigdb, select = sel)
-
-        dbg("[getEnrichmentTable] 1c : dim.F = ",dim(F))
         
         if (is.null(F)) {
           return(NULL)
         }
-
-        dbg("[getEnrichmentTable] 2 : dim.F = ",dim(F))        
 
         ## multiply with sign of enrichment
         if (input$cumgsea_absfc) {
@@ -107,14 +96,9 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         } else {
           rho1 <- df$rho[match(colnames(F), df$pathway)]
           F <- t(t(F) * sign(rho1))
-        }
-
-        dbg("[getEnrichmentTable] 3 : dim.F = ",dim(F))        
-        
+        }        
         ## order by term/geneset
         F <- F[order(-rowMeans(F**2,na.rm=TRUE)), , drop = FALSE]
-
-        dbg("[getEnrichmentTable] 4 : dim.F = ",dim(F))
         
         ## add current contrast
         ct <- getCurrentContrast()
@@ -123,21 +107,14 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         gx[is.na(gx)] <- 0
         F <- cbind(gx, F)
         colnames(F)[1] <- ct$name
-
-        dbg("[getEnrichmentTable] 5 : dim.F = ",dim(F))
         
         ## normalize columns 
         F <- t(t(F) / sqrt(colSums(F**2)))
-
-        dbg("[getEnrichmentTable] 6 : dim.F = ",dim(F))
-        
         F
       })
 
       plot_stackedbar <- function(nsets) {
         ##
-        dbg("[plot_stackedbar] 0 :")
-
         F <- getEnrichmentTable()
         if (is.null(F)) {
           frame()

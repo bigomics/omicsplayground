@@ -30,18 +30,6 @@ ConnectivityInputs <- function(id) {
       "Select reference signature database.",
       placement = "right", options = list(container = "body")
     ),
-    ## shiny::radioButtons(
-    ##     inputId = ns("select_genes"),
-    ##     label = "Select genes:",
-    ##     choices = c("top50","<custom>"),
-    ##     inline = TRUE,
-    ## ),
-    ## shiny::selectizeInput(
-    ##     inputId = ns("genes"),
-    ##     label = NULL,
-    ##     choices = NULL,
-    ##     multiple = TRUE
-    ## ),
     shiny::br(),shiny::br(),
     withTooltip(shiny::actionLink(ns("options"), "Advanced options", icon=icon("cog", lib="glyphicon")),
       "Toggle advanced options.",
@@ -61,7 +49,17 @@ ConnectivityInputs <- function(id) {
         shiny::checkboxInput(ns("abs_score"), "abs.score", TRUE),
         "Use absolute score value",
         placement = "right", options = list(container = "body")
+      ),
+
+      shiny::hr(), 
+      shiny::tags$head(shiny::tags$style("#cmap-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
+      withTooltip(
+        shiny::textAreaInput(ns("genelist"), "Select genes:",
+          rows = 15, placeholder = "Paste your gene list"
+        ),
+        "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
       )
+      
     )
   )
 }

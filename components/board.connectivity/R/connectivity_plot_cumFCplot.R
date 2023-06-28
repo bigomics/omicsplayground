@@ -58,18 +58,16 @@ connectivity_plot_cumFCplot_ui <- function(
 #' @return
 #' @export
 connectivity_plot_cumFCplot_server <- function(id,
-                                               getTopProfiles,
+                                               getProfiles,
                                                getConnectivityScores,
                                                getCurrentContrast,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       cumulativeFCtable <- shiny::reactive({
-        F <- getTopProfiles()
+        F <- getProfiles()
         F[is.na(F)] <- 0
 
-        ## maximum 10??
-        MAXF <- 20
 
         ## multiply with sign of rho
         df <- getConnectivityScores()
@@ -96,7 +94,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         F <- cumulativeFCtable()
         shiny::req(F)
 
-        MAXF <- 10
+        MAXF <- 10  ## number of top signatures
         ##NGENES <- 50
 
         F <- F[, 1:min(MAXF, ncol(F)), drop = FALSE]

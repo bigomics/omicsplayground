@@ -34,7 +34,7 @@ connectivity_table_foldchange_server <- function(id,
                                                   pgx,
                                                   getConnectivityScores,
                                                   columns,
-                                                  getTopProfiles,
+                                                  getProfiles,
                                                   getConnectivityMatrix,
                                                   sigdb,
                                                   height) {
@@ -42,9 +42,9 @@ connectivity_table_foldchange_server <- function(id,
 
     get_table <- reactive({
 
-      F <- getTopProfiles()
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- head(F,20)
+      F <- getProfiles()
+#      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+#      F <- head(F,20)
       F <- F[order(rownames(F)),]
 
       S <- getConnectivityScores()
