@@ -26,7 +26,7 @@ source('components/golem_utils/run_dev.R')
 ### board specific files ###
 
 source(glue::glue('components/{board}/dev/app_ui.R'))
-source(glue::glue('components/{board}/dev/app_server.R'))
+# source(glue::glue('components/{board}/dev/app_server.R'))
 
 
 app_server <- function(input, output, session) {
