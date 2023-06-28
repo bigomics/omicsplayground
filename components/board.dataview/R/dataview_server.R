@@ -281,6 +281,7 @@ DataViewBoard <- function(id, pgx) {
     ## ================================================================================
 
     getCountStatistics <- reactiveVal()
+    
     observeEvent(c(input$data_groupby, input$data_samplefilter), {
       shiny::req(pgx$X, pgx$Y, pgx$samples)
       shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))

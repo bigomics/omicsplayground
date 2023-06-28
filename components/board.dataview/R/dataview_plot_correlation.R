@@ -37,8 +37,15 @@ dataview_plot_correlation_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     getTopCorrelatedGenes <- function(pgx, gene, n = 30, samples = NULL) {
+      
+      samples <- r.samples()
+      gene <- r.gene()
+      
       ## precompute
       if (is.null(samples)) samples <- colnames(pgx$X)
+      if(!all(samples %in% colnames(pgx$X))) return(NULL)
+      if(!gene %in% rownames(pgx$X)) return(NULL)
+
       samples <- intersect(samples, colnames(pgx$X))
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
 

@@ -44,6 +44,9 @@ dataview_plot_averagerank_server <- function(id,
       samples <- r.samples()
       data_type <- r.data_type()
 
+      if(!all(samples %in% colnames(pgx$X))) return(NULL)
+      if(!gene %in% rownames(pgx$X)) return(NULL)
+
       nsamples <- length(samples)
       if (data_type == "counts") {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE]), decreasing = TRUE)

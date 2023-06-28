@@ -39,11 +39,6 @@ dataview_plot_tsne_server <- function(id,
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$genes, pgx$counts, pgx$samples, pgx$tsne2d)
 
-      ##            gene <- parent.input$search_gene
-      ##            samplefilter <- parent.input$data_samplefilter
-      ##            data_type <- parent.input$data_type
-      ##            groupby <- parent.input$groupby
-
       ## dereference reactives
       gene <- r.gene()
       samples <- r.samples()
@@ -52,7 +47,9 @@ dataview_plot_tsne_server <- function(id,
       shiny::req(gene, data_type)
 
       if (samples[1] == "") samples <- colnames(pgx$X)
-
+      if(!all(samples %in% colnames(pgx$X))) return(NULL)
+      if(!gene %in% rownames(pgx$X)) return(NULL)
+      
       ## precompute
       pp <- rownames(pgx$genes)[1]
       sel <- match(gene, pgx$genes$gene_name)
