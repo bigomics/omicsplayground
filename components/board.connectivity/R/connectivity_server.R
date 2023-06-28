@@ -179,7 +179,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
 
-    get_pgx_connectivity <- shiny::reactive({
+    compute_connectivity <- shiny::reactive({
       shiny::req(pgx, pgx$connectivity)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
       
@@ -191,19 +191,19 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         sigdb.file = file.path(pgxdir,"datasets-sigdb.h5")
         user.scores <- NULL
         need_update <- playbase::pgxinfo.needUpdate(pgxdir)
-        dbg("[get_pgx_connectivity] need_update = ",need_update)
-        dbg("[get_pgx_connectivity] file.exists.h5 = ",file.exists(sigdb.file))
+        dbg("[compute_connectivity] need_update = ",need_update)
+        dbg("[compute_connectivity] file.exists.h5 = ",file.exists(sigdb.file))
         
         if(need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
-          info("[get_pgx_connectivity] calling updateDatasetFolder")
+          info("[compute_connectivity] calling updateDatasetFolder")
           shiny::withProgress(message = "Updating signature database...", value = 0.33, {
             playbase::pgxinfo.updateDatasetFolder(pgxdir)
           })
           shiny::removeModal(session)          
         }  
         if(file.exists(sigdb.file)) {
-          info("[get_pgx_connectivity] computing connectivity scores...")
+          info("[compute_connectivity] computing connectivity scores...")
           pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
           shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {          
             user.scores <- playbase::pgx.computeConnectivityScores(

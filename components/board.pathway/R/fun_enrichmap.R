@@ -1,47 +1,43 @@
-if(0) {
-  library(Matrix)
-  library(playbase)
-  load("../pgx/example-data.pgx",verbose=1)
-  pgx=ngs
-  G <- playdata::GSET_SPARSEG_XL
-  dim(G)
-  head(rownames(G))
-  wt=1;rx=3;qsig=0.2
-}
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
 
-compute_enrichmentmap <- function(pgx, G, qsig=0.05, ntop=120, wt=1, contrast=NULL, plot=FALSE) {
+
+compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL, plot=FALSE) {
 
   meta <- playbase::pgx.getMetaMatrix(pgx, level="geneset")
   ##meta <- playbase::pgx.getMetaMatrix(pgx, level="gene")
   F <- meta$fc
   Q <- meta$qv
-  ##X <- pgx$X
   X <- pgx$gsetX  
-  G1 <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5",rownames(G)),]
-  dim(G1)
-
+  G <- Matrix::t(pgx$GMT)
+  table( rownames(G) == rownames(F))
+  G <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5",rownames(G)),]
+  
   ## take most significant genesets
   if(!is.null(contrast)) {
     qmin <- Q[,contrast]
     fmax <- abs(F[,contrast])
   } else {
-    qmin <- apply(Q,1,min)
-    fmax <- apply(abs(F),1,max)    
+    qmin <- apply(Q,1,min,na.rm=TRUE)
+    fmax <- apply(abs(F),1,max,na.rm=TRUE)    
   }
   sig1 <- (qmin < qsig)
   table(sig1)
+
   gg <- rownames(Q)[sig1]
   gg.score <- -log10(qmin[gg]) * fmax[gg]
   gg <- gg[order(-gg.score)]  
-  gg <- intersect(gg, rownames(G1))
+  gg <- intersect(gg, rownames(G))
   gg <- head(gg,ntop)
   length(gg)
-
+  
   ## create multi-mode correlation matrix
   rho1=rho2=rho3=1
   if(ncol(F)>2) rho1 <- cor(t(F[gg,]))
-  rho2 <- cor(t(as.matrix(G1[gg,])))
-  ##rho2 <- cor(as.matrix(G1[,gg]))
+  rho2 <- cor(t(as.matrix(G[gg,])))
+  ##rho2 <- cor(as.matrix(G[,gg]))
   rho3 <- cor(t(X[gg,]))  
   rho1 <- pmax(rho1,0)
   rho2 <- pmax(rho2,0)
@@ -55,6 +51,7 @@ compute_enrichmentmap <- function(pgx, G, qsig=0.05, ntop=120, wt=1, contrast=NU
   qmin <- qmin[rownames(R1)]
   F <- F[rownames(R1), ]
   Q <- Q[rownames(R1), ]
+  G <- G[rownames(R1),]
   
   ## geneset graph
   require(igraph)
@@ -62,7 +59,7 @@ compute_enrichmentmap <- function(pgx, G, qsig=0.05, ntop=120, wt=1, contrast=NU
     R1, weighted=TRUE,
     diag=FALSE, mode="undirected")
   ## E(graph)$weight
-  V(graph)$size <- as.numeric(Matrix::rowSums(G1[rownames(R1),]!=0))
+  V(graph)$size <- as.numeric(Matrix::rowSums(G[rownames(R1),]!=0))
 ##  V(graph)$qmin <- qmin
   
   pos <- layout_with_fr(graph, weights=E(graph)$weight**wt)  ## fast!
@@ -77,6 +74,7 @@ compute_enrichmentmap <- function(pgx, G, qsig=0.05, ntop=120, wt=1, contrast=NU
   ## do clustering
   cl <- igraph::cluster_louvain(graph)
   nclust <- length(table(cl$membership))
+  nclust
   
   ## determine term frequency from descriptions
   terms <- tapply( V(graph)$name, cl$membership, function(s) s)
@@ -94,7 +92,7 @@ compute_enrichmentmap <- function(pgx, G, qsig=0.05, ntop=120, wt=1, contrast=NU
   
   ## marker genes for each cluster
   gset <- V(graph)$name
-  gs.genes <- tapply(V(graph)$name, cl$membership, function(s) names(which(colMeans(G1[s,]!=0)>0.2)))
+  gs.genes <- tapply(V(graph)$name, cl$membership, function(s) names(which(colMeans(G[s,]!=0)>0.2)))
   unique.genes <- names(which(table(unlist(gs.genes))==1))
   marker.genes <- lapply(gs.genes, function(gg) intersect(gg,unique.genes))
   
@@ -417,9 +415,10 @@ if(0) {
   load("~/Playground/pgx/example-data.pgx",verbose=1)
   pgx=ngs
 
-  names(pgx$gset.meta$meta)  
-  res <- compute_enrichmentmap(pgx, G, contrast=NULL, qsig=1.05, ntop=120, plot=TRUE)
-  res <- compute_enrichmentmap(pgx, G, contrast=1, qsig=1.05, ntop=120, plot=TRUE)  
+  names(pgx$gset.meta$meta)
+  G <- Matrix::t(pgx$GMT)
+  res <- compute_enrichmentmap(pgx, contrast=NULL, qsig=1.05, ntop=120, plot=TRUE)
+  res <- compute_enrichmentmap(pgx, contrast=1, qsig=1.05, ntop=120, plot=TRUE)  
   
   plot_enrichmentmap(res, contrast=1, label=FALSE, qsig=0.05)  
   plot_enrichmentmap(res, contrast=1, label=FALSE, max.edges=0)
