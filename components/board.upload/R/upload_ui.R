@@ -96,7 +96,7 @@ UploadUI <- function(id) {
           class = "col-md-4",
           upload_plot_contraststats_ui(
               id = ns("contrastStats"),
-              title = "Contrast Stats",
+              title = "Comparison Stats",
               info.text = "Information about the uploaded comparisons",
               caption = "Information about the uploaded comparisons.",
               height = c("75%", TABLE_HEIGHT_MODAL),
