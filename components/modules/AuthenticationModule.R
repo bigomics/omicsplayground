@@ -429,7 +429,8 @@ FirebaseAuthenticationModule <- function(id,
 EmailAuthenticationModule <- function(id,
                                       pgx_dir,
                                       domain = NULL,
-                                      firebase.rds="firebase.rds"
+                                      credentials.file = NULL,
+                                      firebase.rds = "firebase.rds"
                                       ) {
   shiny::moduleServer( id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using email link (using Firebase) authentication <<<<")
@@ -538,7 +539,6 @@ EmailAuthenticationModule <- function(id,
 
         ## >>> We could check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
-        ## or against a subscription list.
         authorized_domain <- TRUE
         if(!is.null(domain) && domain!="") {
             authorized_domain <- grepl(domain,input$emailInput)
@@ -551,9 +551,33 @@ EmailAuthenticationModule <- function(id,
             email_waiter$hide()
             return()
         }
+        
+        ## >>> We could cross-check here for valid email against a subscription list.
+        authorized_user = TRUE
+        valid_email = TRUE
+        valid_date = TRUE
+        if(!is.null(credentials.file) && file.exists(credentials.file)) {
+            CREDENTIALS <- read.csv(credentials.file,colClasses="character")
+            valid_email <- input$emailInput  %in% CREDENTIALS$email
+            valid_date  <- as.Date(CREDENTIALS$expiry) > as.Date(Sys.time())
+            authorized_user <- valid_email && valid_date
+        }
+        if(!authorized_user && !valid_email) {
+            js.emailFeedbackMessage(session, "email not authorized", "error")
+            shiny::updateTextInput(session, "emailInput", value="")
+            email_waiter$hide()
+            return()
+        }
+        if(!authorized_user && !valid_date) {
+            js.emailFeedbackMessage(session, "credentials expired", "error")
+            shiny::updateTextInput(session, "emailInput", value="")
+            email_waiter$hide()
+            return()
+        }
 
+        
         ## if it is a new user we ask for business email, old users can go
-        is_personal_email <- grepl("gmail|ymail|outlook|yahoo|mail.com$|icloud|msn",input$emailInput)
+        is_personal_email <- grepl("gmail|ymail|outlook|yahoo.com$|mail.com$|icloud.com$|msn.com$",input$emailInput)
         existing_user_dirs <- basename(list.dirs(pgx_dir))
         new_user <- !(input$emailInput %in% existing_user_dirs)
         if(is_personal_email && new_user) {

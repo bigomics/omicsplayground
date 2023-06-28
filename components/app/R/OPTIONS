@@ -1,9 +1,10 @@
 TITLE               = 'Omics Playground'
-#AUTHENTICATION      = none
-AUTHENTICATION      = password
-#AUTHENTICATION      = email
+AUTHENTICATION      = none
+#AUTHENTICATION     = password
+#AUTHENTICATION     = email
+#AUTHENTICATION     = auth-email
 #AUTHENTICATION     = firebase
-#DOMAIN              = @bigomics.ch$|@demo.com$
+#DOMAIN             = @bigomics.ch$|@demo.com$
 ENABLE_USERDIR      = TRUE
 ENABLE_UPLOAD       = TRUE
 ENABLE_SAVE         = TRUE
@@ -21,7 +22,7 @@ MAX_SHARED_QUEUE    = 3
 WATERMARK           = TRUE
 TIMEOUT             = 0
 #TIMEOUT            = 3600
-#HONCHO_URL          = http://localhost:8000
+#HONCHO_URL         = http://localhost:8000
 STARTUP_TITLE       = "Welcome to Version 3!",
 STARTUP_MESSAGE     = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it!"
 
