@@ -259,10 +259,9 @@ LoadingBoard <- function(id,
 
         alert_val <- shinyalert::shinyalert(
             inputId = "share_confirm",
-            title = "Please confirm",
+            title = "Are you sure?",
             tagList(
-                paste("Your dataset", pgx_name, "will be shared with user",
-                      share_user,". Are you sure?")
+                paste("Your dataset", pgx_name, "will be shared with",share_user)
             ),
             html = TRUE,
             showCancelButton = TRUE,
@@ -310,6 +309,17 @@ LoadingBoard <- function(id,
                 if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
                 playbase::pgx.save(pgx0, file = new_pgx_file)
               }
+
+              ## write transaction to log file
+              log.entry <- data.frame( date=date(), from="jane@demo.com", to="tarzan@demo.com",file="example-data.pgx")
+              log.file <- file.path(pgx_shared_dir, "PGX-SHARE-TRANSACTIONS.log")
+              log.entry <- data.frame( date=date(), from=auth$email(), to=share_user, file=paste0(pgx_name,".pgx"))
+              if(file.exists(log.file)) {
+                write.table(log.entry, file=log.file, col.names=FALSE, row.names=FALSE, sep=',', append=TRUE)
+              } else {
+                write.table(log.entry, file=log.file, col.names=TRUE, row.names=FALSE, sep=',')
+              }
+
             })
 
             share_user <- input_share_user()
@@ -900,6 +910,7 @@ LoadingBoard <- function(id,
               file.copy(file_from, file_to)
               file.remove(file_from)
             }
+            
         }
 
         # reload pgx dir so the newly accepted pgx files are registered in user table
