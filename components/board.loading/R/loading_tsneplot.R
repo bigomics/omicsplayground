@@ -63,7 +63,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       if (is.null(pos) && file.exists(allfc.file)) {
 
         shiny::withProgress(
-          message = "Calculating signature similarities...", value = 0.33, {
+          message = "Calculating signature t-SNE...", value = 0.33, {
 
             F <- data.table::fread(allfc.file)
             F <- as.matrix(F[, -1], rownames = F[[1]])

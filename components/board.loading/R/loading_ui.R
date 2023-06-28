@@ -44,7 +44,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      bs_alert("This tab shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date. Select a dataset in the table and load the data by clicking the 'Load dataset' button."),
+      bs_alert("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."),
       uiOutput(ns("receive_pgx_alert")),
       bslib::layout_column_wrap(
         width = 1,
@@ -59,7 +59,7 @@ LoadingUI <- function(id) {
         ),
         loading_tsne_ui(
           ns("tsne"),
-          title = "Dataset explorer",
+          title = "Signature t-SNE",
           info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 340px)", "70vh"),
@@ -97,7 +97,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      bs_alert("This panel shows all <b>public datasets</b>. You can select a public dataset and import that to your library for further analysis."),
+      bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."),
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),
@@ -111,7 +111,7 @@ LoadingUI <- function(id) {
         ),
         loading_tsne_ui(
           ns("tsne_public"),
-          title = "Dataset explorer",
+          title = "Signature t-SNE",
           info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 330px)", 700),
