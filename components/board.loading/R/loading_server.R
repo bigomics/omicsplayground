@@ -180,8 +180,11 @@ LoadingBoard <- function(id,
     })
 
     # put user dataset into shared folder
-    observeEvent(rl$share_pgx, {
+    observeEvent( rl$share_pgx, {
 
+        ## reset for next observe
+        rl$share_pgx <- NULL
+        
         ## sharing folder has to exists
         if(!dir.exists(pgx_shared_dir)) {
           shinyalert::shinyalert(
@@ -444,6 +447,7 @@ LoadingBoard <- function(id,
             showCancelButton = TRUE,
             showConfirmButton = TRUE
           )
+          rl$share_public_pgx <- NULL
         },
         ignoreNULL = TRUE
       )
@@ -502,8 +506,7 @@ LoadingBoard <- function(id,
             )
           )
         }
-        rl$share_pgx <- NULL
-        rl$share_public_pgx <- NULL
+
       })
     }
 
@@ -975,6 +978,7 @@ LoadingBoard <- function(id,
       rl$download_pgx_idx <- rl$download_pgx
       rl$download_pgx <- NULL
     }, ignoreNULL = TRUE)
+
     output$download_pgx_btn <- shiny::downloadHandler(
       ## filename = "userdata.pgx",
       filename = function() {
@@ -1003,6 +1007,7 @@ LoadingBoard <- function(id,
       rl$download_zip_idx <- rl$download_zip
       rl$download_zip <- NULL
     }, ignoreNULL = TRUE)
+
     output$download_zip_btn <- shiny::downloadHandler(
       ## filename = "userdata.zip",
       filename = function() {
@@ -1047,6 +1052,7 @@ LoadingBoard <- function(id,
     )
 
     shiny::observeEvent(rl$delete_pgx, {
+      
       row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
       df <- getFilteredPGXINFO()
       pgxfile <- as.character(df$dataset[row_idx])
@@ -1171,7 +1177,7 @@ LoadingBoard <- function(id,
 
       ## notify new data uploaded
       r_global$loadedDataset <- r_global$loadedDataset + 1
-
+      rl$found_example_trigger <- NULL
     })
 
 
