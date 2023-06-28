@@ -176,6 +176,7 @@ LoadingBoard <- function(id,
 
 
     selectedPGX2 <- reactive({
+      dbg("[loading_server:selectedPGX2] rl$share_pgx = ",rl$share_pgx)
       selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
       pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
       pgx_name
@@ -183,9 +184,6 @@ LoadingBoard <- function(id,
 
     # put user dataset into shared folder
     observeEvent( rl$share_pgx, {
-
-        ## reset for next observe
-        rl$share_pgx <- NULL
         
         ## sharing folder has to exists
         if(!dir.exists(pgx_shared_dir)) {
@@ -194,6 +192,7 @@ LoadingBoard <- function(id,
             text = paste('This server does not support sharing.',
                          'Please contact your administrator.')
           )
+          rl$share_pgx <- NULL                              
           return()
         }
         
@@ -203,7 +202,8 @@ LoadingBoard <- function(id,
              title = "Oops! You're not logged in...",
              text = paste("You need to be logged in with a valid email",
                           "address to share pgx files with other users.")
-           )
+          )
+          rl$share_pgx <- NULL                    
           return()
         }
 
@@ -216,6 +216,7 @@ LoadingBoard <- function(id,
             text = paste("You have already too many shared datasets in the waiting queue.",
                          "Please contact your administrator.")
           )
+          rl$share_pgx <- NULL
           return()
         }
 
@@ -255,7 +256,7 @@ LoadingBoard <- function(id,
 
         shiny::removeModal()
 
-        pgx_name <- selectedPGX2()
+        pgx_name <- selectedPGX2()  ## need rl$share_pgx
 
         alert_val <- shinyalert::shinyalert(
             inputId = "share_confirm",
@@ -449,7 +450,6 @@ LoadingBoard <- function(id,
             showCancelButton = TRUE,
             showConfirmButton = TRUE
           )
-          rl$share_public_pgx <- NULL
         },
         ignoreNULL = TRUE
       )
@@ -467,7 +467,7 @@ LoadingBoard <- function(id,
           pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
 
           new_pgx_file <- file.path(
-            pgx_public__dir,
+            pgx_public_dir,
             paste0(pgx_name, ".pgx")
           )
 
@@ -508,6 +508,8 @@ LoadingBoard <- function(id,
             )
           )
         }
+
+        rl$share_public_pgx <- NULL
 
       })
     }
