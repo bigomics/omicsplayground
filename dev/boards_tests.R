@@ -27,8 +27,15 @@ source('components/golem_utils/run_dev.R')
 
 source(glue::glue('components/{board}/dev/app_ui.R'))
 source(glue::glue('components/{board}/dev/app_server.R'))
-r_files <- list_files_safe(path = glue::glue('components/{board}/R'))
 
+
+app_server <- function(input, output, session) {
+
+    server <- TcgaBoard('tcga', pgx)
+}
+
+
+r_files <- list_files_safe(path = glue::glue('components/{board}/R'))
 
 for (r_file in r_files) {
   source(file.path(glue::glue('components/{board}/R/'),r_file))
