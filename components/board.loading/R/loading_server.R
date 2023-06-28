@@ -649,33 +649,20 @@ LoadingBoard <- function(id,
       info <- NULL
 
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-        FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
-                     pgxdir, file = "datasets-info.csv", verbose = TRUE)
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb=FALSE)
       })
 
-      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+      ##      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+      if(need_update) {      
         pgx.showSmallModal("Updating your library<br>Please wait...")
         shiny::withProgress(message = "Updating your library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(
-            pgxdir,
-            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
-            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
-            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
-            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
-            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
-            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
-            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
-            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            update.sigdb = FALSE, ## we do it later
-            verbose = TRUE
-          )
-
           ## before reading the info file, we need to update for new files
-          shiny::removeModal(session)
-          return(info)
+          playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb=FALSE)
         })
-
+        shiny::removeModal(session)
+        ##return(info)
       }
+      
       info <- playbase::pgxinfo.read(pgxdir, file = "datasets-info.csv")
       shiny::removeModal(session)
       return(info)
@@ -735,28 +722,17 @@ LoadingBoard <- function(id,
         ## update meta files
         info <- NULL        
         shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-          FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(pgx_public_dir, file = "datasets-info.csv", verbose = TRUE)
+          need_update <- playbase::pgxinfo.needUpdate(pgx_public_dir, check.sigdb=FALSE)
         })
 
-      if(FOLDER_UPDATE_STATUS$INITDATASETFOLDER == TRUE) {
+      if(need_update) {              
         pgx.showSmallModal("Updating datasets library<br>Please wait...")
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(
-            pgx_public_dir,
-            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
-            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
-            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
-            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
-            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
-            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
-            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
-            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            update.sigdb = FALSE,  ## we do it later
-            verbose = TRUE)
           ## before reading the info file, we need to update for new files
-          shiny::removeModal(session)
-          return(info)
+          playbase::pgxinfo.updateDatasetFolder(pgx_public_dir, update.sigdb=FALSE)
+          
         })
+        shiny::removeModal(session)
       }
 
       info <- playbase::pgxinfo.read(pgx_public_dir, file = "datasets-info.csv")

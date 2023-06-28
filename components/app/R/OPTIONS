@@ -7,7 +7,6 @@ AUTHENTICATION      = none
 #DOMAIN             = @bigomics.ch$|@demo.com$
 ENABLE_USERDIR      = TRUE
 ENABLE_UPLOAD       = TRUE
-ENABLE_SAVE         = TRUE
 ENABLE_DELETE       = TRUE
 ENABLE_PGX_DOWNLOAD = FALSE
 ENABLE_USER_SHARE   = TRUE
