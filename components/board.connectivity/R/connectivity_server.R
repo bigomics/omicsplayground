@@ -218,7 +218,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
     getConnectivityScores <- shiny::reactive({
-      pgx.connectivity <- get_pgx_connectivity()
+      pgx.connectivity <- compute_connectivity()
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
