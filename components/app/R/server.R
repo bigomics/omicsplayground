@@ -137,7 +137,6 @@ app_server <- function(input, output, session) {
          auth = auth,
          limits = limits,
          enable_userdir = opt$ENABLE_USERDIR,
-         enable_save = opt$ENABLE_SAVE,
          r_global = r_global
        )
     }

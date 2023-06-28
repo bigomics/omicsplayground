@@ -190,15 +190,13 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         sigdb.file = file.path(pgxdir,"datasets-sigdb.h5")
         user.scores <- NULL
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir)
-        dbg("[compute_connectivity] need_update = ",need_update)
-        dbg("[compute_connectivity] file.exists.h5 = ",file.exists(sigdb.file))
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir,check.sigdb=TRUE)
         
         if(need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")
           shiny::withProgress(message = "Updating signature database...", value = 0.33, {
-            playbase::pgxinfo.updateDatasetFolder(pgxdir)
+            playbase::pgxinfo.updateDatasetFolder(pgxdir,update.sigdb=TRUE)
           })
           shiny::removeModal(session)          
         }  

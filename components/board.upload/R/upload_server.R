@@ -13,7 +13,6 @@ UploadBoard <- function(id,
                           "datasets" = 10
                         ),
                         enable_userdir = TRUE,
-                        enable_save = TRUE,
                         r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -110,49 +109,31 @@ UploadBoard <- function(id,
       new_pgx <- playbase::pgx.initialize(new_pgx)
 
       savedata_button <- NULL
-      if (enable_save) {
-        ## -------------- save PGX file/object ---------------
-        pgxname <- sub("[.]pgx$", "", new_pgx$name)
-        pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
-        pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-
-        pgxdir <- getPGXDIR()
-        fn <- file.path(pgxdir, pgxname)
-        fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-        ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## switch 'pgx' as standard name. Actually saving as RDS
-        ## would have been better...
-        pgx <- new_pgx
-        save(pgx, file = fn)
-        remove(pgx)
-
-        FOLDER_UPDATE_STATUS <- playbase::pgx.scanInfoFile(
+      ## -------------- save PGX file/object ---------------
+      pgxname <- sub("[.]pgx$", "", new_pgx$name)
+      pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
+      pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
+      
+      pgxdir <- getPGXDIR()
+      fn <- file.path(pgxdir, pgxname)
+      fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
+      ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ## switch 'pgx' as standard name. Actually saving as RDS
+      ## would have been better...
+      pgx <- new_pgx
+      save(pgx, file = fn)
+      remove(pgx)
+      
+      shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
+        playbase::pgxinfo.updateDatasetFolder(
           pgxdir,
-          file = "datasets-info.csv",
-          new.pgx = pgxname,  ## force update
-          verbose = TRUE)
-
-        shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
-          info <- playbase::pgx.initDatasetFolder(
-            pgxdir,
-            pgxinfo = FOLDER_UPDATE_STATUS$pgxinfo,
-            pgx.files = FOLDER_UPDATE_STATUS$pgx.files,
-            pgxinfo.changed = FOLDER_UPDATE_STATUS$pgxinfo.changed,
-            pgxfc.changed = FOLDER_UPDATE_STATUS$pgxfc.changed,
-            info.file1 = FOLDER_UPDATE_STATUS$info.file1,
-            pgx.missing = FOLDER_UPDATE_STATUS$pgx.missing,
-            pgx.missing0 = FOLDER_UPDATE_STATUS$pgx.missing0,
-            pgx.missing1 = FOLDER_UPDATE_STATUS$pgx.missing1,
-            new.pgx = pgxname,  ## force update
-            force = FALSE,
-            verbose=FALSE
-          )
-        })
-
-##      r_global$reload_pgxdir <- r_global$reload_pgxdir+1
-      }
+          new.pgx = pgxname, 
+          update.sigdb = FALSE
+        )
+      })
 
       r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+
       ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
