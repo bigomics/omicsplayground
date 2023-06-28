@@ -81,7 +81,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION := "v3.0-RC17."$(BRANCH)""$(DATE)
+VERSION := "v3.0-RC18."$(BRANCH)""$(DATE)
 
 tag.version:
 	@echo "new version ->" $(VERSION)
