@@ -176,7 +176,6 @@ LoadingBoard <- function(id,
 
 
     selectedPGX2 <- reactive({
-      dbg("[loading_server:selectedPGX2] rl$share_pgx = ",rl$share_pgx)
       selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
       pgx_name <- rl$pgxTable_data[selected_row, "dataset"]
       pgx_name
