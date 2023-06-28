@@ -95,33 +95,35 @@ LoadingBoard <- function(id,
     ##-------------------------------------------------------------------
     output$receive_pgx_alert <- renderUI({
 
-        if(auth$email()=="") return(NULL)
-        pgx_received <- getReceivedFiles()
-
-        if(length(pgx_received)>0) {
-            df <- receivedPGXtable()
-            dt <- DT::datatable(
-                df,
-                rownames = FALSE,
-                escape = FALSE,
-                selection = "none",
-                ## class = "compact cell-border",
-                class = "compact row-border",
-                options = list(
-                    dom = "t",
-                    pageLength = 999
-                )
-             ) %>%
-                DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
-
-            bs_alert(
-               style = "danger",
-               tagList(
-                   shiny::HTML("<strong>A user has shared data with you!</strong>"),
-                   dt
-               )
-            )
-        }
+      if(auth$email()=="") return(NULL)
+      pgx_received <- getReceivedFiles()
+      
+      if(length(pgx_received)>0) {
+        dt_table  <- DT::datatable(
+          receivedPGXtable(),
+          rownames = FALSE,
+          escape = FALSE,
+          selection = "none",
+          ## class = "compact cell-border",
+          class = "compact row-border",
+          options = list(
+            dom = "t",
+            pageLength = 999
+          )
+          ) %>%
+          DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
+        
+        out <- bs_alert(
+          style = "danger",
+          tagList(
+            shiny::HTML("<strong>A user has shared data with you!</strong>"),
+            dt_table
+          )
+        )
+      } else {
+        out <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+      }
+      out
     })
 
     share_dialog <- function(pgxname, choices=NULL) {

@@ -18,11 +18,11 @@ layout_column_wrap_visible <- function(...) {
   htmltools::tagQuery(res)$children()$addAttrs(style = "overflow:visible;")$allTags()
 }
 
-bs_alert <- function(m="alert!", conditional = TRUE, style="primary") {
+bs_alert <- function(..., conditional = TRUE, style="primary") {
    alert_tag <- shiny::tags$div(
        class = paste0("alert alert-",style," alert-dismissible fade show"),
        role = "alert",
-       shiny::HTML(m),
+       ...,
        shiny::tags$button(
           type = "button",
           class = "btn-close",
