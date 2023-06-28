@@ -120,7 +120,7 @@ UploadUI <- function(id) {
         width = 1,
         height = "calc(100vh - 200px)",
         heights_equal = "row",
-        bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (or so-called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
+        bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts', 'groups'...). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
         upload_module_makecontrast_ui(ns("makecontrast"))
       )
     ),
