@@ -15,6 +15,9 @@ source('components/golem_utils/run_app.R')
 source('components/golem_utils/run_dev.R')
 
 
+# root dir
+
+
 ui_files <- list_files_safe(path = 'components/ui/')
 
 for (ui_file in ui_files) {
@@ -26,29 +29,31 @@ for (ui_file in ui_files) {
 source(glue::glue('components/board.tcga/dev_MMM/app_ui.R'))
 
 app_server <- function(input, output, session) {
-  r_files <- list.files("C:\\code\\omicsplayground\\components\\board.tcga\\R",full.names = TRUE, include.dirs = TRUE)
+  # r_files <- list.files("C:\\code\\omicsplayground\\components\\board.tcga\\R",full.names = TRUE, include.dirs = TRUE)
 
-  for (r_file in r_files) {
-    source(r_file)
-  }
+  # for (r_file in r_files) {
+  #   source(r_file)
+  # }
   
-  pgx_rl <- reactiveVal(NULL)
+  # pgx_rl <- reactiveVal(NULL)
 
-  observeEvent(input$pgx_path, {
-    req(input$pgx_path)
-    load(normalizePath(input$pgx_path))
+  # observeEvent(input$pgx_path, {
+  #   req(input$pgx_path)
+  #   load(normalizePath(input$pgx_path))
     
-    load(normalizePath(driver$getValue("pgx_path")))
+  #   load(normalizePath(driver$getValue("pgx_path")))
     
-    message("pgx loaded")
+  #   message("pgx loaded")
     
-    pgx_rl(pgx)
-  })
+  #   pgx_rl(pgx)
+  # })
+  
+  load("data/example-data.pgx") # this somehow does not work with 
 
-  server <- TcgaBoard('tcga', pgx_rl())
+  server <- TcgaBoard('tcga', pgx)
 }
 
-r_files <- list_files_safe(path = normalizePath('components/board.tcga/R')
+r_files <- list_files_safe(path = normalizePath('components/board.tcga/R'))
 
 for (r_file in r_files) {
   source(file.path(glue::glue('components/{board}/R/'),r_file))
@@ -69,17 +74,17 @@ app = shinyApp(
 )
 
 driver <- shinytest::ShinyDriver$new(
-  path = app,
-  loadTimeout = NULL,
-  checkNames = TRUE,
-  debug = "shiny_console",
-  phantomTimeout = 50000,
-  seed = NULL,
-  cleanLogs = FALSE,
-  shinyOptions = list(),
-  renderArgs = NULL,
-  options = list()
-  )
+  path = app)
+  # loadTimeout = NULL,
+  # checkNames = TRUE,
+  # debug = "shiny_console",
+  # phantomTimeout = 50000,
+  # seed = NULL,
+  # cleanLogs = FALSE,
+  # shinyOptions = list(),
+  # renderArgs = NULL,
+  # options = list()
+  # )
 
   driver$listWidgets()$input
   driver$listWidgets()$output
