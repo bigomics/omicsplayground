@@ -78,14 +78,19 @@ SignatureUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
-        ##height = "100%",        
-        signature_plot_volcano_ui(
-          ns("volcanoPlots"),
-          title = "Volcano plots",
-          info.text = "For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left.",
-          caption = "Volcano plots visualising the test signature in all available contrasts.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+        heights_equal = "row",
+        bs_alert("Overlay your custom list of genes on top of the volcano plots for each comparison. You can enter your list of genes on the right."),
+        bslib::layout_column_wrap(        
+          width = 1,
+          height = "calc(100vh - 190px)",
+          signature_plot_volcano_ui(
+            ns("volcanoPlots"),
+            title = "Volcano plots",
+            info.text = "For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left.",
+            caption = "Volcano plots visualising the test signature in all available contrasts.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
         )
       )
     ),
@@ -95,13 +100,19 @@ SignatureUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
-        signature_plot_enplots_ui(
-          ns("enplots"),
-          title = "Enrichment plots",
-          info.text = "Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.",
-          caption = "Gene set enrichment plots indicating the type of correlation of the test signature with the available contrast profiles.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("100%", "100%")
+        heights_equal = "row",        
+        bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),        
+        bslib::layout_column_wrap(        
+          width = 1,
+          height = "calc(100vh - 190px)",
+          signature_plot_enplots_ui(
+            ns("enplots"),
+            title = "Enrichment plots",
+            info.text = "Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.",
+            caption = "Gene set enrichment plots indicating the type of correlation of the test signature with the available contrast profiles.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("100%", "100%")
+          )
         )
       )
     ),
@@ -111,6 +122,8 @@ SignatureUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
+        heights_equal = "row",                
+        bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),        
         signature_plot_overlap_ui(
           ns("overlapScorePlot"),
           title = "Signature overlap scores",
@@ -135,12 +148,18 @@ SignatureUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
-        signature_plot_markers_ui(
-          ns("markers"),
-          title = "Markers plot",
-          info.text = "After uploading a gene list, the Markers section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
-          caption = "t-SNE plot showing the expression levels of the tested genes in each of the dataset samples.",
-          height = c("100%", TABLE_HEIGHT_MODAL)
+        heights_equal = "row",
+        bs_alert("The markers plot shows the expression levels of the tested genes in the dataset samples as a colored t-SNE plot in red (highly expressed) and light grey (low expressed). The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation)."),
+        bslib::layout_column_wrap(        
+          width = 1,
+          height = "calc(100vh - 190px)",
+          signature_plot_markers_ui(
+            ns("markers"),
+            title = "Markers plot",
+            info.text = "After uploading a gene list, the Markers section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
+            caption = "t-SNE plot showing the expression levels of the tested genes in each of the dataset samples.",
+            height = c("100%", TABLE_HEIGHT_MODAL)
+          )
         )
       )
     )

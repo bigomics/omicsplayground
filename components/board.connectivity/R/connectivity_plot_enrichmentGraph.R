@@ -24,19 +24,22 @@ connectivity_plot_enrichmentGraph_ui <- function(
 
   plot_opts <- shiny::tagList(
     withTooltip(
-      shiny::sliderInput(ns("enrichGraph_threshold"), "edge threshold:", 0, 1, 0, 0.01),
+      shiny::sliderInput(ns("enrichGraph_threshold"), "edge threshold:", 0, 1, 0.3, 0.01),
       "Threshold value for edges."
     ),
+    hr(),
     withTooltip(
       shiny::radioButtons(ns("enrichGraph_ntop"), "N-neighbours:", c(5, 10, 25, 100),
         selected = 10, inline = TRUE
       ),
       "Number of simlar experiments to consider."
     ),
+    hr(),    
     withTooltip(
       shiny::checkboxInput(ns("enrichGraph_oddweighting"), "Odd ratio weighting", FALSE),
       "Odds ratio weighting."
     ),
+    hr(),    
     withTooltip(
       shiny::radioButtons(ns("enrichGraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
         selected = "cumFC", inline = TRUE
@@ -112,8 +115,8 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-        wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 100)[1] ## about 80 edges
-        shiny::updateSliderInput(session, "enrichGraph_threshold", value = 0)
+        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 50)[1] 
+        ##shiny::updateSliderInput(session, "enrichGraph_threshold", value = 0)
 
         return(gr)
       })

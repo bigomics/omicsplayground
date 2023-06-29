@@ -22,7 +22,13 @@ loading_table_datasets_ui <- function(
   )
 }
 
-loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enable_share=TRUE) {
+loading_table_datasets_server <- function(id,
+                                          rl,
+                                          enable_pgxdownload = FALSE,
+                                          enable_delete = FALSE,
+                                          enable_public_share = TRUE,
+                                          enable_user_share = TRUE
+                                          ) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
@@ -32,11 +38,12 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
       df <- rl$pgxTable_data
       shiny::req(df)
 
-      if (nrow(df) == 0) {
+      is.dt <- is.data.frame(df)      
+      if (!is.dt || nrow(df) == 0) {
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste("Your dataset library seems empty. Please upload new data or import",
-            "a dataset from the shared folder."
+            "a dataset from the public datasets folder."
             )
         )
       }
@@ -58,6 +65,8 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
         download_pgx_menuitem <- NULL
         share_public_menuitem <- NULL
         share_dataset_menuitem <- NULL
+        delete_pgx_menuitem <- NULL
+        
         if(enable_pgxdownload) {
           download_pgx_menuitem <- shiny::actionButton(
             ns(paste0("download_pgx_row_",i)),
@@ -69,7 +78,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             onclick=paste0('Shiny.onInputChange(\"',ns("download_pgx"),'\",this.id,{priority: "event"})')
           )
         }
-        if(enable_share) {
+        if(enable_public_share) {
           share_public_menuitem <- shiny::actionButton(
               ns(paste0("share_public_row_", i)),
               label = "Share Public",
@@ -79,7 +88,8 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
               width = '100%',
               onclick=paste0('Shiny.onInputChange(\"',ns("share_public_pgx"),'\",this.id,{priority: "event"})')
           )
-
+        }
+        if(enable_user_share) {          
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
             label = "Share with User",
@@ -88,6 +98,18 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
             style = 'border: none;',
             width = '100%',
             onclick=paste0('Shiny.onInputChange(\"',ns("share_pgx"),'\",this.id,{priority: "event"})')
+          )
+        }
+
+        if(enable_delete) {
+          delete_pgx_menuitem <- shiny::actionButton(
+            ns(paste0("delete_dataset_row_",i)),
+            label = "Delete Dataset",
+            icon = shiny::icon("trash"),
+            class = "btn btn-outline-danger",
+            style = 'border: none;',
+            width = '100%',
+            onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
           )
         }
 
@@ -107,15 +129,7 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
                 ),
               share_public_menuitem,
               share_dataset_menuitem,
-              shiny::actionButton(
-                ns(paste0("delete_dataset_row_",i)),
-                label = "Delete Dataset",
-                icon = shiny::icon("trash"),
-                class = "btn btn-outline-danger",
-                style = 'border: none;',
-                width = '100%',
-                onclick=paste0('Shiny.onInputChange(\"',ns("delete_pgx"),'\",this.id,{priority: "event"});')
-              )
+              delete_pgx_menuitem              
             )
           ),
           size = "sm",
@@ -141,15 +155,15 @@ loading_table_datasets_server <- function(id, rl, enable_pgxdownload=FALSE, enab
           disable = list(columns = c(1,3:ncol(df)))
         ),
         extensions = c("Scroller"),
+        plugins = 'scrollResize',
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
-        plugins = "scrollResize",
         options = list(
           dom = "ft",
           pageLength = 9999,
           scrollX = FALSE,
           scrollY = "55vh",
-          scrollResize = TRUE,
+          scrollResize = TRUE,          
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(

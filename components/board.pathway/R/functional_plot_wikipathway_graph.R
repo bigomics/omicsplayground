@@ -122,7 +122,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
         }
-        dbg("[functional_plot_wikipathway_graph.R] sel.row = ",sel.row)
 
         if (!is.null(sel.row) && length(sel.row) > 0) {
           pathway.id   <- df[sel.row, "pathway.id"]
@@ -130,7 +129,6 @@ functional_plot_wikipathway_graph_server <- function(id,
           pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
 
-        dbg("[functional_plot_wikipathway_graph.R] rendering WikiPathway",pathway.id)
         if (!interactive()) {
           progress <- shiny::Progress$new()
           on.exit(progress$close())

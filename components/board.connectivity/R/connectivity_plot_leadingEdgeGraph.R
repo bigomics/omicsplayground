@@ -24,20 +24,20 @@ connectivity_plot_leadingEdgeGraph_ui <- function(
 
   plot_opts <- shiny::tagList(
     withTooltip(
-      shiny::sliderInput(ns("LEgraph_threshold"), "edge threshold:", 0, 1, 0, 0.01),
-      "Threshold value for edges."
+      shiny::sliderInput(ns("graph_threshold"), "edge threshold:",
+        0, 1, 0.2, 0.01), "Threshold value for edges."
     ),
     withTooltip(
-      shiny::radioButtons(ns("LEgraph_ntop"), "N-neighbours:", c(5, 10, 25, 100),
+      shiny::radioButtons(ns("LEgraph_ntop"), "nr of signatures:", c(5, 10, 25, 100),
         selected = 10, inline = TRUE
       ),
-      "Number of simlar experiments to consider."
+      "Number of similar signatures to consider."
     ),
     withTooltip(
       shiny::radioButtons(ns("LEgraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
         selected = "cumFC", inline = TRUE
       ),
-      "Parameter for node size."
+      "Size parameter for nodes."
     )
   )
 
@@ -65,32 +65,29 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
                                                       getConnectivityScores,
                                                       connectivityScoreTable,
                                                       getCurrentContrast,
-                                                      getTopProfiles,
+                                                      getProfiles,
                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+      
       cumulativeFCtable <- shiny::reactive({
-        F <- getTopProfiles()
+        F <- getProfiles()
         F[is.na(F)] <- 0
-
-        ## maximum 10??
-        MAXF <- 20
-
+        
         ## multiply with sign of rho
         df <- getConnectivityScores()
         rho1 <- df$rho[match(colnames(F), df$pathway)]
         F <- t(t(F) * sign(rho1))
-
+        
         ## add current contrast
         cc <- getCurrentContrast()
         shiny::req(cc)
-        fc <- cc$fc[rownames(F)]
+        fc <- cc$fc[match(rownames(F),names(cc$fc))]
         fc[is.na(fc)] <- 0
-        F <- cbind(fc[rownames(F)], F)
-        colnames(F)[1] <- "thisFC"
+        
+        F <- cbind(fc, F)
         colnames(F)[1] <- cc$name
-
-        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+        F <- F[order(-rowMeans(F**2,na.rm=TRUE)), , drop = FALSE]        
         F
       })
 
@@ -113,6 +110,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         le.genes <- sort(unique(unlist(df$leadingEdge)))
         A <- 1 * sapply(df$leadingEdge, function(g) le.genes %in% g)
         rownames(A) <- le.genes
+        
         A <- head(A[order(-rowMeans(A)), , drop = FALSE], 100)
         adjM <- (A %*% t(A))
         adjM <- adjM / max(adjM, na.rm = TRUE)
@@ -123,8 +121,8 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-        wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 150)[1] ## about 150 edges
-        shiny::updateSliderInput(session, "LEgraph_threshold", value = 0)
+        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)),50)[1] ## about 150 edges
+        ##shiny::updateSliderInput(session, "graph_threshold", value = wt0)
 
         return(gr)
       })
@@ -134,20 +132,22 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         if (is.null(gr)) {
           return(NULL)
         }
+        
         minwt <- 0.5
-        minwt <- input$LEgraph_threshold
+        minwt <- input$graph_threshold
         minwt <- min(c(minwt, 0.99 * max(abs(igraph::E(gr)$weight), na.rm = TRUE)))
         gr <- igraph::subgraph.edges(gr, which(abs(igraph::E(gr)$weight) >= minwt))
         if (length(igraph::V(gr)) == 0) {
           return(NULL)
         }
-
+        
         fc <- cumFC <- NULL
         fc <- getCurrentContrast()$fc
         fc <- fc[igraph::V(gr)$name]
         cumFC <- cumulativeFCtable()
 
-        cumFC <- cumFC[igraph::V(gr)$name, ]
+        ii <- match(igraph::V(gr)$name, rownames(cumFC))
+        cumFC <- cumFC[ii, , drop=FALSE]
         fontsize <- 22
         fc <- fc / max(abs(fc))
 
@@ -156,7 +156,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         if (sizevar == "centrality") {
           vsize <- log(1 + igraph::betweenness(gr))
         } else if (sizevar == "cumFC") {
-          fc1 <- rowMeans(cumFC)
+          fc1 <- rowMeans(cumFC,na.rm=TRUE)
           vsize <- abs(fc1[match(igraph::V(gr)$name, names(fc1))])**2
         } else if (sizevar == "FC") {
           vsize <- abs(fc[match(igraph::V(gr)$name, names(fc))])**2

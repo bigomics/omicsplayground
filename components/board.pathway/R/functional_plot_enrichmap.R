@@ -61,7 +61,6 @@ functional_plot_enrichmap_server <- function(id,
       plot_data <- shiny::reactive({
         res <- compute_enrichmentmap(
           pgx,
-          playdata::GSET_SPARSEG_XL,
           qsig = 0.99,
           ntop = 120,
           wt = 1,

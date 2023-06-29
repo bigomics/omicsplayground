@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-loading_table_datasets_shared_ui <- function(
+loading_table_datasets_public_ui <- function(
   id,
   title,
   info.text,
@@ -22,15 +22,15 @@ loading_table_datasets_shared_ui <- function(
   )
 }
 
-loading_table_datasets_shared_server <- function(id, table) {
+loading_table_datasets_public_server <- function(id, table) {
   moduleServer(id, function(input, output, session) {
 
     pgxTable_DT <- reactive({
       df <- table()
-      shiny::req(df)
-      
+      ##shiny::req(df)
       # need this, otherwise there is an error on user logout
-      if (length(df$dataset) == 0) df <- NULL
+      validate(need(nrow(df)>0, 'No public datasets!'))
+      
       df$creator <- sub("@.*","",df$creator)  ## hide full email
 
       target1 <- grep("date", colnames(df))

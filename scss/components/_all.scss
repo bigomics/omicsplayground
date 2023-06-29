@@ -310,6 +310,10 @@ html {
     line-height: 1.1em;
   }
 
+  .form-group {
+      margin-bottom: 0.3rem; 
+  }
+  
 }
 
 // to work with mouse listeners, we need to remove pointer events from tooltips

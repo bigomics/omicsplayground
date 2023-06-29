@@ -18,121 +18,98 @@ MakeContrastGadget <- function(X, pheno, height = 720) {
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
-
-  shiny::tagList(
+  tagList(
     bslib::layout_column_wrap(
-      width = 1,
-      height = "calc(100vh - 200px)",
-      heights_equal = "all",
-      bslib::layout_column_wrap(
-          width = 1, #fill = FALSE,
-          style = htmltools::css(grid_template_columns = "9fr 3fr;"),
-          bslib::card(
-            full_screen = TRUE,
-            style = "border-width: 0px;",
-            bslib::card_body(
-              shiny::h4("Create comparisons:"),
-                  shiny::fillRow(
-                      style = "gap: 10px; height: 75px !important;",
-                      shiny::div(
-                          shiny::HTML("<b>Phenotype:</b>"),
-                          withTooltip(
-                              shiny::selectInput(ns("param"),
-                                                 NULL,
-                                                 choices = NULL,
-                                                 selected = NULL,
-                                                 multiple = TRUE
-                              ),
-                              "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                              placement = "left", options = list(container = "body")
-                          )
-                      ),
-                      shiny::div(
-                          shiny::conditionalPanel(
-                              "input.param == '<gene>'",
-                              ns = ns,
-                              shiny::HTML("<b>Gene:</b>"),
-                              shiny::selectizeInput(ns("gene"),
-                                                    NULL,
-                                                    choices = NULL,
-                                                    multiple = FALSE
-                              )
-                          )
-                      ),
-                      shiny::div(
-                          shiny::HTML("<b>Comparison name:</b>"),
-                          withTooltip(
-                              shiny::textInput(ns("newname"),
-                                               NULL,
-                                               placeholder = "e.g. MAIN_vs_CONTROL"
-                              ),
-                              "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                              placement = "left", options = list(container = "body")
-                          )
-                      ),
-                      shiny::div(
-                          style = "position: absolute; botton: 0;",
-                          shiny::actionButton(ns("addcontrast"),
-                                              "add comparison",
-                                              icon = icon("plus"),
-                                              class = "btn-outline-primary"
-                          )
-                      )
-                  ),
-                  shiny::div(
-                      style = "overflow: auto;",
-                      withTooltip(
-                          shiny::uiOutput(ns("createcomparison"),
-                                          style = "font-size:13px; height: 280px;"
-                          ),
-                          "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
-                          placement = "top", options = list(container = "body")
-                      )
-                  )
+      width = 1, #fill = FALSE,
+      style = htmltools::css(grid_template_columns = "8fr 3fr;"),
+      height = "50%",
+      bslib::card(
+        full_screen = TRUE,
+        style = "border-width: 1px;",
+        ## bslib::card_header("Create comparisons"),
+        ##h4("Create comparisons:"),
+        bslib::card_body(
+          shiny::fillRow(
+            style = "gap: 10px; height: 75px !important;",
+            flex = c(NA,NA,NA,NA,1),
+            shiny::div(
+              shiny::HTML("<b>Phenotype:</b>"),
+              withTooltip(
+                shiny::selectInput(
+                  ns("param"),
+                  NULL,
+                  width = "250px",
+                  choices = NULL,
+                  selected = NULL,
+                  multiple = TRUE
+                ),
+                "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+                placement = "left", options = list(container = "body")
               )
-          ),
-          makecontrast_plot_pcaplot_ui(
-            ns("pcaplot"),
-            title = "PCA/tSNE plot",
-            info.text = "",
-            caption = "",
-            height = c("100%", 700),
-            width = c("auto", 800)
-            )
             ),
-          bslib::card(
-              fill = TRUE,
-              style = "border-width: 0px;",
-              bslib::card_body(
-                  shiny::h4("Contrast table:"),
-                  shiny::fillRow(
-                      style = "gap: 10px;",
-                      flex = c(NA, 1),
-                      shiny::fillCol(
-                          height = 45,
-                          flex = c(NA, 0.05, NA, NA, 1),
-                          withTooltip(
-                              shiny::actionButton(ns("autocontrast"),
-                                                  "add auto-contrasts",
-                                                  icon = icon("plus"),
-                                                  class = "small-button btn-outline-primary"
-                              ),
-                              "If you are feeling lucky, try this to automatically create contrasts.",
-                              placement = "top", options = list(container = "body")
-                          ),
-                          shiny::br(),
-                          shiny::div(shiny::HTML("<b>Strata:</b>"), style = "padding: 4px 4px;"),
-                          shiny::selectInput(ns("strata"), NULL, choices = NULL, width = "120px"),
-                          shiny::br()
-                      ),
-                      bslib::layout_column_wrap(
-                          width = 1,
-                          DT::dataTableOutput(ns("contrastTable"))
-                      )
-                  )
-
+            shiny::div(
+              shiny::HTML("<b>Comparison name:</b>"),
+              withTooltip(
+                shiny::textInput(ns("newname"),
+                  NULL,
+                  width = "250px",
+                  placeholder = "e.g. MAIN_vs_CONTROL"
+                ),
+                "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                placement = "left", options = list(container = "body")
               )
+            ),
+            shiny::div(
+              style = "padding-top: 20px; height: 35px;",
+              withTooltip(
+                shiny::actionButton(ns("addcontrast"),
+                  "add comparison",
+                  icon = icon("plus"),
+                  class = "btn-outline-primary"
+                ),
+                "Add this comparison to the table.",
+                placement = "top", options = list(container = "body")
+              )
+            ),
+            shiny::div(
+              style = "padding-top: 20px; height: 35px;",
+              withTooltip(
+                shiny::actionButton(ns("autocontrast"),
+                  "auto-contrasts",
+                  icon = icon("plus"),
+                  class = "small-button btn-outline-secondary"
+                ),
+                "If you are feeling lucky, try this to automatically create contrasts.",
+                placement = "top", options = list(container = "body")
+              )
+            ),
+            br()  ## spacer
+          ),          
+          shiny::div(
+            style = "overflow: auto;",
+            withTooltip(
+              shiny::uiOutput(ns("createcomparison"),
+                ##style = "font-size:13px; height: 280px;"
+                style = "font-size:13px;"                
+              ),
+              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
+              placement = "top", options = list(container = "body")
+            )
+          )
         )
+      ),
+      makecontrast_plot_pcaplot_ui(
+        ns("pcaplot"),
+        title = "PCA/tSNE plot",
+        info.text = "",
+        caption = "",
+        height = c("100%", 700),
+        width = c("auto", 800)
+      )
+    ),
+    div(
+      style = "padding: 10px 20px;",
+      DT::dataTableOutput(ns("contrastTable"))
     )
   )
 }
@@ -156,14 +133,13 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::req(phenoRT())
         px <- colnames(phenoRT())
         shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
-        shiny::updateSelectInput(session, "strata", choices = c("<none>", px))
       })
 
       observeEvent(countsRT(), {
         genes <- sort(rownames(countsRT()))
         updateSelectizeInput(inputId = "gene", choices = genes)
 
-        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>", "<gene>")
+        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
         phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
         psel <- c(grep("sample|patient|name|id|^[.]",
           phenotypes,
@@ -178,16 +154,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         if ("<samples>" %in% input$param) {
           df$"<samples>" <- rownames(df)
-        }
-        if ("<gene>" %in% input$param) {
-          gene <- input$gene
-          if (gene %in% rownames(countsRT())) {
-            gx <- log2(1 + countsRT()[gene, ])
-            ## df$"<gene>" <- c("low","high")[1 + 1*(gx >= mean(gx,na.rm=TRUE))]
-            df$"<gene>" <- gx
-          } else {
-            return(NULL)
-          }
         }
 
         df <- type.convert(df)
@@ -217,6 +183,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
+          shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: 0 0 0 -5px;}")),          
           sortable::bucket_list(
             header = NULL,
             sortable::add_rank_list(
@@ -259,9 +226,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         g2 <- substring(g2, 1, 20)
         prm.name <- paste(input$param, collapse = ".")
         prm.name <- gsub("[-_.,<> ]", "", prm.name)
-        if (any(input$param %in% "<gene>")) {
-          prm.name <- sub("gene", input$gene, prm.name)
-        }
         tt <- paste0(prm.name, ":", g1, "_vs_", g2)
         if (g1 == "" && g2 == "") tt <- ""
         shiny::updateTextInput(session, "newname", value = tt)
@@ -333,40 +297,20 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
           rv$contr <- cbind(rv$contr, ctx1)
         }
 
-        ## if(any(input$param %in% c('<gene>','<samples>'))) {
-        if (any(input$param %in% c("<gene>"))) {
-          if (is.null(rv$pheno) || NCOL(rv$pheno) == 0) {
-            rv$pheno <- ctx1
-          } else {
-            message("[MakeContrastServer:addcontrast] add to cond : dim(ctx1) = ", dim(ctx1))
-            if (!ct.name %in% colnames(rv$pheno)) {
-              rv$pheno <- cbind(rv$pheno, ctx1)
-            }
-          }
-        }
       })
 
       shiny::observeEvent(input$autocontrast, {
         shiny::req(phenoRT())
         df <- phenoRT()
-        strata.var <- input$strata
 
         ctx <- NULL
-        if (strata.var == "<none>") {
-          ct <- playbase::pgx.makeAutoContrasts(
-            df,
-            mingrp = 3, slen = 20, ref = NULL, fix.degenerate = FALSE
-          )
-          if (!is.null(ct)) {
-            ctx <- ct$exp.matrix
-            rownames(ctx) <- rownames(df)
-          }
-        } else {
-          ctx <- playbase::pgx.makeAutoContrastsStratified(
-            df,
-            strata = strata.var,
-            mingrp = 3, slen = 20, ref = NULL, fix.degenerate = FALSE
-          )
+        ct <- playbase::pgx.makeAutoContrasts(
+          df,
+          mingrp = 3, slen = 20, ref = NULL, fix.degenerate = FALSE
+        )
+        if (!is.null(ct)) {
+          ctx <- ct$exp.matrix
+          rownames(ctx) <- rownames(df)
         }
         if (is.null(ctx)) {
           return(NULL)
@@ -395,7 +339,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
               "control.group" = ""
             )[0, ]
           } else {
-            paste.max <- function(x, n = 6) {
+            paste.max <- function(x, n = 5) {
               ## x <- unlist(x)
               if (length(x) > n) {
                 x <- c(x[1:n], paste("+", length(x) - n, "others"))
@@ -450,7 +394,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             rownames = FALSE,
             escape = c(-1),
             selection = "none",
-            class = "compact cell-border",
+            class = "compact",
             plugins = 'scrollResize',
             options = list(
               dom = "t",

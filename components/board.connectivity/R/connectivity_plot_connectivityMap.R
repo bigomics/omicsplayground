@@ -32,30 +32,34 @@ connectivity_plot_connectivityMap_ui <- function(
       "Choose the plot layout: t-SNE, PCA, or volcano-type",
       placement = "right", options = list(container = "body")
     ),
+    hr(),
     withTooltip(shiny::sliderInput(ns("scorethreshold"), "Score threshold:", 0, 1, 0, step = 0.01),
       "Threshold the points by minimum score",
       placement = "right", options = list(container = "body")
     ),
+    hr(),    
     withTooltip(
       shiny::radioButtons(
-        ns("cmapcolorby"), "Color by:", c("score", "dataset", "hallmark"),
+        ns("cmapcolorby"), "Color by:", c("score", "dataset"),
         inline = TRUE
-      ), "Color the points by score, dataset or hallmark",
+      ), "Color the points by score or dataset",
       placement = "right", options = list(container = "body")
     ),
+    hr(),    
     withTooltip(shiny::sliderInput(ns("scoregamma"), "Color gamma:", 0.1, 2, 0.5, step = 0.1),
       "Gamma for color adjustments",
       placement = "right", options = list(container = "body")
     ),
+    hr(),
     withTooltip(
       shiny::checkboxGroupInput(
         ns("plotoptions"), "Other options:",
-        choiceValues = c("label", "grouped", "3D", "dark", "large"),
+        choiceValues = c("label", "3D", "dark", "large"),
         choiceNames = c(
-          "show label", "group by dataset", "3D plot", "dark mode",
+          "show label", "3D plot", "dark mode",
           "larger points"
         ),
-        selected = c("label", "3D")
+        selected = c()
       ),
       "Show labels, group by dataset, show 3D plot, dark mode.",
       placement = "top", options = list(container = "body")
@@ -91,10 +95,13 @@ connectivity_plot_connectivityMap_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
+      #' Get the XY positions of signature points
       getConnectivityPositions <- shiny::reactive({
         sigdb <- sigdb()
         shiny::req(pgx)
-
+        shiny::req(sigdb)
+        
         ## get the foldchanges of selected comparison and neighbourhood
         dims <- 2
         method <- input$layout
@@ -110,25 +117,15 @@ connectivity_plot_connectivityMap_server <- function(id,
         do3d <- "3D" %in% input$plotoptions
         dims <- 2 + 1 * do3d
 
-        sigdb <- sigdb
-        shiny::req(sigdb)
-        h5.ref <- grepl("h5$", sigdb)
-        h5.file <- NULL
-        pos <- NULL
-
-        if (!h5.ref) {
+        if (!grepl("h5$", sigdb)) {
           stop("sigdb must be H5 format!")
         }
-
-        h5.file <- "/home/kwee/Playground/omicsplayground/libx/sigdb-archs4.h5"
-        db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d, sigdb)))
-        if (!any(db.exists)) {
+        if (!file.exists(sigdb)) {
           warning("*** WARNING *** cannot locate signature matrix file")
           return(NULL)
         }
-        db.dir <- names(which(db.exists))[1]
-        h5.file <- file.path(db.dir, sigdb)
 
+        h5.file <- sigdb
         rhdf5::h5closeAll()
         rhdf5::h5ls(h5.file)
 
@@ -177,26 +174,11 @@ connectivity_plot_connectivityMap_server <- function(id,
         }
         res <- res[sel, , drop = FALSE]
 
-        ## rownames(res) <- res$pathway
-        grouped <- "grouped" %in% input$plotoptions
-        if (grouped) {
-          res <- res[order(-res$score), ]
-          dset <- sub("].*", "]", res$pathway)
-          names(dset) <- res$pathway
-          idx <- which(!duplicated(dset))
-          resx <- res[idx, , drop = FALSE]
-          tt <- table(dset)[dset[resx$pathway]]
-          resx$pathway <- paste0(resx$pathway, " (+", tt, " contrasts)")
-          resx$datasets <- sub("].*", "]", resx$pathway)
-          rownames(resx) <- resx$datasets
-          res <- resx
-        }
-
         return(res)
       })
 
       plot_RENDER <- shiny::reactive({
-        sigdb <- sigdb()
+        ##sigdb <- sigdb()
         shiny::req(pgx)
 
         ## get positions
@@ -213,11 +195,6 @@ connectivity_plot_connectivityMap_server <- function(id,
           return(NULL)
         }
 
-        grouped <- "grouped" %in% input$plotoptions
-        if (grouped) {
-          pset <- sub("].*", "]", rownames(pos0))
-          pos0 <- apply(pos0, 2, function(x) tapply(x, pset, mean))
-        }
         if (is.null(res0) || nrow(res0) == 0) {
           return(NULL)
         }
@@ -290,13 +267,6 @@ connectivity_plot_connectivityMap_server <- function(id,
           colorvar <- dset ## [GSE1234-xxx]
           marker.col <- list()
           colorpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
-        } else if (colorby == "hallmark") {
-          Y <- t(getEnrichmentMatrix(sigdb, nc = 15))
-          Y <- Y[match(rownames(df), rownames(Y)), ]
-          colorvar <- colnames(Y)[max.col(Y)]
-          colorvar <- playbase::shortstring(colorvar, 40) ## too long!!!
-          marker.col <- list()
-          colorpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
         } else if (colorby == "score") {
           gamma1 <- input$scoregamma
           score1 <- sign(df$score) * (abs(df$score) / max(abs(df$score), na.rm = TRUE))**gamma1
@@ -348,7 +318,7 @@ connectivity_plot_connectivityMap_server <- function(id,
           ##
           sizeref <- 0.08 * max(1, nrow(df) / 1000)**0.33
           sizeref
-          if ("large" %in% input$plotoptions) sizeref <- 0.85 * sizeref
+          if ("large" %in% input$plotoptions) sizeref <- 0.45 * sizeref
 
           plt <- plotly::plot_ly(
             df,

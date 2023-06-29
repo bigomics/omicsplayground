@@ -7,13 +7,22 @@
 ##
 ##
 
+## If you put a card(style = "overflow: visible") in a parent element
+## that has overflow:auto set (e.g., layout_column_wrap()) you'll run
+## into this issue (because the parent's overflow setting will
+## overrule the child's property). You can currently work around the
+## problem by making sure the layout containers also have overflow:
+## visible.
+layout_column_wrap_visible <- function(...) {
+  res <- bslib::layout_column_wrap(..., style = "overflow:visible;")
+  htmltools::tagQuery(res)$children()$addAttrs(style = "overflow:visible;")$allTags()
+}
 
-bs_alert <- function(m="alert!", conditional = TRUE, style="primary") {
-
+bs_alert <- function(..., conditional = TRUE, style="primary") {
    alert_tag <- shiny::tags$div(
        class = paste0("alert alert-",style," alert-dismissible fade show"),
        role = "alert",
-       m,
+       ...,
        shiny::tags$button(
           type = "button",
           class = "btn-close",

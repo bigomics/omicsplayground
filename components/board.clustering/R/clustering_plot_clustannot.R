@@ -61,7 +61,6 @@ clustering_plot_clusterannot_server <- function(id,
     shiny::observe({
 
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
-      dbg("[clustering_plot_clustannot.R] observe : triggered ")
 
       if (is.null(input$xann_level)) {
         return(NULL)
@@ -89,7 +88,6 @@ clustering_plot_clusterannot_server <- function(id,
       } else {
         ann.types <- sel <- "<all>"
       }
-      dbg("[clustering_plot_clustannot.R] observe : shiny::updateSelectInput ")
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
     })
 

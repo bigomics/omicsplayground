@@ -68,35 +68,38 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
                                                        watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      cumEnrichmentTable <- shiny::reactive({
+
+      
+      getEnrichmentTable <- shiny::reactive({
         sigdb <- sigdb()
         shiny::req(sigdb)
         if (!grepl(".h5$", sigdb)) {
           return(NULL)
         }
-
+        
         df <- getConnectivityScores()
         if (is.null(df)) {
           return(NULL)
         }
         ii <- connectivityScoreTable$rows_all()
-        shiny::req(ii)
-
+        shiny::req(ii)        
         sel <- head(df$pathway[ii], 10)
         F <- getEnrichmentMatrix(sigdb, select = sel)
+        
         if (is.null(F)) {
           return(NULL)
         }
 
         ## multiply with sign of enrichment
-        rho1 <- df$rho[match(colnames(F), df$pathway)]
-        F <- t(t(F) * sign(rho1))
-
         if (input$cumgsea_absfc) {
           F <- abs(F)
-        }
-        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-
+        } else {
+          rho1 <- df$rho[match(colnames(F), df$pathway)]
+          F <- t(t(F) * sign(rho1))
+        }        
+        ## order by term/geneset
+        F <- F[order(-rowMeans(F**2,na.rm=TRUE)), , drop = FALSE]
+        
         ## add current contrast
         ct <- getCurrentContrast()
         gx <- ct$gs[match(rownames(F), names(ct$gs))]
@@ -104,53 +107,61 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         gx[is.na(gx)] <- 0
         F <- cbind(gx, F)
         colnames(F)[1] <- ct$name
-
+        
+        ## normalize columns 
+        F <- t(t(F) / sqrt(colSums(F**2)))
         F
       })
 
-      plot_RENDER <- shiny::reactive({
+      plot_stackedbar <- function(nsets) {
         ##
-        F <- cumEnrichmentTable()
+        F <- getEnrichmentTable()
         if (is.null(F)) {
           frame()
           return(NULL)
         }
-
-        NSETS <- 20
+        
+        ##NSETS <- 20
         if (input$cumgsea_order == "FC") {
           F <- F[order(-abs(F[, 1])), ]
-          F <- head(F, NSETS)
+          F <- head(F, nsets)
           F <- F[order(F[, 1]), , drop = FALSE]
         } else {
-          F <- F[order(-rowMeans(F**2)), ]
-          F <- head(F, NSETS)
-          F <- F[order(rowMeans(F)), , drop = FALSE]
+          F <- F[order(-rowMeans(F**2,na.rm=TRUE)), ]
+          F <- head(F, nsets)
+          F <- F[order(rowMeans(F,na.rm=TRUE)), , drop = FALSE]
         }
-
+        
+        ## strip comments/prefixes to shorten names
         rownames(F) <- gsub("H:HALLMARK_", "", rownames(F))
         rownames(F) <- gsub("C2:KEGG_", "", rownames(F))
         rownames(F) <- playbase::shortstring(rownames(F), 72)
-        maxfc <- max(abs(rowSums(F, na.rm = TRUE)))
-        xlim <- c(-1 * (min(F, na.rm = TRUE) < 0), 1.2) * maxfc
-
+        
         playbase::pgx.stackedBarplot(
-          x = data.frame(F),
+          x = data.frame(F, check.names=FALSE),
+          ## x = F,
           ylab = "cumulative enrichment",
           xlab = "",
           showlegend = FALSE
         )
-      })
+      }
 
-      plot_RENDER2 <- shiny::reactive({
-        plot_RENDER() %>% plotly::layout(showlegend = TRUE)
-      })
+      plot_RENDER <- function() {
+        plot_stackedbar(30) %>%
+          plotly::layout(showlegend = FALSE)
+      }
+      
+      plot_RENDER2 <- function() {
+        plot_stackedbar(50) %>%
+          plotly::layout(showlegend = TRUE)
+      }
 
       PlotModuleServer(
         "plot",
         plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
-        csvFunc = cumEnrichmentTable,
+        csvFunc = getEnrichmentTable,
         pdf.height = 8, pdf.width = 12,
         res = c(72, 90),
         add.watermark = watermark

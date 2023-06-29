@@ -27,7 +27,7 @@ connectivity_plot_FCFCplots_ui <- function(
     shiny::radioButtons(
       ns("fcfc_plottype"),
       "Plot type:",
-      c("scatter", "enrichment"),
+      c("scatter", "gsea","umap"),
       inline = TRUE
     )
   )
@@ -55,7 +55,7 @@ connectivity_plot_FCFCplots_ui <- function(
 #' @export
 connectivity_plot_FCFCplots_server <- function(id,
                                                pgx,
-                                               contrast,
+                                               r_contrast,
                                                getCurrentContrast,
                                                getTopProfiles,
                                                getConnectivityScores,
@@ -127,6 +127,61 @@ connectivity_plot_FCFCplots_server <- function(id,
         }
       }
 
+      FCumap <- function(fc, F, mfplots, ylab) {
+        ## get the foldchanges of selected comparison and neighbourhood
+        names(fc) <- toupper(names(fc))
+        rownames(F) <- toupper(rownames(F))          
+        gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
+
+        ## get gene UMAP cluster
+        pos <- pgx$cluster.genes$pos$umap2d
+        gg <- intersect(gg, rownames(pos))
+
+        F <- cbind( fc[gg], F[gg,])
+        colnames(F)[1] <- "SIGNATURE"
+        pos <- pos[gg,]  
+          
+        ## Set layout
+        nplots <- mfplots[1] * mfplots[2]
+        F <- F[, 1:min(nplots, ncol(F)), drop = FALSE]
+        par(
+          mfrow = mfplots, mar = c(3, 1.7, 3.5, 0.5),
+          mgp = c(1.6, 0.7, 0), oma = c(0, 3, 0, 0)
+        )
+
+        ## determine color  
+        cpal <- playdata::BLUERED(33)  
+        fcol <- function(f) {
+            f1 <- abs(f) / max(abs(F),na.rm=TRUE)
+            f1 <- tanh(2*f1)
+            cpal[1 + round(sign(f) * f1 * 16) + 16]
+        }
+
+        i <- 1
+        for (i in 1:ncol(F)) {
+          ct1 <- colnames(F)[i]
+          ct1x <- sub("\\]", "]\n", ct1)
+          f1 <- F[,i] 
+          base::plot(
+            pos[,1], pos[,2],
+            pch = 20,
+            cex = 0.85,
+            cex.lab = 0.9,
+            cex.axis = 0.9,
+            xlab = "UMAP.x",
+            ylab = "",
+            col = fcol(f1),
+            main = ct1x,
+            cex.main = 0.9
+          )
+          abline(v = 0, h = 0, lty = 2, lwd = 0.5)
+          if (i %% mfplots[2] == 1) {
+            mtext("UMAP.y", 2, line = 3, cex = 0.60)
+          }
+        }
+
+      }
+
       plot_data <- shiny::reactive({
 
         res1 <- getCurrentContrast()
@@ -135,7 +190,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         
         res <- list(
           F = F,          
-          contrast = contrast(),
+          contrast = r_contrast(),
           fc = res1$fc,
           ct = res1$name
         )
@@ -158,10 +213,13 @@ connectivity_plot_FCFCplots_server <- function(id,
         if (input$fcfc_plottype == "scatter") {
           mfplots <- c(2, 5)
           FCFCscatter(fc, F, mfplots, ylab = ct)
-        } else {
+        } else if (input$fcfc_plottype == "gsea") {
           mfplots <- c(3, 4)
           df <- getConnectivityScores()
           FCFCenplot(fc, F, mfplots, ylab, df)
+        } else if (input$fcfc_plottype == "umap") {
+          mfplots <- c(2, 5)
+          FCumap(fc, F, mfplots, ylab = ct)
         }
         
       }

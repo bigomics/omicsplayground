@@ -45,13 +45,16 @@ dataview_plot_expression_server <- function(id,
       samples <- r.samples()
       data_type <- r.data_type()
       groupby <- r.data_groupby()
-
-      if (samples[1] == "") samples <- colnames(pgx$X)
-      if (gene == "") genes <- rownames(pgx$X)[1]
+      xgenes <- rownames(pgx$X)
+      
+      if (samples[1] == "") return(NULL)
+      if (gene == "") return(NULL)
+      if (!gene %in% xgenes) return(NULL)
 
       grpvar <- 1
       grp <- rep(NA, length(samples))
       if (groupby != "<ungrouped>") {
+
         ## grp  = factor(as.character(pgx$samples[,3]))
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }

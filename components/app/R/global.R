@@ -14,7 +14,7 @@ message("                                          |___/ |___/                  
 message("\n\n\n")
 
 
-message("[INIT] reading global.R ...")
+message("[GLOBAL] reading global.R ...")
 
 if(Sys.info()["sysname"] != "Windows") {
     Sys.setlocale("LC_TIME","en_US.UTF-8")
@@ -43,8 +43,10 @@ options(DT.options = list(
 SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 
-reticulate::use_miniconda('r-reticulate')
+## reticulate::use_miniconda('r-reticulate')
 
+# Get the OPG root folder. Works only from inside the repo as it looks
+# up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
     pwd <- getwd()
     dirs <- unlist(strsplit(pwd, "/"))
@@ -53,9 +55,16 @@ get_opg_root <- function() {
     #root_dirs <- head(dirs, -3)
     root <- paste(root_dirs, collapse = "/")
     return(root)
+  pwd <- getwd() 
+  dirs <- unlist(strsplit(pwd, "/"))
+  ## root_dirs <- head(dirs, -3)  ## this breaks single board launch
+  root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
+  root <- paste(root_dirs, collapse = "/")
+  return(root)
 }
 
 ## Set folders
+##OPG       = normalizePath("../../..")
 OPG       = get_opg_root()
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")
@@ -81,7 +90,7 @@ TIMEOUT   = 0
 
 ## Allow API like calls
 ALLOW_URL_QUERYSTRING = FALSE
-ALLOW_URL_QUERYSTRING = TRUE
+#ALLOW_URL_QUERYSTRING = TRUE
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
@@ -121,11 +130,7 @@ if(file.exists("Renviron.site")) {
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
 envcat("PLAYGROUND_AUTHENTICATION")
-envcat("PLAYGROUND_USERID")
-envcat("PLAYGROUND_EXPIRY")
-envcat("PLAYGROUND_QUOTA")
-envcat("PLAYGROUND_LEVEL")
-envcat("PLAYGROUND_HELLO")
+envcat("PLAYGROUND_USERNAME")
 
 message("\n***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")
@@ -160,22 +165,21 @@ message("************************************************")
 
 opt.file <- file.path(APPDIR,"OPTIONS")
 if(!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
-opt <- playbase::pgx.readOptions(file=opt.file)
+opt <- playbase::pgx.readOptions(file=opt.file)  ## THIS IS GLOBAL!!!
 
 ## Check and set authentication method
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
-    message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
+    message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
 }
-if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
-    Sys.setenv("SHINYPROXY_USERNAME"="Test Person")  ## only for testing!!
-}
-if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
-    message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")
-    opt$AUTHENTICATION = "none"
-    ## opt$ENABLE_USERDIR = FALSE
-    ## stop("[INIT] FATAL Missing firebase.rds file")
+##if(opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
+##    Sys.setenv("SHINYPROXY_USERNAME"="ShinyProxy User")  ## only for testing!!
+##}
+if(opt$AUTHENTICATION %in% c("firebase","email") && !file.exists("firebase.rds")) {
+    message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
+    ##opt$AUTHENTICATION = "password"
+    stop("[GLOBAL] FATAL : missing firebase.rds file")
 }
 
 ## copy to global.R environment
@@ -200,8 +204,8 @@ ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
-has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
-if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
+##has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
+##if(!has.sigdb) ENABLED["cmap"] <- FALSE
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
@@ -244,7 +248,7 @@ logHandler <- function(http.req){
     log.file <- tail(log.file,1)  ## take newest???
 
     if(length(log.file)==0) {
-        dbg("[INIT.logHandler] could not resolve log file for session ID = ",id)
+        dbg("[GLOBAL.logHandler] could not resolve log file for session ID = ",id)
         return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
@@ -264,14 +268,13 @@ logHandler <- function(http.req){
         encode = "json"
     )
 
-
     http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-handlerManager <- getFromNamespace("handlerManager", "shiny")
-handlerManager$removeHandler("/log")
-handlerManager$addHandler(logHandler, "/log")
-
+## Are we ever going to use this??
+##handlerManager <- getFromNamespace("handlerManager", "shiny")
+##handlerManager$removeHandler("/log")
+##handlerManager$addHandler(logHandler, "/log")
 
 message("\n\n")
 message("=================================================================")
@@ -282,6 +285,6 @@ message("\n\n")
 ## Calculate init time
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[global.R] global init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[GLOBAL] global init time = ",main.init_time," ",attr(main.init_time,"units"))
 
 shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))

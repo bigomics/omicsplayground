@@ -65,7 +65,7 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$Y)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "pdx_samplefilter", choices = levels)
@@ -73,14 +73,14 @@ BiomarkerBoard <- function(id, pgx) {
 
     ## get selected samples after sample filtering
     selected_samples <- reactive({
-      shiny::req(pgx)      
+      shiny::req(pgx)
       samples <- colnames(pgx$X)
       if (!is.null(input$pdx_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$pdx_samplefilter)
       }
       samples
     })
-    
+
     shiny::observe({
       shiny::req(pgx)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
@@ -137,7 +137,7 @@ BiomarkerBoard <- function(id, pgx) {
       ii <- unlist(tapply( 1:length(y), y, sample, size=100, replace=TRUE))
       y <- y[ii]
       ##if (length(y) < 100) y <- head(rep(y, 100), 100)
-      
+
       ## -------------------------------------------
       ## select features
       ## -------------------------------------------
@@ -347,12 +347,12 @@ BiomarkerBoard <- function(id, pgx) {
       id = "featurerank",
       pgx = pgx,
       ##ft_level = shiny::reactive(input$ft_level),
-      ft_level = shiny::reactive("gene"),      
+      ft_level = shiny::reactive("gene"),
       ##selected_phenotypes = shiny::reactive(NULL),
       samplefilter = shiny::reactive(input$pdx_samplefilter),
       watermark = WATERMARK
     )
 
-    
+
   })
 } ## end-of-Board

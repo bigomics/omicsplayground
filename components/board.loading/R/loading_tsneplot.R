@@ -27,7 +27,7 @@ loading_tsne_ui <- function(
   )
 }
 
-loading_tsne_server <- function(id, pgx.dirRT, info.table,
+loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -40,7 +40,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
       pgx.files <- info.table$dataset
-      
+
       pos <- NULL
       if (file.exists(tsne.file)) {
         pos <- read.csv(tsne.file, row.names = 1)
@@ -63,7 +63,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       if (is.null(pos) && file.exists(allfc.file)) {
 
         shiny::withProgress(
-          message = "Calculating signature similarities...", value = 0.33, {
+          message = "Calculating signature t-SNE...", value = 0.33, {
 
             F <- data.table::fread(allfc.file)
             F <- as.matrix(F[, -1], rownames = F[[1]])
@@ -127,22 +127,22 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pos.pgx <- gsub("^\\[|\\].*", "", rownames(pos))
       pos <- pos[which(pos.pgx %in% pgx.files), , drop = FALSE]
 
-      dset <- gsub("^\\[|\\].*", "", rownames(pos))
+      dataset <- gsub("^\\[|\\].*", "", rownames(pos))
       comparison <- gsub("^.*\\]", "", rownames(pos))
       colnames(pos) <- c("x", "y")
-      df <- data.frame(pos, dataset = dset, comparison = comparison)
+      df <- data.frame(pos, dataset = dataset, comparison = comparison)
 
       ## compute medioid of datasets
-      dpos <- apply(pos, 2, function(x) tapply(x, dset, median, na.rm = TRUE))
-      if (length(unique(dset)) == 1) {
-        dpos <- matrix(dpos, nrow = 1, ncol = 2)
-        rownames(dpos) <- dset[1]
+      dataset_pos <- apply(pos, 2, function(x) tapply(x, dataset, median, na.rm = TRUE))
+      if (length(unique(dataset)) == 1) {
+        dataset_pos <- matrix(dataset_pos, nrow = 1, ncol = 2)
+        rownames(dataset_pos) <- dataset[1]
       }
-      colnames(dpos) <- c("x", "y")
+      colnames(dataset_pos) <- c("x", "y")
 
       pdata <- list(
         df = df,
-        pos = dpos
+        dataset_pos = dataset_pos
       )
       
       return(pdata)
@@ -152,18 +152,24 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
 
       pdata <- plot_data()
       shiny::req(pdata)      
-      pos <- pdata[['pos']]
+      dataset_pos <- pdata[['dataset_pos']]
       df <- pdata[['df']]
+
+      ## filter with datatable active rows
+      active_datasets <- info.table()$dataset[r_selected()]
+      df <- df[which(df$dataset %in% active_datasets),,drop=FALSE]
+      dataset_pos <- dataset_pos[which(rownames(dataset_pos) %in% active_datasets),,drop=FALSE]
       
-      marker_size <- ifelse( nrow(df) > 50, 8, 11)
-      marker_size <- ifelse( nrow(df) > 100, 5, marker_size)
+      marker_size <- ifelse( nrow(df) > 60, 8, 11)
+      marker_size <- ifelse( nrow(df) > 120, 5, marker_size)
       font_size <- marker_size**0.55 * 5
       
       fig <- plotly::plot_ly(
         data = df,
         x = ~x,
         y = ~y,
-        text = ~ paste("Dataset:", dataset, "<br>Comparison:", comparison),
+        text = ~ paste(ifelse(nrow(df),"Dataset:","Oops!"), dataset,
+          ifelse(nrow(df),"<br>Comparison:",""), comparison),
         color = ~dataset,
         ## colors = omics_pal_c(palette = "brand_blue")(100),
         marker = list(
@@ -175,14 +181,14 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
         )
       )
 
-      dy <- diff(range(pos[,"y"]))
+      dy <- diff(range(dataset_pos[,"y"]))
       dbg("[loading_tsneplot.R] range.y=",dy)
       
       fig <- fig %>%
         plotly::add_annotations(
-          x = pos[,"x"],
-          y = pos[,"y"],
-          text = rownames(pos),
+          x = dataset_pos[,"x"],
+          y = dataset_pos[,"y"],
+          text = rownames(dataset_pos),
           font = list( size=font_size ),
           xref = "x",
           yref = "y",          
@@ -190,8 +196,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
           xanchor = "middle",
           yanchor = "bottom",
           yshift = 0.02*dy,
-#          ax = 0,
-#          ay = -0.05 * dy,
           showarrow = FALSE
         )
 
@@ -217,8 +221,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table,
       pdata <- plot_data()
       shiny::req(pdata)
       df <- pdata[['df']]
-      marker_size <- ifelse( nrow(df) > 50, 9, 13)
-      marker_size <- ifelse( nrow(df) > 100, 6, marker_size)
+      marker_size <- ifelse( nrow(df) > 60, 9, 13)
+      marker_size <- ifelse( nrow(df) > 120, 6, marker_size)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,

@@ -85,71 +85,89 @@ CompareUI <- function(id) {
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Compare expression",
-      bslib::layout_column_wrap(
-        width = 1/2,
-        height = fullH,
-        compare_plot_compare1_ui(
-          id = ns("dt1"),
-          width = c("auto", "100%"),
-          height = c("100%", "70vh")
-        ),
-        compare_plot_compare2_ui(
-          id = ns("dt2"),
-          width = c("auto", "100%"),
-          height = c("100%", "70vh")
-        )
-      )
-    ),
-    shiny::tabPanel(
-      "Foldchange",
-      bslib::layout_column_wrap(
-        width = 1/2,
-        height = fullH,
-        compare_plot_fc_correlation_ui(
-          id = ns("fcfcplot"),
-          width = c("auto", "100%"),
-          height = c("100%", "70vh")
-        ),
+        "Compare expression",
         bslib::layout_column_wrap(
           width = 1,
-          compare_plot_cum_fc1_ui(
-            id = ns("cumfcplot1"),
-            width = c("auto", "100%"),
-            height = c("100%", "70vh"),
-            label = "b"
-          ),
-          compare_plot_cum_fc2_ui(
-            id = ns("cumfcplot2"),
-            width = c("auto", "100%"),
-            height = c("100%", "70vh"),
-            label = "c"
+          height = fullH,
+          heights_equal = "row",                 
+          bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
+          bslib::layout_column_wrap(
+            width = 1/2,
+            height = fullH,
+            compare_plot_compare1_ui(
+              id = ns("dataset1"),
+              width = c("auto", "100%"),
+              height = c("100%", "70vh")
+            ),
+            compare_plot_compare2_ui(
+              id = ns("dataset2"),
+              width = c("auto", "100%"),
+              height = c("100%", "70vh")
+            )
           )
-        )
-      )
+       )          
     ),
     shiny::tabPanel(
-      "Gene Correlation",
-      bslib::layout_column_wrap(
-        width = 1/2,
-        height = fullH,
+        "Foldchange",
         bslib::layout_column_wrap(
-          width = 1,
-          compare_plot_expression_ui(
-            id = ns("multibarplot"),
-            height = c("70%", TABLE_HEIGHT_MODAL)
-          ),
-          compare_table_corr_score_ui(
-            id = ns("score_table"),
-            height = c("30%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")            
-          )
-        ),
-        compare_plot_gene_corr_ui(
-          id = ns("genecorr"),
-          height = c("100%", TABLE_HEIGHT_MODAL),          
+            width = 1,
+            height = fullH,
+            heights_equal = "row",                 
+            bs_alert("Compare signatures by plotting their fold-changes as pairwise scatterplots. Highly correlated logFC signatures suggest similar experiments."),
+            bslib::layout_column_wrap(
+                width = 1/2,
+                height = fullH,
+                compare_plot_fc_correlation_ui(
+                    id = ns("fcfcplot"),
+                    width = c("auto", "100%"),
+                    height = c("100%", "70vh")
+                ),
+                bslib::layout_column_wrap(
+                    width = 1,
+                    compare_plot_cum_fc1_ui(
+                        id = ns("cumfcplot1"),
+                        width = c("auto", "100%"),
+                        height = c("100%", "70vh"),
+                        label = "b"
+                    ),
+                    compare_plot_cum_fc2_ui(
+                        id = ns("cumfcplot2"),
+                        width = c("auto", "100%"),
+                        height = c("100%", "70vh"),
+                        label = "c"
+                    )
+                )
+            )
         )
-      )
+    ),
+    shiny::tabPanel(
+        "Gene Correlation",
+        bslib::layout_column_wrap(
+            width = 1,
+            height = fullH,
+            heights_equal = "row",                 
+            bs_alert("If the samples are exactly the same in your two datasets, you can plot their gene expression and find highly correlated features, e.g. for genes and proteins."),
+            bslib::layout_column_wrap(
+                width = 1/2,
+                height = fullH,
+                bslib::layout_column_wrap(
+                    width = 1,
+                    compare_plot_expression_ui(
+                        id = ns("multibarplot"),
+                        height = c("70%", TABLE_HEIGHT_MODAL)
+                    ),
+                    compare_table_corr_score_ui(
+                        id = ns("score_table"),
+                        height = c("30%", TABLE_HEIGHT_MODAL),
+                        width = c("auto", "100%")            
+                    )
+                ),
+                compare_plot_gene_corr_ui(
+                    id = ns("genecorr"),
+                    height = c("100%", TABLE_HEIGHT_MODAL)          
+                )
+            )
+        )
     )
   )
 

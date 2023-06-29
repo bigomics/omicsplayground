@@ -18,18 +18,18 @@ app_server <- function(input, output, session) {
 
     VERSION <- scan(file.path(OPG,"VERSION"), character())[1]
 
-    dbg("[server.R] 0: getwd = ",getwd())
-    dbg("[server.R] 0: HONCHO_URL = ",opt$HONCHO_URL)
-    dbg("[server.R] 0: SESSION = ",session$token)
+    info("[server.R] getwd = ",getwd())
+    info("[server.R] HONCHO_URL = ",opt$HONCHO_URL)
+    info("[server.R] SESSION = ",session$token)
 
-    ## Determine is Honcho is alive
-    ##honcho.responding <- grepl("Swagger",RCurl::getURL("http://localhost:8000/__docs__/"))
-    ##curl.resp <- try(RCurl::getURL("http://localhost:8000/__docs__/"))
-    curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
-    honcho.responding <- grepl("Swagger", curl.resp)
-    honcho.responding
-    honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
-    has.honcho <- (honcho.token!="" && honcho.responding)
+    has.honcho <- FALSE
+    if(has.honcho && !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!="") {
+        ## Determine is Honcho is alive
+        curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
+        honcho.responding <- grepl("Swagger", curl.resp)
+        honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
+        has.honcho <- (honcho.token!="" && honcho.responding)
+    }
     if(1 && has.honcho) {
         info("[server.R] Honcho is alive! ")
         sever::sever(sever_screen2(session$token), bg_color = "#004c7d")
@@ -50,47 +50,33 @@ app_server <- function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
 
-    ## Parse and show URL query string
-    if(0 && ALLOW_URL_QUERYSTRING) {
-        observe({
-            query <- parseQueryString(session$clientData$url_search)
-            if(length(query)>0) {
-                dbg("[server.R:parseQueryString] names.query =",names(query))
-                for(i in 1:length(query)) {
-                    dbg("[server.R:parseQueryString]",names(query)[i],"=>",query[[i]])
-                }
-            } else {
-                dbg("[server.R:parseQueryString] no queryString!")
-            }
-            if(!is.null(query[['csv']])) {
-                ## focus on this tab
-                updateTabsetPanel(session, "load-tabs", selected="Upload data")
-                updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
-                                    value = "CSV FILE DESCRIPTION")
-            }
-
-        })
-        dbg("[server.R:parseQueryString] PGX.DIR = ",PGX.DIR)
-    }
-
     ##-------------------------------------------------------------
     ## Authentication
     ##-------------------------------------------------------------
 
     auth <- NULL   ## shared in module
     if(authentication == "password") {
-      auth <- PasswordAuthenticationModule(
-        id = "auth",
-        credentials.file = "CREDENTIALS"
-      )
-    } else if(authentication == "firebase.full") {
-        auth <- FirebaseAuthenticationModule(
-          id ="auth"
+        auth <- PasswordAuthenticationModule(
+            id = "auth",
+            credentials.file = "CREDENTIALS"
         )
     } else if(authentication == "firebase") {
-        auth <- EmailLinkAuthenticationModule(
-          id ="auth",
-          pgx_dir = PGX.DIR,
+        auth <- FirebaseAuthenticationModule(
+            id ="auth",
+            domain = opt$DOMAIN            
+        )
+    } else if(authentication == "email") {
+        auth <- EmailAuthenticationModule(
+            id ="auth",
+            pgx_dir = PGX.DIR,
+            domain = opt$DOMAIN            
+        )
+    } else if(authentication == "auth-email") {
+        auth <- EmailAuthenticationModule(
+            id ="auth",
+            pgx_dir = PGX.DIR,
+            domain = opt$DOMAIN,
+            credentials.file = "CREDENTIALS"            
         )
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -130,13 +116,15 @@ app_server <- function(input, output, session) {
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
-        pgx_dir = PGX.DIR,
+        pgx_topdir = PGX.DIR,
         pgx = PGX,
         limits = limits,
         auth = auth,
         enable_userdir = opt$ENABLE_USERDIR,
         enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-        enable_share = opt$ENABLE_SHARE,
+        enable_user_share = opt$ENABLE_USER_SHARE,
+        enable_delete = opt$ENABLE_DELETE,
+        enable_public_share = opt$ENABLE_PUBLIC_SHARE,        
         r_global = r_global
     )
 
@@ -149,7 +137,6 @@ app_server <- function(input, output, session) {
          auth = auth,
          limits = limits,
          enable_userdir = opt$ENABLE_USERDIR,
-         enable_save = opt$ENABLE_SAVE,
          r_global = r_global
        )
     }
@@ -172,7 +159,18 @@ app_server <- function(input, output, session) {
         has_data
     })
 
-    ## Default boards
+    #' Get user-pgx folder
+    getPgxDir <- reactive({
+        if(!auth$logged()) return(NULL)
+        if(opt$ENABLE_USERDIR &&
+             authentication %in% c("firebase","firebase.full","password")) {
+          return(file.path(PGX.DIR, auth$email() ))
+        } else {
+          return(PGX.DIR)
+        }
+    })
+
+    ## Default boards ------------------------------------------
     WelcomeBoard("welcome",
       auth = auth,
       enable_upload = opt$ENABLE_UPLOAD,
@@ -373,7 +371,7 @@ app_server <- function(input, output, session) {
 
           if(ENABLED['cmap'])  {
             info("[server.R] calling ConnectivityBoard module")
-            ConnectivityBoard("cmap", pgx = PGX)
+            ConnectivityBoard("cmap", pgx = PGX, getPgxDir=getPgxDir)
           }
 
           if(ENABLED['cell']) {
@@ -497,9 +495,7 @@ app_server <- function(input, output, session) {
 
         ## Beta features
         info("[server.R] disabling beta features")
-        ##bigdash.toggleTab(session, "wgcna-tab", show.beta)  ## wgcna
         bigdash.toggleTab(session, "pcsf-tab", show.beta)  ## wgcna
-        bigdash.toggleTab(session, "comp-tab", show.beta)  ## compare datasets
         bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
         toggleTab("drug-tabs","Connectivity map (beta)", show.beta)   ## too slow
         toggleTab("pathway-tabs","Enrichment Map (beta)", show.beta)   ## too slow
@@ -686,12 +682,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
         ## This checks for personal email adress and asks to change to
         ## a business email adress. This will affect also old users.
-        if(opt$AUTHENTICATION=='firebase' && logged) {
-          check_personal_email(auth, PGX.DIR)
+        if(opt$AUTHENTICATION=='email' && logged) {
+            check_personal_email(auth, PGX.DIR)
         }
 
         ##--------- force logout callback??? --------------
-        if(opt$AUTHENTICATION!='firebase' && !logged) {
+        if(!opt$AUTHENTICATION %in% c('firebase','email') && !logged) {
             ## Forcing logout ensures "clean" sessions. For firebase
             ## we allow sticky sessions.
             message("[server.R] user not logged in? forcing logout() JS callback...")
@@ -764,10 +760,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
     shiny::removeUI(selector = ".current-dataset > #spinner-container")
 
     ## Startup Message
-    shinyalert::shinyalert(
-        title = "Welcome to Version 3!",
-        text = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new features. We hope you like it! Please give use your feedback in our Google Groups!"
-    )
+    if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
+        shinyalert::shinyalert(
+            title = opt$STARTUP_TITLE,
+            text  = opt$STARTUP_MESSAGE
+        )
+    }
 
 
 }

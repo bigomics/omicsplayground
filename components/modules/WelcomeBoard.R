@@ -69,10 +69,18 @@ WelcomeBoardUI <- function(id) {
   mission.page =
     div( class = "row welcome-slide",
         div( class = "col-md-12 text-center",
-            shiny::tags$b("Our mission. Your solution."),
-            shiny::p("We love Biology. We love Big Data. At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
+            shiny::tags$b("Our mission"),
+            shiny::p("We love Biology. We love Big Data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
             )
         )
+
+  motto.page =
+    div( class = "row welcome-slide",
+        div( class = "col-md-12 text-center",
+            shiny::tags$b("Advanced omics analysis for everyone."),br(),
+            "At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. With Omics Playground you can analyze your omics data faster, better, easier with more fun. No coding required." 
+        )
+    )
 
   credits.page =
     div( class = "row welcome-slide",
@@ -82,11 +90,11 @@ WelcomeBoardUI <- function(id) {
             )
         )
 
-  motto.page =
+  created.page =
     div( class = "row welcome-slide",
         div( class = "col-md-12 text-center",
-            shiny::tags$b("Omics Playground. Advanced omics analysis for everyone."),br(),
-            "Created with love by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
+            shiny::tags$b("Created with love"),br(),
+            "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
             br(),"Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
             shiny::a("www.bigomics.ch", href="https://www.bigomics.ch")
             )
@@ -141,6 +149,6 @@ WelcomeBoardUI <- function(id) {
       "welcome-carousel",
       wrap=TRUE, autostart=TRUE, fade=TRUE,
       interval=10000,
-      contents=list(mission.page, credits.page, motto.page))    
+      contents=list(mission.page, motto.page, created.page, credits.page ))    
   )
 }
