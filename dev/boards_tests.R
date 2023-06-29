@@ -29,37 +29,38 @@ for (ui_file in ui_files) {
 source(glue::glue('components/board.tcga/dev_MMM/app_ui.R'))
 
 app_server <- function(input, output, session) {
-  # r_files <- list.files("C:\\code\\omicsplayground\\components\\board.tcga\\R",full.names = TRUE, include.dirs = TRUE)
 
-  # for (r_file in r_files) {
-  #   source(r_file)
-  # }
-  
-  # pgx_rl <- reactiveVal(NULL)
 
-  # observeEvent(input$pgx_path, {
-  #   req(input$pgx_path)
-  #   load(normalizePath(input$pgx_path))
-    
-  #   load(normalizePath(driver$getValue("pgx_path")))
-    
-  #   message("pgx loaded")
-    
-  #   pgx_rl(pgx)
-  # })
-  
-  load("data/example-data.pgx") # this somehow does not work with 
+
+    source('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/app/R/global.R')
+    source('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/golem_utils/app_config.R')
+    source('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/golem_utils/run_app.R')
+    source('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/golem_utils/run_dev.R')
+    board = "board.tcga"
+    ui_files <- list_files_safe(path = 'C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/ui/')
+
+    for (ui_file in ui_files) {
+        source(file.path('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/ui/', ui_file))
+    }
+
+    r_files <- list_files_safe(path = normalizePath('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/board.tcga/R'))
+
+    for (r_file in r_files) {
+        source(file.path(glue::glue('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/{board}/R/'),r_file))
+    }
+
+  load("C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/data/example-data.pgx") # this somehow does not work with
 
   server <- TcgaBoard('tcga', pgx)
 }
 
-r_files <- list_files_safe(path = normalizePath('components/board.tcga/R'))
+r_files <- list_files_safe(path = normalizePath('C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/components/board.tcga/R'))
 
 for (r_file in r_files) {
   source(file.path(glue::glue('components/{board}/R/'),r_file))
 }
 
-onStart = NULL  
+onStart = NULL
 enableBookmarking = NULL
 uiPattern = "/"
 resources <- golem_add_external_resources("board.tcga")
@@ -74,7 +75,11 @@ app = shinyApp(
 )
 
 driver <- shinytest::ShinyDriver$new(
-  path = app)
+  path = app
+  )
+
+driver$getUrl()
+driver$getDebugLog()
   # loadTimeout = NULL,
   # checkNames = TRUE,
   # debug = "shiny_console",

@@ -48,10 +48,12 @@ TABLE_HEIGHT_MODAL <<- "75vh"
 # Get the OPG root folder. Works only from inside the repo as it looks
 # up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
-  pwd <- getwd() 
+  pwd <- getwd()
+  message(pwd)
   dirs <- unlist(strsplit(pwd, "/"))
   ## root_dirs <- head(dirs, -3)  ## this breaks single board launch
-  root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
+  # root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
+  root_dirs <- "C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/"
   root <- paste(root_dirs, collapse = "/")
   return(root)
 }
