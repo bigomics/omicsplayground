@@ -23,7 +23,7 @@ for (ui_file in ui_files) {
 
 ### board specific files ###
 
-source(glue::glue('components/{board}/dev/app_ui.R'))
+source(glue::glue('components/board.tcga/dev/app_ui.R'))
 # source(glue::glue('components/{board}/dev/app_server.R'))
 
 
@@ -46,7 +46,7 @@ uiPattern = "/"
 resources <- golem_add_external_resources("board.tcga")
 
 app = shinyApp(
-  ui = app_ui(resources = resources),
+  ui = app_ui(resources = resources, path = getwd()),
   server = app_server,
   onStart = onStart,
   options = options,
@@ -54,14 +54,35 @@ app = shinyApp(
   uiPattern = uiPattern
 )
 
-  driver <- shinytest::ShinyDriver$new(
-    path = app,
-    loadTimeout = NULL,
-    checkNames = TRUE,
-    phantomTimeout = 5000,
-    seed = NULL,
-    cleanLogs = TRUE,
-    shinyOptions = list(),
-    renderArgs = NULL,
-    options = list()
-    )
+driver <- shinytest::ShinyDriver$new(
+  path = app),
+  loadTimeout = NULL,
+  checkNames = TRUE,
+  phantomTimeout = 5000,
+  seed = NULL,
+  cleanLogs = TRUE,
+  shinyOptions = list(),
+  renderArgs = NULL,
+  options = list()
+  )
+  driver$snapshop
+
+  names(driver)
+
+  driver$listWidgets()$output
+
+  driver$etAllValues()
+
+  driver$getValue("tcga-sigtype", "input")
+
+  driver
+
+  driver
+
+  
+
+  driver$getAllValues()
+
+  driver$finalize()
+
+ 
