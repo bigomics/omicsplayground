@@ -23,17 +23,32 @@ for (ui_file in ui_files) {
 
 ### board specific files ###
 
-source(glue::glue('components/board.tcga/dev/app_ui.R'))
-# source(glue::glue('components/{board}/dev/app_server.R'))
-
+source(glue::glue('components/board.tcga/dev_MMM/app_ui.R'))
 
 app_server <- function(input, output, session) {
+  r_files <- list.files("C:\\code\\omicsplayground\\components\\board.tcga\\R",full.names = TRUE, include.dirs = TRUE)
 
-    server <- TcgaBoard('tcga', pgx)
+  for (r_file in r_files) {
+    source(r_file)
+  }
+  
+  pgx_rl <- reactiveVal(NULL)
+
+  observeEvent(input$pgx_path, {
+    req(input$pgx_path)
+    load(normalizePath(input$pgx_path))
+    
+    load(normalizePath(driver$getValue("pgx_path")))
+    
+    message("pgx loaded")
+    
+    pgx_rl(pgx)
+  })
+
+  server <- TcgaBoard('tcga', pgx_rl())
 }
 
-
-r_files <- list_files_safe(path = glue::glue('components/{board}/R'))
+r_files <- list_files_safe(path = normalizePath('components/board.tcga/R')
 
 for (r_file in r_files) {
   source(file.path(glue::glue('components/{board}/R/'),r_file))
@@ -42,7 +57,6 @@ for (r_file in r_files) {
 onStart = NULL  
 enableBookmarking = NULL
 uiPattern = "/"
-
 resources <- golem_add_external_resources("board.tcga")
 
 app = shinyApp(
@@ -55,34 +69,27 @@ app = shinyApp(
 )
 
 driver <- shinytest::ShinyDriver$new(
-  path = app),
+  path = app,
   loadTimeout = NULL,
   checkNames = TRUE,
-  phantomTimeout = 5000,
+  debug = "shiny_console",
+  phantomTimeout = 50000,
   seed = NULL,
-  cleanLogs = TRUE,
+  cleanLogs = FALSE,
   shinyOptions = list(),
   renderArgs = NULL,
   options = list()
   )
-  driver$snapshop
 
-  names(driver)
-
+  driver$listWidgets()$input
   driver$listWidgets()$output
 
-  driver$etAllValues()
+  driver$getAllValues("TcgaBoard")
 
-  driver$getValue("tcga-sigtype", "input")
+  pgx_file <- normalizePath("data/example-data.pgx")
 
-  driver
+  driver$setValue("pgx_path", pgx_file)
 
-  driver
-
-  
-
-  driver$getAllValues()
+  driver$getValue("pgx_path")
 
   driver$finalize()
-
- 

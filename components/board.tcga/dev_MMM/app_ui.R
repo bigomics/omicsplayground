@@ -6,7 +6,6 @@
 #' @noRd
 app_ui <- function(request, resources, path) {
     
-    message(path)
     setwd(path)
 
     source(glue::glue('components/board.tcga/dev/app_ui.R'))
@@ -57,7 +56,9 @@ app_ui <- function(request, resources, path) {
                 src = "assets/img/bigomics.png",
                 width = "110",
             )
+            
         ),
+        textInput("pgx_path", NULL),
         settings = bigdash::settings(
             "Settings"
         ),
