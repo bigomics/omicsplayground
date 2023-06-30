@@ -11,6 +11,7 @@ app_ui <- function(request) {
     source('C:/code//omicsplayground/components/golem_utils/run_dev.R')
     source('C:/code/omicsplayground/components/app/R/global.R')
     source(file.path(getwd(),'../R/tcga_ui.R'))
+    source(file.path(getwd(),'../R/tcga_server.R'))
     source(file.path(getwd(),'../R/tcga_plot_survival.R'))
 
     ui_files <- list_files_safe(path = 'C:/code//omicsplayground/components/ui/')
