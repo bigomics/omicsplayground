@@ -52,8 +52,7 @@ get_opg_root <- function() {
   message(pwd)
   dirs <- unlist(strsplit(pwd, "/"))
   ## root_dirs <- head(dirs, -3)  ## this breaks single board launch
-  # root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
-  root_dirs <- "C:/Users/Xavier/OneDrive/BigOmics/GitHub/omicsplayground/"
+  root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
   root <- paste(root_dirs, collapse = "/")
   return(root)
 }
