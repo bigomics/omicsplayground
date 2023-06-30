@@ -6,29 +6,32 @@
 #' @noRd
 app_ui <- function(request) {
     
-    source('C:/code//omicsplayground/components/golem_utils/app_config.R')
-    source('C:/code//omicsplayground/components/golem_utils/run_app.R')
-    source('C:/code//omicsplayground/components/golem_utils/run_dev.R')
-    source('C:/code/omicsplayground/components/app/R/global.R')
-    source(file.path(getwd(),'../R/tcga_ui.R'))
-    source(file.path(getwd(),'../R/tcga_server.R'))
-    source(file.path(getwd(),'../R/tcga_plot_survival.R'))
+    source('../../app/R/global.R')
 
-    ui_files <- list_files_safe(path = 'C:/code//omicsplayground/components/ui/')
+    root_opg <- get_opg_root()
+
+    source(file.path(root_opg,'components/golem_utils/app_config.R'))
+    source(file.path(root_opg,'components/golem_utils/run_app.R'))
+    source(file.path(root_opg,'components/golem_utils/run_dev.R'))
+
+    source(file.path(root_opg,'components//board.tcga/R/tcga_ui.R'))
+    source(file.path(root_opg,'components/board.tcga/R/tcga_server.R'))
+    source(file.path(root_opg,'components/board.tcga/R/tcga_plot_survival.R'))
+
+    ui_files <- list_files_safe(path = file.path(root_opg,'components/ui/'))
 
     for (ui_file in ui_files) {
-        source(file.path('C:/code//omicsplayground/components/ui/', ui_file))
+        source(file.path(root_opg,'components/ui/', ui_file))
     }
 
-    
     # header
     
     header <- shiny::tagList(
         tags$head(
         golem::favicon(),
         golem::bundle_resources(
-        path = 'C:/code/omicsplayground/components/app/R/www',
-        app_title = "test"
+        path = file.path(root_opg,'components/app/R/www'),
+        app_title = "dev_board"
         ),
         shinyjs::useShinyjs(),
         sever::useSever(),
