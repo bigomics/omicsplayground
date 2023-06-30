@@ -1,17 +1,5 @@
 # test single board minimal components
 
-library(golem)
-library(playbase)
-options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mode
-options(shiny.port = httpuv::randomPort())
-golem::detach_all_attached()
-
-ui_files <- list_files_safe(path = 'components/ui/')
-
-for (ui_file in ui_files) {
-  source(file.path('components/ui/', ui_file))
-}
-
 ### board specific files ###
 
 driver <- shinytest::ShinyDriver$new(
