@@ -4,12 +4,21 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
-app_ui <- function(request, resources, path) {
+app_ui <- function(request) {
     
-    setwd(path)
+    source('C:/code//omicsplayground/components/golem_utils/app_config.R')
+    source('C:/code//omicsplayground/components/golem_utils/run_app.R')
+    source('C:/code//omicsplayground/components/golem_utils/run_dev.R')
+    source('C:/code/omicsplayground/components/app/R/global.R')
+    source(file.path(getwd(),'../R/tcga_ui.R'))
+    source(file.path(getwd(),'../R/tcga_plot_survival.R'))
 
-    source(glue::glue('components/board.tcga/dev/app_ui.R'))
-    
+    ui_files <- list_files_safe(path = 'C:/code//omicsplayground/components/ui/')
+
+    for (ui_file in ui_files) {
+        source(file.path('C:/code//omicsplayground/components/ui/', ui_file))
+    }
+
     
     # header
     
@@ -17,7 +26,7 @@ app_ui <- function(request, resources, path) {
         tags$head(
         golem::favicon(),
         golem::bundle_resources(
-        path = file.path(path,'components/app/R/www'),
+        path = 'C:/code/omicsplayground/components/app/R/www',
         app_title = "test"
         ),
         shinyjs::useShinyjs(),
