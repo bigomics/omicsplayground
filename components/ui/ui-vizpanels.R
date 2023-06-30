@@ -313,15 +313,6 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                              dtype="bar", ctype = "density",
                              title=NULL, subtitle=NULL, caption=NULL)
 {
-    ##
-    ##
-    ##
-
-    if(0) {
-        by.pheno="dlbcl.type";pct=TRUE;phenotypes=NULL;srt=45;
-        xlab=title=subtitle=caption="?"
-        dtype="bar";ctype="box"
-    }
 
     if(is.null(phenotypes))
         phenotypes <- colnames(pgx$samples)
@@ -617,18 +608,6 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
                           title="Contrast", subtitle="The plots show the contrasts.",
                           caption=paste0("Project: ",pgx$name))
 {
-    ##
-    ##
-    ##
-
-    if(0) {
-        ntop=10; dir=0; pos=NULL;
-        psig=0.05; fc=0.20; cex=1; cex.lab=1; fixed.axis=FALSE;
-        type = c("pair","MA","volcano"); plotlib='ggplot';
-        level="gene"; methods='meta'; label.type="box";
-        filt=NULL; strip=NULL; plots.only = FALSE; pgxRT = NULL
-    }
-
 
     type <- type[1]
     if(!is.null(pos)) type <- "custom"
@@ -1022,17 +1001,15 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
                     main=paste("VH usage by",by.pheno))
     )
 
-    if(1) {
-        mm <- playbase::pgx.phenoMatrix(pgx, by.pheno)
-        matlist <- list(VL, VH, mm)
-        S1 <- playbase::pgx.SankeyFromMatrixList.PLOTLY(matlist)
-        ##S1 <- playbase::pgx.SankeyFromPhenotypes.GGPLOT(
-        ##    pgx, phenotypes=c(by.pheno,"VL","VH"), fill=by.pheno,
-        ##    nmin=nmin, title="VH/VL pairing")
-        S1.grob <- NULL
-        S1.grob <- playbase::plotly2ggplot(S1, width=600, height=800, scale=0.97)
-        class(S1.grob)
-    }
+    mm <- playbase::pgx.phenoMatrix(pgx, by.pheno)
+    matlist <- list(VL, VH, mm)
+    S1 <- playbase::pgx.SankeyFromMatrixList.PLOTLY(matlist)
+    ##S1 <- playbase::pgx.SankeyFromPhenotypes.GGPLOT(
+    ##    pgx, phenotypes=c(by.pheno,"VL","VH"), fill=by.pheno,
+    ##    nmin=nmin, title="VH/VL pairing")
+    S1.grob <- NULL
+    S1.grob <- playbase::plotly2ggplot(S1, width=600, height=800, scale=0.97)
+    class(S1.grob)
 
     ## arrange
     c1  <- cowplot::plot_grid(H2, H1, B1, B2, nrow=2, labels=c("a","b","c","d"))
@@ -1045,13 +1022,6 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)
 
 }
-
-if(0) {
-    X0=cX=cX2=NULL;main1="not-corrected";pca.heatmap=FALSE;nmax=40;
-    pos1=pos2=NULL;npca=3
-    main=c("not-corrected", "batch-corrected", "batch-corrected2")
-}
-
 
 viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
                              sort="avg", mode="pct", lab.cex=1)
@@ -1107,10 +1077,9 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     nlev <- length(unique(df$pheno))
     nlev
     xoff <- 0
-    if(1) {
-        xoff <- min(df$value)
-        df$value <- df$value - xoff
-    }
+
+    xoff <- min(df$value)
+    df$value <- df$value - xoff
     xbreaks <- seq(min(df$value),max(df$value),length.out=7)
     xbreaks
 
@@ -1170,12 +1139,7 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
         pheno <- pgx$samples
     }
     pos0 <- pgx$tsne2d
-    if(0) {
-        phenotype='treatment'
-        cX=X0;cX2=NULL
-        viz.BatchCorrectionMatrix(X0=X0, pheno=pheno, cX=cX, cX2=cX2,
-                                  phenotype=phenotype)
-    }
+
     viz.BatchCorrectionMatrix(
         X0=X0, pheno=pheno, cX=cX, cX2=cX2,
         phenotype=phenotype, stat=stat,  pca.heatmap=pca.heatmap,
@@ -1191,27 +1155,23 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                                       main=c("not-corrected", "corrected","corrected2"),
                                       title=NULL, subtitle=NULL, caption=NULL)
 {
-    if(0) {
-        stat='F';pca.heatmap=FALSE;nmax=40;cex=1;npca=3
-        pos0=pos1=pos2=NULL;main=title=subtitle=caption='';
-    }
+
     if(is.null(phenotype)) {
         phenotype <- colnames(pheno)[1]
     }
     phenotype <- utils::head(intersect(phenotype,colnames(pheno)),4) ## max 4
     phenotype
 
-    if(1) {
-        ## take out rows with too many missing values in any of the matrices
-        is.na1=is.na2=is.na3=0
-        is.na1 <- rowMeans(is.na(X0)) > 0.9
-        if(!is.null(cX))  is.na2 <- rowMeans(is.na(cX)) > 0.9
-        if(!is.null(cX2)) is.na3 <- rowMeans(is.na(cX2)) > 0.9
-        sel <- which(!is.na1 & !is.na2 & !is.na3)
-        X0 <- X0[sel,,drop=FALSE]
-        cX <- cX[sel,,drop=FALSE]
-        if(!is.null(cX2)) cX2 <- cX2[sel,,drop=FALSE]
-    }
+    ## take out rows with too many missing values in any of the matrices
+    is.na1=is.na2=is.na3=0
+    is.na1 <- rowMeans(is.na(X0)) > 0.9
+    if(!is.null(cX))  is.na2 <- rowMeans(is.na(cX)) > 0.9
+    if(!is.null(cX2)) is.na3 <- rowMeans(is.na(cX2)) > 0.9
+    sel <- which(!is.na1 & !is.na2 & !is.na3)
+    X0 <- X0[sel,,drop=FALSE]
+    cX <- cX[sel,,drop=FALSE]
+    if(!is.null(cX2)) cX2 <- cX2[sel,,drop=FALSE]
+
 
     ##X1 <- Matrix::head(X1[order(-apply(X1,1,sd)),],50)
     xlist <- list(X0, cX, cX2)

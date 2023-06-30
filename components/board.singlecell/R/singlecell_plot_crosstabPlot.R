@@ -288,20 +288,18 @@ singlecell_plot_crosstabPlot_server <- function(id,
         )
       }
 
-      if (1) {
-        ## main proportion graph
-        klrpal1 <- playdata::COLORS[1:nrow(grp.score1)]
-        par(mar = c(4, 5, 0.3, 3), mgp = c(2.4, 0.9, 0))
-        barplot(100 * grp.score1,
-          col = klrpal1, las = 3, srt = 45, xlim = 1.3 * xlim,
-          ylim = c(0, 99.99), ylab = "proportion (%)", cex.axis = 0.90
-        )
-        legend(1.02 * xlim[2], 100,
-          legend = rev(rownames(grp.score1)),
-          fill = rev(klrpal1), xpd = TRUE, cex = 0.8, y.intersp = 0.8,
-          bg = "white", bty = "n"
-        )
-      }
+      ## main proportion graph
+      klrpal1 <- playdata::COLORS[1:nrow(grp.score1)]
+      par(mar = c(4, 5, 0.3, 3), mgp = c(2.4, 0.9, 0))
+      barplot(100 * grp.score1,
+        col = klrpal1, las = 3, srt = 45, xlim = 1.3 * xlim,
+        ylim = c(0, 99.99), ylab = "proportion (%)", cex.axis = 0.90
+      )
+      legend(1.02 * xlim[2], 100,
+        legend = rev(rownames(grp.score1)),
+        fill = rev(klrpal1), xpd = TRUE, cex = 0.8, y.intersp = 0.8,
+        bg = "white", bty = "n"
+      )
     }
 
     PlotModuleServer(

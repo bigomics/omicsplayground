@@ -380,11 +380,10 @@ DataViewBoard <- function(id, pgx) {
       counts <- counts[, ss, drop = FALSE]
       log2counts <- log2(1 + counts)
 
-      if (1) {
-        names(total.counts) <- substring(names(total.counts), 1, 30)
-        colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
-        colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
-      }
+      names(total.counts) <- substring(names(total.counts), 1, 30)
+      colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
+      colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
+
 
       res <- list(
         total.counts = total.counts,

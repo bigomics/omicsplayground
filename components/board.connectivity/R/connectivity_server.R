@@ -373,7 +373,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     connectivityFoldchangeTable <- NULL
     getLeadingEdgeGraph <- NULL
     
-if(1) {
     connectivity_plot_FCFCplots_server(
       "FCFCplots",
       pgx = pgx,
@@ -495,7 +494,6 @@ if(1) {
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast
     )
-}
     
   }) ## end of moduleserver
 } ## end-of-Board

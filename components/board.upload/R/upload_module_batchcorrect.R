@@ -8,17 +8,6 @@
 ##==================== BATCHCORRECT GADGET UI =================================
 ##=============================================================================
 
-if(0) {
-  load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-  BatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
-  out <- gadgetize2(
-    BatchCorrectUI, BatchCorrectServer,
-    title = "UploadGadget", height=640, size="l",
-    X = ngs$X, pheno=ngs$samples )
-  names(out)
-
-}
-
 BatchCorrectGadget <- function(X, pheno, height=720) {
   gadgetize(BatchCorrectUI, BatchCorrectServer,
             title="BatchCorrect",
@@ -274,14 +263,6 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
         ##mnn.correct <- "MNN" %in% bc
         mnn.correct  <- NULL
         nnm.correct <- "NNM" %in% bc
-
-        if(0) {
-            ## disable parameter correction if doing fancy stuff??
-            if(pca.correct || sva.correct || hc.correct || nnm.correct ) {
-                bio.correct <- c()
-                bp <- c()
-            }
-        }
 
         X0 <- geneX()
         if(is.count) {

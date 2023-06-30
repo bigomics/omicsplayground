@@ -894,66 +894,63 @@ PlotModuleServer <- function(id,
 
       render <- render2 <- NULL
 
-      if (1) {
-        if (!is.null(func) && plotlib == "base") {
-          render <- shiny::renderPlot(
-            {
-              func()
-            },
-            res = res.1
-          )
+      if (!is.null(func) && plotlib == "base") {
+        render <- shiny::renderPlot(
+          {
+            func()
+          },
+          res = res.1
+        )
+      }
+      if (!is.null(func2) && plotlib2 == "base") {
+        render2 <- shiny::renderPlot(
+          {
+            func2()
+          },
+          res = res.2
+        )
+      }
+        if (!is.null(func) && plotlib == "grid") {
+            render <- shiny::renderPlot(
+                {
+                    grid::grid.draw(func(), recording = FALSE)
+                },
+                res = res.1
+            )
         }
-        if (!is.null(func2) && plotlib2 == "base") {
-          render2 <- shiny::renderPlot(
-            {
-              func2()
-            },
-            res = res.2
-          )
+        if (!is.null(func2) && plotlib2 == "grid") {
+            render2 <- shiny::renderPlot(
+                {
+                    grid::grid.draw(func2(), recording = FALSE)
+                },
+                res = res.2
+            )
         }
-          if (!is.null(func) && plotlib == "grid") {
-              render <- shiny::renderPlot(
-                  {
-                      grid::grid.draw(func(), recording = FALSE)
-                  },
-                  res = res.1
-              )
-          }
-          if (!is.null(func2) && plotlib2 == "grid") {
-              render2 <- shiny::renderPlot(
-                  {
-                      grid::grid.draw(func2(), recording = FALSE)
-                  },
-                  res = res.2
-              )
-          }
-        if (plotlib == "image") {
-          render <- shiny::renderImage(func(), deleteFile = FALSE)
-        }
-        if (!is.null(func2) && plotlib2 == "image") {
-          render2 <- shiny::renderImage(func2(), deleteFile = FALSE)
-        }
-
-        if (grepl("cacheKeyExpr", head(renderFunc, 1))) {
-          render <- shiny::renderCachedPlot(
-            func(),
-            cacheKeyExpr = {
-              list(csvFunc())
-            },
-            res = res.1
-          )
-        }
-        if (grepl("cacheKeyExpr", head(renderFunc2, 1))) {
-          render2 <- shiny::renderCachedPlot(
-            func2(),
-            cacheKeyExpr = {
-              list(csvFunc())
-            },
-            res = res.2
-          )
-        }
+      if (plotlib == "image") {
+        render <- shiny::renderImage(func(), deleteFile = FALSE)
+      }
+      if (!is.null(func2) && plotlib2 == "image") {
+        render2 <- shiny::renderImage(func2(), deleteFile = FALSE)
       }
 
+      if (grepl("cacheKeyExpr", head(renderFunc, 1))) {
+        render <- shiny::renderCachedPlot(
+          func(),
+          cacheKeyExpr = {
+            list(csvFunc())
+          },
+          res = res.1
+        )
+      }
+      if (grepl("cacheKeyExpr", head(renderFunc2, 1))) {
+        render2 <- shiny::renderCachedPlot(
+          func2(),
+          cacheKeyExpr = {
+            list(csvFunc())
+          },
+          res = res.2
+        )
+      }
 
       if (is.null(render)) {
         if (plotlib == "plotly") {

@@ -45,14 +45,6 @@ PcsfBoard <- function(id, pgx) {
     },
     {
 
-      if(0) {
-        library(playbase)
-        library(PCSF)
-        source("./util_pcsf.R")
-        pgx <- playbase::pgx.load("~/Playground/pgx/example-data.pgx")
-        names(pgx$gx.meta$meta)
-      }
-
       dbg("[pcsf_server.R:pcsf_compute] reacted!")
       
       NTOP = 4000

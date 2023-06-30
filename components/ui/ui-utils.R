@@ -184,12 +184,6 @@ this.style <- function(id, css, ns=NULL) {
 
 alertDataLoaded <- function(session, ngs) {
     if(!is.null(ngs)) return()
-    if(0) {
-        shinyalert::shinyalert(
-          title = NULL,
-          text = "Please first load a dataset"
-        )
-    }
     message("[alertDataLoaded] WARNING:: no PGX object")
 }
 

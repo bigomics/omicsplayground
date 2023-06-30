@@ -3,25 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-if(0) {
-  ## install.packages("shinyFeedback")
-
-  shiny::shinyApp(
-    ui = shiny::fluidPage(
-      shiny::actionButton("show","show"),
-      send_referral_ui("referral")
-    ),
-    server = function(input, output) {
-      send_referral_server(
-        id = "referral",
-        r.show = reactive(input$show)
-      )
-    }
-  )
-
-
-}
-
 SendReferralModuleUI <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("modal"))

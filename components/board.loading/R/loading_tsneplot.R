@@ -88,26 +88,12 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
               F[is.na(F)] <- 0 ## really??
               colnames(F) <- fnames  ## might be lost...
               
-              if(0) {
-                system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
-                corF <- abs(corF) ## negative corr is also good...
-                ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
-                corF[is.na(corF)] <- 0
-                distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]                        
-                ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
-                pos <- try( Rtsne::Rtsne( distF,
-                                         perplexity = ppx,
-                                         check_duplicates = FALSE,
-                                         is_distance = TRUE
-                                         )$Y )
-              } else {
-                ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
-                pos <- try( Rtsne::Rtsne( t(abs(F)),
-                                         perplexity = ppx,
-                                         check_duplicates = FALSE,
-                                         is_distance = FALSE
-                                         )$Y )
-              }
+              ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
+              pos <- try( Rtsne::Rtsne( t(abs(F)),
+                                        perplexity = ppx,
+                                        check_duplicates = FALSE,
+                                        is_distance = FALSE
+                                        )$Y )
               ## safe...
               if("try-error" %in% class(pos)) {
                 pos <- svd(F)$v[,1:2]

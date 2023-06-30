@@ -46,23 +46,8 @@ WgcnaBoard <- function(id, pgx) {
         on.exit(progress$close())
         progress$set(message = "Calculating WGCNA...", value = 0)
         message("[wgcna.compute] >>> Calculating WGCNA...")
-        if (0) {
-          shinyalert::shinyalert(
-            title = "",
-            text = "No WGCNA data found in PGX object. Computing now.. "
-          )
-        }
 
         WGCNA::enableWGCNAThreads()
-
-        if (0) {
-          liv <- read.csv("~/Downloads/LiverFemale3600.csv")
-          X <- as.matrix(liv[, 9:ncol(liv)])
-          rownames(X) <- liv$gene_symbol
-          X <- X[order(-apply(X, 1, sd)), ]
-          X <- X[!duplicated(rownames(X)), ]
-          dim(X)
-        }
 
         out <- playbase::pgx.wgcna(
           pgx = pgx,

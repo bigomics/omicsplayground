@@ -720,20 +720,18 @@ PasswordAuthenticationModule <- function(id,
         valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
         login.OK   <- (valid.user && valid.pw && valid.date)
 
-        if(1) {
-            message("--------- password login ---------")
-            ##message("input.username = ",input$login_username)
-            message("input.email    = ",input$login_email)
-            message("input.password = ",input$login_password)
-            message("user.password  = ",CREDENTIALS[sel,"password"])
-            message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
-            message("user.email     = ",CREDENTIALS[sel,"email"])
-            message("user.limit     = ",CREDENTIALS[sel,"limit"])
-            message("valid.user     = ",valid.user)
-            message("valid.date     = ",valid.date)
-            message("valid.pw       = ",valid.pw)
-            message("----------------------------------")
-        }
+        message("--------- password login ---------")
+        ##message("input.username = ",input$login_username)
+        message("input.email    = ",input$login_email)
+        message("input.password = ",input$login_password)
+        message("user.password  = ",CREDENTIALS[sel,"password"])
+        message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
+        message("user.email     = ",CREDENTIALS[sel,"email"])
+        message("user.limit     = ",CREDENTIALS[sel,"limit"])
+        message("valid.user     = ",valid.user)
+        message("valid.date     = ",valid.date)
+        message("valid.pw       = ",valid.pw)
+        message("----------------------------------")
 
         if (login.OK) {
             message("[PasswordAuthenticationModule::login] PASSED : login OK! ")

@@ -86,40 +86,6 @@ wgcna_plot_TOMheatmap_server <- function(id,
         main = NULL
       )
 
-      if (0) {
-        source("~/Playground/omicsplayground/R/gx-heatmap.r")
-        D <- selectTOM
-        diag(D) <- 0
-        ann <- data.frame(col = selectColors)
-        rownames(ann) <- colnames(D)
-
-        par(mfrow = c(1, 1))
-        ii <- selectTree$order
-        image(D[ii, ii])
-
-        Heatmap(D[ii, ii],
-          top_annotation = HeatmapAnnotation(module = ann[ii, ]),
-          cluster_rows = FALSE,
-          cluster_columns = FALSE
-        )
-
-        gx <- D
-        col.annot <- ann
-        symm <- TRUE
-        scale <- "none"
-        playbase::gx.heatmap(D,
-          symm = TRUE, scale = "none",
-          dist.method = "euclidean",
-          col.dist.method = "euclidean",
-          clust.method = "average",
-          nmax = 99999,
-          col.annot = ann, verbose = 3, annot.ht = 2
-        )
-
-
-        playbase::gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
-      }
-
       ## add color legend
       frame()
       me.names <- colnames(MEs)

@@ -63,20 +63,18 @@ intersection_scatterplot_pairs_server <- function(id,
 
       ## subsample for speed: take top1000 + 1000
       df <- data.frame(fc0)
-      if (1) {
-        ntop <- 99999
-        ## ntop <- input$splom_ntop
-        jj <- match(sel.genes, rownames(df))
-        jj <- c(jj, 1:min(ntop, nrow(df)))
-        if (nrow(df) > ntop) {
-          nremain <- setdiff(1:nrow(df), jj)
-          jj <- c(jj, sample(nremain, min(1000, length(nremain)))) ## add 1000 random
-        }
-        jj <- unique(jj)
-        ## df <- data.frame(head(fc0,ntop))
-        df <- data.frame(df[jj, ])
-        list(df, sel.genes)
+      ntop <- 99999
+      ## ntop <- input$splom_ntop
+      jj <- match(sel.genes, rownames(df))
+      jj <- c(jj, 1:min(ntop, nrow(df)))
+      if (nrow(df) > ntop) {
+        nremain <- setdiff(1:nrow(df), jj)
+        jj <- c(jj, sample(nremain, min(1000, length(nremain)))) ## add 1000 random
       }
+      jj <- unique(jj)
+      ## df <- data.frame(head(fc0,ntop))
+      df <- data.frame(df[jj, ])
+      list(df, sel.genes)
     })
 
     scatterPlotMatrix.PLOT <- function() {

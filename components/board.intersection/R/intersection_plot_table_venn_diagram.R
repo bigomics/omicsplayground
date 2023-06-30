@@ -123,92 +123,79 @@ intersection_plot_venn_diagram_server <- function(id,
       }
 
       p <- NULL
-      if (0) {
-        limma::vennDiagram(
-          dt1,
-          main = NULL, cex.main = 0.2, cex = 1.2, mar = c(0, 0, 2, 0),
-          include = include, bty = "n", fg = grey(0.7),
-          circle.col = c("turquoise", "salmon", "lightgreen", "orange")
+
+      # convert matrix to list, simplify = FALSE will avoid apply function to simplify the result to a matrix
+      x <- apply(dt1, 2, function(x) rownames(dt1)[which(x != 0)], simplify = FALSE)
+
+      xlen <- sapply(x, length)
+
+      if (length(x) == 0 || all(xlen == 0)) {
+        frame()
+        text(0.5, 0.5, "Error: no valid genes. Please adjust thresholds.",
+          col = "red"
         )
-        tt <- paste(label, "=", plot_names)
-        legend("topleft",
-          legend = tt, bty = "n", cex = 0.9, y.intersp = 0.95,
-          inset = c(0.04, -0.01), xpd = TRUE
-        )
-      } else {
-        # convert matrix to list, simplify = FALSE will avoid apply function to simplify the result to a matrix
-        x <- apply(dt1, 2, function(x) rownames(dt1)[which(x != 0)], simplify = FALSE)
-
-        xlen <- sapply(x, length)
-
-        if (length(x) == 0 || all(xlen == 0)) {
-          frame()
-          text(0.5, 0.5, "Error: no valid genes. Please adjust thresholds.",
-            col = "red"
-          )
-          return(NULL)
-        }
-
-        if (include == "up/down") {
-          x_up <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x > 0)], x[which(x > 0)]))
-          x_down <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x < 0)], x[which(x < 0)]))
-
-          count_up <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_up))$count
-          count_down <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_down))$count
-          count_both <- paste0(count_up, "\n", count_down)
-
-          p <- ggVennDiagram::ggVennDiagram(
-            x,
-            label = "both",
-            edge_size = 0.4
-          ) +
-            ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
-            ggplot2::theme(
-              legend.position = "none",
-              plot.margin = ggplot2::unit(c(1, 1, 1, 1) * 0.3, "cm")
-            )
-
-          p$layers[[4]]$data$both <- count_both
-        } else {
-          # convert matrix x to a list of vectors
-          p <- ggVennDiagram::ggVennDiagram(
-            x,
-            label = "count",
-            edge_size = 0.4
-          ) +
-            ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
-            ggplot2::theme(
-              legend.position = "none",
-              plot.margin = ggplot2::unit(c(1, 1, 1, 1) * 0.3, "cm")
-            )
-        }
-
-        ## legend
-        tt <- paste(label, "=", plot_names)
-        n1 <- ceiling(length(tt) / 2)
-        tt1 <- tt[1:n1]
-        tt2 <- tt[(n1 + 1):length(tt)]
-        if (length(tt2) < length(tt1)) tt2 <- c(tt2, "   ")
-        tt1 <- paste(tt1, collapse = "\n")
-        tt2 <- paste(tt2, collapse = "\n")
-
-        xlim <- ggplot2::ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
-        ylim <- ggplot2::ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
-        x1 <- xlim[1] - 0.1 * diff(xlim)
-        x2 <- xlim[1] + 0.6 * diff(xlim)
-        y1 <- ylim[2] + 0.12 * diff(xlim)
-
-        p <- p +
-          ggplot2::annotate("text",
-            x = x1, y = y1, hjust = "left",
-            label = tt1, size = 4, lineheight = 0.83
-          ) +
-          ggplot2::annotate("text",
-            x = x2, y = y1, hjust = "left",
-            label = tt2, size = 4, lineheight = 0.83
-          ) +
-          ggplot2::coord_sf(clip = "off")
+        return(NULL)
       }
+
+      if (include == "up/down") {
+        x_up <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x > 0)], x[which(x > 0)]))
+        x_down <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x < 0)], x[which(x < 0)]))
+
+        count_up <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_up))$count
+        count_down <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_down))$count
+        count_both <- paste0(count_up, "\n", count_down)
+
+        p <- ggVennDiagram::ggVennDiagram(
+          x,
+          label = "both",
+          edge_size = 0.4
+        ) +
+          ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
+          ggplot2::theme(
+            legend.position = "none",
+            plot.margin = ggplot2::unit(c(1, 1, 1, 1) * 0.3, "cm")
+          )
+
+        p$layers[[4]]$data$both <- count_both
+      } else {
+        # convert matrix x to a list of vectors
+        p <- ggVennDiagram::ggVennDiagram(
+          x,
+          label = "count",
+          edge_size = 0.4
+        ) +
+          ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
+          ggplot2::theme(
+            legend.position = "none",
+            plot.margin = ggplot2::unit(c(1, 1, 1, 1) * 0.3, "cm")
+          )
+      }
+
+      ## legend
+      tt <- paste(label, "=", plot_names)
+      n1 <- ceiling(length(tt) / 2)
+      tt1 <- tt[1:n1]
+      tt2 <- tt[(n1 + 1):length(tt)]
+      if (length(tt2) < length(tt1)) tt2 <- c(tt2, "   ")
+      tt1 <- paste(tt1, collapse = "\n")
+      tt2 <- paste(tt2, collapse = "\n")
+
+      xlim <- ggplot2::ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
+      ylim <- ggplot2::ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
+      x1 <- xlim[1] - 0.1 * diff(xlim)
+      x2 <- xlim[1] + 0.6 * diff(xlim)
+      y1 <- ylim[2] + 0.12 * diff(xlim)
+
+      p <- p +
+        ggplot2::annotate("text",
+          x = x1, y = y1, hjust = "left",
+          label = tt1, size = 4, lineheight = 0.83
+        ) +
+        ggplot2::annotate("text",
+          x = x2, y = y1, hjust = "left",
+          label = tt2, size = 4, lineheight = 0.83
+        ) +
+        ggplot2::coord_sf(clip = "off")
       p
     }
 
