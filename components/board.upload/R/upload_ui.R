@@ -46,7 +46,7 @@ UploadUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Upload",
-      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). NB Users can now create contrasts from the platform itself, so the contrasts.csv file is optional."),
+      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons (comparisons.csv). NB. Users can now create comparisons from the platform itself, so the comparisons.csv file is optional."),
       br(),
       div(
         class = "row",
