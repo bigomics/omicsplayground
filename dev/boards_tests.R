@@ -11,25 +11,14 @@ driver$getDebugLog()
 driver$listWidgets()$input
 driver$listWidgets()$output
 
-  # loadTimeout = NULL,
-  # checkNames = TRUE,
-  # debug = "shiny_console",
-  # phantomTimeout = 50000,
-  # seed = NULL,
-  # cleanLogs = FALSE,
-  # shinyOptions = list(),
-  # renderArgs = NULL,
-  # options = list()
-  # )
-
+# changing pgx file
 
 pgx_file <- normalizePath("data/example-data.pgx")
 
+driver$getValue("pgx_path")
+
 driver$setValue("pgx_path", pgx_file)
 
-driver$getValue("tcga-contrast")
-
-# get all values for the tcga-contrast input
-driver$getAllValues("tcga-contrast")
+driver$getValue("pgx_path")
 
 driver$finalize()
