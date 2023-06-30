@@ -31,8 +31,8 @@ app_server <- function(input, output, session) {
 
   # working version
 
-      # load("C:/code//omicsplayground/data/example-data.pgx")
-      # server <- TcgaBoard('tcga', loaded_pgx())
+      # load("../../../data/example-data.pgx")
+      # server <- TcgaBoard('tcga', pgx)
 
   
 }
