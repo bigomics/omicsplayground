@@ -147,7 +147,7 @@ ConnectivityUI <- function(id) {
           ),          
           bslib::layout_column_wrap(
             width = 1,
-            ## style = htmltools::css(grid_template_columns = "9fr 3fr"),
+
             connectivity_table_foldchange_ui(
               ns("connectivityFoldchangeTable"),
               title = "Fold-change table",

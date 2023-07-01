@@ -27,7 +27,7 @@ loading_table_datasets_public_server <- function(id, table) {
 
     pgxTable_DT <- reactive({
       df <- table()
-      ##shiny::req(df)
+
       # need this, otherwise there is an error on user logout
       validate(need(nrow(df)>0, 'No public datasets!'))
       

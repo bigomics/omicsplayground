@@ -115,7 +115,7 @@ DataViewBoard <- function(id, pgx) {
         }
         shiny::updateSelectizeInput(session, "search_gene",
                                     choices = genes1, selected = selgene,
-                                    ## options = list(maxOptions = 9999999),
+
                                     options = list(maxOptions = 1001),
                                     server = TRUE
         )
@@ -147,7 +147,7 @@ DataViewBoard <- function(id, pgx) {
       samples
     })
 
-    ## dbg("[***dataview_server] names.input = ",names(input))
+
     dataview_module_geneinfo_server(
       "geneinfo",
       r.gene = reactive(input$search_gene),
@@ -301,7 +301,7 @@ DataViewBoard <- function(id, pgx) {
           libsize
           counts <- t(t(counts) * libsize)
         }
-        ## counts <- round(counts)
+
       }
       if (sum(is.na(counts)) > 0) {
         cat("WARNING:: plot counts: counts has missing values!\n")
@@ -316,7 +316,7 @@ DataViewBoard <- function(id, pgx) {
         newx <- c()
         for (g in grps) {
           mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
-          ## mx = rowSums(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)  ## SUM or MEAN???
+
           newx <- cbind(newx, mx)
         }
         if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)

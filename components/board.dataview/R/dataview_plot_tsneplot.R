@@ -73,7 +73,7 @@ dataview_plot_tsne_server <- function(id,
 
       fc1 <- tanh(0.99 * scale(gx)[, 1])
       fc1 <- tanh(0.99 * scale(gx, center = FALSE)[, 1])
-      ## fc1 <- tanh(0.99 * gx/sd(gx))
+
       fc2 <- (fc1 - min(fc1))
 
       data <- data.frame(
@@ -157,7 +157,7 @@ dataview_plot_tsne_server <- function(id,
       }
 
       plot_dl$plot <- fig
-      ## fig <- plotly::ggplotly(fig)
+
       fig
     }
 
@@ -165,7 +165,7 @@ dataview_plot_tsne_server <- function(id,
       fig <- plot.RENDER() +
         playbase::guide_continuous(aes = "color", type = "steps", width = .7) +
         playbase::theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
-      ## plotly::ggplotly(fig)
+
       fig
     }
 
@@ -264,8 +264,8 @@ dataview_plot_tsne_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## func = plot.RENDER,
-      ## func2 = modal_plot.RENDER,
+
+
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

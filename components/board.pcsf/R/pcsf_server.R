@@ -62,7 +62,7 @@ PcsfBoard <- function(id, pgx) {
       ## ------------ find gene clusters --------------      
       clust <- playbase::pgx.FindClusters(
         X = scale(t(pgx$X[genes,])),
-        ##  method=c("kmeans","hclust","louvain","meta"),
+
         method=c("kmeans"), 
         top.sd=1000, npca=40 )
 
@@ -80,10 +80,10 @@ PcsfBoard <- function(id, pgx) {
       ee <- STRING[sel,]
       genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
       rho <- cor(t(pgx$X[genes,]))
-      ##rho.ee <- abs(rho[cbind(ee$from, ee$to)])
+
       rho.ee <- pmax(rho[cbind(ee$from, ee$to)],0.001)
       ee$cost <- ee$cost**1 / rho.ee  ## balance PPI with experiment
-      ##ee$cost <- ee$cost**1 * (1 - rho.ee)**1
+
 
       ## ------------ create igraph network --------------      
       ppi <- PCSF::construct_interactome(ee)

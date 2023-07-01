@@ -19,8 +19,8 @@ dataview_plot_tissue_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    # outputFunc = plotOutput,
-    # outputFunc2 = plotOutput,
+
+
     info.text = info.text,
     caption = caption,
     options = NULL,
@@ -116,10 +116,10 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         df, tissue = forcats::fct_reorder(
               stringr::str_to_title(paste(tissue, " ")),x))
 
-      # df$tissue <- factor(df$tissue, levels = df$tissue)
+
       plotly::plot_ly(
         data = df,
-        ## name = pd$gene
+
         y = ~tissue,
         x = ~x,
         type = "bar",

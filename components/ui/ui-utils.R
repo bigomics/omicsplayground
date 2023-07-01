@@ -4,8 +4,8 @@
 ##
 
 #star.symbols <- function(n, pch="\u2605") {
-#    if(n==0) return("")
-#    paste(rep(pch,n),collapse="")
+
+
 #}
 
 
@@ -43,7 +43,7 @@ visPrint <- function(visnet, file, width=3000, height=3000, delay=0, zoom=1) {
       file.copy(tmp.png,file,overwrite=TRUE)
     }
     unlink(tmp.html)
-    ##unlink(tmp.png)
+
 }
 
 
@@ -121,13 +121,13 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = miniUI::miniPage(
-        ##shinyalert::useShinyalert(),
+
         miniUI::gadgetTitleBar(title),
         miniUI::miniContentPanel(moduleUI(id))
     )
     server = function(input, output, session) {
         return_obj <- moduleSERVER(id, ...)
-        ##return_obj <- moduleSERVER(id)
+
         shiny::observeEvent( input$done, {
             shiny::stopApp(return_obj())
         })
@@ -149,16 +149,16 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
 
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
-        ##shinyalert::useShinyalert()
+
     )
     server = function(input, output, session)
     {
         return_obj <- moduleSERVER(id, ...)
-        ## return_obj <- moduleSERVER(id)
+
         shiny::showModal( shiny::modalDialog(
             moduleUI(id),
             footer = shiny::tagList(
-                ## shiny::modalButton("Cancel"),
+
                 shiny::actionButton("gdgt_close","X")
             ),
             size = size,
@@ -172,7 +172,7 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     }
 
     pgx <- shiny::runGadget(ui, server)
-    ## shiny::shinyApp(ui, server)
+
     cat(names(pgx))
     pgx
 }
@@ -192,7 +192,7 @@ pgx.randomCartoon <- function() {
         list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
         list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
         list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
-        ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
+
         list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
@@ -202,7 +202,7 @@ pgx.randomCartoon <- function() {
         list(slogan="Big Data meets Biology", img="bigdata-meets.png")
     )
     ##randomCartoon <- shiny::reactive({
-    ##invalidateLater(20000)
+
     cartoon <- sample(cartoon_list,1)[[1]]
     cartoon$img2 = file.path("cartoons",cartoon$img)
     cartoon$img  = file.path("www/cartoons",cartoon$img)
@@ -215,7 +215,7 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
         list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
         list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
         list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
-        ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
+
         list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
@@ -234,24 +234,24 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
 
     toon <- randomCartoon()
     shiny::showModal(shiny::modalDialog(
-        #title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
-        ##title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
+
+
         title = shiny::div( shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style="text-align:center;"),
-        #title = div(h2(toon$slogan), style="text-align:center;width:100%;"),
+
         shiny::img(src = toon$img2, class = "img-fluid"),
-        ##footer = div(msg, style="text-align:center;"),
+
         footer = fillRow( flex=c(1,NA,1), " ", msg, " "),
         size = "l",
         easyClose = FALSE,
         fade = TRUE
     ))
-    ## Sys.sleep(600)  # for debugging
+
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")
 {
     shiny::showModal(shiny::modalDialog(
-        ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
+
         title = NULL,
         shiny::HTML("<br><center><p>",msg,"</p></center>"),
         footer = NULL,

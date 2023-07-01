@@ -66,7 +66,7 @@ expression_plot_volcanoAll_server <- function(id,
       F <- ct$F
       Q <- ct$Q
 
-      ## comp = names(pgx$gx.meta$meta)
+
       comp <- names(F)
       if (length(comp) == 0) {
         return(NULL)
@@ -139,7 +139,7 @@ expression_plot_volcanoAll_server <- function(id,
             var = is.sig1,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", ## plotlib="ggplot",
+
             hilight = NULL,
             hilight2 = genes2,
             xlim = xmax * c(-1, 1),

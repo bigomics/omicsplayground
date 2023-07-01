@@ -38,7 +38,7 @@ upload_plot_pcaplot_server <- function(id,
     })
 
     pcaplot.RENDER <- shiny::reactive({
-      ## X <- ngs$X
+
       pheno <- phenoRT()
       counts <- countsRT()
       if (is.null(pheno) || is.null(counts)) {
@@ -59,11 +59,11 @@ upload_plot_pcaplot_server <- function(id,
       if (length(cond) == 0 || is.null(cond)) {
         return(NULL)
       }
-      ## par(mar=c(4,1,1,1))
+
       playbase::pgx.scatterPlotXY(
         clust$pos2d,
         var = cond, plotlib = "plotly",
-        legend = FALSE ## , labels=TRUE
+
       )
     })
 

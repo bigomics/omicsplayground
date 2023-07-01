@@ -36,7 +36,7 @@ app_server <- function(input, output, session) {
     } else {
         ## No honcho, no email....
         info("[server.R] No Honcho? No party..")
-        sever::sever(sever_screen0(), bg_color = "#004c7d") ## lightblue=2780e3
+
     }
 
     setwd(WORKDIR)  ## for some reason it can change!! (defined in global.R)
@@ -458,7 +458,7 @@ app_server <- function(input, output, session) {
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
 
-    ## toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)
+
     bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
 
     shiny::observeEvent({
@@ -478,8 +478,8 @@ app_server <- function(input, output, session) {
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
             warning("[server.R] !!! no data. hiding menu.")
-            ##toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
-            ##bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+
+
             shinyjs::runjs("sidebarClose()")
             shinyjs::runjs("settingsClose()")
             bigdash.selectTab(session, selected = 'welcome-tab')
@@ -508,7 +508,7 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
         tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
         tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-        ##toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))
+
 
         ## DEVELOPER only tabs (still too alpha)
         info("[server.R] disabling alpha features")
@@ -582,7 +582,7 @@ app_server <- function(input, output, session) {
 
         ## Choose type of referral modal upon timeout:
         mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
-        ##mod.timeout <- SendReferralModule("sendreferral", r.user=auth$name, r.show=r.timeout)
+
 
         observeEvent( mod.timeout$success(), {
           success <- mod.timeout$success()

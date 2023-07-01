@@ -16,7 +16,7 @@ connectivity_table_foldchange_ui <- function(
   bslib::layout_column_wrap(
     width = 1,
     height = "35%",
-    ##style = htmltools::css(grid_template_columns = "5fr 1fr"),
+
     TableModuleUI(
       id = ns("table"),
       info.text = info.text,
@@ -43,8 +43,8 @@ connectivity_table_foldchange_server <- function(id,
     get_table <- reactive({
 
       F <- getProfiles()
-#      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-#      F <- head(F,20)
+
+
       F <- F[order(rownames(F)),]
 
       S <- getConnectivityScores()
@@ -71,7 +71,7 @@ connectivity_table_foldchange_server <- function(id,
         plugins = 'scrollResize',
         fillContainer = TRUE,
         options = list(
-            #          dom = "lfrtip",
+
           dom = "lrtip",            
           pageLength = 99999,
           scrollX = TRUE,

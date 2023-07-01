@@ -22,7 +22,7 @@ featuremap_plot_gene_map_ui <- function(
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("umap_colorby"), "color by:",
-      ##choices = c("sd.X", "var.FC", "mean.FC"),
+
       choices = c("sd.X", "sd.FC"),
       selected = "sd.X", inline = TRUE
     )
@@ -84,7 +84,7 @@ featuremap_plot_gene_map_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
-      ## pos <- pgx$cluster.genes$pos[['umap2d']]
+
       pos <- getGeneUMAP()
       colnames(pos) <- c("x","y")
       hilight <- filteredGenes()

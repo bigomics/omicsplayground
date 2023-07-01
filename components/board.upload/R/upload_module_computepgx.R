@@ -139,7 +139,7 @@ upload_module_computepgx_server <- function(
                                           "remove Rik/ORF/LOC genes",
                                           "remove not-expressed"
                                           ##"Exclude immunogenes",
-                                          ##"Exclude X/Y genes"
+
                                           ),
                                     selected = c(
                                         "only.hugo",
@@ -228,11 +228,11 @@ upload_module_computepgx_server <- function(
 
                 if(!is.null(meta[['name']])) {
                     shiny::updateTextInput(session, "upload_name", value=meta[['name']])
-                    ## shiny::updateTextInput(session, ns("upload_name"), value=meta[['name']])
+
                 }
                 if(!is.null(meta[['description']])) {
                     shiny::updateTextAreaInput(session, "upload_description", value=meta[['description']])
-                    ##shiny::updateTextAreaInput(session, ns("upload_description"), value=meta[['description']])
+
                 }
 
             })
@@ -306,7 +306,7 @@ upload_module_computepgx_server <- function(
             })
 
             shiny::observeEvent( input$compute, {
-                ## shiny::req(input$upload_hugo,input$upload_filtergenes)
+
 
                 ##-----------------------------------------------------------
                 ## Check validity
@@ -352,10 +352,10 @@ upload_module_computepgx_server <- function(
                 samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
 
-                ## contrasts[is.na(contrasts)] <- 0
-                ## contrasts[is.na(contrasts)] <- ""
+
+
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
-                ##batch  <- batchRT() ## batch correction vectors for GLM
+
 
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
@@ -396,11 +396,11 @@ upload_module_computepgx_server <- function(
                 message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
 
-                # start_time <- Sys.time()
+
                 ## Create a Progress object
-                # progress <- shiny::Progress$new()
-                # progress$set(message = "Processing", value = 0)
-                # pgx.showCartoonModal("Computation may take 5-20 minutes...")
+
+
+
 
                 flt="";use.design=TRUE;prune.samples=FALSE
                 flt <- input$filter_methods
@@ -479,7 +479,7 @@ upload_module_computepgx_server <- function(
                     title = "Crunching your data!",
                     text = "Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.",
                     type = "info"
-                    ## timer = 8000
+
                 )
                 bigdash.selectTab(
                     session,
@@ -526,7 +526,7 @@ upload_module_computepgx_server <- function(
                 completed_indices <- c()
 
                 for (i in seq_along(active_processes)) {
-                    #i=1
+
                     active_obj <- active_processes[[i]]
                     current_process <- active_processes[[i]]$process
                     temp_dir <- active_processes[[i]]$temp_dir
@@ -546,7 +546,7 @@ upload_module_computepgx_server <- function(
 
                     errlog <- file.path(temp_dir,"processx-error.log")
                     outlog <- file.path(temp_dir,"processx-output.log")
-                    ## dbg("[compute PGX process] : writing stderr to ", logfile)
+
                     cat(paste(stderr_output,collapse='\n'), file=errlog, append=TRUE)
                     cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)
 
@@ -564,14 +564,14 @@ upload_module_computepgx_server <- function(
                       if (length(active_obj$stderr) > 0) {
                         ## Copy the error to the stderr of main app
                         message("Standard error from processx:")
-                        ##for (line in stderr_output) { message(line) }
+
                         err <- paste0("[processx.",nr,":stderr] ", active_obj$stderr)
                         writeLines(err, con = stderr())
                       }
                       if (length(active_obj$stdout) > 0) {
                         ## Copy the error to the stderr of main app
                         cat("Standard output from processx:")
-                        ##for (line in stderr_output) { message(line) }
+
                         out <- paste0("[processx.",nr,":stdout] ", active_obj$stdout)
                         writeLines(out, con = stdout())
                       }

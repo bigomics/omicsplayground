@@ -81,7 +81,7 @@ expression_plot_maplot_server <- function(id,
       shiny::req(pgx)
 
       dbg("[expression_plot_maplot.R] sel1 = ",sel1())
-      ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
+
 
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
@@ -134,7 +134,7 @@ expression_plot_maplot_server <- function(id,
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
-        ## gset <- GSETS[[gs]]
+
         gset <- unlist(playdata::getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(

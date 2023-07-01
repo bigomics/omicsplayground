@@ -3,9 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-##library(shiny)
-##library(shinyjs)
-##library(shinyalert)
+
+
+
 
 TimerModuleUI <- function(id) {
     ns <- shiny::NS(id)
@@ -23,7 +23,7 @@ TimerModule <- function(id,
     {
 
         start_time <- shiny::reactiveVal(Sys.time())
-        ##start_time <- Sys.time()
+
 
         nwarn = 0
         warn_start = timeout - max_warn * warn_before

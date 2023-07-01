@@ -105,7 +105,7 @@ LoadingBoard <- function(id,
           rownames = FALSE,
           escape = FALSE,
           selection = "none",
-          ## class = "compact cell-border",
+
           class = "compact row-border",
           options = list(
             dom = "t",
@@ -147,7 +147,7 @@ LoadingBoard <- function(id,
               placeholder = "Type email..."
             ),
             select_user,
-            ##shiny::textInput(ns("share_user2"), "Re-enter use email:")
+
             shiny::textOutput(ns('error_alert')) %>%
               tagAppendAttributes(style = 'color: red;')
         ),
@@ -493,7 +493,7 @@ LoadingBoard <- function(id,
             return()
           }
 
-          ## file.copy(from = pgx_file, to = new_pgx_file)
+
           shiny::withProgress(message = "Copying file to public folder...", value = 0.33, {
             pgx0  <- playbase::pgx.load(pgx_file)
             unknown.creator <- pgx0$creator %in% c(NA,"","user","anonymous","unknown")
@@ -507,7 +507,7 @@ LoadingBoard <- function(id,
           })
 
           rl$reload_pgxdir_public <- rl$reload_pgxdir_public + 1
-          ## r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+
 
           shinyalert::shinyalert(
             title = "Successfully shared!",
@@ -660,7 +660,7 @@ LoadingBoard <- function(id,
           playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb=FALSE)
         })
         shiny::removeModal(session)
-        ##return(info)
+
       }
       
       info <- playbase::pgxinfo.read(pgxdir, file = "datasets-info.csv")
@@ -843,9 +843,9 @@ LoadingBoard <- function(id,
         )
 
         # split the file name into user who shared and file name
-        #shared_pgx_df <- data.frame(stringr::str_split(shared_pgx_names, '__from__'))
+
         # remove the last '__' from the file name
-        #shared_pgx_df[2,] <- stringr::str_sub(shared_pgx_df[2,], end=-3)
+
         shared_dataset <- sub("__to__.*","",shared_pgx_names)
         shared_from <- gsub(".*__from__|__$","",shared_pgx_names)
 
@@ -899,7 +899,7 @@ LoadingBoard <- function(id,
     # event when a shared pgx is declined by a user
     observeEvent(input$decline_pgx, {
         pgx_name <- stringr::str_split(input$decline_pgx, 'decline_pgx__')[[1]][2]
-        ## pgdir <- getPGXDIR()
+
         shared_file <- file.path(pgx_shared_dir, pgx_name)
         dbg("[loading_server.R] decline_pgx : removing shared_file = ",shared_file)
         file.remove(shared_file)
@@ -970,7 +970,7 @@ LoadingBoard <- function(id,
     }, ignoreNULL = TRUE)
 
     output$download_pgx_btn <- shiny::downloadHandler(
-      ## filename = "userdata.pgx",
+
       filename = function() {
         sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
@@ -999,7 +999,7 @@ LoadingBoard <- function(id,
     }, ignoreNULL = TRUE)
 
     output$download_zip_btn <- shiny::downloadHandler(
-      ## filename = "userdata.zip",
+
       filename = function() {
         sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip_idx, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
@@ -1058,7 +1058,7 @@ LoadingBoard <- function(id,
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
           ## !!!! we should also delete entry in PGXINFO and allFC !!!
-          ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
+
           info <- read.csv(file.path(pgx.path,"datasets-info.csv"),row.names=1)
           idx <- match(pgxname,info$dataset)
           if(length(idx)) {
@@ -1137,11 +1137,11 @@ LoadingBoard <- function(id,
       pgxfile <- NULL
 
       ## Observe URL query
-      ## query <- parseQueryString(session$clientData$url_search)
+
       ## if (!is.null(query[["pgx"]])) {
-      ##   pgxfile <- query[["pgx"]]
-      ##   pgxfile <- basename(pgxfile) ## for security
-      ##   pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
+
+
+
       ## }
 
       ## Observe button press (over-rides URL query)
@@ -1316,7 +1316,7 @@ LoadingBoard <- function(id,
     ## ------------------------------------------------
     res <- list(
       loaded = reactive(r_global$loadedDataset)
-##      auth = auth
+
     )
     return(res)
   })

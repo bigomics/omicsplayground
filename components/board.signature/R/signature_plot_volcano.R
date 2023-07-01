@@ -120,7 +120,7 @@ signature_plot_volcano_server <- function(id,
         )
         title(ct[i], cex.main = cex.main, line = 0.3)
       }
-#      p <- grDevices::recordPlot()
+
 #      p
     }#)
 

@@ -81,7 +81,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
           annot.ht = annot.ht,
           cluster.samples = res$do.clust
         )
-        ## plt <- plt %>% plotly::config(displayModeBar = FALSE)
+
         plt
       } else {
         shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))

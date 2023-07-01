@@ -18,8 +18,8 @@ dataview_plot_histogram_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    # outputFunc = plotOutput,
-    # outputFunc2 = plotOutput,
+
+
     info.text = info.text,
     caption = caption,
     options = NULL,
@@ -41,7 +41,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
         main = main,
         border = FALSE,
         col = "grey",
-        freq = FALSE, ## ylim=ylim,
+
         xlim = c(min(gx), max(gx)),
         xlab = "expression (log2)",
         cex.lab = 1
@@ -92,7 +92,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
 
       df <- data.frame(
         x = rep(hist$mids, ncol(hist) - 2),
-        ## y = unlist(hist[,3:ncol(hist)]),
+
         y = as.vector(y.smooth),
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
@@ -111,7 +111,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
           #   "Sample: <b>", sample, "</b><br>",
           #   "Expression: <b>", x, "</b><br>",
           #   "Density: <b>", y, "</b>",
-          #   "<extra></extra>"
+
           # )
         ) %>%
         plotly::layout(
@@ -141,8 +141,8 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      # renderFunc = shiny::renderPlot,
-      # renderFunc2 = shiny::renderPlot,
+
+
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

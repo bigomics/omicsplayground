@@ -49,7 +49,7 @@ WgcnaUI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   shiny::div(
-    # height = 750,
+
     boardHeader(title = "WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),

@@ -112,7 +112,7 @@ enrichment_plot_volcanoall_server <- function(id,
 
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- names(F)[i]
-          ## xmax <- max(abs(mx[,"fc"]))
+
 
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -121,9 +121,9 @@ enrichment_plot_volcanoall_server <- function(id,
             var = is.sig1,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", ## plotlib="ggplot",
+
             hilight = NULL,
-            # hilight2 = sig.genes,
+
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
             ylim = c(0, ymax),
@@ -159,7 +159,7 @@ enrichment_plot_volcanoall_server <- function(id,
         nc <- ceiling(nplots / 3)
         nr <- 3
       }
-      ## if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
@@ -183,7 +183,7 @@ enrichment_plot_volcanoall_server <- function(id,
         nc <- ceiling(nplots / 4)
         nr <- 4
       }
-      ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 

@@ -6,7 +6,7 @@
 wgcna_plot_gdendogram_ui <- function(id, label, info.text, caption, height, width) {
   ns <- shiny::NS(id)
 
-##  info_text <- "<b>WGCNA gene dendrogram and gene modules.</b>"
+
 
   PlotModuleUI(
     ns("plot"),

@@ -38,7 +38,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
             
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
-      ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
+
       pgx.files <- info.table$dataset
 
       pos <- NULL
@@ -81,7 +81,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
               rownames(pos) <- colnames(F)
               colnames(pos) <- c("x","y")
             } else {            
-              ##F <- apply(F, 2, rank, na.last = "keep")
+
               rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
               F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
               F <- as.matrix(F)
@@ -103,7 +103,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             rownames(pos) <- colnames(F)
         })
         
-        ##plot(pos)
+
         pos <- round(pos, digits = 4)
         colnames(pos) <- c("x", "y")        
         write.csv(pos, file = tsne.file)
@@ -157,7 +157,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         text = ~ paste(ifelse(nrow(df),"Dataset:","Oops!"), dataset,
           ifelse(nrow(df),"<br>Comparison:",""), comparison),
         color = ~dataset,
-        ## colors = omics_pal_c(palette = "brand_blue")(100),
+
         marker = list(
           size = marker_size,
           line = list(
@@ -178,7 +178,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           font = list( size=font_size ),
           xref = "x",
           yref = "y",          
-          ## textposition = 'top',
+
           xanchor = "middle",
           yanchor = "bottom",
           yshift = 0.02*dy,

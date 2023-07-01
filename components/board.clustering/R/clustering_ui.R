@@ -15,7 +15,7 @@ ClusteringInputs <- function(id) {
     withTooltip(
       shiny::radioButtons(
         ns("hm_splitby"), "Split samples by:", inline = TRUE,
-        ## selected="phenotype",
+
         choices = c("none", "phenotype", "gene")
       ),
       "Split the samples by phenotype or expression level of a gene.",
@@ -130,7 +130,7 @@ ClusteringUI <- function(id) {
 
   div(
     boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
-    ##bs_alert(board_info),
+
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
@@ -151,12 +151,12 @@ ClusteringUI <- function(id) {
               caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
               info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
               height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-              ##height = c("100%", TABLE_HEIGHT_MODAL),                
+
               width = c("auto","100%")
             ),
             bslib::layout_column_wrap(
               width = 1,
-              ## height = c("100%", TABLE_HEIGHT_MODAL),
+
               equal_heights = "row",
               clustering_plot_clusterannot_ui(
                 id = ns("plots_clustannot"),
@@ -164,7 +164,7 @@ ClusteringUI <- function(id) {
                 info.text =  "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
                 caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
                 label = "a",
-                ##height = c("calc(60vh - 100px)", TABLE_HEIGHT_MODAL),
+
                 height = c("60%", TABLE_HEIGHT_MODAL),              
                 width = c("100%", "100%")
               ),
@@ -173,7 +173,7 @@ ClusteringUI <- function(id) {
                 title = "Annotation scores",
                 info.text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings.",
                 caption = "Average correlation values of annotation terms, for each gene cluster.",
-                ##height = c("calc(40vh - 100px)", TABLE_HEIGHT_MODAL),
+
                 height = c("40%", TABLE_HEIGHT_MODAL),              
                 width = c("auto", "100%")
               )
@@ -198,7 +198,7 @@ ClusteringUI <- function(id) {
               info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis (PCA), t-distributed stochastic embedding (tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
               caption = "Clustering plot of the dataset samples.",
               label = "",
-              ##  height = c(fullH, TABLE_HEIGHT_MODAL),
+
               height = c("100%", TABLE_HEIGHT_MODAL),            
               width = c("auto", "100%"),
               parent = ns
@@ -209,7 +209,7 @@ ClusteringUI <- function(id) {
               info.text = "This figure visualizes the distribution of the available phenotype data. The plots show the distribution of the phenotypes superposed on the t-SNE clustering. You can choose to put the group labels in the figure or as separate legend in the plot settings",
               caption = "t-SNE clustering plot of phenotype distribution for the current samples.",
               label = "",
-              ## height = c(fullH, TABLE_HEIGHT_MODAL),
+
               height = c("100%", TABLE_HEIGHT_MODAL),            
               width = c("auto", "100%")
             )
@@ -237,7 +237,7 @@ ClusteringUI <- function(id) {
                 caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
                 label = "a",
                 width = c("100%", "100%"),
-                ##height = c("calc(50vh - 108px)", TABLE_HEIGHT_MODAL)
+
                 height = c("100%", TABLE_HEIGHT_MODAL)              
               ),
               clustering_table_parcoord_ui(
@@ -247,7 +247,7 @@ ClusteringUI <- function(id) {
                 caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                 label = "a",
                 width = c("100%", "100%"),
-                ##height = c("calc(50vh - 108px)", TABLE_HEIGHT_MODAL)
+
                 height = c("100%", TABLE_HEIGHT_MODAL)              
               )
             ),

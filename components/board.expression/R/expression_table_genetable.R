@@ -87,7 +87,7 @@ expression_table_genetable_server <- function(id,
 
       DT::datatable(res,
         rownames = FALSE,
-        ## class = 'compact cell-border stripe hover',
+
         class = "compact hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
@@ -95,7 +95,7 @@ expression_table_genetable_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          # paging = TRUE,
+
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = scrollY,
@@ -105,14 +105,14 @@ expression_table_genetable_server <- function(id,
           search = list(
             regex = TRUE,
             caseInsensitive = TRUE
-            ## , search = 'M[ae]'
+
           )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(colnames(res)[fx.col],
-          ## background = DT::styleColorBar(c(0,3), 'lightblue'),
+
           background = playbase::color_from_middle(fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",

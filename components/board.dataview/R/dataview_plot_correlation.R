@@ -19,8 +19,8 @@ dataview_plot_correlation_ui <- function(
     label = label,
     plotlib = "plotly",
     caption = caption,
-    ## outputFunc = plotly::plotlyOutput,
-    ## outputFunc2 = plotly::plotlyOutput,
+
+
     info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
@@ -127,7 +127,7 @@ dataview_plot_correlation_server <- function(id,
         type = "bar",
         marker = list(
           color = ~color # ,
-          # line = list(color = omics_colors("super_dark_grey"), width = .5)
+
         ),
         hovertemplate = ~annot
       ) %>%

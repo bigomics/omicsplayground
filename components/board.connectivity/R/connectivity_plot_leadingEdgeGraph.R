@@ -121,8 +121,8 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)),50)[1] ## about 150 edges
-        ##shiny::updateSliderInput(session, "graph_threshold", value = wt0)
+
+
 
         return(gr)
       })

@@ -121,7 +121,7 @@ pcsf_plot_network_server <- function(id,
       if(highlightby()=="centrality") {
         ewt <- 1.0 / igraph::E(net)$weight
         bc <- igraph::page_rank(net, weights=ewt)$vector
-        ##bc <- igraph::betweenness(net)
+
         label_cex <- 30 + 80 * (bc / max(bc))**2
       }
       if(highlightby()=="FC") {
@@ -136,7 +136,7 @@ pcsf_plot_network_server <- function(id,
         label_cex <- 30 + 80 * (abs(fx) / max(abs(fx)))**2
       }
       
-      ##E(net)$weight <- 1/(E(net)$weight+1e-10)
+
       visnet <- visplot.PCSF(
         net, style = 1,
         node_size = 30,

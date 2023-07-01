@@ -82,10 +82,10 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
                 inspectdf::inspect_cat() %>%
                 inspectdf::show_plot()
             tt2 <- paste(nrow(pheno), "samples x", ncol(pheno), "phenotypes")
-            ## tt2 <- paste(ncol(pheno),"phenotypes")
+
             p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle = tt2) +
                 ggplot2::theme(
-                    ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
+
                     axis.text.y = ggplot2::element_text(
                         size = 12,
                         margin = ggplot2::margin(0, 0, 0, 25),

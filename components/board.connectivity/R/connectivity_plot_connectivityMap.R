@@ -178,7 +178,7 @@ connectivity_plot_connectivityMap_server <- function(id,
       })
 
       plot_RENDER <- shiny::reactive({
-        ##sigdb <- sigdb()
+
         shiny::req(pgx)
 
         ## get positions

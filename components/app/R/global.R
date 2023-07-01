@@ -21,8 +21,8 @@ if(Sys.info()["sysname"] != "Windows") {
 }
 
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
-##options(warnPartialMatchDollar = TRUE)
-##options(warnPartialMatchArgs = TRUE)
+
+
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
@@ -43,21 +43,21 @@ options(DT.options = list(
 SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 
-## reticulate::use_miniconda('r-reticulate')
+
 
 # Get the OPG root folder. Works only from inside the repo as it looks
 # up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
   pwd <- getwd() 
   dirs <- unlist(strsplit(pwd, "/"))
-  ## root_dirs <- head(dirs, -3)  ## this breaks single board launch
+
   root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
   root <- paste(root_dirs, collapse = "/")
   return(root)
 }
 
 ## Set folders
-##OPG       = normalizePath("../../..")
+
 OPG       = get_opg_root()
 RDIR      = file.path(OPG,"components/base/R")
 APPDIR    = file.path(OPG,"components/app/R")
@@ -83,7 +83,7 @@ TIMEOUT   = 0
 
 ## Allow API like calls
 ALLOW_URL_QUERYSTRING = FALSE
-#ALLOW_URL_QUERYSTRING = TRUE
+
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
@@ -105,11 +105,11 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(magrittr)
-#library(ggplot2)
-#library(concaveman)
+
+
 source(file.path(APPDIR,"utils/utils.R"), local = TRUE)
-#source(file.path(APPDIR,"utils/modalUI.R"), local = TRUE)
-#source(file.path(APPDIR,"utils/tooltip.R"), local = TRUE)
+
+
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -149,8 +149,8 @@ if(file.exists("global.R")) {
 
 ## You can add here new files explicitly, but eventually 00Headers.R
 ## should contains all files. Update using .../dev/02_dev.R script.
-##source(file.path(RDIR,"auth.R"))
-##source(file.path(RDIR,"ggplot-theme.R"))
+
+
 
 message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
@@ -167,11 +167,11 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     opt$AUTHENTICATION = auth
 }
 ##if(opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
-##    Sys.setenv("SHINYPROXY_USERNAME"="ShinyProxy User")  ## only for testing!!
+
 ##}
 if(opt$AUTHENTICATION %in% c("firebase","email") && !file.exists("firebase.rds")) {
     message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
-    ##opt$AUTHENTICATION = "password"
+
     stop("[GLOBAL] FATAL : missing firebase.rds file")
 }
 
@@ -197,8 +197,8 @@ ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
-##has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
-##if(!has.sigdb) ENABLED["cmap"] <- FALSE
+
+
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
@@ -246,7 +246,7 @@ logHandler <- function(http.req){
     }
 
     if(!is.null(log.file)) {
-        ##the.log <- readr::read_file(log.file)
+
         ## truncate the log file
         the.log <- paste(system(paste("grep -B100 -A99999",id,log.file),intern=TRUE),collapse='\n')
     }
@@ -265,9 +265,9 @@ logHandler <- function(http.req){
 }
 
 ## Are we ever going to use this??
-##handlerManager <- getFromNamespace("handlerManager", "shiny")
-##handlerManager$removeHandler("/log")
-##handlerManager$addHandler(logHandler, "/log")
+
+
+
 
 message("\n\n")
 message("=================================================================")

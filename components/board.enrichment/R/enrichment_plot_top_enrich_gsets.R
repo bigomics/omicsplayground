@@ -69,7 +69,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
       names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
-      rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) ## scaling/centering
+
       names(rnk0) <- toupper(names(rnk0))
       
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
@@ -140,7 +140,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             ylab <- "Rank metric"
           }
           playbase::gsea.enplot(rnk0, genes,
-            names = NULL, ## main=gs,
+
             main = gs1, xlab = xlab, ylab = ylab,
             lab.line = c(0, 1.8), cex.lab = 0.75,
             cex.main = 0.78, len.main = 200
@@ -227,8 +227,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             )
         }
         plist[[i]] <- plt
-        #qv1 <- formatC(qv[gs], format = "e", digits = 2)
-        #legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
+
+
       }
       plist
     }

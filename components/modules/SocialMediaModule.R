@@ -32,20 +32,20 @@ SocialMediaModule <- function(id, r.show = reactive(0))
     )
 
     social.buttons <- fillRow(
-##      flex = c(1,NA,1),
+
       br(),br(),br(),
       actionButton(ns("twitter"),"", icon=icon("twitter"), class="btn-social"),
       actionButton(ns("linkedin"),"", icon=icon("linkedin"), class="btn-social"),
       actionButton(ns("facebook"),"", icon=icon("facebook"), class="btn-social"),
-#      actionButton(ns("whatsapp"),"", icon=icon("whatsapp"), class="btn-social"),
-#      actionButton(ns("email"),"", icon=icon("envelope"), class="btn-social"),
-#      actionButton(ns("telegram"),"", icon=icon("telegram"), class="btn-social"),
+
+
+
       actionButton(ns("reddit"),"", icon=icon("reddit"), class="btn-social"),
-#      actionButton(ns("pinterest"),"", icon=icon("pinterest"), class="btn-social"),
-#      actionButton(ns("yahoo"),"", icon=icon("yahoo"), class="btn-social"),
-#      actionButton(ns("skype"),"", icon=icon("skype"), class="btn-social"),
-#      actionButton(ns("xing"),"", icon=icon("xing"), class="btn-social")
-      ##tags$a(href=urls["line.me"], NULL, icon("line"), style="font-size:30px;", target="_blank")
+
+
+
+
+
       br(),br(),br()
     )
 
@@ -54,7 +54,7 @@ SocialMediaModule <- function(id, r.show = reactive(0))
       height = 30,
       flex = c(1,NA,1),
       br(),
-      ##      actionButton(ns("later"),"Maybe later...", class="btn-warn"),
+
       actionButton(ns("sure"),"Yes, for sure! I just did!", class="btn-primary"),
       br()
     )
@@ -186,7 +186,7 @@ if(FALSE) {
     shinyApp(
         ui = fluidPage(
             actionButton("show","show")
-            ##SocialMediaModuleUI("social")
+
         ),
         server = function(input, output, session) {
             SocialMediaModule(

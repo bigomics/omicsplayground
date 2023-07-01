@@ -60,7 +60,7 @@ FunctionalUI <- function(id) {
             caption = "Visualisation of the selected WikiPathway with highlighted up- and down-regulated genes.",
             info.width = "350px",
             label = "a",
-            ##height = c(435, TABLE_HEIGHT_MODAL),
+
             height = c("60%", TABLE_HEIGHT_MODAL),            
             width = c("100%", "100%")            
           ),
@@ -70,7 +70,7 @@ FunctionalUI <- function(id) {
             info.text = "Scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.",
             caption = "Reporting enrichment score for each pathway for the selected contrast profile.",
             label = "b",
-            ##height = c(340, TABLE_HEIGHT_MODAL),
+
             height = c("40%", TABLE_HEIGHT_MODAL),            
             width = c("100%", "100%")
           )
@@ -81,7 +81,7 @@ FunctionalUI <- function(id) {
           info.text = "The activation matrix facilitates the rapid perusal and detection of the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
           caption = "The matrix allow visualizing the activation levels of pathways (or pathway keywords) across multiple contrast profiles.",
           label = "c",
-          ##height = c(790, TABLE_HEIGHT_MODAL)
+
           height = c("100%", TABLE_HEIGHT_MODAL)            
         )
       )
@@ -174,7 +174,7 @@ FunctionalUI <- function(id) {
           title = "Enrichment Map",
           info.text = "The Enrichment Map visualizes enrichments of pathways as an enrichment map, a network representing overlaps among enriched pathways. Nodes represent gene-sets and edges represent mutual overlap; in this way, highly redundant gene-sets are grouped together as clusters, dramatically improving the capability to navigate and interpret enrichment results. Reference: 'Enrichment Map: A Network-Based Method for Gene-Set Enrichment Visualization and Interpretation' Merico D et.al, PLoS One, 2010.",
           caption = "The Enrichment Map visualizes enrichments of pathways as an enrichment map, a network representing overlaps among enriched pathways. Nodes represent gene-sets and edges represent mutual overlap.",
-          # height = c("70vh", TABLE_HEIGHT_MODAL),
+
           height = c("100%", TABLE_HEIGHT_MODAL),            
           width = c("100%", "100%"),
           label = "a"

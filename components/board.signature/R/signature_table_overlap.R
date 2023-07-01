@@ -38,7 +38,7 @@ signature_table_overlap_server <- function(id,
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       DT::datatable(df,
-##      class = "compact cell-border stripe",
+
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
