@@ -2,8 +2,6 @@
 
 ### board specific files ###
 
-pgx_logs <- list()  
-
 # get error from driver and save it as error_log
 error_log <- list()
 
@@ -14,7 +12,7 @@ driver <- tryCatch(
         )
       },
       error = function(e) {
-        return(e)
+        error_log = e
       }
     )
 
@@ -29,7 +27,6 @@ pgx_file <- normalizePath("data/example-data.pgx")
 
 pgx_file
 
-shiny::runApp("components/board.tcga/dev_MMM/")
 # I added a textInput for pgx_path
 driver$getValue("pgx_path")
 
@@ -45,5 +42,11 @@ driver$getValue("pgx_path")
 driver$getDebugLog()
 driver$listWidgets()$output
 driver$getValue("error_log")
+
+# driver is still running even if we stop the app
+driver
 # exit the app
 driver$finalize()
+
+
+shiny::runApp("components/board.tcga/dev_MMM/")
