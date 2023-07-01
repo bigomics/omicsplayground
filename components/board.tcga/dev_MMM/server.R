@@ -28,7 +28,11 @@ app_server <- function(input, output, session) {
   
   # Render error log as output text
   output$error_log <- renderText({
-    error_log()
-  })
+  logs <- error_log()
+  if (is.list(logs)) {
+    logs <- paste(logs, collapse = "\n")
+  }
+  logs
+})
   
 }
