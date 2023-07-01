@@ -2,13 +2,11 @@
 
 ### board specific files ###
 
+pgx_logs <- list()
+
 driver <- shinytest::ShinyDriver$new(
   path = "components/board.tcga/dev_MMM/"
   )
-
-
-# when I run the same thing over runApp, and place C:\\code\\omicsplayground\\data\\example-data.pgx in text input, the pgx gets loaded ;)
-shiny::runApp("components/board.tcga/dev_MMM/")
 
 # basic info for the app
 driver$getUrl()
@@ -27,6 +25,12 @@ driver$setValue("pgx_path", pgx_file)
 
 # check that the path is updated
 driver$getValue("pgx_path")
+
+# get error log
+
+# get stderror for the app
+driver$getDebugLog()
+driver$listWidgets()$output
 
 # exit the app
 driver$finalize()

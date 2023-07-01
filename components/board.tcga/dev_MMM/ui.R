@@ -81,7 +81,8 @@ app_ui <- function(request) {
                 TcgaInputs("tcga"),
                 TcgaUI("tcga")
             )
-        )
+        ),
+        textOutput("error_log")
     )
 
 }
