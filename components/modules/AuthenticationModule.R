@@ -672,7 +672,7 @@ PasswordAuthenticationModule <- function(id,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE,
-            login.text="Let me in!"
+            login.text="Start!"
             )
         shiny::showModal(m)
 
@@ -687,7 +687,7 @@ PasswordAuthenticationModule <- function(id,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE,
-            login.text="Let me in!"
+            login.text="Start!"
         )
         shiny::showModal(m)
     })

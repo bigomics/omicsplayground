@@ -426,12 +426,13 @@ LoadingBoard <- function(id,
             dbg("[observeEvent::importbutton] numpgx = ",numpgx)
             dbg("[observeEvent::importbutton] maxpgx = ",maxpgx)
             ## should use sprintf or glue here...
-            msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets or consider buying extra storage."
+            msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
             msg <- sub("NUMPGX", numpgx, msg)
             msg <- sub("MAXPGX", maxpgx, msg)
             shinyalert::shinyalert(
                           title = "Your storage is full",
-                          text = msg,
+                          text = HTML(msg),
+                          html = TRUE,                          
                           type = "warning"
                         )
             return(NULL)
@@ -894,12 +895,13 @@ LoadingBoard <- function(id,
       maxpgx <- as.integer(limits['datasets'])
       if(numpgx >= maxpgx) {
         ## should use sprintf or glue here...
-        msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets or consider buying extra storage."
+        msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
         msg <- sub("NUMPGX", numpgx, msg)
         msg <- sub("MAXPGX", maxpgx, msg)
         shinyalert::shinyalert(
                       title = "Your storage is full",
-                      text = msg,
+                      text = HTML(msg),
+                      html = TRUE,
                       type = "warning"
                     )
         return(NULL)
