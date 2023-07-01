@@ -3,19 +3,26 @@
 ### board specific files ###
 
 # get error from driver and save it as error_log
-error_log <- list()
 
 driver <- tryCatch(
-      {
-        shinytest::ShinyDriver$new(
-          path = "components/board.tcga/dev_MMM/"
-        )
-      },
-      error = function(e) {
-        error_log = e
-      }
+  {
+    options(shiny.testmode = TRUE)  # Enable test mode
+    
+    shinytest::ShinyDriver$new(
+      path = "components/board.tcga/dev_MMM/",
+      options = list(shiny.error = function() {
+        parent_env <- parent.frame()
+        return(parent_env$e)
+      }),
+      loadTimeout = 5000  # Set the load timeout value (in milliseconds)
     )
+  },
+  error = function(e) {
+    return(e)
+  }
+)
 
+driver  # Display the driver object
 # basic info for the app
 driver$getUrl()
 driver$getDebugLog()
@@ -41,7 +48,6 @@ driver$getValue("pgx_path")
 # get stderror for the app
 driver$getDebugLog()
 driver$listWidgets()$output
-driver$getValue("error_log")
 
 # driver is still running even if we stop the app
 driver
