@@ -1,4 +1,4 @@
-
+##    devtools::install_github("m-jahn/fluctuator")
 
 wikipathview <- function(wp, val, dir) {
     

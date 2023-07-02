@@ -103,16 +103,16 @@ clustering_plot_clustpca_server <- function(id,
       hmpca_legend <- pd[["hmpca_legend"]]
 
       do3d <- ("3D" %in% hmpca_options)
-
+      ## clust <- hm_getClusterPositions()
       sel <- rownames(pos)
       df <- cbind(pos, pgx$Y[sel, ])
-
+      # if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
 
       colvar <- shapevar <- linevar <- textvar <- NULL
       if (hmpca.colvar %in% colnames(df)) colvar <- factor(df[, hmpca.colvar])
       if (hmpca.shapevar %in% colnames(df)) shapevar <- factor(df[, hmpca.shapevar])
-
-
+      ## if(input$hmpca.line %in% colnames(df)) linevar = factor(df[,input$hmpca.line])
+      ## if(input$hmpca.text %in% colnames(df)) textvar = factor(df[,input$hmpca.text])
       mode <- "markers"
       ann.text <- rep(" ", nrow(df))
       if (!do3d && "sample label" %in% hmpca_options) ann.text <- rownames(df)
@@ -127,7 +127,7 @@ clustering_plot_clustpca_server <- function(id,
       )
 
       Y <- cbind("sample" = rownames(pos), pgx$Y[sel, ])
-
+      ## tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
       tt.info <- apply(Y, 1, function(y) paste0(colnames(Y), ": ", y, "</br>", collapse = ""))
       tt.info <- as.character(tt.info)
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
@@ -145,7 +145,7 @@ clustering_plot_clustpca_server <- function(id,
           plotly::add_markers(
             x = df[j0, 1], y = df[j0, 2], z = df[j0, 3], type = "scatter3d",
             color = colvar[j0], ## size = sizevar, sizes=c(80,140),
-
+            ## marker = list(size = 5*cex1),
             marker = list(size = 5 * cex1, line = list(color = "grey10", width = 0.1)),
             symbol = shapevar[j0], symbols = symbols,
             text = tt.info[j0]
@@ -160,7 +160,7 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_markers(
             x = df[j1, 1], y = df[j1, 2], z = df[j1, 3], type = "scatter3d",
             color = colvar[j1], ## size = sizevar, sizes=c(80,140),
-
+            ## marker = list(size=5*cex1, line=list(color="grey10", width=2)),
             symbol = shapevar[j1], symbols = symbols,
             text = tt.info[j1]
           )
@@ -169,7 +169,7 @@ clustering_plot_clustpca_server <- function(id,
         if (0 && length(unique(colvar)) > 1) {
           ## add cluster annotation labels
           grp.pos <- apply(pos, 2, function(x) tapply(x, colvar, median))
-
+          ## grp.pos <- matrix(grp.pos, ncol=3)
           cex2 <- ifelse(length(grp.pos) > 20, 0.8, 1)
           plt <- plt %>% plotly::add_annotations(
             x = grp.pos[, 1], y = grp.pos[, 2], z = grp.pos[, 3],
@@ -242,14 +242,14 @@ clustering_plot_clustpca_server <- function(id,
       title <- paste0("<b>PCA</b>  (", nrow(pos), " samples)")
       if (hm_clustmethod == "tsne") title <- paste0("<b>tSNE</b>  (", nrow(pos), " samples)")
       ## plt <- plt %>% plotly::layout(title=title) %>%
-
+      ##     plotly::config(displayModeBar = FALSE)
       plt <- plt %>%
         ## config(displayModeBar = FALSE) %>%
         plotly::config(displayModeBar = TRUE) %>%
         ## config(modeBarButtonsToRemove = all.plotly.buttons ) %>%
         plotly::config(displaylogo = FALSE) %>%
         plotly::config(toImageButtonOptions = list(format = "svg", height = 800, width = 800))
-
+      ## print(plt)
       return(plt)
     }
 

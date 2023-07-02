@@ -10,7 +10,7 @@ boardHeader <- function(title, info_link) {
   div(
     fillRow(
         flex=c(NA,1,NA),
-
+        ##h2(input$nav),
         shiny::div(
             id = "navheader-current-section",
             HTML(paste0(title," &nbsp;")),
@@ -18,7 +18,7 @@ boardHeader <- function(title, info_link) {
                 shiny::actionLink(
                     inputId = info_link,
                     label="",
-
+                    ## icon = shiny::icon("info-circle"),
                     icon = shiny::icon("youtube"),                    
                     style = "color: #ccc;"
                 ),
@@ -33,6 +33,6 @@ boardHeader <- function(title, info_link) {
                 )
             )
     )
-
+##    bs_alert(shiny::HTML(header_infotext))
   )
 }

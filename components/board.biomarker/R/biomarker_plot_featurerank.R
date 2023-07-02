@@ -72,7 +72,7 @@ biomarker_plot_featurerank_server <- function(id,
       features <- features[sapply(features, length) >= 10]
 
       ## ------------ Just to get current samples
-
+      ## samples = colnames(X)
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
       X <- X[, samples]
       # the code below overwrittes user input, and should be removed
@@ -137,7 +137,7 @@ biomarker_plot_featurerank_server <- function(id,
             design <- model.matrix(~ grp[jj])
             suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj], design)))
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
-
+            ## s2 = mean(-log10(top$P.Value))  ## as score
             s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE) ## as score
           }
 
@@ -170,7 +170,7 @@ biomarker_plot_featurerank_server <- function(id,
       )
       #%>%
       #  plotly::layout(
-
+      #    legend = list(orientation = "h")   # show entries horizontally
       #  )
     }
 
@@ -193,8 +193,8 @@ biomarker_plot_featurerank_server <- function(id,
       func = clust_featureRank.RENDER,
       func2 = clust_featureRank.RENDER2,
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
-
-
+      ## renderFunc = plotly::renderPlotly,
+      ## renderFunc2 = plotly::renderPlotly,
       res = c(72, 90), ## resolution of plots
       pdf.width = 8, pdf.height = 10,
       add.watermark = watermark

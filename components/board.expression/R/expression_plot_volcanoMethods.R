@@ -96,7 +96,7 @@ expression_plot_volcanoMethods_server <- function(id,
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       fc <- unclass(mx$fc)
-
+      ## pv = unclass(mx$p)
       qv <- unclass(mx$q)
       nlq <- -log10(1e-99 + qv)
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
@@ -105,7 +105,7 @@ expression_plot_volcanoMethods_server <- function(id,
       fc.genes <- pd[["pgx"]]$genes[rownames(mx), "gene_name"]
       nplots <- min(24, ncol(qv))
 
-
+      ## methods = names(pgx$gx.meta$output)
       methods <- colnames(pd[["pgx"]]$gx.meta$meta[[1]]$fc)
       plt <- list()
 
@@ -130,7 +130,7 @@ expression_plot_volcanoMethods_server <- function(id,
             var = is.sig1,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
-
+            legend.pos = "none", ## plotlib="ggplot",
             hilight = genes1,
             hilight2 = genes2,
             xlim = xlim,
@@ -188,7 +188,7 @@ expression_plot_volcanoMethods_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-
+##      plotlib = "ggplot",
       plotlib = "grid",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,

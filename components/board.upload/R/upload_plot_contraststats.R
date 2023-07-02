@@ -45,7 +45,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
                     toupper(status.ok), "\n", "(Optional) Upload 'contrasts.csv'",
                     tolower(status.ds)
                 )
-
+                ## text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
                 graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
                 graphics::box(lty = 1, col = "grey60")
                 return(NULL)
@@ -65,14 +65,14 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
                 )
             )
 
-
-
-
+            #shiny::req(contrasts)
+            ## contrasts <- sign(contrasts)
+            ## df <- playbase::contrastAsLabels(contrasts)
             df <- contrasts
             px <- head(colnames(df), 20) ## maximum to show??
             df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
             tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "contrasts")
-
+            ## tt2 <- paste(ncol(contrasts),"contrasts")
 
             p1 <- df %>%
                 inspectdf::inspect_cat() %>%
@@ -80,7 +80,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
 
             p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle = tt2) +
                 ggplot2::theme(
-
+                    ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
                     axis.text.y = ggplot2::element_text(
                         size = 12,
                         margin = ggplot2::margin(0, 0, 0, 25),

@@ -7,7 +7,7 @@
 compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL, plot=FALSE) {
 
   meta <- playbase::pgx.getMetaMatrix(pgx, level="geneset")
-
+  ##meta <- playbase::pgx.getMetaMatrix(pgx, level="gene")
   F <- meta$fc
   Q <- meta$qv
   X <- pgx$gsetX  
@@ -37,7 +37,7 @@ compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL,
   rho1=rho2=rho3=1
   if(ncol(F)>2) rho1 <- cor(t(F[gg,]))
   rho2 <- cor(t(as.matrix(G[gg,])))
-
+  ##rho2 <- cor(as.matrix(G[,gg]))
   rho3 <- cor(t(X[gg,]))  
   rho1 <- pmax(rho1,0)
   rho2 <- pmax(rho2,0)
@@ -58,13 +58,13 @@ compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL,
   graph <- igraph::graph_from_adjacency_matrix(
     R1, weighted=TRUE,
     diag=FALSE, mode="undirected")
-
+  ## E(graph)$weight
   V(graph)$size <- as.numeric(Matrix::rowSums(G[rownames(R1),]!=0))
-
+##  V(graph)$qmin <- qmin
   
   pos <- layout_with_fr(graph, weights=E(graph)$weight**wt)  ## fast!
-
-
+  ##pos <- layout_with_kk(graph, weights=1/E(graph)$weight**wt)
+  ##pos <- layout_with_graphopt(graph)
   rownames(pos) <- V(graph)$name
 
   if(plot) {
@@ -120,8 +120,8 @@ compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL,
   res
 }
 
-
-
+#contrast=1;clustlabel.y=1;nodelabel.y=1;cex=1;title.y=1.05;title="Enrichment Map";
+#rx=3;lwd=1;label=TRUE;paper_bgcolor=plot_bgcolor="#cdceeb";title.x=0.5
 plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
                                clustlabel.y=1.15, nodelabel.y=1, colorscale="RdBu",
                                cex=1, rx=3, lwd=1, title.x=0.5, title.y=1.08,
@@ -174,7 +174,7 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
         color = 'rgb(170,170,170)',
         width = 4*lwd
       ),
-
+      ##    opacity = 0.10,
       layer = "below"
     )
   }
@@ -239,8 +239,8 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
     genesets <- V(graph)$name
     fc <- F[genesets,contrast]
     qv <- Q[genesets,contrast]    
-
-
+    ##df$color  <- my.colors[c('blue','red')][ 1 + 1*(sign(fc)>0) ]
+    ##df$color <- (1.1-qv) * sign(fc) * abs(fc)**0.5 ## fudge
     df$color <- -log10(1e-4+qv) * sign(fc) * abs(fc)**0.5 ## fudge    
     df$text2 <- paste0("<b>",df$text,"</b>",
       "<br>Enrichment score: ",round(fc,digits=4),
@@ -250,8 +250,8 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
     genesets <- V(graph)$name
     F1 <- F[genesets,]
     Q1 <- Q[genesets,]    
-
-
+    ##df$color  <- my.colors[c('blue','red')][ 1 + 1*(sign(fc)>0) ]
+    ##df$color <- fc
     ct <- paste(colnames(F1),collapse=', ')
     ff <- apply(round(F1,3),1,paste,collapse=", ")
     qq <- apply(round(Q1,3),1,paste,collapse=", ")    
@@ -281,9 +281,9 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
   fig <- fig  %>%
     plotly::layout(
 #      title = list(
-
-
-
+#        text = sprintf("<b>%s</b>",title),
+#        font = list(size = 36),
+#        y = 0.99
 #      ),
       paper_bgcolor = paper_bgcolor,
       plot_bgcolor = plot_bgcolor,
@@ -301,7 +301,7 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
   xalign <- cut(title.x, breaks=c(-99,0.25,0.75,99),labels=c("left","center","right"))
   fig <- fig %>% plotly::layout(
     annotations = list(
-
+      #      x = title.x,
       x = midx,
       y = title.y,
       text = sprintf("<b>%s</b>",title),
@@ -310,7 +310,7 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
       xanchor = "middle",
       yanchor = "top",      
       showarrow = FALSE,
-
+      #xref = 'paper',
       xref = 'x',      
       yref = 'paper'
     )
@@ -368,7 +368,7 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
           color = 'rgb(100,100,100)',
           width = 1.3
         ),
-
+        ## colorscale = list(c(0, "blue"), list(1, "red")),
         colorscale = colorscale,
         cauto = FALSE,
         cmin = -maxabsf,

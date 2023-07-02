@@ -88,7 +88,7 @@ enrichment_plot_volcano_server <- function(id,
       playbase::gx.volcanoPlot.XY(
         x = fx, pv = qval, gene = fc.genes,
         render = "canvas", n = 5000, nlab = 10,
-
+        xlim = xlim, ylim = ylim, ## hi.col="#222222",
         use.fdr = TRUE, p.sig = fdr, lfc = lfc,
         cex = 0.9, lab.cex = 1.3,
         cex.main = 0.8, cex.axis = 0.9,

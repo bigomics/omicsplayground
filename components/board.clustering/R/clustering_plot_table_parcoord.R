@@ -165,7 +165,7 @@ clustering_plot_table_parcoord_server <- function(id,
       df <- data.frame(clust.id = clust.id, zx)
       klrpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
       klrpal <- klrpal[1:max(clust.id)]
-
+      ## klrpal <- setNames(klrpal, sort(unique(clust.id)))
       klrpal2 <- lapply(1:length(klrpal), function(i) c((i - 1) / (length(klrpal) - 1), klrpal[i]))
 
       plt <- plotly::plot_ly(df, source = "pcoords") %>%
@@ -178,7 +178,7 @@ clustering_plot_table_parcoord_server <- function(id,
             cmax = max(clust.id),
             showscale = FALSE,
             width = 10
-
+            ## reversescale = TRUE
           ),
           dimensions = dimensions
         )
@@ -219,17 +219,17 @@ clustering_plot_table_parcoord_server <- function(id,
       numeric.cols <- 2:ncol(df)
       DT::datatable(
         df,
-
+        rownames = TRUE, ## escape = c(-1,-2),
         extensions = c("Buttons", "Scroller"),
         plugins = 'scrollResize',        
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact hover",
         fillContainer = TRUE,
         options = list(
-
+          dom = "lfrtip", ## buttons = c('copy','csv','pdf'),
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-
-
+          scrollX = TRUE, ## scrollY = TRUE,
+          ## scrollY = 170,
           scrollY = "23vh",
           scrollResize = TRUE,
           scroller = TRUE,

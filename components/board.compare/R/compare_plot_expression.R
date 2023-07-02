@@ -108,7 +108,7 @@ compare_plot_expression_server <- function(id,
     PlotModuleServer(
       "plot",
       func = multibarplot.RENDER,
-
+      # csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 130),
       add.watermark = watermark

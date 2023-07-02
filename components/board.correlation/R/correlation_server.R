@@ -86,7 +86,7 @@ CorrelationBoard <- function(id, pgx) {
       } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
         ft <- input$cor_features
         psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
-
+        ## psel = unique(c(gene, psel))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
       }
@@ -104,7 +104,7 @@ CorrelationBoard <- function(id, pgx) {
       ## filter gene expression matrix
       X <- getFilteredExpression()
 
-
+      # shiny::showNotification(paste("Computing correlation...\n"))
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
       ## res <- playbase::pgx.computePartialCorrelationAroundGene(
@@ -146,7 +146,7 @@ CorrelationBoard <- function(id, pgx) {
       dim(zx)
       
       zx.genes0 <- rownames(zx)
-
+      ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
       zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       
@@ -189,7 +189,7 @@ CorrelationBoard <- function(id, pgx) {
       ## corr always in log.scale and restricted to selected samples subset
       zx <- pgx$X
       zx.genes0 <- rownames(zx)
-
+      ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
       zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       xref <- list(
@@ -267,6 +267,6 @@ CorrelationBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-
+    # output$test <- visNetwork::renderVisNetwork(cor_graph.VISNETWORK())
   })
 } ## end of Board

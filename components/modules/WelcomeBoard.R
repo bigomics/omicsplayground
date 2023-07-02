@@ -37,7 +37,7 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
           title = "Upload disabled",          
           text ='Sorry, upload of new data is disabled for this account.',
           type = "warning",
-
+          ##btn_labels = "OK",
           closeOnClickOutside = FALSE
         )
       }

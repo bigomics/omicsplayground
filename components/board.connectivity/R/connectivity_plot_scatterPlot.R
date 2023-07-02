@@ -134,7 +134,7 @@ connectivity_plot_scatterPlot_server <- function(id,
 
       ## Plots get data from plot_data. This should be a simple
       ## function, not reactive. Any slow pre-plotting should be in
-
+      ## plot_data()
       plot_RENDER <- function() {
 
         res <- plot_data()

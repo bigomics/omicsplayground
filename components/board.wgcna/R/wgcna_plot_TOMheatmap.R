@@ -43,7 +43,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
       ## more efficiently by saving the TOM calculated during
       ## module detection, but let us do it again here.
 
-
+      # power  <- as.numeric(shiny::isolate(input$power))
       power <- as.numeric(power())
       dissTOM <- 1 - TOMsimilarityFromExpr(datExpr, power = power)
       rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)
@@ -56,7 +56,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
       selectTOM <- dissTOM[select, select]
       ## There’s no simple way of restricting a clustering tree
       ## to a subset of genes, so we must re-cluster.
-
+      ## selectTree = hclust(as.dist(selectTOM), method = "ward.D2")
       selectTree <- hclust(as.dist(selectTOM), method = "average")
       selectColors <- moduleColors[select]
       ## Taking the dissimilarity to a power, say 10, makes the plot

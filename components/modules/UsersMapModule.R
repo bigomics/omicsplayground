@@ -39,7 +39,7 @@ UsersMapModule <- function(input, output, session, env)
     output$inputsUI <- renderUI({
         tagList()
     })
-
+    ##outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -57,11 +57,11 @@ UsersMapModule <- function(input, output, session, env)
                                             
         acc <- read.table(accessfile)
         ip <- as.character(acc[,1])
-
+        ##loc <- ip_api(unique(ip))
         ip <- unique(ip)
         
-
-
+        ##file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
+        ##loc <- maxmind(ip, file, "country_code")
         file <- file.path(FILESX,"GeoLite2-City.mmdb")
         loc <- maxmind(ip, file, c("country_code", "country_name", "city_name"))
         country_code <- unique(loc$country_code)
@@ -100,10 +100,10 @@ UsersMapModule <- function(input, output, session, env)
         id = "geolocate", label="a", 
         plotlib="baseplot", func=geolocate.RENDER, 
         info.text = geolocate_info,
-
+        ##options = geolocate_options,
         pdf.width=12, pdf.height=7, pdf.pointsize=13,
         height = 0.5*rowH, res=72,
-
+        ##datacsv = enrich_getWordFreq,
         title = "User's map"
     )
 

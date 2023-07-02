@@ -76,7 +76,7 @@ enrichment_plot_compare_server <- function(id,
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
           playbase::gsea.enplot(rnk0, genes,
-
+            names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
           )
@@ -99,7 +99,7 @@ enrichment_plot_compare_server <- function(id,
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
           playbase::gsea.enplot(rnk0, genes,
-
+            names = NULL, ## main=gs,
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
           )
@@ -107,7 +107,7 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-
+#      p <- grDevices::recordPlot()
 #      p
     }
 

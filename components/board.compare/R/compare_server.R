@@ -96,7 +96,7 @@ CompareBoard <- function(id, pgx) {
       if (input$dataset2 == "<this>") {
         pgx <- pgx
       } else {
-
+        ##load(file.path(OPG, "data", input$dataset2))
         file2 <- file.path(OPG, "data", input$dataset2)
         pgx <- local(get(load(file2, verbose=0)))
       }
@@ -219,7 +219,7 @@ CompareBoard <- function(id, pgx) {
         p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct, hilight = higenes1,
-
+          ntop = ntop, cex.lab = cex.lab, ## dlim=0.06,
           par.sq = TRUE, type = type, plotlib = "base"
         )
       }

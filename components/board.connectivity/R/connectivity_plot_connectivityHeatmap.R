@@ -44,9 +44,9 @@ connectivity_plot_connectivityHeatmap_ui <- function(
   PlotModuleUI(ns("plotmodule"),
     title = title,
     label = label,
-
+    ## plotlib = "base",
     plotlib = "plotly",
-
+    ##plotlib = "iheatmapr",
     info.text = info.text,
     options = plot_opts,
     download.fmt = c("pdf", "png", "csv"),    
@@ -85,7 +85,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         shiny::req(cc)
         fc <- cc$fc[match(rownames(F),names(cc$fc))]
         names(fc) <- rownames(F)
-
+        ## fc[is.na(fc)] <- 0
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
         colnames(F)[1] <- cc$name
@@ -111,7 +111,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
         playbase::gx.splitmap(t(F1),
           split = 1,
-
+          ## cluster_columns = FALSE,
           cluster_columns = TRUE,
           cluster_rows = TRUE,
           rowlab.maxlen = 80,
@@ -189,9 +189,9 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
       
       PlotModuleServer(
         "plotmodule",
-
+        ##plotlib = "base",
         plotlib = "plotly",
-    
+        ##plotlib = "iheatmapr",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,

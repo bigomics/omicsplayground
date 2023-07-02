@@ -62,11 +62,11 @@ ClusteringBoard <- function(id, pgx) {
       ## update defaults??
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
-
+      ## groupings <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat=2, max.ncat=n1)
 
       groupings <- sort(groupings)
 
-
+      ##shiny::updateSelectInput(session, "hm_group", choices = c("<ungrouped>", groupings))
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
     })
@@ -75,7 +75,7 @@ ClusteringBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$families, pgx$gsetX)
       shiny::req(input$hm_level)
-
+      ### if(is.null(input$hm_level)) return(NULL)
       choices <- names(pgx$families)
       if (input$hm_level == "geneset") {
         nk <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
@@ -140,7 +140,7 @@ ClusteringBoard <- function(id, pgx) {
         ## Gene set level features #########
 
         gsets <- rownames(pgx$gsetX)
-
+        ## gsets = unique(unlist(playdata::COLLECTIONS[ft]))
         gsets <- unique(playdata::COLLECTIONS[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
@@ -196,7 +196,7 @@ ClusteringBoard <- function(id, pgx) {
             idx <- idx[gg1]
           }
           gg <- gg1
-
+          ## if(length(gg1)>1) gg = gg1
         } else {
           message("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
           gg <- NULL
@@ -269,7 +269,7 @@ ClusteringBoard <- function(id, pgx) {
     ##' @author kwee
     getTopMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
-
+##      shiny::req(input$splitby)
 
       flt <- getFilteredMatrix()
       zx <- flt$zx
@@ -304,7 +304,7 @@ ClusteringBoard <- function(id, pgx) {
 
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
-
+        ## xgene <- rownames(pgx$X)[1]
         gx <- pgx$X[1, ]
         gx <- pgx$X[splitvar, colnames(zx)]
 
@@ -340,7 +340,7 @@ ClusteringBoard <- function(id, pgx) {
         names(grp) <- colnames(zx)
       }
 
-
+      ## if(length(grp)==0) splitby <- 'none'
       if (do.split && length(grp) == 0) {
         return(NULL)
       }
@@ -381,22 +381,22 @@ ClusteringBoard <- function(id, pgx) {
         gg <- rownames(zx)
         sv.top <- lapply(1:NPCA, function(i) gg[head(order(-abs(svdres$u[, i])), ntop)])
         gg.top <- unlist(sv.top)
-
+        ## gg.top <- addsplitgene(gg.top)
         for (i in 1:length(sv.top)) {
           sv.top[[i]] <- paste0("PC", i, ":", sv.top[[i]])
         }
         sv.top1 <- unlist(sv.top)
         zx <- zx[gg.top, , drop = FALSE]
-
+        ## rownames(zx) <- sv.top1
         dim(zx)
-
+        ## idx <- paste0("PC",sub(":.*","",sv.top1))
         idx <- sub(":.*", "", sv.top1)
         table(idx)
       } else if (topmode == "marker" && splitby != "none") {
         ##
         ## sample cluster marker gene prioritazion
         ##
-
+        ## grp <- pgx$samples[colnames(zx),"cluster"]
         grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
         if (length(table(grp)) == 1) {
           grp.zx <- t(grp.zx)
@@ -411,7 +411,7 @@ ClusteringBoard <- function(id, pgx) {
         ntop <- 12
         ntop <- ceiling(as.integer(splitmap$hm_ntop()) / ncol(grp.dx))
         grp.top <- lapply(1:nc, function(i) gg[head(order(-grp.dx[, i]), ntop)])
-
+        ## idx <- unlist(sapply(1:nc,function(i) rep(i,length(grp.top[[i]]))))
         idx <- unlist(mapply(rep, 1:nc, sapply(grp.top, length)))
         idx <- paste0("M", idx)
         table(idx)
@@ -437,14 +437,14 @@ ClusteringBoard <- function(id, pgx) {
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
         system.time(hc <- fastcluster::hclust(D, method = "ward.D2"))
-
-
+        ## system.time( hc <- flashClust::hclust(D, method="ward" ) )
+        ## system.time( hc <- nclust(D, link="ward") )
         ngrp <- min(CLUSTK, nrow(zx)) ## how many default groups???
         idx <- paste0("S", cutree(hc, ngrp))
       }
 
       ## ------------- matched annotation
-
+      ## annot = pgx$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
       annot <- pgx$samples[colnames(zx), , drop = FALSE] ## Y or full matrix??
       kk <- grep("sample|patient", colnames(annot), invert = TRUE)
       annot <- annot[, kk, drop = FALSE] ## no group??
@@ -566,9 +566,9 @@ ClusteringBoard <- function(id, pgx) {
       ann.level <- "geneset"
       ann.refset <- "Hallmark collection"
       ann.level <- clusterannot$xann_level()
-
+      ## if(is.null(ann.level)) return(NULL)
       ann.refset <- clusterannot$xann_refset()
-
+      ## if(is.null(ann.refset)) return(NULL)
       shiny::req(clusterannot$xann_level(), clusterannot$xann_refset())
 
       ref <- NULL
@@ -619,7 +619,7 @@ ClusteringBoard <- function(id, pgx) {
           gg <- rownames(zx)[which(idx == idxx[i])]
           aa <- t(X[gg, samples, drop = FALSE])
           bb <- t(ref[, samples, drop = FALSE])
-
+          ## rr = cor(aa , bb, use="pairwise", method="spearman")
           rr <- cor(apply(aa, 2, rank), apply(bb, 2, rank), use = "pairwise")
           if (hm_topmode == "pca") rr <- abs(rr)
           rho[, i] <- colMeans(rr, na.rm = TRUE)
@@ -629,7 +629,7 @@ ClusteringBoard <- function(id, pgx) {
       if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-
+        ## gmt <- GSETS[rownames(rho)]
         gmt <- playdata::getGSETS(rownames(rho))
         bg.genes <- toupper(rownames(X))
         P <- c()
@@ -643,8 +643,8 @@ ClusteringBoard <- function(id, pgx) {
           res <- res[rownames(rho), ]
           r <- res[, "odd.ratio"]
           odd.prob <- r / (1 + r)
-
-
+          ## odd.1mpv <- 1 - res[,"p.value"]
+          ## P <- cbind(P,odd.1mpv)
           P <- cbind(P, odd.prob)
         }
         colnames(P) <- colnames(rho)
@@ -652,13 +652,13 @@ ClusteringBoard <- function(id, pgx) {
         rho <- rho * (P / max(P))
       }
 
-
+      ## rho = round(rho, digits=3)
       dim(rho)
       return(rho)
     })
 
     hm_getClusterPositions <- shiny::reactive({
-
+      ## shiny::req(pgx$tsne2d,pgx$tsne3d,pgx$cluster)
 
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
@@ -689,11 +689,11 @@ ClusteringBoard <- function(id, pgx) {
         shiny::showNotification(paste("computing ", clustmethod, "...\n"))
 
         ntop <- 1000
-
+        ## ntop = as.integer(input$hm_ntop2)
         zx <- pgx$X
         zx <- zx[order(-apply(zx, 1, sd)), , drop = FALSE] ## OK?
         if (nrow(zx) > ntop) {
-
+          ## zx = head(zx,ntop)  ## OK?
           zx <- zx[1:ntop, , drop = FALSE] ## OK?
         }
         if ("normalize" %in% input$`PCAplot-hmpca_options`) {
@@ -715,8 +715,8 @@ ClusteringBoard <- function(id, pgx) {
 
       pos <- pos[sel.samples, ]
       pos <- scale(pos) ## scale
-
-
+      ## colnames(pos) = paste0("dim",1:ncol(pos))
+      ## rownames(pos) = colnames(zx)
 
       idx <- NULL
 

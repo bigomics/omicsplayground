@@ -76,7 +76,7 @@ app_ui <- function() {
 
 
         menu_tree = list(
-
+          ## "Home" = c("load"),
           "Load" = c(
             welcome = "Welcome",
             load    = "Load dataset",
@@ -112,13 +112,13 @@ app_ui <- function() {
             wgcna = "WGCNA",            
             tcga = "TCGA survival (beta)"            
           )
-
+          ## "DEV" = c("corsa","system","multi")
         )
 
         ## filter disabled modules
         ENABLED['welcome'] <<- TRUE
         ENABLED['load'] <<- TRUE
-
+        #ENABLED['upload'] <- TRUE
         dbg("[ui.R] sum.enabled = ",sum(ENABLED))
         dbg("[ui.R] names.enabled = ",names(ENABLED))
         menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
@@ -156,7 +156,7 @@ app_ui <- function() {
               menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
             }
           }
-
+          ##lapply(menu,cat)
           return(menu)
         }
 

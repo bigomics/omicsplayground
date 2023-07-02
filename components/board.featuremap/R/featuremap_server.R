@@ -66,7 +66,7 @@ FeatureMapBoard <- function(id, pgx) {
     ## ============================= FUNCTIONS ========================================
     ## ================================================================================
 
-
+    ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
       if (!is.null(hilight)) {
@@ -88,8 +88,8 @@ FeatureMapBoard <- function(id, pgx) {
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
-
-
+      ## cex = 0.9
+      ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
 
       p <- playbase::pgx.scatterPlotXY(
@@ -103,13 +103,13 @@ FeatureMapBoard <- function(id, pgx) {
         zsym = (min(var, na.rm = TRUE) < 0),
         zlim = zlim,
         hilight.cex = cex,
-
+        ## hilight.col = 'red',
         hilight.col = NULL,
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
         title = title,
-
+        ## legend.pos = 'bottomright',
         source = source,
         key = rownames(pos)
       )
@@ -121,7 +121,7 @@ FeatureMapBoard <- function(id, pgx) {
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)
-
+      ## ntop <- 10
       cex <- ifelse(nc > 3, 0.5, 0.7)
       jj <- 1:nrow(F)
       if (ncol(F) > 4 && nrow(F) > 8000) jj <- sample(1:nrow(F), 8000) ## subsample for speed
@@ -135,7 +135,7 @@ FeatureMapBoard <- function(id, pgx) {
       c(min(qq, na.rm = TRUE), max(qq, na.rm = TRUE))
       qq
       zlim <- qq
-
+      ## zlim = NULL
 
       i <- 1
       for (i in 1:ncol(F)) {

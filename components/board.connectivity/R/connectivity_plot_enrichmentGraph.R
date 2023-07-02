@@ -115,8 +115,8 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-
-
+        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 50)[1] 
+        ##shiny::updateSliderInput(session, "enrichGraph_threshold", value = 0)
 
         return(gr)
       })

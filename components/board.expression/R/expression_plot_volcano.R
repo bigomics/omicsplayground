@@ -29,8 +29,8 @@ expression_plot_volcano_ui <- function(id,
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-
-
+    ## outputFunc = plotly::plotlyOutput,
+    ## outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
     options = NULL,
     title = title,
@@ -86,7 +86,7 @@ expression_plot_volcano_server <- function(id,
       df2 <- df2()
 
       ## if no gene selected we should show full volcano plot
-
+#      req(sel1())
 
       fam.genes <- res$gene_name
 
@@ -180,7 +180,7 @@ expression_plot_volcano_server <- function(id,
         label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
         ## xlim=xlim, ylim=ylim, ## hi.col="#222222",
-
+        ## use.fdr=TRUE,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "effect size (log2FC)",

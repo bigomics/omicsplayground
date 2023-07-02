@@ -4,11 +4,11 @@
 ##
 
 tagsub <- function(s) {
-
-
+    s <- gsub("\\{\\{","<i>",gsub("\\}\\}","</i>",s))  ## {{...}}
+    s <- gsub("\\{","<code>",gsub("\\}","</code>",s))  ## {...}
     return(s)
 }
-
+## example: tagsub("Hi this is an {{option}} block with a {setting}")
 
 a_OMIM="<a href='https://www.ncbi.nlm.nih.gov/omim/'> OMIM</a>"
 a_ImmProt="<a href='https://www.ncbi.nlm.nih.gov/pubmed/28263321'> ImmProt</a>"

@@ -126,7 +126,7 @@ correlation_plot_cor_graph_server <- function(
       "plot",
       plotlib = "visnetwork",
       func = cor_graph.VISNETWORK,
-
+#      csvFunc = plot_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

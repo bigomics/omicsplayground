@@ -86,7 +86,7 @@ functional_table_go_table_server <- function(id,
       DT::datatable(dt,
         rownames = FALSE,
         escape = c(-1, -2),
-
+        ## class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,

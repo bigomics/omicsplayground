@@ -39,7 +39,7 @@ PlotModuleUI <- function(id,
     )
   }
   width.1 <- ifnotchar.int(width[1])
-
+  width.2 <- "100%" # ifnotchar.int(width[2]) ## OVERRIDE WIDTH: for fullscreen modal always 100%
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
@@ -363,7 +363,7 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
-
+  ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
   return(e)
 }
 
@@ -513,7 +513,7 @@ PlotModuleServer <- function(id,
             resx <- 4 ## upresolution
             shiny::withProgress(
               {
-
+                ## unlink(PNGFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- png.width
@@ -604,7 +604,7 @@ PlotModuleServer <- function(id,
             pdf.height <- input$pdf_height
             shiny::withProgress(
               {
-
+                ## unlink(PDFFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- pdf.width * 80
@@ -675,7 +675,7 @@ PlotModuleServer <- function(id,
       } ## end if do.pdf
 
       saveHTML <- function() {
-
+        ## unlink(HTMLFILE) ## do not remove!
         if (plotlib == "plotly") {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
@@ -713,7 +713,7 @@ PlotModuleServer <- function(id,
           content = function(file) {
             shiny::withProgress(
               {
-        
+                ## unlink(HTMLFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)

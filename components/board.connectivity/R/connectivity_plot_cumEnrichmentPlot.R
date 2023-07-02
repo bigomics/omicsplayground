@@ -121,7 +121,7 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
           return(NULL)
         }
         
-
+        ##NSETS <- 20
         if (input$cumgsea_order == "FC") {
           F <- F[order(-abs(F[, 1])), ]
           F <- head(F, nsets)
@@ -139,7 +139,7 @@ connectivity_plot_cumEnrichmentPlot_server <- function(id,
         
         playbase::pgx.stackedBarplot(
           x = data.frame(F, check.names=FALSE),
-
+          ## x = F,
           ylab = "cumulative enrichment",
           xlab = "",
           showlegend = FALSE

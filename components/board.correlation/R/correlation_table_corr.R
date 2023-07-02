@@ -65,11 +65,11 @@ correlation_table_corr_server <- function(id,
       df <- plot_data()
 
       numeric.cols <- colnames(df)[3:ncol(df)]
-
+      ## selectmode <- ifelse(input$corGSEAtable_multiselect,'multiple','single')
 
       DT::datatable(
         df,
-
+        rownames = FALSE, ## escape = c(-1),
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         class = "compact cell-border stripe hover",
@@ -77,9 +77,9 @@ correlation_table_corr_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrti",
-
-
-
+          ## pageLength = 20,
+          ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          ##paging = FALSE,
           scrollX = FALSE,
           scrollY = 100,
           scrollResize = TRUE,

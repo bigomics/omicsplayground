@@ -96,8 +96,8 @@ singlecell_plot_mappingplot_server <- function(id,
       score <- score[rownames(pos), , drop = FALSE]
       score[is.na(score)] <- 0
       score <- pmax(score, 0)
-
-
+      ## score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
+      ## score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
       score <- score / (1e-20 + rowSums(score))
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
@@ -142,7 +142,7 @@ singlecell_plot_mappingplot_server <- function(id,
       b0 <- 0.1 + 0.70 * pmax(30 - ncol(pd[["score"]]), 0)
 
       if (pd[["view"]] == "dotmap") {
-
+        ## playbase::gx.heatmap(pd[["score"]])
         par(mfrow = c(1, 1), mar = c(0, 0, 8, 1), oma = c(1, 1, 1, 1) * 0.25)
         score3 <- pd[["score"]]**1.5
         rownames(score3) <- paste("", rownames(score3), "  ")
@@ -156,9 +156,9 @@ singlecell_plot_mappingplot_server <- function(id,
           tl.srt = tl.srt
         )
 
-
-
-
+        ## mtext(pd[["grpvar"]], side=1, line=0.5)
+        ## title(sub=pd[["grpvar"]], line=0)
+        ## mtext(refset, side=4, line=0.5)
       }
 
       if (pd[["view"]] == "heatmap") {
@@ -197,7 +197,7 @@ singlecell_plot_mappingplot_server <- function(id,
           for (k in 1:length(all.scores)) {
             ii <- rownames(pd[["score"]])
             score1 <- all.scores[[k]][ii, kk]
-
+            ## score1 <- score1[rownames(score0),kk]
             if (k %% n != 0) colnames(score1) <- rep("", ncol(score1))
             if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score1) <- rep("", nrow(score1))
             score1 <- score1 / (1e-8 + rowSums(score1))

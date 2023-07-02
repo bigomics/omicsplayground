@@ -21,7 +21,7 @@ dataview_plot_expression_ui <- function(
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
-
+    ## width = c("auto","100%"),
     height = height
   )
 }
@@ -55,7 +55,7 @@ dataview_plot_expression_server <- function(id,
       grp <- rep(NA, length(samples))
       if (groupby != "<ungrouped>") {
 
-
+        ## grp  = factor(as.character(pgx$samples[,3]))
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }
 
@@ -74,7 +74,7 @@ dataview_plot_expression_server <- function(id,
       }
 
       geneplot_type <- "barplot"
-
+      # geneplot_type <- input$geneplot_type
 
       pd <- list(
         df = data.frame(
@@ -121,10 +121,10 @@ dataview_plot_expression_server <- function(id,
             col.main = "#7f7f7f",
             bar = TRUE,
             border = NA,
-
+            ## bee  =  ifelse(length(df$x) < 500,TRUE,FALSE),
             bee.cex = bee.cex,
-
-
+            ## sig.stars = TRUE,
+            ## max.stars = 5,
             xlab = "",
             names.cex = cx1,
             srt = srt,
@@ -138,7 +138,7 @@ dataview_plot_expression_server <- function(id,
             cex.main = 1,
             xlab = "",
             ylab = ylab,
-
+            ## vcol = rgb(0.2,0.5,0.8,0.8),
             vcol = rgb(0.4, 0.6, 0.85, 0.85),
             srt = srt
           )
@@ -207,7 +207,7 @@ dataview_plot_expression_server <- function(id,
       shiny::req(pd)
 
       df <- pd[["df"]]
-
+      ## par(mar=c(7,3.5,2,1), mgp=c(2.1,0.8,0))
 
       BLUE <- rgb(0.2, 0.5, 0.8, 0.8)
       bee.cex <- ifelse(length(df$x) > 500, 0.1, 0.2)
@@ -255,7 +255,7 @@ dataview_plot_expression_server <- function(id,
             ) %>%
             plotly::layout(
               yaxis = list(
-
+                ## title = "",
                 zeroline = FALSE
               )
             )
@@ -276,7 +276,7 @@ dataview_plot_expression_server <- function(id,
       } else {
         ## plot as regular bar plot
         fig <- plotly::plot_ly(df, x = ~samples, y = ~x, type = "bar", name = pd$gene)
-
+        # fig <- plotly::plot_ly(x = df$samples, y = df$x, type = 'bar', name = pd$gene)
         pd$groupby <- ""
         ## fig
       }
@@ -287,7 +287,7 @@ dataview_plot_expression_server <- function(id,
           yaxis = list(title = pd$ylab, fixedrange = TRUE),
           font = list(family = "Lato"),
           showlegend = FALSE
-
+          ## title = pd$gene
         ) %>%
         plotly_default()
       fig
@@ -296,7 +296,7 @@ dataview_plot_expression_server <- function(id,
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
         plotly_modal_default()
-
+      ## fig <- plotly::style(fig, marker.size = 14)
       fig
     }
 

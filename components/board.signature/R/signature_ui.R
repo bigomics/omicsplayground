@@ -196,7 +196,7 @@ SignatureUI <- function(id) {
     boardHeader(title = "Test signatures", info_link = ns("info")),
     bslib::layout_column_wrap(
       width = 1,
-
+      ## height = "calc(100vh - 190px)",
       style = htmltools::css(grid_template_columns = "8fr 4fr"),
       left.panel,
       right.panel

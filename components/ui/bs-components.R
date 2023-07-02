@@ -122,8 +122,8 @@ bs_carousel <- function(id, contents, img.src=NULL) {
       class = "carousel slide",
       `data-bs-ride` = "carousel",
 #      shiny::div(
-
-
+#          class="carousel-indicators",
+#          shiny::tagList(buttons)
 #      ),
       shiny::div(
           class="carousel-inner",
@@ -148,8 +148,8 @@ bs_carousel <- function(id, contents, img.src=NULL) {
   )
 }
 
-
-
+##contents=list("hello","world");id="id"
+##bs_carousel(id=id, contents)
 
 modal_carousel <- function(id, contents) {
     modalUI(

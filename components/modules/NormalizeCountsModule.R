@@ -32,13 +32,13 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             nc_info = ""
 
             output$UI <- shiny::renderUI({
-
-
+                ##ns <- shiny::NS(id)  ## namespace
+                ##ns <- function(id) id
                 ns <- session$ns
                 shiny::sidebarLayout(
                     shiny::sidebarPanel(
                         shiny::helpText(nc_info),
-
+                        ##br(),
                         ##radioButtons(ns("selectmethod"),"Select normalization:",
                         ##             choices=all.methods, selected="CPM"),
                         withTooltip(
@@ -95,7 +95,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             })
 
             normalized_counts <- shiny::reactive({
-
+                ##req(input$selectmethod)
                 method <- input$selectmethod
                 message("[normalized_counts] length(method) = ",length(method))
                 message("[normalized_counts] method = ",method)
@@ -103,7 +103,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     message("[normalized_counts] setting method to 'none'")
                     method <- "none"
                 }
-
+                ##method = "CPM"
                 norm.counts <- NULL
                 pgx <- pgx()
                 if(method == "none") {

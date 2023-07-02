@@ -104,7 +104,7 @@ signature_plot_markers_server <- function(id,
       if ("gsva" %in% method) {
         gset <- names(y)[which(y != 0)]
         gmt <- list("gmt" = gset)
-
+        res.gsva <- GSVA::gsva(X, gmt, method = "gsva", parallel.sz = 1) ## parallel=buggy
         res.colnames <- colnames(res.gsva)
         fc <- as.vector(res.gsva[1, ])
         names(fc) <- res.colnames
@@ -136,8 +136,8 @@ signature_plot_markers_server <- function(id,
 
       ## select samples
       X <- pgx$X
-
-
+##      sel <- colnames(X)  ##???
+##      X <- X[, sel]
 
       ## get the signature
       gset <- getCurrentMarkers()
@@ -150,7 +150,7 @@ signature_plot_markers_server <- function(id,
       names(y) <- rownames(X)
 
       ## expression by group
-
+      ## grp = pgx$samples[colnames(X),"group"]
       grp <- pgx$model.parameters$group
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
@@ -276,17 +276,17 @@ signature_plot_markers_server <- function(id,
           title = tt,
           cex.title = 0.85,
           title.y = 0.86,
-
+#         cex.clust = 0.8,
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = 'fff'
         ) %>% plotly::layout(
-
+          ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
         )
         plt[[i+1]] <- p
       }
-
+      ##p <- grDevices::recordPlot()
       return(plt)
     }
 

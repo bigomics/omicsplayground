@@ -98,13 +98,13 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
       ## reset batch parameters choices if modelparamters change.
       observeEvent( input$bc_modelpar, {
 
-
+        ##pheno.par <- colnames(ngs$samples)
         px <- pheno()
         if(is.null(px)) return(NULL)
         sel <- apply(px,2,function(x) length(unique(x[!is.na(x)])))
         pheno.par <- sort(colnames(px)[sel>1])
         sel.par   <- c(grep("^[.<]|batch",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
-
+        ##batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
         batch.par <- c(pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
 
         bc <- setdiff(batch.par, input$bc_modelpar)
@@ -148,7 +148,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
 
         if(ncol(X0) != ncol(cX)) {
             warning("[BatchCorrect] canvas.renderPlot : ***ERROR*** dimension mismatch!")
-
+            ## return(NULL)
         }
         req(ncol(X0) == ncol(cX))
 
@@ -170,28 +170,28 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
         bc.options = c("none","PCA","HC","SVA","NNM")
         bc.options = c("none","PCA","SVA","NNM")
         bc.selected = "none"
-
+        ##bc.selected = c("mito/ribo","cell.cycle","gender")
 
         bc_info <- NULL
         bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
 
-
+        ##pheno.par <- colnames(ngs$samples)
         px <- pheno()
         if(is.null(px)) return(NULL)
         sel <- apply(px,2,function(x) length(unique(x[!is.na(x)])))
         pheno.par <- sort(colnames(px)[sel>1])
         sel.par   <- c(grep("^[.<]|batch",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
-
+        ##batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
         batch.par <- c(pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
 
         shiny::tagList(
-
+          ##helpText(bc_info),
           shiny::p(bc_info),
-
+          ## shinyWidgets::prettySwitch(ns("on_off"),"on/off", inputId="s1"),
 
           shiny::br(),
           shiny::actionButton(ns("bc_compute_button"),"Batch correct",
-
+                              ## icon=icon("exclamation-triangle"),
                               class="run-button"),
           shiny::br(),
           shiny::br(),
@@ -260,7 +260,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
         hc.correct  <- "HC"  %in% bc
         pca.correct <- "PCA" %in% bc
         sva.correct <- "SVA" %in% bc
-
+        ##mnn.correct <- "MNN" %in% bc
         mnn.correct  <- NULL
         nnm.correct <- "NNM" %in% bc
 
@@ -274,7 +274,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
           pheno = pheno(),
           model.par = mp,
           batch.par = bp,
-
+          ## batch.cov = bv,
           lib.correct = lib.correct,
           bio.correct = bio.correct,
           hc.correct = hc.correct,

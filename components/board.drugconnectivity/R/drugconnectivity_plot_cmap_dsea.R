@@ -127,7 +127,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         ntarget <- sapply(xtarget, length)
         ii <- unlist(mapply(rep, 1:nrow(pos), ntarget))
         pos3 <- apply(pos[ii, ], 2, function(x) tapply(x, unlist(xtarget), median))
-
+        ## var3 <- tapply(var[ii], unlist(xtarget), median, na.rm=TRUE)
         moa3 <- moa.target
         nes3 <- array(moa3$NES, dimnames = list(moa3$pathway))
         var3 <- nes3[rownames(pos3)]
@@ -270,7 +270,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         par(mfrow = c(nr, nr))
         for (contr in all.contr) {
           tt <- paste0(contr, " (", toupper(labtype), ")")
-
+          ## tt <- toupper(labtype)
           plotCMAP(pgx, db, contr,
             moa.target, moa.class,
             labtype = labtype, showlabel = showlab,

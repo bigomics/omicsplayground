@@ -62,10 +62,10 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
       shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
 
-
-
-
-
+      ## dcmethods <- names(pgx$deconv[[1]])
+      ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+      ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+      ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
 
       grpvars <- c("<ungrouped>", colnames(pgx$samples))
       sel <- grpvars[1]
@@ -92,14 +92,14 @@ SingleCellBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
 
-
+      ## if(is.null(input$crosstaboptions)) return(NULL)
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
-
+      pheno1 <- c("<cell type>", pheno0) # pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
       shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1,,selected = pheno1[1])
@@ -121,7 +121,7 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-
+      ## if(is.null(pgx)) return(NULL)
       shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
@@ -147,7 +147,7 @@ SingleCellBoard <- function(id, pgx) {
     pfGetClusterPositions <- shiny::reactive({ # used by many plots
       shiny::req(pgx)
 
-
+      ## zx <- filtered_matrix1()
       zx <- pgx$X
       kk <- colnames(zx)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
@@ -179,23 +179,23 @@ SingleCellBoard <- function(id, pgx) {
 
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
-
-
+      # dbg("[pfGetClusterPositions2] computing distances and clusters...")
+      # dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
       #
-
-
+      # ##dist = as.dist(dist(pos))
+      # dist = 0.001+dist(pos)**2
       #
-
+      # dbg("[pfGetClusterPositions2] creating graph")
       #
       # gr = igraph::graph_from_adjacency_matrix(
       #   1.0/dist, diag=FALSE, mode="undirected")
       #
-
+      # dbg("[pfGetClusterPositions2] cluster louvain")
       #
-
+      # clust <- igraph::cluster_louvain(gr)$membership
       #
-
-
+      # dbg("pfGetClusterPositions2:: done!")
+      # return( list(pos=pos, clust=clust) )
 
       return(pos)
     })

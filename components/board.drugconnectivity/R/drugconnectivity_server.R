@@ -148,7 +148,7 @@ DrugConnectivityBoard <- function(id, pgx) {
       rnk <- dt$NES
       names(rnk) <- rownames(dt)
       suppressWarnings(
-
+        ## moa.class <- fgsea::fgsea(gmt, rnk, nperm = 20000)
         moa.class <- fgsea::fgsea(gmt, rnk)        
       )
       moa.class <- moa.class[order(-abs(moa.class$NES)), ]

@@ -108,8 +108,8 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-
-
+      # renderFunc = shiny::renderPlot,
+      # renderFunc2 = shiny::renderPlot,
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

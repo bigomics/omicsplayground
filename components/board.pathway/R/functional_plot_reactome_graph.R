@@ -56,7 +56,7 @@ functional_plot_reactome_graph_server <- function(id,
     id, function(input, output, session) {
 
       ## preload... takes few seconds...
-
+      ##suppressMessages(require(SBGNview))
 
       ## reactive or function? that's the question...
       ## plot_data <- shiny::reactive({
@@ -89,16 +89,16 @@ functional_plot_reactome_graph_server <- function(id,
 
         NULL.IMG <- list(src = "", contentType = "image/png")
         ## if (is.null(pgx)) {
-
+        ##   return(NULL.IMG)
         ## }
         ## if (is.null(comparison) || length(comparison) == 0) {
-
+        ##   return(NULL.IMG)
         ## }
         ## if (comparison == "") {
-
+        ##   return(NULL.IMG)
         ## }
         ## if (is.null(df)) {
-
+        ##   return(NULL.IMG)
         ## }
 
         ## get fold-change vector
@@ -130,9 +130,9 @@ functional_plot_reactome_graph_server <- function(id,
         setwd(tmpdir)
 
         suppressMessages(require(SBGNview)) ## slow!! but needed!!!       
-
-
-
+        ##data("mapped.ids","pathways.info", "sbgn.xmls")
+        ##data("sbgn.xmls", package="SBGNview.data",verbose=1)  ### BIG 700MB!!!
+        ##object.size(sbgn.xmls)
 
         ## this is a trick. the original object in SBGNview.data was 700MB!!
         sbgn.xmls <- dir(sbgn.dir,".sbgn")
@@ -146,11 +146,11 @@ functional_plot_reactome_graph_server <- function(id,
 
         obj <- try( SBGNview::SBGNview(
           gene.data = fc,
-
+          ##gene.id.type = "ENTREZID",
           gene.id.type = "SYMBOL",
-
+          ##sbgn.gene.id.type = "SYMBOL",
           sbgn.dir = sbgn.dir,
-
+          # input.sbgn = pathway.id,
           input.sbgn = pathway.id,
           output.file = "reactome",
           output.formats =  c("png")

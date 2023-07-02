@@ -44,7 +44,7 @@ correlation_plot_barplot_ui <- function(
       label = label,
       plotlib = "plotly",
       caption = caption,
-
+#     options = plot_opts,
       info.text = info.text,
       download.fmt = c("png", "pdf", "csv"),
       width = width,
