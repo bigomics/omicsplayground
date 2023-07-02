@@ -20,14 +20,14 @@ upload_module_makecontrast_ui <- function(id) {
 
   tagList(
     bslib::layout_column_wrap(
-      width = 1, #fill = FALSE,
+      width = 1, 
       style = htmltools::css(grid_template_columns = "8fr 3fr;"),
       height = "50%",
       bslib::card(
         full_screen = TRUE,
         style = "border-width: 1px;",
-        ## bslib::card_header("Create comparisons"),
-        ##h4("Create comparisons:"),
+        #
+        #
         bslib::card_body(
           shiny::fillRow(
             style = "gap: 10px; height: 75px !important;",
@@ -89,7 +89,7 @@ upload_module_makecontrast_ui <- function(id) {
             style = "overflow: auto;",
             withTooltip(
               shiny::uiOutput(ns("createcomparison"),
-                ##style = "font-size:13px; height: 280px;"
+                #
                 style = "font-size:13px;"                
               ),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
@@ -259,8 +259,8 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
         in.ref <- in.ref1 | in.ref2
 
-        ## ctx <- 1*(in.main) - 1*(in.ref)
-        ## ct.name <- paste0(input$group1name,"_vs_",input$group2name)
+        #
+        #
         ct.name <- input$newname
         gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
         gr2 <- gsub(".*_vs_|@.*", "", ct.name)
@@ -340,7 +340,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             )[0, ]
           } else {
             paste.max <- function(x, n = 5) {
-              ## x <- unlist(x)
+              #
               if (length(x) > n) {
                 x <- c(x[1:n], paste("+", length(x) - n, "others"))
               }
@@ -364,16 +364,16 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             deleteButtons <- makebuttonInputs(
               FUN = actionButton,
               len = ncol(ct),
-              ## id = 'contrast_delete_',
+              #
               id = paste0("contrast_delete_", sample(99999, 1), "_"), ## hack to allow double click
               label = "",
-              ## size = "mini",
+              #
               width = "50px",
               inline = TRUE,
               icon = shiny::icon("trash-alt"),
               class = "btn-inline btn-outline-danger-hover",
               style = "padding:0px; margin:0px; font-size:95%; color: #B22222;",
-              ## onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
+              #
               onclick = paste0('Shiny.onInputChange(\"', ns("contrast_delete"), '\",this.id)')
             )
 
@@ -401,7 +401,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
               scrollResize = TRUE,
               pageLength = 999,
               ## autoWidth = TRUE, ## scrollX=TRUE,
-              # scrollY = "300px",
+              
               scrollY = "25vh",
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),

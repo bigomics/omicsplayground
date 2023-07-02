@@ -35,7 +35,7 @@ connectivity_table_similarity_scores_server <- function(id,
       df <- getConnectivityScores()
       shiny::req(df)
 
-      ##kk <- c("pathway", "score", "rho", "NES", "padj", "leadingEdge")
+      #
       kk <- intersect(columns, colnames(df))
       df <- df[, kk]
       df <- df[abs(df$score) > 0, , drop = FALSE]

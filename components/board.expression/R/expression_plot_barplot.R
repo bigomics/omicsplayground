@@ -82,7 +82,7 @@ expression_plot_barplot_server <- function(id,
       sel <- sel()
       res <- res()
 
-      ##shiny::req(sel())
+      #
       shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
 
       psel <- rownames(res)[sel]
@@ -137,7 +137,7 @@ expression_plot_barplot_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
-      # func2 = modal_plotly.RENDER,
+      
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

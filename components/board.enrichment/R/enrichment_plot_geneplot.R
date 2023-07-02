@@ -54,7 +54,7 @@ enrichment_plot_geneplot_server <- function(id,
 
       has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
-      ## collapse.others=TRUE
+      #
 
       sel <- gene_selected()
       if (is.null(sel) || is.na(sel) || length(sel) == 0) {

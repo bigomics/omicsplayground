@@ -59,7 +59,7 @@ functional_table_reactome_server <- function(id,
       DT::datatable(df,
         rownames = FALSE,
         escape = c(-1, -2),
-        ##class = "compact cell-border stripe hover",
+        #
         extensions = c("Scroller"),
         selection = list(
           mode = "single",
@@ -70,7 +70,7 @@ functional_table_reactome_server <- function(id,
         plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
-          ## dom = "ft",          
+          #
           scrollX = FALSE,
           scrollY = scrollY,
           scrollResize = TRUE,

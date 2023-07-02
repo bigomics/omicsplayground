@@ -75,7 +75,7 @@ enrichment_plot_barplot_server <- function(id,
       grouped <- !input$gs_ungroup1
       has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
-      ## collapse.others=TRUE
+      #
 
       ngrp <- length(unique(pgx$samples$group))
       srt <- ifelse(!grouped || ngrp > 4, 30, 0)

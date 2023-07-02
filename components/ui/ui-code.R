@@ -5,7 +5,7 @@
 
 ##textInput <- function(inputId, label, value = "") {
 myTextInput <- function(inputId, label, value = "") {
-    ##singleton(shiny::tags$head(shiny::tags$script(src = "/temp/mytextinput.js"))),
+    #
     shiny::tagList(shiny::tags$label(label, `for` = inputId),
             shiny::tags$input(id = inputId, type = "text", value = value,
                        class="myTextInput form-control shiny-bound-input"))
@@ -14,9 +14,9 @@ myTextInput <- function(inputId, label, value = "") {
 ## shiny::shinyUI(
 ##     shiny::basicPage(
 ##         code
-##        ,myTextInput("myTextInput","My text input","On enter or focus out")
-##        ,shiny::textOutput("meh")
-##        ,shiny::HTML('<script src="https://gist.github.com/xiaodaigh/7150112.js"></script>')
+#
+#
+#
 ##     ))
 
 ## from https://gist.github.com/xiaodaigh/7150112

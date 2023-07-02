@@ -37,7 +37,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     ## update choices upon change of data set
     shiny::observe({
-      ## req(pgx)
+      #
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -52,12 +52,12 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
     shiny::observe({
-      ## shiny::req(pgx,input$level)
+      #
       if (is.null(pgx)) {
         return(NULL)
       }
       shiny::req(input$level)
-      ## flt.choices = names(pgx$families)
+      #
       if (input$level == "geneset") {
         ft <- names(playdata::COLLECTIONS)
         nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
@@ -67,19 +67,19 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
-      ## if(input$level=="gene") ft = sort(c("<custom>",ft))
-      ## ft = sort(c("<custom>",ft))
+      #
+      #
       names(ft) <- sub(".*:","",ft)
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
 
     ## shiny::observe({
-    ##     splom.sel <- plotly::event_data("plotly_selected", source="splom")
-    ##     sel.keys <- as.character(splom.sel$key)
+    #
+    #
     ##     if(0 && length(sel.keys)>0) {
-    ##         shiny::updateSelectInput(session, "filter", selected="<custom>")
-    ##         sel.keys = paste(sel.keys, collapse=" ")
-    ##         shiny::updateTextAreaInput(session, "customlist", value=sel.keys)
+    #
+    #
+    #
     ##     }
     ## })
 
@@ -100,9 +100,9 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       shiny::req(pgx)
 
       sel <- names(pgx$gset.meta$meta)
-      ## sel = input_comparisons()
-      ## sel = intersect(sel, names(pgx$gset.meta$meta))
-      ## if(length(sel)==0) return(NULL)
+      #
+      #
+      #
 
       if (input$level == "geneset") {
         gsetmethods <- c("gsva", "camera", "fgsea")
@@ -163,7 +163,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
             sel.probes <- playbase::filterProbes(pgx$genes, genes)
           }
         } else if (input$filter != "<all>") {
-          ## gset <- GSETS[[input$filter]]
+          #
           gset.genes <- unlist(playdata::getGSETS(input$filter))
           sel.probes <- playbase::filterProbes(pgx$genes, gset.genes)
         }
@@ -181,11 +181,11 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     getActiveFoldChangeMatrix <- shiny::reactive({
       res <- getFoldChangeMatrix()
-      ## if(is.null(res)) return(NULL)
+      #
       shiny::req(res)
 
       ## match with selected/active contrasts
-      ## comp = head(colnames(res$fc),3)
+      #
       comp <- input_comparisons()
       kk <- match(comp, colnames(res$fc))
       if (length(kk) == 0) {
@@ -240,8 +240,8 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       ## ------------ get signature matrices -----------------
       F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")
       G <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")
-      ## f.score <- F$fc * -log10(F$qv)
-      ## g.score <- G$fc * -log10(G$qv)
+      #
+      #
       f.score <- F$fc * (1 - F$qv)**4 ## q-weighted FC
       g.score <- G$fc * (1 - G$qv)**4
 

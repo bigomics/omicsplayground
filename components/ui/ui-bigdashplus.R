@@ -12,7 +12,7 @@
 bigdash.selectTab <- function(session, selected) {
   shiny:::validate_session_object(session)
   msg <- shiny:::dropNulls(list(value = selected))
-  ##session$sendInputMessage(inputId, message)
+  #
   session$sendCustomMessage("bigdash-select-tab", msg)
 }
 

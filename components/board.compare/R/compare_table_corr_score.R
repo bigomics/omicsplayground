@@ -32,7 +32,7 @@ compare_table_corr_score_server <- function(id,
 
       DT::datatable(
         df,
-        rownames = TRUE, ## escape = c(-1,-2),
+        rownames = TRUE, #
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),

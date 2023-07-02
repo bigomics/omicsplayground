@@ -72,12 +72,12 @@ pcsf_plot_heatmap_server <- function(id,
       playbase::gx.splitmap(
         pgx$X[genes,],
         col.annot = pgx$samples,
-        ## row.annot = (cc[genes,1:5]),  
+        #
         split = idx,
         scale = 'row',
         cexRow = 1,
         show_rownames = 0,
-        ##keysize=0.5,
+        #
         mar=c(4,16),
         show_legend = FALSE,
         key.offset = c(0.05, 0.96)

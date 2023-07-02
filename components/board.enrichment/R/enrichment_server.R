@@ -84,9 +84,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     selected_gsetmethods <- shiny::reactive({
       shiny::req(pgx)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
-      ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
+      ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) 
       test <- input$gs_statmethod
-      test <- intersect(test, gset.methods0) ## maximum three
+      test <- intersect(test, gset.methods0) 
       test
     })
 
@@ -120,14 +120,14 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       dim(pv)
       if (NCOL(pv) > 1) {
         ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)
-        ## fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  ## REALLY???
+        ## fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  
         fc <- rowMeans(fc, na.rm = TRUE) ## NEED RETHINK!!!
-        ## pv = apply(pv,1,function(x) metap::allmetap(x,method="sumz")$p[[1]])
-        ## pv = apply(pv,1,vec.combinePvalues,method="stouffer")
-        ## qv = p.adjust(pv, method="fdr")
+        #
+        #
+        #
         pv <- apply(pv, 1, max, na.rm = TRUE)
         qv <- apply(qv, 1, max, na.rm = TRUE)
-        ## score = rowMeans(scale(score,center=FALSE),na.rm=TRUE)
+        #
         score <- rowMeans(apply(score, 2, ss.rank), na.rm = TRUE)
       }
 
@@ -287,7 +287,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         jj <- match(gs, rownames(mx))
         rpt <- cbind(rpt, q = qv[jj, ])
 
-        ## rownames(rpt) = gs
+        #
       } else {
         ## show original table (single method)
         rpt <- outputs[[gsmethod]]
@@ -354,7 +354,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
     metaFC <- shiny::reactive({
       req(pgx)
-      ##methods <- selected_gsetmethods()
+      #
       metaFC <- sapply(pgx$gset.meta$meta, function(m) m$meta.fx)
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
       metaFC
@@ -394,10 +394,10 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       if (is.multiomics) {
         ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
         mx <- mx[ii, ]
-        ## rownames(mx) <- sub(".*:|.*\\]","",rownames(mx))
+        #
       }
 
-      ## gxmethods <- c("trend.limma","ttest.welch")
+      #
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx

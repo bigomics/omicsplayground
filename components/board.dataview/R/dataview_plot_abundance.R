@@ -46,49 +46,49 @@ dataview_plot_abundance_server <- function(id,
     })
 
     ## plot.RENDER <- function() {
-    ##   res <- plot_data()
-    ##   shiny::req(res)
+    #
+    #
 
     ##   klr <- colorRampPalette(
     ##     c(
-    ##       rgb(0.2, 0.5, 0.8, 0.8),
-    ##       rgb(0.2, 0.5, 0.8, 0.1)
+    #
+    #
     ##     ),
-    ##     alpha = TRUE
+    #
     ##   )(nrow(res$prop.counts))
 
-    ##   ymax <- max(colSums(res$prop.counts, na.rm = TRUE))
-    ##   names.arg <- colnames(res$prop.counts)
+    #
+    #
     ##   if (length(names.arg) > 20) {
-    ##     names.arg <- rep("", length(names.arg))
+    #
     ##   }
-    ##   cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
+    #
 
-    ##   par(mar = c(8, 3.5, 2, 0), mgp = c(2.2, 0.8, 0))
+    #
     ##   barplot(res$prop.counts,
-    ##     las = 3,
+    #
     ##     cex.lab = 1.0, border = NA,
     ##     ylim = c(0, ymax) * 1.6, ylab = "abundance (%)",
     ##     names.arg = names.arg, cex.names = cex.names,
-    ##     col = klr
+    #
     ##   )
     ##   leg <- legend("topleft",
-    ##     legend = rev(rownames(res$prop.counts)),
+    #
     ##     fill = rev(klr), cex = 1, y.intersp = 0.75, bty = "n", plot = FALSE
     ##   )
-    ##   leftx <- leg$rect$left * 0.9
-    ##   rightx <- leg$rect$right * 0.9
-    ##   topy <- leg$rect$top
-    ##   bottomy <- leg$rect$bottom
+    #
+    #
+    #
+    #
     ##   legend(
     ##     x = c(leftx, rightx), y = c(topy, bottomy),
-    ##     legend = rev(rownames(res$prop.counts)),
+    #
     ##     fill = rev(klr), bty = "n", cex = 0.9, y.intersp = 0.75
     ##   )
     ## }
     ## 
     ## modal_plot.RENDER <- function() {
-    ##   plot.RENDER()
+    #
     ## }
 
     plotly.RENDER <- function() {
@@ -137,7 +137,7 @@ dataview_plot_abundance_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "base",
+      #
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

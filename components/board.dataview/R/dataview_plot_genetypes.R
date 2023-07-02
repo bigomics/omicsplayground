@@ -69,8 +69,8 @@ dataview_plot_genetypes_server <- function(id,
         t(res$prop.counts) / nsamples,
         horiz = TRUE, las = 1,
         cex.lab = 1.0, border = NA,
-        # ylim = c(0,ymax)*1.6, ylab = "abundance (%)",
-        ## ylim = c(0,ymax)*1.6,
+         ylab = "abundance (%)",
+        #
         xlab = "abundance (%)",
         # names.arg = names.arg, cex.names = cex.names,
         col = klr
@@ -141,14 +141,14 @@ dataview_plot_genetypes_server <- function(id,
         plotly::layout(
           showlegend = TRUE
         )
-      ## fig <- plotly::style(fig, marker.size = 14)
+      #
       fig
     }
 
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## plotlib2 = "base",
+      #
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

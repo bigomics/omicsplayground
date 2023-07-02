@@ -41,16 +41,16 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
     table_data <- shiny::reactive({
 
       ## get enrichment for all contrasts
-      ##F <- sapply(pgx$gset.meta$meta, function(x) x[, "meta.fx"])
+      #
       F <- metaFC()
       colnames(F) <- gsub("_", " ", colnames(F))
-      ##rownames(F) <- rownames(pgx$gset.meta$meta[[1]])
+      #
 
       ## get enrichment q-value for all contrasts
-      ##Q <- sapply(pgx$gset.meta$meta, function(x) x[,"meta.q"])
+      #
       Q <- metaQ()
       colnames(Q) <- gsub("_", " ", colnames(Q))
-      ##rownames(Q) <- rownames(pgx$gset.meta$meta[[1]])
+      #
 
       ## RMS (non-centered variance)
       fc.rms <- sqrt(F[, 1]**2)
@@ -66,7 +66,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
         colnames(F1) <- as.vector(rbind(paste0("ES.", colnames(F)), paste0("q.", colnames(Q))))
-        ## colnames(F1) <- sub("q.*","q",colnames(F1))
+        #
         df <- data.frame(geneset = gs, rms.ES = fc.rms, F1, check.names = FALSE)
       } else {
         F1 <- F
@@ -82,7 +82,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
-      ## if(length(qv.cols)==0) qv = 0
+      #
 
       list(
         df = df,

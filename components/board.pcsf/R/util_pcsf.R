@@ -63,16 +63,16 @@ visplot.PCSF <- function (x, style = 0, edge_width = 5, node_size = 40, node_lab
       visNetwork::visNodes(shadow = list(enabled = TRUE, size = 12)) %>%
       visNetwork::visEdges(scaling = list(min = 6, max = edge_width*6)) ## %>%          
     ##   visNetwork::visGroups(groupname = "Steiner", 
-    ##             color = list(background = Steiner_node_color, border = "blue"), 
+    #
     ##             shape = "triangle") %>%
     ##   visNetwork::visGroups(groupname = "Terminal", 
-    ##             color = list(background = Terminal_node_color, border = "green"), 
+    #
     ##             shape = "dot")
     ## leg.groups <- list(
     ##   list(
-    ##     label = Terminal_node_legend, 
+    #
     ##     shape = "dot", size = 15,
-    ##     color = list(background = Terminal_node_color, border = "green"),
+    #
     ##     label.cex = 0.8),
     ##   list(label = Steiner_node_legend, 
     ##        shape = "triangle", size = 10,
@@ -81,10 +81,10 @@ visplot.PCSF <- function (x, style = 0, edge_width = 5, node_size = 40, node_lab
     ## )
     ## if (length(extra_node_colors) > 0) {
     ##   for (i in 1:length(extra_node_colors)) {
-    ##     en = names(extra_node_colors)[i]
+    #
     ##     visNet <- visNet %>%
     ##       visNetwork::visGroups(
-    ##         groupname = en, 
+    #
     ##         color = list(background = extra_node_colors[[en]], 
     ##                      border = "grey"), shape = "dot")
     ##     leg.groups[[i + 2]] <- list(label = en, shape = "dot", 
@@ -108,7 +108,7 @@ visplot.PCSF <- function (x, style = 0, edge_width = 5, node_size = 40, node_lab
       visNetwork::visPhysics(enabled=physics) %>%
       visNetwork::visOptions(highlightNearest = list(enabled = TRUE)) %>% 
       visNetwork::visLegend(width = 0.05, useGroups = TRUE, position="right")        
-    ## visNet <- visNet %>% visLegend(addNodes = leg.groups, width = 0.15, useGroups = FALSE)
+    #
     
     visNet
 }
@@ -129,14 +129,14 @@ plot.pcsf <- function(net, fx0=NULL, label.cex=1) {
   
   if(is.null(fx0)) fx0 <- igraph::V(net)$prize
   fx0 <- tanh(1.3*fx0)
-  ##vertex.label.cex <- label.cex * (0.2 + 3*abs(fx0)**2)
+  #
   vertex.label.cex <- label.cex
   
   vertex.size <- igraph::V(net)$prize**0.66
-  # vertex.size <- 1 * (c1 / mean(c1))**0.3
-  #vertex.size <- 1 * (c2 / mean(c2))**2
-  #vertex.size <- 1.5 * (c3 / mean(c3))**0.15
-  #vertex.size <- 2*vertex.label.cex
+  
+  
+  
+  
   
   vertex.color <- "lightblue"  
   cpal <- colorRampPalette(c("blue2","grey90","red3"))(33)

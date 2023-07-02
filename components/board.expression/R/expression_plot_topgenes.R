@@ -147,7 +147,7 @@ expression_plot_topgenes_server <- function(id,
         
         p <- playbase::pgx.plotExpression(
           pd[["pgx"]],
-          # pd[["gene"]],
+          
           probe = gene,
           comp = pd[["comp"]],
           grouped = pd[["grouped"]],

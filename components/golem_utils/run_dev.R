@@ -27,14 +27,14 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options
 
   # Detach all loaded packages and clean your environment
   golem::detach_all_attached()
-  # rm(list=ls(all.names = TRUE))
+  
 
   document_and_reload2 <-
     function (pkg = get_golem_wd(), roclets = NULL, load_code = NULL,
               clean = FALSE, export_all = FALSE, helpers = FALSE, attach_testthat = FALSE,
               ...)
     {
-      #check_name_consistency(pkg)
+      
       rlang::check_installed("pkgload")
       if (rlang::is_installed("rstudioapi") && rstudioapi::isAvailable() &&
           rstudioapi::hasFun("documentSaveAll")) {
@@ -60,7 +60,7 @@ launch_board <- function(board, board_deps = NULL, playbase_path = NULL, options
       }
     }
   # Document and reload your package
-  #document_and_reload2()
+  
 
   ## SOURCE FILES ##
 

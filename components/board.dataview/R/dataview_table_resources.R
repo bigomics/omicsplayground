@@ -35,7 +35,7 @@ dataview_table_resources_server <- function(id, pgx) {
     timings_data <- shiny::reactive({
       shiny::req(pgx$timings)
 
-      ## if(is.null(pgx$timings)) return(NULL)
+      #
       D <- data.frame()
       if (!is.null(pgx$timings)) {
         D <- round(pgx$timings[, 1:3], digits = 3)
