@@ -42,7 +42,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
                 frame()
                 status.ds <- check["contrasts.csv", "description"]
                 msg <- paste(
-                    toupper(status.ok), "\n", "(Optional) Upload 'contrasts.csv'",
+                    toupper(status.ok), "\n", "(Optional) Upload 'comparisons.csv'",
                     tolower(status.ds)
                 )
                 ## text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
@@ -61,7 +61,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
             shiny::validate(
                 shiny::need(
                     !is.null(contrasts),
-                    "Please upload a contrasts.csv file (OPTIONAL)."
+                    "Please upload a comparison.csv file (OPTIONAL)."
                 )
             )
 
@@ -71,14 +71,14 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
             df <- contrasts
             px <- head(colnames(df), 20) ## maximum to show??
             df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
-            tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "contrasts")
+            tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "comparisons")
             ## tt2 <- paste(ncol(contrasts),"contrasts")
 
             p1 <- df %>%
                 inspectdf::inspect_cat() %>%
                 inspectdf::show_plot()
 
-            p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle = tt2) +
+            p1 <- p1 + ggplot2::ggtitle("COMPARISONS", subtitle = tt2) +
                 ggplot2::theme(
                     ## axis.text.x = ggplot2::element_text(size=8, vjust=+5),
                     axis.text.y = ggplot2::element_text(

@@ -167,7 +167,7 @@ UploadBoard <- function(id,
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
           #shiny::showTab("tabs", "Normalize")
@@ -178,12 +178,12 @@ UploadBoard <- function(id,
           #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
         #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "Contrasts")
+        shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       }
     })
@@ -242,7 +242,7 @@ UploadBoard <- function(id,
         message("[upload_files] getting matrices from CSV")
 
         ii <- grep("csv$", input$upload_files$name)
-        ii <- grep("sample|count|contrast|expression",
+        ii <- grep("sample|count|contrast|expression|comparison",
           input$upload_files$name,
           ignore.case = TRUE
         )
@@ -264,7 +264,7 @@ UploadBoard <- function(id,
             IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
             IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
-            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast|comparison", fn1, ignore.case = TRUE)
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
