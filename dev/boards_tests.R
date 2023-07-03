@@ -2,57 +2,49 @@
 
 ### board specific files ###
 
-# get error from driver and save it as error_log
+# get error from AppDriver and save it as error_log
 
-driver <- tryCatch(
+AppDriver <- tryCatch(
   {
-    options(shiny.testmode = TRUE)  # Enable test mode
-    
-    shinytest::ShinyDriver$new(
-      path = "components/board.tcga/dev_MMM/",
-      options = list(shiny.error = function() {
-        parent_env <- parent.frame()
-        return(parent_env$e)
-      }),
-      loadTimeout = 5000  # Set the load timeout value (in milliseconds)
-    )
+     shinytest2::AppDriver$new(
+      normalizePath("components/board.tcga/dev_MMM"),
+      wait_ = TRUE,
+      )
   },
   error = function(e) {
     return(e)
   }
 )
 
-driver  # Display the driver object
+AppDriver  # Display the AppDriver object
 # basic info for the app
-driver$getUrl()
-driver$getDebugLog()
-driver$listWidgets()$input
-driver$listWidgets()$output
+AppDriver$get_url()
+AppDriver$get_logs()
 
 # get pgx file path
 pgx_file <- normalizePath("data/example-data.pgx")
 
 pgx_file
 
-# I added a textInput for pgx_path
-driver$getValue("pgx_path")
+# get input/output values
+AppDriver$get_value(input = "pgx_path")
+AppDriver$get_values()
+
 
 # update pgx_path to an actual path
-driver$setValue("pgx_path", pgx_file)
+AppDriver$set_inputs("pgx_path" = pgx_file)
 
 # check that the path is updated
-driver$getValue("pgx_path")
-
+AppDriver$get_value(input = "pgx_path")
+AppDriver$getEventLog()
 # get error log
 
 # get stderror for the app
-driver$getDebugLog()
-driver$listWidgets()$output
+AppDriver$get_logs()
 
-# driver is still running even if we stop the app
-driver
 # exit the app
-driver$finalize()
-
+AppDriver$finalize()
+AppDriver$snapshot()
 
 shiny::runApp("components/board.tcga/dev_MMM/")
+
