@@ -190,7 +190,7 @@ LoadingBoard <- function(id,
         }
         if(num_shared>0) {        
           out2 <- shiny::wellPanel(
-            shiny::HTML("<b>Send datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
+            shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
             br(),br(),
             pgxshared$sharedPGXtable(),
             br()
