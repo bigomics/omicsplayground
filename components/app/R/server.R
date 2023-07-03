@@ -191,7 +191,6 @@ app_server <- function(input, output, session) {
         }
 
         if(modules_loaded) {
-            Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
             return(NULL)
         }
@@ -419,7 +418,7 @@ app_server <- function(input, output, session) {
         bigdash.selectTab(session, selected = 'dataview-tab')
         bigdash.openSettings()
 
-        ## remove modal from LoadingBoard
+        ## remove loading modal from LoadingBoard
         shiny::removeModal()
 
         #show hidden tabs
