@@ -26,6 +26,10 @@ app_ui <- function(request) {
         source(file.path(root_opg,'components/ui/', ui_file))
     }
 
+    # attempt to evaluate board functions
+    
+    # board_inputs <- grep("inputs", ls(), value = TRUE, ignore.case = TRUE)
+
     # header
     
     header <- shiny::tagList(
@@ -80,7 +84,7 @@ app_ui <- function(request) {
         bigdash::bigTabs(
             bigdash::bigTabItem(
                 paste0(board,"-tab"),
-                TcgaInputs("tcga"),
+                TcgaInputs("tcga"), # eval(parse(text = paste0(board_inputs, glue::glue('("{board}")'))))
                 TcgaUI("tcga")
             )
         )
