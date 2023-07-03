@@ -153,6 +153,7 @@ UploadBoard <- function(id,
           cancelButtonText = "Stay here.",
           inputId = 'confirmload',
           closeOnEsc = FALSE,
+          immediate = TRUE,
           callbackR = load_my_dataset
       )
     })

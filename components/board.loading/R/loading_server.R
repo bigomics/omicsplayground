@@ -410,15 +410,6 @@ LoadingBoard <- function(id,
     )
 
     ## -----------------------------------------------------------------------------
-    ## User interface
-    ## -----------------------------------------------------------------------------
-
-#    output$rowselected <- shiny::reactive({
-#      !is.null(selectedPGX()) && length(selectedPGX()) > 0
-#    })
-#    shiny::outputOptions(output, "rowselected", suspendWhenHidden = FALSE)
-
-    ## -----------------------------------------------------------------------------
     ## READ initial PGX file info
     ## -----------------------------------------------------------------------------
 
