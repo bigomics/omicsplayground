@@ -13,6 +13,7 @@ UploadBoard <- function(id,
                           "datasets" = 10
                         ),
                         enable_userdir = TRUE,
+                        enable_delete = TRUE,
                         r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -710,6 +711,7 @@ UploadBoard <- function(id,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
+      enable_delete = enable_delete,
       alertready = FALSE,
       lib.dir = FILES,
       pgx.dirRT = shiny::reactive(getPGXDIR()),

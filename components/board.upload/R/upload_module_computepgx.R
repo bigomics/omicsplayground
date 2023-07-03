@@ -28,6 +28,7 @@ upload_module_computepgx_server <- function(
     lib.dir,
     pgx.dirRT,
     enable_button = TRUE,
+    enable_delete = TRUE,
     alertready = TRUE,
     max.genes = 20000,
     max.genesets = 10000,

@@ -4,7 +4,6 @@
 ##
 
 LoadingBoard <- function(id,
-                         pgx_topdir,
                          pgx,
                          auth,
                          limits = c(
@@ -12,6 +11,7 @@ LoadingBoard <- function(id,
                            "genes" = 20000, "genesets" = 10000,
                            "datasets" = 10
                          ),
+                         pgx_topdir,
                          enable_userdir = TRUE,
                          enable_pgxdownload = TRUE,
                          enable_delete = TRUE,
@@ -24,8 +24,6 @@ LoadingBoard <- function(id,
     ## reactive variables used only within this module
     rl <- reactiveValues(
       reload_pgxdir_public = 0,
-##      selected_row = NULL,
-##      found_example_trigger = NULL,
       pgxTablePublic_data = NULL,
       selected_row_public = NULL,
       share_pgx = NULL,
@@ -50,11 +48,6 @@ LoadingBoard <- function(id,
       enable_public_share <- FALSE
     }
 
-    # this allows for deselection (selected_row -> NULL)
-#    observeEvent(pgxtable$rows_selected(), {
-#      rl$selected_row <- pgxtable$rows_selected()
-#    }, ignoreNULL = FALSE)
-
     ##-------------------------------------------------------------------
     ## Received/shared UI 
     ##-------------------------------------------------------------------
@@ -65,6 +58,7 @@ LoadingBoard <- function(id,
       pgx_shared_dir= pgx_shared_dir,
       getPGXDIR = getPGXDIR,
       max_datasets = limits['datasets'],
+      enable_delete = enable_delete,
       r_global = r_global
     )
 
@@ -166,8 +160,6 @@ LoadingBoard <- function(id,
         return(NULL)
       } else {
 
-##        rl$selected_row <- example_row
-##        rl$found_example_trigger <- 1
         loadAndActivatePGX("example-data") 
         
         # open the left & right sidebar
@@ -209,7 +201,7 @@ LoadingBoard <- function(id,
 
           ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
           numpgx <- length(dir(pgx_path, pattern="*.pgx$"))
-          if(!opt$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern="*.pgx$|*.pgx_$"))
+          if(!enable_delete) numpgx <- length(dir(pgx_path, pattern="*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(limits['datasets'])
           if(numpgx >= maxpgx) {
             ## should use sprintf or glue here...

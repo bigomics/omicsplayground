@@ -642,7 +642,7 @@ loading_table_datasets_server <- function(id,
         ## user has to be logged in and have email for them to share with other users
         if (auth$email() == "") {
           shinyalert::shinyalert(
-             title = "Oops! You're not logged in...",
+             title = "Oops! Cannot share...",
              text = paste("You need to be logged in with a valid email",
                           "address to share pgx files with other users.")
           )
