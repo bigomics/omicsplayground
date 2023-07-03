@@ -2,14 +2,14 @@
 
 ### board specific files ###
 
-error_logs <- list
+error_logs <- list()
 
 # get error from AppDriver and save it as error_log
 
 AppDriver <- tryCatch(
   {
      shinytest2::AppDriver$new(
-      normalizePath("components/board.tcga/dev_MMM"),
+      normalizePath("components/board.single"),
       options = list(board = "tcga")
       )
   },

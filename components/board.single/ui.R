@@ -8,7 +8,7 @@ app_ui <- function(request) {
 
     board = options()$board
     
-    source('../../app/R/global.R')
+    source('../app/R/global.R')
 
     root_opg <- get_opg_root()
     
