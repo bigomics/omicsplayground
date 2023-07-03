@@ -5,18 +5,20 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
+
+    board = options()$board
     
     source('../../app/R/global.R')
 
     root_opg <- get_opg_root()
-
+    
     source(file.path(root_opg,'components/golem_utils/app_config.R'))
     source(file.path(root_opg,'components/golem_utils/run_app.R'))
     source(file.path(root_opg,'components/golem_utils/run_dev.R'))
 
-    source(file.path(root_opg,'components//board.tcga/R/tcga_ui.R'))
-    source(file.path(root_opg,'components/board.tcga/R/tcga_server.R'))
-    source(file.path(root_opg,'components/board.tcga/R/tcga_plot_survival.R'))
+    directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
+    file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
+    lapply(file_paths, source)  # Source all the files in the directory
 
     ui_files <- list_files_safe(path = file.path(root_opg,'components/ui/'))
 
@@ -46,8 +48,8 @@ app_ui <- function(request) {
         bigdash::sidebarMenu(
             "Signature",
             bigdash::sidebarMenuItem(
-                "TCGA survival (beta)",
-                "tcga-tab"
+                board,
+                paste0(board,"-tab")
             )
         )
     )
@@ -77,7 +79,7 @@ app_ui <- function(request) {
         ),
         bigdash::bigTabs(
             bigdash::bigTabItem(
-                "tcga-tab",
+                paste0(board,"-tab"),
                 TcgaInputs("tcga"),
                 TcgaUI("tcga")
             )
