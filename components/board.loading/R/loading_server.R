@@ -20,7 +20,7 @@ LoadingBoard <- function(id,
                          r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-
+    
     ## reactive variables used only within this module
     rl <- reactiveValues(
       reload_pgxdir_public = 0,
@@ -36,7 +36,8 @@ LoadingBoard <- function(id,
       share_pgx = NULL,
       share_public_pgx = NULL,
       delete_pgx = NULL,
-      delete_trigger = 0
+      delete_trigger = 0,
+      refresh_shared = 0
     )
 
     update_received <- reactiveVal(0)
@@ -76,7 +77,7 @@ LoadingBoard <- function(id,
     ##-------------------------------------------------------------------
 
     is_valid_email <- function(email) {
-        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud",email)
+        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$",email)
         valid_email <- grepl(".*@.*[.].*",email)
         valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars
         return(!is_personal && valid_email)
@@ -90,42 +91,124 @@ LoadingBoard <- function(id,
         cow
     }
 
-    ##-------------------------------------------------------------------
-    ## share dataset with specific user
-    ##-------------------------------------------------------------------
-    output$receive_pgx_alert <- renderUI({
+    sendShareMessage <- function(pgxname, sender, share_user, path_to_creds='gmail_creds') {
 
-      pgx_received <- getReceivedFiles()
+      dbg("[sendShareMessage] pgxname = ", pgxname)
+      dbg("[sendShareMessage] sender = ", sender)
+      dbg("[sendShareMessage] share_user = ", share_user)
+      
+      if(!file.exists(path_to_creds)) return(NULL)
+      
+      blastula::smtp_send(
+        blastula::compose_email(
+          body = blastula::md(
+            glue::glue(
+              "Hello, {sender} shared a dataset with you on OmicsPlayground! ",
+              "Login to accept the new dataset.")
+          ),
+          footer = blastula::md(
+            glue::glue("Email sent on {blastula::add_readable_time()}.")
+          )
+        ),
+        from = "app@bigomics.ch",
+        to = share_user,
+        subject = paste("Your friend",sender,"shared data on OmicsPlayground"),
+        credentials = blastula::creds_file(path_to_creds)
+      )
+    }
+    
+    ##-------------------------------------------------------------------
+    ## Received/shared UI 
+    ##-------------------------------------------------------------------
 
-      if(length(pgx_received)==0) {
-        out <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
-      } else {
-        dt_table  <- DT::datatable(
-          receivedPGXtable(),
-          rownames = FALSE,
-          escape = FALSE,
-          selection = "none",
-          ## class = "compact cell-border",
-          class = "compact row-border",
-          options = list(
-            dom = "t",
-            pageLength = 999
+    pgxreceived <- upload_module_received_server(
+      id = "received",
+      auth = auth,
+      pgx_shared_dir= pgx_shared_dir,
+      getPGXDIR = getPGXDIR,
+      max_datasets = limits['datasets'],
+      r_global = r_global
+    )
+
+    pgxshared <- upload_module_shared_server(
+      id = "shared",
+      auth = auth,
+      pgx_shared_dir= pgx_shared_dir,
+      sendShareMessage = sendShareMessage,
+      r_global = r_global,
+      refresh = reactive(rl$refresh_shared)
+    )
+
+    output$sharing_alert <- renderUI({
+      received_files <- pgxreceived$getReceivedFiles()
+      shared_files   <- pgxshared$getSharedFiles()
+      num_received <- length(received_files)
+      num_shared <- length(shared_files)      
+
+      if(num_received==0 && num_shared==0 ) {
+        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+        return(tag)
+      }
+
+      ## If not show alerts for sharing 
+      msg <- c()
+      if(num_received>0) {        
+        msg <- paste("You have received <strong>",num_received,"datasets</strong> that you need to accept.")
+      }
+      if(num_shared>0) {
+        msg1 <- paste("You have still <strong>",num_shared,"shared datasets</strong> waiting in the queue.")        
+        msg <- c(msg, msg1)
+      }
+      bs_alert(
+        style = "warning",
+        conditional = FALSE,            
+        shiny::HTML(paste(msg,"Please check the Sharing panel."))
+      )
+    })
+
+    output$sharing_panel_ui <- renderUI({
+      received_files <- pgxreceived$getReceivedFiles()
+      shared_files   <- pgxshared$getSharedFiles()
+      num_received <- length(received_files)
+      num_shared <- length(shared_files)      
+
+      if( num_received==0 && num_shared==0 ) {
+        return(paste("No datasets being shared."))
+      }
+      
+      out <- tagList()
+      if(length(out)==0) {
+        if(num_received>0) {        
+          out1 <- shiny::wellPanel(
+            shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
+            br(),br(),
+            pgxreceived$receivedPGXtable(),
+            br()            
           )
-          ) %>%
-          DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
-        
-        out <- bs_alert(
-          style = "danger",
-          tagList(
-            shiny::HTML("<strong>A user has shared data with you!</strong>"),
-            dt_table
+          out <- tagList(out, out1)
+        }
+        if(num_shared>0) {        
+          out2 <- shiny::wellPanel(
+            shiny::HTML("<b>Send datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
+            br(),br(),
+            pgxshared$sharedPGXtable(),
+            br()
           )
-        )
+          if(length(out)==0) {
+            out <- out2
+          } else {
+            out <- tagList(out, br(), out2)            
+          }
+        }
       }
 
       return(out)
     })
 
+    ##-------------------------------------------------------------------
+    ## share dataset with specific user
+    ##-------------------------------------------------------------------
+    
     share_dialog <- function(pgxname, choices=NULL) {
 
       select_user <- NULL
@@ -209,7 +292,10 @@ LoadingBoard <- function(id,
         ## check how many are already in queue
         pp <- paste0("__from__",auth$email(),"__$")
         num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
-        if(num_shared_queue > opt$MAX_SHARED_QUEUE) {   ## NB opt is global...
+        dbg("[LoadingBoard:observeEvent(rl$share_pgx)] num_shared_queue = ",num_shared_queue)
+        dbg("[LoadingBoard:observeEvent(rl$share_pgx)] MAX_SHARED_QUEUE = ",opt$MAX_SHARED_QUEUE)        
+
+        if(num_shared_queue >= opt$MAX_SHARED_QUEUE) {   ## NB opt is global...
           shinyalert::shinyalert(
             title = "Oops! Too many shared...",
             text = paste("You have already too many shared datasets in the waiting queue.",
@@ -269,6 +355,7 @@ LoadingBoard <- function(id,
         )
     })
 
+    
     observeEvent(input$share_confirm, {
 
         # if confirmed, then share the data
@@ -312,7 +399,7 @@ LoadingBoard <- function(id,
 
               ## write transaction to log file
               log.entry <- data.frame( date=date(), from="jane@demo.com", to="tarzan@demo.com",file="example-data.pgx")
-              log.file <- file.path(pgx_shared_dir, "PGX-SHARE-TRANSACTIONS.log")
+              log.file <- file.path(pgx_shared_dir, "PGXSHARE-TRANSACTIONS.log")
               log.entry <- data.frame( date=date(), from=auth$email(), to=share_user, file=paste0(pgx_name,".pgx"))
               if(file.exists(log.file)) {
                 write.table(log.entry, file=log.file, col.names=FALSE, row.names=FALSE, sep=',', append=TRUE)
@@ -332,26 +419,11 @@ LoadingBoard <- function(id,
             )
 
             # send email to user
-            path_to_creds <- 'gmail_creds'
             sender <- auth$email()
-            if (file.exists(path_to_creds)) {
-                blastula::smtp_send(
-                    blastula::compose_email(
-                        body = blastula::md(
-                            glue::glue(
-                                "Hello, {sender} shared a dataset with you on OmicsPlayground! ",
-                                "Login to accept the new dataset.")
-                        ),
-                        footer = blastula::md(
-                            glue::glue("Email sent on {blastula::add_readable_time()}.")
-                        )
-                    ),
-                    from = "app@bigomics.ch",
-                    to = share_user,
-                    subject = paste("Your friend",sender,"shared data on OmicsPlayground"),
-                    credentials = blastula::creds_file(path_to_creds)
-                )
-            }
+            sendShareMessage(pgx_name, sender, share_user, path_to_creds='gmail_creds')
+
+            rl$refresh_shared <- rl$refresh_shared + 1
+          
         }
 
         rl$share_pgx <- NULL
@@ -423,8 +495,8 @@ LoadingBoard <- function(id,
           numpgx <- length( dir(pgx_path, pattern="*.pgx$") )
           maxpgx <- as.integer(limits['datasets'])
           if(numpgx >= maxpgx) {
-            dbg("[observeEvent::importbutton] numpgx = ",numpgx)
-            dbg("[observeEvent::importbutton] maxpgx = ",maxpgx)
+            dbg("[observeEvent:importbutton] numpgx = ",numpgx)
+            dbg("[observeEvent:importbutton] maxpgx = ",maxpgx)
             ## should use sprintf or glue here...
             msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
             msg <- sub("NUMPGX", numpgx, msg)
@@ -676,7 +748,7 @@ LoadingBoard <- function(id,
       
       ## before reading the info file, we need to update for new files
       if(need_update) {
-        dbg("[loading_server::getPGXINFO] updating library...")
+        dbg("[loading_server:getPGXINFO] updating library...")
         pgx.showSmallModal("Updating your library<br>Please wait...")
         shiny::withProgress(message = "Updating your library...", value = 0.33, {
           playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb=FALSE)
@@ -812,140 +884,7 @@ LoadingBoard <- function(id,
       pgxfile
     })
 
-    getReceivedFiles <- shiny::reactive({
-      req(auth)
-      if (!auth$logged()) return(c())
-      if(auth$email()=="") return(c())      
-      ## allow trigger for when a shared pgx is accepted / decline
-      update_received()
-      pgxfiles <- dir(path = pgx_shared_dir,
-                      pattern = paste0('__to__',auth$email(),'__from__.*__$'))
-      return(pgxfiles)
-    })
-
-    makebuttonInputs2 <- function(FUN, len, id, ...) {
-        inputs <- character(length(len))
-        for (i in seq_along(len)) {
-            inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
-        }
-        inputs
-    }
-
-    receivedPGXtable <- shiny::eventReactive(
-        c(r_global$nav, update_received()),
-    {
-        req(r_global$nav == 'load-tab')
-        shared_pgx_names <- getReceivedFiles()
-
-        accept_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = shared_pgx_names,
-            id = "accept_pgx__",
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("check"),
-            class = "btn-inline btn-success",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            onclick=paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
-        )
-
-        decline_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = shared_pgx_names,
-            id = "decline_pgx__",
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("x"),
-            class = "btn-inline btn-danger",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            onclick=paste0('Shiny.onInputChange(\"',ns("decline_pgx"),'\", this.id, {priority: "event"})')
-        )
-
-        # split the file name into user who shared and file name
-        #shared_pgx_df <- data.frame(stringr::str_split(shared_pgx_names, '__from__'))
-        # remove the last '__' from the file name
-        #shared_pgx_df[2,] <- stringr::str_sub(shared_pgx_df[2,], end=-3)
-        shared_dataset <- sub("__to__.*","",shared_pgx_names)
-        shared_from <- gsub(".*__from__|__$","",shared_pgx_names)
-
-        df <- data.frame(
-            Dataset = shared_dataset,
-            From = shared_from,
-            Actions = paste(accept_btns, decline_btns)
-        )
-        df
-    })
-
-    # event when a shared pgx is accepted by a user
-    observeEvent(input$accept_pgx, {
-        # get pgx name and remove the __from__* tag
-      pgx_name <- stringr::str_split(input$accept_pgx, 'accept_pgx__')[[1]][2]
-      new_pgx_name <- stringr::str_split(pgx_name, '__from__')[[1]][1]
-      new_pgx_name <- sub("__to__.*","",pgx_name)
-      
-      ## rename the file to be a valid pgx file
-      pgxdir <- getPGXDIR()
-      file_from <- file.path(pgx_shared_dir, pgx_name)
-      file_to   <- file.path(pgxdir, new_pgx_name)
-        
-      ## check number of datasets
-      numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
-      maxpgx <- as.integer(limits['datasets'])
-      if(numpgx >= maxpgx) {
-        ## should use sprintf or glue here...
-        msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
-        msg <- sub("NUMPGX", numpgx, msg)
-        msg <- sub("MAXPGX", maxpgx, msg)
-        shinyalert::shinyalert(
-                      title = "Your storage is full",
-                      text = HTML(msg),
-                      html = TRUE,
-                      type = "warning"
-                    )
-        return(NULL)
-      }
-      
-      ##  
-      if(file.exists(file_to)) {
-        shinyalert::shinyalert(
-                      "File already exists!",
-                      paste("You have already a dataset called '", new_pgx_name,
-                            "'. Please delete it before accepting the new file."),
-                      confirmButtonText = "Cancel",
-                      showCancelButton = FALSE
-                    )
-        return(NULL)
-      }
-      
-      ## Rename file to user folder. Some servers do not allow
-      ## "cross-device link" and then we resort to slower copy
-      dbg("[loading_server.R] accept_pgx : renaming file from = ",file_from,"to = ",file_to)
-      if(!file.rename(file_from, file_to)) {
-        info("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
-        ## file.rename does not allow "cross-device link"
-        file.copy(file_from, file_to)
-        file.remove(file_from)
-      }
-      
-      ## reload pgx dir so the newly accepted pgx files are registered in user table
-      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
-      
-      ## remove the accepted pgx from the table
-      update_received(update_received() + 1)
-    }, ignoreInit = TRUE)
-
-    # event when a shared pgx is declined by a user
-    observeEvent(input$decline_pgx, {
-        pgx_name <- stringr::str_split(input$decline_pgx, 'decline_pgx__')[[1]][2]
-        shared_file <- file.path(pgx_shared_dir, pgx_name)
-        file.remove(shared_file)
-
-        # remove the declined pgx from the table
-        update_received(update_received() + 1)
-    }, ignoreInit = TRUE)
-
+    
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
     ## =============================================================================
@@ -1028,7 +967,6 @@ LoadingBoard <- function(id,
       }
     )
 
-
     # DOWNLOAD DATA AS ZIP FILE #
     observeEvent(rl$download_zip, {
       shinyjs::click(id = 'download_zip_btn')
@@ -1078,7 +1016,7 @@ LoadingBoard <- function(id,
         gc()
       }
     )
-
+    
     shiny::observeEvent(rl$delete_pgx, {
       
       row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
@@ -1087,6 +1025,9 @@ LoadingBoard <- function(id,
       pgxname <- sub("[.]pgx$", "", pgxfile)
       pgxfile <- paste0(pgxname, ".pgx") ## add/replace .pgx
 
+      selpgx <- pgxtable$rownames_selected()
+      dbg("[LoadingBoard:observeEvent(rl$delete_pgx)] selpgx = ",selpgx)
+      
       pgx.path <- getPGXDIR()
       pgxfile1 <- file.path(pgx.path, pgxfile)
       sel <- NULL
@@ -1107,20 +1048,7 @@ LoadingBoard <- function(id,
         }
       }
 
-      not.anonymous <- (!is.na(auth$name()) && auth$name() != "")
-      allow.delete <- !not.anonymous
-      allow.delete <- TRUE
-      if (!allow.delete) {
-        warning(
-          "[LoadingBoard::@deletebutton] WARNING:: ", pgxfile,
-          " not owned by ", auth$name(), " \n"
-        )
-        shinyalert::shinyalert(
-          title = "Error!",
-          text = "You do not have permission to delete this dataset",
-          type = "error"
-        )
-      } else {
+      if(enable_delete) {
         shinyalert::shinyalert(
           "Delete this dataset?",
           paste("Are you sure you want\nto delete '", pgxfile, "'?"),
@@ -1129,6 +1057,11 @@ LoadingBoard <- function(id,
           callbackR = deletePGX,
           inputId = "confirmdelete"
         )
+      } else {
+          shinyalert::shinyalert(
+            title = "Oops!",
+            text = "Delete is disabled on this server"
+          )
       }
 
       rl$delete_pgx <- NULL
@@ -1174,14 +1107,6 @@ LoadingBoard <- function(id,
 
       pgxfile <- NULL
 
-      ## Observe URL query
-      ## query <- parseQueryString(session$clientData$url_search)
-      ## if (!is.null(query[["pgx"]])) {
-      ##   pgxfile <- query[["pgx"]]
-      ##   pgxfile <- basename(pgxfile) ## for security
-      ##   pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      ## }
-
       ## Observe button press (over-rides URL query)
       btn <- input$loadbutton
       if (!is.null(btn) && btn != 0) {
@@ -1201,7 +1126,7 @@ LoadingBoard <- function(id,
       ## During loading show loading pop-up modal
       pgx.showCartoonModal()
 
-      activatePGX(pgxfile)
+      loadAndActivatePGX(pgxfile)
 
       ## notify new data uploaded
       r_global$loadedDataset <- r_global$loadedDataset + 1
@@ -1212,7 +1137,7 @@ LoadingBoard <- function(id,
     ## ---------------------------------------------------------------------
     ## ----------------- Load and activate PGX object ----------------------
     ## ---------------------------------------------------------------------
-    activatePGX <- function(pgxfile) {
+    loadAndActivatePGX <- function(pgxfile) {
 
       loaded_pgx <- loadPGX(pgxfile)
       if (is.null(loaded_pgx)) {

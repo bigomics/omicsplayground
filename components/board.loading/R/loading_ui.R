@@ -44,7 +44,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      uiOutput(ns("receive_pgx_alert")),
+      uiOutput(ns("sharing_alert")),      
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),
@@ -83,9 +83,18 @@ LoadingUI <- function(id) {
         ),
         shiny::actionButton(
           ns("loadbutton"),
-              label = "Load Dataset", icon = icon("file-import"),
-          class = "btn btn-outline-primary"
+          label = "Load dataset",
+          icon = icon("file-import"),
+          class = "btn btn-outline-primary",
+          width = NULL
         )
+        ## shiny::actionButton(
+        ##   ns("deletebutton"),
+        ##   label = "Delete dataset",
+        ##   icon = icon("file-delete"),
+        ##   class = "btn btn-outline-danger",
+        ##   width = NULL
+        ## )
       ) ## end of buttons div
     )
   )
@@ -127,6 +136,24 @@ LoadingUI <- function(id) {
           ) ## end of buttons div
     ) ## end first layout_column_wrap
   ) ## end of Public tabPanel
+  
+  sharing_tabpanel <- shiny::tabPanel(
+    'Sharing',
+    bslib::layout_column_wrap(
+      width = 1,
+      heights_equal = "row",          
+      height = "calc(100vh - 180px)",
+      bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 180px)",
+        uiOutput(ns("sharing_panel_ui"))
+      )
+    ) 
+  ) ## end of Public tabPanel
+
+
+  ## ------------------------------------------------------------------------
 
   ## disable/hide public tabpanel if public folder does not exists
   public_dir <- file.path(OPG,"data_public")
@@ -134,15 +161,17 @@ LoadingUI <- function(id) {
     public_tabpanel <- NULL
   }
   
-  ## return object
+  ## ============================ Board object ===========================
   div(
     class = "p-0",
     board_header,
     shiny::tabsetPanel(
       id = ns('tabs'),
       user_tabpanel,
-      public_tabpanel
+      public_tabpanel,
+      sharing_tabpanel
     )
   )
+
   
 }

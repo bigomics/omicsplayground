@@ -81,7 +81,7 @@ loading_table_datasets_server <- function(id,
         if(enable_public_share) {
           share_public_menuitem <- shiny::actionButton(
               ns(paste0("share_public_row_", i)),
-              label = "Share Public",
+              label = "Share public",
               icon = shiny::icon('share-nodes'),
               class = "btn btn-outline-info",
               style = 'border: none;',
@@ -92,7 +92,7 @@ loading_table_datasets_server <- function(id,
         if(enable_user_share) {          
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
-            label = "Share with User",
+            label = "Share with user",
             icon = shiny::icon('share-nodes'),
             class = "btn btn-outline-info",
             style = 'border: none;',
@@ -101,10 +101,11 @@ loading_table_datasets_server <- function(id,
           )
         }
 
-        if(enable_delete) {
+        ##        if(enable_delete) {
+        if(TRUE) {        
           delete_pgx_menuitem <- shiny::actionButton(
             ns(paste0("delete_dataset_row_",i)),
-            label = "Delete Dataset",
+            label = "Delete dataset",
             icon = shiny::icon("trash"),
             class = "btn btn-outline-danger",
             style = 'border: none;',
@@ -144,7 +145,7 @@ loading_table_datasets_server <- function(id,
       observeEvent(input$share_pgx, { rl$share_pgx <- input$share_pgx }, ignoreInit = TRUE)
       observeEvent(input$share_public_pgx, { rl$share_public_pgx <- input$share_public_pgx }, ignoreInit = TRUE)
       observeEvent(input$delete_pgx, { rl$delete_pgx <- input$delete_pgx }, ignoreInit = TRUE)
-
+      
       DT::datatable(
         df,
         class = "compact hover",

@@ -8,21 +8,20 @@
 ##==================== BATCHCORRECT GADGET UI =================================
 ##=============================================================================
 
-if(0) {
-  load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-  BatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
-  out <- gadgetize2(
-    BatchCorrectUI, BatchCorrectServer,
-    title = "UploadGadget", height=640, size="l",
-    X = ngs$X, pheno=ngs$samples )
-  names(out)
-
-}
-
 BatchCorrectGadget <- function(X, pheno, height=720) {
   gadgetize(BatchCorrectUI, BatchCorrectServer,
             title="BatchCorrect",
             X=reactive(X), pheno=reactive(pheno), height=height)
+}
+
+BatchCorrectInputsUI <- function(id) {
+  ns <- shiny::NS(id)
+  shiny::uiOutput(ns("inputsUI"))
+}
+
+BatchCorrectCanvas <- function(id, height=720) {
+  ns <- shiny::NS(id)
+  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
 }
 
 upload_module_batchcorrect_ui <- function(id, height=720) {
@@ -39,15 +38,6 @@ upload_module_batchcorrect_ui <- function(id, height=720) {
   )
 }
 
-BatchCorrectInputsUI <- function(id) {
-  ns <- shiny::NS(id)
-  shiny::uiOutput(ns("inputsUI"))
-}
-
-BatchCorrectCanvas <- function(id, height=720) {
-  ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
-}
 
 upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, height=720) {
 
