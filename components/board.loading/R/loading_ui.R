@@ -14,11 +14,7 @@ downloadButton2 <- function(outputId, label = "Download", class = NULL, ...) {
 
 LoadingInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    shiny::checkboxGroupInput(ns("flt_datatype"), "datatype", choices = ""),
-    shiny::checkboxGroupInput(ns("flt_organism"), "organism", choices = "")
-  )
+  bigdash::tabSettings()
 }
 
 LoadingUI <- function(id) {
@@ -42,7 +38,7 @@ LoadingUI <- function(id) {
     'User',
     bslib::layout_column_wrap(
       width = 1,
-      heights_equal = "row",          
+      heights_equal = "row",
       height = "calc(100vh - 180px)",
       uiOutput(ns("sharing_alert")),      
       bslib::layout_column_wrap(
@@ -103,7 +99,7 @@ LoadingUI <- function(id) {
     'Public',
     bslib::layout_column_wrap(
       width = 1,
-      heights_equal = "row",          
+      heights_equal = "row",
       height = "calc(100vh - 180px)",
       bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
       bslib::layout_column_wrap(
@@ -173,5 +169,4 @@ LoadingUI <- function(id) {
     )
   )
 
-  
 }

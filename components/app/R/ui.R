@@ -88,12 +88,12 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            pcsf = "PCSF (beta)"            
+            pcsf = "PCSF (beta)"
           ),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis",
-            bio = "Find biomarkers"            
+            bio = "Find biomarkers"
           ),
           "GeneSets" = c(
             enrich = "Geneset Enrichment",
@@ -109,8 +109,8 @@ app_ui <- function() {
           "SystemsBio" = c(
             drug = "Drug connectivity",
             cell = "Cell profiling",
-            wgcna = "WGCNA",            
-            tcga = "TCGA survival (beta)"            
+            wgcna = "WGCNA",
+            tcga = "TCGA survival (beta)"
           )
           ## "DEV" = c("corsa","system","multi")
         )
@@ -508,7 +508,7 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "load-tab",
-                    LoadingInputs("load"),
+                    #LoadingInputs("load")
                     LoadingUI("load")
                 ),
                 bigdash::bigTabItem(
