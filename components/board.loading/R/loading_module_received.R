@@ -1,3 +1,7 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
 
 upload_module_received_ui <- function(id, height=720) {
   ns <- shiny::NS(id)
@@ -113,12 +117,11 @@ upload_module_received_server <- function(id,
         
         ## check number of datasets
         numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
+        if(!opt$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern="*.pgx$|*.pgx_$"))
         maxpgx <- as.integer(max_datasets)
         if(numpgx >= maxpgx) {
           ## should use sprintf or glue here...
           msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
-          msg <- sub("NUMPGX", numpgx, msg)
-          msg <- sub("MAXPGX", maxpgx, msg)
           shinyalert::shinyalert(
             title = "Your storage is full",
             text = HTML(msg),

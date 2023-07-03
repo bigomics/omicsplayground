@@ -24,19 +24,12 @@ LoadingBoard <- function(id,
     ## reactive variables used only within this module
     rl <- reactiveValues(
       reload_pgxdir_public = 0,
-      selected_row = NULL,
-      found_example_trigger = 0,
-      pgxTable_data = NULL,
-      pgxTable_edited = 0,
-      pgxTable_edited_row = NULL,
+##      selected_row = NULL,
+##      found_example_trigger = NULL,
       pgxTablePublic_data = NULL,
       selected_row_public = NULL,
-      download_pgx = NULL,
-      download_zip = NULL,
       share_pgx = NULL,
       share_public_pgx = NULL,
-      delete_pgx = NULL,
-      delete_trigger = 0,
       refresh_shared = 0
     )
 
@@ -58,66 +51,10 @@ LoadingBoard <- function(id,
     }
 
     # this allows for deselection (selected_row -> NULL)
-    #observeEvent(pgxtable$rows_selected(), {
-    #  rl$selected_row <- pgxtable$rows_selected()
-    #}, ignoreNULL = FALSE)
+#    observeEvent(pgxtable$rows_selected(), {
+#      rl$selected_row <- pgxtable$rows_selected()
+#    }, ignoreNULL = FALSE)
 
-    # disable buttons when no row is selected; enable when one is selected
-    observeEvent( pgxtable$rows_selected(), {
-      shiny::req(pgxtable)
-      if (is.null(pgxtable$rows_selected())) {
-        shinyjs::disable(id = 'loadbutton')
-      } else {
-        shinyjs::enable(id = 'loadbutton')
-      }
-    }, ignoreNULL = FALSE)
-
-
-    ##-------------------------------------------------------------------
-    ## util functions
-    ##-------------------------------------------------------------------
-
-    is_valid_email <- function(email) {
-        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$",email)
-        valid_email <- grepl(".*@.*[.].*",email)
-        valid_email <- valid_email && !grepl("[*/\\}{]",email) ## no special chars
-        return(!is_personal && valid_email)
-    }
-
-    get_coworkers <- function(pgxdir, email) {
-        domain <- sub(".*@","",email)
-        if(email=="" || domain=="") return(NULL)
-        cow <- dir(pgxdir, pattern=paste0(domain,"$"))
-        cow <- setdiff(cow, email)
-        cow
-    }
-
-    sendShareMessage <- function(pgxname, sender, share_user, path_to_creds='gmail_creds') {
-
-      dbg("[sendShareMessage] pgxname = ", pgxname)
-      dbg("[sendShareMessage] sender = ", sender)
-      dbg("[sendShareMessage] share_user = ", share_user)
-      
-      if(!file.exists(path_to_creds)) return(NULL)
-      
-      blastula::smtp_send(
-        blastula::compose_email(
-          body = blastula::md(
-            glue::glue(
-              "Hello, {sender} shared a dataset with you on OmicsPlayground! ",
-              "Login to accept the new dataset.")
-          ),
-          footer = blastula::md(
-            glue::glue("Email sent on {blastula::add_readable_time()}.")
-          )
-        ),
-        from = "app@bigomics.ch",
-        to = share_user,
-        subject = paste("Your friend",sender,"shared data on OmicsPlayground"),
-        credentials = blastula::creds_file(path_to_creds)
-      )
-    }
-    
     ##-------------------------------------------------------------------
     ## Received/shared UI 
     ##-------------------------------------------------------------------
@@ -206,260 +143,38 @@ LoadingBoard <- function(id,
       return(out)
     })
 
-    ##-------------------------------------------------------------------
-    ## share dataset with specific user
-    ##-------------------------------------------------------------------
-    
-    share_dialog <- function(pgxname, choices=NULL) {
-
-      select_user <- NULL
-      if(!is.null(choices) && length(choices)>0) {
-        select_user <- tagList(
-          shiny::selectizeInput(ns("share_user2"),
-            "Or select a coworker from the list:",
-            choices = c("Choose coworker..."="",choices),
-            options=list(create=TRUE))
-        )
-      }
-
-      shiny::modalDialog(
-        tagList(
-            paste("Your dataset",pgxname,"will be shared with the user below."),
-            br(), br(),
-            shiny::textInput(ns("share_user"),
-              label = "Enter email who will receive the dataset:",
-              placeholder = "Type email..."
-            ),
-            select_user,
-            ##shiny::textInput(ns("share_user2"), "Re-enter use email:")
-            shiny::textOutput(ns('error_alert')) %>%
-              tagAppendAttributes(style = 'color: red;')
-        ),
-        title = "Share this dataset?",
-        footer = tagList(
-            actionButton(ns("share_dialog_cancel"), "Cancel"),
-            actionButton(ns("share_dialog_confirm"), "Share")
-        )
-      )
-    }
-
-    #' will either take free-form or selected email
-    input_share_user <- reactive({
-      share_user <- input$share_user
-      if(!is.null(input$share_user2) && input$share_user2 != '') {
-        share_user <- input$share_user2
-      }
-      share_user
-    })
-
-    observeEvent(input$share_user2,{
-        if(input$share_user2!="") {
-            updateTextInput(session, "share_user", value='')
-        }
-    })
-    
-    selectedPGX2 <- reactive({
-      selected_row <- as.numeric(stringr::str_split(rl$share_pgx, "_row_")[[1]][2])
-      pgx_name <- pgxtable_data()[selected_row, "dataset"]
-      pgx_name
-    })
-
-    # put user dataset into shared folder
-    observeEvent( rl$share_pgx, {
-
-        ## sharing folder has to exists
-        if(!dir.exists(pgx_shared_dir)) {
-          shinyalert::shinyalert(
-            title = "Oops! Cannot share...",
-            text = paste('This server does not support sharing.',
-                         'Please contact your administrator.')
-          )
-          rl$share_pgx <- NULL
-          return()
-        }
-
-        ## user has to be logged in and have email for them to share with other users
-        if (auth$email() == "") {
-          shinyalert::shinyalert(
-             title = "Oops! You're not logged in...",
-             text = paste("You need to be logged in with a valid email",
-                          "address to share pgx files with other users.")
-          )
-          rl$share_pgx <- NULL
-          return()
-        }
-
-        ## check how many are already in queue
-        pp <- paste0("__from__",auth$email(),"__$")
-        num_shared_queue <- length(dir(pgx_shared_dir, pattern=pp))
-
-        if(num_shared_queue >= opt$MAX_SHARED_QUEUE) {   ## NB opt is global...
-          shinyalert::shinyalert(
-            title = "Oops! Too many shared...",
-            text = paste("You have already too many shared datasets in the waiting queue.",
-                         "Please contact your administrator.")
-          )
-          rl$share_pgx <- NULL
-          return()
-        }
-
-        ## show share dialog
-        coworkers <- get_coworkers( pgx_topdir, auth$email())
-        pgxname <- sub("[.]pgx$","",selectedPGX2())
-        if(length(coworkers)==0) coworkers <- NULL
-        shiny::showModal(share_dialog(pgxname, choices=coworkers))
-
-    }, ignoreNULL = TRUE)
-
-    observeEvent(input$share_dialog_cancel, {
-        rl$share_pgx <- NULL
-        output$error_alert <- renderText({''})
-        shiny::removeModal()
-    })
-
-    observeEvent(input$share_dialog_confirm, {
-
-        share_user <- input_share_user()
-        if (share_user == '') {
-            output$error_alert <- renderText({'Please enter an email.'})
-            return()
-        }
-
-        if (!is_valid_email(share_user)) {
-            output$error_alert <- renderText({'Email is not valid. Please use only work or business emails.'})
-            return()
-        }
-        if (share_user==auth$email()) {
-            output$error_alert <- renderText({'Error. You cannot share with yourself...'})
-            return()
-        }
-
-        output$error_alert <- renderText({''})
-
-        shiny::removeModal()
-
-        pgx_name <- selectedPGX2()  ## need rl$share_pgx
-
-        alert_val <- shinyalert::shinyalert(
-            inputId = "share_confirm",
-            title = "Are you sure?",
-            tagList(
-                paste("Your dataset", pgx_name, "will be shared with",share_user)
-            ),
-            html = TRUE,
-            showCancelButton = TRUE,
-            showConfirmButton = TRUE
-        )
-    })
-
-    
-    observeEvent(input$share_confirm, {
-
-        # if confirmed, then share the data
-        if (input$share_confirm) {
-
-            pgx_name <- selectedPGX2()
-            pgx_name <- sub("[.]pgx$", "", pgx_name)
-            pgx_path <- getPGXDIR()
-            pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
-
-            dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_name = ",pgx_name)
-            dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_path = ",pgx_path)                    
-            dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_file = ",pgx_file)
-
-            ## The shared file will be copied to the data_shared
-            ## folder with the name of the sender and receiver in the
-            ## file name.
-            share_user <- input_share_user()
-            new_pgx_file <- file.path(
-                pgx_shared_dir,
-                paste0(pgx_name, ".pgx", '__to__', share_user,
-                     '__from__', auth$email(), '__')
-            )
-
-            if(file.exists(new_pgx_file)) {
-                shinyalert::shinyalert(
-                    title = "Oops! File exists...",
-                    paste('There is already a dataset called', pgx_name,
-                          'being shared. Please rename your file.')
-                    )
-                return()
-            }
-
-            ## load and save the pgx file to new directory
-            shiny::withProgress(message = "Preparing to share...", value = 0.33, {
-              pgx0 <- playbase::pgx.load(pgx_file)
-              unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
-              if ("creator" %in% names(pgx0) && !unknown.creator) {
-                file.copy(from = pgx_file, to = new_pgx_file)
-              } else {
-                pgx0$creator <- session$user ## really?
-                if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
-                playbase::pgx.save(pgx0, file = new_pgx_file)
-              }
-
-              ## write transaction to log file
-              log.entry <- data.frame( date=date(), from="jane@demo.com", to="tarzan@demo.com",file="example-data.pgx")
-              log.file <- file.path(pgx_shared_dir, "PGXSHARE-TRANSACTIONS.log")
-              log.entry <- data.frame( date=date(), from=auth$email(), to=share_user, file=paste0(pgx_name,".pgx"))
-              if(file.exists(log.file)) {
-                write.table(log.entry, file=log.file, col.names=FALSE, row.names=FALSE, sep=',', append=TRUE)
-              } else {
-                write.table(log.entry, file=log.file, col.names=TRUE, row.names=FALSE, sep=',')
-              }
-
-            })
-
-            share_user <- input_share_user()
-            shinyalert::shinyalert(
-                title = "Successfully shared!",
-                paste(
-                  "Your dataset", pgx_name, "has now been successfully",
-                  "been shared with", share_user
-                )
-            )
-
-            # send email to user
-            sender <- auth$email()
-            sendShareMessage(pgx_name, sender, share_user, path_to_creds='gmail_creds')
-
-            rl$refresh_shared <- rl$refresh_shared + 1
-          
-        }
-
-        rl$share_pgx <- NULL
-    })
 
     ##======================================================================
     ## LOAD EXAMPLE TRIGGER
     ##======================================================================
     observeEvent(r_global$load_example_trigger, {
 
-      data_names <- as.character(pgxtable_data()$dataset)
-
       # get the row which corresponds to "example-data"
+      data_names <- as.character(pgxtable_data()$dataset)
       example_row <- which(data_names == "example-data")[1]
-
+      has.exampledata <- ("example-data" %in% data_names)
+      
       # if not found, throw error modal that example-data doesnt exist
-      if (is.na(example_row)) {
+      ##if (is.na(example_row)) {
+      if (!has.exampledata) {
         shinyalert::shinyalert(
-          title = "No example data found",
-          text ='Sorry, the example dataset cannot be found. You may have deleted
-            it in a previous session.',
+          title = "No example data",
+          text ='Sorry, the example dataset could not be found.',
           type = "warning",
           closeOnClickOutside = FALSE
         )
         return(NULL)
       } else {
+
+##        rl$selected_row <- example_row
+##        rl$found_example_trigger <- 1
+        loadAndActivatePGX("example-data") 
+        
         # open the left & right sidebar
         bigdash.openSettings(lock=TRUE)
         bigdash.openSidebar()
-
-        # go to dataview
         bigdash.selectTab(session, selected = 'dataview-tab')
-
-        rl$selected_row <- example_row
-        rl$found_example_trigger <- rl$found_example_trigger+1
+        ##shiny::removeModal()
       }
     }, ignoreInit = TRUE)
 
@@ -492,16 +207,13 @@ LoadingBoard <- function(id,
           pgx_path <- getPGXDIR()
           new_pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
 
-          ## check number of datasets
-          numpgx <- length( dir(pgx_path, pattern="*.pgx$") )
+          ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
+          numpgx <- length(dir(pgx_path, pattern="*.pgx$"))
+          if(!opt$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern="*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(limits['datasets'])
           if(numpgx >= maxpgx) {
-            dbg("[observeEvent:importbutton] numpgx = ",numpgx)
-            dbg("[observeEvent:importbutton] maxpgx = ",maxpgx)
             ## should use sprintf or glue here...
-            msg = "You have NUMPGX datasets in your library and your quota is MAXPGX datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
-            msg <- sub("NUMPGX", numpgx, msg)
-            msg <- sub("MAXPGX", maxpgx, msg)
+            msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
             shinyalert::shinyalert(
                           title = "Your storage is full",
                           text = HTML(msg),
@@ -520,18 +232,19 @@ LoadingBoard <- function(id,
             return()
           }
           
-
           ## Copy the file from Public folder to user folder
-          file.copy(from = pgx_file, to = new_pgx_file)
-          playbase::pgxinfo.updateDatasetFolder(pgx_path, update.sigdb=FALSE)
-          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
-          
+          shiny::withProgress(message = "Importing dataset...", value = 0.33, {
+            file.copy(from = pgx_file, to = new_pgx_file)
+            playbase::pgxinfo.updateDatasetFolder(pgx_path, update.sigdb=FALSE)
+          })
+                    
           shinyalert::shinyalert(
             "Dataset imported",
             paste('The public dataset', pgx_name, 'has now been successfully imported',
-              'to your data files. Feel free to load it as usual!'
-            )
+              'to your library. Feel free to load it as usual!')
           )
+
+          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
         }
       )
 
@@ -625,11 +338,15 @@ LoadingBoard <- function(id,
 
     pgxtable <- loading_table_datasets_server(
       id = "pgxtable",
-      getPGXINFO = getPGXINFO,
+      ## getPGXINFO = getPGXINFO,
       getPGXDIR = getPGXDIR,
+      pgx_shared_dir = pgx_shared_dir,
+      pgx_topdir = pgx_topdir,
       auth = auth,
       rl = rl,
       r_global = r_global,
+      loadAndActivatePGX = loadAndActivatePGX,
+      loadPGX = loadPGX,
       enable_pgxdownload = enable_pgxdownload,
       enable_delete = enable_delete,
       enable_public_share = enable_public_share,
@@ -652,6 +369,11 @@ LoadingBoard <- function(id,
     
     if(enable_public_tabpanel) {
 
+      pgxtable_public <- loading_table_datasets_public_server(
+        id = "pgxtable_public",
+        table = reactive(rl$pgxTablePublic_data)
+      )
+
       loading_tsne_server(
         id = "tsne_public",
         pgx.dir = reactive(pgx_public_dir),
@@ -660,10 +382,6 @@ LoadingBoard <- function(id,
         watermark = WATERMARK
       )
 
-      pgxtable_public <- loading_table_datasets_public_server(
-        id = "pgxtable_public",
-        table = reactive(rl$pgxTablePublic_data)
-      )
     }
 
     ## -----------------------------------------------------------------------------
@@ -703,10 +421,10 @@ LoadingBoard <- function(id,
     ## User interface
     ## -----------------------------------------------------------------------------
 
-    output$rowselected <- shiny::reactive({
-      !is.null(selectedPGX()) && length(selectedPGX()) > 0
-    })
-    shiny::outputOptions(output, "rowselected", suspendWhenHidden = FALSE)
+#    output$rowselected <- shiny::reactive({
+#      !is.null(selectedPGX()) && length(selectedPGX()) > 0
+#    })
+#    shiny::outputOptions(output, "rowselected", suspendWhenHidden = FALSE)
 
     ## -----------------------------------------------------------------------------
     ## READ initial PGX file info
@@ -735,74 +453,7 @@ LoadingBoard <- function(id,
       pdir
     })
 
-    getPGXINFO <- shiny::reactive({
-      req(auth)
-      if (!auth$logged()) {
-        return(NULL)
-      }
-
-      ## upstream trigger
-      r_global$reload_pgxdir  
-      pgxdir <- getPGXDIR()
-      
-      shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb=FALSE)
-      })
-      
-      ## before reading the info file, we need to update for new files
-      if(need_update) {
-        dbg("[loading_server:getPGXINFO] updating library...")
-        pgx.showSmallModal("Updating your library<br>Please wait...")
-        shiny::withProgress(message = "Updating your library...", value = 0.33, {
-          playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb=FALSE)
-        })
-        shiny::removeModal(session)
-      }
-
-      info <- playbase::pgxinfo.read(pgxdir, file = "datasets-info.csv")
-      shiny::removeModal(session)
-      return(info)
-    })
-
-    getFilteredPGXINFO <- shiny::reactive({
-      ## get the filtered table of pgx datasets
-      req(auth)
-      if (!auth$logged()) {
-        return(NULL)
-      }
-      df <- getPGXINFO()
-      if (is.null(df)) {
-        return(NULL)
-      }
-
-      ## filter on actual PGX present in folder
-      pgxdir <- getPGXDIR()
-      pgxfiles <- dir(pgxdir, pattern = ".pgx$")
-      sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
-      df <- df[sel, , drop = FALSE]
-
-      ## Apply table selection filters
-      if (nrow(df) > 0) {
-        f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
-        notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
-        if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
-        if (notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
-        df <- df[which(f1 & f2 & f3), , drop = FALSE]
-        df$date <- as.Date(df$date, format = "%Y-%m-%d")
-        df <- df[order(df$date, decreasing = TRUE), ]
-        if (nrow(df) > 0) rownames(df) <- nrow(df):1
-      }
-
-      kk <- unique(c(
-        "dataset", "description", "datatype", "nsamples",
-        "ngenes", "nsets", "conditions", "date", "organism",
-        "creator"
-      ))
-      kk <- intersect(kk, colnames(df))
-      df <- df[, kk, drop = FALSE]
-      df
-    })
-
+    
     if(enable_public_tabpanel) {
 
       getPGXINFO_PUBLIC <- shiny::eventReactive({
@@ -870,24 +521,9 @@ LoadingBoard <- function(id,
         df
       })
 
-    }
+    }  ## end of if public
 
-    selectedPGX <- shiny::reactive({
-      req(pgxtable_data())
-      sel <- rl$selected_row
-      if (is.null(sel) || length(sel) == 0) {
-        return(NULL)
-      }
-      df <- pgxtable_data()
-      if (is.null(df) || nrow(df) == 0) {
-        return(NULL)
-      }
-      pgxfile <- as.character(df$dataset[sel])
-      pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      pgxfile
-    })
 
-    
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
     ## =============================================================================
@@ -900,7 +536,6 @@ LoadingBoard <- function(id,
 
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
       pgxdir <- getPGXDIR()
-
       pgx.path <- pgxdir[file.exists(file.path(pgxdir, pgxfile))][1]
       pgxfile1 <- file.path(pgx.path, pgxfile)
 
@@ -941,203 +576,10 @@ LoadingBoard <- function(id,
       return(NULL)
     }
 
-
-    # DOWNLOAD PGX FILE #
-    observeEvent(rl$download_pgx, {
-      shinyjs::click(id = 'download_pgx_btn')
-      rl$download_pgx_idx <- rl$download_pgx
-      rl$download_pgx <- NULL
-    }, ignoreNULL = TRUE)
-
-    output$download_pgx_btn <- shiny::downloadHandler(
-      ## filename = "userdata.pgx",
-      filename = function() {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx_idx, '_row_')[[1]][2])
-        df <- getFilteredPGXINFO()
-        pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
-        pgxfile
-      },
-      content = function(file) {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_pgx_idx, '_row_')[[1]][2])
-        df <- getFilteredPGXINFO()
-        pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
-        pgx <- loadPGX(pgxfile)
-        temp <- tempfile()
-        save(pgx, file = temp)
-        file.copy(temp, file)
-      }
-    )
-
-    # DOWNLOAD DATA AS ZIP FILE #
-    observeEvent(rl$download_zip, {
-      shinyjs::click(id = 'download_zip_btn')
-      rl$download_zip_idx <- rl$download_zip
-      rl$download_zip <- NULL
-    }, ignoreNULL = TRUE)
-
-    output$download_zip_btn <- shiny::downloadHandler(
-      ## filename = "userdata.zip",
-      filename = function() {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip_idx, '_row_')[[1]][2])
-        df <- getFilteredPGXINFO()
-        pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-        newfile <- sub("pgx$", "zip", pgxfile)
-        newfile
-      },
-      content = function(file) {
-        sel <- row_idx <- as.numeric(stringr::str_split(rl$download_zip_idx, '_row_')[[1]][2])
-        df <- getFilteredPGXINFO()
-        pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-        pgxname <- sub("[.]pgx$", "", pgxfile)
-
-        pgx <- loadPGX(pgxfile)
-        dir.create(tmp <- tempfile())
-        tmp2 <- file.path(tmp, pgxname)
-        dir.create(tmp2)
-
-        exp.matrix <- sign(pgx$model.parameters$exp.matrix)
-        exp.matrix <- playbase::contrastAsLabels(exp.matrix) ## new recommended style
-        exp.matrix[is.na(exp.matrix)] <- ""
-
-        write.csv(round(pgx$counts, digits = 2), file = file.path(tmp2, "counts.csv"))
-        write.csv(pgx$samples, file = file.path(tmp2, "samples.csv"))
-        write.csv(exp.matrix, file = file.path(tmp2, "contrasts.csv"))
-        write.csv(round(pgx$X, digits = 4), file = file.path(tmp2, "normalized.csv"))
-
-        zipfile <- tempfile(fileext = ".zip")
-        zip::zip(zipfile,
-          files = paste0(pgxname, "/", c("counts.csv", "samples.csv",
-            "contrasts.csv", "normalized.csv")),
-          root = tmp
-        )
-        file.copy(zipfile, file)
-        remove(pgx)
-        gc()
-      }
-    )
-    
-    shiny::observeEvent(rl$delete_pgx, {
-      
-      row_idx <- as.numeric(stringr::str_split(rl$delete_pgx, '_row_')[[1]][2])
-      df <- getFilteredPGXINFO()
-      pgxfile <- as.character(df$dataset[row_idx])
-      pgxname <- sub("[.]pgx$", "", pgxfile)
-      pgxfile <- paste0(pgxname, ".pgx") ## add/replace .pgx
-      
-      pgx.path <- getPGXDIR()
-      pgxfile1 <- file.path(pgx.path, pgxfile)
-      sel <- NULL
-
-      deletePGX <- function(x) {
-        if (input$confirmdelete) {
-          pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
-          file.rename(pgxfile1, pgxfile2)
-          ## !!!! we should also delete entry in PGXINFO and allFC !!!
-          ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
-          info <- read.csv(file.path(pgx.path,"datasets-info.csv"),row.names=1)
-          idx <- match(pgxname,info$dataset)
-          if(length(idx)) {
-            info <- info[-idx,]
-            write.csv(info, file.path(pgx.path,"datasets-info.csv"))
-          }
-          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
-        }
-      }
-
-      if(enable_delete) {
-        shinyalert::shinyalert(
-          "Delete this dataset?",
-          paste("Are you sure you want\nto delete '", pgxfile, "'?"),
-          confirmButtonText = "Delete",
-          showCancelButton = TRUE,
-          callbackR = deletePGX,
-          inputId = "confirmdelete"
-        )
-      } else {
-          shinyalert::shinyalert(
-            title = "Oops!",
-            text = "Delete is disabled on this server"
-          )
-      }
-
-      rl$delete_pgx <- NULL
-
-    }, ignoreNULL = TRUE, ignoreInit = TRUE)
-
-
-    ## ================================================================================
-    ## ========================== LOAD DATA FROM LIST =================================
-    ## ================================================================================
-
-    load_react <- reactive({
-      btn <- input$loadbutton
-      btn2 <- rl$found_example_trigger
-      logged <- isolate(auth$logged()) ## avoid reloading when logout/login
-      !is.null(btn) && logged
-    })
-
-    loadRowManual <- reactiveVal(0)
-
-    observeEvent(r_global$load_data_from_upload, {
-        data_names <- as.character(pgxtable_data()$dataset)
-        data_names <- sub("[.]pgx$","",data_names)
-        upload_pgx <- sub("[.]pgx$","",r_global$load_data_from_upload)
-        load_row <- which(data_names == upload_pgx)[1]
-        rl$selected_row <- load_row
-        loadRowManual(loadRowManual() + 1)
-        r_global$load_data_from_upload <- NULL
-    }, ignoreNULL = TRUE)
-
-    observeEvent(loadRowManual(), {
-        shinyjs::click('loadbutton')
-    }, ignoreInit = TRUE)
-
-    shiny::observeEvent(load_react(), {
-      if (!load_react()) {
-        return(NULL)
-      }
-
-      on.exit({
-        bigdash.showTabsGoToDataView(session)  ## in ui-bigdashplus.R
-      })
-
-      pgxfile <- NULL
-
-      ## Observe button press (over-rides URL query)
-      btn <- input$loadbutton
-      if (!is.null(btn) && btn != 0) {
-        pgxfile <- selectedPGX()
-      }
-      ## Observe "try example dataset" press
-      if (!is.null(rl$found_example_trigger)) {
-        pgxfile <- selectedPGX()
-      }
-
-      ## check if file is there
-      if (is.na(pgxfile) || is.null(pgxfile) || pgxfile == "" || length(pgxfile) == 0) {
-        message("[LoadingBoard@load_react] ERROR file not found : ", pgxfile, "\n")
-        return(NULL)
-      }
+    loadAndActivatePGX <- function(pgxfile) {
 
       ## During loading show loading pop-up modal
       pgx.showCartoonModal()
-
-      loadAndActivatePGX(pgxfile)
-
-      ## notify new data uploaded
-      r_global$loadedDataset <- r_global$loadedDataset + 1
-      rl$found_example_trigger <- NULL
-    })
-
-
-    ## ---------------------------------------------------------------------
-    ## ----------------- Load and activate PGX object ----------------------
-    ## ---------------------------------------------------------------------
-    loadAndActivatePGX <- function(pgxfile) {
 
       loaded_pgx <- loadPGX(pgxfile)
       if (is.null(loaded_pgx)) {
@@ -1181,11 +623,28 @@ LoadingBoard <- function(id,
           pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
         }
       })
-      ## ----------------- remove modal on exit?? -------------------------
-      remove(loaded_pgx)
       info("[loading_server.R] copying pgx done!")
       gc()
+      remove(loaded_pgx)
+
+      ## remove modal on exit??
+      ## shiny::removeModal()
+      bigdash.showTabsGoToDataView(session)  ## in ui-bigdashplus.R
+
+      ## notify new data uploaded
+      r_global$loadedDataset <- r_global$loadedDataset + 1
     }
+
+
+    observeEvent(r_global$load_data_from_upload, {
+        data_names <- as.character(pgxtable_data()$dataset)
+        data_names <- sub("[.]pgx$","",data_names)
+        upload_pgx <- sub("[.]pgx$","",r_global$load_data_from_upload)
+        dbg("[load_data_from_upload] upload_pgx = ",upload_pgx)
+        loadAndActivatePGX(upload_pgx)
+        ##loadRowManual(loadRowManual() + 1)
+        r_global$load_data_from_upload <- NULL
+    }, ignoreNULL = TRUE)
 
 
     ## ================================================================================
@@ -1224,42 +683,20 @@ LoadingBoard <- function(id,
     }
 
     if(enable_public_tabpanel) {
-    observeEvent(
-      ## c(getFilteredPGXINFO_PUBLIC(), rl$reload_pgxdir_public), {
-      c(getFilteredPGXINFO_PUBLIC()), {
-        df <- getFilteredPGXINFO_PUBLIC()
-        df$dataset <- sub("[.]pgx$", "", df$dataset)
-        df$conditions <- gsub("[,]", " ", df$conditions)
-        df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-        df$description <- playbase::shortstring(as.character(df$description), 200)
-        df$nsets <- NULL
-        df$organism <- NULL
-        rl$pgxTablePublic_data <- df
-      }
-    )
+      observeEvent(
+        ## c(getFilteredPGXINFO_PUBLIC(), rl$reload_pgxdir_public), {
+        c(getFilteredPGXINFO_PUBLIC()), {
+          df <- getFilteredPGXINFO_PUBLIC()
+          df$dataset <- sub("[.]pgx$", "", df$dataset)
+          df$conditions <- gsub("[,]", " ", df$conditions)
+          df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+          df$description <- playbase::shortstring(as.character(df$description), 200)
+          df$nsets <- NULL
+          df$organism <- NULL
+          rl$pgxTablePublic_data <- df
+        }
+      )
     }
-
-    # re-write datasets-info.csv when pgxTable_edited
-    # also edit the pgx files
-    observeEvent(rl$pgxTable_edited, {
-      pgxdir <- getPGXDIR()
-      fname <- file.path(pgxdir, 'datasets-info.csv')
-      pgxinfotable <- rl$pgxTable_data
-      write.csv(pgxinfotable, fname)
-
-      ## also rewrite description in actual pgx file
-      pgx_name <- pgxinfotable[rl$pgxTable_edited_row, 'dataset']
-      pgx_file <- file.path(pgxdir, paste0(pgx_name, '.pgx'))
-      pgx <- local(get(load(pgx_file, verbose = 0))) ## override any name
-
-      col_edited <- colnames(pgxinfotable)[rl$pgxTable_edited_col]
-      new_val <- rl$pgxTable_data[rl$pgxTable_edited_row, rl$pgxTable_edited_col]
-
-      pgx[[col_edited]] <- new_val
-      playbase::pgx.save(pgx, file = pgx_file)
-      remove(pgx)
-
-    }, ignoreInit = TRUE)
 
     ## ------------------------------------------------
     ## Board return object

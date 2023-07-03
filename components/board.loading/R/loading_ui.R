@@ -60,38 +60,7 @@ LoadingUI <- function(id) {
           height = c("calc(100vh - 340px)", "70vh"),
           width = c("auto",  "100%")
         )
-      ), ## end of 7fr-5fr
-      div(
-        id = "load-action-buttons",
-        # this button is needed to trigger download but should be hidden
-        shiny::downloadLink(
-          ns("download_pgx_btn"),
-          label = "",
-          icon = NULL,
-          width = '0%'
-        ),
-        # this button is needed to trigger download but should be hidden
-        shiny::downloadLink(
-          ns("download_zip_btn"),
-          label = "",
-          icon = NULL,
-          width = '0%'
-        ),
-        shiny::actionButton(
-          ns("loadbutton"),
-          label = "Load dataset",
-          icon = icon("file-import"),
-          class = "btn btn-outline-primary",
-          width = NULL
-        )
-        ## shiny::actionButton(
-        ##   ns("deletebutton"),
-        ##   label = "Delete dataset",
-        ##   icon = icon("file-delete"),
-        ##   class = "btn btn-outline-danger",
-        ##   width = NULL
-        ## )
-      ) ## end of buttons div
+      ) ## end of 7fr-5fr
     )
   )
 
