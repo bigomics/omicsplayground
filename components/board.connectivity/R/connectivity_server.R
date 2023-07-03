@@ -179,31 +179,30 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
 
-    get_pgx_connectivity <- shiny::reactive({
-      shiny::req(pgx, pgx$connectivity)
+    compute_connectivity <- shiny::reactive({
+      shiny::req(pgx, pgx$X, pgx$connectivity)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
-      
-      pgx.connectivity <- pgx$connectivity
+
+      pgx.connectivity <- list()
+      if("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
       pgxdir <- getPgxDir()
       
       if(!"datasets-sigdb" %in% names(pgx.connectivity)) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         sigdb.file = file.path(pgxdir,"datasets-sigdb.h5")
         user.scores <- NULL
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir)
-        dbg("[get_pgx_connectivity] need_update = ",need_update)
-        dbg("[get_pgx_connectivity] file.exists.h5 = ",file.exists(sigdb.file))
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir,check.sigdb=TRUE)
         
         if(need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
-          info("[get_pgx_connectivity] calling updateDatasetFolder")
+          info("[compute_connectivity] calling updateDatasetFolder")
           shiny::withProgress(message = "Updating signature database...", value = 0.33, {
-            playbase::pgxinfo.updateDatasetFolder(pgxdir)
+            playbase::pgxinfo.updateDatasetFolder(pgxdir,update.sigdb=TRUE)
           })
           shiny::removeModal(session)          
         }  
         if(file.exists(sigdb.file)) {
-          info("[get_pgx_connectivity] computing connectivity scores...")
+          info("[compute_connectivity] computing connectivity scores...")
           pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
           shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {          
             user.scores <- playbase::pgx.computeConnectivityScores(
@@ -218,7 +217,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
     getConnectivityScores <- shiny::reactive({
-      pgx.connectivity <- get_pgx_connectivity()
+      pgx.connectivity <- compute_connectivity()
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]

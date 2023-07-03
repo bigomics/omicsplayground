@@ -73,30 +73,21 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
       cumulativeFCtable <- shiny::reactive({
         F <- getProfiles()
         F[is.na(F)] <- 0
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:cumulativeFCtable] 1:")
         
         ## multiply with sign of rho
         df <- getConnectivityScores()
         rho1 <- df$rho[match(colnames(F), df$pathway)]
         F <- t(t(F) * sign(rho1))
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:cumulativeFCtable] 2:")
         
         ## add current contrast
         cc <- getCurrentContrast()
         shiny::req(cc)
         fc <- cc$fc[match(rownames(F),names(cc$fc))]
         fc[is.na(fc)] <- 0
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:cumulativeFCtable] 3:")
         
         F <- cbind(fc, F)
         colnames(F)[1] <- cc$name
-        F <- F[order(-rowMeans(F**2,na.rm=TRUE)), , drop = FALSE]
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:cumulativeFCtable] 4:")
-        
+        F <- F[order(-rowMeans(F**2,na.rm=TRUE)), , drop = FALSE]        
         F
       })
 
@@ -141,8 +132,6 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         if (is.null(gr)) {
           return(NULL)
         }
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:plot_RENDER] 1:")
         
         minwt <- 0.5
         minwt <- input$graph_threshold
@@ -151,22 +140,16 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         if (length(igraph::V(gr)) == 0) {
           return(NULL)
         }
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:plot_RENDER] 2:")
         
         fc <- cumFC <- NULL
         fc <- getCurrentContrast()$fc
         fc <- fc[igraph::V(gr)$name]
         cumFC <- cumulativeFCtable()
 
-        dbg("[connectivity_plot_leadingEdgeGraph_server:plot_RENDER] 3:")
-
         ii <- match(igraph::V(gr)$name, rownames(cumFC))
         cumFC <- cumFC[ii, , drop=FALSE]
         fontsize <- 22
         fc <- fc / max(abs(fc))
-
-        dbg("[connectivity_plot_leadingEdgeGraph_server:plot_RENDER] 4:")        
 
         sizevar <- input$LEgraph_sizevar
         vsize <- 15

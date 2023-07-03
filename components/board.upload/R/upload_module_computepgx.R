@@ -317,22 +317,22 @@ upload_module_computepgx_server <- function(
                 }
 
                 pgxdir <- pgx.dirRT()
-
                 numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
-
                 if(numpgx >= max.datasets) {
                     ### should use sprintf here...
-                    msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
+                    msg = "You have NUMPGX datasets in your library and your quota is LIMIT datasets. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
                     msg <- sub("NUMPGX",numpgx,msg)
                     msg <- sub("LIMIT",max.datasets,msg)
                     shinyalert::shinyalert(
-                      title = "WARNING",
-                      text = msg,
+                      title = "Your storage is full",
+                      text = HTML(msg),
+                      html = TRUE,
                       type = "warning"
                     )
                     return(NULL)
                 }
 
+                ## check for name and description
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {

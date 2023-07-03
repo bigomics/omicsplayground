@@ -44,7 +44,6 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      bs_alert("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."),
       uiOutput(ns("receive_pgx_alert")),
       bslib::layout_column_wrap(
         width = 1,
@@ -97,7 +96,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",          
       height = "calc(100vh - 180px)",
-      bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."),
+      bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),

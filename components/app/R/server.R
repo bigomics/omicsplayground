@@ -71,6 +71,13 @@ app_server <- function(input, output, session) {
             pgx_dir = PGX.DIR,
             domain = opt$DOMAIN            
         )
+    } else if(authentication == "auth-email") {
+        auth <- EmailAuthenticationModule(
+            id ="auth",
+            pgx_dir = PGX.DIR,
+            domain = opt$DOMAIN,
+            credentials.file = "CREDENTIALS"            
+        )
     } else if(authentication == "shinyproxy") {
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         auth <- NoAuthenticationModule(
@@ -130,7 +137,6 @@ app_server <- function(input, output, session) {
          auth = auth,
          limits = limits,
          enable_userdir = opt$ENABLE_USERDIR,
-         enable_save = opt$ENABLE_SAVE,
          r_global = r_global
        )
     }
