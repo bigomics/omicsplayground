@@ -147,7 +147,12 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     counts <- as.matrix(counts)
     if(is.null(contrasts))  contrasts <- samples[,0]
     ## contrasts[is.na(contrasts)] <- 0
-    
+
+
+    message("[createPGX] input: dim(counts) = ",dim(counts))
+    message("[createPGX] input: dim(samples) = ",dim(samples))
+    message("[createPGX] input: dim(contrasts) = ",dim(contrasts))
+  
     ## contrast matrix
     colnames(contrasts)
     is.numbered <- all(unique(as.vector(contrasts)) %in% c(-1,0,1))
@@ -175,26 +180,20 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
         
     ## sanity check...
-    if( !all(rownames(contrasts)==rownames(samples)) &&
-        !all(rownames(contrasts)==colnames(counts)) ) {
-        stop("[createPGX] FATAL :: matrices do not match")
-    }
+    ## if( !all(rownames(contrasts)==rownames(samples)) &&
+    ##     !all(rownames(contrasts)==colnames(counts)) ) {
+    ##     stop("[createPGX] FATAL :: matrices do not match")
+    ## }
 
     ## prune.samples=FALSE    
     ##used.samples <- names(which(rowSums(contrasts!=0)>0))
     contrasts[contrasts==""] <- NA
     used.samples <- names(which(rowSums(!is.na(contrasts))>0))        
     if(prune.samples && length(used.samples) < ncol(counts) ) {
-
         message("[createPGX] pruning unused samples...")
         counts    <- counts[,used.samples,drop=FALSE]
         samples   <- samples[used.samples,,drop=FALSE]
-        contrasts <- contrasts[used.samples,,drop=FALSE] ## sample-based!!! 
-
-        message("[createPGX] dim(counts) = ",dim(counts))
-        message("[createPGX] dim(samples) = ",dim(samples))
-        message("[createPGX] dim(contrasts) = ",dim(contrasts))
-        
+        contrasts <- contrasts[used.samples,,drop=FALSE] ## sample-based!!!         
     }
 
     ##-------------------------------------------------------------------
@@ -210,6 +209,10 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         contrasts <- contrasts[kk,,drop=FALSE]
     }
 
+    message("[createPGX] final: dim(counts) = ",dim(counts))
+    message("[createPGX] final: dim(samples) = ",dim(samples))
+    message("[createPGX] final: dim(contrasts) = ",dim(contrasts))
+  
     ##-------------------------------------------------------------------
     ## check counts
     ##-------------------------------------------------------------------
