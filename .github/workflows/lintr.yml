@@ -40,12 +40,5 @@ jobs:
           extra-packages: lintr
 
       - name: Run lintr
-        run: lintr::sarif_outputlintr::lint_dir("components/app"), "lintr-results.sarif")
+        run: lintr::lint_dir("components/app")
         shell: Rscript {0}
-        continue-on-error: true
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: lintr-results.sarif
-          wait-for-processing: true
