@@ -35,8 +35,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
 
       pgx.dir <- pgx.dirRT()
       info.table <- info.table()
-      validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
-            
+      validate(need(nrow(info.table)>0, 'Need at least one dataset!'))
+
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
       pgx.files <- info.table$dataset
@@ -75,25 +75,25 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             ## get top 2000
             sel <- head(order(-rowMeans(F**2)),2000)
             F <- F[sel,]
-            
+
             if(NCOL(F)==1) {
               pos <- matrix(0, 1, 2)
               rownames(pos) <- colnames(F)
               colnames(pos) <- c("x","y")
-            } else {            
+            } else {
               ##F <- apply(F, 2, rank, na.last = "keep")
               rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
               F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
               F <- as.matrix(F)
               F[is.na(F)] <- 0 ## really??
               colnames(F) <- fnames  ## might be lost...
-              
+
               if(0) {
                 system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
                 corF <- abs(corF) ## negative corr is also good...
                 ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
                 corF[is.na(corF)] <- 0
-                distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]                        
+                distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]
                 ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
                 pos <- try( Rtsne::Rtsne( distF,
                                          perplexity = ppx,
@@ -101,7 +101,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
                                          is_distance = TRUE
                                          )$Y )
               } else {
-                ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
+                ppx <- max(min(30, floor(ncol(F) / 4)), 1)
                 pos <- try( Rtsne::Rtsne( t(abs(F)),
                                          perplexity = ppx,
                                          check_duplicates = FALSE,
@@ -112,14 +112,14 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
               if("try-error" %in% class(pos)) {
                 pos <- svd(F)$v[,1:2]
               }
-            } 
+            }
             colnames(pos) <- c("x","y")
             rownames(pos) <- colnames(F)
         })
-        
+
         ##plot(pos)
         pos <- round(pos, digits = 4)
-        colnames(pos) <- c("x", "y")        
+        colnames(pos) <- c("x", "y")
         write.csv(pos, file = tsne.file)
       }
 
@@ -144,14 +144,14 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         df = df,
         dataset_pos = dataset_pos
       )
-      
+
       return(pdata)
     })
 
     plot.RENDER <- function() {
 
       pdata <- plot_data()
-      shiny::req(pdata)      
+      shiny::req(pdata)
       dataset_pos <- pdata[['dataset_pos']]
       df <- pdata[['df']]
 
@@ -159,11 +159,13 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       active_datasets <- info.table()$dataset[r_selected()]
       df <- df[which(df$dataset %in% active_datasets),,drop=FALSE]
       dataset_pos <- dataset_pos[which(rownames(dataset_pos) %in% active_datasets),,drop=FALSE]
-      
+
       marker_size <- ifelse( nrow(df) > 60, 8, 11)
       marker_size <- ifelse( nrow(df) > 120, 5, marker_size)
       font_size <- marker_size**0.55 * 5
-      
+      x <- 1
+      print('dfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfffdfff')
+
       fig <- plotly::plot_ly(
         data = df,
         x = ~x,
@@ -183,7 +185,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
 
       dy <- diff(range(dataset_pos[,"y"]))
       dbg("[loading_tsneplot.R] range.y=",dy)
-      
+
       fig <- fig %>%
         plotly::add_annotations(
           x = dataset_pos[,"x"],
@@ -191,7 +193,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           text = rownames(dataset_pos),
           font = list( size=font_size ),
           xref = "x",
-          yref = "y",          
+          yref = "y",
           ## textposition = 'top',
           xanchor = "middle",
           yanchor = "bottom",
@@ -209,7 +211,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           ),
           yaxis = list(
             title = "tsne-y",
-            zeroline = FALSE,            
+            zeroline = FALSE,
             showticklabels = FALSE
           )
         )
