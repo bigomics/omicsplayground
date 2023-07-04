@@ -5,7 +5,7 @@
 
 connectivity_table_similarity_scores_ui <- function(
   id,
-  title, 
+  title,
   info.text,
   caption,
   width,
@@ -22,7 +22,7 @@ connectivity_table_similarity_scores_ui <- function(
     title = title,
     label = label
   )
-  
+
 }
 
 connectivity_table_similarity_scores_server <- function(id,
@@ -30,7 +30,7 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
-    
+
     connectivityScoreTable.RENDER <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
@@ -59,7 +59,7 @@ connectivity_table_similarity_scores_server <- function(id,
           pageLength = 99999,
           scrollX = TRUE,
           scrollY = height,
-          scrollResize = TRUE,          
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -67,7 +67,7 @@ connectivity_table_similarity_scores_server <- function(id,
         DT::formatSignif(numcols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "score"], "lightblue", "#f5aeae"
           ),
           backgroundSize = "98% 88%",

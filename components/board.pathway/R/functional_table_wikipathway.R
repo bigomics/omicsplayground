@@ -83,7 +83,7 @@ functional_table_wikipathway_server <- function(id,
         plugins = 'scrollResize',  ## resizes scrollable area
         options = list(
           dom = "lfrtip",
-          ## dom = "ft",          
+          ## dom = "ft",
           scrollX = FALSE,
           ##          scrollY = scrollY,
           scrollY = 800,
@@ -109,7 +109,7 @@ functional_table_wikipathway_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("logFC",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "logFC"],
             "lightblue",
             "#f5aeae"

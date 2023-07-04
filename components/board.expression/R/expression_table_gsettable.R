@@ -77,7 +77,7 @@ expression_table_gsettable_server <- function(id,
         selection = list(mode = "single", target = "row", selected = NULL)
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle("fx", background = playbase::color_from_middle(df$fx, "lightblue", "#f5aeae"))
+        DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
     })
 
     gsettable.RENDER_modal <- shiny::reactive({

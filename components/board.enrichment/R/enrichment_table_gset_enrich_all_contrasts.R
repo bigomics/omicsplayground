@@ -18,7 +18,7 @@ enrichment_table_gset_enrich_all_contrasts_ui <- function(
       placement = "right", options = list(container = "body")
     )
   )
-  
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
@@ -57,7 +57,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       if (NCOL(F) > 1) {
         fc.rms <- round(sqrt(rowMeans(F**2, na.rm = TRUE)), digits = 3)
       }
-      
+
       ## show Q values?
       show.q <- TRUE
       show.q <- input$showq
@@ -91,7 +91,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         F = F
       )
     })
-    
+
     fctable.RENDER <- function() {
 
       td <- table_data()
@@ -99,10 +99,10 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       qv.cols <- td$qv.cols
       fc.cols <- td$fc.cols
       F <- td$F
-      
+
       ## wrap with hyperlink
       df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
-      
+
       dt <- DT::datatable(
         df,
         rownames = FALSE,
@@ -125,13 +125,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.ES",
-          background = playbase::color_from_middle( df$rms.ES, "lightblue", "#f5aeae"),
+          background = color_from_middle( df$rms.ES, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = playbase::color_from_middle( F[, ], "lightblue", "#f5aeae"),
+          background = color_from_middle( F[, ], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
