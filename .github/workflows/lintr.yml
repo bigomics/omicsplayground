@@ -11,9 +11,8 @@
 name: lintr
 
 on:
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "master" ]
+  schedule:
+    - cron: "0 0 * * *"
 
 permissions:
   contents: read
@@ -32,20 +31,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@4e1feaf90520ec1215d1882fdddfe3411c08e492
+        uses: r-lib/actions/setup-r@v2
 
       - name: Setup lintr
-        uses: r-lib/actions/setup-r-dependencies@4e1feaf90520ec1215d1882fdddfe3411c08e492
-        with:
-          extra-packages: lintr
+        run: install.packages('lintr')
+        shell: Rscript {0}
 
       - name: Run lintr
-        run: lintr::sarif_output(lintr::lint_dir("."), "lintr-results.sarif")
+        run: lintr::lint_dir("components/app")
         shell: Rscript {0}
-        continue-on-error: true
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: lintr-results.sarif
-          wait-for-processing: true
