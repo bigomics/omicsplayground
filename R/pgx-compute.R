@@ -149,9 +149,9 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## contrasts[is.na(contrasts)] <- 0
 
 
-    message("[createPGX] input: dim(counts) = ",dim(counts))
-    message("[createPGX] input: dim(samples) = ",dim(samples))
-    message("[createPGX] input: dim(contrasts) = ",dim(contrasts))
+    message("[createPGX] input: dim(counts) = ",paste(dim(counts),collapse='x'))
+    message("[createPGX] input: dim(samples) = ",paste(dim(samples),collapse='x'))
+    message("[createPGX] input: dim(contrasts) = ",paste(dim(contrast),collapse='x'))
   
     ## contrast matrix
     colnames(contrasts)
@@ -209,9 +209,9 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         contrasts <- contrasts[kk,,drop=FALSE]
     }
 
-    message("[createPGX] final: dim(counts) = ",dim(counts))
-    message("[createPGX] final: dim(samples) = ",dim(samples))
-    message("[createPGX] final: dim(contrasts) = ",dim(contrasts))
+    message("[createPGX] final: dim(counts) = ",paste(dim(counts),collapse='x'))
+    message("[createPGX] final: dim(samples) = ",paste(dim(samples),collapse='x'))
+    message("[createPGX] final: dim(contrasts) = ",paste(dim(contrast),collapse='x'))
   
     ##-------------------------------------------------------------------
     ## check counts
