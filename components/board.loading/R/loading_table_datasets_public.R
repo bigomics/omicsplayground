@@ -12,27 +12,45 @@ loading_table_datasets_public_ui <- function(
   width) {
   ns <- shiny::NS(id)
 
-  TableModuleUI(
-    ns("datasets"),
-    info.text = info.text,
-    width = width,
-    caption = caption,
-    height = height,
-    title = title
+  tagList(
+      TableModuleUI(
+          ns("datasets"),
+          info.text = info.text,
+          width = width,
+          caption = caption,
+          height = height,
+          title = title
+      ),
+      div(
+          id = "load-action-buttons",
+          shiny::actionButton(
+              ns("importbutton"),
+              label = "Import dataset",
+              icon = icon("file-import"),
+              class = "btn btn-primary"
+          )
+      )
   )
 }
 
-loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
+loading_table_datasets_public_server <- function(id,
+                                                 getPGXDIR,
+                                                 pgx_public_dir,
+                                                 rl,
+                                                 auth,
+                                                 enable_delete,
+                                                 limits,
+                                                 r_global) {
   moduleServer(id, function(input, output, session) {
 
-      getPGXINFO_PUBLIC <- shiny::eventReactive({
-          rl$reload_pgxdir_public
-      }, {
+      getPGXINFO_PUBLIC <- shiny::reactive({
           req(auth)
           if (!auth$logged()) {
               warning("[LoadingBoard:getPGXINFO_PUBLIC] user not logged in!")
               return(NULL)
           }
+
+          rl$reload_pgxdir_public
 
           ## update meta files
           info <- NULL
@@ -87,22 +105,16 @@ loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
           ))
           kk <- intersect(kk, colnames(df))
           df <- df[, kk, drop = FALSE]
+
+          df$dataset <- sub("[.]pgx$", "", df$dataset)
+          df$conditions <- gsub("[,]", " ", df$conditions)
+          df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+          df$description <- playbase::shortstring(as.character(df$description), 200)
+          df$nsets <- NULL
+          df$organism <- NULL
+
           df
       })
-
-      observeEvent(
-          ## c(getFilteredPGXINFO_PUBLIC(), rl$reload_pgxdir_public), {
-          c(getFilteredPGXINFO_PUBLIC()), {
-              df <- getFilteredPGXINFO_PUBLIC()
-              df$dataset <- sub("[.]pgx$", "", df$dataset)
-              df$conditions <- gsub("[,]", " ", df$conditions)
-              df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-              df$description <- playbase::shortstring(as.character(df$description), 200)
-              df$nsets <- NULL
-              df$organism <- NULL
-              rl$pgxTablePublic_data <- df
-          }
-      )
 
       observeEvent( pgxtable_public$rows_selected(), {
           rl$selected_row_public <- pgxtable_public$rows_selected()
@@ -119,7 +131,7 @@ loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
 
       observeEvent( input$importbutton, {
           selected_row <- rl$selected_row_public
-          pgx_name <- rl$pgxTablePublic_data[selected_row, 'dataset']
+          pgx_name <- pgxtable_public$data()[selected_row, 'dataset']
           pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
           pgx_path <- getPGXDIR()
           new_pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
@@ -166,7 +178,7 @@ loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
       )
 
     pgxTable_DT <- reactive({
-      df <- table()
+      df <- getFilteredPGXINFO_PUBLIC()
       ##shiny::req(df)
       # need this, otherwise there is an error on user logout
       validate(need(nrow(df)>0, 'No public datasets!'))
@@ -213,7 +225,7 @@ loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
         DT::formatStyle(0, target = "row", fontSize = "16px", lineHeight = "95%")
     }
 
-    tablemodule <- TableModuleServer(
+    pgxtable_public <- TableModuleServer(
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,
@@ -221,6 +233,6 @@ loading_table_datasets_public_server <- function(id, table, getPGXDIR, rl) {
     )
 
     ## please refer to TableModule for return values
-    return(tablemodule)
+    return(pgxtable_public)
   })
 }

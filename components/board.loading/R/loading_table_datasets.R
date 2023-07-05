@@ -48,17 +48,9 @@ loading_table_datasets_ui <- function(
         ns("loadbutton"),
         label = "Load dataset",
         icon = icon("file-import"),
-        ##        class = "btn btn-outline-primary",
         class = "btn btn-primary",
         width = NULL
       )
-      ## shiny::actionButton(
-      ##   ns("deletebutton"),
-      ##   label = "Delete dataset",
-      ##   icon = icon("file-delete"),
-      ##   class = "btn btn-outline-danger",
-      ##   width = NULL
-      ## )
     ) ## end of buttons div
   )
 

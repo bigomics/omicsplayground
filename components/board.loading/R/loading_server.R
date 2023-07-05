@@ -209,14 +209,19 @@ LoadingBoard <- function(id,
 
       pgxtable_public <- loading_table_datasets_public_server(
         id = "pgxtable_public",
-        table = reactive(rl$pgxTablePublic_data),
-        pgxtable_data = getPGXDIR
+        getPGXDIR = getPGXDIR,
+        pgx_public_dir = pgx_public_dir,
+        rl = rl,
+        auth = auth,
+        enable_delete = enable_delete,
+        limits = limits,
+        r_global = r_global
       )
 
       loading_tsne_server(
         id = "tsne_public",
         pgx.dir = reactive(pgx_public_dir),
-        info.table = getFilteredPGXINFO_PUBLIC,
+        info.table = reactive(pgxtable_public$data()),
         r_selected = reactive(pgxtable_public$rows_all()),
         watermark = WATERMARK
       )
