@@ -137,7 +137,6 @@ biomarker_plot_featurerank_server <- function(id,
             design <- model.matrix(~ grp[jj])
             suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj], design)))
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
-            ## s2 = mean(-log10(top$P.Value))  
             s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE) 
           }
 
@@ -168,10 +167,6 @@ biomarker_plot_featurerank_server <- function(id,
         ylab = "",
         horiz = TRUE
       )
-      #%>%
-      #  plotly::layout(
-      #    legend = list(orientation = "h")   # show entries horizontally
-      #  )
     }
 
     clust_featureRank.RENDER <- function() {
@@ -193,8 +188,6 @@ biomarker_plot_featurerank_server <- function(id,
       func = clust_featureRank.RENDER,
       func2 = clust_featureRank.RENDER2,
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
-      #
-      #
       res = c(72, 90), ## resolution of plots
       pdf.width = 8, pdf.height = 10,
       add.watermark = watermark

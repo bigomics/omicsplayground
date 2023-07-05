@@ -20,7 +20,6 @@ viz._showPlotly <- function(fig){}
 viz._showShiny  <- function(fig){}
 viz._showGGplot  <- function(fig){}
 
-#
 viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1,
                                 main=c("heatmap1", "heatmap2"),
                                 title=NULL, subtitle=NULL, caption=NULL)
@@ -63,10 +62,6 @@ viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1,
                          plt3, ncol=2, rel_widths=c(np,1),
                          labels=c("","")
                      )
-
-    #
-    #
-    #
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)
 
 }
@@ -75,9 +70,6 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
                                   ntop=10, plot.diag=NULL, cex=1, nrow=NULL,
                                   title=NULL, subtitle=NULL, caption=NULL)
 {
-    ##
-    ##
-    ##
 
     if(is.null(comparisons)) {
         ct <- names(pgx$gx.meta$meta)
@@ -117,12 +109,10 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
 
 }
 
-#
 viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
                                   genes=NULL, subsample=300, scale='none', legend = TRUE,
                                theme=NULL, title=NULL, subtitle=NULL, caption=NULL)
 {
-    #
     posx <- pgx$tsne2d
     X <- as.matrix(pgx$X)
     if(!is.null(genes)) {
@@ -168,7 +158,6 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
 }
 
 
-#
 viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
                              legend.pos = "bottomleft", theme=NULL,
                              title=NULL, subtitle=NULL, caption=NULL)
@@ -196,7 +185,6 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
             posx, var=y, title=ph, cex=cex, legend.pos=legend.pos,
             hilight2 = hilight2,
             plotlib="ggplot", theme=theme)
-        #
         p <- p + ggplot2::theme( plot.margin = ggplot2::margin(0,8,0,8) )
         plt[[ph]] <- p
     }
@@ -205,12 +193,9 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
     if(is.null(subtitle)) subtitle = "The plot show the phenotypes of your experiments."
     if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
 
-    #
-    #
     viz.showFigure(fig=plt, title=title, subtitle=subtitle, caption=caption)
 }
 
-#
 viz.PhenoStats <- function(pgx, phenotypes=NULL,
                            dtype="bar", ctype="density", plot.lib="ggplot",
                            theme=NULL, title="*", subtitle=NULL, caption=NULL)
@@ -240,7 +225,7 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
         isfactor = TRUE
         isfactor = ptype[i] %in% c("factor","character","logical")
         isfactor
-        #
+        
         ## violin plot or barplot
         p <- phenotypes[i]
         p
@@ -293,7 +278,6 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
             ##plt
             plotlist[[i]] <- plt
         }
-        #
     }
 
     if(!is.null(title) && title=="*") {
@@ -302,8 +286,6 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
         caption <- paste0("Project: ",pgx$name)
     }
 
-    #
-    #
     viz.showFigure(fig=plotlist, title=title,
                    subtitle=subtitle, caption=caption)
 }
@@ -367,7 +349,6 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                     plt <- ggplot2::ggplot(df, ggplot2::aes(x=x, y=y, fill=x)) +
                         ggplot2::geom_boxplot() +
                         ggplot2::theme(
-                            #
                             legend.position = 'right',
                             legend.title = ggplot2::element_blank()
                         ) +
@@ -399,7 +380,6 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
 
             plt <- plt +
                 ggplot2::theme_classic(base_size=12)
-            #
             plt
         }
 
@@ -422,12 +402,9 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
     if(is.null(title)) title = paste("Phenotype statistics by",by.pheno)
     if(is.null(subtitle)) subtitle = "The plots show the phenotypes of your experiments."
     if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
-    #
-    #
     viz.showFigure(fig=plotlist, title=title, subtitle=subtitle, caption=caption)
 }
 
-#
 viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
                            ngenes=24, nrow=NULL, cex=1, srt=25,
                            title=NULL, subtitle=NULL, caption=NULL)
@@ -486,12 +463,9 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     gene_plots <- list()
     g="Cd8a"
     zlim <- range(pgx$X[genes,])
-    #
     for(i in 1:length(genes)) {
-        ##m1 <- pgx.plotSampleProjection (
         m1 <- playbase::pgx.scatterPlot(
             pgx, gene=genes[i], title=genes[i],
-            ##label.clusters=TRUE, ## labels=markers,
             cex=cex, cex.clust=1, cex.title=0.9,
             legend = ifelse(i==1,TRUE,FALSE),
             cex.legend=0.7, legend.ysp=1.8,
@@ -575,10 +549,9 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
                 pos=pos1, var=fill,
                 cex=1, cex.title=0.8,
                 hilight = gs.genes[[i]],
-                #
                 hilight2 = top.genes[[i]],
                 title = tt,
-                plotlib=plotlib #
+                plotlib=plotlib 
             )
         }
         p1
@@ -639,7 +612,6 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
         fc.max <- quantile(abs(meta$fc[,contrasts]),probs=0.999,na.rm=TRUE)
         qv.min <- quantile(meta$qv[,contrasts],probs=0.005,na.rm=TRUE)
     }
-    #
 
     ##--------------------------------------------------
     ## Scatter plots
@@ -718,15 +690,10 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
 
 }
 
-#
-#
 viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
                                 ntop=10, plot.diag=NULL, cex=1, nrow=NULL,
                                 title=NULL, subtitle=NULL, caption=NULL)
 {
-    ##
-    ##
-    ##
 
     ##--------------------------------------------------
     ## Main scatter plots
@@ -775,7 +742,6 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
         }
         plotlist[[i]] <- p2
     }
-    #
 
     ##--------------------------------------------------
     ## Arrange
@@ -818,7 +784,6 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     s3 <- playbase::plot_ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
     s4 <- playbase::plot_ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
     ss <- patchwork::wrap_plots(s1, s2, s3 ,s4, nrow=1)
-    #
 
     fig <- (vv / ss)
 
@@ -838,7 +803,6 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
         if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
         if(ncol(xx)>100)  xx <- xx[,sample(1:ncol(xx),100)]
         dc <- reshape2::melt(xx)
-        #
         dc <- dc[dc$value>0,,drop=FALSE]
         dc$Var2 <- paste0("column.",dc$Var2)  ## colnames
         tt2 <- paste(nrow(counts),"x",ncol(counts))
@@ -862,9 +826,7 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
     plotBox <- function(xx, main="") {
         if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
         if(ncol(xx)>100)  xx <- xx[,sample(1:ncol(xx),100)]
-        ## xx[xx==0] <- NA  
         dc <- reshape2::melt(xx)
-        #
         dc <- dc[dc$value>0,,drop=FALSE]
         p <- ggplot2::ggplot(dc, ggplot2::aes(x=Var2, y=value)) +
             ggplot2::geom_boxplot(fill='grey85') +
@@ -880,10 +842,8 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
     }
 
     counts <- as.matrix(pgx$counts)
-    #
 
     xlist <- list()
-    #
     NORMALIZATION.METHODS <- c("none","scale","quantile","CPM","TMM","RLE","RLE2")
 
     if(is.null(methods))
@@ -913,35 +873,21 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
 
     }
 
-    #
     fig <- patchwork::wrap_plots(plotlist)
     fig
-
-    #
-    #
-    #
     viz.showFigure(plotlist, title=title, subtitle=subtitle, caption=caption)
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption)
 }
 
-#
 viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
                           title=NULL, subtitle=NULL, caption=NULL)
 {
-    ##
-    ##
-    ##
 
     grep("^IG",rownames(pgx$counts),value=TRUE,ignore.case=TRUE)
     X <- pgx$counts
-    #
     X <- X[grep("^IG",rownames(X)),]
 
     ## subtract background
-    #
-    #
-    #
-
     igX  <- X[grep("^IG[HKL]",rownames(X),ignore.case=TRUE),]
     igH  <- X[grep("^IGH[ADGEM]$|^IGH[ADGEM][1-9]",rownames(X),ignore.case=TRUE),]
     VH   <- X[grep("^IGHV",rownames(X),ignore.case=TRUE),]
@@ -960,8 +906,6 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     VL.avg <- tapply(1:ncol(VL), y, function(i) rowMeans(VL[,i,drop=FALSE]))
     VH.avg <- do.call(cbind, VH.avg)
     VL.avg <- do.call(cbind, VL.avg)
-    #
-    #
     VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))),]
     VL.avg <- VL.avg[order(-rowSums(abs(VL.avg))),]
 
@@ -1004,9 +948,6 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     mm <- playbase::pgx.phenoMatrix(pgx, by.pheno)
     matlist <- list(VL, VH, mm)
     S1 <- playbase::pgx.SankeyFromMatrixList.PLOTLY(matlist)
-    ##S1 <- playbase::pgx.SankeyFromPhenotypes.GGPLOT(
-    ##    pgx, phenotypes=c(by.pheno,"VL","VH"), fill=by.pheno,
-    ##    nmin=nmin, title="VH/VL pairing")
     S1.grob <- NULL
     S1.grob <- playbase::plotly2ggplot(S1, width=600, height=800, scale=0.97)
     class(S1.grob)
@@ -1045,9 +986,6 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     } else if(mode=="avg") {
         fx <- t(sapply(gset, function(gg) colMeans(pgx$X[gg,])))
         rownames(fx) <- names(gset)
-        #
-        #
-        #
         ylab <- "average expression  (logCPM)"
     } else {
         stop("FATAL ERROR:: invalid mode", mode)
@@ -1064,9 +1002,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     }
 
 
-    #
     df <- reshape2::melt(Matrix::head(fx,ntop))
-    #
     df$pheno <- ""
     if(!is.null(by.pheno)) {
         df$pheno <- pgx$samples[df$Var2,by.pheno]
@@ -1077,7 +1013,6 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     nlev <- length(unique(df$pheno))
     nlev
     xoff <- 0
-
     xoff <- min(df$value)
     df$value <- df$value - xoff
     xbreaks <- seq(min(df$value),max(df$value),length.out=7)
@@ -1086,24 +1021,20 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     if(nlev<=5) {
         plt <- playbase::plot_ggbarplot(
                           df, x = "gene family", y = "value", fill = "pheno",
-                          add = "mean_se", ## palette = c("#00AFBB", "#E7B800"),
+                          add = "mean_se",
                           position = ggplot2::position_dodge(width=0.8)) +
-            ##scale_x_discrete(guide=guide_axis(angle=srt)) +
             ggplot2::xlab("gene family") + ggplot2::ylab(ylab) +
             ggplot2::labs(fill = by.pheno, color = by.pheno) +
             ggplot2::scale_x_discrete(guide=guide_axis(angle=srt)) +
-            ## ggplot2::xlim(c(min(df$value), max(df$value))) +
             ggplot2::scale_y_continuous(breaks=xbreaks, labels=round(xbreaks+xoff,2)) +
             ggplot2::theme(
                 axis.text.x = ggplot2::element_text(angle=srt, vjust=0.2, size=10*lab.cex),
-                #
                 axis.text.y = ggplot2::element_text(size=10*lab.cex),
                 legend.title = ggplot2::element_text(by.pheno),
                 legend.justification = c(1,1),
                 legend.position = c(1,1),
                 legend.key.size = grid::unit(9, "pt"),
                 legend.key.height = grid::unit(9, "pt"),
-                #
                 plot.margin = ggplot2::margin(5,5,20,5)
             )
 
@@ -1115,7 +1046,6 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
                            df,
                            x = "pheno", y = "value", fill = "gene family",
                            add = "mean",
-                           ## palette = c("#00AFBB", "#E7B800"),
                            position = ggplot2::position_stack()) +
             ggplot2::scale_y_continuous(breaks=xbreaks, labels=round(xbreaks + xoff,1)) +
             ggplot2::xlab(by.pheno) + ggplot2::ylab(ylab)
@@ -1139,7 +1069,6 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
         pheno <- pgx$samples
     }
     pos0 <- pgx$tsne2d
-
     viz.BatchCorrectionMatrix(
         X0=X0, pheno=pheno, cX=cX, cX2=cX2,
         phenotype=phenotype, stat=stat,  pca.heatmap=pca.heatmap,
@@ -1172,8 +1101,6 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     cX <- cX[sel,,drop=FALSE]
     if(!is.null(cX2)) cX2 <- cX2[sel,,drop=FALSE]
 
-
-    #
     xlist <- list(X0, cX, cX2)
     pos <- list()
     pos[[1]] <- pos0
@@ -1199,10 +1126,9 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     if(pca.heatmap) {
         for(i in 1:length(xlist)) {
             hlist[[i]] <- grid::grid.grabExpr(
-                ##gx.splitmap(
                 playbase::gx.PCAheatmap(
                     X=xlist[[i]], main=main[i],
-                    nv=5, ngenes=10, #
+                    nv=5, ngenes=10, 
                     col.annot=pheno, softmax=TRUE,
                     show_legend=FALSE, scale="row",
                     nmax = nmax, show_rownames = 40,
@@ -1262,8 +1188,6 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         plist[[i]] <- playbase::plot_ggscatter(
             pos[[i]], col=y1, shape=y2,
             cex=0.7*cex) +
-            ## ggplot2::theme(legend.position="top") +
-            ## ggplot2::theme_classic() +
             ggplot2::xlab("tSNE-1") + ggplot2::ylab("tSNE-2") +
             ggplot2::ggtitle(paste0(phenotype[1]," (",main[i],")")) +
             ggplot2::theme(
@@ -1288,10 +1212,6 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                          plt3, ncol=2, rel_widths=c(np,1),
                          labels=c("","")
                      )
-
-    #
-    #
-    #
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)
 
 }
@@ -1303,10 +1223,8 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     ## determine clusters
     cl1 <- playbase::pgx.FindClusters(t(umap), method="kmeans")[[1]][,"kmeans.10"]
     cl2 <- playbase::pgx.FindClusters(t(gs.umap), method="kmeans")[[1]][,"kmeans.5"]
-    #
     cl1 <- paste0("G",cl1)
     cl2 <- paste0("S",cl2)
-    #
     cl3 <- pgx$samples$cluster
 
     ## contrast plots
@@ -1322,13 +1240,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
         p3 <- playbase::pgx.scatterPlotXY(
             pgx$tsne2d, var=factor(cl3), label.clusters=TRUE, legend=FALSE,
             cex=1, cex.clust=0.85, plotlib=plotlib, title="sample clusters")
-
-        #
-        ##p5 <- viz.Contrasts(pgx, contrasts=contrast, level="geneset",
-        ##                    filt="HALLMARK", strip=".*HALLMARK_",
-        ##                    ntop=5, plots.only=TRUE, pos=gs.umap)[[1]]
-        ##p6 <- playbase::pgx.scatterPlot(pgx, pheno="celltype", cex.legend=0.7,
-        ##                      plotlib=plotlib, title="celltype")
         p4 <- playbase::pgx.scatterPlot(
             pgx, contrast=contrast, pos=umap, plotlib=plotlib, title="gene")
         p5 <- playbase::pgx.scatterPlot(
@@ -1338,7 +1249,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
             pgx, contrast=contrast, plotlib=plotlib, title="sample")
 
         cowplot::plot_grid(p1, p2, p3, p4, p5, p6, nrow=2)
-        #
     }
 
     ##----------------------------------------------
@@ -1384,13 +1294,10 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
 
     xlist <- list(t(X1), t(X2), t(P1), t(P2))
     matlist <- list(t(M1), t(M2), t(P1), t(P2))
-    #
     toplist <- list( M1.top, M2.top, P1.top, P2.top)
 
     fc.plots <- function(contrast, dir) {
-        #
         y0 <- pgx$model.parameters$exp.matrix[,contrast]
-        #
         fc1 <- rowMeans(X1[,y0>0]) - rowMeans(X1[,y0<0])
         fc2 <- rowMeans(X2[,y0>0]) - rowMeans(X2[,y0<0])
         fc3 <- rowMeans(P1[,y0>0]) - rowMeans(P1[,y0<0])
@@ -1416,7 +1323,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
         f4 <- playbase::plot_ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="")
 
         fc.plots <- f1 + f2 + f3 + f4 + patchwork::plot_layout(ncol=4) &
-            ggplot2::coord_flip() & ## ggplot2::xlab("") & ggplot2::ylab("logFC") &
+            ggplot2::coord_flip() &
             ggplot2::theme_minimal() & ggplot2::theme(legend.position="none") &
             ggplot2::theme(
                 axis.title.x = ggplot2::element_text(size=9),
@@ -1435,7 +1342,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     for(i in 1:(length(matlist)-1)) {
         k1 <- colnames(matlist[[i]])[max.col(matlist[[i]])]
         k2 <- colnames(matlist[[i+1]])[max.col(matlist[[i+1]])]
-        #
         M[[i]] <- table(k1,k2)
     }
 
@@ -1448,7 +1354,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
 
     ## Edge value (i.e. capacity) : rho * contrast/FC
     cty.mode=1
-    #
     plot.sk <- function(contrast, fill=TRUE) {
         F = R
         cty <- sign(pgx$model.parameters$exp.matrix[,contrast])
@@ -1466,7 +1371,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
             M=M, R=R, F=F, fill=fill, labels=toplist)
     }
 
-    #
 
     ## ---------------------------------------------------------
     ## ---------------------------------------------------------
@@ -1475,18 +1379,14 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     all.ct <- colnames(pgx$model.parameters$exp.matrix)
 
     ## list of plot objects
-    #
     params <- NULL
-    #
     plots <- list(plot.sk,cluster.plots,fc.plots)
     shared.params <- list(contrast=all.ct)
     params <- list(
         list(contrast="*", fill=c(TRUE,FALSE)),
-        ##list(), list(), list(), list(), list(), list(),
         list(contrast="*"),
         list(contrast="*", dir=c("up","down","both"))
     )
-    #
     types <- c("plotly","ggplot","ggplot")
     widths  <- c(6,6,12)
     heights <- c(2,2,1.5)*200
@@ -1500,7 +1400,6 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
 ##=============================================================================================
 ##=============================================================================================
 ##=============================================================================================
-#
 
 ## just a shortcut
 viz <- function(...) viz.showFigure(...)
@@ -1520,9 +1419,6 @@ viz.showFigure <- function(fig, widths=NULL, heights=NULL, page.height=NULL,
         cat("viz.showFigure:: plotlist detected\n")
         plotlib0 <- intersect(c("ggplot","plotly"),class(fig[[1]]))
         cat("viz.showFigure:: plotlib0=",plotlib0,"\n")
-        ##fig <- autoarrange_plots(
-        ##    fig, widths=widths, heights=heights, page.height=page.height, sort=sort,
-        ##    tag=tag, ncol=ncol, plotlib=plotlib0 )
     } else {
         ## single figure
         plotlib0 <- intersect(c("ggplot","plotly"),class(fig))
@@ -1537,12 +1433,11 @@ viz.showFigure <- function(fig, widths=NULL, heights=NULL, page.height=NULL,
             fig, title=title, subtitle=subtitle, caption=caption, tag=tag)
     } else if(plotlib=="shiny") {
         z <- viz._showShiny(
-            fig, widths=widths, heights=heights,  #
+            fig, widths=widths, heights=heights, 
             title=title, subtitle=subtitle, caption=caption)
     } else if(plotlib=="ggplot") {
         z <- viz._showGGplot(
             fig,
-            ##cowplot::plot_grid(fig, scale=scale),  ## allow scaling
             title=title, subtitle=subtitle, caption=caption, tag=FALSE) ## tagging in layout
     } else {
         stop("FATAL:: unknown plotlib=",plotlib)
@@ -1630,15 +1525,12 @@ autoarrange_plots.UNIFORM <- function(plotlist, ncol=NULL, page.height=NULL,
         if(is.null(page.height)) page.height <- 720
         ht <- page.height / nrow
         if(plotlib=="shiny-plotly") outFUN <- "plotlyOutput"
-        #
         subrows <- lapply(idx, function(i) paste0(outFUN,"('",plotnames[i],"',height=",ht,")"))
 
         ## add shinydashboard BOX
-        #
         subrows <- sapply(subrows, function(s) paste(s,collapse=","))
         subrows <- sapply(subrows, function(s)
             paste0("fillRow(",s,",height=",ht,")")) ## height important!!
-        #
         subrows <- lapply(subrows, function(s) eval(parse(text=s)))
         fig <- shiny::tagList(subrows)
     } else {
@@ -1651,7 +1543,6 @@ autoarrange_plots.UNIFORM <- function(plotlist, ncol=NULL, page.height=NULL,
 viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                            tag=FALSE, widths = 3, heights = 3,
                            title="TITLE", subtitle="Subtitle", caption="Caption"
-                           ##title="", subtitle="", caption=""
                            )
 {
     ## ---------------------------------------------------------------------
@@ -1698,7 +1589,6 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                 np <- length(params[[i]])
                 if(np>0) {
                     plotFUN <- shiny::reactive({
-                        #
                         inputVALUES <- list()
                         for(j in 1:np) {
                             if(params[[i]][j]=="*") {
@@ -1712,16 +1602,12 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                         do.call(plots[[i]], as.list(inputVALUES))
                     })
                 } else {
-                    #
-                    #
                     plotFUN = plots[[i]]
                 }
             } else {
-                #
                 plotFUN <- function(){ plots[[i]] }
             }
             pclass <- types[i]
-            #
             r <- NULL
             if(any(pclass=="ggplot")) r <- shiny::renderPlot({plotFUN()},res=90)
             if(any(pclass=="plotly")) r <- plotly::renderPlotly(plotFUN())
@@ -1776,7 +1662,6 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
         message("viz._showShiny:: server : 3")
         plot_output <- function(i, ht) {
             pclass <- types[[i]]
-            #
             plotname <- paste0("plot_",i)
             if(any(pclass=="ggplot")) {
                 return(shiny::plotOutput(plotname, height=ht))
@@ -1842,7 +1727,6 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                 shiny::column(width=12, acc)
             }
             aa <- lapply(0:length(params), function(i) make.accordion(i))
-            #
             shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(do.call(shiny::tagList,aa))))
         })
         shiny::outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
@@ -1880,13 +1764,10 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
         miniUI::miniContentPanel(sidebar.ui)
     )
 
-    #
     if(!is.null(params)) {
         shiny::runGadget(sidebar.ui, server)
-        #
     } else {
         shiny::runGadget(full.ui, server)
-        #
     }
 }
 
@@ -1928,8 +1809,7 @@ viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
         header <- header %>%
             plotly::add_annotations(
                 x = 0.0, y = 1,
-                yshift = -3, #
-                #
+                yshift = -3,
                 xanchor = "left",
                 xref = "paper", yref = "paper",
                 text = subtitle,
@@ -1941,7 +1821,7 @@ viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
         caption <- caption %>%
             plotly::add_annotations(
                 x= 1.0, y=0.0, align= "right",
-                yshift = -20, #
+                yshift = -20, 
                 xref = "paper", yref = "paper",
                 text = caption,
                 showarrow = FALSE
@@ -1971,7 +1851,3 @@ viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 ##====================================================================================
 ##======================== END OF FILE ===============================================
 ##====================================================================================
-
-
-
-

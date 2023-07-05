@@ -140,7 +140,6 @@ dataview_table_rawdata_server <- function(id,
       }
 
       dbg("[dataview_rawdata:table_data] create dataframe")
-      #
       xgenes <- pgx$genes[rownames(x), "gene_name"]
       gene.title <- playdata::GENE_TITLE[toupper(xgenes)]
       gene.title <- substring(gene.title, 1, 50)
@@ -157,7 +156,6 @@ dataview_table_rawdata_server <- function(id,
           as.matrix(x), check.names = FALSE
         )
       }
-      #
       x <- x[order(-x$rho, -x$SD), , drop = FALSE]
 
       list(
@@ -165,7 +163,7 @@ dataview_table_rawdata_server <- function(id,
         x95 = x95,
         x99 = x99
       )
-    }) ## %>% bindCache(pgx$Y, r.gene(), r.data_type(), r.groupby())
+    })
 
     rawdataTable.RENDER <- function() {
       dt <- table_data()
@@ -196,7 +194,6 @@ dataview_table_rawdata_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(numcols,
           background = DT::styleColorBar(data = c(0, dt$x99), color = unname(omics_colors("light_blue"))),
-          ## background = playbase::color_from_middle(x99, 'lightblue', '#f5aeae'),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

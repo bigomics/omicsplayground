@@ -32,6 +32,9 @@ wikipathview <- function(wp, val, dir) {
         path_ids[i] <- pp$id[j]
     }
     
+#    svg <- fluctuator::set_attributes(
+#        svg, node=path_ids, node_attr='id', attr = "style",
+    #        pattern = "fill:none", replacement = paste0("fill:",colors))
     ## skip summary: not needed.. faster
     df <- data.frame(node=path_ids, attr="style",
       pattern = "fill:none", replacement = paste0("fill:",colors))

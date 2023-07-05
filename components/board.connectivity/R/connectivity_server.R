@@ -55,7 +55,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       sigdbx <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$")  ## extra sigdb
       sigdb <- c(sigdb1, sigdbx)      
       computed.sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
-      #
       sel <- sigdb1
       shiny::updateSelectInput(session, "sigdb", choices = sigdb, selected = sel)
     })
@@ -81,7 +80,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       list(name = ct, fc = fc, gs = gs)
     })
 
-    #
     observeEvent( getCurrentContrast(), {
       res <- getCurrentContrast()
       top50 <- head(names(sort(abs(res$fc),decreasing=TRUE)),50)
@@ -248,7 +246,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       }
 
       ## only those in existing database
-      #
       sigpath <- getConnectivityPath(sigdb)
       cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path=sigpath)
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
@@ -322,8 +319,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     
     getTopProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
-      ##
-      ##
       sigdb <- input$sigdb
       shiny::req(sigdb)
 
@@ -347,8 +342,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
     getSelectedProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
-      ##
-      ##
       sigdb <- input$sigdb
       shiny::req(sigdb)
 
@@ -372,7 +365,6 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     connectivityScoreTable <- NULL
     connectivityFoldchangeTable <- NULL
     getLeadingEdgeGraph <- NULL
-    
     connectivity_plot_FCFCplots_server(
       "FCFCplots",
       pgx = pgx,

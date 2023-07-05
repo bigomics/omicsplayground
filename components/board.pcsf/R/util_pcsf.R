@@ -61,37 +61,7 @@ visplot.PCSF <- function (x, style = 0, edge_width = 5, node_size = 40, node_lab
     visNet <- visNetwork::visNetwork(
       nodes, edges, width = width, height = height, ... ) %>%
       visNetwork::visNodes(shadow = list(enabled = TRUE, size = 12)) %>%
-      visNetwork::visEdges(scaling = list(min = 6, max = edge_width*6)) ## %>%          
-    ##   visNetwork::visGroups(groupname = "Steiner", 
-    #
-    ##             shape = "triangle") %>%
-    ##   visNetwork::visGroups(groupname = "Terminal", 
-    #
-    ##             shape = "dot")
-    ## leg.groups <- list(
-    ##   list(
-    #
-    ##     shape = "dot", size = 15,
-    #
-    ##     label.cex = 0.8),
-    ##   list(label = Steiner_node_legend, 
-    ##        shape = "triangle", size = 10,
-    ##        color = list(background = Steiner_node_color, 
-    ##                     border = "blue"), label.cex = 0.8)
-    ## )
-    ## if (length(extra_node_colors) > 0) {
-    ##   for (i in 1:length(extra_node_colors)) {
-    #
-    ##     visNet <- visNet %>%
-    ##       visNetwork::visGroups(
-    #
-    ##         color = list(background = extra_node_colors[[en]], 
-    ##                      border = "grey"), shape = "dot")
-    ##     leg.groups[[i + 2]] <- list(label = en, shape = "dot", 
-    ##          size = 13, color = list(background = extra_node_colors[[en]], 
-    ##                                  border = "grey"), label.cex = 0.8)
-    ##   }
-    ## }
+      visNetwork::visEdges(scaling = list(min = 6, max = edge_width*6)) 
 
     if(layout!="hierarchical") {
       visNet <- visNet %>%
@@ -108,12 +78,10 @@ visplot.PCSF <- function (x, style = 0, edge_width = 5, node_size = 40, node_lab
       visNetwork::visPhysics(enabled=physics) %>%
       visNetwork::visOptions(highlightNearest = list(enabled = TRUE)) %>% 
       visNetwork::visLegend(width = 0.05, useGroups = TRUE, position="right")        
-    #
     
     visNet
 }
 
-#
 plot.pcsf <- function(net, fx0=NULL, label.cex=1) {
   ## take largest connected graph
   csize <- clusters(net)$csize
@@ -129,7 +97,6 @@ plot.pcsf <- function(net, fx0=NULL, label.cex=1) {
   
   if(is.null(fx0)) fx0 <- igraph::V(net)$prize
   fx0 <- tanh(1.3*fx0)
-  #
   vertex.label.cex <- label.cex
   
   vertex.size <- igraph::V(net)$prize**0.66

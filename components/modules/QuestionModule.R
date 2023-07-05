@@ -13,7 +13,6 @@ QUESTIONS.ANSWERS <- list(
 )
 
 QuestionModuleUI <- function(id) {
-    ##ns <- shiny::NS(id)  
 }
 
 QuestionModule <- function(input, output, session, lapse=5)

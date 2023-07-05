@@ -23,7 +23,6 @@ if(Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
@@ -44,13 +43,11 @@ SCROLLY_MODAL <<- "55vh"
 TABLE_HEIGHT_MODAL <<- "75vh"
 
 
-
 # Get the OPG root folder. Works only from inside the repo as it looks
 # up to the closest parent folder matching 'omicsplayground'
 get_opg_root <- function() {
   pwd <- getwd() 
   dirs <- unlist(strsplit(pwd, "/"))
-
   root_dirs <- paste(dirs[1:max(grep("omicsplayground",dirs))],collapse="/")
   root <- paste(root_dirs, collapse = "/")
   return(root)
@@ -149,8 +146,8 @@ if(file.exists("global.R")) {
 
 ## You can add here new files explicitly, but eventually 00Headers.R
 ## should contains all files. Update using .../dev/02_dev.R script.
-#
-#
+
+
 
 message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
@@ -166,12 +163,11 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
 }
-##if(opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
-##    Sys.setenv("SHINYPROXY_USERNAME"="ShinyProxy User")  
-##}
+
+
 if(opt$AUTHENTICATION %in% c("firebase","email") && !file.exists("firebase.rds")) {
     message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
-    #
+    
     stop("[GLOBAL] FATAL : missing firebase.rds file")
 }
 
@@ -197,8 +193,6 @@ ENABLED <- array(rep(TRUE,length(BOARDS)),dimnames=list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 
 ## disable connectivity map if we have no signature database folder
-#
-#
 
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
@@ -246,7 +240,6 @@ logHandler <- function(http.req){
     }
 
     if(!is.null(log.file)) {
-        #
         ## truncate the log file
         the.log <- paste(system(paste("grep -B100 -A99999",id,log.file),intern=TRUE),collapse='\n')
     }
@@ -265,9 +258,6 @@ logHandler <- function(http.req){
 }
 
 ## Are we ever going to use this??
-#
-#
-#
 
 message("\n\n")
 message("=================================================================")

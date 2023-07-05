@@ -73,11 +73,14 @@ loading_table_datasets_public_server <- function(id, table) {
         DT::formatStyle(0, target = "row", fontSize = "16px", lineHeight = "95%")
     }
 
-    TableModuleServer(
+    tablemodule <- TableModuleServer(
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,
       selector = "single"
     )
+
+    ## please refer to TableModule for return values
+    return(tablemodule)
   })
 }

@@ -37,7 +37,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     ## update choices upon change of data set
     shiny::observe({
-      #
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -52,12 +51,10 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
     shiny::observe({
-      #
       if (is.null(pgx)) {
         return(NULL)
       }
       shiny::req(input$level)
-      #
       if (input$level == "geneset") {
         ft <- names(playdata::COLLECTIONS)
         nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
@@ -67,21 +64,9 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
-      #
-      #
       names(ft) <- sub(".*:","",ft)
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
-
-    ## shiny::observe({
-    #
-    #
-    ##     if(0 && length(sel.keys)>0) {
-    #
-    #
-    #
-    ##     }
-    ## })
 
 
     ## ================================================================================
@@ -89,20 +74,13 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
     ## ================================================================================
 
     getFoldChangeMatrix <- shiny::reactive({
-      ##
       ## Get full foldchange matrix from pgx object.
-      ##
-      ##
-      ##
       fc0 <- NULL
       qv0 <- NULL
       alertDataLoaded(session, pgx)
       shiny::req(pgx)
 
       sel <- names(pgx$gset.meta$meta)
-      #
-      #
-      #
 
       if (input$level == "geneset") {
         gsetmethods <- c("gsva", "camera", "fgsea")
@@ -111,8 +89,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
           return(NULL)
         }
 
-        ## fc0 = sapply(pgx$gset.meta$meta[sel], function(x)
-        ##    rowMeans(unclass(x$fc)[,gsetmethods,drop=FALSE]))
         fc0 <- sapply(pgx$gset.meta$meta[sel], function(x) x$meta.fx)
         rownames(fc0) <- rownames(pgx$gset.meta$meta[[1]])
         qv0 <- sapply(pgx$gset.meta$meta[sel], function(x) {
@@ -135,7 +111,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         qv1 <- qv0[gsets, , drop = FALSE]
       } else {
         ## Gene
-        ##
         gxmethods <- "trend.limma"
         gxmethods <- c("trend.limma", "edger.qlf", "deseq2.wald")
         gxmethods <- selected_gxmethods() ## reactive object from EXPRESSION section
@@ -163,7 +138,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
             sel.probes <- playbase::filterProbes(pgx$genes, genes)
           }
         } else if (input$filter != "<all>") {
-          #
           gset.genes <- unlist(playdata::getGSETS(input$filter))
           sel.probes <- playbase::filterProbes(pgx$genes, gset.genes)
         }
@@ -181,11 +155,9 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     getActiveFoldChangeMatrix <- shiny::reactive({
       res <- getFoldChangeMatrix()
-      #
       shiny::req(res)
 
       ## match with selected/active contrasts
-      #
       comp <- input_comparisons()
       kk <- match(comp, colnames(res$fc))
       if (length(kk) == 0) {
@@ -202,8 +174,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     getCurrentSig <- shiny::reactive({
       ## Switch between FC profile or NMF vectors
-      ##
-      ##
       shiny::req(pgx)
       progress <- shiny::Progress$new()
       on.exit(progress$close())
@@ -240,8 +210,6 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       ## ------------ get signature matrices -----------------
       F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")
       G <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")
-      #
-      #
       f.score <- F$fc * (1 - F$qv)**4 ## q-weighted FC
       g.score <- G$fc * (1 - G$qv)**4
 

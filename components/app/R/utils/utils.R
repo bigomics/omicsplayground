@@ -33,7 +33,6 @@ mem.proc <- function(digits=0) {
     ## In your logging routine
     vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
     vsz <- vsz / (1024**2) ## MB
-    #
     mem <- paste0(round(vsz,digits),"MB")
   }
   mem
@@ -149,12 +148,6 @@ sever_screen <- function() {
                                      width=450,height=250)),
                shiny::div(
                           id="logSub",
-                          ##        shiny::textAreaInput(
-                          #
-                          #
-                          ##               width = "100%", height="80px",
-                          #
-                          ##        ),
                           shiny::br(),
                           shiny::tags$a(
                                           onClick = "sendLog()",
@@ -274,12 +267,6 @@ sever_screen2 <- function(session_id) {
                           width=450,height=250)),
     shiny::div(
       id="logSub",
-      ##        shiny::textAreaInput(
-      #
-      #
-      ##               width = "100%", height="80px",
-      #
-      ##        ),
       shiny::br(),
       shiny::tags$a(
         onClick = HTML(paste0("sendLog2('",session_id,"')")),

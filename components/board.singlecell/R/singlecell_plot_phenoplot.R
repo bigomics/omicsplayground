@@ -121,14 +121,6 @@ singlecell_plot_phenoplot_server <- function(id,
           klr0 <- klrpal[y]
         }
 
-        #
-        ## if (length(jj)) klr0[jj] <- "#AAAAAA22"
-        ## base::plot(pd[["pos"]],
-        ##   pch = 19, cex = cex1, col = klr0, fg = gray(0.5), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
-        #
-
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = y,

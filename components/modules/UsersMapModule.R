@@ -39,7 +39,6 @@ UsersMapModule <- function(input, output, session, env)
     output$inputsUI <- renderUI({
         tagList()
     })
-    ##outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) 
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================

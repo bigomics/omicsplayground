@@ -104,7 +104,7 @@ signature_plot_markers_server <- function(id,
       if ("gsva" %in% method) {
         gset <- names(y)[which(y != 0)]
         gmt <- list("gmt" = gset)
-        res.gsva <- GSVA::gsva(X, gmt, method = "gsva", parallel.sz = 1) #
+        res.gsva <- GSVA::gsva(X, gmt, method = "gsva", parallel.sz = 1) 
         res.colnames <- colnames(res.gsva)
         fc <- as.vector(res.gsva[1, ])
         names(fc) <- res.colnames
@@ -124,20 +124,15 @@ signature_plot_markers_server <- function(id,
     }
 
     getSingleSampleEnrichment <- shiny::reactive({
-      ##
       ## Calls calcSingleSampleValues() and calculates single-sample
       ## enrichment values for complete data matrix and reduced data by
       ## group (for currentmarkers)
-      ##
-      ##
       if(is.null(pgx$X)) {
         return(NULL)
       }
 
       ## select samples
       X <- pgx$X
-##      sel <- colnames(X)  
-#
 
       ## get the signature
       gset <- getCurrentMarkers()
@@ -150,7 +145,6 @@ signature_plot_markers_server <- function(id,
       names(y) <- rownames(X)
 
       ## expression by group
-      #
       grp <- pgx$model.parameters$group
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
@@ -281,12 +275,10 @@ signature_plot_markers_server <- function(id,
           legend = FALSE,
           gridcolor = 'fff'
         ) %>% plotly::layout(
-          #
           plot_bgcolor = "#f8f8f8"
         )
         plt[[i+1]] <- p
       }
-      #
       return(plt)
     }
 

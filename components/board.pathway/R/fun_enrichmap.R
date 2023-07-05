@@ -121,7 +121,6 @@ compute_enrichmentmap <- function(pgx, qsig=0.05, ntop=120, wt=1, contrast=NULL,
 }
 
 
-#rx=3;lwd=1;label=TRUE;paper_bgcolor=plot_bgcolor="#cdceeb";title.x=0.5
 plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
                                clustlabel.y=1.15, nodelabel.y=1, colorscale="RdBu",
                                cex=1, rx=3, lwd=1, title.x=0.5, title.y=1.08,
@@ -239,8 +238,6 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
     genesets <- V(graph)$name
     fc <- F[genesets,contrast]
     qv <- Q[genesets,contrast]    
-    #
-    ##df$color <- (1.1-qv) * sign(fc) * abs(fc)**0.5 
     df$color <- -log10(1e-4+qv) * sign(fc) * abs(fc)**0.5     
     df$text2 <- paste0("<b>",df$text,"</b>",
       "<br>Enrichment score: ",round(fc,digits=4),
@@ -250,8 +247,6 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
     genesets <- V(graph)$name
     F1 <- F[genesets,]
     Q1 <- Q[genesets,]    
-    #
-    #
     ct <- paste(colnames(F1),collapse=', ')
     ff <- apply(round(F1,3),1,paste,collapse=", ")
     qq <- apply(round(Q1,3),1,paste,collapse=", ")    
@@ -368,7 +363,6 @@ plot_enrichmentmap <- function( res, contrast=NULL, qsig = 0.05,
           color = 'rgb(100,100,100)',
           width = 1.3
         ),
-        #
         colorscale = colorscale,
         cauto = FALSE,
         cmin = -maxabsf,

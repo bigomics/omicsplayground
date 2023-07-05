@@ -84,7 +84,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     selected_gsetmethods <- shiny::reactive({
       shiny::req(pgx)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
-      ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) 
       test <- input$gs_statmethod
       test <- intersect(test, gset.methods0) 
       test
@@ -120,14 +119,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       dim(pv)
       if (NCOL(pv) > 1) {
         ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)
-        ## fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  
         fc <- rowMeans(fc, na.rm = TRUE) ## NEED RETHINK!!!
-        #
-        #
-        #
         pv <- apply(pv, 1, max, na.rm = TRUE)
         qv <- apply(qv, 1, max, na.rm = TRUE)
-        #
         score <- rowMeans(apply(score, 2, ss.rank), na.rm = TRUE)
       }
 

@@ -26,8 +26,6 @@ upload_module_makecontrast_ui <- function(id) {
       bslib::card(
         full_screen = TRUE,
         style = "border-width: 1px;",
-        #
-        #
         bslib::card_body(
           shiny::fillRow(
             style = "gap: 10px; height: 75px !important;",
@@ -55,7 +53,7 @@ upload_module_makecontrast_ui <- function(id) {
                   width = "250px",
                   placeholder = "e.g. MAIN_vs_CONTROL"
                 ),
-                "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
                 placement = "left", options = list(container = "body")
               )
             ),
@@ -79,7 +77,7 @@ upload_module_makecontrast_ui <- function(id) {
                   icon = icon("plus"),
                   class = "small-button btn-outline-secondary"
                 ),
-                "If you are feeling lucky, try this to automatically create contrasts.",
+                "If you are feeling lucky, try this to automatically create comparisons.",
                 placement = "top", options = list(container = "body")
               )
             ),
@@ -89,10 +87,9 @@ upload_module_makecontrast_ui <- function(id) {
             style = "overflow: auto;",
             withTooltip(
               shiny::uiOutput(ns("createcomparison"),
-                #
                 style = "font-size:13px;"                
               ),
-              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
+              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
               placement = "top", options = list(container = "body")
             )
           )
@@ -233,7 +230,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
       shiny::observeEvent(input$contrast_delete, {
         ## Observe if a contrast is to be deleted
-        ##
         id <- as.numeric(gsub(".*_", "", input$contrast_delete))
         if (length(id) == 0) {
           return(NULL)
@@ -259,8 +255,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
         in.ref <- in.ref1 | in.ref2
 
-        #
-        #
         ct.name <- input$newname
         gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
         gr2 <- gsub(".*_vs_|@.*", "", ct.name)
@@ -271,19 +265,19 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
           return(NULL)
         }
         if (ct.name %in% c(NA, "", " ")) {
-          shinyalert::shinyalert("ERROR", "You must give a contrast name")
+          shinyalert::shinyalert("ERROR", "You must give the comparison a name")
           return(NULL)
         }
         if (1 && gr1 == gr2) {
-          shinyalert::shinyalert("ERROR", "Invalid contrast name")
+          shinyalert::shinyalert("ERROR", "Invalid comparison name")
           return(NULL)
         }
         if (!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
-          shinyalert::shinyalert("ERROR", "Contrast name already exists.")
+          shinyalert::shinyalert("ERROR", "Comparison name already exists.")
           return(NULL)
         }
         if (!grepl("_vs_", ct.name)) {
-          shinyalert::shinyalert("ERROR", "Contrast must include _vs_ in name")
+          shinyalert::shinyalert("ERROR", "Comparison must include _vs_ in name")
           return(NULL)
         }
 
@@ -340,7 +334,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             )[0, ]
           } else {
             paste.max <- function(x, n = 5) {
-              #
               if (length(x) > n) {
                 x <- c(x[1:n], paste("+", length(x) - n, "others"))
               }
@@ -364,16 +357,13 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             deleteButtons <- makebuttonInputs(
               FUN = actionButton,
               len = ncol(ct),
-              #
               id = paste0("contrast_delete_", sample(99999, 1), "_"), ## hack to allow double click
               label = "",
-              #
               width = "50px",
               inline = TRUE,
               icon = shiny::icon("trash-alt"),
               class = "btn-inline btn-outline-danger-hover",
               style = "padding:0px; margin:0px; font-size:95%; color: #B22222;",
-              #
               onclick = paste0('Shiny.onInputChange(\"', ns("contrast_delete"), '\",this.id)')
             )
 

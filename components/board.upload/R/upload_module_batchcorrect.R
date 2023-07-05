@@ -14,6 +14,16 @@ BatchCorrectGadget <- function(X, pheno, height=720) {
             X=reactive(X), pheno=reactive(pheno), height=height)
 }
 
+BatchCorrectInputsUI <- function(id) {
+  ns <- shiny::NS(id)
+  shiny::uiOutput(ns("inputsUI"))
+}
+
+BatchCorrectCanvas <- function(id, height=720) {
+  ns <- shiny::NS(id)
+  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
+}
+
 upload_module_batchcorrect_ui <- function(id, height=720) {
   ns <- shiny::NS(id)
   shiny::sidebarLayout(
@@ -28,15 +38,6 @@ upload_module_batchcorrect_ui <- function(id, height=720) {
   )
 }
 
-BatchCorrectInputsUI <- function(id) {
-  ns <- shiny::NS(id)
-  shiny::uiOutput(ns("inputsUI"))
-}
-
-BatchCorrectCanvas <- function(id, height=720) {
-  ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% bigLoaders::useSpinner()
-}
 
 upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, height=720) {
 
@@ -98,13 +99,11 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
       ## reset batch parameters choices if modelparamters change.
       observeEvent( input$bc_modelpar, {
 
-        #
         px <- pheno()
         if(is.null(px)) return(NULL)
         sel <- apply(px,2,function(x) length(unique(x[!is.na(x)])))
         pheno.par <- sort(colnames(px)[sel>1])
         sel.par   <- c(grep("^[.<]|batch",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
-        #
         batch.par <- c(pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
 
         bc <- setdiff(batch.par, input$bc_modelpar)
@@ -148,7 +147,6 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
 
         if(ncol(X0) != ncol(cX)) {
             warning("[BatchCorrect] canvas.renderPlot : ***ERROR*** dimension mismatch!")
-            #
         }
         req(ncol(X0) == ncol(cX))
 
@@ -170,24 +168,18 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
         bc.options = c("none","PCA","HC","SVA","NNM")
         bc.options = c("none","PCA","SVA","NNM")
         bc.selected = "none"
-        #
-
         bc_info <- NULL
         bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
 
-        #
         px <- pheno()
         if(is.null(px)) return(NULL)
         sel <- apply(px,2,function(x) length(unique(x[!is.na(x)])))
         pheno.par <- sort(colnames(px)[sel>1])
         sel.par   <- c(grep("^[.<]|batch",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
-        #
         batch.par <- c(pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
 
         shiny::tagList(
-          #
           shiny::p(bc_info),
-          #
 
           shiny::br(),
           shiny::actionButton(ns("bc_compute_button"),"Batch correct",
@@ -211,7 +203,6 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
           ),
 
           withTooltip(
-            ##shiny::checkboxGroupInput(
             shiny::radioButtons(
               ns('bc_methods'),'Unsupervised correction:',
               choices=bc.options, selected=bc.selected, inline=FALSE),
@@ -230,8 +221,6 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
                           placement="left", options=list(container="body"))
 
         )
-##      )
-##        )
       })
 
       ## ------------------------------------------------------------
@@ -260,7 +249,6 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count=FALSE, heig
         hc.correct  <- "HC"  %in% bc
         pca.correct <- "PCA" %in% bc
         sva.correct <- "SVA" %in% bc
-        #
         mnn.correct  <- NULL
         nnm.correct <- "NNM" %in% bc
 

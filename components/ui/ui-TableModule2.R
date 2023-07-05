@@ -118,8 +118,6 @@ TableModuleUI <- function(id,
       style = paste0("height:",height.1,";overflow:visible;"),
       bslib::as.card_item(div(header)),
       bslib::card_body(
-        #
-          ##  DT::DTOutput(ns("datatable"), width=width.1, height=height.1) %>%
           DT::DTOutput(ns("datatable"),height="100%") %>% bigLoaders::useSpinner(),
           shiny::div(
               class = "popup-modal",

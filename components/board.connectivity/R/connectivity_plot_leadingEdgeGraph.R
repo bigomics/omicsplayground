@@ -121,8 +121,6 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)),50)[1] 
-        #
 
         return(gr)
       })

@@ -45,52 +45,6 @@ dataview_plot_abundance_server <- function(id,
       res
     })
 
-    ## plot.RENDER <- function() {
-    #
-    #
-
-    ##   klr <- colorRampPalette(
-    ##     c(
-    #
-    #
-    ##     ),
-    #
-    ##   )(nrow(res$prop.counts))
-
-    #
-    #
-    ##   if (length(names.arg) > 20) {
-    #
-    ##   }
-    #
-
-    #
-    ##   barplot(res$prop.counts,
-    #
-    ##     cex.lab = 1.0, border = NA,
-    ##     ylim = c(0, ymax) * 1.6, ylab = "abundance (%)",
-    ##     names.arg = names.arg, cex.names = cex.names,
-    #
-    ##   )
-    ##   leg <- legend("topleft",
-    #
-    ##     fill = rev(klr), cex = 1, y.intersp = 0.75, bty = "n", plot = FALSE
-    ##   )
-    #
-    #
-    #
-    #
-    ##   legend(
-    ##     x = c(leftx, rightx), y = c(topy, bottomy),
-    #
-    ##     fill = rev(klr), bty = "n", cex = 0.9, y.intersp = 0.75
-    ##   )
-    ## }
-    ## 
-    ## modal_plot.RENDER <- function() {
-    #
-    ## }
-
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
@@ -137,7 +91,6 @@ dataview_plot_abundance_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      #
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

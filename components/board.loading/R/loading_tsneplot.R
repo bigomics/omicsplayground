@@ -80,14 +80,12 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
               pos <- matrix(0, 1, 2)
               rownames(pos) <- colnames(F)
               colnames(pos) <- c("x","y")
-            } else {            
-              #
+            } else {
               rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
               F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
               F <- as.matrix(F)
               F[is.na(F)] <- 0 ## really??
               colnames(F) <- fnames  ## might be lost...
-              
               ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
               pos <- try( Rtsne::Rtsne( t(abs(F)),
                                         perplexity = ppx,
@@ -154,7 +152,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         data = df,
         x = ~x,
         y = ~y,
-        text = ~ paste(ifelse(nrow(df),"Dataset:","Oops!"), dataset,
+        text = ~ paste(ifelse(nrow(df),"Dataset:","Whoops!"), dataset,
           ifelse(nrow(df),"<br>Comparison:",""), comparison),
         color = ~dataset,
         #

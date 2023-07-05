@@ -59,8 +59,6 @@ BiomarkerBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx)
       ct <- colnames(pgx$Y)
-      #
-      #
       shiny::updateSelectInput(session, "pdx_predicted", choices = ct)
     })
 
@@ -92,15 +90,13 @@ BiomarkerBoard <- function(id, pgx) {
         ft <- names(pgx$families)
       }
       ft <- sort(ft)
-      #
       ft <- sort(c("<custom>", ft))
       shiny::updateSelectInput(session, "pdx_filter", choices = ft, selected = "<all>")
     })
 
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
-      ##
+
       ## This code also features a progress indicator.
-      ##
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -136,7 +132,6 @@ BiomarkerBoard <- function(id, pgx) {
       ## augment to at least 100 samples per level
       ii <- unlist(tapply( 1:length(y), y, sample, size=100, replace=TRUE))
       y <- y[ii]
-      #
 
       ## -------------------------------------------
       ## select features
@@ -164,7 +159,6 @@ BiomarkerBoard <- function(id, pgx) {
       if (ft == "<custom>" && !is.null(sel) && length(sel) > 0) {
         ## ------------- filter with user selection
         if (sel[1] != "") {
-          #
           pp <- rownames(X)[which(toupper(rownames(X)) %in% toupper(sel))]
           X <- X[pp, , drop = FALSE]
         }
@@ -211,7 +205,6 @@ BiomarkerBoard <- function(id, pgx) {
       P[is.na(P)] <- 0
       P[is.nan(P)] <- 0
       P <- t(t(P) / (1e-3 + apply(P, 2, max, na.rm = TRUE)))
-      #
       P <- P[order(-rowSums(P, na.rm = TRUE)), , drop = FALSE]
 
       R <- P
@@ -270,18 +263,14 @@ BiomarkerBoard <- function(id, pgx) {
       orig.names <- sel
       names(orig.names) <- colnames(tx)
       jj <- names(y)
-      #
-      #
 
       if (do.survival) {
         time <- abs(y)
         status <- (y > 0) ## dead if positive time
         df <- data.frame(time = time + 0.001, status = status, tx)
-        #
         rf <- rpart::rpart(survival::Surv(time, status) ~ ., data = df)
       } else {
         df <- data.frame(y = y, tx)
-        #
         rf <- rpart::rpart(y ~ ., data = df)
       }
       table(rf$where)
@@ -297,17 +286,13 @@ BiomarkerBoard <- function(id, pgx) {
       if (max(rf.nsplit) > MAXSPLIT) {
         cp.idx <- max(which(rf.nsplit <= MAXSPLIT))
         cp0 <- rf$cptable[cp.idx, "CP"]
-        #
         rf <- rpart::prune(rf, cp = cp0)
       }
 
       progress$inc(2 / 10, detail = "done")
 
-      #
-      #
       y <- y[rownames(tx)]
       colnames(tx) <- orig.names[colnames(tx)]
-      #
       res <- list(R = R, y = y, X = t(tx), rf = rf)
 
       return(res)
@@ -346,9 +331,7 @@ BiomarkerBoard <- function(id, pgx) {
     biomarker_plot_featurerank_server(
       id = "featurerank",
       pgx = pgx,
-      #
       ft_level = shiny::reactive("gene"),
-      #
       samplefilter = shiny::reactive(input$pdx_samplefilter),
       watermark = WATERMARK
     )

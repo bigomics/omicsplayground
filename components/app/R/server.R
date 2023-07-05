@@ -116,10 +116,10 @@ app_server <- function(input, output, session) {
     ## Modules needed from the start
     env$load <- LoadingBoard(
         id = "load",
-        pgx_topdir = PGX.DIR,
         pgx = PGX,
-        limits = limits,
         auth = auth,
+        limits = limits,
+        pgx_topdir = PGX.DIR,
         enable_userdir = opt$ENABLE_USERDIR,
         enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
         enable_user_share = opt$ENABLE_USER_SHARE,
@@ -191,7 +191,6 @@ app_server <- function(input, output, session) {
         }
 
         if(modules_loaded) {
-            Sys.sleep(4)
             shiny::removeModal()  ## remove modal from LoadingBoard
             return(NULL)
         }
@@ -419,7 +418,7 @@ app_server <- function(input, output, session) {
         bigdash.selectTab(session, selected = 'dataview-tab')
         bigdash.openSettings()
 
-        ## remove modal from LoadingBoard
+        ## remove loading modal from LoadingBoard
         shiny::removeModal()
 
         #show hidden tabs
@@ -458,7 +457,6 @@ app_server <- function(input, output, session) {
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
 
-    #
     bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
 
     shiny::observeEvent({
@@ -478,8 +476,6 @@ app_server <- function(input, output, session) {
         ## hide all main tabs until we have an object
         if(is.null(PGX) || is.null(PGX$name) || !is.logged) {
             warning("[server.R] !!! no data. hiding menu.")
-            #
-            #
             shinyjs::runjs("sidebarClose()")
             shinyjs::runjs("settingsClose()")
             bigdash.selectTab(session, selected = 'welcome-tab')
@@ -508,7 +504,6 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
         tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
         tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-        #
 
         ## DEVELOPER only tabs (still too alpha)
         info("[server.R] disabling alpha features")
@@ -582,7 +577,6 @@ app_server <- function(input, output, session) {
 
         ## Choose type of referral modal upon timeout:
         mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
-        #
 
         observeEvent( mod.timeout$success(), {
           success <- mod.timeout$success()

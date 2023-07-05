@@ -62,11 +62,6 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
       shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
 
-      #
-      #
-      #
-      #
-
       grpvars <- c("<ungrouped>", colnames(pgx$samples))
       sel <- grpvars[1]
       if (ncol(pgx$X) > 30) sel <- grpvars[2]
@@ -92,7 +87,6 @@ SingleCellBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
 
-      #
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
@@ -121,7 +115,6 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      #
       shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
@@ -147,7 +140,6 @@ SingleCellBoard <- function(id, pgx) {
     pfGetClusterPositions <- shiny::reactive({ # used by many plots
       shiny::req(pgx)
 
-      #
       zx <- pgx$X
       kk <- colnames(zx)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
@@ -178,25 +170,6 @@ SingleCellBoard <- function(id, pgx) {
       rownames(pos) <- colnames(zx)
 
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
-
-      
-      
-      #
-      # 
-      
-      #
-      
-      #
-      # gr = igraph::graph_from_adjacency_matrix(
-      #   1.0/dist, diag=FALSE, mode="undirected")
-      #
-      
-      #
-      
-      #
-      
-      
-
       return(pos)
     })
 

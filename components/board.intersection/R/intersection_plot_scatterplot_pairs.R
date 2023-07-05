@@ -50,7 +50,6 @@ intersection_scatterplot_pairs_server <- function(id,
         return(NULL)
       }
 
-      #
       fc0 <- fc0[order(-apply(abs(fc0), 1, max)), ]
       fc0 <- fc0[order(-rowMeans(abs(fc0**2))), ]
 
@@ -64,7 +63,6 @@ intersection_scatterplot_pairs_server <- function(id,
       ## subsample for speed: take top1000 + 1000
       df <- data.frame(fc0)
       ntop <- 99999
-      #
       jj <- match(sel.genes, rownames(df))
       jj <- c(jj, 1:min(ntop, nrow(df)))
       if (nrow(df) > ntop) {
@@ -72,7 +70,6 @@ intersection_scatterplot_pairs_server <- function(id,
         jj <- c(jj, sample(nremain, min(1000, length(nremain)))) ## add 1000 random
       }
       jj <- unique(jj)
-      #
       df <- data.frame(df[jj, ])
       list(df, sel.genes)
     })
@@ -107,8 +104,6 @@ intersection_scatterplot_pairs_server <- function(id,
 
       ## Tooltip text for all
       tt <- rownames(df) ## strip prefix
-      ## tt <- sub("","",tt)  
-      # if(input$level == "gene") {
       if (level == "gene") {
         g <- rownames(df)
         tt <- paste0("<b>", g, "</b> ", pgx$genes[g, "gene_title"])
@@ -117,7 +112,6 @@ intersection_scatterplot_pairs_server <- function(id,
       tt <- sapply(tt, playbase::breakstring2, 50, brk = "<br>")
 
       ## plotly
-      ##
       axis <- list(
         showline = TRUE,
         zeroline = TRUE,
@@ -157,7 +151,6 @@ intersection_scatterplot_pairs_server <- function(id,
             size = 8,
             line = list(
               width = 0.3,
-              #
               color = "rgb(0,0,0)"
             )
           )
@@ -166,8 +159,6 @@ intersection_scatterplot_pairs_server <- function(id,
             x = df[sel1, 1],
             y = df[sel1, 2],
             text = as.character(label.text),
-            #
-            #
             xanchor = "center",
             yanchor = "top",
             font = list(size = 14),
@@ -178,12 +169,9 @@ intersection_scatterplot_pairs_server <- function(id,
             ay = -40
           ) %>%
           plotly::layout(
-            #
             annotations = annot.rho,
             hovermode = "closest",
             dragmode = "select",
-            #
-            #
             xaxis = c(title = paste(colnames(df)[1], "   (logFC)"), axis),
             yaxis = c(title = paste(colnames(df)[2], "   (logFC)"), axis)
           )
@@ -201,9 +189,7 @@ intersection_scatterplot_pairs_server <- function(id,
 
         ## annotation positions (approximated by eye...)
         xann <- 1.02 * (as.vector(mapply(rep, seq(0, 0.98, 1 / n), n)) + 0.05 * 1 / n)
-        #
         yann <- 1.08 * (as.vector(rep(seq(1, 0.02, -1 / n), n)) - 0.15 * 1 / n - 0.04)
-        #
 
         p <- plotly::plot_ly(df, source = "splom", key = rownames(df)) %>%
           plotly::add_trace(
@@ -213,11 +199,9 @@ intersection_scatterplot_pairs_server <- function(id,
             hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
             marker = list(
               color = df.color,
-              #
               size = 5,
               line = list(
                 width = 0.3,
-                #
                 color = "rgb(0,0,0)"
               )
             )
@@ -237,25 +221,19 @@ intersection_scatterplot_pairs_server <- function(id,
             borderwidth = 0.6
           ) %>%
           plotly::layout(
-            #
             hovermode = "closest",
             dragmode = "select",
-            #
-            #
-            #
             xaxis = c(domain = NULL, axis),
             yaxis = c(domain = NULL, axis),
             xaxis2 = axis, xaxis3 = axis, xaxis4 = axis, xaxis5 = axis, xaxis6 = axis, xaxis7 = axis,
             yaxis2 = axis, yaxis3 = axis, yaxis4 = axis, yaxis5 = axis, yaxis6 = axis, yaxis7 = axis
           )
-        ## %>% plotly::style(diagonal = list(visible = F))
       }
 
       p <- p %>%
         plotly::layout(margin = list(80, 80, 80, 80)) ## l,r,b,t
 
       p <- p %>%
-        ## config(displayModeBar = FALSE) %>% ## disable buttons
         plotly::config(modeBarButtonsToRemove = setdiff(all.plotly.buttons, "toImage")) %>%
         plotly::config(toImageButtonOptions = list(
           format = "svg",

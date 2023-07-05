@@ -3,10 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-##
-##
-##
-
 
 ##=================================================================================
 ##=============================== SHINY MODULES ===================================
@@ -32,7 +28,6 @@ SocialMediaModule <- function(id, r.show = reactive(0))
     )
 
     social.buttons <- fillRow(
-#
       br(),br(),br(),
       actionButton(ns("twitter"),"", icon=icon("twitter"), class="btn-social"),
       actionButton(ns("linkedin"),"", icon=icon("linkedin"), class="btn-social"),
@@ -45,7 +40,6 @@ SocialMediaModule <- function(id, r.show = reactive(0))
 
 
 
-      #
       br(),br(),br()
     )
 
@@ -54,7 +48,6 @@ SocialMediaModule <- function(id, r.show = reactive(0))
       height = 30,
       flex = c(1,NA,1),
       br(),
-      #
       actionButton(ns("sure"),"Yes, for sure! I just did!", class="btn-primary"),
       br()
     )
@@ -186,7 +179,6 @@ if(FALSE) {
     shinyApp(
         ui = fluidPage(
             actionButton("show","show")
-            #
         ),
         server = function(input, output, session) {
             SocialMediaModule(

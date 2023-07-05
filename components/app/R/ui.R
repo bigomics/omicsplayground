@@ -76,7 +76,6 @@ app_ui <- function() {
 
 
         menu_tree = list(
-          #
           "Load" = c(
             welcome = "Welcome",
             load    = "Load dataset",
@@ -88,12 +87,12 @@ app_ui <- function() {
           "Clustering" = c(
             clustersamples  = "Samples",
             clusterfeatures = "Features",
-            pcsf = "PCSF (beta)"            
+            pcsf = "PCSF (beta)"
           ),
           "Expression" = c(
             diffexpr = "Differential expression",
             corr = "Correlation analysis",
-            bio = "Find biomarkers"            
+            bio = "Find biomarkers"
           ),
           "GeneSets" = c(
             enrich = "Geneset Enrichment",
@@ -109,10 +108,9 @@ app_ui <- function() {
           "SystemsBio" = c(
             drug = "Drug connectivity",
             cell = "Cell profiling",
-            wgcna = "WGCNA",            
-            tcga = "TCGA survival (beta)"            
+            wgcna = "WGCNA",
+            tcga = "TCGA survival (beta)"
           )
-          #
         )
 
         ## filter disabled modules
@@ -149,14 +147,12 @@ app_ui <- function() {
             tab.titles <- menu_tree[[i]]
             menu.id <- names(menu_tree)[i]
             if(length(tab.names)==0) {
-              ##
             } else if(length(tab.names)==1) {
               menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
             } else {
               menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
             }
           }
-          #
           return(menu)
         }
 
@@ -508,7 +504,7 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "load-tab",
-                    LoadingInputs("load"),
+                    
                     LoadingUI("load")
                 ),
                 bigdash::bigTabItem(

@@ -146,7 +146,6 @@ CorrelationBoard <- function(id, pgx) {
       dim(zx)
       
       zx.genes0 <- rownames(zx)
-      ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  
       zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       
@@ -189,7 +188,6 @@ CorrelationBoard <- function(id, pgx) {
       ## corr always in log.scale and restricted to selected samples subset
       zx <- pgx$X
       zx.genes0 <- rownames(zx)
-      ## rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  
       zx.genes <- as.character(pgx$genes[rownames(zx), ]$gene_name)
       rownames(zx) <- toupper(zx.genes)
       xref <- list(

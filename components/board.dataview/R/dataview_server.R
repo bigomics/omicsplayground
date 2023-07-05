@@ -301,22 +301,18 @@ DataViewBoard <- function(id, pgx) {
           libsize
           counts <- t(t(counts) * libsize)
         }
-        #
       }
       if (sum(is.na(counts)) > 0) {
         cat("WARNING:: plot counts: counts has missing values!\n")
       }
 
-      ## if(input$data_sampling=="grouped") {
       grpvar <- input$data_groupby
       gr <- pgx$Y[samples, grpvar]
       grps <- sort(unique(gr))
-      ## if(input$data_grouped && length(grps)>1 ) {
       if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
         newx <- c()
         for (g in grps) {
           mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
-          ## mx = rowSums(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)  
           newx <- cbind(newx, mx)
         }
         if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)

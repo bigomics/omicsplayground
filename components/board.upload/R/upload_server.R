@@ -13,6 +13,7 @@ UploadBoard <- function(id,
                           "datasets" = 10
                         ),
                         enable_userdir = TRUE,
+                        enable_delete = TRUE,
                         r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -33,7 +34,6 @@ UploadBoard <- function(id,
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
-        #
         shiny::div(
           id = "navheader-current-section",
           HTML("Upload data &nbsp;"),
@@ -76,17 +76,14 @@ UploadBoard <- function(id,
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
-    #
 
     getPGXDIR <- shiny::reactive({
-      #  
 
       email <- "../me@company.com"
       email <- auth$email()
       email <- gsub(".*\\/", "", email)
       pdir <- pgx_dir ## from module input
 
-      #
       if (enable_userdir) {
         pdir <- paste0(pdir, "/", email)
         if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
@@ -134,7 +131,6 @@ UploadBoard <- function(id,
 
       r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
-      ## beepr::beep(sample(c(3,4,5,6,8),1))  
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
@@ -152,6 +148,7 @@ UploadBoard <- function(id,
           cancelButtonText = "Stay here.",
           inputId = 'confirmload',
           closeOnEsc = FALSE,
+          immediate = TRUE,
           callbackR = load_my_dataset
       )
     })
@@ -167,7 +164,7 @@ UploadBoard <- function(id,
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
           
@@ -178,12 +175,12 @@ UploadBoard <- function(id,
           
           shiny::showTab("tabs", "BatchCorrect")
         }
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
         
         shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "Contrasts")
+        shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       }
     })
@@ -218,7 +215,6 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      #
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
 
@@ -231,18 +227,16 @@ UploadBoard <- function(id,
 
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
-        ##
         i <- grep("[.]pgx$", input$upload_files$name)
         pgxfile <- input$upload_files$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0))) ## override any name
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
-        ##
         message("[upload_files] getting matrices from CSV")
 
         ii <- grep("csv$", input$upload_files$name)
-        ii <- grep("sample|count|contrast|expression",
+        ii <- grep("sample|count|contrast|expression|comparison",
           input$upload_files$name,
           ignore.case = TRUE
         )
@@ -264,7 +258,7 @@ UploadBoard <- function(id,
             IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
             IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
-            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast|comparison", fn1, ignore.case = TRUE)
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
@@ -613,7 +607,6 @@ UploadBoard <- function(id,
       rownames(df) <- files.needed
 
       ## deselect
-      #
       return(df)
     })
 
@@ -677,7 +670,6 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
       contrRT = shiny::reactive(uploaded$contrasts.csv),
-      #
       countsRT = corrected_counts,
       height = height
     )
@@ -685,7 +677,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
-      ##
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
       uploaded$samples.csv <- modct$pheno
@@ -703,13 +694,13 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      #
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
+      enable_delete = enable_delete,
       alertready = FALSE,
       lib.dir = FILES,
       pgx.dirRT = shiny::reactive(getPGXDIR()),
@@ -761,7 +752,6 @@ UploadBoard <- function(id,
 
     output$checkTablesOutput <- DT::renderDataTable({
       ## Render the upload status table
-      ##
       if (!input$advanced_mode) {
         return(NULL)
       }

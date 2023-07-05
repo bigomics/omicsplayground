@@ -53,9 +53,7 @@ NoAuthenticationModule <- function( id,
 
     shiny::observeEvent( input$login_btn, {
         shiny::removeModal()
-        #
         USER$logged <- TRUE
-        #
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
@@ -94,7 +92,6 @@ upgrade.dialog <- function(ns, current.plan) {
     modalDialog(
         title = h3("Find the right OmicsPlayground plan for you"),
         size = "m",
-        #
         div(
           class = "row",
           style = "padding-left:4rem;padding-right:4rem;text-align:center;",
@@ -119,7 +116,6 @@ upgrade.dialog <- function(ns, current.plan) {
             style = "background:#E8F8FF;",
             h4(HTML("<b>Starter</b>")),
             p("Great to start"),
-            #
             h3("Soon!"),
             tags$ul(
               class = "list-unstyled",
@@ -129,7 +125,6 @@ upgrade.dialog <- function(ns, current.plan) {
               tags$li("Up to 10 comparisons")
             ),
             shiny::actionButton(ns("get_starter"),btn_starter),
-            #
             br()
           ),
           div(
@@ -137,7 +132,6 @@ upgrade.dialog <- function(ns, current.plan) {
               style = "background:#E2F4FF;",
               HTML("<h4><b>Premium</b></h4>"),
               p("For power users or small groups"),
-              #
               h3("Soon!"),
               tags$ul(
                        class = "list-unstyled",
@@ -146,7 +140,6 @@ upgrade.dialog <- function(ns, current.plan) {
                        tags$li("Up to 2000 samples / dataset"),
                        tags$li("Up to 100 comparisons")
                    ),
-              #
               shiny::actionButton(ns("get_premium"),btn_premium),
               br()
           )
@@ -316,7 +309,6 @@ FirebaseAuthenticationModule <- function(id,
         }
         if(!authorized_domain) {
             js.emailFeedbackMessage(session, "Invalid domain", "error")
-            #
             email_waiter$hide()
             return()
         }
@@ -544,9 +536,7 @@ EmailAuthenticationModule <- function(id,
             authorized_domain <- grepl(domain,input$emailInput)
         }
         if(!authorized_domain) {
-            #
             js.emailFeedbackMessage(session, "domain not authorized", "error")
-            #
             shiny::updateTextInput(session, "emailInput", value="")
             email_waiter$hide()
             return()
@@ -581,7 +571,6 @@ EmailAuthenticationModule <- function(id,
         existing_user_dirs <- basename(list.dirs(pgx_dir))
         new_user <- !(input$emailInput %in% existing_user_dirs)
         if(is_personal_email && new_user) {
-            #
             js.emailFeedbackMessage(session, "No personal email allowed. Please provide your business, academic or institutional email.", "error")
             shiny::updateTextInput(session, "emailInput", value="")
             email_waiter$hide()
@@ -652,7 +641,6 @@ PasswordAuthenticationModule <- function(id,
     ns <- session$ns
     USER <- shiny::reactiveValues(
                        logged=FALSE,
-                       #
                        email=NA,
                        password=NA,
                        level=NA,
@@ -661,7 +649,6 @@ PasswordAuthenticationModule <- function(id,
     resetUSER <- function() {
 
         USER$logged <- FALSE
-        #
         USER$email <- NA
         USER$password <- NA
         USER$level <- ""
@@ -672,7 +659,7 @@ PasswordAuthenticationModule <- function(id,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE,
-            login.text="Let me in!"
+            login.text="Start!"
             )
         shiny::showModal(m)
 
@@ -687,7 +674,7 @@ PasswordAuthenticationModule <- function(id,
             with.email=TRUE,
             with.username=FALSE,
             with.password=TRUE,
-            login.text="Let me in!"
+            login.text="Start!"
         )
         shiny::showModal(m)
     })
@@ -721,7 +708,6 @@ PasswordAuthenticationModule <- function(id,
         login.OK   <- (valid.user && valid.pw && valid.date)
 
         message("--------- password login ---------")
-        #
         message("input.email    = ",input$login_email)
         message("input.password = ",input$login_password)
         message("user.password  = ",CREDENTIALS[sel,"password"])
@@ -737,18 +723,13 @@ PasswordAuthenticationModule <- function(id,
             message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
             output$login_warning = shiny::renderText("")
             shiny::removeModal()
-            #
-            #
             cred <- CREDENTIALS[sel,]
-            #
             USER$email     <- cred$email
             USER$level     <- cred$level
             USER$limit     <- cred$limit
 
             ## Here you can perform some user-specific functions, site
             ## news, or 2nd hello modal...
-            #
-            #
             USER$logged <- TRUE
             session$sendCustomMessage("set-user", list(user = USER$email))
 
@@ -801,7 +782,6 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
         first.name <- strsplit(as.character(name),split=" ")[[1]][1]
         first.name <- paste0(toupper(substring(first.name,1,1)),
                              substring(first.name,2,999))
-        #
         title = paste(paste0(sample(all.hello,1)," ",first.name,"!"),collapse=" ")
     }
     subtitle = "Have a good day!"
@@ -935,14 +915,6 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                         icon = icon("google")
                     )
                 ),
-                ## div(
-                #
-                ##     actionLink(
-                #
-                ##         "Sign in with Apple",
-                #
-                ##     )
-                ## ),
                 div(
                     class = "social-button facebook-button",
                     actionLink(
@@ -994,7 +966,6 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
     )
 
-    #
     if(with.firebase || with.firebase_emailonly) {
         splash.content <- div.firebase
     } else {

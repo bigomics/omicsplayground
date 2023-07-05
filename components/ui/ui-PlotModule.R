@@ -39,7 +39,7 @@ PlotModuleUI <- function(id,
     )
   }
   width.1 <- ifnotchar.int(width[1])
-  width.2 <- "100%" # ifnotchar.int(width[2]) 
+  width.2 <- "100%" 
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
@@ -363,7 +363,6 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
-  #
   return(e)
 }
 
@@ -513,7 +512,6 @@ PlotModuleServer <- function(id,
             resx <- 4 ## upresolution
             shiny::withProgress(
               {
-                ## unlink(PNGFILE) 
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- png.width
@@ -552,7 +550,6 @@ PlotModuleServer <- function(id,
                   file.copy(p$src, PNGFILE, overwrite = TRUE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PNG inside plot func()
-                  ##
                 } else if (plotlib == "base") {
                   # Save original plot parameters
                   if (remove_margins == TRUE) {
@@ -604,7 +601,6 @@ PlotModuleServer <- function(id,
             pdf.height <- input$pdf_height
             shiny::withProgress(
               {
-                ## unlink(PDFFILE) 
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- pdf.width * 80
@@ -633,10 +629,8 @@ PlotModuleServer <- function(id,
                 } else if (plotlib == "image") {
                   p <- func()
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "base") {
                   pdf(
                     file = PDFFILE, width = pdf.width, height = pdf.height,
@@ -675,7 +669,6 @@ PlotModuleServer <- function(id,
       } ## end if do.pdf
 
       saveHTML <- function() {
-        ## unlink(HTMLFILE) 
         if (plotlib == "plotly") {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
@@ -695,7 +688,6 @@ PlotModuleServer <- function(id,
           write("<body>image cannot export to HTML</body>", HTMLFILE)
         } else if (plotlib == "generic") {
           ## generic function should produce PDF inside plot func()
-          ##
         } else if (plotlib == "base") {
           write("<body>R base plots cannot export to HTML</body>", HTMLFILE)
         } else if (plotlib == "svgPanZoom") {
@@ -713,7 +705,6 @@ PlotModuleServer <- function(id,
           content = function(file) {
             shiny::withProgress(
               {
-                ## unlink(HTMLFILE) 
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -731,7 +722,6 @@ PlotModuleServer <- function(id,
                   htmlwidgets::saveWidget(plotly::ggplotly(p), file = HTMLFILE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "image") {
                   write("<body>image cannot be exported to HTML</body>", HTMLFILE)
                 } else if (plotlib == "base") {

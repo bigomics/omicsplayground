@@ -85,7 +85,6 @@ singlecell_plot_markersplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      #
 
       shiny::req(pgx)
 
@@ -98,10 +97,8 @@ singlecell_plot_markersplot_server <- function(id,
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      #
       pos <- clust.pos
 
-      #
       if (is.null(mrk_features)) {
         return(NULL)
       }
@@ -123,13 +120,11 @@ singlecell_plot_markersplot_server <- function(id,
         } else {
           markers <- pgx$genes$gene_name
         }
-        #
         markers <- intersect(toupper(markers), toupper(pgx$genes$gene_name))
         jj <- match(markers, toupper(pgx$genes$gene_name))
         pmarkers <- intersect(rownames(pgx$genes)[jj], rownames(pgx$X))
         gx <- pgx$X[pmarkers, rownames(pos), drop = FALSE]
       } else if (mrk_level == "geneset") {
-        #
         markers <- playdata::COLLECTIONS[[1]]
         if (is.null(mrk_features)) {
           return(NULL)
@@ -158,7 +153,6 @@ singlecell_plot_markersplot_server <- function(id,
       }
 
       ## prioritize gene with large variance (groupwise)
-      #
       grp <- pgx$model.parameters$group[rownames(pos)]
       zx <- t(apply(gx, 1, function(x) tapply(x, grp, mean)))
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
@@ -174,7 +168,6 @@ singlecell_plot_markersplot_server <- function(id,
         top.gx <- top.gx[order(-rowMeans(top.gx)), , drop = FALSE]
       }
       top.gx <- pmax(top.gx, 0)
-      #
 
       pd <- list(
           top.gx = top.gx,
@@ -218,12 +211,6 @@ singlecell_plot_markersplot_server <- function(id,
           label <- tolower(label)
         }
 
-        ## base::plot(pos[, ],
-        ##   pch = 19, cex = cex1, col = klr0,
-        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
-        ##   fg = gray(0.8), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
 p
         tt <- rownames(top.gx)[i]
 
@@ -241,8 +228,6 @@ p
           axis = FALSE,
           title = tt,
           cex.title = 0.50,
-          #
-          #
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "#ffffff",
@@ -288,12 +273,6 @@ p
           label <- tolower(label)
         }
 
-        ## base::plot(pos[, ],
-        ##   pch = 19, cex = cex1, col = klr0,
-        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
-        ##   fg = gray(0.8), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
 p
         tt <- rownames(top.gx)[i]
 

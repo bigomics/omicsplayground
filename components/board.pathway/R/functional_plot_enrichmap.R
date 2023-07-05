@@ -93,9 +93,7 @@ functional_plot_enrichmap_server <- function(id,
             title = ct[i],
             title.y = 0.08,
             title.x = 0.02,
-            # paper_bgcolor="#cdceebff",
             plot_bgcolor="#cdceeb66",            
-            # plot_bgcolor="#ffffff88",
             label = FALSE)          
           if (!interactive()) shiny::incProgress(1/length(ct))
         }

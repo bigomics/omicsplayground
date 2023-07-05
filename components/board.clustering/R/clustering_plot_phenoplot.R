@@ -118,7 +118,6 @@ clustering_plot_phenoplot_server <- function(id,
           cex.clust = cex*1.1,
           label.clusters = showlabels
         ) %>% plotly::layout(
-          #
           plot_bgcolor = "#f8f8f8"
         )
 
@@ -174,7 +173,6 @@ clustering_plot_phenoplot_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      #
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,

@@ -28,6 +28,7 @@ upload_module_computepgx_server <- function(
     lib.dir,
     pgx.dirRT,
     enable_button = TRUE,
+    enable_delete = TRUE,
     alertready = TRUE,
     max.genes = 20000,
     max.genesets = 10000,
@@ -139,7 +140,6 @@ upload_module_computepgx_server <- function(
                                           "remove Rik/ORF/LOC genes",
                                           "remove not-expressed"
                                           ##"Exclude immunogenes",
-                                          #
                                           ),
                                     selected = c(
                                         "only.hugo",
@@ -212,7 +212,6 @@ upload_module_computepgx_server <- function(
 
             shiny::observeEvent( enable_button(), {
                 ## NEED CHECK. not working...
-                ##
                 if(!enable_button()){
                     message("[ComputePgxServer:@enable] disabling compute button")
                     shinyjs::disable(ns("compute"))
@@ -228,11 +227,9 @@ upload_module_computepgx_server <- function(
 
                 if(!is.null(meta[['name']])) {
                     shiny::updateTextInput(session, "upload_name", value=meta[['name']])
-                    #
                 }
                 if(!is.null(meta[['description']])) {
                     shiny::updateTextAreaInput(session, "upload_description", value=meta[['description']])
-                    #
                 }
 
             })
@@ -306,7 +303,6 @@ upload_module_computepgx_server <- function(
             })
 
             shiny::observeEvent( input$compute, {
-                #
 
                 ##-----------------------------------------------------------
                 ## Check validity
@@ -317,22 +313,21 @@ upload_module_computepgx_server <- function(
                 }
 
                 pgxdir <- pgx.dirRT()
-
                 numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
-
+                if(!opt$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern="*.pgx$|*.pgx_$"))
                 if(numpgx >= max.datasets) {
                     ### should use sprintf here...
-                    msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
-                    msg <- sub("NUMPGX",numpgx,msg)
-                    msg <- sub("LIMIT",max.datasets,msg)
+                    msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
                     shinyalert::shinyalert(
-                      title = "WARNING",
-                      text = msg,
+                      title = "Your storage is full",
+                      text = HTML(msg),
+                      html = TRUE,
                       type = "warning"
                     )
                     return(NULL)
                 }
 
+                ## check for name and description
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {
@@ -351,9 +346,6 @@ upload_module_computepgx_server <- function(
                 samples   <- samplesRT()
                 samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
-
-                #
-                #
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
                 ##batch  <- batchRT() 
 
@@ -457,7 +449,7 @@ upload_module_computepgx_server <- function(
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
                     use.design = use.design,        ## no.design+prune are combined
-                    prune.samples = prune.samples,  ##
+                    prune.samples = prune.samples,  
                     do.cluster = TRUE,
                     libx.dir = libx.dir, # needs to be replaced with libx.dir
                     name = dataset_name,
@@ -478,8 +470,8 @@ upload_module_computepgx_server <- function(
                 shinyalert::shinyalert(
                     title = "Crunching your data!",
                     text = "Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.",
-                    type = "info"
-                    #
+                    type = "info",
+                    timer = 60000
                 )
                 bigdash.selectTab(
                     session,
@@ -546,7 +538,6 @@ upload_module_computepgx_server <- function(
 
                     errlog <- file.path(temp_dir,"processx-error.log")
                     outlog <- file.path(temp_dir,"processx-output.log")
-                    #
                     cat(paste(stderr_output,collapse='\n'), file=errlog, append=TRUE)
                     cat(paste(stdout_output,collapse='\n'), file=outlog, append=TRUE)
 
@@ -564,14 +555,12 @@ upload_module_computepgx_server <- function(
                       if (length(active_obj$stderr) > 0) {
                         ## Copy the error to the stderr of main app
                         message("Standard error from processx:")
-                        #
                         err <- paste0("[processx.",nr,":stderr] ", active_obj$stderr)
                         writeLines(err, con = stderr())
                       }
                       if (length(active_obj$stdout) > 0) {
                         ## Copy the error to the stderr of main app
                         cat("Standard output from processx:")
-                        #
                         out <- paste0("[processx.",nr,":stdout] ", active_obj$stdout)
                         writeLines(out, con = stdout())
                       }

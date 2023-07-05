@@ -14,13 +14,11 @@ contrast_correlation_ui <- function(
   ns <- shiny::NS(id)
 
   ctcorrplot.opts <- shiny::tagList(
-    ## tipify( shiny::checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
     ## "Show correlation values in cells."),
     withTooltip(
       shiny::checkboxInput(ns("ctcorrplot_allfc"), "show all contrasts", TRUE),
       "Show all contrasts or just the selected ones."
     ),
-    ## tipify( shiny::checkboxInput('ctcorrplot_fixed', "fix heatmap", FALSE),
     ##       "Fix heatmap layout when changing number of top genes"),
     withTooltip(
       shiny::radioButtons(ns("ctcorrplot_ntop"), "number of top genes",
@@ -81,10 +79,8 @@ contrast_correlation_server <- function(id,
         fc0 <- fc0[, kk, drop = FALSE]
       }
 
-      #
       R.full <- cor(apply(fc0, 2, rank), use = "pairwise")
       jj <- head(order(-rowMeans(fc0**2)), ntop)
-      #
       R <- cor(apply(fc0[jj, ], 2, rank), use = "pairwise")
       R <- round(R, digits = 2)
       R
@@ -94,18 +90,15 @@ contrast_correlation_server <- function(id,
       R <- plot_data()
       col <- playdata::BLUERED(16)
       col <- gplots::colorpanel(64, "royalblue3", "grey90", "indianred3")
-      #
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
       if (max(R, na.rm = TRUE) <= 0) col <- head(col, 32)
 
       bluered.pal <- colorRampPalette(colors = c("royalblue3", "grey90", "indianred3"))
       cellnote <- NULL
-      #
 
       plt <- heatmaply::heatmaply(
         R,
         margins = c(250, 200, NA, 0),
-        ## k_col = 5, k_row = 5,
         cellnote = cellnote, cellnote_size = 11,
         cellnote_textposition = "middle center",
         colors = bluered.pal,
@@ -127,76 +120,3 @@ contrast_correlation_server <- function(id,
 }
 
 # OLD PLOTING FUNCTION
-
-# ctcorrplot.PLOT <- shiny::reactive({
-#
-
-
-#
-#     
-
-#
-
-#     
-
-#
-
-
-#
-
-
-
-
-#
-
-#     if(!allfc) {
-
-
-
-
-#     }
-#
-#     
-
-
-#     
-
-
-
-#
-
-
-
-
-
-
-#
-
-
-
-
-#
-
-
-#     
-
-
-
-#
-#     col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
-#                                "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
-#                                "#4393C3", "#2166AC", "#053061"))
-#
-#
-#     corrplot::corrplot(R, method = "circle", order="hclust",
-
-
-
-#              
-
-
-
-#              tl.srt = 90)
-#     
-#     
-# })

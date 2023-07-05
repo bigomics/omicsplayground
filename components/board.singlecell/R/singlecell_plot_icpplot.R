@@ -44,7 +44,6 @@ singlecell_plot_icpplot_ui <- function(
     withTooltip(
       shiny::radioButtons(parent("layout"), "Layout:",
         choices = c("4x4", "6x6"),
-        #
         inline = TRUE
       ),
       "Choose layout.",
@@ -54,7 +53,6 @@ singlecell_plot_icpplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plot"),
-    #
     plotlib = "ggplot",      
     label = label,
     info.text = info.text,
@@ -94,7 +92,7 @@ singlecell_plot_icpplot_server <- function(id,
       if (is.null(method)) {
         return(NULL)
       }
-      refset <- refset() #
+      refset <- refset() 
       layout <- layout()
       sortby <- sortby()
 
@@ -236,8 +234,6 @@ singlecell_plot_icpplot_server <- function(id,
         p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
           var = gx,
-          #
-          #
           col = klrpal,
           zlim = c(0,16),
           cex = 0.6*cex1,
@@ -248,8 +244,6 @@ singlecell_plot_icpplot_server <- function(id,
           axis = FALSE,
           title = tt,
           cex.title = 0.55,
-          #
-          #
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "#ffffff",
@@ -384,9 +378,6 @@ singlecell_plot_icpplot_server <- function(id,
       id = "plot",        
       func = ggplot.RENDER,
       func2 = ggplot.RENDER2,
-      #
-      #
-      #
       plotlib = "ggplot",      
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,

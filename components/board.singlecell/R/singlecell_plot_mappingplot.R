@@ -96,8 +96,6 @@ singlecell_plot_mappingplot_server <- function(id,
       score <- score[rownames(pos), , drop = FALSE]
       score[is.na(score)] <- 0
       score <- pmax(score, 0)
-      ## score <- score - min(score,na.rm=TRUE) + 0.01 
-      #
       score <- score / (1e-20 + rowSums(score))
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
@@ -155,10 +153,6 @@ singlecell_plot_mappingplot_server <- function(id,
           tl.cex = tl.cex, tl.col = "grey20",
           tl.srt = tl.srt
         )
-
-        #
-        #
-        #
       }
 
       if (pd[["view"]] == "heatmap") {
@@ -197,7 +191,6 @@ singlecell_plot_mappingplot_server <- function(id,
           for (k in 1:length(all.scores)) {
             ii <- rownames(pd[["score"]])
             score1 <- all.scores[[k]][ii, kk]
-            #
             if (k %% n != 0) colnames(score1) <- rep("", ncol(score1))
             if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score1) <- rep("", nrow(score1))
             score1 <- score1 / (1e-8 + rowSums(score1))

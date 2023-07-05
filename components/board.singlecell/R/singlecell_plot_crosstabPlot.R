@@ -37,9 +37,6 @@ singlecell_plot_crosstabPlot_ui <- function(
       "Visualize the expression barplot of a gene by specifying the gene name.",
       placement = "top", options = list(container = "body")
     )
-    #
-    #
-    ## br(), cellArgs=list(width='80px')
   )
 
   PlotModuleUI(ns("plot"),
@@ -73,7 +70,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      #
 
       crosstabvar <- crosstabvar()
       gene <- gene()
@@ -119,13 +115,11 @@ singlecell_plot_crosstabPlot_server <- function(id,
       )
 
       ## expected counts per stat level
-      ## kk.counts <- colSums(pgx$counts[,kk,drop=FALSE])  
       kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE]) ## approximate counts from log2X
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]
 
       getProportionsTable <- function(pheno, is.gene = FALSE) {
         y <- NULL
-        ## if("gene" %in% input$crosstaboptions) {
         if (is.gene) {
           xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
           gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
@@ -140,7 +134,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
           res1 <- getDeconvResults2()
           res1 <- pmax(res1, 0) ## ??
           res1 <- res1[kk, , drop = FALSE]
-          #
           y <- colnames(res1)[max.col(res1)] ## take maximum col??
           remove(res1)
           pheno <- "<cell type>"
@@ -172,7 +165,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
         ## reduce to maximum number of items (x-axis)
         if (0 && ncol(grp.score) > 25) {
-          #
           jj <- order(-colSums(grp.score))
           j1 <- head(jj, 25) ## define maximum number of items
           j0 <- setdiff(jj, j1)
@@ -184,7 +176,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
           }
           grp.score <- grp.score0
           grp.counts <- grp.counts0
-          grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score))) ##
+          grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score))) 
           dim(grp.score)
         }
 
@@ -199,11 +191,10 @@ singlecell_plot_crosstabPlot_server <- function(id,
           }
           grp.score <- grp.score0
         }
-        grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score))) ##
+        grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score)))
 
 
         ## cluster columns??
-        #
         dist1 <- dist(t(grp.score))
         dist1[is.na(dist1)] <- mean(dist1, na.rm = TRUE)
         jj <- hclust(dist1)$order
@@ -223,7 +214,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
         return(NULL)
       }
 
-      #
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
       
@@ -254,7 +244,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
       grp.score1 <- pd[["grp.score1"]]
       ## -------------- plot by estimated cell.type ----------------------
 
-      #
       plotly::layout(matrix(c(1, 2, 3), 3, 1), heights = c(2, 4, 3))
       if (!is.null(grp.score2)) {
         plotly::layout(matrix(c(1, 2, 3, 4), 4, 1), heights = c(2.2, 1, 4, 2))
@@ -265,10 +254,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
       xlim <- c(0, 1.2 * length(grp.counts)) ## reserves space for legend
       barplot(grp.counts,
         col = "grey50", ylab = "counts (M)", cex.axis = 0.8,
-        cex.lab = 0.8, names.arg = NA, xpd = NA, xlim = 1.3 * xlim, #
+        cex.lab = 0.8, names.arg = NA, xpd = NA, xlim = 1.3 * xlim, 
         ylim = c(0.01, max(grp.counts)), yaxs = "i"
       )
-      #
 
       ## middle plot (gene)
       if (!is.null(grp.score2)) {

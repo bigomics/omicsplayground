@@ -3,11 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-#star.symbols <- function(n, pch="\u2605") {
-
-
-#}
-
 
 visPrint <- function(visnet, file, width=3000, height=3000, delay=0, zoom=1) {
     is.pdf <- grepl("pdf$",file)
@@ -43,7 +38,6 @@ visPrint <- function(visnet, file, width=3000, height=3000, delay=0, zoom=1) {
       file.copy(tmp.png,file,overwrite=TRUE)
     }
     unlink(tmp.html)
-    #
 }
 
 
@@ -121,13 +115,11 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
 
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = miniUI::miniPage(
-        #
         miniUI::gadgetTitleBar(title),
         miniUI::miniContentPanel(moduleUI(id))
     )
     server = function(input, output, session) {
         return_obj <- moduleSERVER(id, ...)
-        #
         shiny::observeEvent( input$done, {
             shiny::stopApp(return_obj())
         })
@@ -149,16 +141,13 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
 
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
-        #
     )
     server = function(input, output, session)
     {
         return_obj <- moduleSERVER(id, ...)
-        #
         shiny::showModal( shiny::modalDialog(
             moduleUI(id),
             footer = shiny::tagList(
-                #
                 shiny::actionButton("gdgt_close","X")
             ),
             size = size,
@@ -172,7 +161,6 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     }
 
     pgx <- shiny::runGadget(ui, server)
-    #
     cat(names(pgx))
     pgx
 }
@@ -192,7 +180,6 @@ pgx.randomCartoon <- function() {
         list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
         list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
         list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
-        #
         list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
@@ -201,8 +188,7 @@ pgx.randomCartoon <- function() {
         list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
         list(slogan="Big Data meets Biology", img="bigdata-meets.png")
     )
-    ##randomCartoon <- shiny::reactive({
-    #
+
     cartoon <- sample(cartoon_list,1)[[1]]
     cartoon$img2 = file.path("cartoons",cartoon$img)
     cartoon$img  = file.path("www/cartoons",cartoon$img)
@@ -215,7 +201,6 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
         list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
         list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
         list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
-        #
         list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
         list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
         list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
@@ -234,24 +219,18 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
 
     toon <- randomCartoon()
     shiny::showModal(shiny::modalDialog(
-        
-        #
         title = shiny::div( shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style="text-align:center;"),
-        
         shiny::img(src = toon$img2, class = "img-fluid"),
-        #
         footer = fillRow( flex=c(1,NA,1), " ", msg, " "),
         size = "l",
         easyClose = FALSE,
         fade = TRUE
     ))
-    ## Sys.sleep(600)  # for debugging
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")
 {
     shiny::showModal(shiny::modalDialog(
-        #
         title = NULL,
         shiny::HTML("<br><center><p>",msg,"</p></center>"),
         footer = NULL,

@@ -121,10 +121,7 @@ dataview_plot_expression_server <- function(id,
             col.main = "#7f7f7f",
             bar = TRUE,
             border = NA,
-            #
             bee.cex = bee.cex,
-            #
-            #
             xlab = "",
             names.cex = cx1,
             srt = srt,
@@ -138,7 +135,6 @@ dataview_plot_expression_server <- function(id,
             cex.main = 1,
             xlab = "",
             ylab = ylab,
-            #
             vcol = rgb(0.4, 0.6, 0.85, 0.85),
             srt = srt
           )
@@ -207,7 +203,6 @@ dataview_plot_expression_server <- function(id,
       shiny::req(pd)
 
       df <- pd[["df"]]
-      #
 
       BLUE <- rgb(0.2, 0.5, 0.8, 0.8)
       bee.cex <- ifelse(length(df$x) > 500, 0.1, 0.2)
@@ -255,7 +250,6 @@ dataview_plot_expression_server <- function(id,
             ) %>%
             plotly::layout(
               yaxis = list(
-                #
                 zeroline = FALSE
               )
             )
@@ -287,7 +281,6 @@ dataview_plot_expression_server <- function(id,
           yaxis = list(title = pd$ylab, fixedrange = TRUE),
           font = list(family = "Lato"),
           showlegend = FALSE
-          #
         ) %>%
         plotly_default()
       fig
@@ -296,7 +289,6 @@ dataview_plot_expression_server <- function(id,
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
         plotly_modal_default()
-      #
       fig
     }
 
