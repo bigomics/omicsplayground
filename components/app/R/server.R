@@ -441,7 +441,8 @@ app_server <- function(input, output, session) {
 
     output$current_user <- shiny::renderText({
         ## trigger on change of user
-        user <- auth$email()
+        user <- auth$email()        
+        if(user %in% c("",NA,NULL)) user <- auth$name()      
         if(user %in% c("",NA,NULL)) user <- "User"
         user
     })

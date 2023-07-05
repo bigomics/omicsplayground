@@ -32,10 +32,12 @@ NoAuthenticationModule <- function( id,
         if(show_modal) {
             m <- splashLoginModal(
               ns=ns,
+              with.username=FALSE,
               with.email=FALSE,
               with.password=FALSE,
-              alt=h5("Ready to explore your data?",style="color:white;"),
-              login.text="Sure I am!"
+              subtitle = "",
+              title = "Ready to explore your data?",
+              button.text="Sure I am!"
             )
             shiny::showModal(m)
         } else {
@@ -53,10 +55,8 @@ NoAuthenticationModule <- function( id,
 
     shiny::observeEvent( input$login_btn, {
         shiny::removeModal()
-        ##shiny::showModal(splashHelloModal(name=USER$name,ns=ns))
         USER$logged <- TRUE
-        ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()
-        session$sendCustomMessage("set-user", list(user = USER$email))
+        session$sendCustomMessage("set-user", list(user = "User"))
     })
 
     observeEvent( input$userLogout, {
@@ -237,8 +237,6 @@ FirebaseAuthenticationModule <- function(id,
 
     resetUSER <- function() {
 
-        message("[FirebaseAuthenticationModule] resetting USER... ")
-
         USER$logged <- FALSE
         USER$name <- ""
         USER$password <- ""
@@ -258,8 +256,9 @@ FirebaseAuthenticationModule <- function(id,
             with.password = FALSE,
             with.firebase = TRUE,
             with.firebase_emailonly = FALSE,
-            alt = h5("Ready to explore your data?",style="color:white;"),
-            login.text = "Sure I am!"
+            title = "Log in",
+            subtitle = "Ready to explore your data?",
+            button.text = "Sure I am!"
         )
 
         ## login modal
@@ -489,8 +488,9 @@ EmailAuthenticationModule <- function(id,
             with.password = FALSE,
             with.firebase = FALSE,
             with.firebase_emailonly = TRUE,
-            alt = h5("Ready to explore your data?",style="color:white;"),
-            login.text = "Sure I am!"
+            title = "Log in",          
+            subtitle = "Ready to explore your data?",
+            button.text = "Sure I am!"
         )
 
         ## login modal
@@ -652,16 +652,15 @@ PasswordAuthenticationModule <- function(id,
     ns <- session$ns
     USER <- shiny::reactiveValues(
                        logged=FALSE,
-                       ## username=NA,
+                       username=NA,
                        email=NA,
                        password=NA,
                        level=NA,
                        limit=NA)
 
     resetUSER <- function() {
-
         USER$logged <- FALSE
-        ## USER$username <- NA
+        USER$username <- NA
         USER$email <- NA
         USER$password <- NA
         USER$level <- ""
@@ -669,10 +668,12 @@ PasswordAuthenticationModule <- function(id,
 
         m <- splashLoginModal(
             ns=ns,
-            with.email=TRUE,
-            with.username=FALSE,
+            with.email=FALSE,
+            with.username=TRUE,
             with.password=TRUE,
-            login.text="Start!"
+            title = "Log in", 
+            subtitle = "Ready to explore your data?",
+            button.text="Start!"
             )
         shiny::showModal(m)
 
@@ -684,10 +685,12 @@ PasswordAuthenticationModule <- function(id,
     output$showLogin <- shiny::renderUI({
         m <- splashLoginModal(
             ns=ns,
-            with.email=TRUE,
-            with.username=FALSE,
+            with.email=FALSE,
+            with.username=TRUE,
             with.password=TRUE,
-            login.text="Start!"
+            title = "Log in",
+            subtitle = "Ready to explore your data?",
+            button.text="Start!"
         )
         shiny::showModal(m)
     })
@@ -700,11 +703,12 @@ PasswordAuthenticationModule <- function(id,
         valid.date = FALSE
         valid.user = FALSE
 
-        login_email    <- input$login_email
+##        login_email    <- input$login_email
+        login_username <- input$login_username
         login_password <- input$login_password
 
-        if( is.null(login_email) || login_email=="") {
-            output$login_warning = shiny::renderText("missing email")
+        if( is.null(login_username) || login_username=="") {
+            output$login_warning = shiny::renderText("missing username")
             shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
             return(NULL)
         }
@@ -714,19 +718,20 @@ PasswordAuthenticationModule <- function(id,
             return(NULL)
         }
 
-        sel <- tail(which( CREDENTIALS$email == login_email),1)
-        valid.user <- isTRUE(CREDENTIALS$email[sel] == login_email) && length(sel)>0
+        sel <- which(CREDENTIALS$username == login_username)[1]
+        valid.user <- isTRUE(length(sel)>0)
         valid.pw   <- isTRUE(CREDENTIALS[sel,"password"] == input$login_password)
         valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
         login.OK   <- (valid.user && valid.pw && valid.date)
 
         if(1) {
             message("--------- password login ---------")
-            ##message("input.username = ",input$login_username)
-            message("input.email    = ",input$login_email)
+            message("input.username = ",input$login_username)
+            ##message("input.email    = ",input$login_email)
             message("input.password = ",input$login_password)
             message("user.password  = ",CREDENTIALS[sel,"password"])
             message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
+            message("user.username  = ",CREDENTIALS[sel,"username"])
             message("user.email     = ",CREDENTIALS[sel,"email"])
             message("user.limit     = ",CREDENTIALS[sel,"limit"])
             message("valid.user     = ",valid.user)
@@ -741,18 +746,14 @@ PasswordAuthenticationModule <- function(id,
             shiny::removeModal()
             ##USER$name   <- input$login_username
             ##USER$email <- CREDENTIALS[sel,"email"]
+            sel <- which(CREDENTIALS$username == login_username)[1]            
             cred <- CREDENTIALS[sel,]
-            ##USER$username  <- cred$username
+            USER$username  <- cred$username
             USER$email     <- cred$email
             USER$level     <- cred$level
             USER$limit     <- cred$limit
-
-            ## Here you can perform some user-specific functions, site
-            ## news, or 2nd hello modal...
-            ##shiny::showModal(splashHelloModal(USER$name,ns=ns))
-            ##removeModal()
             USER$logged <- TRUE
-            session$sendCustomMessage("set-user", list(user = USER$email))
+            session$sendCustomMessage("set-user", list(user = USER$username))
 
         } else {
             message("[PasswordAuthenticationModule::login] login invalid!")
@@ -776,7 +777,7 @@ PasswordAuthenticationModule <- function(id,
 
     ## module reactive return value
     rt <- list(
-        name   = shiny::reactive(""),
+        name   = shiny::reactive(USER$username),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
@@ -828,67 +829,76 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
     return(m)
 }
 
-splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
+splashLoginModal <- function(ns=NULL,
+                             with.email=TRUE,
+                             with.password=TRUE,
                              with.username=FALSE,
                              with.firebase=FALSE,
                              with.firebase_emailonly=FALSE,
-                             login.text="Login", alt=NULL)
+                             button.text="Login",
+                             title="Log in",
+                             subtitle="")
 {
     if(is.null(ns)) ns <- function(e) return(e)
-    message("[AuthenticationModule::splashLoginModal]")
+    message("[AuthenticationModule::splashLoginModal] called()")
 
-    titles <- list()
-    titles[[1]] = c("Big Omics Data","Isn't big anymore with BigOmics Playground")
-    titles[[2]] = c("Great Discoveries","Start on BigOmics Playground")
-    titles[[3]] = c("Fasten Your Seat Belts!","Hi-speed analytics")
-    titles[[4]] = c("Do-it-yourself Omics Analytics","Yes you can!")
-    titles[[5]] = c("Twenty-Four Seven","Your Playground doesn't go on coffee breaks")
-    titles[[6]] = c("Analyze with confidence","Be a data rockstar, a Freddie Mercury of omics!")
-    titles[[7]] = c("Play-Explore-Discover","Get deeper insights with BigOmics Playground")
-    titles[[8]] = c("Skip the Queue","Take the fast lane. Self-service analytics.")
-    titles[[9]] = c("Look Ma! No help!","I did it without a bioinformatician")
-    titles[[10]] = c("Easy-peasy insight!","Get insight from your data the easy way")
-    titles[[11]] = c("Zoom-zoom-insight!","Get faster insight from your data")
-    titles[[12]] = c("Click-click-eureka!","Owe yourself that <i>eureka!</i> moment")
-    titles[[13]] = c("I Love Omics Data!","Unleash your inner nerd with BigOmics Playground")
-    titles[[14]] = c("More Omics Data","Is all I want for my birthday")
-    titles[[15]] = c("Keep Exploring","Never stop discovering with BigOmics Playground")
-    titles[[16]] = c("Real Bioinformaticians","Do it with BigOmics Playground")
-    titles[[17]] = c("Real Biologists","Do it with BigOmics Playground")
-    titles[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use BigOmics Playground")
-    titles[[19]] = c("Non sono mica scemo!","Of course I use BigOmics Playground")
-    titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
-    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow")
-    titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
-    titles[[23]] = c("Love Adventurous Life","Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
-    titles[[24]] = c("Succes is Exploration","Find the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
-    titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
-    titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")
-    title <- titles[[length(titles)]]
-    title <- sample(titles,1)[[1]]
-    title.len <- nchar(paste(title,collapse=' '))
-    if(title.len < 80) title[1] <- paste0("<br>",title[1])
+    slogan <- list()
+    slogan[[1]] = c("Big Omics Data","Isn't big anymore with BigOmics Playground")
+    slogan[[2]] = c("Great Discoveries","Start on BigOmics Playground")
+    slogan[[3]] = c("Fasten Your Seat Belts!","Hi-speed analytics")
+    slogan[[4]] = c("Do-it-yourself Omics Analytics","Yes you can!")
+    slogan[[5]] = c("Twenty-Four Seven","Your Playground doesn't go on coffee breaks")
+    slogan[[6]] = c("Analyze with confidence","Be a data rockstar, a Freddie Mercury of omics!")
+    slogan[[7]] = c("Play-Explore-Discover","Get deeper insights with BigOmics Playground")
+    slogan[[8]] = c("Skip the Queue","Take the fast lane. Self-service analytics.")
+    slogan[[9]] = c("Look Ma! No help!","I did it without a bioinformatician")
+    slogan[[10]] = c("Easy-peasy insight!","Get insight from your data the easy way")
+    slogan[[11]] = c("Zoom-zoom-insight!","Get faster insight from your data")
+    slogan[[12]] = c("Click-click-eureka!","Owe yourself that <i>eureka!</i> moment")
+    slogan[[13]] = c("I Love Omics Data!","Unleash your inner nerd with BigOmics Playground")
+    slogan[[14]] = c("More Omics Data","Is all I want for my birthday")
+    slogan[[15]] = c("Keep Exploring","Never stop discovering with BigOmics Playground")
+    slogan[[16]] = c("Real Bioinformaticians","Do it with BigOmics Playground")
+    slogan[[17]] = c("Real Biologists","Do it with BigOmics Playground")
+    slogan[[18]] = c("Ich bin doch nicht bl\u00F6d!","Of course I use BigOmics Playground")
+    slogan[[19]] = c("Non sono mica scemo!","Of course I use BigOmics Playground")
+    slogan[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
+    slogan[[21]] = c("Explore More","The more you explore, the more you learn and grow")
+    slogan[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
+    slogan[[23]] = c("Love Adventurous Life","Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
+    slogan[[24]] = c("Succes is Exploration","Find the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
+    slogan[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
+    slogan[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")
+
+    slogan <- sample(slogan,1)[[1]]
+    slogan.len <- nchar(paste(slogan,collapse=' '))
+    if(slogan.len < 80) slogan[1] <- paste0("<br>",slogan[1])
     splash.title <- shiny::div(
+        id="splash-title",                             
         class = "text-white",
-        shiny::div(shiny::HTML(title[1]),style="font-size:3.2rem;font-weight:700;line-height:1em;width:130%;"),
-        shiny::div(shiny::HTML(title[2]),style="font-size:1.8rem;line-height:1.1em;margin-top:0.5em;width:130%;")
+        shiny::div(shiny::HTML(slogan[1]),style="font-size:3.2rem;font-weight:700;line-height:1em;width:130%;"),
+        shiny::div(shiny::HTML(slogan[2]),style="font-size:1.8rem;line-height:1.1em;margin-top:0.5em;width:130%;")
     )
 
     div.password <- div()
     div.email <- div()
     div.username <- div()
     div.firebase <- div()
+    div.title <- div()
+    div.subtitle <- div()
 
+    message("[AuthenticationModule::splashLoginModal] 1:")
+    
     if(with.email) {
         div.email <- div(
             id="splash-email",
-            textInput(ns("login_email"),NULL,placeholder="login with your email")
+            textInput(ns("login_email"),NULL,placeholder="enter your email")
         )
     }
     if(with.username) {
-        div.email <- div(
+        div.username <- div(
             id="splash-username",
-            textInput(ns("login_username"),NULL,placeholder="login with your username")
+            textInput(ns("login_username"),NULL,placeholder="enter your username")
         )
     }
     if(with.password) {
@@ -986,45 +996,61 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         )
     }
 
-    div.alt <- div()
-    if(!is.null(alt)) div.alt <- alt
-    top <- shiny::HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
+    message("[AuthenticationModule::splashLoginModal] 2:")
+    
+    if(!is.null(title) && title!="") {
+      div.title <- div(
+        id="splash-login-title",
+        class = "pb-4",
+        h2(title, style="color:white;")
+      )
+    }
 
+    if(!is.null(subtitle) && subtitle!="") {
+      div.subtitle <- div(
+        id="splash-login-subtitle",
+        class = "pb-4",
+        h5(subtitle, style="color:white;")
+      )
+    }
+
+    message("[AuthenticationModule::splashLoginModal] 3:")
+    
     div.button <- div(
         id="splash-buttons",
         class = "pb-4",
-        actionButton(ns("login_btn"),login.text,class="btn-warning btn-xl shadow blink")
+        actionButton(ns("login_btn"),button.text,class="btn-warning btn-xl shadow blink")
     )
 
-    ##splash.panel=div();ns=function(x)x
+    ##splash.panel=div();ns=function(x)
+    splash.content <- NULL
     if(with.firebase || with.firebase_emailonly) {
         splash.content <- div.firebase
     } else {
         splash.content <- div(
             id="splash-login",
-            ## top,
+            div.title,
             div.username,
             div.email,
             div.password,
-            div.alt,
+            div.subtitle,
             div.button
         )
     }
 
-    splash.subtitle <- NULL
-
+    message("[AuthenticationModule::splashLoginModal] 4:")
+    
     body <- div(
       id="splash-content",
       splash.content
     )
 
-    title <- div(
-        div(id="splash-title",splash.title),
-        div(id="splash-subtitle",splash.subtitle)
-    )
+    message("[AuthenticationModule::splashLoginModal] 5:")
+    
+    m <- splashScreen(title=splash.title, body=body, ns=ns)
 
-    m <- splashScreen(title, body, ns=ns)
-
+    message("[AuthenticationModule::splashLoginModal] done!")
+    
     return(m)
 }
 

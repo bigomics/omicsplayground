@@ -166,9 +166,7 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
 }
-##if(opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
-##    Sys.setenv("SHINYPROXY_USERNAME"="ShinyProxy User")  ## only for testing!!
-##}
+
 if(opt$AUTHENTICATION %in% c("firebase","email") && !file.exists("firebase.rds")) {
     message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
     ##opt$AUTHENTICATION = "password"
