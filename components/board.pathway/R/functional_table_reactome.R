@@ -33,7 +33,7 @@ functional_table_reactome_server <- function(id,
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      df = getFilteredReactomeTable()      
+      df = getFilteredReactomeTable()
       shiny::req(df, fa_contrast())
       res <- list(
         df = df,
@@ -70,7 +70,7 @@ functional_table_reactome_server <- function(id,
         plugins = 'scrollResize',
         options = list(
           dom = "lfrtip",
-          ## dom = "ft",          
+          ## dom = "ft",
           scrollX = FALSE,
           scrollY = scrollY,
           scrollResize = TRUE,
@@ -95,7 +95,7 @@ functional_table_reactome_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("logFC",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "logFC"],
             "lightblue",
             "#f5aeae"
