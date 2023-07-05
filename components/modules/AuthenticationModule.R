@@ -913,11 +913,11 @@ splashLoginModal <- function(ns=NULL,
             div(
                 class = "card-body",
                 h1(
-                    "Sign in",
+                    "Login or Register",
                     class = "card-title pb-2"
                 ),
                 div(
-                    "Enter your email and we'll send you a link."
+                    "Enter your email and we'll send you a magic code for a password-free sign in."
                 ),
                 textInput(
                     ns("emailInput"),
@@ -972,11 +972,11 @@ splashLoginModal <- function(ns=NULL,
             div(
                 class = "card-body",
                 h1(
-                    "Sign in",
+                    "Login or Register",
                     class = "card-title pb-2"
                 ),
                 div(
-                    "Enter your email and we'll send you a link."
+                    "Enter your email and we'll send you a magic code for a password-free sign in."
                 ),
                 textInput(
                     ns("emailInput"),
