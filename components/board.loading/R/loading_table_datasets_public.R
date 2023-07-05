@@ -36,7 +36,7 @@ loading_table_datasets_public_ui <- function(
 loading_table_datasets_public_server <- function(id,
                                                  getPGXDIR,
                                                  pgx_public_dir,
-                                                 rl,
+                                                 reload_pgxdir_public,
                                                  auth,
                                                  enable_delete,
                                                  limits,
@@ -50,7 +50,7 @@ loading_table_datasets_public_server <- function(id,
               return(NULL)
           }
 
-          rl$reload_pgxdir_public
+          reload_pgxdir_public()
 
           ## update meta files
           info <- NULL
@@ -116,13 +116,9 @@ loading_table_datasets_public_server <- function(id,
           df
       })
 
-      observeEvent( pgxtable_public$rows_selected(), {
-          rl$selected_row_public <- pgxtable_public$rows_selected()
-      }, ignoreNULL = FALSE)
-
       # disable buttons when no row is selected; enable when one is selected
-      observeEvent( rl$selected_row_public, {
-          if (is.null(rl$selected_row_public)) {
+      observeEvent( pgxtable_public$rows_selected(), {
+          if (is.null(pgxtable_public$rows_selected())) {
               shinyjs::disable(id = 'importbutton')
           } else {
               shinyjs::enable(id = 'importbutton')
@@ -130,7 +126,7 @@ loading_table_datasets_public_server <- function(id,
       }, ignoreNULL = FALSE)
 
       observeEvent( input$importbutton, {
-          selected_row <- rl$selected_row_public
+          selected_row <- pgxtable_public$rows_selected()
           pgx_name <- pgxtable_public$data()[selected_row, 'dataset']
           pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
           pgx_path <- getPGXDIR()

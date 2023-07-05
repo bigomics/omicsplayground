@@ -21,16 +21,8 @@ LoadingBoard <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    ## reactive variables used only within this module
-    rl <- reactiveValues(
-      reload_pgxdir_public = 0,
-      pgxTablePublic_data = NULL,
-      selected_row_public = NULL,
-      share_pgx = NULL,
-      share_public_pgx = NULL,
-      refresh_shared = 0
-    )
-
+    reload_pgxdir_public <- reactiveVal(0)
+    refresh_shared <- reactiveVal(0)
     update_received <- reactiveVal(0)
 
     ## static, not changing
@@ -68,7 +60,7 @@ LoadingBoard <- function(id,
       pgx_shared_dir= pgx_shared_dir,
       sendShareMessage = sendShareMessage,
       r_global = r_global,
-      refresh = reactive(rl$refresh_shared)
+      refresh = refresh_shared
     )
 
     output$sharing_alert <- renderUI({
@@ -181,10 +173,10 @@ LoadingBoard <- function(id,
       pgx_shared_dir = pgx_shared_dir,
       pgx_topdir = pgx_topdir,
       auth = auth,
-      rl = rl,
       r_global = r_global,
       loadAndActivatePGX = loadAndActivatePGX,
       loadPGX = loadPGX,
+      refresh_shared = refresh_shared,
       enable_pgxdownload = enable_pgxdownload,
       enable_delete = enable_delete,
       enable_public_share = enable_public_share,
@@ -211,7 +203,7 @@ LoadingBoard <- function(id,
         id = "pgxtable_public",
         getPGXDIR = getPGXDIR,
         pgx_public_dir = pgx_public_dir,
-        rl = rl,
+        reload_pgxdir_public = reload_pgxdir_public,
         auth = auth,
         enable_delete = enable_delete,
         limits = limits,
