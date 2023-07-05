@@ -122,7 +122,7 @@ upload_module_received_server <- function(id,
         maxpgx <- as.integer(max_datasets)
         if(numpgx >= maxpgx) {
           ## should use sprintf or glue here...
-          msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
+          msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
           shinyalert::shinyalert(
             title = "Your storage is full",
             text = HTML(msg),
