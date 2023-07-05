@@ -232,17 +232,19 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     getPGXDIR <- shiny::reactive({
         reload_pgxdir()  ## force reload
 
-        email="../me@company.com"
-        email <- auth$email()
-        email <- gsub(".*\\/","",email)
+        user="../me@company.com"
+        user <- auth$email()
+        if(authentication == "password") user <- auth$name()
+        user <- gsub(".*\\/","",user)
         pdir <- pgx_dir  ## from module input
+        dbg("[LoadingBoard::getPGXDIR] authentication = ",authentication)
         dbg("[LoadingBoard::getPGXDIR] pgx_dir = ",pgx_dir)
-        dbg("[LoadingBoard::getPGXDIR] pdir = ",pdir)        
+        dbg("[LoadingBoard::getPGXDIR] user = ",user)        
 
         ##USERDIR=FALSE
         if(enable_userdir) {
-            pdir <- paste0(pdir,"/",email)
-            if(!is.null(email) && !is.na(email) && email!="") pdir <- paste0(pdir,'/')
+            pdir <- paste0(pdir,"/",user)
+            if(!is.null(user) && !is.na(user) && user!="") pdir <- paste0(pdir,'/')
             if(!dir.exists(pdir)) {
                 dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ",pdir)
                 dir.create(pdir)
@@ -250,6 +252,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                 file.copy(file.path(pgx_dir,"example-data.pgx"),pdir)
             }
         }
+        dbg("[LoadingBoard::getPGXDIR] user.pgxdir = ",pdir)
         pdir
     })
     
