@@ -761,8 +761,8 @@ Upgrade today and experience advanced analysis features without the time limit.<
     ## Startup Message
     if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
         shinyalert::shinyalert(
-            title = opt$STARTUP_TITLE,
-            text  = opt$STARTUP_MESSAGE,
+            title = HTML(opt$STARTUP_TITLE),
+            text  = HTML(opt$STARTUP_MESSAGE),
             html = TRUE
         )
     }
