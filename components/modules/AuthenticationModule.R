@@ -64,6 +64,7 @@ NoAuthenticationModule <- function( id,
     })
 
     rt <- list(
+        method = "none",
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
@@ -409,6 +410,7 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     rt <- list(
+        method = "firebase",
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
@@ -629,6 +631,7 @@ EmailAuthenticationModule <- function(id,
     })
 
     rt <- list(
+        method = "email",      
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
@@ -777,6 +780,7 @@ PasswordAuthenticationModule <- function(id,
 
     ## module reactive return value
     rt <- list(
+        method = "password",
         name   = shiny::reactive(USER$username),
         email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),

@@ -418,21 +418,27 @@ LoadingBoard <- function(id,
     getPGXDIR <- shiny::reactive({
 
       ## react on change of auth user
-      email <- auth$email()
-      email <- gsub(".*\\/", "", email)  ##??
-      pdir  <- pgx_topdir ## from module input
+      user <- auth$email()
+      if(auth$method == "password") user <- auth$name()
+      user <- gsub(".*\\/", "", user)  ## get rid of dangerous characters that can skip folders...
+      pdir <- pgx_topdir  ## from module input
 
+      dbg("[LoadingBoard::getPGXDIR] authentication = ",auth$method)
+      dbg("[LoadingBoard::getPGXDIR] pgx_topdir = ",pgx_topdir)
+      dbg("[LoadingBoard::getPGXDIR] user = ",user)
+      valid.user <-(!is.null(user) && !is.na(user) && user != "") 
+      
       ## Append email to the pgx path.
-      if (enable_userdir) {
-        pdir <- paste0(pdir, "/", email)
-        if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
-
+      if (valid.user && enable_userdir) {
+        pdir <- file.path(pdir, user)
         #If dir not exists, create and copy example pgx file
-        if (!dir.exists(pdir)) {
+        example.file <- file.path(pgx_topdir, "example-data.pgx")
+        if (!dir.exists(pdir) && file.exists(example.file)) {
           dir.create(pdir)
-          file.copy(file.path(pgx_topdir, "example-data.pgx"), pdir)
+          file.copy(example.file, pdir)
         }
       }
+      dbg("[LoadingBoard::getPGXDIR] user.pgxdir = ",pdir)
       pdir
     })
 
