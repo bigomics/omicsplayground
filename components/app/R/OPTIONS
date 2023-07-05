@@ -22,7 +22,7 @@ WATERMARK           = TRUE
 TIMEOUT             = 3600
 #HONCHO_URL         = http://localhost:8000
 STARTUP_TITLE       = "Welcome to Version 3!"
-STARTUP_MESSAGE     = "This is a release preview of our new version of Omics Playground. We have completely redesigned the looks and added some new nifty features. We hope you like it!"
+STARTUP_MESSAGE     = "This is a <b>release preview</b> of our new version of Omics Playground. We have completely redesigned the looks and added some new nifty features. We hope you like it!>"
 
 #BOARDS_ENABLED = welcome;load;upload;view;clustersamples;clusterfeatures;wgcna;diffexpr;corr;enrich;pathway;wordcloud;drug;isect;sig;bio;cmap;comp;tcga;cell
 #BOARDS_ENABLED = load;dataview
