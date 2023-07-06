@@ -95,7 +95,7 @@ LoadingUI <- function(id) {
   ) ## end of Public tabPanel
 
  
-  uiOutput(ns("sharing_panel_ui"))
+  sharing_tabpanel <- shiny::uiOutput(ns("sharing_panel_ui"))
   
   ## ------------------------------------------------------------------------
 
