@@ -1,6 +1,7 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
+  push:
   pull_request:
     types: [opened, reopened]
 
@@ -53,7 +54,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: Style
-        run: styler::style_pkg()
+        run: styler::style_dir('components/')
         shell: Rscript {0}
 
       - name: Commit and push changes
