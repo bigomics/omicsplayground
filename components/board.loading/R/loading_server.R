@@ -23,7 +23,6 @@ LoadingBoard <- function(id,
 
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
-##    update_received <- reactiveVal(0)  ## not used??
 
     ## static, not changing
     pgx_shared_dir = stringr::str_replace_all(pgx_topdir, c('data'='data_shared'))
@@ -171,7 +170,7 @@ LoadingBoard <- function(id,
       ## getPGXINFO = getPGXINFO,
       getPGXDIR = getPGXDIR,
       pgx_shared_dir = pgx_shared_dir,
-      pgx_public_dir = pgx_public_dir,      
+      pgx_public_dir = pgx_public_dir,
       pgx_topdir = pgx_topdir,
       auth = auth,
       r_global = r_global,
@@ -272,8 +271,8 @@ LoadingBoard <- function(id,
       dbg("[LoadingBoard::getPGXDIR] authentication = ",auth$method)
       dbg("[LoadingBoard::getPGXDIR] pgx_topdir = ",pgx_topdir)
       dbg("[LoadingBoard::getPGXDIR] user = ",user)
-      valid.user <-(!is.null(user) && !is.na(user) && user != "") 
-      
+      valid.user <-(!is.null(user) && !is.na(user) && user != "")
+
       ## Append email to the pgx path.
       if (valid.user && enable_userdir) {
         pdir <- file.path(pdir, user)
