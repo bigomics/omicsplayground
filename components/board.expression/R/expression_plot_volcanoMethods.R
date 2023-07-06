@@ -128,10 +128,10 @@ expression_plot_volcanoMethods_server <- function(id,
           is.sig2 <- fc.genes %in% genes2
 
           ymax1 <- ymax
-          if(input$scale_per_method) {
-            ymax1 <- 1.2*quantile(xy[,2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
+          if (input$scale_per_method) {
+            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
           }
-          
+
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = methods[i],
