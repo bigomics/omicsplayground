@@ -116,34 +116,6 @@ app_server <- function(input, output, session) {
     r_global$nav <- input$nav
   })
 
-  ## Modules needed from the start
-  env$load <- LoadingBoard(
-    id = "load",
-    pgx = PGX,
-    auth = auth,
-    limits = limits,
-    pgx_topdir = PGX.DIR,
-    enable_userdir = opt$ENABLE_USERDIR,
-    enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-    enable_user_share = opt$ENABLE_USER_SHARE,
-    enable_delete = opt$ENABLE_DELETE,
-    enable_public_share = opt$ENABLE_PUBLIC_SHARE,
-    r_global = r_global
-  )
-
-  ## Modules needed from the start
-  if (opt$ENABLE_UPLOAD) {
-    env$upload <- UploadBoard(
-      id = "upload",
-      pgx_dir = PGX.DIR,
-      pgx = PGX,
-      auth = auth,
-      limits = limits,
-      enable_userdir = opt$ENABLE_USERDIR,
-      r_global = r_global
-    )
-  }
-
   ## If user logs off, we clear the data
   observeEvent(auth$logged(), {
     is.logged <- auth$logged()
@@ -156,11 +128,15 @@ app_server <- function(input, output, session) {
     }
   })
 
-  is_data_loaded <- reactive({
-    has_data <- env$load$loaded()
-    if (opt$ENABLE_UPLOAD) has_data <- (has_data || env$upload$loaded())
-    has_data
-  })
+  ## Default boards ------------------------------------------
+  WelcomeBoard("welcome",
+               auth = auth,
+               enable_upload = opt$ENABLE_UPLOAD,
+               r_global = r_global
+  )
+  env$user_profile <- UserProfileBoard("user_profile", user = auth)
+  env$user_settings <- UserSettingsBoard("user_settings", user = auth)
+
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
@@ -180,14 +156,57 @@ app_server <- function(input, output, session) {
     userpgx
   })
 
-  ## Default boards ------------------------------------------
-  WelcomeBoard("welcome",
-    auth = auth,
-    enable_upload = opt$ENABLE_UPLOAD,
-    r_global = r_global
-  )
-  env$user_profile <- UserProfileBoard("user_profile", user = auth)
-  env$user_settings <- UserSettingsBoard("user_settings", user = auth)
+  is_data_loaded <- reactiveVal(0)
+  is_signed_in <- reactiveVal(NULL)
+
+  observeEvent(auth$logged(), {
+
+    # overwrite global options with user options
+    if (auth$logged() && (auth$method != 'none')) {
+      user_opt_file <- file.path(getPgxDir(), "OPTIONS")
+      if (!file.exists(user_opt_file)) {
+        file.copy(from = opt.file, to = user_opt_file)
+      } else {
+        user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+        for (opt_name in names(user_opt)) {
+          opt[[opt_name]] <<- user_opt[[opt_name]]
+        }
+      }
+    }
+    if (auth$logged()) is_signed_in(TRUE)
+  })
+
+  observeEvent(is_signed_in(), {
+    ## Modules needed from the start
+    env$load <- LoadingBoard(
+      id = "load",
+      pgx = PGX,
+      auth = auth,
+      limits = limits,
+      pgx_topdir = PGX.DIR,
+      enable_userdir = opt$ENABLE_USERDIR,
+      enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
+      enable_user_share = opt$ENABLE_USER_SHARE,
+      enable_delete = opt$ENABLE_DELETE,
+      enable_public_share = opt$ENABLE_PUBLIC_SHARE,
+      r_global = r_global,
+      is_data_loaded = is_data_loaded
+    )
+
+    ## Modules needed from the start
+    if (opt$ENABLE_UPLOAD) {
+      env$upload <- UploadBoard(
+        id = "upload",
+        pgx_dir = PGX.DIR,
+        pgx = PGX,
+        auth = auth,
+        limits = limits,
+        enable_userdir = opt$ENABLE_USERDIR,
+        r_global = r_global
+      )
+    }
+  })
+
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")

@@ -244,15 +244,14 @@ loading_table_datasets_server <- function(id,
       !is.null(btn) && logged
     })
 
-
     shiny::observeEvent(load_react(), {
       if (!load_react()) {
         return(NULL)
       }
 
-      on.exit({
-        bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
-      })
+      #on.exit({
+      #  if (load_react()) bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
+      #})
 
       pgxfile <- NULL
 

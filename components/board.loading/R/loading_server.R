@@ -17,7 +17,8 @@ LoadingBoard <- function(id,
                          enable_delete = TRUE,
                          enable_user_share = TRUE,
                          enable_public_share = TRUE,
-                         r_global) {
+                         r_global,
+                         is_data_loaded) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -438,6 +439,9 @@ LoadingBoard <- function(id,
     touchtable <- shiny::reactiveVal(0)
 
 
+    observeEvent(r_global$loadedDataset,{
+      if (r_global$loadedDataset != 0) is_data_loaded(r_global$loadedDataset)
+    })
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
