@@ -53,7 +53,7 @@ singlecell_plot_markersplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    #    plotlib = "plotly",
+    
     plotlib = "ggplot",
     label = label,
     info.text = info.text,
@@ -85,7 +85,6 @@ singlecell_plot_markersplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ## if(!input$tsne.all) return(NULL)
 
       shiny::req(pgx)
 
@@ -98,10 +97,8 @@ singlecell_plot_markersplot_server <- function(id,
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      ## pos <- pgx$tsne2d
       pos <- clust.pos
 
-      ## markers <- pgx$families[["CD family"]]
       if (is.null(mrk_features)) {
         return(NULL)
       }
@@ -123,13 +120,11 @@ singlecell_plot_markersplot_server <- function(id,
         } else {
           markers <- pgx$genes$gene_name
         }
-        ## markers <- intersect(markers, rownames(pgx$X))
         markers <- intersect(toupper(markers), toupper(pgx$genes$gene_name))
         jj <- match(markers, toupper(pgx$genes$gene_name))
         pmarkers <- intersect(rownames(pgx$genes)[jj], rownames(pgx$X))
         gx <- pgx$X[pmarkers, rownames(pos), drop = FALSE]
       } else if (mrk_level == "geneset") {
-        ## markers <- pgx$families[["Immune checkpoint (custom)"]]
         markers <- playdata::COLLECTIONS[[1]]
         if (is.null(mrk_features)) {
           return(NULL)
@@ -158,7 +153,6 @@ singlecell_plot_markersplot_server <- function(id,
       }
 
       ## prioritize gene with large variance (groupwise)
-      ## grp <- as.character(pgx$samples[rownames(pos),"group"])
       grp <- pgx$model.parameters$group[rownames(pos)]
       zx <- t(apply(gx, 1, function(x) tapply(x, grp, mean)))
       gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
@@ -174,7 +168,6 @@ singlecell_plot_markersplot_server <- function(id,
         top.gx <- top.gx[order(-rowMeans(top.gx)), , drop = FALSE]
       }
       top.gx <- pmax(top.gx, 0)
-      ## top.gx <- tanh(top.gx/mean(top.gx))
 
       pd <- list(
           top.gx = top.gx,
@@ -218,12 +211,6 @@ singlecell_plot_markersplot_server <- function(id,
           label <- tolower(label)
         }
 
-        ## base::plot(pos[, ],
-        ##   pch = 19, cex = cex1, col = klr0,
-        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
-        ##   fg = gray(0.8), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
 p
         tt <- rownames(top.gx)[i]
 
@@ -241,8 +228,6 @@ p
           axis = FALSE,
           title = tt,
           cex.title = 0.50,
-          ##title.y = 0.85,
-          ##cex.clust = cex1*0.8,
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "#ffffff",
@@ -288,12 +273,6 @@ p
           label <- tolower(label)
         }
 
-        ## base::plot(pos[, ],
-        ##   pch = 19, cex = cex1, col = klr0,
-        ##   xlim = 1.1 * range(pos[, 1]), ylim = 1.1 * range(pos[, 2]),
-        ##   fg = gray(0.8), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
 p
         tt <- rownames(top.gx)[i]
 
@@ -312,7 +291,7 @@ p
           title = tt,
           cex.title = 0.85,
           title.y = 0.85,
-#         cex.clust = cex1*0.8,
+
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "fff",
@@ -378,8 +357,8 @@ p
     PlotModuleServer(
       "plotmodule",
       func = ggplot.RENDER,
-      #      func = plotly.RENDER,
-      #      func2 = plotly_modal.RENDER,
+      
+      
       plotlib = "ggplot",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,

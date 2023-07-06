@@ -101,7 +101,7 @@ clustering_plot_clusterannot_server <- function(id,
       rho <- plot_data()
       if(is.null(rho)) return(NULL)
 
-      ## par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+      #
       NTERMS <- 6
       NTERMS <- 12
       slen <- 40
@@ -116,7 +116,7 @@ clustering_plot_clusterannot_server <- function(id,
       }
 
       klrpal <- omics_pal_d("muted_light")(ncol(rho))
-      # klrpal <- paste0(klrpal, "B3")
+      
 
       plot_list <- list()
       i <- 1

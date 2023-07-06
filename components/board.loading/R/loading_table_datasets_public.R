@@ -174,8 +174,10 @@ loading_table_datasets_public_server <- function(id,
       )
 
     pgxTable_DT <- reactive({
+
       df <- getFilteredPGXINFO_PUBLIC()
       ##shiny::req(df)
+
       # need this, otherwise there is an error on user logout
       validate(need(nrow(df)>0, 'No public datasets!'))
 
@@ -221,7 +223,9 @@ loading_table_datasets_public_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "16px", lineHeight = "95%")
     }
 
+
     pgxtable_public <- TableModuleServer(
+
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,
@@ -229,6 +233,8 @@ loading_table_datasets_public_server <- function(id,
     )
 
     ## please refer to TableModule for return values
+
     return(pgxtable_public)
+
   })
 }

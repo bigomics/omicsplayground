@@ -96,14 +96,6 @@ compare_plot_gene_corr_server <- function(id,
       dset1 <- paste0("1: expression")
       dset2 <- paste0("2: expression")
 
-      if (0) {
-        F <- playbase::pgx.getMetaMatrix(pgx1)$fc
-        higenes <- names(head(sort(-rowMeans(F**2)), 16))
-        higenes <- hilightgenes()
-        higenes <- intersect(higenes, rownames(X1))
-        higenes <- head(higenes, 16)
-      }
-
       df <- getOmicsScoreTable()
       if (is.null(df)) {
         return(NULL)
@@ -124,18 +116,14 @@ compare_plot_gene_corr_server <- function(id,
       klrpal <- rep(1:7, 99)
       klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
 
-      # colorby="ER_STATUS"
-      # colorby = ct1[1]
+      
+      
       colorby <- input$colorby
 
-      if (0) {
-        grp <- factor(Y1[, colorby])
-        klr1 <- klrpal[as.integer(grp)]
-      } else {
-        grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
-        grp <- grp[colnames(X1)]
-        klr1 <- klrpal[as.integer(grp)]
-      }
+
+      grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
+      grp <- grp[colnames(X1)]
+      klr1 <- klrpal[as.integer(grp)]
 
       nc <- ceiling(sqrt(length(higenes)))
       nr <- (length(higenes) - 1) %/% nc
@@ -177,7 +165,7 @@ compare_plot_gene_corr_server <- function(id,
     PlotModuleServer(
       "plot",
       func = genecorr.RENDER,
-      # csvFunc = plot_data,
+      
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark

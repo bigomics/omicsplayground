@@ -103,10 +103,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
 
 
     getCurrentMarkers <- shiny::reactive({
-      ##
       ## Get current selection of markers/genes
-      ##
-      ##
 
       if (is.null(pgx)) {
         return(NULL)
@@ -163,10 +160,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     sigCalculateGSEA <- shiny::reactive({
-      ##
       ## Calculate fgsea for current marker selection and active
       ## datasets.
-      ##
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -219,7 +214,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       gmt <- list("gset" = unique(gset))
       res <- NULL
       enrich_method <- "fgsea"
-      ## enrich_method <- input$rankmethod
 
       if (enrich_method == "fgsea") {
         i <- 1
@@ -270,13 +264,10 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     ## ================================================================================
-    ## Overlap/similarity
+    #
     ## ================================================================================
 
     getOverlapTable <- shiny::reactive({
-      ##
-      ##
-      ##
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -288,7 +279,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
       }
 
       ## fold change just for ranking of genes
-      ## F <- sapply(pgx$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
       F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
       rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
       fx <- rowMeans(F**2)

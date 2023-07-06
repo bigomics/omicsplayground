@@ -58,7 +58,7 @@ functional_plot_wikipathway_graph_server <- function(id,
       plot_data <- shiny::reactive({
       ##plot_data <- function() {
         ## folder with predownloaded SVG files
-        ##svg.dir <- file.path(FILES, "wikipathway-svg")
+        #
         svg.dir <- pgx.system.file("svg/", package="pathway")
         svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(

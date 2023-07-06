@@ -18,8 +18,8 @@ dataview_plot_totalcounts_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    # outputFunc = plotOutput,
-    # outputFunc2 = plotOutput,
+    
+    
     info.text = info.text,
     caption = caption,
     options = NULL,

@@ -47,12 +47,6 @@ wgcna_plot_MTrelationships_server <- function(id,
       nGenes <- ncol(datExpr)
       nSamples <- nrow(datExpr)
 
-      if (0) {
-        ## Recalculate MEs with color as labels
-        MEs0 <- moduleEigengenes(datExpr, moduleColors)$eigengenes
-        MEs <- orderMEs(MEs0)
-      }
-
       moduleTraitCor <- cor(MEs, out$datTraits, use = "pairwise")
       moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, nSamples)
 

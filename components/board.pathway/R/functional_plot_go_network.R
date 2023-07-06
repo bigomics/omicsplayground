@@ -192,7 +192,7 @@ functional_plot_go_network_server <- function(id,
         "plot",
         plotlib = "visnetwork",
         func = plot_RENDER,
-        # csvFunc = plot_data,
+        
         res = 72,
         pdf.width = 10, pdf.height = 8,
         add.watermark = watermark

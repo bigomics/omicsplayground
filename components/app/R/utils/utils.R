@@ -33,7 +33,6 @@ mem.proc <- function(digits=0) {
     ## In your logging routine
     vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
     vsz <- vsz / (1024**2) ## MB
-    ##cat("Virtual size: ", vsz, " MB\n", sep = "")
     mem <- paste0(round(vsz,digits),"MB")
   }
   mem
@@ -53,17 +52,6 @@ dbg <- function(...) info(..., type="DBUG")
 
 ## Parse access logs
 ACCESS.LOG <- NULL
-if(0) {
-    access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
-                    "../logs","/var/log/httpd","/var/log/nginx")
-    access.dirs <- access.dirs[dir.exists(access.dirs)]
-    access.dirs
-    ##ACCESS.LOG <- playbase::pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
-    ACCESS.LOG <- playbase::pgx.parseAccessLogs(access.dirs[], filter.get="playground")
-    names(ACCESS.LOG)
-    sum(ACCESS.LOG$visitors$count)
-}
-
 
 tipify2 <- function(...) {
 	withTooltip(..., placement="top", options = list(container = "body"))
@@ -160,12 +148,6 @@ sever_screen <- function() {
                                      width=450,height=250)),
                shiny::div(
                           id="logSub",
-                          ##        shiny::textAreaInput(
-                          ##               inputId = "logMsg",
-                          ##               label = "",
-                          ##               width = "100%", height="80px",
-                          ##               value = "If this was a crash, please help and describe here the last thing you did."
-                          ##        ),
                           shiny::br(),
                           shiny::tags$a(
                                           onClick = "sendLog()",
@@ -285,12 +267,6 @@ sever_screen2 <- function(session_id) {
                           width=450,height=250)),
     shiny::div(
       id="logSub",
-      ##        shiny::textAreaInput(
-      ##               inputId = "logMsg",
-      ##               label = "",
-      ##               width = "100%", height="80px",
-      ##               value = "If this was a crash, please help and describe here the last thing you did."
-      ##        ),
       shiny::br(),
       shiny::tags$a(
         onClick = HTML(paste0("sendLog2('",session_id,"')")),

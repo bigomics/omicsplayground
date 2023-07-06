@@ -8,16 +8,6 @@
 ##===================== NORMALIZE GADGET UI ===========================================
 ##=====================================================================================
 
-if(0) {
-    load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-    NormalizeCountsGadget(X=ngs$X, pheno=ngs$samples)
-    out <- gadgetize2(
-        NormalizeCountsUI, NormalizeCountsServer,
-        title = "UploadGadget", height=640, size="l",
-        X = ngs$X, pheno=ngs$samples )
-    names(out)
-}
-
 NormalizeCountsGadget <- function(X, pheno, height=720) {
     gadgetize(NormalizeCountsUI, NormalizeCountsServer,
               title="NormalizeCounts",
@@ -42,15 +32,11 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             nc_info = ""
 
             output$UI <- shiny::renderUI({
-                ##ns <- shiny::NS(id)  ## namespace
-                ##ns <- function(id) id
+
                 ns <- session$ns
                 shiny::sidebarLayout(
                     shiny::sidebarPanel(
                         shiny::helpText(nc_info),
-                        ##br(),
-                        ##radioButtons(ns("selectmethod"),"Select normalization:",
-                        ##             choices=all.methods, selected="CPM"),
                         withTooltip(
                             shiny::selectInput(ns("selectmethod"),"Select normalization:",
                                         choices=all.methods, selected="CPM"),
@@ -104,19 +90,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     title=NULL, subtitle=NULL, caption=NULL)
             })
 
-            if(0) {
-                pgx =list(counts=counts)
-                viz.NormalizeCounts(
-                    pgx = pgx,
-                    methods = NULL,
-                    post.qn = FALSE,
-                    title=NULL, subtitle=NULL, caption=NULL)
-
-
-            }
-
             normalized_counts <- shiny::reactive({
-                ##req(input$selectmethod)
                 method <- input$selectmethod
                 message("[normalized_counts] length(method) = ",length(method))
                 message("[normalized_counts] method = ",method)
@@ -124,7 +98,6 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     message("[normalized_counts] setting method to 'none'")
                     method <- "none"
                 }
-                ##method = "CPM"
                 norm.counts <- NULL
                 pgx <- pgx()
                 if(method == "none") {

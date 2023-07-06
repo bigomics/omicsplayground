@@ -41,17 +41,17 @@ wgcna_table_genes_server <- function(id,
 
       DT::datatable(
         df,
-        rownames = FALSE, ## escape = c(-1,-2),
-        ## filter = 'top',
+        rownames = FALSE, #
+        #
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
         options = list(
-          dom = "lfrtip", ## buttons = c('copy','csv','pdf'),
+          dom = "lfrtip", #
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
+          scrollX = TRUE, #
+          #
           scrollY = "70vh",
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list

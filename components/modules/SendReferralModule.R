@@ -3,25 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-if(0) {
-  ## install.packages("shinyFeedback")
-
-  shiny::shinyApp(
-    ui = shiny::fluidPage(
-      shiny::actionButton("show","show"),
-      send_referral_ui("referral")
-    ),
-    server = function(input, output) {
-      send_referral_server(
-        id = "referral",
-        r.show = reactive(input$show)
-      )
-    }
-  )
-
-
-}
-
 SendReferralModuleUI <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("modal"))
@@ -50,7 +31,7 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
           title = "Sorry, time's up mate! Your FREE session has expired.",
           size = "l",
           shinyFeedback::useShinyFeedback(),
-##          p("Please enter three email addresses."),
+#
         HTML("Did you enjoy using BigOmics Playground? Yes? You can extend
          your FREE session by referring BigOmics to 3 of your friends!<br><br>"),
           fluidRow(
@@ -98,7 +79,7 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
               ns("close"),
               "Maybe later...",
               class = "btn btn-warning"
-              ##icon = icon("times")
+              #
             ),
             br(),
             actionButton(
@@ -175,7 +156,7 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
 
       ## send emails
       body <- list(
-        ##referrer = "The user",
+        #
         referrer = r.user(),
         referrals = list(
           list(

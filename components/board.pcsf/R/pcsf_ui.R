@@ -76,7 +76,7 @@ PcsfUI <- function(id) {
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
     ## "Hello",
-    ##bs_alert(pcsf_module_info),
+    #
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(

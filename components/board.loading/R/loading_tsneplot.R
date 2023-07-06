@@ -38,7 +38,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
             
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
-      ## pgx.files <- sub("[.]pgx$", "", dir(pgx.dir, pattern = ".pgx$"))
+      #
       pgx.files <- info.table$dataset
 
       pos <- NULL
@@ -80,34 +80,18 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
               pos <- matrix(0, 1, 2)
               rownames(pos) <- colnames(F)
               colnames(pos) <- c("x","y")
-            } else {            
-              ##F <- apply(F, 2, rank, na.last = "keep")
+            } else {
               rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
               F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
               F <- as.matrix(F)
               F[is.na(F)] <- 0 ## really??
               colnames(F) <- fnames  ## might be lost...
-              
-              if(0) {
-                system.time( corF <- Rfast::Crossprod(F,F)) ## fast innerprod
-                corF <- abs(corF) ## negative corr is also good...
-                ##corF <- corF / max(diag(corF),na.rm=TRUE)  ## normalize diag=1??
-                corF[is.na(corF)] <- 0
-                distF <- pmax(-log(corF + 1e-8),0)  ## transform to range [0,inf]                        
-                ppx <- max(min(30, floor(ncol(corF) / 4)), 1)
-                pos <- try( Rtsne::Rtsne( distF,
-                                         perplexity = ppx,
-                                         check_duplicates = FALSE,
-                                         is_distance = TRUE
-                                         )$Y )
-              } else {
-                ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
-                pos <- try( Rtsne::Rtsne( t(abs(F)),
-                                         perplexity = ppx,
-                                         check_duplicates = FALSE,
-                                         is_distance = FALSE
-                                         )$Y )
-              }
+              ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
+              pos <- try( Rtsne::Rtsne( t(abs(F)),
+                                        perplexity = ppx,
+                                        check_duplicates = FALSE,
+                                        is_distance = FALSE
+                                        )$Y )
               ## safe...
               if("try-error" %in% class(pos)) {
                 pos <- svd(F)$v[,1:2]
@@ -117,7 +101,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             rownames(pos) <- colnames(F)
         })
         
-        ##plot(pos)
+        #
         pos <- round(pos, digits = 4)
         colnames(pos) <- c("x", "y")        
         write.csv(pos, file = tsne.file)
@@ -171,7 +155,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         text = ~ paste(ifelse(nrow(df),"Dataset:","Whoops!"), dataset,
           ifelse(nrow(df),"<br>Comparison:",""), comparison),
         color = ~dataset,
-        ## colors = omics_pal_c(palette = "brand_blue")(100),
+        #
         marker = list(
           size = marker_size,
           line = list(
@@ -192,7 +176,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           font = list( size=font_size ),
           xref = "x",
           yref = "y",          
-          ## textposition = 'top',
+          #
           xanchor = "middle",
           yanchor = "bottom",
           yshift = 0.02*dy,

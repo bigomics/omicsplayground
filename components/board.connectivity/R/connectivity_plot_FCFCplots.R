@@ -71,7 +71,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
         fc <- fc[gg]
 
-        ##mfplots <- c(2, 5)        
+        #
         nplots <- mfplots[1] * mfplots[2]
         F <- F[gg, 1:min(nplots, ncol(F)), drop = FALSE]
         F0 <- F0[gg, colnames(F), drop = FALSE]
@@ -229,7 +229,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER,
-##      csvFunc = plot_data,
+#
         res = c(90, 130),
         pdf.height = 4.5,
         pdf.width = 10,

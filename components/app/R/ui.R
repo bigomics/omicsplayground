@@ -76,7 +76,6 @@ app_ui <- function() {
 
 
         menu_tree = list(
-          ## "Home" = c("load"),
           "Load" = c(
             welcome = "Welcome",
             load    = "Load dataset",
@@ -112,13 +111,12 @@ app_ui <- function() {
             wgcna = "WGCNA",
             tcga = "TCGA survival (beta)"
           )
-          ## "DEV" = c("corsa","system","multi")
         )
 
         ## filter disabled modules
         ENABLED['welcome'] <<- TRUE
         ENABLED['load'] <<- TRUE
-        #ENABLED['upload'] <- TRUE
+        
         dbg("[ui.R] sum.enabled = ",sum(ENABLED))
         dbg("[ui.R] names.enabled = ",names(ENABLED))
         menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
@@ -149,14 +147,12 @@ app_ui <- function() {
             tab.titles <- menu_tree[[i]]
             menu.id <- names(menu_tree)[i]
             if(length(tab.names)==0) {
-              ##
             } else if(length(tab.names)==1) {
               menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
             } else {
               menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
             }
           }
-          ##lapply(menu,cat)
           return(menu)
         }
 
@@ -508,6 +504,7 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "load-tab",
+
                     #LoadingInputs("load")
                     LoadingUI("load")
                 ),

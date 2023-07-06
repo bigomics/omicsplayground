@@ -100,7 +100,7 @@ enrichment_plot_volcanomethods_server <- function(id,
 
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- colnames(Q)[i]
-          ## xmax <- max(abs(mx[,"fc"]))
+          #
 
           dbg("[enrichment_plot_volcanomethods.R] dim.xy = ",dim(xy))
           dbg("[enrichment_plot_volcanomethods.R] sig.genes = ",head(sig.genes))
@@ -113,9 +113,9 @@ enrichment_plot_volcanomethods_server <- function(id,
             var = is.sig,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", ## plotlib="ggplot",
-            # hilight = sig.genes,
-            # hilight2 = sig.genes,
+            legend.pos = "none", #
+            
+            
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
             ylim = c(0, ymax),
@@ -141,7 +141,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       nplots <- length(plt)
       nr <- ifelse(nplots <=6, 1, 2)
       nc <- max(ceiling(nplots/nr),4)
-      ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
@@ -151,7 +151,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       nplots <- length(plt)
       nr <- ifelse(nplots <=5, 1, 2)
       nc <- max(ceiling(nplots/nr),3)
-      ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 

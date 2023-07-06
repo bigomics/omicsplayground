@@ -34,7 +34,6 @@ UploadBoard <- function(id,
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
-        ## h2(input$nav),
         shiny::div(
           id = "navheader-current-section",
           HTML("Upload data &nbsp;"),
@@ -77,17 +76,14 @@ UploadBoard <- function(id,
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
-    ## reload_pgxdir()
 
     getPGXDIR <- shiny::reactive({
-      ## reload_pgxdir()  ## force reload
 
       email <- "../me@company.com"
       email <- auth$email()
       email <- gsub(".*\\/", "", email)
       pdir <- pgx_dir ## from module input
 
-      ## USERDIR=FALSE
       if (enable_userdir) {
         pdir <- paste0(pdir, "/", email)
         if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
@@ -135,7 +131,6 @@ UploadBoard <- function(id,
 
       r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
 
-      ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
@@ -172,18 +167,18 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
+          
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (all(has.upload(need2))) {
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
+          
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
+        
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
@@ -196,10 +191,10 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$advanced_mode, {
       if (input$advanced_mode) {
-        #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
+         
         shiny::showTab("tabs", "BatchCorrect")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
+        
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
@@ -220,7 +215,6 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      ## for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
 
@@ -233,14 +227,12 @@ UploadBoard <- function(id,
 
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
-        ##
         i <- grep("[.]pgx$", input$upload_files$name)
         pgxfile <- input$upload_files$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0))) ## override any name
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
-        ##
         message("[upload_files] getting matrices from CSV")
 
         ii <- grep("csv$", input$upload_files$name)
@@ -615,7 +607,6 @@ UploadBoard <- function(id,
       rownames(df) <- files.needed
 
       ## deselect
-      ## DT::selectRows(proxy = DT::dataTableProxy("pgxtable"), selected=NULL)
       return(df)
     })
 
@@ -647,16 +638,16 @@ UploadBoard <- function(id,
 
     ## correctedX <- shiny::reactive({
     #normalized_counts <- NormalizeCountsServerRT(
-    #  id = "normalize",
-    #  counts = shiny::reactive(uploaded$counts.csv),
-    #  height = height
+    
+    
+    
     #)
 
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
-      ## X = normalized_counts,  ## NOT YET!!!!
+      ## X = normalized_counts,  !
       is.count = TRUE,
       pheno = shiny::reactive(uploaded$samples.csv),
       height = height
@@ -679,7 +670,6 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
       contrRT = shiny::reactive(uploaded$contrasts.csv),
-      ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
       height = height
     )
@@ -687,7 +677,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
-      ##
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
       uploaded$samples.csv <- modct$pheno
@@ -705,7 +694,6 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
@@ -764,7 +752,6 @@ UploadBoard <- function(id,
 
     output$checkTablesOutput <- DT::renderDataTable({
       ## Render the upload status table
-      ##
       if (!input$advanced_mode) {
         return(NULL)
       }

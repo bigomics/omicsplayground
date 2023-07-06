@@ -78,6 +78,7 @@ loading_table_datasets_server <- function(id,
 
     share_pgx <- reactiveVal(NULL)
 
+
     getPGXINFO <- shiny::reactive({
       req(auth)
       if (!auth$logged()) {
@@ -85,6 +86,7 @@ loading_table_datasets_server <- function(id,
       }
 
       ## upstream trigger
+
       r_global$reload_pgxdir
       pgxdir <- getPGXDIR()
 
@@ -152,6 +154,7 @@ loading_table_datasets_server <- function(id,
         shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
         shiny::updateCheckboxGroupInput(session, "flt_organism", choices = organisms)
     })
+
 
     ##-------------------------------------------------------------------
     ## make a pgx public (i.e. share publicly)
@@ -238,6 +241,7 @@ loading_table_datasets_server <- function(id,
       !is.null(btn) && logged
     })
 
+
     shiny::observeEvent(load_react(), {
       if (!load_react()) {
         return(NULL)
@@ -270,6 +274,7 @@ loading_table_datasets_server <- function(id,
       ## load PGX go to dataview
       loadAndActivatePGX(pgxfile)
 
+
     })
 
     ##---------------------------- create table module -----------------------------------
@@ -277,6 +282,7 @@ loading_table_datasets_server <- function(id,
     table_data <- shiny::reactive({
         #r_global$reload_pgxdir
         df <- getFilteredPGXINFO()
+
         if (is.null(df)) return(NULL)
         df$dataset <- sub("[.]pgx$", "", df$dataset)
         df$conditions <- gsub("[,]", " ", df$conditions)
@@ -286,6 +292,7 @@ loading_table_datasets_server <- function(id,
         df$organism <- NULL
         return(df)
     })
+
 
     pgxTable_DT <- reactive({
 
@@ -357,6 +364,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ##        if(enable_delete) {
+
         if(TRUE) {
           delete_pgx_menuitem <- shiny::actionButton(
             ns(paste0("delete_dataset_row_",i)),
@@ -394,6 +402,7 @@ loading_table_datasets_server <- function(id,
         )
         menus <- c(menus, as.character(new_menu))
       }
+
 
       observeEvent(input$share_pgx, { share_pgx(input$share_pgx) }, ignoreInit = TRUE)
 
@@ -453,12 +462,12 @@ loading_table_datasets_server <- function(id,
 
         df <- table_data()
         col_edited <- colnames(df)[col]
+
         dataset_edited <- df$dataset[row]
         pgxinfo <- getPGXINFO()
 
         row_edited <- match(dataset_edited, pgxinfo$dataset)
         pgxinfo[row_edited, col_edited] <- val
-
         pgxdir <- getPGXDIR()
         fname <- file.path(pgxdir, 'datasets-info.csv')
         write.csv(pgxinfo, fname)
@@ -467,6 +476,7 @@ loading_table_datasets_server <- function(id,
         pgx_name <- dataset_edited
         pgx_file <- file.path(pgxdir, paste0(pgx_name, '.pgx'))
         pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
+
 
         row_edited <- match(dataset_edited, pgxinfo$dataset)
         new_val <- pgxinfo[row_edited, col_edited]
@@ -483,7 +493,9 @@ loading_table_datasets_server <- function(id,
 
     table_selected_pgx <- shiny::reactive({
       req(table_module)
+
       sel <- table_module$rows_selected()
+
       if (is.null(sel) || length(sel) == 0) {
         return(NULL)
       }
@@ -517,6 +529,7 @@ loading_table_datasets_server <- function(id,
 
     output$download_zip_btn <- shiny::downloadHandler(
       filename = function() {
+
         sel <- row_idx <- as.numeric(stringr::str_split(input$download_zip, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
@@ -525,6 +538,7 @@ loading_table_datasets_server <- function(id,
         newfile
       },
       content = function(file) {
+
         sel <- row_idx <- as.numeric(stringr::str_split(input$download_zip, '_row_')[[1]][2])
         df <- getFilteredPGXINFO()
         pgxfile <- as.character(df$dataset[sel])
@@ -563,6 +577,7 @@ loading_table_datasets_server <- function(id,
     }, ignoreNULL = TRUE)
 
     output$download_pgx_btn <- shiny::downloadHandler(
+
       ## filename = "userdata.pgx",
       filename = function() {
         sel <- row_idx <- as.numeric(stringr::str_split(input$download_pgx, '_row_')[[1]][2])
@@ -602,7 +617,9 @@ loading_table_datasets_server <- function(id,
           pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
           file.rename(pgxfile1, pgxfile2)
           ## !!!! we should also delete entry in PGXINFO and allFC !!!
+
           ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
+
           info <- read.csv(file.path(pgx.path,"datasets-info.csv"),row.names=1)
           idx <- match(pgxname,info$dataset)
           if(length(idx)) {
@@ -671,7 +688,9 @@ loading_table_datasets_server <- function(id,
               placeholder = "Type email..."
             ),
             select_user,
+
             ##shiny::textInput(ns("share_user2"), "Re-enter use email:")
+
             shiny::textOutput(ns('error_alert')) %>%
               tagAppendAttributes(style = 'color: red;')
         ),
@@ -683,6 +702,7 @@ loading_table_datasets_server <- function(id,
       )
     }
 
+
     # put user dataset into shared folder
     observeEvent( input$share_pgx, {
 
@@ -693,7 +713,9 @@ loading_table_datasets_server <- function(id,
             text = paste('This server does not support sharing.',
                          'Please contact your administrator.')
           )
+
           share_pgx(NULL)
+
           return()
         }
 
@@ -704,6 +726,7 @@ loading_table_datasets_server <- function(id,
              text = paste("You need to be logged in with a valid email",
                           "address to share pgx files with other users.")
           )
+
           share_pgx(NULL)
           return()
         }
@@ -718,7 +741,9 @@ loading_table_datasets_server <- function(id,
             text = paste("You have already too many shared datasets in the waiting queue.",
                          "Please contact your administrator.")
           )
+
           share_pgx(NULL)
+
           return()
         }
 
@@ -757,6 +782,7 @@ loading_table_datasets_server <- function(id,
 
         shiny::removeModal()
 
+
         pgx_name <- selected_sharePGX()
 
         alert_val <- shinyalert::shinyalert(
@@ -783,6 +809,7 @@ loading_table_datasets_server <- function(id,
             pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
 
             dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_name = ",pgx_name)
+
             dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_path = ",pgx_path)
             dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_file = ",pgx_file)
 
@@ -842,6 +869,7 @@ loading_table_datasets_server <- function(id,
             sender <- auth$email()
             sendShareMessage(pgx_name, sender, share_user, path_to_creds='gmail_creds')
 
+
             refresh_shared(refresh_shared() + 1)
         }
 
@@ -852,6 +880,7 @@ loading_table_datasets_server <- function(id,
 
 
     ## please refer to TableModule for return values
+
     return(table_module)
   })
 }
