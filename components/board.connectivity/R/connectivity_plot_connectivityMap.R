@@ -41,7 +41,8 @@ connectivity_plot_connectivityMap_ui <- function(
     withTooltip(
       shiny::radioButtons(
         ns("cmapcolorby"), "Color by:", c("dataset", "score"),
-        inline = TRUE),
+        inline = TRUE
+      ),
       "Color the points by score or dataset",
       placement = "right", options = list(container = "body")
     ),
