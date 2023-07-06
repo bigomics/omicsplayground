@@ -4,12 +4,12 @@
 ##
 
 wordcloud_table_leading_edge_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  width,
-  height) {
+    id,
+    title,
+    caption,
+    info.text,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -52,7 +52,7 @@ wordcloud_table_leading_edge_server <- function(id,
         rownames = FALSE, escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(

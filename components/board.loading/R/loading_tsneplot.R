@@ -4,13 +4,13 @@
 ##
 
 loading_tsne_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -30,13 +30,11 @@ loading_tsne_ui <- function(
 loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       pgx.dir <- pgx.dirRT()
       info.table <- info.table()
-      validate(need(nrow(info.table)>0, 'Need at least one dataset!'))      
-            
+      validate(need(nrow(info.table) > 0, "Need at least one dataset!"))
+
       tsne.file <- file.path(pgx.dir, "datasets-tsne.csv")
       #
       pgx.files <- info.table$dataset
@@ -55,16 +53,16 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       }
 
       allfc.file <- file.path(pgx.dir, "datasets-allFC.csv")
-      if(!file.exists(allfc.file)) {
+      if (!file.exists(allfc.file)) {
         return(NULL)
       }
 
       ## if no t-SNE file exists, we need to calculate it
       if (is.null(pos) && file.exists(allfc.file)) {
-
         shiny::withProgress(
-          message = "Calculating signature t-SNE...", value = 0.33, {
-
+          message = "Calculating signature t-SNE...",
+          value = 0.33,
+          {
             F <- data.table::fread(allfc.file)
             F <- as.matrix(F[, -1], rownames = F[[1]])
             fnames <- colnames(F)
@@ -73,37 +71,38 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             F[is.na(F)] <- 0 ## really??
 
             ## get top 2000
-            sel <- head(order(-rowMeans(F**2)),2000)
-            F <- F[sel,]
-            
-            if(NCOL(F)==1) {
+            sel <- head(order(-rowMeans(F**2)), 2000)
+            F <- F[sel, ]
+
+            if (NCOL(F) == 1) {
               pos <- matrix(0, 1, 2)
               rownames(pos) <- colnames(F)
-              colnames(pos) <- c("x","y")
+              colnames(pos) <- c("x", "y")
             } else {
-              rmsF <- (sqrt(colSums(F**2,na.rm=TRUE)) + 1e-8)
-              F <- F %*% Matrix::Diagonal(x=1/rmsF)  ## fast scale
+              rmsF <- (sqrt(colSums(F**2, na.rm = TRUE)) + 1e-8)
+              F <- F %*% Matrix::Diagonal(x = 1 / rmsF) ## fast scale
               F <- as.matrix(F)
               F[is.na(F)] <- 0 ## really??
-              colnames(F) <- fnames  ## might be lost...
-              ppx <- max(min(30, floor(ncol(F) / 4)), 1)                
-              pos <- try( Rtsne::Rtsne( t(abs(F)),
-                                        perplexity = ppx,
-                                        check_duplicates = FALSE,
-                                        is_distance = FALSE
-                                        )$Y )
+              colnames(F) <- fnames ## might be lost...
+              ppx <- max(min(30, floor(ncol(F) / 4)), 1)
+              pos <- try(Rtsne::Rtsne(t(abs(F)),
+                perplexity = ppx,
+                check_duplicates = FALSE,
+                is_distance = FALSE
+              )$Y)
               ## safe...
-              if("try-error" %in% class(pos)) {
-                pos <- svd(F)$v[,1:2]
+              if ("try-error" %in% class(pos)) {
+                pos <- svd(F)$v[, 1:2]
               }
-            } 
-            colnames(pos) <- c("x","y")
+            }
+            colnames(pos) <- c("x", "y")
             rownames(pos) <- colnames(F)
-        })
-        
+          }
+        )
+
         #
         pos <- round(pos, digits = 4)
-        colnames(pos) <- c("x", "y")        
+        colnames(pos) <- c("x", "y")
         write.csv(pos, file = tsne.file)
       }
 
@@ -128,32 +127,33 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         df = df,
         dataset_pos = dataset_pos
       )
-      
+
       return(pdata)
     })
 
     plot.RENDER <- function() {
-
       pdata <- plot_data()
-      shiny::req(pdata)      
-      dataset_pos <- pdata[['dataset_pos']]
-      df <- pdata[['df']]
+      shiny::req(pdata)
+      dataset_pos <- pdata[["dataset_pos"]]
+      df <- pdata[["df"]]
 
       ## filter with datatable active rows
       active_datasets <- info.table()$dataset[r_selected()]
-      df <- df[which(df$dataset %in% active_datasets),,drop=FALSE]
-      dataset_pos <- dataset_pos[which(rownames(dataset_pos) %in% active_datasets),,drop=FALSE]
-      
-      marker_size <- ifelse( nrow(df) > 60, 8, 11)
-      marker_size <- ifelse( nrow(df) > 120, 5, marker_size)
+      df <- df[which(df$dataset %in% active_datasets), , drop = FALSE]
+      dataset_pos <- dataset_pos[which(rownames(dataset_pos) %in% active_datasets), , drop = FALSE]
+
+      marker_size <- ifelse(nrow(df) > 60, 8, 11)
+      marker_size <- ifelse(nrow(df) > 120, 5, marker_size)
       font_size <- marker_size**0.55 * 5
-      
+
       fig <- plotly::plot_ly(
         data = df,
         x = ~x,
         y = ~y,
-        text = ~ paste(ifelse(nrow(df),"Dataset:","Whoops!"), dataset,
-          ifelse(nrow(df),"<br>Comparison:",""), comparison),
+        text = ~ paste(
+          ifelse(nrow(df), "Dataset:", "Whoops!"), dataset,
+          ifelse(nrow(df), "<br>Comparison:", ""), comparison
+        ),
         color = ~dataset,
         #
         marker = list(
@@ -165,21 +165,21 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         )
       )
 
-      dy <- diff(range(dataset_pos[,"y"]))
-      dbg("[loading_tsneplot.R] range.y=",dy)
-      
+      dy <- diff(range(dataset_pos[, "y"]))
+      dbg("[loading_tsneplot.R] range.y=", dy)
+
       fig <- fig %>%
         plotly::add_annotations(
-          x = dataset_pos[,"x"],
-          y = dataset_pos[,"y"],
+          x = dataset_pos[, "x"],
+          y = dataset_pos[, "y"],
           text = rownames(dataset_pos),
-          font = list( size=font_size ),
+          font = list(size = font_size),
           xref = "x",
-          yref = "y",          
+          yref = "y",
           #
           xanchor = "middle",
           yanchor = "bottom",
-          yshift = 0.02*dy,
+          yshift = 0.02 * dy,
           showarrow = FALSE
         )
 
@@ -193,7 +193,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           ),
           yaxis = list(
             title = "tsne-y",
-            zeroline = FALSE,            
+            zeroline = FALSE,
             showticklabels = FALSE
           )
         )
@@ -204,9 +204,9 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
     modal_plot.RENDER <- function() {
       pdata <- plot_data()
       shiny::req(pdata)
-      df <- pdata[['df']]
-      marker_size <- ifelse( nrow(df) > 60, 9, 13)
-      marker_size <- ifelse( nrow(df) > 120, 6, marker_size)
+      df <- pdata[["df"]]
+      marker_size <- ifelse(nrow(df) > 60, 9, 13)
+      marker_size <- ifelse(nrow(df) > 120, 6, marker_size)
       p <- plot.RENDER() %>%
         plotly::layout(
           showlegend = TRUE,

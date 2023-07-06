@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_mappingplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   VIEWTYPES2 <- c("dotmap" = "dotmap", "heatmap (by method)" = "heatmap")
@@ -78,7 +78,6 @@ singlecell_plot_mappingplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)

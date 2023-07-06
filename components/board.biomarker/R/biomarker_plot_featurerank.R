@@ -5,13 +5,13 @@
 
 
 biomarker_plot_featurerank_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   clust_featureRank.opts <- shiny::tagList(
@@ -42,10 +42,10 @@ biomarker_plot_featurerank_ui <- function(
 }
 
 biomarker_plot_featurerank_server <- function(id,
-                                               pgx,
-                                               ft_level,
-                                               samplefilter,
-                                               watermark = FALSE) {
+                                              pgx,
+                                              ft_level,
+                                              samplefilter,
+                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -137,7 +137,7 @@ biomarker_plot_featurerank_server <- function(id,
             design <- model.matrix(~ grp[jj])
             suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj], design)))
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
-            s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE) 
+            s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE)
           }
 
           f <- 1
@@ -158,7 +158,7 @@ biomarker_plot_featurerank_server <- function(id,
 
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
-      rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
+      rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
       playbase::pgx.stackedBarplot(
         x = t(S),
@@ -173,7 +173,7 @@ biomarker_plot_featurerank_server <- function(id,
       render_featureRank() %>%
         plotly_default() %>%
         plotly::layout(
-          legend = list(orientation = 'h')
+          legend = list(orientation = "h")
         )
     }
 

@@ -13,19 +13,20 @@
 #'
 #' @export
 biomarker_plot_heatmap_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_options <- tagList(
     withTooltip(
       shiny::checkboxInput(
-        ns("show_all"), "show all samples", value = FALSE
+        ns("show_all"), "show all samples",
+        value = FALSE
       ), "Show all samples or only selected.",
       placement = "right", options = list(container = "body")
     )
@@ -59,8 +60,7 @@ biomarker_plot_heatmap_server <- function(id,
                                           watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
-      ## return data structure for plots  
+      ## return data structure for plots
       plot_data <- shiny::reactive({
         shiny::req(pgx)
 
@@ -72,12 +72,12 @@ biomarker_plot_heatmap_server <- function(id,
 
         gg <- rownames(res$X)
         gg <- intersect(gg, rownames(pgx$X))
-        if(input$show_all) {
-            kk <- colnames(pgx$X)
+        if (input$show_all) {
+          kk <- colnames(pgx$X)
         } else {
-            kk <- colnames(res$X)
+          kk <- colnames(res$X)
         }
-        X <- pgx$X[gg,kk]
+        X <- pgx$X[gg, kk]
         X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
 
         splitx <- NULL
@@ -108,7 +108,6 @@ biomarker_plot_heatmap_server <- function(id,
           dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
-          
           key.offset = c(0.05, 0.98),
           show_rownames = 99,
           lab.len = 50,

@@ -85,7 +85,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       shiny::req(pgx)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
       test <- input$gs_statmethod
-      test <- intersect(test, gset.methods0) 
+      test <- intersect(test, gset.methods0)
       test
     })
 
@@ -190,15 +190,14 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         meta <- calcGsetMeta(comp, gsmethod, pgx = pgx)
         meta <- meta[rownames(mx), , drop = FALSE]
         dim(meta)
-        
-        if(!is.data.frame(pgx$gset.meta$info)){
+
+        if (!is.data.frame(pgx$gset.meta$info)) {
           # below is legacy code, before branch dev-gmt 2023-05
           # in new pgx code, this will be automatically calculated, with more details
           gset.size <- Matrix::colSums(pgx$GMT[, rownames(mx), drop = FALSE] != 0)
           names(gset.size) <- rownames(mx)
-
         }
-        
+
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
         ##
@@ -252,8 +251,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         gs <- intersect(names(meta.fc), rownames(meta))
         length(gs)
 
-        if(!is.data.frame(pgx$gset.meta$info)){
-
+        if (!is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
@@ -264,13 +262,13 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
           )
         }
 
-        if(is.data.frame(pgx$gset.meta$info)){
+        if (is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
-            matched.genes = pgx$gset.meta$info[gs,"gset.size"],
-            total.genes = pgx$gset.meta$info[gs,"gset.size.raw"],
-            fraction.genes.covered = pgx$gset.meta$info[gs,"gset.fraction"],
+            matched.genes = pgx$gset.meta$info[gs, "gset.size"],
+            total.genes = pgx$gset.meta$info[gs, "gset.size.raw"],
+            fraction.genes.covered = pgx$gset.meta$info[gs, "gset.fraction"],
             stars = stars[gs],
             AveExpr0 = AveExpr0[gs],
             AveExpr1 = AveExpr1[gs]
@@ -340,8 +338,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     metaQ <- shiny::reactive({
       req(pgx)
       methods <- selected_gsetmethods()
-      metaQ <- sapply(pgx$gset.meta$meta, function(m)
-        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      metaQ <- sapply(pgx$gset.meta$meta, function(m) {
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE)
+      })
       rownames(metaQ) <- rownames(pgx$gset.meta$meta[[1]])
       metaQ
     })

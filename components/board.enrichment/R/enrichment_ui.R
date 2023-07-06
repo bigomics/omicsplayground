@@ -55,7 +55,7 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 120px)"  ## full height of page (minus header)
+  fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
   halfH <- "height: calc(50vh - 120px);" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
@@ -63,7 +63,7 @@ EnrichmentUI <- function(id) {
     shiny::tabPanel(
       "Top enriched",
       bslib::layout_column_wrap(
-        width = 1/2,
+        width = 1 / 2,
         style = halfH,
         enrichment_plot_top_enrich_gsets_ui(
           ns("topEnriched"),
@@ -86,8 +86,8 @@ EnrichmentUI <- function(id) {
     shiny::tabPanel(
       "Plots",
       bslib::layout_column_wrap(
-        width = 1/4,
-        style = halfH,        
+        width = 1 / 4,
+        style = halfH,
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
           title = "Volcano plot",
@@ -126,7 +126,7 @@ EnrichmentUI <- function(id) {
       "Compare",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,          
+        style = halfH,
         enrichment_plot_compare_ui(
           ns("compare"),
           title = "Enrichment of geneset across multiple contrasts",
@@ -141,7 +141,7 @@ EnrichmentUI <- function(id) {
       "Volcano (all)",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,          
+        style = halfH,
         enrichment_plot_volcanoall_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
@@ -168,7 +168,7 @@ EnrichmentUI <- function(id) {
       )
     )
   )
-  
+
   tabs2 <- shiny::tabsetPanel(
     id = ns("tabs2"),
     shiny::tabPanel(
@@ -229,10 +229,9 @@ EnrichmentUI <- function(id) {
     bslib::layout_column_wrap(
       width = 1,
       height = fullH,
-      gap = '0px',
+      gap = "0px",
       tabs1,
       tabs2
     )
   )
-  
 }

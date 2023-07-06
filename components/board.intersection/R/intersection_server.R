@@ -64,7 +64,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
         ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       }
       ft <- sort(ft)
-      names(ft) <- sub(".*:","",ft)
+      names(ft) <- sub(".*:", "", ft)
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
 
@@ -279,37 +279,37 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     intersection_plot_venn_diagram_server(
       "venndiagram",
-      pgx           = pgx,
-      level               = input$level,
-      input_comparisons   = input_comparisons,
+      pgx = pgx,
+      level = input$level,
+      input_comparisons = input_comparisons,
       getFoldChangeMatrix = getFoldChangeMatrix,
-      watermark           = WATERMARK
+      watermark = WATERMARK
     )
 
     intersection_scatterplot_pairs_server(
       "scatterplot",
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
-      level                     = input$level,
-      pgx                 = pgx,
-      watermark                 = WATERMARK
+      level = input$level,
+      pgx = pgx,
+      watermark = WATERMARK
     )
 
     ## second tab ---------------------------------------
 
     foldchange_heatmap_server(
       "FoldchangeHeatmap",
-      getFoldChangeMatrix       = getFoldChangeMatrix,
+      getFoldChangeMatrix = getFoldChangeMatrix,
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
-      pgx                 = pgx,
-      level                     = input$level,
-      watermark                 = WATERMARK
+      pgx = pgx,
+      level = input$level,
+      watermark = WATERMARK
     )
 
     contrast_correlation_server(
       "ctcorrplot",
       getFoldChangeMatrix = getFoldChangeMatrix,
-      pgx           = pgx,
-      input_comparisons   = input_comparisons
+      pgx = pgx,
+      input_comparisons = input_comparisons
     )
   })
 } ## end-of-Board

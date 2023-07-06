@@ -13,13 +13,12 @@
 #'
 #' @export
 drugconnectivity_plot_cmap_dsea_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height
-  ) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -39,12 +38,13 @@ drugconnectivity_plot_cmap_dsea_ui <- function(
       "Number of labels to show.",
       placement = "left", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxGroupInput(
-      ns("cmap_labeloptions"), "label options:",
-      choices = c("show", "fixed"),
-      selected = c("show"), inline = TRUE
-    ), "Other labels options.",
-    placement = "left", options = list(container = "body")
+    withTooltip(
+      shiny::checkboxGroupInput(
+        ns("cmap_labeloptions"), "label options:",
+        choices = c("show", "fixed"),
+        selected = c("show"), inline = TRUE
+      ), "Other labels options.",
+      placement = "left", options = list(container = "body")
     )
   )
 
@@ -80,7 +80,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotCMAP <- function(pgx, db, contr, moa.target, moa.class,
                            labtype = "drugs", showlabel = TRUE,
                            npoints = 100, nlabel = 10,

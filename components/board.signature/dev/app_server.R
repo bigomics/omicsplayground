@@ -5,9 +5,8 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-
   # Your application server logic
-  load('data/example-data.pgx')
-  diffexpr <- ExpressionBoard('diffexpr', pgx)
-  server <- SignatureBoard('sig', pgx, diffexpr$selected_gxmethods)
+  load("data/example-data.pgx")
+  diffexpr <- ExpressionBoard("diffexpr", pgx)
+  server <- SignatureBoard("sig", pgx, diffexpr$selected_gxmethods)
 }

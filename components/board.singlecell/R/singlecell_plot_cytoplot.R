@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_cytoplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   cyto.opts <- shiny::tagList(
@@ -42,7 +42,7 @@ singlecell_plot_cytoplot_ui <- function(
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c("csv"),#FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
+    download.fmt = c("csv"), # FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
     height = height,
     width = width
   )

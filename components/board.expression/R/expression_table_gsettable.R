@@ -12,13 +12,12 @@
 #'
 #' @export
 expression_table_gsettable_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  width,
-  height
-  ) {
+    id,
+    title,
+    caption,
+    info.text,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -51,16 +50,18 @@ expression_table_gsettable_server <- function(id,
       df <- gx_related_genesets()
 
       #
-      shiny::validate(shiny::need(!is.null(df),
-        "Please select a gene in the table."))
+      shiny::validate(shiny::need(
+        !is.null(df),
+        "Please select a gene in the table."
+      ))
 
       df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
 
       DT::datatable(df,
-#        class = "compact",  ## not good!
+        #        class = "compact",  ## not good!
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",

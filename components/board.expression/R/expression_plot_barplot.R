@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_barplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plots_barplot_opts <- shiny::tagList(
@@ -128,7 +128,7 @@ expression_plot_barplot_server <- function(id,
         logscale = pd[["logscale"]],
         srt = pd[["srt"]],
         xlab = "",
-        plotlib = "plotly"        
+        plotlib = "plotly"
       )
       fig
     }
@@ -137,7 +137,6 @@ expression_plot_barplot_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
-      
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

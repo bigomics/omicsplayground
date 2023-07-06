@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_averagerank_ui <- function(
-  id, 
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -44,8 +44,12 @@ dataview_plot_averagerank_server <- function(id,
       samples <- r.samples()
       data_type <- r.data_type()
 
-      if(!all(samples %in% colnames(pgx$X))) return(NULL)
-      if(!gene %in% rownames(pgx$X)) return(NULL)
+      if (!all(samples %in% colnames(pgx$X))) {
+        return(NULL)
+      }
+      if (!gene %in% rownames(pgx$X)) {
+        return(NULL)
+      }
 
       nsamples <- length(samples)
       if (data_type == "counts") {

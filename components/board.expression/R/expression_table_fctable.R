@@ -12,12 +12,12 @@
 #'
 #' @export
 expression_table_fctable_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   table_opts <- shiny::tagList(
@@ -99,8 +99,6 @@ expression_table_fctable_server <- function(id,
 
       dt <- DT::datatable(df,
         rownames = FALSE,
-        
-        
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = c(1)),

@@ -59,8 +59,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     ## ================================================================================
 
     plotActivationMatrix <- function(meta, df, normalize = 1, nterms = 40,
-                                     nfc = 10, tl.cex=1.0, row.nchar=60) {
-
+                                     nfc = 10, tl.cex = 1.0, row.nchar = 60) {
       fx <- sapply(meta, function(x) x$meta.fx)
       qv <- sapply(meta, function(x) x$meta.q)
       rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
@@ -103,7 +102,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         rownames(score2),
         ignore.case = TRUE
       ))
-      rownames(score2) <- gsub("(_.*$)", "", rownames(score2))    
+      rownames(score2) <- gsub("(_.*$)", "", rownames(score2))
       #
       rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
@@ -117,7 +116,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         is.corr = FALSE,
         cl.pos = "n",
         col = playdata::BLUERED(100),
-        tl.cex = 1.0*tl.cex,
+        tl.cex = 1.0 * tl.cex,
         tl.col = "grey20",
         tl.srt = 90,
         mar = c(0, 0, 0.5, 0)
@@ -143,10 +142,10 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       }
 
       ## ----- get REACTOME id
-      sbgn.dir <- pgx.system.file("sbgn/",package="pathway")
+      sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
       reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
-      reactome.gsets <- grep("R-HSA",rownames(pgx$gsetX),value=TRUE)
-      reactome.ids <- gsub(".*R-HSA","R-HSA",reactome.gsets)
+      reactome.gsets <- grep("R-HSA", rownames(pgx$gsetX), value = TRUE)
+      reactome.ids <- gsub(".*R-HSA", "R-HSA", reactome.gsets)
       ## sometimes no REACTOME in genesets...
       if (length(reactome.ids) == 0) {
         shinyalert::shinyalert(
@@ -167,7 +166,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
 
       meta <- pgx$gset.meta$meta[[comparison]]
       meta <- meta[reactome.gsets, ]
-      mm = "fgsea"
+      mm <- "fgsea"
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
@@ -179,7 +178,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         meta.q = meta.q,
         check.names = FALSE
       )
-      df <- df[!duplicated(df$reactome.id), ] 
+      df <- df[!duplicated(df$reactome.id), ]
       df <- df[order(-abs(df$logFC)), ]
       return(df)
     })
@@ -262,12 +261,12 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       }
 
       ## ----- get WIKIPATHWAY id
-      svg.dir <- pgx.system.file("svg/",package="board.pathway")
-      wp.available <- sub("_[0-9]+.svg","",gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
-      wp.gsets <- grep("_WP",rownames(pgx$gsetX),value=TRUE)
+      svg.dir <- pgx.system.file("svg/", package = "board.pathway")
+      wp.available <- sub("_[0-9]+.svg", "", gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
+      wp.gsets <- grep("_WP", rownames(pgx$gsetX), value = TRUE)
       # extract wp.ids from string
-      wp.ids <- gsub(".*_WP","WP",wp.gsets)
-      wp.ids <-  gsub("(_.*$)", "", wp.ids)
+      wp.ids <- gsub(".*_WP", "WP", wp.gsets)
+      wp.ids <- gsub("(_.*$)", "", wp.ids)
       ## sometimes no WIKIPATHWAY in genesets...
       if (length(wp.ids) == 0) {
         shinyalert::shinyalert(
@@ -281,13 +280,13 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
 
       ## select those of which we have SGBN files
       jj <- which(!is.na(wp.ids) & !duplicated(wp.ids) &
-                  wp.ids %in% wp.available)
+        wp.ids %in% wp.available)
       wp.gsets <- wp.gsets[jj]
       wp.ids <- wp.ids[jj]
 
       meta <- pgx$gset.meta$meta[[comparison]]
       meta <- meta[wp.gsets, ]
-      mm = "fgsea"
+      mm <- "fgsea"
       mm <- selected_gsetmethods()
       mm <- intersect(mm, colnames(meta$q))
       meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
@@ -298,7 +297,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
         meta.q = meta.q,
         check.names = FALSE
       )
-      df <- df[!duplicated(df$pathway.id), ] 
+      df <- df[!duplicated(df$pathway.id), ]
       df <- df[order(-abs(df$logFC)), ]
 
       return(df)
@@ -335,6 +334,5 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       getFilteredWikiPathwayTable,
       reactive(input$fa_contrast)
     )
-
   }) ## end-of-moduleServer
 }

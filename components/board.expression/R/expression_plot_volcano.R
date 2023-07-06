@@ -70,7 +70,6 @@ expression_plot_volcano_server <- function(id,
                                            df2,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       # calculate required inputs for plotting
@@ -199,7 +198,8 @@ expression_plot_volcano_server <- function(id,
           legend = list(
             font = list(size = 18)
           )
-        ) %>% plotly::style(
+        ) %>%
+        plotly::style(
           marker.size = 6
         )
       fig

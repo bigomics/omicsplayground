@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_freq_top_gsets_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   topEnrichedFreq.opts <- shiny::tagList(

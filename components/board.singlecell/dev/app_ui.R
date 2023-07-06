@@ -5,20 +5,20 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.singlecell')
+    golem_add_external_resources("board.singlecell")
   )
 
   # sidebar
   sidebar <- bigdash::sidebar(
     "Menu",
-    div(class="sidebar-item",
-        bigdash::sidebarItem(
-          "Cell profiling",
-          "cell-tab"
-        )
+    div(
+      class = "sidebar-item",
+      bigdash::sidebarItem(
+        "Cell profiling",
+        "cell-tab"
+      )
     )
   )
 
@@ -51,7 +51,4 @@ app_ui <- function(request) {
       )
     )
   )
-
 }
-
-

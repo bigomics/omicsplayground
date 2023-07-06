@@ -53,7 +53,7 @@ ExpressionBoard <- function(id, pgx) {
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
-      names(fam) <- sub(".*:","",fam)
+      names(fam) <- sub(".*:", "", fam)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
       ## available statistical methods
@@ -275,7 +275,7 @@ ExpressionBoard <- function(id, pgx) {
       df1 = filteredDiffExprTable,
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
-      watermark = WATERMARK      
+      watermark = WATERMARK
     )
 
     expression_plot_maplot_server(
@@ -291,7 +291,7 @@ ExpressionBoard <- function(id, pgx) {
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       fam.genes = res$gene_name,
-      watermark = WATERMARK 
+      watermark = WATERMARK
     )
 
     expression_plot_barplot_server(
@@ -300,7 +300,7 @@ ExpressionBoard <- function(id, pgx) {
       pgx = pgx,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
-      watermark = WATERMARK 
+      watermark = WATERMARK
     )
 
     expression_plot_topfoldchange_server(
@@ -309,7 +309,7 @@ ExpressionBoard <- function(id, pgx) {
       pgx = pgx,
       sel = genetable_rows_selected,
       res = filteredDiffExprTable,
-      watermark = WATERMARK 
+      watermark = WATERMARK
     )
 
     # tab differential expression > Top genes ####
@@ -404,7 +404,9 @@ ExpressionBoard <- function(id, pgx) {
       ## get table
       sel.row <- 1
       sel.row <- genetable_rows_selected()
-      if (is.null(sel.row)) return(NULL)
+      if (is.null(sel.row)) {
+        return(NULL)
+      }
 
       gene0 <- rownames(res)[sel.row]
       gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
@@ -471,8 +473,9 @@ ExpressionBoard <- function(id, pgx) {
     metaQ <- shiny::reactive({
       req(pgx)
       methods <- selected_gxmethods()
-      metaQ <- sapply(pgx$gx.meta$meta, function(m)
-        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      metaQ <- sapply(pgx$gx.meta$meta, function(m) {
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE)
+      })
       rownames(metaQ) <- rownames(pgx$gx.meta$meta[[1]])
       metaQ
     })

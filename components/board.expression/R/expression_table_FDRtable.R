@@ -12,12 +12,12 @@
 #'
 #' @export
 expression_table_FDRtable_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  width,
-  height) {
+    id,
+    title,
+    caption,
+    info.text,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -39,14 +39,13 @@ expression_table_FDRtable_ui <- function(
 expression_table_FDRtable_server <- function(id,
                                              pgx,
                                              methods, # input$gx_statmethod
-                                             height, 
+                                             height,
                                              scrollY,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     FDRtable.RENDER <- shiny::reactive({
-      
       methods <- methods() # input$gx_statmethod
 
       if (is.null(methods)) {
@@ -84,11 +83,11 @@ expression_table_FDRtable_server <- function(id,
 
       DT::datatable(D,
         rownames = FALSE,
-        
+
         #
         fillContainer = TRUE,
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         options = list(
           dom = "lfrtip",
           pageLength = 999, #

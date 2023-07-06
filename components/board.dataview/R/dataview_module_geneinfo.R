@@ -5,14 +5,13 @@
 
 
 dataview_module_geneinfo_ui <- function(
-  id,
-  label = "",
-  title,
-  height,
-  width,
-  caption,
-  info.text
-  ) {
+    id,
+    label = "",
+    title,
+    height,
+    width,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
 
@@ -40,7 +39,6 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     geneinfo_data <- shiny::reactive({
       require(org.Hs.eg.db)
       gene <- r.gene()
@@ -84,12 +82,12 @@ dataview_module_geneinfo_server <- function(id,
 
     info.RENDER <- function() {
       res <- geneinfo_data()
-      div( shiny::HTML(res), class="gene-info")
+      div(shiny::HTML(res), class = "gene-info")
     }
 
     modal_info.RENDER <- function() {
       res <- geneinfo_data()
-      div(shiny::HTML(res), class="gene-info", style="font-size:1.3em;")
+      div(shiny::HTML(res), class = "gene-info", style = "font-size:1.3em;")
     }
 
     PlotModuleServer(

@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_markersplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   markersplot.opts <- shiny::tagList(
@@ -53,14 +53,13 @@ singlecell_plot_markersplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    
     plotlib = "ggplot",
     label = label,
     info.text = info.text,
     title = title,
     caption = caption,
     options = markersplot.opts,
-    download.fmt = c("png", "csv"), #FIXME pdf is not working, to avoid crashing other things, we decided to remove it
+    download.fmt = c("png", "csv"), # FIXME pdf is not working, to avoid crashing other things, we decided to remove it
     height = height,
     width = width
   )
@@ -85,7 +84,6 @@ singlecell_plot_markersplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-
       shiny::req(pgx)
 
       mrk_level <- mrk_level()
@@ -170,17 +168,16 @@ singlecell_plot_markersplot_server <- function(id,
       top.gx <- pmax(top.gx, 0)
 
       pd <- list(
-          top.gx = top.gx,
-          pos = pos,
-          mrk_level = mrk_level,
-          mrk_features = mrk_features
+        top.gx = top.gx,
+        pos = pos,
+        mrk_level = mrk_level,
+        mrk_features = mrk_features
       )
 
       return(pd)
     })
 
     get_ggplots <- function() {
-
       pd <- plot_data()
       shiny::req(pd)
       top.gx <- pd$top.gx
@@ -211,7 +208,7 @@ singlecell_plot_markersplot_server <- function(id,
           label <- tolower(label)
         }
 
-p
+        p
         tt <- rownames(top.gx)[i]
 
         ## ------- start plot ----------
@@ -219,12 +216,12 @@ p
           pos,
           var = colvar,
           col = klrpal,
-          zlim = c(0,16),
-          cex = 0.5*cex1,
+          zlim = c(0, 16),
+          cex = 0.5 * cex1,
           xlab = "",
           ylab = "",
-          xlim = 1.2*range(pos[,1]),
-          ylim = 1.2*range(pos[,2]),
+          xlim = 1.2 * range(pos[, 1]),
+          ylim = 1.2 * range(pos[, 2]),
           axis = FALSE,
           title = tt,
           cex.title = 0.50,
@@ -242,7 +239,6 @@ p
 
 
     get_plotly_plots <- function() {
-
       pd <- plot_data()
       shiny::req(pd)
       top.gx <- pd$top.gx
@@ -273,25 +269,24 @@ p
           label <- tolower(label)
         }
 
-p
+        p
         tt <- rownames(top.gx)[i]
 
         ## ------- start plot ----------
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = colvar,
-          zlim = c(0,16),
+          zlim = c(0, 16),
           col = klrpal,
-          cex = 0.6*cex1,
+          cex = 0.6 * cex1,
           xlab = "",
           ylab = "",
-          xlim = 1.2*range(pos[,1]),
-          ylim = 1.2*range(pos[,2]),
+          xlim = 1.2 * range(pos[, 1]),
+          ylim = 1.2 * range(pos[, 2]),
           axis = FALSE,
           title = tt,
           cex.title = 0.85,
           title.y = 0.85,
-
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "fff",
@@ -299,7 +294,7 @@ p
           tooltip = FALSE
         ) %>%
           plotly::style(
-            hoverinfo = 'none'
+            hoverinfo = "none"
           )
 
         plt[[i]] <- p
@@ -312,7 +307,7 @@ p
       pd <- plot_data()
       plt <- get_plotly_plots()
       shiny::req(plt)
-      nr  <- ceiling(sqrt(length(plt)))
+      nr <- ceiling(sqrt(length(plt)))
       title <- pd$mrk_features
       fig <- plotly::subplot(
         plt,
@@ -321,8 +316,8 @@ p
       ) %>%
         plotly_default() %>%
         plotly::layout(
-          title = list(text=title, size=12),
-          margin = list(l=0,r=0,b=0,t=30) # lfbt
+          title = list(text = title, size = 12),
+          margin = list(l = 0, r = 0, b = 0, t = 30) # lfbt
         )
 
       return(fig)
@@ -332,8 +327,8 @@ p
       fig <- plotly.RENDER() %>%
         plotly_modal_default() %>%
         plotly::layout(
-          margin = list(l=0,r=0,b=0,t=50), # lfbt
-          title = list(size=18)
+          margin = list(l = 0, r = 0, b = 0, t = 50), # lfbt
+          title = list(size = 18)
         )
       return(fig)
     }
@@ -342,14 +337,14 @@ p
       pd <- plot_data()
       plt <- get_ggplots()
       shiny::req(plt)
-      nr  <- ceiling(sqrt(length(plt)))
+      nr <- ceiling(sqrt(length(plt)))
       title <- pd$mrk_features
       fig <- gridExtra::grid.arrange(
         grobs = plt,
         nrow = nr,
         ncol = nr,
-        padding = unit(0.01,"line"),
-        top = textGrob(title,gp=gpar(fontsize=15))
+        padding = unit(0.01, "line"),
+        top = textGrob(title, gp = gpar(fontsize = 15))
       )
       return(fig)
     }
@@ -357,8 +352,6 @@ p
     PlotModuleServer(
       "plotmodule",
       func = ggplot.RENDER,
-      
-      
       plotlib = "ggplot",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,
