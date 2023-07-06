@@ -91,16 +91,22 @@ LoadingBoard <- function(id,
         shiny::HTML(paste(msg, "Please check the Sharing panel."))
       )
     })
-    browser()
+
     if (enable_user_share==TRUE) {
-    
+      
       output$sharing_panel_ui <- renderUI({
+        
+        received_files <- pgxreceived$getReceivedFiles()
+        shared_files <- pgxshared$getSharedFiles()
+        num_received <- length(received_files)
+        num_shared <- length(shared_files)
+        
         if (num_received == 0 && num_shared == 0) {
           return(paste("No datasets being shared."))
         }
 
         out <- tagList()
-        if (length(out) == 0) browser()/{
+        if (length(out) == 0){
           if (num_received > 0) {
             out1 <- shiny::wellPanel(
               shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
@@ -124,10 +130,7 @@ LoadingBoard <- function(id,
             }
           }
         }
-        received_files <- pgxreceived$getReceivedFiles()
-        shared_files <- pgxshared$getSharedFiles()
-        num_received <- length(received_files)
-        num_shared <- length(shared_files)
+        
 
          shiny::tabPanel(
           "Sharing",
@@ -143,7 +146,6 @@ LoadingBoard <- function(id,
             )
           )
         )
-        return(out)
       })
     } else {
       output$sharing_panel_ui <- renderUI({NULL})
