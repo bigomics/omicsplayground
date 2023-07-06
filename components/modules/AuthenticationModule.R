@@ -793,8 +793,10 @@ PasswordAuthenticationModule <- function(id,
 ## ================================================================================
 
 splashHelloModal <- function(name, msg = NULL, ns = NULL, duration = 3500) {
-  if (is.null(ns)) ns <- function(e) {
-    return(e)
+  if (is.null(ns)) {
+    ns <- function(e) {
+      return(e)
+    }
   }
   message("[AuthenticationModule::splashHelloModel]")
 
@@ -845,8 +847,10 @@ splashLoginModal <- function(ns = NULL,
                              button.text = "Login",
                              title = "Log in",
                              subtitle = "") {
-  if (is.null(ns)) ns <- function(e) {
-    return(e)
+  if (is.null(ns)) {
+    ns <- function(e) {
+      return(e)
+    }
   }
   message("[AuthenticationModule::splashLoginModal] called()")
 
@@ -1154,8 +1158,10 @@ splashscreen.buttons <- function() {
 
 splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE,
                          buttons = TRUE, footer = TRUE) {
-  if (is.null(ns)) ns <- function(e) {
-    return(e)
+  if (is.null(ns)) {
+    ns <- function(e) {
+      return(e)
+    }
   }
   message("[AuthenticationModule::monsterFullScreen]")
 
