@@ -251,9 +251,9 @@ FirebaseAuthenticationModule <- function(id,
         with.password = FALSE,
         with.firebase = TRUE,
         with.firebase_emailonly = FALSE,
-        title = "Log in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Sure I am!"
+        title = HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in"),
+        subtitle = "Enter your email and we'll send you a magic link for password-free access.",
+        button.text = NULL
       )
 
       ## login modal
@@ -475,6 +475,11 @@ EmailAuthenticationModule <- function(id,
       firebase$sign_out()
       dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
 
+      title = HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
+      if (!is.null(credentials.file) && file.exists(credentials.file)) {
+        title <- "Log in"
+      }
+          
       m <- splashLoginModal(
         ns = ns,
         with.email = FALSE,
@@ -482,8 +487,8 @@ EmailAuthenticationModule <- function(id,
         with.password = FALSE,
         with.firebase = FALSE,
         with.firebase_emailonly = TRUE,
-        title = "Log in",
-        subtitle = "Ready to explore your data?",
+        title = title,
+        subtitle = "Enter your email and we'll send you a magic link for password-free access.",
         button.text = "Sure I am!"
       )
 
@@ -925,11 +930,11 @@ splashLoginModal <- function(ns = NULL,
       div(
         class = "card-body",
         h1(
-          "Login or Register",
+          title,
           class = "card-title pb-2"
         ),
         div(
-          "Enter your email and we'll send you a magic code for a password-free sign in."
+          subtitle
         ),
         textInput(
           ns("emailInput"),
@@ -976,11 +981,11 @@ splashLoginModal <- function(ns = NULL,
       div(
         class = "card-body",
         h1(
-          "Login or Register",
+          title,
           class = "card-title pb-2"
         ),
         div(
-          "Enter your email and we'll send you a magic code for a password-free sign in."
+          subtitle
         ),
         textInput(
           ns("emailInput"),
@@ -1005,7 +1010,7 @@ splashLoginModal <- function(ns = NULL,
   if (!is.null(title) && title != "") {
     div.title <- div(
       id = "splash-login-title",
-      class = "pb-4",
+      class = "pb-2",
       h2(title, style = "color:white;")
     )
   }
@@ -1022,7 +1027,7 @@ splashLoginModal <- function(ns = NULL,
 
   div.button <- div(
     id = "splash-buttons",
-    class = "pb-4",
+    class = "pt-4",
     actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl shadow blink")
   )
 
