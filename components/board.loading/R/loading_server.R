@@ -23,7 +23,7 @@ LoadingBoard <- function(id,
 
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
-    update_received <- reactiveVal(0)
+##    update_received <- reactiveVal(0)  ## not used??
 
     ## static, not changing
     pgx_shared_dir = stringr::str_replace_all(pgx_topdir, c('data'='data_shared'))
@@ -171,12 +171,14 @@ LoadingBoard <- function(id,
       ## getPGXINFO = getPGXINFO,
       getPGXDIR = getPGXDIR,
       pgx_shared_dir = pgx_shared_dir,
+      pgx_public_dir = pgx_public_dir,      
       pgx_topdir = pgx_topdir,
       auth = auth,
       r_global = r_global,
       loadAndActivatePGX = loadAndActivatePGX,
       loadPGX = loadPGX,
       refresh_shared = refresh_shared,
+      reload_pgxdir_public = reload_pgxdir_public,
       enable_pgxdownload = enable_pgxdownload,
       enable_delete = enable_delete,
       enable_public_share = enable_public_share,

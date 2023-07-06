@@ -61,11 +61,13 @@ loading_table_datasets_server <- function(id,
                                           getPGXDIR,
                                           pgx_topdir,
                                           pgx_shared_dir,
+                                          pgx_public_dir,                                          
                                           auth,
                                           r_global,
                                           loadAndActivatePGX,
                                           loadPGX,
                                           refresh_shared,
+                                          reload_pgxdir_public,
                                           enable_pgxdownload = FALSE,
                                           enable_delete = FALSE,
                                           enable_public_share = TRUE,
@@ -158,7 +160,7 @@ loading_table_datasets_server <- function(id,
         input$share_public_pgx,
         {
             selected_row <- as.numeric(stringr::str_split(input$share_public_pgx, "_row_")[[1]][2])
-            pgx_name <- pgxtable_data()[selected_row, "dataset"]
+            pgx_name <- table_data()[selected_row, "dataset"]
 
             alert_val <- shinyalert::shinyalert(
                 inputId = 'share_public_confirm',
@@ -180,7 +182,7 @@ loading_table_datasets_server <- function(id,
         if (input$share_public_confirm) {
 
             selected_row <- as.numeric(stringr::str_split(input$share_public_pgx, "_row_")[[1]][2])
-            pgx_name <- pgxtable_data()[selected_row, "dataset"]
+            pgx_name <- table_data()[selected_row, "dataset"]
             pgx_name <- sub("[.]pgx$", "", pgx_name)
             pgx_path <- getPGXDIR()
             pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
