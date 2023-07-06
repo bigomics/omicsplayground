@@ -7,18 +7,29 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    output$welcome <- shiny::renderText({
+    getFirstName <- reactive({
       name <- auth$name()
-      dbg("[WelcomeBoard] name =", name)
-      if (name %in% c("", NA, NULL)) {
+      if(is.null(name) || is.na(name) || name=='') name <- auth$email()
+      if(is.null(name) || is.na(name) || name=='') {
+        name <- "anonymous"
+        name <- paste0("user",substring(session$token,1,4))
+        return(name)
+      }
+      first.name <- strsplit(name, split = "[@ .]")[[1]][1]
+      first.name <- paste0(
+        toupper(substring(first.name, 1, 1)),
+        substring(first.name, 2, nchar(first.name))
+      )
+      first.name
+    })
+    
+    output$welcome <- shiny::renderText({
+      name <- getFirstName()
+      if(grepl("^user",name)) name <- ""
+      if (name %in% c("", NA, NULL,"anonymous")) {
         welcome <- "Welcome back..."
       } else {
-        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
-        first.name <- paste0(
-          toupper(substring(first.name, 1, 1)),
-          substring(first.name, 2, nchar(first.name))
-        )
-        welcome <- paste0("Welcome back ", first.name, "...")
+        welcome <- paste0("Welcome back ", name, "...")
       }
       welcome
     })
@@ -47,6 +58,22 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
       bigdash.openSidebar()
       bigdash.selectTab(session, "load-tab")
     })
+
+    chatbox_rds <- "chatbox_data.rds"
+    if(!file.exists(chatbox_rds)) {
+      df <- data.frame(rowid = numeric(),
+        user = character(),
+        text = character(),
+        time = double())
+      saveRDS(df, chatbox_rds)
+    }
+    shinyChatR::chat_server(
+      "chatbox",
+      rds_path = chatbox_rds,
+      chat_user = getFirstName
+    )
+
+    
   })
 }
 
@@ -101,7 +128,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Created with love"), br(),
         "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-        br(), "Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
+        br(), "© 2000-2023 BigOmics Analytics, Inc.", br(),
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )
@@ -109,6 +136,18 @@ WelcomeBoardUI <- function(id) {
   ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",
+    div( class = "row justify-content-center",
+      div( class = "col-md-10",
+        bslib::card(
+          full_screen = TRUE,
+          height = "200px",
+          style = "border-width: 1px",
+          bslib::card_body(
+            shinyChatR::chat_ui(ns("chatbox"), height='100px', width='100%')
+          )
+        )
+      )
+    ),
     div(
       class = "row",
       div(
