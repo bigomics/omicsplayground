@@ -4,13 +4,13 @@
 ##
 
 connectivity_table_similarity_scores_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height,
-  label="") {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height,
+    label = "") {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -22,7 +22,6 @@ connectivity_table_similarity_scores_ui <- function(
     title = title,
     label = label
   )
-
 }
 
 connectivity_table_similarity_scores_server <- function(id,
@@ -30,7 +29,6 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
-
     connectivityScoreTable.RENDER <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
@@ -52,7 +50,7 @@ connectivity_table_similarity_scores_server <- function(id,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",

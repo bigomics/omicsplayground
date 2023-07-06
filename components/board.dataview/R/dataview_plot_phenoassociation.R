@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_phenoassociation_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -46,20 +46,20 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
-      
-      check_diversity_in_colums <- function(df){
-        sum( unlist( apply(df, 2, function(x) length(unique(x))>1 ))) >1
+
+      check_diversity_in_colums <- function(df) {
+        sum(unlist(apply(df, 2, function(x) length(unique(x)) > 1))) > 1
       }
 
       if (check_diversity_in_colums(res$annot) && is.data.frame(res$annot)) {
         ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
         ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
         pq <- playbase::pgx.testPhenoCorrelation(
-          df = res$annot, 
+          df = res$annot,
           plot = TRUE,
           cex = 1
-          ) 
-        return(pq)  
+        )
+        return(pq)
       } else {
         shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))
         return(NULL)
@@ -76,7 +76,7 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       plotlib2 = "base",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
-      csvFunc = plot_data,   ##  *** downloadable data as CSV
+      csvFunc = plot_data, ##  *** downloadable data as CSV
       renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot,
       res = c(100, 170) * 0.85, ## resolution of plots

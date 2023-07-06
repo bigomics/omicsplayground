@@ -73,34 +73,34 @@ UploadUI <- function(id) {
         div(
           class = "col-md-4",
           upload_plot_countstats_ui(
-              id = ns("countStats"),
-              title = "Count Stats",
-              info.text = "Information about the uploaded counts.",
-              caption = "Information about the uploaded counts.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("countStats"),
+            title = "Count Stats",
+            info.text = "Information about the uploaded counts.",
+            caption = "Information about the uploaded counts.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         div(
           class = "col-md-4",
           upload_plot_phenostats_ui(
-              id = ns("phenoStats"),
-              title = "Pheno Stats",
-              info.text = "Information about the uploaded samples",
-              caption = "Information about the uploaded samples.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("phenoStats"),
+            title = "Pheno Stats",
+            info.text = "Information about the uploaded samples",
+            caption = "Information about the uploaded samples.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         div(
           class = "col-md-4",
           upload_plot_contraststats_ui(
-              id = ns("contrastStats"),
-              title = "Comparison Stats",
-              info.text = "Information about the uploaded comparisons",
-              caption = "Information about the uploaded comparisons.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("contrastStats"),
+            title = "Comparison Stats",
+            info.text = "Information about the uploaded comparisons",
+            caption = "Information about the uploaded comparisons.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         )
       )

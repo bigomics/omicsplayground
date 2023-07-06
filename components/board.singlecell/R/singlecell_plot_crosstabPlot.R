@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_crosstabPlot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   crosstab.opts <- shiny::tagList(
@@ -70,7 +70,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-
       crosstabvar <- crosstabvar()
       gene <- gene()
       pheno <- pheno()
@@ -176,7 +175,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
           }
           grp.score <- grp.score0
           grp.counts <- grp.counts0
-          grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score))) 
+          grp.score <- t(t(grp.score) / (1e-20 + colSums(grp.score)))
           dim(grp.score)
         }
 
@@ -204,19 +203,19 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       ## select phenotype variable
       head(pgx$samples)
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
       if (is.null(pheno)) {
         return(NULL)
       }
 
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
-      
+
       gene <- gene
       if (gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
@@ -254,7 +253,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       xlim <- c(0, 1.2 * length(grp.counts)) ## reserves space for legend
       barplot(grp.counts,
         col = "grey50", ylab = "counts (M)", cex.axis = 0.8,
-        cex.lab = 0.8, names.arg = NA, xpd = NA, xlim = 1.3 * xlim, 
+        cex.lab = 0.8, names.arg = NA, xpd = NA, xlim = 1.3 * xlim,
         ylim = c(0.01, max(grp.counts)), yaxs = "i"
       )
 

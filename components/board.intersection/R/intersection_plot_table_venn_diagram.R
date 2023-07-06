@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-intersection_plot_venn_diagram_ui <- function(
-                                              id,
+intersection_plot_venn_diagram_ui <- function(id,
                                               title,
                                               caption,
                                               info.text,
@@ -17,7 +16,7 @@ intersection_plot_venn_diagram_ui <- function(
 
   venndiagram.opts <- shiny::tagList(
     shiny::fillRow(
-      flex = c(1, 1), 
+      flex = c(1, 1),
       withTooltip(shiny::selectInput(ns("fdr"), "FDR", choices = FDR.VALUES2, selected = 0.20),
         "Threshold for false discovery rate",
         placement = "right", options = list(container = "body")
@@ -48,8 +47,7 @@ intersection_plot_venn_diagram_ui <- function(
   )
 }
 
-intersection_table_venn_diagram_ui <- function(
-                                               id,
+intersection_table_venn_diagram_ui <- function(id,
                                                title,
                                                caption,
                                                info.text,

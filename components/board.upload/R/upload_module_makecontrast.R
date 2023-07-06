@@ -20,7 +20,7 @@ upload_module_makecontrast_ui <- function(id) {
 
   tagList(
     bslib::layout_column_wrap(
-      width = 1, 
+      width = 1,
       style = htmltools::css(grid_template_columns = "8fr 3fr;"),
       height = "50%",
       bslib::card(
@@ -29,7 +29,7 @@ upload_module_makecontrast_ui <- function(id) {
         bslib::card_body(
           shiny::fillRow(
             style = "gap: 10px; height: 75px !important;",
-            flex = c(NA,NA,NA,NA,1),
+            flex = c(NA, NA, NA, NA, 1),
             shiny::div(
               shiny::HTML("<b>Phenotype:</b>"),
               withTooltip(
@@ -81,13 +81,13 @@ upload_module_makecontrast_ui <- function(id) {
                 placement = "top", options = list(container = "body")
               )
             ),
-            br()  ## spacer
-          ),          
+            br() ## spacer
+          ),
           shiny::div(
             style = "overflow: auto;",
             withTooltip(
               shiny::uiOutput(ns("createcomparison"),
-                style = "font-size:13px;"                
+                style = "font-size:13px;"
               ),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
               placement = "top", options = list(container = "body")
@@ -180,7 +180,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
-          shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: 0 0 0 -5px;}")),          
+          shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: 0 0 0 -5px;}")),
           sortable::bucket_list(
             header = NULL,
             sortable::add_rank_list(
@@ -242,7 +242,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       })
 
       shiny::observeEvent(input$addcontrast, {
-
         cond <- sel.conditions()
         if (length(cond) == 0 || is.null(cond)) {
           return(NULL)
@@ -290,7 +289,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         } else {
           rv$contr <- cbind(rv$contr, ctx1)
         }
-
       })
 
       shiny::observeEvent(input$autocontrast, {
@@ -385,13 +383,13 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
             escape = c(-1),
             selection = "none",
             class = "compact",
-            plugins = 'scrollResize',
+            plugins = "scrollResize",
             options = list(
               dom = "t",
               scrollResize = TRUE,
               pageLength = 999,
               ## autoWidth = TRUE, ## scrollX=TRUE,
-              
+
               scrollY = "25vh",
               columnDefs = list(
                 list(width = "20px", targets = c(0, 2, 3)),
@@ -406,11 +404,11 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       )
 
       makecontrast_plot_pcaplot_server(
-          "pcaplot",
-          phenoRT,
-          countsRT,
-          sel.conditions,
-          watermark = WATERMARK
+        "pcaplot",
+        phenoRT,
+        countsRT,
+        sel.conditions,
+        watermark = WATERMARK
       )
 
       return(
@@ -427,37 +425,36 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
 
 # PlotModuleUI for pcaplot
-makecontrast_plot_pcaplot_ui <- function(
-        id,
-        title,
-        info.text,
-        caption,
-        label = "",
-        height,
-        width) {
-    ns <- shiny::NS(id)
+makecontrast_plot_pcaplot_ui <- function(id,
+                                         title,
+                                         info.text,
+                                         caption,
+                                         label = "",
+                                         height,
+                                         width) {
+  ns <- shiny::NS(id)
 
-    options <- shiny::tagList(
-        withTooltip(
-            shiny::selectInput(ns("pcaplot.method"), "Method:",
-                               choices = c("pca", "tsne", "umap"),
-                               width = "100%"
-            ), "Choose clustering method.",
-            placement = "right", options = list(container = "body")
-        )
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::selectInput(ns("pcaplot.method"), "Method:",
+        choices = c("pca", "tsne", "umap"),
+        width = "100%"
+      ), "Choose clustering method.",
+      placement = "right", options = list(container = "body")
     )
+  )
 
-    PlotModuleUI(ns("plot"),
-                 title = title,
-                 caption = caption,
-                 label = label,
-                 plotlib = "plotly",
-                 info.text = info.text,
-                 options = options,
-                 download.fmt = c("png", "pdf", "csv"),
-                 width = width,
-                 height = height
-    )
+  PlotModuleUI(ns("plot"),
+    title = title,
+    caption = caption,
+    label = label,
+    plotlib = "plotly",
+    info.text = info.text,
+    options = options,
+    download.fmt = c("png", "pdf", "csv"),
+    width = width,
+    height = height
+  )
 }
 
 # PlotModuleServer for pcaplot
@@ -466,58 +463,58 @@ makecontrast_plot_pcaplot_server <- function(id,
                                              countsRT,
                                              sel.conditions,
                                              watermark = FALSE) {
-    moduleServer(
-        id, function(input, output, session) {
-            plot_data <- shiny::reactive({
-                pheno <- phenoRT()
-                counts <- countsRT()
-                res <- list(
-                    pheno = pheno,
-                    counts = counts
-                )
-                return(res)
-            })
+  moduleServer(
+    id, function(input, output, session) {
+      plot_data <- shiny::reactive({
+        pheno <- phenoRT()
+        counts <- countsRT()
+        res <- list(
+          pheno = pheno,
+          counts = counts
+        )
+        return(res)
+      })
 
-            plot.RENDER <- function() {
-                res <- plot_data()
-                pheno <- res$pheno
-                counts <- res$counts
+      plot.RENDER <- function() {
+        res <- plot_data()
+        pheno <- res$pheno
+        counts <- res$counts
 
-                if (is.null(pheno) || is.null(counts)) {
-                    return(NULL)
-                }
-                if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
-                    return(NULL)
-                }
-                shiny::req(pheno)
-                shiny::req(counts)
-
-                method <- input$pcaplot.method
-                X <- log2(1 + counts)
-                clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
-
-                cond <- sel.conditions()
-                if (length(cond) == 0 || is.null(cond)) {
-                    return(NULL)
-                }
-                playbase::pgx.scatterPlotXY(
-                    clust$pos2d,
-                    var = cond,
-                    plotlib = "plotly",
-                    legend = FALSE
-                )
-            }
-
-            PlotModuleServer(
-                "plot",
-                plotlib = "plotly",
-                func = plot.RENDER,
-                func2 = plot.RENDER,
-                csvFunc = plot_data,
-                res = c(70, 140),
-                pdf.width = 8, pdf.height = 8,
-                add.watermark = watermark
-            )
+        if (is.null(pheno) || is.null(counts)) {
+          return(NULL)
         }
-    )
+        if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
+          return(NULL)
+        }
+        shiny::req(pheno)
+        shiny::req(counts)
+
+        method <- input$pcaplot.method
+        X <- log2(1 + counts)
+        clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
+
+        cond <- sel.conditions()
+        if (length(cond) == 0 || is.null(cond)) {
+          return(NULL)
+        }
+        playbase::pgx.scatterPlotXY(
+          clust$pos2d,
+          var = cond,
+          plotlib = "plotly",
+          legend = FALSE
+        )
+      }
+
+      PlotModuleServer(
+        "plot",
+        plotlib = "plotly",
+        func = plot.RENDER,
+        func2 = plot.RENDER,
+        csvFunc = plot_data,
+        res = c(70, 140),
+        pdf.width = 8, pdf.height = 8,
+        add.watermark = watermark
+      )
+    }
+  )
 }

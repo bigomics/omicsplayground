@@ -5,10 +5,9 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.clustering')
+    golem_add_external_resources("board.clustering")
   )
 
   # sidebar
@@ -52,5 +51,4 @@ app_ui <- function(request) {
       )
     )
   )
-
 }

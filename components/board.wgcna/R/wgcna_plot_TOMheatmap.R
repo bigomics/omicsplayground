@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_TOMheatmap_ui <- function(
-  id,
-  label,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -43,7 +43,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
       ## more efficiently by saving the TOM calculated during
       ## module detection, but let us do it again here.
 
-      
+
       power <- as.numeric(power())
       dissTOM <- 1 - TOMsimilarityFromExpr(datExpr, power = power)
       rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)

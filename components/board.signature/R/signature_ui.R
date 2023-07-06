@@ -72,7 +72,7 @@ SignatureUI <- function(id) {
 
   left.panel <- shiny::tabsetPanel(
     id = ns("tabs1"),
-    ## ----------------------------- volcano panel  ------------------                
+    ## ----------------------------- volcano panel  ------------------
     shiny::tabPanel(
       "Volcano plots",
       bslib::layout_column_wrap(
@@ -80,7 +80,7 @@ SignatureUI <- function(id) {
         height = "calc(100vh - 190px)",
         heights_equal = "row",
         bs_alert("Overlay your custom list of genes on top of the volcano plots for each comparison. You can enter your list of genes on the right."),
-        bslib::layout_column_wrap(        
+        bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
           signature_plot_volcano_ui(
@@ -94,15 +94,15 @@ SignatureUI <- function(id) {
         )
       )
     ),
-    ## ----------------------------- enrichment panel  ------------------        
+    ## ----------------------------- enrichment panel  ------------------
     shiny::tabPanel(
       "Enrichment",
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",        
-        bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),        
-        bslib::layout_column_wrap(        
+        heights_equal = "row",
+        bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),
+        bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
           signature_plot_enplots_ui(
@@ -116,14 +116,14 @@ SignatureUI <- function(id) {
         )
       )
     ),
-    ## ----------------------------- overlap panel ------------------        
+    ## ----------------------------- overlap panel ------------------
     shiny::tabPanel(
       "Overlap/similarity",
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",                
-        bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),        
+        heights_equal = "row",
+        bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),
         signature_plot_overlap_ui(
           ns("overlapScorePlot"),
           title = "Signature overlap scores",
@@ -150,7 +150,7 @@ SignatureUI <- function(id) {
         height = "calc(100vh - 190px)",
         heights_equal = "row",
         bs_alert("The markers plot shows the expression levels of the tested genes in the dataset samples as a colored t-SNE plot in red (highly expressed) and light grey (low expressed). The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation)."),
-        bslib::layout_column_wrap(        
+        bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
           signature_plot_markers_ui(
@@ -191,7 +191,7 @@ SignatureUI <- function(id) {
       )
     )
   )
-  
+
   div(
     boardHeader(title = "Test signatures", info_link = ns("info")),
     bslib::layout_column_wrap(

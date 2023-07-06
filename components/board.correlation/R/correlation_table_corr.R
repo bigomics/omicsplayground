@@ -6,23 +6,23 @@
 
 #' @export
 correlation_table_corr_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
-      ns("table"),
-      info.text = info.text,
-      height = height,
-      width = width,
-      title = title,
-      caption = caption,
-      label = label
+    ns("table"),
+    info.text = info.text,
+    height = height,
+    width = width,
+    title = title,
+    caption = caption,
+    label = label
   )
 }
 
@@ -41,19 +41,19 @@ correlation_table_corr_server <- function(id,
                                           pgx,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     # reactive function listeninng for changes in input
     plot_data <- shiny::reactive({
-
       R <- getGeneCorr()
-      if (is.null(R)) return(NULL)
+      if (is.null(R)) {
+        return(NULL)
+      }
 
       P <- getPartialCorrelation()
       pcor <- P[match(rownames(R), rownames(P)), "pcor"]
 
-      title <- pgx$genes[rownames(R),"gene_title"]
+      title <- pgx$genes[rownames(R), "gene_title"]
       title <- substring(title, 1, 80)
-      df <- data.frame(gene=rownames(R), title=title, cor=R[,"cor"], pcor=pcor)
+      df <- data.frame(gene = rownames(R), title = title, cor = R[, "cor"], pcor = pcor)
 
       return(df)
     })
@@ -111,6 +111,5 @@ correlation_table_corr_server <- function(id,
       func2 = cor_table.RENDER_modal,
       selector = "none"
     )
-
   }) ## end of moduleServer
 }

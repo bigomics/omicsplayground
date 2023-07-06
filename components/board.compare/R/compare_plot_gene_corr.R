@@ -116,8 +116,8 @@ compare_plot_gene_corr_server <- function(id,
       klrpal <- rep(1:7, 99)
       klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
 
-      
-      
+
+
       colorby <- input$colorby
 
 
@@ -165,7 +165,6 @@ compare_plot_gene_corr_server <- function(id,
     PlotModuleServer(
       "plot",
       func = genecorr.RENDER,
-      
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark

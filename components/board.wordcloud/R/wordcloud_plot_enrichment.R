@@ -4,11 +4,11 @@
 ##
 
 wordcloud_plot_enrichment_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    height) {
   ns <- shiny::NS(id)
 
   gseaplots_opts <- shiny::tagList(

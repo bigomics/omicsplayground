@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_topgenes_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    caption,
+    info.text,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   topgenes_opts <- shiny::tagList(
@@ -91,11 +91,11 @@ expression_plot_topgenes_server <- function(id,
       if (nrow(res) == 0) {
         return(NULL)
       }
-      
+
       grouped <- input$gx_grouped
       logscale <- input$gx_logscale
       showothers <- input$gx_showothers
-      
+
       ylab <- ifelse(logscale, "log2CPM", "CPM")
       ny <- nrow(pgx$samples) ## ???!!
       show.names <- ifelse(!grouped & ny > 25, FALSE, TRUE)
@@ -116,20 +116,19 @@ expression_plot_topgenes_server <- function(id,
       ))
     })
 
-    
-    render_plotly <- function(annot.y=1.05, xaxis.fontsize=10, title.cex=1) {
+
+    render_plotly <- function(annot.y = 1.05, xaxis.fontsize = 10, title.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
       nplots <- min(8, nrow(pd[["res"]]))
-      if(pd$grouped) {
+      if (pd$grouped) {
         nplots <- min(18, nrow(pd[["res"]]))
       }
-      
+
       plts <- list()
 
-      for(i in 1:nplots) {
-
+      for (i in 1:nplots) {
         gene <- rownames(pd[["res"]])[i]
 
         ## manual plotly annotation for plot title
@@ -137,17 +136,16 @@ expression_plot_topgenes_server <- function(id,
           x = 0.5,
           y = annot.y,
           text = gene,
-          font = list(size=10*title.cex),
+          font = list(size = 10 * title.cex),
           xref = "paper",
           yref = "paper",
           xanchor = "bottom",
           yanchor = "top",
           showarrow = FALSE
         )
-        
+
         p <- playbase::pgx.plotExpression(
           pd[["pgx"]],
-          
           probe = gene,
           comp = pd[["comp"]],
           grouped = pd[["grouped"]],
@@ -162,31 +160,30 @@ expression_plot_topgenes_server <- function(id,
           main = "",
           plotlib = "plotly",
           plotly.annotations = annotations,
-          plotly.margin = list(l=5, r=5, b=5, t=20, pad=3)
+          plotly.margin = list(l = 5, r = 5, b = 5, t = 20, pad = 3)
         )
 
-        p  <- p %>% plotly::layout(
+        p <- p %>% plotly::layout(
           plot_bgcolor = "#f2f2f2",
-          xaxis = list(tickfont = list(size=xaxis.fontsize))          
+          xaxis = list(tickfont = list(size = xaxis.fontsize))
         )
-        
+
         plts[[i]] <- p
-        
       }
       return(plts)
     }
 
     plotly.RENDER <- function() {
       ## layout in subplots
-      plts <- render_plotly(annot.y=1.00, xaxis.fontsize=10, title.cex=1) 
-      plts <- head(plts,16)
+      plts <- render_plotly(annot.y = 1.00, xaxis.fontsize = 10, title.cex = 1)
+      plts <- head(plts, 16)
       pd <- plot_data()
-      ncols <- ifelse( pd[["grouped"]], 8, 4)
+      ncols <- ifelse(pd[["grouped"]], 8, 4)
       nrows <- ceiling(length(plts) / ncols)
       plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.010,0.010,0.04,0.04),  ## lrtb
+        margin = c(0.010, 0.010, 0.04, 0.04), ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,
@@ -199,27 +196,28 @@ expression_plot_topgenes_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      plts <- render_plotly(annot.y=1.00, xaxis.fontsize=14, title.cex=1.4)
-      plts <- head(plts,18)
+      plts <- render_plotly(annot.y = 1.00, xaxis.fontsize = 14, title.cex = 1.4)
+      plts <- head(plts, 18)
       pd <- plot_data()
-      ncols <- ifelse( pd[["grouped"]], 6, 4)
+      ncols <- ifelse(pd[["grouped"]], 6, 4)
       nrows <- ceiling(length(plts) / ncols)
       fig <- plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.011,0.011,0.04,0.03),  ## lrtb
+        margin = c(0.011, 0.011, 0.04, 0.03), ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,
         shareX = TRUE
       )
-      
+
       fig <- fig %>%
         plotly::layout(
           font = list(size = 18),
           margin = list(b = 0),
           showlegend = FALSE
-        ) %>% plotly::style(
+        ) %>%
+        plotly::style(
           marker.size = 20
         )
       fig
@@ -228,7 +226,7 @@ expression_plot_topgenes_server <- function(id,
     PlotModuleServer(
       "pltmod",
       func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,      
+      func2 = modal_plotly.RENDER,
       plotlib = "plotly",
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 105), ## resolution of plots

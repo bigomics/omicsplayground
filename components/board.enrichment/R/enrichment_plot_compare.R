@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_compare_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -30,7 +30,6 @@ enrichment_plot_compare_server <- function(id,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     render_compare <- function() {
       shiny::req(pgx, gs_contrast())
 
@@ -108,22 +107,22 @@ enrichment_plot_compare_server <- function(id,
         }
       }
 
-#      p
+      #      p
     }
 
     compare.RENDER <- function() {
       render_compare()
     }
-    
+
     compare.RENDER2 <- function() {
       render_compare()
     }
 
-    
+
     PlotModuleServer(
       "plot",
       func = compare.RENDER,
-      func2 = compare.RENDER,      
+      func2 = compare.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
       add.watermark = watermark

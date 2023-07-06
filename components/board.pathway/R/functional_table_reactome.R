@@ -5,13 +5,13 @@
 
 
 functional_table_reactome_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    label,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -28,12 +28,12 @@ functional_table_reactome_ui <- function(
 functional_table_reactome_server <- function(id,
                                              getFilteredReactomeTable,
                                              fa_contrast,
-                                             scrollY ) {
+                                             scrollY) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      df = getFilteredReactomeTable()
+      df <- getFilteredReactomeTable()
       shiny::req(df, fa_contrast())
       res <- list(
         df = df,
@@ -67,7 +67,7 @@ functional_table_reactome_server <- function(id,
           selected = 1
         ),
         fillContainer = TRUE,
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         options = list(
           dom = "lfrtip",
 
@@ -84,9 +84,10 @@ functional_table_reactome_server <- function(id,
               "function(data, type, row, meta) {",
               "return type === 'display' && data.length > 50 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
-              "}")
+              "}"
+            )
           ))
-          ) ## end of options.list
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(

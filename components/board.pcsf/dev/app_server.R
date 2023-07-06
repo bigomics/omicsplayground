@@ -5,8 +5,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-
-    # Your application server logic
-    pgx <- playbase::pgx.load('data/example-data.pgx')
-    server <- PcsfBoard('pcsf', pgx)
+  # Your application server logic
+  pgx <- playbase::pgx.load("data/example-data.pgx")
+  server <- PcsfBoard("pcsf", pgx)
 }

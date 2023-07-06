@@ -5,13 +5,13 @@
 
 
 functional_table_wikipathway_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    label,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -26,9 +26,9 @@ functional_table_wikipathway_ui <- function(
 }
 
 functional_table_wikipathway_server <- function(id,
-                                               pgx,
-                                               getFilteredWikipathwayTable,
-                                               fa_contrast) {
+                                                pgx,
+                                                getFilteredWikipathwayTable,
+                                                fa_contrast) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -63,9 +63,11 @@ functional_table_wikipathway_server <- function(id,
 
       ## add hyperlink
       url <- paste0(
-        "https://www.wikipathways.org/pathways/",df$pathway.id,".html")
+        "https://www.wikipathways.org/pathways/", df$pathway.id, ".html"
+      )
       df$pathway.id <- paste0(
-        "<a href='", url, "' target='_blank'>",df$pathway.id, "</a>")
+        "<a href='", url, "' target='_blank'>", df$pathway.id, "</a>"
+      )
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
@@ -80,7 +82,7 @@ functional_table_wikipathway_server <- function(id,
           selected = 1
         ),
         fillContainer = TRUE,
-        plugins = 'scrollResize',  ## resizes scrollable area
+        plugins = "scrollResize", ## resizes scrollable area
         options = list(
           dom = "lfrtip",
 
@@ -99,7 +101,8 @@ functional_table_wikipathway_server <- function(id,
               "function(data, type, row, meta) {",
               "return type === 'display' && data.length > 50 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
-              "}")
+              "}"
+            )
           ))
         ) ## end of options.list
       ) %>%

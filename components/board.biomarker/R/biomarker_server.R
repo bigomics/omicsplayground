@@ -95,7 +95,6 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
-
       ## This code also features a progress indicator.
       if (is.null(pgx)) {
         return(NULL)
@@ -130,7 +129,7 @@ BiomarkerBoard <- function(id, pgx) {
       y <- y0[!is.na(y0)]
 
       ## augment to at least 100 samples per level
-      ii <- unlist(tapply( 1:length(y), y, sample, size=100, replace=TRUE))
+      ii <- unlist(tapply(1:length(y), y, sample, size = 100, replace = TRUE))
       y <- y[ii]
 
       ## -------------------------------------------
@@ -335,7 +334,5 @@ BiomarkerBoard <- function(id, pgx) {
       samplefilter = shiny::reactive(input$pdx_samplefilter),
       watermark = WATERMARK
     )
-
-
   })
 } ## end-of-Board

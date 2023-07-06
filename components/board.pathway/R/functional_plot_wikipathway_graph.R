@@ -13,15 +13,14 @@
 #'
 #' @export
 functional_plot_wikipathway_graph_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  info.width,
-  height,
-  width
-  ) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    info.width,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -47,19 +46,19 @@ functional_plot_wikipathway_graph_ui <- function(
 #' @return
 #' @export
 functional_plot_wikipathway_graph_server <- function(id,
-                                              pgx,
-                                              getFilteredWikiPathwayTable,
-                                              wikipathway_table,
-                                              fa_contrast,
-                                              watermark = FALSE) {
-  moduleServer( id, function(input, output, session) {
-
+                                                     pgx,
+                                                     getFilteredWikiPathwayTable,
+                                                     wikipathway_table,
+                                                     fa_contrast,
+                                                     watermark = FALSE) {
+  moduleServer(
+    id, function(input, output, session) {
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
-      ##plot_data <- function() {
+        ## plot_data <- function() {
         ## folder with predownloaded SVG files
         #
-        svg.dir <- pgx.system.file("svg/", package="pathway")
+        svg.dir <- pgx.system.file("svg/", package = "pathway")
         svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(
           df = getFilteredWikiPathwayTable(),
@@ -71,11 +70,11 @@ functional_plot_wikipathway_graph_server <- function(id,
       })
 
       getPathwayImage <- function() {
-      ## getPathwayImage <- shiny::reactive({
+        ## getPathwayImage <- shiny::reactive({
 
         res <- plot_data()
         shiny::req(res, res$df)
-        
+
         df <- res$df
         comparison <- res$fa_contrast
         wikipathway_table <- res$wikipathway_table
@@ -124,7 +123,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id   <- df[sel.row, "pathway.id"]
+          pathway.id <- df[sel.row, "pathway.id"]
           pathway.name <- df[sel.row, "pathway"]
           pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
@@ -135,8 +134,8 @@ functional_plot_wikipathway_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
-        tmpfile <- paste0(tempfile(),".svg")
-        svg <- wikipathview(wp=pathway.id, val=fc, dir=svg.dir)
+        tmpfile <- paste0(tempfile(), ".svg")
+        svg <- wikipathview(wp = pathway.id, val = fc, dir = svg.dir)
         fluctuator::write_svg(svg, file = tmpfile)
 
         list(
@@ -145,13 +144,13 @@ functional_plot_wikipathway_graph_server <- function(id,
           width = "100%", height = "100%", ## actual size: 1040x800
           alt = "wikipathway SVG"
         )
-      } #)
+      } # )
 
       plot_RENDER <- function() {
         img <- getPathwayImage()
         shiny::req(img$width, img$height)
         filename <- img$src
-        img.svg <-  readChar(filename, nchars = file.info(filename)$size)
+        img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
           img.svg,
           controlIconsEnabled = TRUE,
@@ -169,7 +168,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         func = plot_RENDER,
         add.watermark = watermark
       )
-
     } ## end of moduleServer
   )
 }

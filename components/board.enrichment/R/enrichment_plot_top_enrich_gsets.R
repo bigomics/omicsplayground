@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_top_enrich_gsets_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -32,7 +32,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     gseatable,
                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     get_TopEnriched <- reactive({
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
@@ -44,7 +43,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (!(comp %in% names(pgx$gx.meta$meta))) {
         return(NULL)
       }
-      
+
       ## selected
       sel <- as.integer(gseatable$rows_selected())
       sel.gs <- NULL
@@ -53,7 +52,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       ii <- gseatable$rows_selected()
       jj <- gseatable$rows_current()
       shiny::req(jj)
-      
+
       if (nrow(rpt) == 0) {
         return(NULL)
       }
@@ -64,14 +63,14 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       } else {
         itop <- head(jj, 12)
       }
-      rpt <- rpt[itop,]
-      
+      rpt <- rpt[itop, ]
+
       gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
       names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
       names(rnk0) <- toupper(names(rnk0))
-      
+
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       qv.col <- grep("meta.q|q$", colnames(rpt))[1]
       fx <- rpt[, fx.col]
@@ -82,7 +81,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (is.null(top) || is.na(top[1])) {
         return(NULL)
       }
-      
+
       gmt.genes <- list()
       for (i in 1:length(top)) {
         gs <- top[i]
@@ -91,7 +90,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       dbg("[enrichment_plot_top_enrich_gsets_server] done!")
-      
+
       res <- list(
         rnk0 = rnk0,
         gmt.genes = gmt.genes,
@@ -100,21 +99,20 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       )
       res
     })
-      
-    plot.RENDER <- function() {      
-      
+
+    plot.RENDER <- function() {
       res <- get_TopEnriched()
       shiny::req(res)
-      
+
       rnk0 <- res$rnk0
       gmt.genes <- res$gmt.genes
       fc <- res$fc
       qv <- res$qv
 
       ntop <- length(gmt.genes)
-      if(ntop==1) rowcol = c(1, 1)
-      if(ntop==12) rowcol = c(3, 4)
-      
+      if (ntop == 1) rowcol <- c(1, 1)
+      if (ntop == 12) rowcol <- c(3, 4)
+
       par(mfrow = rowcol)
       if (ntop == 1) {
         par(mar = c(1, 6, 2, 6), mgp = c(1.6, 0.6, 0), oma = c(0.1, 1, 0, 0.1))
@@ -151,25 +149,24 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
     }
 
-    get_plotly_plots <- function(cex.text) {      
-
+    get_plotly_plots <- function(cex.text) {
       dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
-      
+
       res <- get_TopEnriched()
       shiny::req(res)
-      
+
       rnk0 <- res$rnk0
       gmt.genes <- res$gmt.genes
       fc <- res$fc
       qv <- res$qv
 
-      x.title <- 0.01*length(rnk0)
+      x.title <- 0.01 * length(rnk0)
       y.title <- max(rnk0)
-      
-      ntop <- length(gmt.genes)      
-      if(ntop==1) rowcol = c(1, 1)
-      if(ntop==12) rowcol = c(3, 4)
-      
+
+      ntop <- length(gmt.genes)
+      if (ntop == 1) rowcol <- c(1, 1)
+      if (ntop == 12) rowcol <- c(3, 4)
+
       plist <- list()
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
@@ -177,7 +174,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         genes <- toupper(genes)
         names(rnk0) <- toupper(names(rnk0))
 
-        if(ntop==1) {
+        if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
@@ -185,19 +182,17 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             main = gset.name,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
-            ##lab.line = c(0, 1.8), cex.lab = 0.75,
-            ##cex.main = 0.78, len.main = 200,
+            ## lab.line = c(0, 1.8), cex.lab = 0.75,
+            ## cex.main = 0.78, len.main = 200,
             ticklen = 0.25,
-            yth = 1,  ## threshold for which points get label
+            yth = 1, ## threshold for which points get label
             cbar.width = 32,
             tooltips = NULL,
             cex.text = cex.text
           ) %>% plotly::layout(
-            margin = list(l=30,r=10,t=20,b=40)
+            margin = list(l = 30, r = 10, t = 20, b = 40)
           )
-          
         } else {
-          
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
@@ -207,19 +202,20 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             xlab = NULL,
             ylab = NULL,
             ticklen = 0.25,
-            yth = 999,  ## threshold for which points get label
+            yth = 999, ## threshold for which points get label
             cbar.width = 15,
             tooltips = NULL,
             cex.text = cex.text
           ) %>%
             plotly::add_text(
-              x=x.title, y=y.title, text=gset.name,
-              textfont = list( size = 12*cex.text ),
-              textposition="bottom right") %>%
+              x = x.title, y = y.title, text = gset.name,
+              textfont = list(size = 12 * cex.text),
+              textposition = "bottom right"
+            ) %>%
             plotly::layout(
-              xaxis= list(showticklabels = FALSE),
-              margin = list(l=0,r=0,t=80,b=40)
-              ## annotations = list( 
+              xaxis = list(showticklabels = FALSE),
+              margin = list(l = 0, r = 0, t = 80, b = 40)
+              ## annotations = list(
               ##   list(x = 0.1 , y = y0, xanchor='left',
               ##     text = gset.name, font = list(size=10),
               ##     showarrow = FALSE, xref='paper', yref='y')
@@ -227,25 +223,24 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             )
         }
         plist[[i]] <- plt
-        
-        
       }
       plist
     }
-    
+
     plotly.RENDER <- function() {
-      plist <- get_plotly_plots(cex.text=0.7)
+      plist <- get_plotly_plots(cex.text = 0.7)
       ntop <- length(plist)
-      if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = 3,
+      if (ntop > 1) {
+        plt <- plotly::subplot(plist,
+          nrows = 3,
           shareX = TRUE, shareY = TRUE,
           ## titleX=FALSE, titleY=FALSE,
-          titleX = TRUE, titleY = TRUE,          
-          margin = c(0.0,0.0,0.02,0.02)
+          titleX = TRUE, titleY = TRUE,
+          margin = c(0.0, 0.0, 0.02, 0.02)
         ) %>%
           plotly::layout(
-            margin = list(l=20,r=0,t=20,b=20),
-            xaxis= list( showticklabels = FALSE )                  
+            margin = list(l = 20, r = 0, t = 20, b = 20),
+            xaxis = list(showticklabels = FALSE)
           )
       } else {
         plt <- plist[[1]]
@@ -254,17 +249,18 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     }
 
     plotly.RENDER2 <- function() {
-      plist <- get_plotly_plots(cex.text=1.1)
+      plist <- get_plotly_plots(cex.text = 1.1)
       ntop <- length(plist)
-      if(ntop>1) {
-        plt <- plotly::subplot(plist, nrows = 3,
+      if (ntop > 1) {
+        plt <- plotly::subplot(plist,
+          nrows = 3,
           shareX = TRUE, shareY = TRUE,
-          titleX=TRUE, titleY=TRUE,
-          margin = c(0.0,0.0,0.02,0.02)
+          titleX = TRUE, titleY = TRUE,
+          margin = c(0.0, 0.0, 0.02, 0.02)
         ) %>%
           plotly::layout(
-            margin = list(l=20,r=0,t=20,b=20),
-            xaxis= list( showticklabels = FALSE )                  
+            margin = list(l = 20, r = 0, t = 20, b = 20),
+            xaxis = list(showticklabels = FALSE)
           )
       } else {
         plt <- plist[[1]]
@@ -272,11 +268,11 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       plt
     }
 
-    
+
     PlotModuleServer(
       "plotmodule",
       func = plotly.RENDER,
-      func2 = plotly.RENDER2,      
+      func2 = plotly.RENDER2,
       plotlib = "plotly",
       pdf.width = 5,
       pdf.height = 5,

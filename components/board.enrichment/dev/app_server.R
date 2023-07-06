@@ -5,11 +5,10 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-
   # Your application server logic
-  load('data/example-data.pgx')
+  load("data/example-data.pgx")
 
   # need ExpressionBoard to input into EnrichmentBoard
   diffexpr <- ExpressionBoard("diffexpr", pgx)
-  server <- EnrichmentBoard('enrich', pgx, diffexpr$selected_gxmethods)
+  server <- EnrichmentBoard("enrich", pgx, diffexpr$selected_gxmethods)
 }

@@ -12,13 +12,12 @@
 #'
 #' @export
 expression_table_genetable_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height)
-{
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
@@ -56,7 +55,6 @@ expression_table_genetable_server <- function(id,
                                               scrollY,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
 
     table.RENDER <- function() {
@@ -91,11 +89,11 @@ expression_table_genetable_server <- function(id,
         class = "compact hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          
+
           # pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = scrollY,

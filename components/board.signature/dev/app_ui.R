@@ -5,10 +5,9 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.signature')
+    golem_add_external_resources("board.signature")
   )
 
   # sidebar
@@ -55,13 +54,10 @@ app_ui <- function(request) {
         SignatureUI("sig")
       ),
       bigdash::bigTabItem(
-        'diffexpr-tab',
-        ExpressionInputs('diffexpr'),
-        ExpressionUI('diffexpr')
+        "diffexpr-tab",
+        ExpressionInputs("diffexpr"),
+        ExpressionUI("diffexpr")
       )
     )
   )
-
 }
-
-

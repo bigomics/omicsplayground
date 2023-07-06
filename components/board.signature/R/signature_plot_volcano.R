@@ -13,14 +13,14 @@
 #'
 #' @export
 signature_plot_volcano_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(ns("plot"),
     title = title,
     info.text = info.text,
@@ -48,7 +48,6 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-        
     ##    volcanoPlots.RENDER <- shiny::reactive({
     volcanoPlots.RENDER <- function() {
       alertDataLoaded(session, pgx)
@@ -121,8 +120,8 @@ signature_plot_volcano_server <- function(id,
         title(ct[i], cex.main = cex.main, line = 0.3)
       }
 
-#      p
-    }#)
+      #      p
+    } # )
 
     PlotModuleServer(
       "plot",

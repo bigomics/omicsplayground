@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_maplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
   options <- tagList(
     actionButton(ns("button1"), "some action")
@@ -80,7 +80,7 @@ expression_plot_maplot_server <- function(id,
       }
       shiny::req(pgx)
 
-      dbg("[expression_plot_maplot.R] sel1 = ",sel1())
+      dbg("[expression_plot_maplot.R] sel1 = ", sel1())
       #
 
       fdr <- as.numeric(gx_fdr())
@@ -201,7 +201,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      )  ## %>% plotly::layout(margin = list(b = 65))
+      ) ## %>% plotly::layout(margin = list(b = 65))
       plt
     }
 

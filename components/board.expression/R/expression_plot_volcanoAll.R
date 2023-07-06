@@ -12,15 +12,13 @@
 #' @param height
 #'
 #' @export
-expression_plot_volcanoAll_ui <- function(
-      id,
-      title,
-      caption,
-      info.text,
-      label = "",
-      height,
-      width) {
-
+expression_plot_volcanoAll_ui <- function(id,
+                                          title,
+                                          caption,
+                                          info.text,
+                                          label = "",
+                                          height,
+                                          width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -53,10 +51,8 @@ expression_plot_volcanoAll_server <- function(id,
                                               lfc,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
-
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -87,14 +83,14 @@ expression_plot_volcanoAll_server <- function(id,
       }
 
       ## combined matrix for output
-      matF <- do.call(cbind,F)
-      colnames(matF) <- paste0("fc.",names(F))
-      matQ <- do.call(cbind,Q)
-      colnames(matQ) <- paste0("q.",names(Q))
+      matF <- do.call(cbind, F)
+      colnames(matF) <- paste0("fc.", names(F))
+      matQ <- do.call(cbind, Q)
+      colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
 
       pd <- list(
-        FQ = FQ,   ## Remember: the first element is returned as downloadable CSV
+        FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
         fdr = fdr,
         lfc = lfc,
@@ -106,7 +102,7 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    get_plots <- function(cex=0.45, base_size=11) {
+    get_plots <- function(cex = 0.45, base_size = 11) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -116,7 +112,7 @@ expression_plot_volcanoAll_server <- function(id,
       xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
 
       ## maximum 24!!!
-      nplots <- min(24,length(pd$Q))
+      nplots <- min(24, length(pd$Q))
       plt <- list()
 
       shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
@@ -150,7 +146,7 @@ expression_plot_volcanoAll_server <- function(id,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.8*cex,
+            cex.lab = 1.8 * cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
 
@@ -163,34 +159,34 @@ expression_plot_volcanoAll_server <- function(id,
 
 
     plot.RENDER <- function() {
-      plt <- get_plots(cex=0.5, base_size=11)
+      plt <- get_plots(cex = 0.5, base_size = 11)
       nplots <- length(plt)
-      nr = 1
-      nc = max(4,nplots)
-      if(nplots > 6) {
-        nr = 2
-        nc = ceiling(nplots/nr)
+      nr <- 1
+      nc <- max(4, nplots)
+      if (nplots > 6) {
+        nr <- 2
+        nc <- ceiling(nplots / nr)
       }
       if (nplots > 12) {
-        nr = 3
-        nc = ceiling(nplots/nr)
+        nr <- 3
+        nc <- ceiling(nplots / nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     modal_plot.RENDER <- function() {
-      plt <- get_plots(cex=0.9, base_size=15)
+      plt <- get_plots(cex = 0.9, base_size = 15)
       nplots <- length(plt)
       ## layout
-      nr = 1
-      nc = max(2,nplots)
-      if(nplots > 3) {
-        nr = 2
-        nc = ceiling(nplots/nr)
+      nr <- 1
+      nc <- max(2, nplots)
+      if (nplots > 3) {
+        nr <- 2
+        nc <- ceiling(nplots / nr)
       }
       if (nplots > 8) {
-        nr = 3
-        nc = ceiling(nplots/nr)
+        nr <- 3
+        nc <- ceiling(nplots / nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }

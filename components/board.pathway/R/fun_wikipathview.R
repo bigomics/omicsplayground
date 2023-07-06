@@ -1,64 +1,71 @@
 #
 
 wikipathview <- function(wp, val, dir) {
-    
   require(fluctuator)
   get_pathway_svg <- function(wp) {
-    fn <- grep(paste0("_",wp,"_"), dir(dir, pattern="svg$",
-      full.names=TRUE), ignore.case=TRUE, value=TRUE)
-    if(length(fn)) {
-        svg <- fluctuator::read_svg(fn)
+    fn <- grep(paste0("_", wp, "_"), dir(dir,
+      pattern = "svg$",
+      full.names = TRUE
+    ), ignore.case = TRUE, value = TRUE)
+    if (length(fn)) {
+      svg <- fluctuator::read_svg(fn)
     } else {
-        svg <- NULL
+      svg <- NULL
     }
     svg
-  }  
+  }
   get_labels <- function(svg) {
-    nodes <- fluctuator::get_attributes(svg, node="text", node_attr="node_set", attr=NULL)
-    text <- sapply(nodes$id, function(id)
-        fluctuator::get_values(svg, node=id, node_attr="id")) ## SLOW!
+    nodes <- fluctuator::get_attributes(svg, node = "text", node_attr = "node_set", attr = NULL)
+    text <- sapply(nodes$id, function(id) {
+      fluctuator::get_values(svg, node = id, node_attr = "id")
+    }) ## SLOW!
     names(text) <- nodes$id
     text
   }
   color_all_nodes <- function(svg, node_ids, colors) {
-    aa  <- fluctuator::get_attributes(svg, node=node_ids, node_attr="id")  
-    path_url <- unlist(aa['clip-path'])
-    path_ids <- rep(NA,length(path_url))
-    i=1
-    for(i in 1:length(path_url)) {
-        pp <- fluctuator::get_attributes(svg, node=path_url[i], node_attr="clip-path")  
-        j <- which(pp$node_set=="path" & grepl("stroke:black",pp$style))
-        if(length(j)==0) next()
-        path_ids[i] <- pp$id[j]
+    aa <- fluctuator::get_attributes(svg, node = node_ids, node_attr = "id")
+    path_url <- unlist(aa["clip-path"])
+    path_ids <- rep(NA, length(path_url))
+    i <- 1
+    for (i in 1:length(path_url)) {
+      pp <- fluctuator::get_attributes(svg, node = path_url[i], node_attr = "clip-path")
+      j <- which(pp$node_set == "path" & grepl("stroke:black", pp$style))
+      if (length(j) == 0) next()
+      path_ids[i] <- pp$id[j]
     }
-    
-#    svg <- fluctuator::set_attributes(
-#        svg, node=path_ids, node_attr='id', attr = "style",
+
+    #    svg <- fluctuator::set_attributes(
+    #        svg, node=path_ids, node_attr='id', attr = "style",
     #        pattern = "fill:none", replacement = paste0("fill:",colors))
     ## skip summary: not needed.. faster
-    df <- data.frame(node=path_ids, attr="style",
-      pattern = "fill:none", replacement = paste0("fill:",colors))
+    df <- data.frame(
+      node = path_ids, attr = "style",
+      pattern = "fill:none", replacement = paste0("fill:", colors)
+    )
     res <- apply(df, 1, function(p) {
-      fluctuator:::set_single_attribute(svg, p["node"], node_attr='id', p["attr"], 
-        p["pattern"], p["replacement"]) })
+      fluctuator:::set_single_attribute(svg, p["node"],
+        node_attr = "id", p["attr"],
+        p["pattern"], p["replacement"]
+      )
+    })
     svg@summary <- fluctuator:::svg_summary_table(svg@svg)
-    remove(res) 
+    remove(res)
     svg
   }
-    
+
   svg <- get_pathway_svg(wp)
-  if(is.null(svg)) {
+  if (is.null(svg)) {
     return(NULL)
   }
-    
-  labels <- get_labels(svg)  ## slow...
-  if(is.null(val)) {
+
+  labels <- get_labels(svg) ## slow...
+  if (is.null(val)) {
     node_ids <- names(labels)
-    colors = "#00ff0033"
-    svg2 <- color_all_nodes(svg, node_ids, colors)  
+    colors <- "#00ff0033"
+    svg2 <- color_all_nodes(svg, node_ids, colors)
   } else {
     sum(names(val) %in% labels)
-    if(sum(names(val) %in% labels)==0) {
+    if (sum(names(val) %in% labels) == 0) {
       return(NULL)
     }
     labels <- labels[labels %in% names(val)]
@@ -66,9 +73,9 @@ wikipathview <- function(wp, val, dir) {
     val <- val[labels]
     val
     node_ids <- names(labels)
-    rr <- round(66*pmin(1,abs(val/2.0))**0.5)  
-    colors <- ifelse(val>0, paste0("#ff0000",rr), paste0("#0055ff",rr))
-    svg2 <- color_all_nodes(svg, node_ids, colors)  
+    rr <- round(66 * pmin(1, abs(val / 2.0))**0.5)
+    colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
+    svg2 <- color_all_nodes(svg, node_ids, colors)
   }
   svg2
 }

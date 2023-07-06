@@ -30,7 +30,6 @@ CompareBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-
       comparisons1 <- names(pgx$gx.meta$meta)
       sel1 <- comparisons1[1]
       shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
@@ -60,14 +59,14 @@ CompareBoard <- function(id, pgx) {
       shiny::req(dataset2)
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
-      
+
       pgx1 <- pgx
       pgx2 <- dataset2()
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
       ct2 <- input$contrast2
-      
+
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
@@ -98,7 +97,7 @@ CompareBoard <- function(id, pgx) {
       } else {
         #
         file2 <- file.path(OPG, "data", input$dataset2)
-        pgx <- local(get(load(file2, verbose=0)))
+        pgx <- local(get(load(file2, verbose = 0)))
       }
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
@@ -107,7 +106,6 @@ CompareBoard <- function(id, pgx) {
     })
 
     getOmicsScoreTable <- shiny::reactive({
-      
       shiny::req(pgx)
       shiny::req(dataset2())
       shiny::req(input$contrast1)
@@ -120,7 +118,7 @@ CompareBoard <- function(id, pgx) {
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
       ct2 <- input$contrast2
-      
+
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         return(NULL)
       }
@@ -132,8 +130,8 @@ CompareBoard <- function(id, pgx) {
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
-      F1 <- F1[match(gg, toupper(rownames(F1))),, drop = FALSE] 
-      F2 <- F2[match(gg, toupper(rownames(F2))),, drop = FALSE]
+      F1 <- F1[match(gg, toupper(rownames(F1))), , drop = FALSE]
+      F2 <- F2[match(gg, toupper(rownames(F2))), , drop = FALSE]
       rownames(F1) <- gg
       rownames(F2) <- gg
       colnames(F1) <- paste0("1:", colnames(F1))
@@ -168,7 +166,7 @@ CompareBoard <- function(id, pgx) {
       gsub("[ ]", "", genes)
     })
 
-  
+
     ## ============================================================================
     ## ScatterPlot 1
     ## ============================================================================

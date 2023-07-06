@@ -30,9 +30,9 @@
 
 open_url_js <- function(url) {
   # Turn `'` character into %27
-  url <- url%>% gsub("'", "%27", x = .)
+  url <- url %>% gsub("'", "%27", x = .)
   # Remove `\n`
-  url <- url%>% gsub("\n", "", x = .)
+  url <- url %>% gsub("\n", "", x = .)
   # Run JS code in the browser (window.open opens a new tab)
   shinyjs::runjs(
     code = paste0(

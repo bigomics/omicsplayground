@@ -13,13 +13,12 @@
 #'
 #' @export
 drugconnectivity_plot_moa_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height
-                                         ) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -60,7 +59,6 @@ drugconnectivity_plot_moa_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         moatype <- input$dsea_moatype
         if (moatype == "target gene") {
@@ -76,17 +74,17 @@ drugconnectivity_plot_moa_server <- function(id,
       plotTopBarplot <- function(ntop) {
         res <- plot_data()
         shiny::req(res)
-        
+
         res$score <- res$NES
         yaxistitle <- "score (NES)"
-        if(input$qweight) {
-          res$score <- res$NES * (1 - res$padj) * (1- 1/res$size**1)
-          yaxistitle <- "score (qNES)"          
+        if (input$qweight) {
+          res$score <- res$NES * (1 - res$padj) * (1 - 1 / res$size**1)
+          yaxistitle <- "score (qNES)"
         }
         jj <- unique(c(head(order(-res$score), ntop), tail(order(-res$score), ntop)))
         moa.top <- res$score[jj]
         names(moa.top) <- res$pathway[jj]
-        
+
         p <- playbase::pgx.barplot.PLOTLY(
           data = data.frame(
             x = factor(names(moa.top), levels = names(moa.top)),
@@ -96,22 +94,22 @@ drugconnectivity_plot_moa_server <- function(id,
           y = "y",
           yaxistitle = yaxistitle,
           xaxistitle = "",
-          grouped = FALSE,  ## not really...
+          grouped = FALSE, ## not really...
           yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top))),
           xlen = 30
         )
-        
+
         return(p)
       }
 
       plot.RENDER <- function() {
-        plotTopBarplot(14)         
+        plotTopBarplot(14)
       }
 
       plot.RENDER2 <- function() {
         plotTopBarplot(24) %>%
           plotly::layout(
-            font = list( size = 18 )
+            font = list(size = 18)
           )
       }
 

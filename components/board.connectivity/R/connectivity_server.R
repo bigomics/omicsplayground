@@ -6,7 +6,6 @@
 
 ConnectivityBoard <- function(id, pgx, getPgxDir) {
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
     tabH <- "70vh"
@@ -22,7 +21,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       frameborder='0' allow='accelerometer; autoplay; encrypted-media;
       gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
     )
-    
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -36,10 +35,10 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
     ## update choices upon change of data set
-    shiny::observeEvent( pgx$model.parameters$contr.matrix, {
+    shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
-      dbg("[ConnectivityBoard:observeEvent] updating contrasts")      
+      dbg("[ConnectivityBoard:observeEvent] updating contrasts")
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "contrast",
@@ -52,41 +51,41 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       shiny::req(pgx, pgx$connectivity)
       ## update sigdb choices
       sigdb1 <- "datasets-sigdb.h5"
-      sigdbx <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$")  ## extra sigdb
-      sigdb <- c(sigdb1, sigdbx)      
+      sigdbx <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$") ## extra sigdb
+      sigdb <- c(sigdb1, sigdbx)
       computed.sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
       sel <- sigdb1
       shiny::updateSelectInput(session, "sigdb", choices = sigdb, selected = sel)
     })
-    
+
 
     getCurrentContrast <- shiny::reactive({
       shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
       ct <- input$contrast
       meta1 <- pgx$gx.meta$meta
-      meta2 <- pgx$gset.meta$meta      
-      if(!ct %in% names(meta1) || !ct %in% names(meta2)) {
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ",ct)
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ",names(meta1))
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ",names(meta2))        
+      meta2 <- pgx$gset.meta$meta
+      if (!ct %in% names(meta1) || !ct %in% names(meta2)) {
+        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ", ct)
+        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ", names(meta1))
+        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ", names(meta2))
         return(NULL)
       }
-      
+
       fc <- pgx$gx.meta$meta[[ct]]$meta.fx
-      names(fc) <- rownames(pgx$gx.meta$meta[[ct]])      
+      names(fc) <- rownames(pgx$gx.meta$meta[[ct]])
       gs <- pgx$gset.meta$meta[[ct]]$meta.fx
       names(gs) <- rownames(pgx$gset.meta$meta[[ct]])
       names(fc) <- toupper(names(fc)) ## de-MOUSE
       list(name = ct, fc = fc, gs = gs)
     })
 
-    observeEvent( getCurrentContrast(), {
+    observeEvent(getCurrentContrast(), {
       res <- getCurrentContrast()
-      top50 <- head(names(sort(abs(res$fc),decreasing=TRUE)),50)
-      top50 <- paste(top50, collapse=" ")
-      updateTextAreaInput(session, "genelist", value=top50)
+      top50 <- head(names(sort(abs(res$fc), decreasing = TRUE)), 50)
+      top50 <- paste(top50, collapse = " ")
+      updateTextAreaInput(session, "genelist", value = top50)
     })
-        
+
     ## ================================================================================
     ## =============================  FUNCTIONS =======================================
     ## ================================================================================
@@ -94,19 +93,27 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     getConnectivityFilename <- function(sigdb) {
       db1 <- file.path(SIGDB.DIR, sigdb)
       db2 <- file.path(getPgxDir(), sigdb)
-      if( file.exists(db1)) return(db1)
-      if( file.exists(db2)) return(db2)
+      if (file.exists(db1)) {
+        return(db1)
+      }
+      if (file.exists(db2)) {
+        return(db2)
+      }
       return(NULL)
     }
 
-    #' Get the path/folder to the signature database file. 
+    #' Get the path/folder to the signature database file.
     #'
-    #' @param sigdb signature h5 file  
+    #' @param sigdb signature h5 file
     getConnectivityPath <- function(sigdb) {
       db1 <- file.path(SIGDB.DIR, sigdb)
       db2 <- file.path(getPgxDir(), sigdb)
-      if( file.exists(db1)) return(SIGDB.DIR)
-      if( file.exists(db2)) return(getPgxDir())
+      if (file.exists(db1)) {
+        return(SIGDB.DIR)
+      }
+      if (file.exists(db2)) {
+        return(getPgxDir())
+      }
       return(NULL)
     }
 
@@ -115,30 +122,32 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         return(NULL)
       }
       cpath <- getConnectivityPath(sigdb)
-      playbase::sigdb.getConnectivityContrasts(sigdb, path=cpath)
+      playbase::sigdb.getConnectivityContrasts(sigdb, path = cpath)
     }
 
     getConnectivityMatrix <- function(sigdb, select = NULL, genes = NULL) {
       cpath <- getConnectivityPath(sigdb)
-      playbase::sigdb.getConnectivityMatrix(sigdb, select=select, genes=genes, path=cpath) 
+      playbase::sigdb.getConnectivityMatrix(sigdb, select = select, genes = genes, path = cpath)
     }
 
     getEnrichmentMatrix <- function(sigdb, select = NULL, nc = -1) {
-        cpath <- getConnectivityPath(sigdb)
-        playbase::sigdb.getEnrichmentMatrix( sigdb, select=select, path=cpath,
-                                             which=c("gsea","rankcor"))
-    }
-    
-    getSignatureMatrix <- function(sigdb) {
-        cpath <- getConnectivityPath(sigdb)
-        playbase::sigdb.getSignatureMatrix(sigdb, path=cpath)
+      cpath <- getConnectivityPath(sigdb)
+      playbase::sigdb.getEnrichmentMatrix(sigdb,
+        select = select, path = cpath,
+        which = c("gsea", "rankcor")
+      )
     }
 
-    
+    getSignatureMatrix <- function(sigdb) {
+      cpath <- getConnectivityPath(sigdb)
+      playbase::sigdb.getSignatureMatrix(sigdb, path = cpath)
+    }
+
+
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
-    
+
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
       shiny::req(sigdb, pgx, pgx$connectivity)
@@ -182,32 +191,34 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
 
       pgx.connectivity <- list()
-      if("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
+      if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
       pgxdir <- getPgxDir()
-      
-      if(!"datasets-sigdb" %in% names(pgx.connectivity)) {
+
+      if (!"datasets-sigdb" %in% names(pgx.connectivity)) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        sigdb.file = file.path(pgxdir,"datasets-sigdb.h5")
+        sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
         user.scores <- NULL
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir,check.sigdb=TRUE)
-        
-        if(need_update || !file.exists(sigdb.file)) {
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb = TRUE)
+
+        if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")
           shiny::withProgress(message = "Updating signature database...", value = 0.33, {
-            playbase::pgxinfo.updateDatasetFolder(pgxdir,update.sigdb=TRUE)
+            playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = TRUE)
           })
-          shiny::removeModal(session)          
-        }  
-        if(file.exists(sigdb.file)) {
+          shiny::removeModal(session)
+        }
+        if (file.exists(sigdb.file)) {
           info("[compute_connectivity] computing connectivity scores...")
           pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
-          shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {          
+          shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {
             user.scores <- playbase::pgx.computeConnectivityScores(
-              pgx, sigdb.file, ntop = 50, contrasts = NULL,
-              remove.le = TRUE, inmemory = FALSE)
+              pgx, sigdb.file,
+              ntop = 50, contrasts = NULL,
+              remove.le = TRUE, inmemory = FALSE
+            )
           })
-          shiny::removeModal(session)          
+          shiny::removeModal(session)
         }
         pgx.connectivity[["datasets-sigdb.h5"]] <- user.scores
       }
@@ -219,7 +230,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
-      
+
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
         warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
@@ -247,21 +258,21 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
       ## only those in existing database
       sigpath <- getConnectivityPath(sigdb)
-      cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path=sigpath)
+      cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path = sigpath)
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
 
       ## filter on significance
       qsig <- 0.20
       scores <- scores[which(scores$padj <= qsig), , drop = FALSE]
       scores <- scores[order(-scores$score), , drop = FALSE]
-      
+
       no.le <- !("leadingEdge" %in% colnames(scores))
       abs_score <- input$abs_score
       ntop <- 100
 
       if (no.le && abs_score == TRUE) {
         ## recreate "leadingEdge" list
-        sig <- playbase::sigdb.getSignatureMatrix(sigdb, path=sigpath)
+        sig <- playbase::sigdb.getSignatureMatrix(sigdb, path = sigpath)
         fc <- getCurrentContrast()$fc
         fc <- fc[order(-abs(fc))]
         fc.up <- head(names(fc[fc > 0]), ntop)
@@ -273,7 +284,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         ee <- ee[match(scores$pathway, names(ee))]
         scores$leadingEdge <- ee
       }
-      
+
       if (no.le && abs_score == FALSE) {
         ## recreate "leadingEdge" list
         sig <- getSignatureMatrix(sigdb)
@@ -298,12 +309,12 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         ee[neg.rho] <- nn[match(scores$pathway[neg.rho], names(nn))]
         scores$leadingEdge <- ee
       }
-      
+
       ## bail out
       if (nrow(scores) == 0) {
         return(NULL)
       }
-      
+
       return(scores)
     })
 
@@ -313,10 +324,10 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
     getSelectedGenes <- reactive({
       genes <- input$genelist
-      genes <- strsplit(genes, split=" ")[[1]]
+      genes <- strsplit(genes, split = " ")[[1]]
       genes
-    })  
-    
+    })
+
     getTopProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
       sigdb <- input$sigdb
@@ -326,7 +337,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       shiny::req(ii, input$sigdb)
 
       df <- getConnectivityScores()
-      pw <- head(df$pathway[ii],100)
+      pw <- head(df$pathway[ii], 100)
 
       contr <- getCurrentContrast()
       fc <- contr$fc
@@ -349,7 +360,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       shiny::req(ii, input$sigdb)
 
       df <- getConnectivityScores()
-      pw <- head(df$pathway[ii],100)
+      pw <- head(df$pathway[ii], 100)
 
       selected_genes <- getSelectedGenes()
       F <- getConnectivityMatrix(sigdb, select = pw, genes = selected_genes)
@@ -357,8 +368,8 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       F <- F[, pw, drop = FALSE]
       return(F)
     })
-    
-    
+
+
     ## ============================================================================
     ## FC correlation/scatter plots
     ## ============================================================================
@@ -388,10 +399,10 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
     connectivity_plot_cumFCplot_server(
       "cumFCplot",
-      ##getTopProfiles,
-      getProfiles = getSelectedProfiles,      
+      ## getTopProfiles,
+      getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
-      getCurrentContrast= getCurrentContrast
+      getCurrentContrast = getCurrentContrast
     )
 
     ## ================================================================================
@@ -419,7 +430,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       getConnectivityScores,
       getEnrichmentMatrix
     )
-    
+
     connectivityFoldchangeTable <- connectivity_table_foldchange_server(
       id = "connectivityFoldchangeTable",
       pgx = pgx,
@@ -486,6 +497,5 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast
     )
-    
   }) ## end of moduleserver
 } ## end-of-Board

@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_scatter_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
