@@ -12,11 +12,20 @@ enrichment_plot_volcanomethods_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+
+  plot_options <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
+      "Scale the volcano plots individually per method..",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(
     ns("plot"),
     plotlib = "grid",
     title = title,
     caption = caption,
+    options = plot_options,
     info.text = info.text,
     height = height,
     width = width,
@@ -76,18 +85,12 @@ enrichment_plot_volcanomethods_server <- function(id,
       lfc <- pd$lfc
       sel.gsets <- pd$sel.gsets
 
-      dbg("[enrichment_plot_volcanomethods.R] dim.Q = ", dim(Q))
-      dbg("[enrichment_plot_volcanomethods.R] dim.F = ", dim(F))
-      dbg("[enrichment_plot_volcanomethods.R] lfc = ", lfc)
-      dbg("[enrichment_plot_volcanomethods.R] fdr = ", fdr)
-
       shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
         plt <- list()
         i <- 1
         for (i in 1:nplots) {
           fc <- F[, i]
           qv <- Q[, i]
-          dbg("[enrichment_plot_volcanomethods.R] names.fc = ", head(names(fc)))
           is.sig <- (qv <= fdr & abs(fc) >= lfc)
           table(is.sig)
           sig.genes <- names(fc)[which(is.sig)]
@@ -97,9 +100,10 @@ enrichment_plot_volcanomethods_server <- function(id,
           tt <- colnames(Q)[i]
           #
 
-          dbg("[enrichment_plot_volcanomethods.R] dim.xy = ", dim(xy))
-          dbg("[enrichment_plot_volcanomethods.R] sig.genes = ", head(sig.genes))
-          dbg("[enrichment_plot_volcanomethods.R] length.is.sig = ", length(is.sig))
+          ymax1 <- ymax
+          if (input$scale_per_method) {
+            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
+          }
 
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -113,7 +117,7 @@ enrichment_plot_volcanomethods_server <- function(id,
 
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax),
+            ylim = c(0, ymax1),
             xlab = "difference  (log2FC)",
             ylab = "significance  (-log10q)",
             hilight.lwd = 0,
