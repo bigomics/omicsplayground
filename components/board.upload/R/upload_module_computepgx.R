@@ -624,7 +624,8 @@ upload_module_computepgx_server <- function(
           shiny::removeUI(selector = ".current-dataset > #spinner-container")
         }
 
-        if (process_counter() < opt$MAX_DS_PROCESS) {
+        MAX_DS_PROCESS = 1
+        if (process_counter() < MAX_DS_PROCESS) {
           shinyjs::enable("compute")
         } else {
           shinyjs::disable("compute")
