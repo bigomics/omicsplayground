@@ -266,12 +266,10 @@ FirebaseAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
-        dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")
         return()
       }
 
       first_time <<- FALSE
-      message("[FirebaseAuthenticationModule] USER not logged in!")
       resetUSER()
     })
 
@@ -857,7 +855,6 @@ splashLoginModal <- function(ns = NULL,
       return(e)
     }
   }
-  message("[AuthenticationModule::splashLoginModal] called()")
 
   slogan <- list()
   slogan[[1]] <- c("Big Omics Data", "Isn't big anymore with BigOmics Playground")
@@ -903,8 +900,6 @@ splashLoginModal <- function(ns = NULL,
   div.firebase <- div()
   div.title <- div()
   div.subtitle <- div()
-
-  message("[AuthenticationModule::splashLoginModal] 1:")
 
   if (with.email) {
     div.email <- div(
@@ -1005,8 +1000,6 @@ splashLoginModal <- function(ns = NULL,
     )
   }
 
-  message("[AuthenticationModule::splashLoginModal] 2:")
-
   if (!is.null(title) && title != "") {
     div.title <- div(
       id = "splash-login-title",
@@ -1022,8 +1015,6 @@ splashLoginModal <- function(ns = NULL,
       h5(subtitle, style = "color:white;")
     )
   }
-
-  message("[AuthenticationModule::splashLoginModal] 3:")
 
   div.button <- div(
     id = "splash-buttons",
@@ -1048,19 +1039,12 @@ splashLoginModal <- function(ns = NULL,
     )
   }
 
-  message("[AuthenticationModule::splashLoginModal] 4:")
-
   body <- div(
     id = "splash-content",
     splash.content
   )
 
-  message("[AuthenticationModule::splashLoginModal] 5:")
-
   m <- splashScreen(title = splash.title, body = body, ns = ns)
-
-  message("[AuthenticationModule::splashLoginModal] done!")
-
   return(m)
 }
 
@@ -1168,7 +1152,6 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
       return(e)
     }
   }
-  message("[AuthenticationModule::monsterFullScreen]")
 
   div.buttons <- shiny::modalButton("Dismiss")
   if (buttons) {
