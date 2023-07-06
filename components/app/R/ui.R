@@ -504,7 +504,8 @@ app_ui <- function() {
                 ),
                 bigdash::bigTabItem(
                     "load-tab",
-                    
+
+                    #LoadingInputs("load")
                     LoadingUI("load")
                 ),
                 bigdash::bigTabItem(

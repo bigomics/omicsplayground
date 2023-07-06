@@ -317,7 +317,8 @@ upload_module_computepgx_server <- function(
                 if(!opt$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern="*.pgx$|*.pgx_$"))
                 if(numpgx >= max.datasets) {
                     ### should use sprintf here...
-                    msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade'><b><u>UPGRADE</u></b></a> your account."
+
+                    msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
                     shinyalert::shinyalert(
                       title = "Your storage is full",
                       text = HTML(msg),

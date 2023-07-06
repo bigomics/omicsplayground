@@ -12,25 +12,175 @@ loading_table_datasets_public_ui <- function(
   width) {
   ns <- shiny::NS(id)
 
-  TableModuleUI(
-    ns("datasets"),
-    info.text = info.text,
-    width = width,
-    caption = caption,
-    height = height,
-    title = title
+  tagList(
+      TableModuleUI(
+          ns("datasets"),
+          info.text = info.text,
+          width = width,
+          caption = caption,
+          height = height,
+          title = title
+      ),
+      div(
+          id = "load-action-buttons",
+          shiny::actionButton(
+              ns("importbutton"),
+              label = "Import dataset",
+              icon = icon("file-import"),
+              class = "btn btn-primary"
+          )
+      )
   )
 }
 
-loading_table_datasets_public_server <- function(id, table) {
+loading_table_datasets_public_server <- function(id,
+                                                 getPGXDIR,
+                                                 pgx_public_dir,
+                                                 reload_pgxdir_public,
+                                                 auth,
+                                                 enable_delete,
+                                                 limits,
+                                                 r_global) {
   moduleServer(id, function(input, output, session) {
 
+      getPGXINFO_PUBLIC <- shiny::reactive({
+          req(auth)
+          if (!auth$logged()) {
+              warning("[LoadingBoard:getPGXINFO_PUBLIC] user not logged in!")
+              return(NULL)
+          }
+
+          reload_pgxdir_public()
+
+          ## update meta files
+          info <- NULL
+          shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
+              need_update <- playbase::pgxinfo.needUpdate(pgx_public_dir, check.sigdb=FALSE)
+          })
+
+          if(need_update) {
+              pgx.showSmallModal("Updating datasets library<br>Please wait...")
+              shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
+                  ## before reading the info file, we need to update for new files
+                  playbase::pgxinfo.updateDatasetFolder(pgx_public_dir, update.sigdb=FALSE)
+
+              })
+              shiny::removeModal(session)
+          }
+
+          info <- playbase::pgxinfo.read(pgx_public_dir, file = "datasets-info.csv")
+          return(info)
+      })
+
+      getFilteredPGXINFO_PUBLIC <- shiny::reactive({
+          ## get the filtered table of pgx datasets
+          req(auth)
+          if (!auth$logged()) {
+              return(NULL)
+          }
+
+          df <- getPGXINFO_PUBLIC()
+          shiny::req(df)
+
+          pgxfiles <- dir(pgx_public_dir, pattern = ".pgx$")
+          sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
+          df <- df[sel, , drop = FALSE]
+
+          ## Apply filters
+          if (nrow(df) > 0) {
+              f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
+              notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
+              if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
+              if (notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
+              df <- df[which(f1 & f2 & f3), , drop = FALSE]
+              df$date <- as.Date(df$date, format = "%Y-%m-%d")
+              df <- df[order(df$date, decreasing = TRUE), ]
+              if (nrow(df) > 0) rownames(df) <- nrow(df):1
+          }
+
+          kk <- unique(c(
+              "dataset", "description", "datatype", "nsamples",
+              "ngenes", "nsets", "conditions", "date", "organism",
+              "creator"
+          ))
+          kk <- intersect(kk, colnames(df))
+          df <- df[, kk, drop = FALSE]
+
+          df$dataset <- sub("[.]pgx$", "", df$dataset)
+          df$conditions <- gsub("[,]", " ", df$conditions)
+          df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
+          df$description <- playbase::shortstring(as.character(df$description), 200)
+          df$nsets <- NULL
+          df$organism <- NULL
+
+          df
+      })
+
+      # disable buttons when no row is selected; enable when one is selected
+      observeEvent( pgxtable_public$rows_selected(), {
+          if (is.null(pgxtable_public$rows_selected())) {
+              shinyjs::disable(id = 'importbutton')
+          } else {
+              shinyjs::enable(id = 'importbutton')
+          }
+      }, ignoreNULL = FALSE)
+
+      observeEvent( input$importbutton, {
+          selected_row <- pgxtable_public$rows_selected()
+          pgx_name <- pgxtable_public$data()[selected_row, 'dataset']
+          pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, '.pgx'))
+          pgx_path <- getPGXDIR()
+          new_pgx_file <- file.path(pgx_path, paste0(pgx_name, '.pgx'))
+
+          ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
+          numpgx <- length(dir(pgx_path, pattern="*.pgx$"))
+          if(!enable_delete) numpgx <- length(dir(pgx_path, pattern="*.pgx$|*.pgx_$"))
+          maxpgx <- as.integer(limits['datasets'])
+          if(numpgx >= maxpgx) {
+              ## should use sprintf or glue here...
+              msg = "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
+              shinyalert::shinyalert(
+                  title = "Your storage is full",
+                  text = HTML(msg),
+                  html = TRUE,
+                  type = "warning"
+              )
+              return(NULL)
+          }
+
+          if(file.exists(new_pgx_file)) {
+              shinyalert::shinyalert(
+                  title = "Oops! File exists...",
+                  paste('There is already a dataset called', pgx_name,
+                        'in your dataset folder. Please delete your file first.')
+              )
+              return()
+          }
+
+          ## Copy the file from Public folder to user folder
+          shiny::withProgress(message = "Importing dataset...", value = 0.33, {
+              file.copy(from = pgx_file, to = new_pgx_file)
+              playbase::pgxinfo.updateDatasetFolder(pgx_path, update.sigdb=FALSE)
+          })
+
+          shinyalert::shinyalert(
+              "Dataset imported",
+              paste('The public dataset', pgx_name, 'has now been successfully imported',
+                    'to your library. Feel free to load it as usual!')
+          )
+
+          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+      }
+      )
+
     pgxTable_DT <- reactive({
-      df <- table()
-      #
+
+      df <- getFilteredPGXINFO_PUBLIC()
+      ##shiny::req(df)
+
       # need this, otherwise there is an error on user logout
       validate(need(nrow(df)>0, 'No public datasets!'))
-      
+
       df$creator <- sub("@.*","",df$creator)  ## hide full email
 
       target1 <- grep("date", colnames(df))
@@ -73,7 +223,9 @@ loading_table_datasets_public_server <- function(id, table) {
         DT::formatStyle(0, target = "row", fontSize = "16px", lineHeight = "95%")
     }
 
-    tablemodule <- TableModuleServer(
+
+    pgxtable_public <- TableModuleServer(
+
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,
@@ -81,6 +233,8 @@ loading_table_datasets_public_server <- function(id, table) {
     )
 
     ## please refer to TableModule for return values
-    return(tablemodule)
+
+    return(pgxtable_public)
+
   })
 }

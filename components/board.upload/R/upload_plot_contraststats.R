@@ -72,7 +72,8 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
             px <- head(colnames(df), 20) ## maximum to show??
             df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
             tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "comparisons")
-            #
+
+            ## tt2 <- paste(ncol(contrasts),"contrasts")
 
             p1 <- df %>%
                 inspectdf::inspect_cat() %>%

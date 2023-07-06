@@ -162,12 +162,17 @@ app_server <- function(input, output, session) {
     #' Get user-pgx folder
     getPgxDir <- reactive({
         if(!auth$logged()) return(NULL)
+        userpgx <- PGX.DIR
         if(opt$ENABLE_USERDIR &&
-             authentication %in% c("firebase","firebase.full","password")) {
-          return(file.path(PGX.DIR, auth$email() ))
+             authentication %in% c("email","auth-email","firebase")) {
+          userpgx <- file.path(PGX.DIR, auth$email())
+        } else if(opt$ENABLE_USERDIR &&
+             authentication %in% c("password")) {
+          userpgx <- file.path(PGX.DIR, auth$name())
         } else {
-          return(PGX.DIR)
+          userpgx <- PGX.DIR
         }
+        userpgx
     })
 
     ## Default boards ------------------------------------------
@@ -441,7 +446,8 @@ app_server <- function(input, output, session) {
 
     output$current_user <- shiny::renderText({
         ## trigger on change of user
-        user <- auth$email()
+        user <- auth$email()        
+        if(user %in% c("",NA,NULL)) user <- auth$name()      
         if(user %in% c("",NA,NULL)) user <- "User"
         user
     })
@@ -756,8 +762,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
     ## Startup Message
     if(!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE!="") {
         shinyalert::shinyalert(
-            title = opt$STARTUP_TITLE,
-            text  = opt$STARTUP_MESSAGE
+            title = HTML(opt$STARTUP_TITLE),
+            text  = HTML(opt$STARTUP_MESSAGE),
+            html = TRUE
         )
     }
 

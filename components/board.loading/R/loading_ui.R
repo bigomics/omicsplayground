@@ -40,7 +40,7 @@ LoadingUI <- function(id) {
       width = 1,
       heights_equal = "row",
       height = "calc(100vh - 180px)",
-      uiOutput(ns("sharing_alert")),      
+      uiOutput(ns("sharing_alert")),
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),
@@ -90,15 +90,7 @@ LoadingUI <- function(id) {
           height = c("calc(100vh - 330px)", 700),
           width = c("auto",  "100%")
         )
-      ), ## end of 7fr-5fr
-      div(
-        id = "load-action-buttons",
-        shiny::actionButton(
-          ns("importbutton"),
-          label = "Import dataset", icon = icon("file-import"),
-              class = "btn btn-outline-primary"
-        )
-          ) ## end of buttons div
+      ) ## end of 7fr-5fr
     ) ## end first layout_column_wrap
   ) ## end of Public tabPanel
   
@@ -120,12 +112,31 @@ LoadingUI <- function(id) {
 
   ## ------------------------------------------------------------------------
 
+  sharing_tabpanel <- shiny::tabPanel(
+    'Sharing',
+    bslib::layout_column_wrap(
+      width = 1,
+      heights_equal = "row",
+      height = "calc(100vh - 180px)",
+      bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 180px)",
+        uiOutput(ns("sharing_panel_ui"))
+      )
+    )
+  ) ## end of Public tabPanel
+
+
+  ## ------------------------------------------------------------------------
+
   ## disable/hide public tabpanel if public folder does not exists
   public_dir <- file.path(OPG,"data_public")
   if(!dir.exists(public_dir)) {
     public_tabpanel <- NULL
   }
-  
+
+
   ## ============================ Board object ===========================
   div(
     class = "p-0",

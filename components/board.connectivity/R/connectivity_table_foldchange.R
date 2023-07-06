@@ -5,7 +5,7 @@
 
 connectivity_table_foldchange_ui <- function(
   id,
-  title, 
+  title,
   info.text,
   caption,
   width,
@@ -27,7 +27,7 @@ connectivity_table_foldchange_ui <- function(
       label = label
     )
   )
-  
+
 }
 
 connectivity_table_foldchange_server <- function(id,
@@ -49,15 +49,15 @@ connectivity_table_foldchange_server <- function(id,
 
       S <- getConnectivityScores()
       S1 <- S[match(colnames(F), S$pathway),c("score","rho")]
-      
+
       df <- data.frame(signature=colnames(F), S1, t(F))
       df
     })
-    
+
     foldchangeTable.RENDER <- function() {
 
       df <- get_table()
-      
+
       ## pathway is actually signature name
       df$signature <- playbase::shortstring(df$signature, 100)
       score.col <- which(colnames(df) == "score")
@@ -71,12 +71,13 @@ connectivity_table_foldchange_server <- function(id,
         plugins = 'scrollResize',
         fillContainer = TRUE,
         options = list(
-            
-          dom = "lrtip",            
+
+            #          dom = "lfrtip",
+          dom = "lrtip",
           pageLength = 99999,
           scrollX = TRUE,
           scrollY = height,
-          scrollResize = TRUE,          
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list
@@ -84,7 +85,7 @@ connectivity_table_foldchange_server <- function(id,
         DT::formatSignif(numcols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = playbase::color_from_middle(df[, "score"], "lightblue", "#f5aeae"),
+          background = color_from_middle(df[, "score"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

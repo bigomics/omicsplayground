@@ -54,7 +54,7 @@ correlation_table_corr_server <- function(id,
       title <- pgx$genes[rownames(R),"gene_title"]
       title <- substring(title, 1, 80)
       df <- data.frame(gene=rownames(R), title=title, cor=R[,"cor"], pcor=pcor)
-      
+
       return(df)
     })
 
@@ -90,7 +90,7 @@ correlation_table_corr_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("cor",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "cor"], "lightblue", "#f5aeae"
           ),
           backgroundSize = "98% 88%",
@@ -111,6 +111,6 @@ correlation_table_corr_server <- function(id,
       func2 = cor_table.RENDER_modal,
       selector = "none"
     )
-    
+
   }) ## end of moduleServer
 }
