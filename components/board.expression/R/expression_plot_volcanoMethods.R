@@ -23,6 +23,13 @@ expression_plot_volcanoMethods_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  plot_options <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
+      "Scale the volcano plots individually per method..",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     title = "Volcano plots for all methods",
@@ -30,7 +37,7 @@ expression_plot_volcanoMethods_ui <- function(
     plotlib = "grid",
     info.text = info.text,
     caption = caption,
-    options = NULL,
+    options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
@@ -57,8 +64,6 @@ expression_plot_volcanoMethods_server <- function(id,
     plot_data <- shiny::reactive({
       comp <- comp()
       features <- features()
-
-      dbg("[expression_plot_volcanoMethods.R] comp = ", comp)
 
       if (is.null(comp)) {
         return(NULL)
@@ -122,6 +127,11 @@ expression_plot_volcanoMethods_server <- function(id,
           is.sig1 <- fc.genes %in% sig.genes
           is.sig2 <- fc.genes %in% genes2
 
+          ymax1 <- ymax
+          if(input$scale_per_method) {
+            ymax1 <- 1.2*quantile(xy[,2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
+          }
+          
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = methods[i],
@@ -133,7 +143,7 @@ expression_plot_volcanoMethods_server <- function(id,
             hilight = genes1,
             hilight2 = genes2,
             xlim = xlim,
-            ylim = c(0, ymax),
+            ylim = c(0, ymax1),
             xlab = "difference  (log2FC)",
             ylab = "significance  (-log10q)",
             hilight.lwd = 0,
