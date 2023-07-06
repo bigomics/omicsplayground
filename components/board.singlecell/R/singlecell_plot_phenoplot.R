@@ -59,7 +59,7 @@ singlecell_plot_phenoplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ## if(is.null(pgx)) return(NULL)
+      #
       shiny::req(pgx)
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
@@ -79,7 +79,7 @@ singlecell_plot_phenoplot_server <- function(id,
     })
 
     get_plots <- function(cex=1) {
-      ## if(!input$tsne.all) return(NULL)
+      #
       pd <- plot_data()
       shiny::req(pd)
 
@@ -121,14 +121,6 @@ singlecell_plot_phenoplot_server <- function(id,
           klr0 <- klrpal[y]
         }
 
-        ## jj <- which(is.na(klr0))
-        ## if (length(jj)) klr0[jj] <- "#AAAAAA22"
-        ## base::plot(pd[["pos"]],
-        ##   pch = 19, cex = cex1, col = klr0, fg = gray(0.5), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
-        ## title(, cex.main = 1.3, line = 0.5, col = "grey40")
-
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = y,
@@ -149,7 +141,7 @@ singlecell_plot_phenoplot_server <- function(id,
           gridcolor = 'fff'
         ) %>%
           plotly::layout(
-            ## showlegend = TRUE,
+            #
             plot_bgcolor = "#f8f8f8",
             margin = list(0,0,0,0)
           )
@@ -171,7 +163,7 @@ singlecell_plot_phenoplot_server <- function(id,
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        ##   margin = 0.02
+        #
         margin = c(0.01,0.01,0.01,0.045)
       ) %>%
         plotly_default() %>%

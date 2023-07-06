@@ -1,4 +1,4 @@
-##    devtools::install_github("m-jahn/fluctuator")
+#
 
 wikipathview <- function(wp, val, dir) {
     
@@ -72,12 +72,3 @@ wikipathview <- function(wp, val, dir) {
   }
   svg2
 }
-
-if(0) {
-    wp="WP558"
-    wp="WP179"
-    svg2 <- wikipathview(wp="WP179", val=NULL, dir="svg2")
-    fluctuator::write_svg(svg2, file = "WP179-green.svg")
-}
-
-

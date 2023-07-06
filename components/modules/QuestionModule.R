@@ -13,14 +13,13 @@ QUESTIONS.ANSWERS <- list(
 )
 
 QuestionModuleUI <- function(id) {
-    ##ns <- shiny::NS(id)  ## namespace
 }
 
 QuestionModule <- function(input, output, session, lapse=5)
 {
     ns <- session$ns ## NAMESPACE
 
-    ##qa = QUESTIONS.ANSWERS[[1]]
+    #
     cur_question <- shiny::reactiveVal("")
 
     showQuestion <- function(qa=NULL) {
@@ -38,7 +37,7 @@ QuestionModule <- function(input, output, session, lapse=5)
             title = question,
             answer.tags,
             footer = shiny::tagList(
-                ##modalButton("Cancel"),
+                #
                 shiny::actionButton(ns("question_submit"),"Continue", icon=NULL)
             ),
             size = "m"

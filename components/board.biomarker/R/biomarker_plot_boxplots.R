@@ -36,7 +36,6 @@ biomarker_plot_boxplots_ui <- function(
     label = label,
     plotlib = "base",
     info.text = info.text,
-    ##    options = plot_options,
     options = NULL,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
@@ -152,7 +151,6 @@ biomarker_plot_boxplots_server <- function(id,
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        ## csvFunc = plot_data,
         res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
         add.watermark = watermark

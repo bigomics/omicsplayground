@@ -169,7 +169,7 @@ dataview_plot_averagerank_server <- function(id,
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() %>%
         plotly_modal_default()
-      ## fig <- plotly::style(fig, marker.size = 14)
+      #
       fig
     }
 

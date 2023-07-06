@@ -162,7 +162,7 @@ drugconnectivity_plot_enplots_server <- function(id,
         }
 
         ## This is needed for base plots as reactive to return something
-        ##grDevices::recordPlot()
+        #
       }
 
       PlotModuleServer(

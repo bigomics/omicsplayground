@@ -39,20 +39,3 @@ Upgrade today and get advanced analysis features of Playground Pro<br>without th
     easyClose = TRUE
   ))
 }
-
-
-if(0) {
-
-  shiny::shinyApp(
-    ui = shiny::fluidPage(
-      shiny::actionButton("show","show")
-    ),
-    server = function(input, output) {
-
-      observeEvent(input$show, {
-        show_upgrade_modal(timeout.min=40)         
-      })
-    }
-  )
-
-}

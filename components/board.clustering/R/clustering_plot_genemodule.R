@@ -118,16 +118,13 @@ clustering_plot_genemodule_server <- function(id,
           y = "gx",
           grouped = FALSE,
           fillcolor = plotly.colors[(i-1)%%10+1],
-          ## title = rownames(mat)[i],
           yaxistitle = "avg expr (logCPM)",
           xaxistitle = "",
           annotations = anntitle
-          ##margin = plotly.margin
         ) %>% plotly::layout(
           plot_bgcolor = "#f2f2f2",
           margin = list(l=20,r=0,b=0,t=0),
           bargap = 0.35
-          ##xaxis = list(tickfont = list(size=xaxis.fontsize))          
         )        
         plts[[i]] <- p        
       }

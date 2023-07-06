@@ -21,6 +21,7 @@ LoadingBoard <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
+
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
 
@@ -68,10 +69,12 @@ LoadingBoard <- function(id,
       num_received <- length(received_files)
       num_shared <- length(shared_files)
 
+
       if(num_received==0 && num_shared==0 ) {
         tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
         return(tag)
       }
+
 
       ## If not show alerts for sharing
       msg <- c()
@@ -85,6 +88,7 @@ LoadingBoard <- function(id,
       bs_alert(
         style = "warning",
         conditional = FALSE,
+
         shiny::HTML(paste(msg,"Please check the Sharing panel."))
       )
     })
@@ -106,6 +110,7 @@ LoadingBoard <- function(id,
             shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
             br(),br(),
             pgxreceived$receivedPGXtable(),
+
             br()
           )
           out <- tagList(out, out1)
@@ -151,6 +156,7 @@ LoadingBoard <- function(id,
         return(NULL)
       } else {
 
+
         loadAndActivatePGX("example-data")
 
         # open the left & right sidebar
@@ -188,6 +194,7 @@ LoadingBoard <- function(id,
       shiny::req(pgxtable)
       pgxtable$data()
     })
+
 
     loading_tsne_server(
       id = "tsne",
@@ -286,6 +293,7 @@ LoadingBoard <- function(id,
       dbg("[LoadingBoard::getPGXDIR] user.pgxdir = ",pdir)
       pdir
     })
+
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -391,6 +399,7 @@ LoadingBoard <- function(id,
       remove(loaded_pgx)
 
       ## remove modal on exit??
+
       ## shiny::removeModal()
       bigdash.showTabsGoToDataView(session)  ## in ui-bigdashplus.R
 
@@ -430,6 +439,7 @@ LoadingBoard <- function(id,
 
     ## reactive value for updating table
     touchtable <- shiny::reactiveVal(0)
+
 
     ## ------------------------------------------------
     ## Board return object

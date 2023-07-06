@@ -56,10 +56,9 @@ functional_plot_reactome_graph_server <- function(id,
     id, function(input, output, session) {
 
       ## preload... takes few seconds...
-      ##suppressMessages(require(SBGNview))
+      #
 
       ## reactive or function? that's the question...
-      ## plot_data <- shiny::reactive({
       plot_data <- function() {
         ## folder with predownloaded SBGN files
         sbgn.dir <- pgx.system.file("sbgn/", package="pathway")
@@ -71,9 +70,8 @@ functional_plot_reactome_graph_server <- function(id,
           sbgn.dir = sbgn.dir
         )
         return(res)
-      }#)
+      }
 
-      #  getPathwayImage <- function() {
       getPathwayImage <- shiny::reactive({
 
         res <- plot_data()
@@ -88,18 +86,6 @@ functional_plot_reactome_graph_server <- function(id,
         shiny::req(df, comparison, pgx$X)
 
         NULL.IMG <- list(src = "", contentType = "image/png")
-        ## if (is.null(pgx)) {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (is.null(comparison) || length(comparison) == 0) {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (comparison == "") {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (is.null(df)) {
-        ##   return(NULL.IMG)
-        ## }
 
         ## get fold-change vector
         fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
@@ -130,9 +116,7 @@ functional_plot_reactome_graph_server <- function(id,
         setwd(tmpdir)
 
         suppressMessages(require(SBGNview)) ## slow!! but needed!!!       
-        ##data("mapped.ids","pathways.info", "sbgn.xmls")
-        ##data("sbgn.xmls", package="SBGNview.data",verbose=1)  ### BIG 700MB!!!
-        ##object.size(sbgn.xmls)
+
 
         ## this is a trick. the original object in SBGNview.data was 700MB!!
         sbgn.xmls <- dir(sbgn.dir,".sbgn")
@@ -146,11 +130,9 @@ functional_plot_reactome_graph_server <- function(id,
 
         obj <- try( SBGNview::SBGNview(
           gene.data = fc,
-          ##gene.id.type = "ENTREZID",
           gene.id.type = "SYMBOL",
-          ##sbgn.gene.id.type = "SYMBOL",
           sbgn.dir = sbgn.dir,
-          # input.sbgn = pathway.id,
+          
           input.sbgn = pathway.id,
           output.file = "reactome",
           output.formats =  c("png")
@@ -182,9 +164,7 @@ functional_plot_reactome_graph_server <- function(id,
           src = imgfile,
           svg = svgfile,
           contentType = "image/png",
-          #width = "100%", height = "100%", ## actual size: 1040x800
           width = img.dim[2], height = img.dim[1], ## actual size
-          ##width = img.width, height = img.height, ## actual size
           alt = "reactome pathway"
         )
       })

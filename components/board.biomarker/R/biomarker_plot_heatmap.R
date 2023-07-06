@@ -108,7 +108,7 @@ biomarker_plot_heatmap_server <- function(id,
           dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
-          #  key.offset = c(0.05, 1.03),
+          
           key.offset = c(0.05, 0.98),
           show_rownames = 99,
           lab.len = 50,

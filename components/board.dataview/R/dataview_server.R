@@ -115,7 +115,7 @@ DataViewBoard <- function(id, pgx) {
         }
         shiny::updateSelectizeInput(session, "search_gene",
                                     choices = genes1, selected = selgene,
-                                    ## options = list(maxOptions = 9999999),
+                                    #
                                     options = list(maxOptions = 1001),
                                     server = TRUE
         )
@@ -147,7 +147,7 @@ DataViewBoard <- function(id, pgx) {
       samples
     })
 
-    ## dbg("[***dataview_server] names.input = ",names(input))
+    #
     dataview_module_geneinfo_server(
       "geneinfo",
       r.gene = reactive(input$search_gene),
@@ -301,22 +301,18 @@ DataViewBoard <- function(id, pgx) {
           libsize
           counts <- t(t(counts) * libsize)
         }
-        ## counts <- round(counts)
       }
       if (sum(is.na(counts)) > 0) {
         cat("WARNING:: plot counts: counts has missing values!\n")
       }
 
-      ## if(input$data_sampling=="grouped") {
       grpvar <- input$data_groupby
       gr <- pgx$Y[samples, grpvar]
       grps <- sort(unique(gr))
-      ## if(input$data_grouped && length(grps)>1 ) {
       if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
         newx <- c()
         for (g in grps) {
           mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
-          ## mx = rowSums(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)  ## SUM or MEAN???
           newx <- cbind(newx, mx)
         }
         if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)
@@ -380,11 +376,10 @@ DataViewBoard <- function(id, pgx) {
       counts <- counts[, ss, drop = FALSE]
       log2counts <- log2(1 + counts)
 
-      if (1) {
-        names(total.counts) <- substring(names(total.counts), 1, 30)
-        colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
-        colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
-      }
+      names(total.counts) <- substring(names(total.counts), 1, 30)
+      colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
+      colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
+
 
       res <- list(
         total.counts = total.counts,

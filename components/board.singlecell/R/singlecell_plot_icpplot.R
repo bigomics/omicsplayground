@@ -44,7 +44,6 @@ singlecell_plot_icpplot_ui <- function(
     withTooltip(
       shiny::radioButtons(parent("layout"), "Layout:",
         choices = c("4x4", "6x6"),
-        ## selected="6x6",
         inline = TRUE
       ),
       "Choose layout.",
@@ -54,7 +53,6 @@ singlecell_plot_icpplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plot"),
-    ##    plotlib = "plotly",
     plotlib = "ggplot",      
     label = label,
     info.text = info.text,
@@ -94,7 +92,7 @@ singlecell_plot_icpplot_server <- function(id,
       if (is.null(method)) {
         return(NULL)
       }
-      refset <- refset() #
+      refset <- refset() 
       layout <- layout()
       sortby <- sortby()
 
@@ -109,7 +107,7 @@ singlecell_plot_icpplot_server <- function(id,
       if (is.null(clust.pos)) {
         return(NULL)
       }
-      ##pos=pgx$tsne2d;score=pgx$deconv[[1]][["meta"]]
+      #
       pos <- clust.pos      
       score <- results
       if (is.null(score) || length(score) == 0) {
@@ -236,8 +234,6 @@ singlecell_plot_icpplot_server <- function(id,
         p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
           var = gx,
-          ##type = "factor",
-          ##col = klr0,
           col = klrpal,
           zlim = c(0,16),
           cex = 0.6*cex1,
@@ -248,8 +244,6 @@ singlecell_plot_icpplot_server <- function(id,
           axis = FALSE,
           title = tt,
           cex.title = 0.55,
-          ##title.y = 0.85,
-          ##cex.clust = cex*0.8,
           label.clusters = FALSE,
           legend = FALSE,
           gridcolor = "#ffffff",
@@ -306,7 +300,7 @@ singlecell_plot_icpplot_server <- function(id,
           title = tt,
           cex.title = 0.5,
           title.y = 0.9,
-#         cex.clust = cex1*0.8,
+
           label.clusters = FALSE,
           legend = FALSE,
           box = TRUE,
@@ -384,9 +378,6 @@ singlecell_plot_icpplot_server <- function(id,
       id = "plot",        
       func = ggplot.RENDER,
       func2 = ggplot.RENDER2,
-      ##func = plotly.RENDER,
-      ##func2 = plotly_modal.RENDER,
-      ##plotlib = "plotly",
       plotlib = "ggplot",      
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,

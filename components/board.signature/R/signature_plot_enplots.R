@@ -84,7 +84,7 @@ signature_plot_enplots_server <- function(id,
     })
 
     get_plots <- function(cex=1) {
-      ## if(!input$tsne.all) return(NULL)
+      #
       pd <- plot_data()
       shiny::req(pd)
 
@@ -137,13 +137,13 @@ signature_plot_enplots_server <- function(id,
         plt[[i]] <- p
       }
       return(plt)
-##      p <- grDevices::recordPlot()
+#
 ##      p
     } ##)
 
 
     plotly.RENDER <- function() {
-      # pd  <- plot_data()
+      
       plt <- get_plots(cex=0.9)
       shiny::req(plt)
       ## layout
@@ -170,7 +170,7 @@ signature_plot_enplots_server <- function(id,
 
 
     plotly_modal.RENDER <- function() {
-      # pd  <- plot_data()
+      
       plt <- get_plots(cex=1.3)
       ## layout
       nc = 2

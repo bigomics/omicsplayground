@@ -21,7 +21,7 @@ featuremap_plot_geneset_map_ui <- function(
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
-      ##choices = c("sd.X", "sd.FC", "mean.FC"),
+      #
       choices = c("sd.X", "sd.FC"),      
       selected = "sd.X", inline = TRUE
     )
@@ -248,7 +248,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          scrollX = TRUE, ## scrollY = TRUE,
+          scrollX = TRUE, #
           scrollY = 240,
           scrollResize = TRUE,
           scroller = TRUE,

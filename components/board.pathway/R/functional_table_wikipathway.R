@@ -72,7 +72,7 @@ functional_table_wikipathway_server <- function(id,
       DT::datatable(df,
         rownames = FALSE,
         escape = c(-1, -2),
-        ##class = "compact cell-border stripe hover",
+        #
         extensions = c("Scroller"),
         selection = list(
           mode = "single",
@@ -83,9 +83,11 @@ functional_table_wikipathway_server <- function(id,
         plugins = 'scrollResize',  ## resizes scrollable area
         options = list(
           dom = "lfrtip",
+
           ## dom = "ft",
+
           scrollX = FALSE,
-          ##          scrollY = scrollY,
+          #
           scrollY = 800,
           scrollResize = TRUE,
           scroller = TRUE,

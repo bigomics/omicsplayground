@@ -16,9 +16,8 @@ intersection_plot_venn_diagram_ui <- function(
   FDR.VALUES2 <- c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1)
 
   venndiagram.opts <- shiny::tagList(
-    ##    shiny::checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )
     shiny::fillRow(
-      flex = c(1, 1), ## height=80,
+      flex = c(1, 1), 
       withTooltip(shiny::selectInput(ns("fdr"), "FDR", choices = FDR.VALUES2, selected = 0.20),
         "Threshold for false discovery rate",
         placement = "right", options = list(container = "body")
@@ -225,7 +224,6 @@ intersection_plot_venn_diagram_server <- function(id,
 
     getSignificanceCalls <- shiny::reactive({
       ## Gets the matrix of significance calls.
-      ##
 
       sel <- head(names(pgx$gset.meta$meta), 7)
       sel <- input_comparisons()
@@ -258,7 +256,6 @@ intersection_plot_venn_diagram_server <- function(id,
       shiny::updateSelectInput(
         session, "venntable_intersection",
         choices = choices,
-        ## selected = "<all>"
         selected = selected
       )
 
@@ -266,7 +263,6 @@ intersection_plot_venn_diagram_server <- function(id,
     })
 
     getSignificantFoldChangeMatrix <- shiny::reactive({
-      ##
       ## Filters FC matrix with significance and user-defined
       ## intersection region.
       dt <- getSignificanceCalls()
@@ -328,7 +324,6 @@ intersection_plot_venn_diagram_server <- function(id,
       fc1 <- fc1[order(-rowMeans(fc1)), , drop = FALSE]
       fc1 <- round(fc1, digits = 3)
       colnames(fc1) <- LETTERS[1:ncol(fc1)]
-      ## fc0 = data.frame(fc0)
 
       ## add intersection code
       sel <- match(rownames(fc1), rownames(dt))
@@ -357,7 +352,6 @@ intersection_plot_venn_diagram_server <- function(id,
         gene <- as.character(pgx$genes[rownames(fc0), "gene_name"])
         gene.tt <- substring(playdata::GENE_TITLE[gene], 1, 50)
         gene.tt <- as.character(gene.tt)
-        ## fc0 = data.frame( name=name, title=gene.tt, fc0)
         fc0 <- data.frame(name = gene, fc0, check.names = FALSE)
       } else {
         name <- substring(rownames(fc0), 1, 50)
@@ -367,8 +361,6 @@ intersection_plot_venn_diagram_server <- function(id,
 
       df <- data.frame(fc0, check.names = FALSE)
       nsc <- setdiff(1:ncol(df), 2)
-      ## dt <- dt[rownames(fc0),]
-      ## D <- cbind(intersection=dt$intersection, D)
       DT::datatable(df,
         class = "compact cell-border stripe",
         rownames = FALSE,
@@ -376,11 +368,7 @@ intersection_plot_venn_diagram_server <- function(id,
         plugins = "scrollResize",
         selection = "none",
         options = list(
-          ## dom = 'lfrtip',
           dom = "tip",
-          ## buttons = c('copy','csv','pdf'),
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          ## columnDefs = list(list(targets=nsc, searchable = FALSE)),
           scrollX = TRUE,
           scrollY = 215,
           scrollResize = TRUE,
