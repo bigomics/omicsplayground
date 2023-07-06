@@ -475,11 +475,11 @@ EmailAuthenticationModule <- function(id,
       firebase$sign_out()
       dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
 
-      title = HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
+      title <- HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
       if (!is.null(credentials.file) && file.exists(credentials.file)) {
         title <- "Log in"
       }
-          
+
       m <- splashLoginModal(
         ns = ns,
         with.email = FALSE,
