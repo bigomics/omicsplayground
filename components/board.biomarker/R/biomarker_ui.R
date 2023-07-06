@@ -65,7 +65,7 @@ BiomarkerUI <- function(id) {
   imgH1 <- c("calc(40vh - 120px)", "70vh") ## heights for small and fullscreen image
   imgH2 <- c("calc(60vh - 180px)", "70vh")
   fullH <- "calc(100vh - 200px)"
-  
+
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
     shiny::tabsetPanel(
@@ -73,7 +73,7 @@ BiomarkerUI <- function(id) {
       shiny::tabPanel(
         "Feature selection",
         bslib::layout_column_wrap(
-          width = 1/2,
+          width = 1 / 2,
           height = fullH,
           heights_equal = "row",
           biomarker_plot_importance_ui(
@@ -117,7 +117,7 @@ BiomarkerUI <- function(id) {
       shiny::tabPanel(
         "Feature-set ranking",
         bslib::layout_column_wrap(
-          width = 1/2,
+          width = 1 / 2,
           height = fullH,
           heights_equal = "row",
           biomarker_plot_featurerank_ui(
@@ -131,6 +131,6 @@ BiomarkerUI <- function(id) {
           )
         )
       )
-    )  ## tabsetpanel
+    ) ## tabsetpanel
   ) ## div
 }

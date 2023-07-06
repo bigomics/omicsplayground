@@ -4,13 +4,13 @@
 ##
 
 connectivity_table_foldchange_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height,
-  label="") {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height,
+    label = "") {
   ns <- shiny::NS(id)
 
   bslib::layout_column_wrap(
@@ -27,52 +27,48 @@ connectivity_table_foldchange_ui <- function(
       label = label
     )
   )
-
 }
 
 connectivity_table_foldchange_server <- function(id,
-                                                  pgx,
-                                                  getConnectivityScores,
-                                                  columns,
-                                                  getProfiles,
-                                                  getConnectivityMatrix,
-                                                  sigdb,
-                                                  height) {
+                                                 pgx,
+                                                 getConnectivityScores,
+                                                 columns,
+                                                 getProfiles,
+                                                 getConnectivityMatrix,
+                                                 sigdb,
+                                                 height) {
   moduleServer(id, function(input, output, session) {
-
     get_table <- reactive({
-
       F <- getProfiles()
 
 
-      F <- F[order(rownames(F)),]
+      F <- F[order(rownames(F)), ]
 
       S <- getConnectivityScores()
-      S1 <- S[match(colnames(F), S$pathway),c("score","rho")]
+      S1 <- S[match(colnames(F), S$pathway), c("score", "rho")]
 
-      df <- data.frame(signature=colnames(F), S1, t(F))
+      df <- data.frame(signature = colnames(F), S1, t(F))
       df
     })
 
     foldchangeTable.RENDER <- function() {
-
       df <- get_table()
 
       ## pathway is actually signature name
       df$signature <- playbase::shortstring(df$signature, 100)
       score.col <- which(colnames(df) == "score")
-      numcols <- setdiff(colnames(df),grep("signature|dataset|pathway|dataset|contrast",colnames(df),value=TRUE))
+      numcols <- setdiff(colnames(df), grep("signature|dataset|pathway|dataset|contrast", colnames(df), value = TRUE))
 
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
 
-            #          dom = "lfrtip",
+          #          dom = "lfrtip",
           dom = "lrtip",
           pageLength = 99999,
           scrollX = TRUE,

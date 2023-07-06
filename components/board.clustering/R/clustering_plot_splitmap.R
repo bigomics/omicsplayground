@@ -14,13 +14,13 @@
 #'
 #' @export
 clustering_plot_splitmap_ui <- function(
-  id,
-  label = "",
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   topmodes <- c("sd", "pca", "marker")
@@ -126,7 +126,6 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     base_splitmap.RENDER <- function() {
-
       ## extract from plot data
       pd <- plot_data()
       zx <- pd[["zx"]]
@@ -178,7 +177,7 @@ clustering_plot_splitmap_server <- function(id,
       cex1 <- as.numeric(input$hm_cexCol) * 0.85
       cex2 <- as.numeric(input$hm_cexRow) * 0.75
       cex0 <- ifelse(!is.null(splitx) && length(splitx) <= 10, 1.05, 0.85) ## title
-      
+
       crot <- 0
       totnchar <- nchar(paste0(unique(splitx), collapse = ""))
       totnchar
@@ -205,7 +204,7 @@ clustering_plot_splitmap_server <- function(id,
       )
       p <- grDevices::recordPlot()
       p
-      
+
       # plt
     }
 
@@ -236,14 +235,14 @@ clustering_plot_splitmap_server <- function(id,
 
       rownames(annotF) <- rownames(annot)
       if (length(selected_phenotypes()) == 0) {
-        annotF = NULL
+        annotF <- NULL
       } else {
-        annotF <- annotF[,selected_phenotypes(), drop=FALSE]
+        annotF <- annotF[, selected_phenotypes(), drop = FALSE]
       }
-      
+
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
-      
+
       tooltips <- NULL
       if (hm_level() == "gene") {
         getInfo <- function(g) {
@@ -266,13 +265,13 @@ clustering_plot_splitmap_server <- function(id,
         row_annot_width = 0.025, rowcex = rowcex,
         colcex = colcex, show_legend = input$hm_legend
       )
-      
+
       obj2 <- plt %>% iheatmapr::to_plotly_list()
       plt <- plotly::as_widget(obj2) %>%
         plotly::layout(
-          margin = list(l=0,r=0,t=0,b=0)
+          margin = list(l = 0, r = 0, t = 0, b = 0)
         )
-      
+
       return(plt)
     }
 
@@ -296,8 +295,6 @@ clustering_plot_splitmap_server <- function(id,
 
     return(list(
       hm_ntop = shiny::reactive(input$hm_ntop),
-
-
       hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk)

@@ -32,7 +32,7 @@ DrugConnectivityUI <- function(id) {
 
   fullH <- "calc(100vh - 180px)"
   halfH <- "calc(50vh  - 98px)"
-  
+
   panel1 <- shiny::tabPanel(
     "Drug enrichment",
     bslib::layout_column_wrap(
@@ -42,7 +42,7 @@ DrugConnectivityUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         bslib::layout_column_wrap(
-          width = 1/2,
+          width = 1 / 2,
           drugconnectivity_plot_enplots_ui(
             id = ns("dsea_enplots"),
             title = "Drug connectivity",
@@ -57,7 +57,7 @@ DrugConnectivityUI <- function(id) {
             title = "Mechanism of action",
             info.text = "This plot visualizes the mechanism of action (MOA) across the enriched drug profiles. On the vertical axis, the GSEA normalized enrichment score of the MOA class or gene target is plotted. You can switch to visualize between MOA class or target gene.",
             caption = "Mechanism of action (MOA) plot indicating the most correlated drug MOAs for a selected contrast.",
-            height = c("100%", TABLE_HEIGHT_MODAL),                  
+            height = c("100%", TABLE_HEIGHT_MODAL),
             label = "c"
           )
         ),
@@ -76,12 +76,12 @@ DrugConnectivityUI <- function(id) {
         info.text = "The Activation Matrix visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         caption = "Activation Matrix visualising drug or single gene alteration profile correlations in all the available contrasts.",
         height = c("100%", TABLE_HEIGHT_MODAL),
-        width = c("100%", "100%"),              
+        width = c("100%", "100%"),
         label = "d"
       )
     )
   ) ## end of tabPanel
-  
+
   panel2 <- shiny::tabPanel(
     "Connectivity map (beta)",
     shiny::div(
@@ -120,7 +120,7 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
-  
+
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
     panel1 <- shiny::tabsetPanel(

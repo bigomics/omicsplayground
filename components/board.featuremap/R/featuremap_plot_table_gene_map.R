@@ -4,13 +4,13 @@
 ##
 
 featuremap_plot_gene_map_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot.opts <- shiny::tagList(
@@ -29,38 +29,38 @@ featuremap_plot_gene_map_ui <- function(
   )
 
   PlotModuleUI(
-      ns("gene_map"),
-      title = title,
-      label = "a",
-      plotlib = "plotly",
-      plotlib2 = "plotly",
-      info.text = info.text,
-      caption = caption,
-      options = plot.opts,
-      height = height,
-      width = width,
-      download.fmt = c("png", "pdf")
+    ns("gene_map"),
+    title = title,
+    label = "a",
+    plotlib = "plotly",
+    plotlib2 = "plotly",
+    info.text = info.text,
+    caption = caption,
+    options = plot.opts,
+    height = height,
+    width = width,
+    download.fmt = c("png", "pdf")
   )
 }
 
 featuremap_table_gene_map_ui <- function(
-  id,
-  label = "",
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
-      ns("gene_table"),
-      info.text = info.text,
-      height = height,
-      width = width,
-      caption = caption,
-      title = title,
-      label = "c"
+    ns("gene_table"),
+    info.text = info.text,
+    height = height,
+    width = width,
+    caption = caption,
+    title = title,
+    label = "c"
   )
 }
 
@@ -73,7 +73,6 @@ featuremap_plot_gene_map_server <- function(id,
                                             r_fulltable,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
 
     filteredGenes <- shiny::reactive({
@@ -86,7 +85,7 @@ featuremap_plot_gene_map_server <- function(id,
     plot_data <- shiny::reactive({
       #
       pos <- getGeneUMAP()
-      colnames(pos) <- c("x","y")
+      colnames(pos) <- c("x", "y")
       hilight <- filteredGenes()
       colgamma <- as.numeric(input$umap_gamma)
       colorby <- input$umap_colorby
@@ -105,27 +104,25 @@ featuremap_plot_gene_map_server <- function(id,
 
       ## conform
       gg <- intersect(rownames(pos), names(fc))
-      pos <- pos[gg,]
+      pos <- pos[gg, ]
       fc <- fc[gg]
 
       pd <- list(
-        df = data.frame(pos, fc=fc),
+        df = data.frame(pos, fc = fc),
         fc = fc,
         hilight = hilight,
         colgamma = colgamma,
         nlabel = nlabel,
         colorby = colorby
       )
-
     })
 
-    render_geneUMAP <- function(cex=1, cex.label=1) {
-
-      pd  <- plot_data()
-      pos <- pd$df[,c("x","y")]
-      fc  <- pd$fc
+    render_geneUMAP <- function(cex = 1, cex.label = 1) {
+      pd <- plot_data()
+      pos <- pd$df[, c("x", "y")]
+      fc <- pd$fc
       hilight <- pd$hilight
-      nlabel  <- pd$nlabel
+      nlabel <- pd$nlabel
       colorby <- pd$colorby
 
       p <- plotUMAP(
@@ -147,7 +144,7 @@ featuremap_plot_gene_map_server <- function(id,
     }
 
     geneUMAP.RENDER <- function() {
-      p <- render_geneUMAP(cex=1, cex.label=1) %>%
+      p <- render_geneUMAP(cex = 1, cex.label = 1) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -156,7 +153,7 @@ featuremap_plot_gene_map_server <- function(id,
     }
 
     geneUMAP.RENDER2 <- function() {
-      p <- render_geneUMAP(cex=1.2, cex.label=1.5) %>%
+      p <- render_geneUMAP(cex = 1.2, cex.label = 1.5) %>%
         plotly::config(
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
@@ -178,7 +175,6 @@ featuremap_plot_gene_map_server <- function(id,
     # Table
 
     geneTable.RENDER <- shiny::reactive({
-
       shiny::req(pgx)
       if (is.null(pgx$drugs)) {
         return(NULL)
@@ -196,8 +192,8 @@ featuremap_plot_gene_map_server <- function(id,
         sel.genes <- rownames(pos)
       }
 
-      if(!r_fulltable()) {
-        if(!is.null(sel.genes)) {
+      if (!r_fulltable()) {
+        if (!is.null(sel.genes)) {
           filt.genes <- filteredGenes()
           sel.genes_aux <- match(filt.genes |> stringr::str_to_upper(), sel.genes |> stringr::str_to_upper())
           sel.genes_aux <- sel.genes_aux[!is.na(sel.genes_aux)]
@@ -211,21 +207,21 @@ featuremap_plot_gene_map_server <- function(id,
       pheno <- sigvar()
       is.fc <- FALSE
       if (pheno %in% colnames(pgx$samples)) {
-        gg <- intersect(sel.genes,rownames(pgx$X))
-        X <- pgx$X[gg,,drop=FALSE]
+        gg <- intersect(sel.genes, rownames(pgx$X))
+        X <- pgx$X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[,i,drop = FALSE])
+          rowMeans(X[, i, drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
-        gg <- intersect(sel.genes,rownames(F))
-        F <- F[gg,,drop=FALSE]
+        gg <- intersect(sel.genes, rownames(F))
+        F <- F[gg, , drop = FALSE]
         is.fc <- TRUE
       }
-      F <- F[order(-rowMeans(F**2)),,drop=FALSE]
+      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
 
       tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)
@@ -268,6 +264,5 @@ featuremap_plot_gene_map_server <- function(id,
       func2 = geneTable.RENDER_modal,
       selector = "none"
     )
-
-  })  ## moduleServer
+  }) ## moduleServer
 }

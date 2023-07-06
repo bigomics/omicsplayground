@@ -4,12 +4,12 @@
 ##
 
 dataview_plot_expression_ui <- function(
-  id,
-  label = "",
-  height,
-  title,
-  caption,
-  info.text) {
+    id,
+    label = "",
+    height,
+    title,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -46,15 +46,20 @@ dataview_plot_expression_server <- function(id,
       data_type <- r.data_type()
       groupby <- r.data_groupby()
       xgenes <- rownames(pgx$X)
-      
-      if (samples[1] == "") return(NULL)
-      if (gene == "") return(NULL)
-      if (!gene %in% xgenes) return(NULL)
+
+      if (samples[1] == "") {
+        return(NULL)
+      }
+      if (gene == "") {
+        return(NULL)
+      }
+      if (!gene %in% xgenes) {
+        return(NULL)
+      }
 
       grpvar <- 1
       grp <- rep(NA, length(samples))
       if (groupby != "<ungrouped>") {
-
         #
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }
@@ -74,7 +79,7 @@ dataview_plot_expression_server <- function(id,
       }
 
       geneplot_type <- "barplot"
-      
+
 
       pd <- list(
         df = data.frame(
@@ -270,7 +275,7 @@ dataview_plot_expression_server <- function(id,
       } else {
         ## plot as regular bar plot
         fig <- plotly::plot_ly(df, x = ~samples, y = ~x, type = "bar", name = pd$gene)
-        
+
         pd$groupby <- ""
         ## fig
       }

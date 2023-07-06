@@ -55,7 +55,7 @@ CorrelationUI <- function(id) {
     shiny::tabPanel(
       "Correlation",
       bslib::layout_column_wrap(
-        width = 1/2,
+        width = 1 / 2,
         height = "calc(100vh - 180px)",
         bslib::layout_column_wrap(
           width = 1,
@@ -91,7 +91,7 @@ CorrelationUI <- function(id) {
     shiny::tabPanel(
       "Graph",
       bslib::layout_column_wrap(
-        width = 1/2,
+        width = 1 / 2,
         height = "calc(100vh - 180px)",
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),

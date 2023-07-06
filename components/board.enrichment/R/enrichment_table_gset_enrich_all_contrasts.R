@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_gset_enrich_all_contrasts_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   fctable_opts <- shiny::tagList(
@@ -39,7 +39,6 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
     tabH <- 340 ## row height of panels
 
     table_data <- shiny::reactive({
-
       ## get enrichment for all contrasts
       #
       F <- metaFC()
@@ -93,7 +92,6 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
     })
 
     fctable.RENDER <- function() {
-
       td <- table_data()
       df <- td$df
       qv.cols <- td$qv.cols
@@ -109,7 +107,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         escape = -1,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
@@ -125,13 +123,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.ES",
-          background = color_from_middle( df$rms.ES, "lightblue", "#f5aeae"),
+          background = color_from_middle(df$rms.ES, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = color_from_middle( F[, ], "lightblue", "#f5aeae"),
+          background = color_from_middle(F[, ], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

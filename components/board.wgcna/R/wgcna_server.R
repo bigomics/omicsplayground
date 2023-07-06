@@ -36,8 +36,9 @@ WgcnaBoard <- function(id, pgx) {
         if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
           shiny::updateSelectInput(session, "selected_module",
-                                   choices = names(pgx$wgcna$me.genes),
-                                   selected = "ME1")
+            choices = names(pgx$wgcna$me.genes),
+            selected = "ME1"
+          )
           return(pgx$wgcna)
         }
 
@@ -73,7 +74,7 @@ WgcnaBoard <- function(id, pgx) {
     ## ================================================================================
 
     infotext <-
-       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
+      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
@@ -81,7 +82,7 @@ WgcnaBoard <- function(id, pgx) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
-        size = 'xl',
+        size = "xl",
         easyClose = TRUE
       ))
     })

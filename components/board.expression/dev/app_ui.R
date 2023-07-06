@@ -5,10 +5,9 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.expression')
+    golem_add_external_resources("board.expression")
   )
 
   # sidebar
@@ -52,7 +51,4 @@ app_ui <- function(request) {
       )
     )
   )
-
 }
-
-

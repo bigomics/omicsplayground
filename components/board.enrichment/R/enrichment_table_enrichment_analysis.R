@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_enrichment_analysis_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   gseatable_opts <- shiny::tagList(
@@ -82,7 +82,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         rownames = FALSE,
         escape = c(-1, -5),
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         selection = list(mode = selectmode, target = "row", selected = 1),
         options = list(

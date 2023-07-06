@@ -5,13 +5,13 @@
 
 
 dataview_plot_tissue_ui <- function(
-  id,
-  label = "",
-  title,
-  height,
-  width,
-  caption,
-  info.text) {
+    id,
+    label = "",
+    title,
+    height,
+    width,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -19,8 +19,6 @@ dataview_plot_tissue_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    
-    
     info.text = info.text,
     caption = caption,
     options = NULL,
@@ -32,7 +30,6 @@ dataview_plot_tissue_ui <- function(
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -71,7 +68,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         color = tissue.klr
       )
       df <- df[with(df, order(-x)), ]
-      df <- head(df,15) # select top 15 tissues
+      df <- head(df, 15) # select top 15 tissues
 
       return(
         list(
@@ -113,10 +110,13 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
       ## plot as regular bar plot
       df <- dplyr::mutate(
-        df, tissue = forcats::fct_reorder(
-              stringr::str_to_title(paste(tissue, " ")),x))
+        df,
+        tissue = forcats::fct_reorder(
+          stringr::str_to_title(paste(tissue, " ")), x
+        )
+      )
 
-      
+
       plotly::plot_ly(
         data = df,
         #
@@ -126,7 +126,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         orientation = "h",
         color = ~color, ## TODO: use variable that encodes grouping
         colors = omics_pal_d()(length(unique(df$color))),
-        hovertemplate = '%{y}: %{x}<extra></extra>'
+        hovertemplate = "%{y}: %{x}<extra></extra>"
       ) %>%
         plotly::layout(
           yaxis = list(title = FALSE),

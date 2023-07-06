@@ -5,10 +5,9 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.pathway')
+    golem_add_external_resources("board.pathway")
   )
 
   # sidebar
@@ -59,18 +58,15 @@ app_ui <- function(request) {
         FunctionalUI("pathway")
       ),
       bigdash::bigTabItem(
-        'enrich-tab',
-        EnrichmentInputs('enrich'),
-        EnrichmentUI('enrich')
+        "enrich-tab",
+        EnrichmentInputs("enrich"),
+        EnrichmentUI("enrich")
       ),
       bigdash::bigTabItem(
-        'diffexpr-tab',
-        ExpressionInputs('diffexpr'),
-        ExpressionUI('diffexpr')
+        "diffexpr-tab",
+        ExpressionInputs("diffexpr"),
+        ExpressionUI("diffexpr")
       )
     )
   )
-
 }
-
-

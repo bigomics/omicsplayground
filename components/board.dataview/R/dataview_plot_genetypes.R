@@ -4,14 +4,13 @@
 ##
 
 dataview_plot_genetypes_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption
-  ) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -69,7 +68,7 @@ dataview_plot_genetypes_server <- function(id,
         t(res$prop.counts) / nsamples,
         horiz = TRUE, las = 1,
         cex.lab = 1.0, border = NA,
-         ylab = "abundance (%)",
+        ylab = "abundance (%)",
         #
         xlab = "abundance (%)",
         # names.arg = names.arg, cex.names = cex.names,

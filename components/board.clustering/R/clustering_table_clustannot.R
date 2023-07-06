@@ -12,12 +12,12 @@
 #'
 #' @export
 clustering_table_clustannot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,12 +38,11 @@ clustering_table_clustannot_ui <- function(
 #'
 #' @export
 clustering_table_clustannot_server <- function(
-  id,
-  getClustAnnotCorrelation,
-  xann_level,
-  watermark,
-  scrollY )
-{
+    id,
+    getClustAnnotCorrelation,
+    xann_level,
+    watermark,
+    scrollY) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -67,7 +66,7 @@ clustering_table_clustannot_server <- function(
         df,
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = c(1)),
         class = "compact hover",
         fillContainer = TRUE,

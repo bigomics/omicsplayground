@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_MTrelationships_ui <- function(
-  id,
-  title,
-  label,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    label,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   moduleTrait_opts <- shiny::tagList(
@@ -26,7 +26,7 @@ wgcna_plot_MTrelationships_ui <- function(
     options = moduleTrait_opts,
     height = height,
     width = width,
-    download.fmt = NULL #FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
+    download.fmt = NULL # FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
   )
 }
 

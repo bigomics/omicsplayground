@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_volcanomethods_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -32,9 +32,7 @@ enrichment_plot_volcanomethods_server <- function(id,
                                                   gs_lfc,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       shiny::req(pgx, gs_features(), gs_contrast())
 
       cmp <- gs_contrast()
@@ -65,8 +63,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       pd
     })
 
-    get_ggplots <- function(cex=1, base_size=12) {
-
+    get_ggplots <- function(cex = 1, base_size = 12) {
       pd <- plot_data()
       shiny::req(pd)
       F <- pd$F
@@ -79,20 +76,18 @@ enrichment_plot_volcanomethods_server <- function(id,
       lfc <- pd$lfc
       sel.gsets <- pd$sel.gsets
 
-      dbg("[enrichment_plot_volcanomethods.R] dim.Q = ",dim(Q))
-      dbg("[enrichment_plot_volcanomethods.R] dim.F = ",dim(F))
-      dbg("[enrichment_plot_volcanomethods.R] lfc = ",lfc)
-      dbg("[enrichment_plot_volcanomethods.R] fdr = ",fdr)
+      dbg("[enrichment_plot_volcanomethods.R] dim.Q = ", dim(Q))
+      dbg("[enrichment_plot_volcanomethods.R] dim.F = ", dim(F))
+      dbg("[enrichment_plot_volcanomethods.R] lfc = ", lfc)
+      dbg("[enrichment_plot_volcanomethods.R] fdr = ", fdr)
 
       shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
-
         plt <- list()
-        i=1
+        i <- 1
         for (i in 1:nplots) {
-
-          fc <- F[,i]
-          qv <- Q[,i]
-          dbg("[enrichment_plot_volcanomethods.R] names.fc = ",head(names(fc)))
+          fc <- F[, i]
+          qv <- Q[, i]
+          dbg("[enrichment_plot_volcanomethods.R] names.fc = ", head(names(fc)))
           is.sig <- (qv <= fdr & abs(fc) >= lfc)
           table(is.sig)
           sig.genes <- names(fc)[which(is.sig)]
@@ -102,9 +97,9 @@ enrichment_plot_volcanomethods_server <- function(id,
           tt <- colnames(Q)[i]
           #
 
-          dbg("[enrichment_plot_volcanomethods.R] dim.xy = ",dim(xy))
-          dbg("[enrichment_plot_volcanomethods.R] sig.genes = ",head(sig.genes))
-          dbg("[enrichment_plot_volcanomethods.R] length.is.sig = ",length(is.sig))
+          dbg("[enrichment_plot_volcanomethods.R] dim.xy = ", dim(xy))
+          dbg("[enrichment_plot_volcanomethods.R] sig.genes = ", head(sig.genes))
+          dbg("[enrichment_plot_volcanomethods.R] length.is.sig = ", length(is.sig))
 
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -114,8 +109,8 @@ enrichment_plot_volcanomethods_server <- function(id,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
             legend.pos = "none", #
-            
-            
+
+
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
             ylim = c(0, ymax),
@@ -125,7 +120,7 @@ enrichment_plot_volcanomethods_server <- function(id,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.8*cex,
+            cex.lab = 1.8 * cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
 
@@ -136,21 +131,21 @@ enrichment_plot_volcanomethods_server <- function(id,
     }
 
     volcano.RENDER <- function() {
-      plt <- get_ggplots(cex=0.4, base_size=12)
+      plt <- get_ggplots(cex = 0.4, base_size = 12)
       shiny::req(plt)
       nplots <- length(plt)
-      nr <- ifelse(nplots <=6, 1, 2)
-      nc <- max(ceiling(nplots/nr),4)
+      nr <- ifelse(nplots <= 6, 1, 2)
+      nc <- max(ceiling(nplots / nr), 4)
       #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     volcano.RENDER2 <- function() {
-      plt <- get_ggplots(cex=0.8, base_size=18)
+      plt <- get_ggplots(cex = 0.8, base_size = 18)
       shiny::req(plt)
       nplots <- length(plt)
-      nr <- ifelse(nplots <=5, 1, 2)
-      nc <- max(ceiling(nplots/nr),3)
+      nr <- ifelse(nplots <= 5, 1, 2)
+      nc <- max(ceiling(nplots / nr), 3)
       #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }

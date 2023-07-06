@@ -4,12 +4,12 @@
 ##
 
 signature_table_overlap_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,7 +38,7 @@ signature_table_overlap_server <- function(id,
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       DT::datatable(df,
-#
+        #
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",

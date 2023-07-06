@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_volcanoMethods_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -53,13 +53,12 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   lfc, # input$gx_lfc
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       comp <- comp()
       features <- features()
 
-      dbg("[expression_plot_volcanoMethods.R] comp = ",comp)
+      dbg("[expression_plot_volcanoMethods.R] comp = ", comp)
 
       if (is.null(comp)) {
         return(NULL)
@@ -78,17 +77,17 @@ expression_plot_volcanoMethods_server <- function(id,
       }
 
       pd <- list(
-          pgx = pgx,
-          fdr = fdr,
-          lfc = lfc,
-          comp = comp,
-          sel.genes = sel.genes
+        pgx = pgx,
+        fdr = fdr,
+        lfc = lfc,
+        comp = comp,
+        sel.genes = sel.genes
       )
 
       return(pd)
     })
 
-    render_plots <- function(cex=NULL, base_size=11) {
+    render_plots <- function(cex = NULL, base_size = 11) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -113,7 +112,7 @@ expression_plot_volcanoMethods_server <- function(id,
         i <- 1
         for (i in 1:nplots) {
           fx <- fc[, i]
-          qval <- qv[,i]
+          qval <- qv[, i]
           is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
           sig.genes <- fc.genes[which(is.sig)]
           genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
@@ -134,14 +133,14 @@ expression_plot_volcanoMethods_server <- function(id,
             hilight = genes1,
             hilight2 = genes2,
             xlim = xlim,
-            ylim = c(0,ymax),
+            ylim = c(0, ymax),
             xlab = "difference  (log2FC)",
             ylab = "significance  (-log10q)",
             hilight.lwd = 0,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.7*cex,
+            cex.lab = 1.7 * cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
 
@@ -153,42 +152,42 @@ expression_plot_volcanoMethods_server <- function(id,
     }
 
     plot.RENDER <- function() {
-      plt <- render_plots(cex=0.45, base_size=11)
+      plt <- render_plots(cex = 0.45, base_size = 11)
       nplots <- length(plt)
       ## layout
-      nr = 1
-      nc = max(4,nplots)
-      if(nplots > 5) {
-        nr = 2
-        nc = ceiling(nplots/nr)
+      nr <- 1
+      nc <- max(4, nplots)
+      if (nplots > 5) {
+        nr <- 2
+        nc <- ceiling(nplots / nr)
       }
       if (nplots > 12) {
-        nr = 3
-        nc = ceiling(nplots/nr)
+        nr <- 3
+        nc <- ceiling(nplots / nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     modal_plot.RENDER <- function() {
-      plt <- render_plots(cex=1, base_size=16)
+      plt <- render_plots(cex = 1, base_size = 16)
       nplots <- length(plt)
       ## layout
-      nr = 1
-      nc = max(2,nplots)
-      if(nplots > 3) {
-        nr = 2
-        nc = ceiling(nplots/nr)
+      nr <- 1
+      nc <- max(2, nplots)
+      if (nplots > 3) {
+        nr <- 2
+        nc <- ceiling(nplots / nr)
       }
       if (nplots > 8) {
-        nr = 3
-        nc = ceiling(nplots/nr)
+        nr <- 3
+        nc <- ceiling(nplots / nr)
       }
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     PlotModuleServer(
       "pltmod",
-#
+      #
       plotlib = "grid",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,

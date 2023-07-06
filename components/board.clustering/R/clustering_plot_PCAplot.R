@@ -8,14 +8,14 @@
 ## Annotate clusters ############
 
 clustering_plot_clustpca_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption,
-  parent) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption,
+    parent) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -31,9 +31,9 @@ clustering_plot_clustpca_ui <- function(
       shiny::radioButtons(
         ns("hmpca_legend"),
         label = "Legend:",
-        choiceValues = list("bottom","group label"),
-        choiceNames = list("Bottom","Group label"),
-         inline = TRUE
+        choiceValues = list("bottom", "group label"),
+        choiceNames = list("Bottom", "Group label"),
+        inline = TRUE
       ),
       "Normalize matrix before calculating distances."
     ),
@@ -75,10 +75,10 @@ clustering_plot_clustpca_server <- function(id,
     plot_data <- shiny::reactive({
       clust <- hm_getClusterPositions()
 
-      if("3D" %in% input$hmpca_options){
-        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2], z = clust$pos[, 3])
+      if ("3D" %in% input$hmpca_options) {
+        df <- data.frame(x = clust$pos[, 1], y = clust$pos[, 2], z = clust$pos[, 3])
       } else {
-        df = data.frame(x = clust$pos[, 1], y = clust$pos[, 2])
+        df <- data.frame(x = clust$pos[, 1], y = clust$pos[, 2])
       }
       return(
         list(
@@ -105,7 +105,7 @@ clustering_plot_clustpca_server <- function(id,
       do3d <- ("3D" %in% hmpca_options)
       sel <- rownames(pos)
       df <- cbind(pos, pgx$Y[sel, ])
-      
+
 
       colvar <- shapevar <- linevar <- textvar <- NULL
       if (hmpca.colvar %in% colnames(df)) colvar <- factor(df[, hmpca.colvar])
@@ -140,7 +140,7 @@ clustering_plot_clustpca_server <- function(id,
         plt <- plotly::plot_ly(df, mode = mode) %>%
           plotly::add_markers(
             x = df[j0, 1], y = df[j0, 2], z = df[j0, 3], type = "scatter3d",
-            color = colvar[j0], 
+            color = colvar[j0],
             marker = list(size = 5 * cex1, line = list(color = "grey10", width = 0.1)),
             symbol = shapevar[j0], symbols = symbols,
             text = tt.info[j0]
@@ -153,7 +153,7 @@ clustering_plot_clustpca_server <- function(id,
         if (!is.null(j1) & length(j1) > 0) {
           plt <- plt %>% plotly::add_markers(
             x = df[j1, 1], y = df[j1, 2], z = df[j1, 3], type = "scatter3d",
-            color = colvar[j1], 
+            color = colvar[j1],
             symbol = shapevar[j1], symbols = symbols,
             text = tt.info[j1]
           )
@@ -171,7 +171,6 @@ clustering_plot_clustpca_server <- function(id,
           )
         }
       } else {
-
         ## 2D plot
         j0 <- 1:nrow(df)
         j1 <- NULL

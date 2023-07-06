@@ -13,15 +13,15 @@
 #'
 #' @export
 connectivity_plot_cumFCplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
@@ -81,8 +81,8 @@ connectivity_plot_cumFCplot_server <- function(id,
         fc[is.na(fc)] <- 0
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
-        colnames(F)[1] <- paste("********",cc$name,"********")
-        
+        colnames(F)[1] <- paste("********", cc$name, "********")
+
         if (input$cumFCplot_absfc) {
           F <- abs(F)
         }
@@ -94,7 +94,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         F <- cumulativeFCtable()
         shiny::req(F)
 
-        MAXF <- 10  ## number of top signatures
+        MAXF <- 10 ## number of top signatures
         #
 
         F <- F[, 1:min(MAXF, ncol(F)), drop = FALSE]
@@ -108,8 +108,8 @@ connectivity_plot_cumFCplot_server <- function(id,
         }
 
         playbase::pgx.stackedBarplot(
-          x = data.frame(F1, check.names=FALSE),
-          ylab = "cumulative logFC", xlab="",
+          x = data.frame(F1, check.names = FALSE),
+          ylab = "cumulative logFC", xlab = "",
           showlegend = FALSE
         )
       }
@@ -118,7 +118,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         render_stackedbar(40) %>%
           plotly::layout(showlegend = FALSE)
       }
-      
+
       plot_RENDER2 <- function() {
         render_stackedbar(60) %>%
           plotly::layout(showlegend = TRUE)

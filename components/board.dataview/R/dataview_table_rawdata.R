@@ -5,12 +5,12 @@
 
 
 dataview_table_rawdata_ui <- function(
-  id,
-  width,
-  height,
-  title,
-  caption,
-  info.text) {
+    id,
+    width,
+    height,
+    title,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -29,8 +29,7 @@ dataview_table_rawdata_server <- function(id,
                                           r.data_type = reactive("counts"),
                                           r.samples = reactive(""),
                                           r.groupby = reactive(""),
-                                          scrollY = "auto"
-                                          ) {
+                                          scrollY = "auto") {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       ## get current view of raw_counts
@@ -178,10 +177,9 @@ dataview_table_rawdata_server <- function(id,
         #
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
-          
           dom = "frtip",
           pageLength = 100,
           lengthMenu = c(25, 40, 100, 250, 1000),

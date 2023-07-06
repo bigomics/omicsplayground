@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_totalcounts_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  info.text,
-  caption,
-  title) {
+    id,
+    label = "",
+    height,
+    width,
+    info.text,
+    caption,
+    title) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -18,8 +18,6 @@ dataview_plot_totalcounts_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    
-    
     info.text = info.text,
     caption = caption,
     options = NULL,

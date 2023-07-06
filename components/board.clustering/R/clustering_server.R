@@ -8,17 +8,17 @@
 ##' Clustering board server module
 ##'
 ##' .. content for \details{} ..
-##' @title 
-##' @param id 
-##' @param pgx 
-##' @return 
+##' @title
+##' @param id
+##' @param pgx
+##' @return
 ##' @author kwee
 ClusteringBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
 
-    clust_infotext =
+    clust_infotext <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/hyDEk_MCaTk"
        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
@@ -32,9 +32,9 @@ ClusteringBoard <- function(id, pgx) {
       ))
     })
 
-    ##===================================================================================
-    ##======================== OBSERVERS ================================================
-    ##===================================================================================
+    ## ===================================================================================
+    ## ======================== OBSERVERS ================================================
+    ## ===================================================================================
 
     shiny::observe({
       shiny::req(pgx$Y)
@@ -112,19 +112,18 @@ ClusteringBoard <- function(id, pgx) {
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
 
-    ##===================================================================================
-    ##============================= REACTIVES ===========================================
-    ##===================================================================================
-    
+    ## ===================================================================================
+    ## ============================= REACTIVES ===========================================
+    ## ===================================================================================
+
     ##' Returns filtered matrix ready for clustering. Filtering based
     ##' on user selected geneset/features or custom list of genes.
     ##'
-    ##' @title 
-    ##' @param id 
-    ##' @param pgx 
-    ##' @return 
+    ##' @title
+    ##' @param id
+    ##' @param pgx
+    ##' @return
     getFilteredMatrix <- shiny::reactive({
-
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
       genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
@@ -241,7 +240,7 @@ ClusteringBoard <- function(id, pgx) {
       )
 
       return(flt) ## end of getFilteredMatrix
-    })  %>%  bindEvent(
+    }) %>% bindEvent(
       input$hm_samplefilter,
       input$hm_features,
       input$hm_level,
@@ -253,14 +252,14 @@ ClusteringBoard <- function(id, pgx) {
       splitmap$hm_ntop()
     )
 
-    
+
     ##' .. content for \description{} (no empty lines) ..
     ##'
     ##' .. content for \details{} ..
-    ##' @title 
-    ##' @param id 
-    ##' @param pgx 
-    ##' @return 
+    ##' @title
+    ##' @param id
+    ##' @param pgx
+    ##' @return
     ##' @author kwee
     getTopMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
@@ -363,7 +362,7 @@ ClusteringBoard <- function(id, pgx) {
         }
         gg
       }
-      
+
       grp.zx <- NULL
       if (topmode == "pca") {
         NPCA <- 5
@@ -407,7 +406,7 @@ ClusteringBoard <- function(id, pgx) {
         ## Order by SD
         gg <- rownames(zx)[order(-apply(zx, 1, sd, na.rm = TRUE))]
         gg <- head(gg, nmax)
-        gg <- addsplitgene(gg)        
+        gg <- addsplitgene(gg)
         zx <- zx[gg, , drop = FALSE] ## order
       }
 
@@ -426,7 +425,7 @@ ClusteringBoard <- function(id, pgx) {
       }
 
       ## ------------- matched annotation
-      annot <- pgx$samples[colnames(zx), , drop = FALSE] 
+      annot <- pgx$samples[colnames(zx), , drop = FALSE]
       kk <- grep("sample|patient", colnames(annot), invert = TRUE)
       annot <- annot[, kk, drop = FALSE] ## no group??
       samples <- colnames(zx) ## original sample list
@@ -437,9 +436,9 @@ ClusteringBoard <- function(id, pgx) {
       grp.zx <- NULL
       grp.var <- "group"
       grp.average <- input$hm_average_group
-      is.grouped = FALSE
-      
-      if (grp.average && input$hm_splitby!="none") {
+      is.grouped <- FALSE
+
+      if (grp.average && input$hm_splitby != "none") {
         grp.zx <- tapply(colnames(zx), grp, function(k) {
           rowMeans(zx[, k, drop = FALSE], na.rm = TRUE)
         })
@@ -454,7 +453,7 @@ ClusteringBoard <- function(id, pgx) {
         grp.annot <- data.frame(do.call(rbind, grp.annot))
         grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
         grp <- colnames(grp.zx)
-        is.grouped = TRUE
+        is.grouped <- TRUE
       } else {
         grp.zx <- zx
         grp.annot <- annot
@@ -464,37 +463,36 @@ ClusteringBoard <- function(id, pgx) {
       filt <- list(
         mat = grp.zx,
         annot = grp.annot,
-        grp = grp,   ## sample grouping
-        idx = idx,   ## gene grouping
+        grp = grp, ## sample grouping
+        idx = idx, ## gene grouping
         samples = samples,
         is.grouped = is.grouped
       )
 
       return(filt)
-    })  ## end of getTopMatrix
+    }) ## end of getTopMatrix
 
 
     ##' Same as getTopMatrix but always averaged by group
     ##'
     ##' .. content for \details{} ..
-    ##' @title 
-    ##' @param id 
-    ##' @param pgx 
-    ##' @return 
+    ##' @title
+    ##' @param id
+    ##' @param pgx
+    ##' @return
     ##' @author kwee
     getTopMatrixGrouped <- shiny::reactive({
-
       topmat <- getTopMatrix()
       shiny::req(topmat$mat)
-      
-      if(topmat$is.grouped || is.null(topmat$grp) ) {
+
+      if (topmat$is.grouped || is.null(topmat$grp)) {
         return(topmat)
       }
 
       ## ----------------------------------------------------
       ## ------------ calculate group summarized ------------
       ## ----------------------------------------------------
-      
+
       grp <- topmat$grp
       zx <- topmat$mat
       annot <- topmat$annot
@@ -520,16 +518,15 @@ ClusteringBoard <- function(id, pgx) {
       res <- list(
         mat = grp.zx,
         annot = grp.annot,
-        grp = grp,   ## sample grouping
-        idx = idx,   ## gene grouping
+        grp = grp, ## sample grouping
+        idx = idx, ## gene grouping
         samples = samples,
         is.grouped = TRUE
       )
       return(res)
+    })
 
-    })    
 
-    
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
 
@@ -632,7 +629,6 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     hm_getClusterPositions <- shiny::reactive({
-
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
       pdim <- 2
@@ -663,9 +659,9 @@ ClusteringBoard <- function(id, pgx) {
 
         ntop <- 1000
         zx <- pgx$X
-        zx <- zx[order(-apply(zx, 1, sd)), , drop = FALSE] 
+        zx <- zx[order(-apply(zx, 1, sd)), , drop = FALSE]
         if (nrow(zx) > ntop) {
-          zx <- zx[1:ntop, , drop = FALSE] 
+          zx <- zx[1:ntop, , drop = FALSE]
         }
         if ("normalize" %in% input$`PCAplot-hmpca_options`) {
           zx <- scale(t(scale(t(zx))))
@@ -751,6 +747,5 @@ ClusteringBoard <- function(id, pgx) {
       scrollY = "calc(40vh - 236px)",
       watermark = WATERMARK
     )
-
   }) ## end of moduleServer
 } ## end of Board

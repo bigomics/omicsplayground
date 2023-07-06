@@ -4,14 +4,13 @@
 ##
 
 dataview_plot_abundance_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption
-  ) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   menu_grouped <- "<code>grouped</code>"
@@ -84,7 +83,7 @@ dataview_plot_abundance_server <- function(id,
         plotly_modal_default() %>%
         plotly::layout(
           showlegend = FALSE
-        )  
+        )
       fig
     }
 
