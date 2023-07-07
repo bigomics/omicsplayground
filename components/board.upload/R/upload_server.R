@@ -510,8 +510,8 @@ UploadBoard <- function(id,
 
       MAXSAMPLES <- 25
       MAXCONTRASTS <- 5
-      MAXSAMPLES <- as.integer(limits["samples"])
-      MAXCONTRASTS <- as.integer(limits["comparisons"])
+      MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+      MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
@@ -598,9 +598,9 @@ UploadBoard <- function(id,
       upload_info <- sub("EXAMPLEZIP", DLlink, upload_info)
 
       limits0 <- paste(
-        limits["datasets"], "datasets (with each up to",
-        limits["samples"], "samples and",
-        limits["comparisons"], "comparisons)"
+        auth$options$MAX_DATASETS, "datasets (with each up to",
+        auth$options$MAX_SAMPLES, "samples and",
+        auth$options$MAX_COMPARISONS, "comparisons)"
       )
       upload_info <- sub("LIMITS", limits0, upload_info)
       shiny::HTML(upload_info)
@@ -678,9 +678,9 @@ UploadBoard <- function(id,
       lib.dir = FILES,
       pgx.dirRT = shiny::reactive(getPGXDIR()),
       auth = auth,
-      max.genes = as.integer(limits["genes"]),
-      max.genesets = as.integer(limits["genesets"]),
-      max.datasets = as.integer(limits["datasets"]),
+      max.genes = as.integer(auth$options$MAX_GENES),
+      max.genesets = as.integer(auth$options$MAX_GENESETS),
+      max.datasets = as.integer(auth$options$MAX_DATASETS),
       height = height
     )
 

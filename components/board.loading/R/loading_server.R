@@ -37,7 +37,7 @@ LoadingBoard <- function(id,
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
       getPGXDIR = getPGXDIR,
-      max_datasets = limits["datasets"],
+      max_datasets = auth$options$MAX_DATASETS,
       reload_pgxdir = reload_pgxdir,
       current_page = current_page
     )
@@ -187,7 +187,6 @@ LoadingBoard <- function(id,
         pgx_public_dir = pgx_public_dir,
         reload_pgxdir_public = reload_pgxdir_public,
         auth = auth,
-        limits = limits,
         reload_pgxdir = reload_pgxdir
       )
 

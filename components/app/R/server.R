@@ -43,14 +43,6 @@ app_server <- function(input, output, session) {
   session.start_time <- -1
   authentication <- opt$AUTHENTICATION
 
-  limits <- c(
-    "samples" = opt$MAX_SAMPLES,
-    "comparisons" = opt$MAX_COMPARISONS,
-    "genes" = opt$MAX_GENES,
-    "genesets" = opt$MAX_GENESETS,
-    "datasets" = opt$MAX_DATASETS
-  )
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -126,7 +118,6 @@ app_server <- function(input, output, session) {
     id = "load",
     pgx = PGX,
     auth = auth,
-    limits = limits,
     pgx_topdir = PGX.DIR,
     load_example = load_example,
     reload_pgxdir = reload_pgxdir,
@@ -142,7 +133,6 @@ app_server <- function(input, output, session) {
       pgx = PGX,
       auth = auth,
       getPGXDIR = getPgxDir,
-      limits = limits,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )

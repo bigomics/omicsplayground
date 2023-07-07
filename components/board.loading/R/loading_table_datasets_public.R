@@ -38,7 +38,6 @@ loading_table_datasets_public_server <- function(id,
                                                  pgx_public_dir,
                                                  reload_pgxdir_public,
                                                  auth,
-                                                 limits,
                                                  reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
     getPGXINFO_PUBLIC <- shiny::reactive({
@@ -135,7 +134,7 @@ loading_table_datasets_public_server <- function(id,
       ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
       numpgx <- length(dir(pgx_path, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
-      maxpgx <- as.integer(limits["datasets"])
+      maxpgx <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= maxpgx) {
         ## should use sprintf or glue here...
         msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
