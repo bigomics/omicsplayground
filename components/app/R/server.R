@@ -679,11 +679,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
     }
   })
 
-  # this shouldn't be needed but the login doesnt really work without it
-  # this is a remnant from when the observe function directly above used
-  # to be called on app start even before a user logged in
-  shinyjs::runjs("logout()")
-
   ## logout helper function
   logout.JScallback <- "logout()"
   if (opt$AUTHENTICATION == "shinyproxy") {
