@@ -27,8 +27,8 @@ upload_module_computepgx_server <- function(
     metaRT,
     lib.dir,
     pgx.dirRT,
+    auth,
     enable_button = TRUE,
-    enable_delete = TRUE,
     alertready = TRUE,
     max.genes = 20000,
     max.genesets = 10000,
@@ -322,7 +322,7 @@ upload_module_computepgx_server <- function(
 
         pgxdir <- pgx.dirRT()
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-        if (!opt$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
+        if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
         if (numpgx >= max.datasets) {
           ### should use sprintf here...
 

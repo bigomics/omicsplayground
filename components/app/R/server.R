@@ -43,14 +43,6 @@ app_server <- function(input, output, session) {
   session.start_time <- -1
   authentication <- opt$AUTHENTICATION
 
-  limits <- c(
-    "samples" = opt$MAX_SAMPLES,
-    "comparisons" = opt$MAX_COMPARISONS,
-    "genes" = opt$MAX_GENES,
-    "genesets" = opt$MAX_GENESETS,
-    "datasets" = opt$MAX_DATASETS
-  )
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -112,7 +104,6 @@ app_server <- function(input, output, session) {
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
-    enable_upload = opt$ENABLE_UPLOAD,
     load_example = load_example
   )
   env$user_profile <- UserProfileBoard("user_profile", user = auth)
@@ -127,17 +118,11 @@ app_server <- function(input, output, session) {
     id = "load",
     pgx = PGX,
     auth = auth,
-    limits = limits,
     pgx_topdir = PGX.DIR,
     load_example = load_example,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
-    load_uploaded_data = load_uploaded_data,
-    enable_userdir = opt$ENABLE_USERDIR,
-    enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-    enable_user_share = opt$ENABLE_USER_SHARE,
-    enable_delete = opt$ENABLE_DELETE,
-    enable_public_share = opt$ENABLE_PUBLIC_SHARE
+    load_uploaded_data = load_uploaded_data
   )
 
   ## Modules needed from the start
@@ -148,16 +133,14 @@ app_server <- function(input, output, session) {
       pgx = PGX,
       auth = auth,
       getPGXDIR = getPgxDir,
-      limits = limits,
-      enable_userdir = opt$ENABLE_USERDIR,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
   }
 
   ## If user logs off, we clear the data
-  observeEvent(auth$logged(), {
-    is.logged <- auth$logged()
+  observeEvent(auth$logged, {
+    is.logged <- auth$logged
     length.pgx <- length(names(PGX))
     if (!is.logged && length.pgx > 0) {
       for (i in 1:length.pgx) {
@@ -169,16 +152,16 @@ app_server <- function(input, output, session) {
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
-    if (!auth$logged()) {
+    if (!auth$logged) {
       return(NULL)
     }
     userpgx <- PGX.DIR
-    if (opt$ENABLE_USERDIR &&
+    if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("email", "auth-email", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email())
-    } else if (opt$ENABLE_USERDIR &&
+      userpgx <- file.path(PGX.DIR, auth$email)
+    } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$name())
+      userpgx <- file.path(PGX.DIR, auth$name)
     } else {
       userpgx <- PGX.DIR
     }
@@ -442,8 +425,8 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
-    user <- auth$email()
-    if (user %in% c("", NA, NULL)) user <- auth$name()
+    user <- auth$email
+    if (user %in% c("", NA, NULL)) user <- auth$name
     if (user %in% c("", NA, NULL)) user <- "User"
     user
   })
@@ -463,7 +446,7 @@ app_server <- function(input, output, session) {
 
   shiny::observeEvent(
     {
-      auth$logged()
+      auth$logged
       env$user_settings$enable_beta()
       PGX$name
     },
@@ -474,7 +457,7 @@ app_server <- function(input, output, session) {
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-      is.logged <- auth$logged()
+      is.logged <- auth$logged
 
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {
@@ -574,7 +557,7 @@ app_server <- function(input, output, session) {
     })
 
     r.timeout <- reactive({
-      timer$timeout() && auth$logged()
+      timer$timeout() && auth$logged
     })
 
     ## Choose type of referral modal upon timeout:
@@ -603,9 +586,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
       }
     })
 
-    shiny::observeEvent(auth$logged(), {
+    shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
-      logged <- auth$logged()
+      logged <- auth$logged
       info("[server.R & TIMEOUT>0] change in user log status : logged = ", logged)
 
       ## --------- start timer --------------
@@ -663,12 +646,13 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## -------------------------------------------------------------
 
   shiny::observe({
+    req(auth$logged)
     ## trigger on change of USER
-    logged <- auth$logged()
+    logged <- auth$logged
     info("[server.R] change in user log status : logged = ", logged)
 
     if (logged) {
-      session$user <- auth$email()
+      session$user <- auth$email
     } else {
       session$user <- "nobody"
     }
@@ -687,6 +671,8 @@ Upgrade today and experience advanced analysis features without the time limit.<
       shinyjs::runjs("logout()")
     }
   })
+
+  shinyjs::runjs("logout()")
 
   ## logout helper function
   logout.JScallback <- "logout()"

@@ -20,8 +20,8 @@ UserProfileBoard <- function(id, user) {
       ))
     })
 
-    observeEvent(user$logged(), {
-      if (!user$logged()) {
+    observeEvent(user$logged, {
+      if (!user$logged) {
         return()
       }
 
