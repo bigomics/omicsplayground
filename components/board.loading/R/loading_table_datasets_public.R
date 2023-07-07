@@ -44,7 +44,7 @@ loading_table_datasets_public_server <- function(id,
   moduleServer(id, function(input, output, session) {
     getPGXINFO_PUBLIC <- shiny::reactive({
       req(auth)
-      if (!auth$logged()) {
+      if (!auth$logged) {
         warning("[LoadingBoard:getPGXINFO_PUBLIC] user not logged in!")
         return(NULL)
       }
@@ -73,7 +73,7 @@ loading_table_datasets_public_server <- function(id,
     getFilteredPGXINFO_PUBLIC <- shiny::reactive({
       ## get the filtered table of pgx datasets
       req(auth)
-      if (!auth$logged()) {
+      if (!auth$logged) {
         return(NULL)
       }
 

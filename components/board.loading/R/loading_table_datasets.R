@@ -78,8 +78,8 @@ loading_table_datasets_server <- function(id,
 
 
     getPGXINFO <- shiny::reactive({
-      req(auth$logged() == TRUE)
-      if (!auth$logged()) {
+      req(auth$logged == TRUE)
+      if (!auth$logged) {
         return(NULL)
       }
       ## upstream trigger
@@ -317,7 +317,7 @@ loading_table_datasets_server <- function(id,
             onclick = paste0('Shiny.onInputChange(\"', ns("share_public_pgx"), '\",this.id,{priority: "event"})')
           )
         }
-        if (auth$opt()$ENABLE_USER_SHARE) {
+        if (auth$options$ENABLE_USER_SHARE) {
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
             label = "Share with user",
@@ -709,7 +709,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ## user has to be logged in and have email for them to share with other users
-        if (auth$email() == "") {
+        if (auth$email == "") {
           shinyalert::shinyalert(
             title = "Oops! Cannot share...",
             text = paste(
@@ -722,7 +722,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ## check how many are already in queue
-        pp <- paste0("__from__", auth$email(), "__$")
+        pp <- paste0("__from__", auth$email, "__$")
         num_shared_queue <- length(dir(pgx_shared_dir, pattern = pp))
 
         if (num_shared_queue >= opt$MAX_SHARED_QUEUE) { ## NB opt is global...
@@ -738,7 +738,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ## show share dialog
-        coworkers <- get_coworkers(pgx_topdir, auth$email())
+        coworkers <- get_coworkers(pgx_topdir, auth$email)
         pgxname <- sub("[.]pgx$", "", selected_sharePGX())
         if (length(coworkers) == 0) coworkers <- NULL
         shiny::showModal(share_dialog(pgxname, choices = coworkers))
@@ -769,7 +769,7 @@ loading_table_datasets_server <- function(id,
         })
         return()
       }
-      if (share_user == auth$email()) {
+      if (share_user == auth$email) {
         output$error_alert <- renderText({
           "Error. You cannot share with yourself..."
         })
@@ -819,7 +819,7 @@ loading_table_datasets_server <- function(id,
           pgx_shared_dir,
           paste0(
             pgx_name, ".pgx", "__to__", share_user,
-            "__from__", auth$email(), "__"
+            "__from__", auth$email, "__"
           )
         )
 
@@ -849,7 +849,7 @@ loading_table_datasets_server <- function(id,
           ## write transaction to log file
           log.entry <- data.frame(date = date(), from = "jane@demo.com", to = "tarzan@demo.com", file = "example-data.pgx")
           log.file <- file.path(pgx_shared_dir, "PGXSHARE-TRANSACTIONS.log")
-          log.entry <- data.frame(date = date(), from = auth$email(), to = share_user, file = paste0(pgx_name, ".pgx"))
+          log.entry <- data.frame(date = date(), from = auth$email, to = share_user, file = paste0(pgx_name, ".pgx"))
           if (file.exists(log.file)) {
             write.table(log.entry, file = log.file, col.names = FALSE, row.names = FALSE, sep = ",", append = TRUE)
           } else {
@@ -867,7 +867,7 @@ loading_table_datasets_server <- function(id,
         )
 
         # send email to user
-        sender <- auth$email()
+        sender <- auth$email
         sendShareMessage(pgx_name, sender, share_user, path_to_creds = "gmail_creds")
 
 

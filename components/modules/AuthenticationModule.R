@@ -647,17 +647,17 @@ PasswordAuthenticationModule <- function(id,
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
+      method = 'password',
       logged = FALSE,
       username = NA,
       email = NA,
       password = NA,
-      level = NA,
-      limit = NA
+      level = "",
+      limit = ""
     )
 
     resetUSER <- function() {
       USER$logged <- FALSE
-
       USER$username <- NA
       USER$email <- NA
       USER$password <- NA
@@ -677,7 +677,6 @@ PasswordAuthenticationModule <- function(id,
     }
 
     CREDENTIALS <- read.csv(credentials.file, colClasses = "character")
-    head(CREDENTIALS)
 
     output$showLogin <- shiny::renderUI({
       m <- splashLoginModal(
@@ -699,7 +698,6 @@ PasswordAuthenticationModule <- function(id,
       valid.date <- FALSE
       valid.user <- FALSE
 
-      ##        login_email    <- input$login_email
       login_username <- input$login_username
       login_password <- input$login_password
 
@@ -725,29 +723,24 @@ PasswordAuthenticationModule <- function(id,
       login.OK <- (valid.user && valid.pw && valid.date)
 
 
-      if (1) {
-        message("--------- password login ---------")
-        message("input.username = ", input$login_username)
-        ## message("input.email    = ",input$login_email)
-        message("input.password = ", input$login_password)
-        message("user.password  = ", CREDENTIALS[sel, "password"])
-        message("user.expiry    = ", CREDENTIALS[sel, "expiry"])
-        message("user.username  = ", CREDENTIALS[sel, "username"])
-        message("user.email     = ", CREDENTIALS[sel, "email"])
-        message("user.limit     = ", CREDENTIALS[sel, "limit"])
-        message("valid.user     = ", valid.user)
-        message("valid.date     = ", valid.date)
-        message("valid.pw       = ", valid.pw)
-        message("----------------------------------")
-      }
+      message("--------- password login ---------")
+      message("input.username = ", input$login_username)
+      message("input.password = ", input$login_password)
+      message("user.password  = ", CREDENTIALS[sel, "password"])
+      message("user.expiry    = ", CREDENTIALS[sel, "expiry"])
+      message("user.username  = ", CREDENTIALS[sel, "username"])
+      message("user.email     = ", CREDENTIALS[sel, "email"])
+      message("user.limit     = ", CREDENTIALS[sel, "limit"])
+      message("valid.user     = ", valid.user)
+      message("valid.date     = ", valid.date)
+      message("valid.pw       = ", valid.pw)
+      message("----------------------------------")
 
 
       if (login.OK) {
         message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
         output$login_warning <- shiny::renderText("")
         shiny::removeModal()
-        ## USER$name   <- input$login_username
-        ## USER$email <- CREDENTIALS[sel,"email"]
         sel <- which(CREDENTIALS$username == login_username)[1]
         cred <- CREDENTIALS[sel, ]
         USER$username <- cred$username
@@ -768,7 +761,7 @@ PasswordAuthenticationModule <- function(id,
             new_opt[[opt_name]] <- user_opt[[opt_name]]
           }
         }
-        USER$opt <- new_opt
+        USER$options <- new_opt
 
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
@@ -793,17 +786,7 @@ PasswordAuthenticationModule <- function(id,
       resetUSER()
     })
 
-    ## module reactive return value
-    rt <- list(
-      method = "password",
-      name   = shiny::reactive(USER$username),
-      email  = shiny::reactive(USER$email),
-      level  = shiny::reactive(USER$level),
-      logged = shiny::reactive(USER$logged),
-      limit  = shiny::reactive(USER$limit),
-      opt = shiny::reactive(USER$opt)
-    )
-    return(rt)
+    return(USER)
   })
 }
 

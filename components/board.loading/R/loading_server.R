@@ -262,16 +262,14 @@ LoadingBoard <- function(id,
     ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
       ## react on change of auth user
-      user <- auth$email()
-      if (auth$method == "password") user <- auth$name()
+      user <- auth$email
+      if (auth$method == "password") user <- auth$username
       user <- gsub(".*\\/", "", user) ## get rid of dangerous characters that can skip folders...
       pdir <- pgx_topdir ## from module input
-
       dbg("[LoadingBoard::getPGXDIR] authentication = ", auth$method)
       dbg("[LoadingBoard::getPGXDIR] pgx_topdir = ", pgx_topdir)
       dbg("[LoadingBoard::getPGXDIR] user = ", user)
       valid.user <- (!is.null(user) && !is.na(user) && user != "")
-
       ## Append email to the pgx path.
       if (valid.user && enable_userdir) {
         pdir <- file.path(pdir, user)
@@ -292,8 +290,8 @@ LoadingBoard <- function(id,
     ## =============================================================================
 
     loadPGX <- function(pgxfile) {
-      req(auth$logged())
-      if (!auth$logged()) {
+      req(auth$logged)
+      if (!auth$logged) {
         return(NULL)
       }
 
@@ -321,8 +319,8 @@ LoadingBoard <- function(id,
     }
 
     savePGX <- function(pgx, file) {
-      req(auth$logged())
-      if (!auth$logged()) {
+      req(auth$logged)
+      if (!auth$logged) {
         warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")
         return(NULL)
       }

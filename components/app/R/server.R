@@ -156,8 +156,8 @@ app_server <- function(input, output, session) {
   }
 
   ## If user logs off, we clear the data
-  observeEvent(auth$logged(), {
-    is.logged <- auth$logged()
+  observeEvent(auth$logged, {
+    is.logged <- auth$logged
     length.pgx <- length(names(PGX))
     if (!is.logged && length.pgx > 0) {
       for (i in 1:length.pgx) {
@@ -175,10 +175,10 @@ app_server <- function(input, output, session) {
     userpgx <- PGX.DIR
     if (opt$ENABLE_USERDIR &&
       authentication %in% c("email", "auth-email", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email())
+      userpgx <- file.path(PGX.DIR, auth$email)
     } else if (opt$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$name())
+      userpgx <- file.path(PGX.DIR, auth$username)
     } else {
       userpgx <- PGX.DIR
     }
@@ -442,8 +442,8 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
-    user <- auth$email()
-    if (user %in% c("", NA, NULL)) user <- auth$name()
+    user <- auth$email
+    if (user %in% c("", NA, NULL)) user <- auth$username
     if (user %in% c("", NA, NULL)) user <- "User"
     user
   })
@@ -463,7 +463,7 @@ app_server <- function(input, output, session) {
 
   shiny::observeEvent(
     {
-      auth$logged()
+      auth$logged
       env$user_settings$enable_beta()
       PGX$name
     },
@@ -576,7 +576,7 @@ app_server <- function(input, output, session) {
     })
 
     r.timeout <- reactive({
-      timer$timeout() && auth$logged()
+      timer$timeout() && auth$logged
     })
 
     ## Choose type of referral modal upon timeout:
@@ -605,9 +605,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
       }
     })
 
-    shiny::observeEvent(auth$logged(), {
+    shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
-      logged <- auth$logged()
+      logged <- auth$logged
       info("[server.R & TIMEOUT>0] change in user log status : logged = ", logged)
 
       ## --------- start timer --------------
@@ -666,11 +666,11 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
   shiny::observe({
     ## trigger on change of USER
-    logged <- auth$logged()
+    logged <- auth$logged
     info("[server.R] change in user log status : logged = ", logged)
 
     if (logged) {
-      session$user <- auth$email()
+      session$user <- auth$email
     } else {
       session$user <- "nobody"
     }

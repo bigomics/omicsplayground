@@ -22,10 +22,10 @@ upload_module_shared_server <- function(id,
       ## ------------ get received files
       getSharedFiles <- shiny::reactive({
         req(auth)
-        if (!auth$logged()) {
+        if (!auth$logged) {
           return(c())
         }
-        if (auth$email() == "") {
+        if (auth$email == "") {
           return(c())
         }
         ## allow trigger for when a shared pgx is accepted / decline
@@ -33,7 +33,7 @@ upload_module_shared_server <- function(id,
         refresh()
         pgxfiles <- dir(
           path = pgx_shared_dir,
-          pattern = paste0("__to__.*__from__", auth$email(), "__$"),
+          pattern = paste0("__to__.*__from__", auth$email, "__$"),
           ignore.case = TRUE
         )
         return(pgxfiles)

@@ -4,7 +4,7 @@
 ##
 
 check_personal_email <- function(auth, pgx_dir, title = NULL, text = NULL) {
-  email <- auth$email()
+  email <- auth$email
   is_personal_email <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", email)
   existing_user_dirs <- basename(list.dirs(pgx_dir))
   user_exists <- (email %in% existing_user_dirs)
