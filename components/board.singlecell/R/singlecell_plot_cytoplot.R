@@ -58,7 +58,7 @@ singlecell_plot_cytoplot_ui <- function(
 #'
 #' @param id
 #'
-#'@export
+#' @export
 singlecell_plot_cytoplot_server <- function(id,
                                             pgx,
                                             pfGetClusterPositions,
