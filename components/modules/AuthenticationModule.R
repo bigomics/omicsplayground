@@ -3,6 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+create_or_read_user_options <- function(user_dir) {
+  user_opt_file <- file.path(user_dir, "OPTIONS")
+  new_opt <- opt
+  if (!file.exists(user_opt_file)) {
+    file.copy(from = opt.file, to = user_opt_file)
+  } else {
+    user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+    for (opt_name in names(user_opt)) {
+      new_opt[[opt_name]] <- user_opt[[opt_name]]
+    }
+  }
+  new_opt
+}
+
 AuthenticationUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 }
@@ -62,18 +76,7 @@ NoAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # set options
-        userpgx <- PGX.DIR
-        user_opt_file <- file.path(userpgx, "OPTIONS")
-        new_opt <- opt
-        if (!file.exists(user_opt_file)) {
-          file.copy(from = opt.file, to = user_opt_file)
-        } else {
-          user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-          for (opt_name in names(user_opt)) {
-            new_opt[[opt_name]] <- user_opt[[opt_name]]
-          }
-        }
-        USER$options <- new_opt
+        USER$options <- create_or_read_user_options(PGX.DIR)
       })
 
       observeEvent(input$userLogout, {
@@ -358,18 +361,9 @@ FirebaseAuthenticationModule <- function(id,
 
 
       # set options
-      userpgx <- file.path(PGX.DIR, USER$email)
-      user_opt_file <- file.path(userpgx, "OPTIONS")
-      new_opt <- opt
-      if (!file.exists(user_opt_file)) {
-        file.copy(from = opt.file, to = user_opt_file)
-      } else {
-        user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-        for (opt_name in names(user_opt)) {
-          new_opt[[opt_name]] <- user_opt[[opt_name]]
-        }
-      }
-      USER$options <- new_opt
+      USER$options <- create_or_read_user_options(
+        file.path(PGX.DIR, USER$email)
+      )
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -634,18 +628,9 @@ EmailAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
-      userpgx <- file.path(PGX.DIR, USER$email)
-      user_opt_file <- file.path(userpgx, "OPTIONS")
-      new_opt <- opt
-      if (!file.exists(user_opt_file)) {
-        file.copy(from = opt.file, to = user_opt_file)
-      } else {
-        user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-        for (opt_name in names(user_opt)) {
-          new_opt[[opt_name]] <- user_opt[[opt_name]]
-        }
-      }
-      USER$options <- new_opt
+      USER$options <- create_or_read_user_options(
+        file.path(PGX.DIR, USER$email)
+      )
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -769,18 +754,9 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # set options
-        userpgx <- file.path(PGX.DIR, USER$name)
-        user_opt_file <- file.path(userpgx, "OPTIONS")
-        new_opt <- opt
-        if (!file.exists(user_opt_file)) {
-          file.copy(from = opt.file, to = user_opt_file)
-        } else {
-          user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-          for (opt_name in names(user_opt)) {
-            new_opt[[opt_name]] <- user_opt[[opt_name]]
-          }
-        }
-        USER$options <- new_opt
+        USER$options <- create_or_read_user_options(
+          file.path(PGX.DIR, USER$name)
+        )
 
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
