@@ -276,6 +276,11 @@ FirebaseAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
+
+        # set options
+        USER$options <- create_or_read_user_options(
+          file.path(PGX.DIR, USER$email)
+        )
         return()
       }
 
