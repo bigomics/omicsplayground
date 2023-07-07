@@ -46,7 +46,7 @@ SingleCellBoard <- function(id, pgx) {
       ## update cluster methods if available in object
       if ("cluster" %in% names(pgx)) {
         clustmethods <- names(pgx$cluster$pos)
-        clustmethods <- grep("3d", clustmethods, value = TRUE, invert = TRUE, ignore.case = TRUE) ## no 3D
+        clustmethods <- grep("3d",clustmethods,value=TRUE,invert=TRUE,ignore.case=TRUE) ## no 3D
         clustmethods <- c("default", clustmethods)
         shiny::updateSelectInput(session, "clustmethod",
           choices = clustmethods
@@ -61,6 +61,11 @@ SingleCellBoard <- function(id, pgx) {
       refsel <- unique(c(grep("LM22", refsets, value = TRUE), refsets))[1]
       shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
       shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
+
+      ## dcmethods <- names(pgx$deconv[[1]])
+      ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+      ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+      ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
 
       grpvars <- c("<ungrouped>", colnames(pgx$samples))
       sel <- grpvars[1]
@@ -87,16 +92,17 @@ SingleCellBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
 
+      ## if(is.null(input$crosstaboptions)) return(NULL)
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
-      pheno1 <- c("<cell type>", pheno0)
+      pheno1 <- c("<cell type>", pheno0) # pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
-      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
+      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1,,selected = pheno1[1])
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
     })
 
@@ -115,6 +121,7 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
+      ## if(is.null(pgx)) return(NULL)
       shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
@@ -131,6 +138,8 @@ SingleCellBoard <- function(id, pgx) {
 
       shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
       shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
+      shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
+
     })
 
 
@@ -140,6 +149,7 @@ SingleCellBoard <- function(id, pgx) {
     pfGetClusterPositions <- shiny::reactive({ # used by many plots
       shiny::req(pgx)
 
+      ## zx <- filtered_matrix1()
       zx <- pgx$X
       kk <- colnames(zx)
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
@@ -149,7 +159,6 @@ SingleCellBoard <- function(id, pgx) {
       zx <- zx[, kk, drop = FALSE]
       zx <- head(zx[order(-apply(zx, 1, sd)), ], 1000)
       zx <- t(scale(t(zx))) ## scale??
-
       pos <- NULL
       m <- "tsne"
       m <- input$clustmethod
@@ -168,8 +177,27 @@ SingleCellBoard <- function(id, pgx) {
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-
+      
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
+
+      # dbg("[pfGetClusterPositions2] computing distances and clusters...")
+      # dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
+      #
+      # ##dist = as.dist(dist(pos))
+      # dist = 0.001+dist(pos)**2
+      #
+      # dbg("[pfGetClusterPositions2] creating graph")
+      #
+      # gr = igraph::graph_from_adjacency_matrix(
+      #   1.0/dist, diag=FALSE, mode="undirected")
+      #
+      # dbg("[pfGetClusterPositions2] cluster louvain")
+      #
+      # clust <- igraph::cluster_louvain(gr)$membership
+      #
+      # dbg("pfGetClusterPositions2:: done!")
+      # return( list(pos=pos, clust=clust) )
+
       return(pos)
     })
 
@@ -260,6 +288,7 @@ SingleCellBoard <- function(id, pgx) {
       samplefilter = shiny::reactive(input$samplefilter),
       cytovar1 = shiny::reactive(input$cytovar1),
       cytovar2 = shiny::reactive(input$cytovar2),
+      nbins = shiny::reactive(input$nbins),
       selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
       watermark = WATERMARK
     )
