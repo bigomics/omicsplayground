@@ -63,37 +63,43 @@ LoadingBoard <- function(id,
       refresh = refresh_shared
     )
 
-    output$sharing_alert <- renderUI({
-      received_files <- pgxreceived$getReceivedFiles()
-      shared_files <- pgxshared$getSharedFiles()
-      num_received <- length(received_files)
-      num_shared <- length(shared_files)
-
-
-      if (num_received == 0 && num_shared == 0) {
-        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
-        return(tag)
-      }
-
-
-      ## If not show alerts for sharing
-      msg <- c()
-      if (num_received > 0) {
-        msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
-      }
-      if (num_shared > 0) {
-        msg1 <- paste("You have still <strong>", num_shared, "shared datasets</strong> waiting in the queue.")
-        msg <- c(msg, msg1)
-      }
-      bs_alert(
-        style = "warning",
-        conditional = FALSE,
-        shiny::HTML(paste(msg, "Please check the Sharing panel."))
+    if (enable_user_share==FALSE) {
+      output$sharing_panel_ui <- renderUI(
+        "The demo version does not allow sharing of datasets."
       )
-    })
-
+    }
+    
     if (enable_user_share==TRUE) {
-      
+
+      output$sharing_alert <- renderUI({
+        received_files <- pgxreceived$getReceivedFiles()
+        shared_files <- pgxshared$getSharedFiles()
+        num_received <- length(received_files)
+        num_shared <- length(shared_files)
+
+
+        if (num_received == 0 && num_shared == 0) {
+          tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+          return(tag)
+        }
+
+
+        ## If not show alerts for sharing
+        msg <- c()
+        if (num_received > 0) {
+          msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
+        }
+        if (num_shared > 0) {
+          msg1 <- paste("You have still <strong>", num_shared, "shared datasets</strong> waiting in the queue.")
+          msg <- c(msg, msg1)
+        }
+        bs_alert(
+          style = "warning",
+          conditional = FALSE,
+          shiny::HTML(paste(msg, "Please check the Sharing panel."))
+        )
+      })
+
       output$sharing_panel_ui <- renderUI({
         
         received_files <- pgxreceived$getReceivedFiles()

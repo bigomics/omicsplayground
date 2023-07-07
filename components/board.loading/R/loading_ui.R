@@ -93,13 +93,12 @@ LoadingUI <- function(id) {
       ) ## end of 7fr-5fr
     ) ## end first layout_column_wrap
   ) ## end of Public tabPanel
-
-  # show sharing tabpanel if uiouput is not NULL using conditional exists
-  
-  
+    
   sharing_tabpanel <- shiny::tabPanel(
-          "Sharing",
-          uiOutput(ns("sharing_panel_ui")))
+    "Sharing",
+    uiOutput(ns("sharing_panel_ui")
+    )
+  )
   
   ## ------------------------------------------------------------------------
 
