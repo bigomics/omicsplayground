@@ -442,8 +442,15 @@ app_server <- function(input, output, session) {
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
 
-  bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+  ## upon change of user
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      bigdash.toggleTab(session, "upload-tab", enable_upload)
+    }
+  })
 
+  ## upon change of user OR beta toggle OR new pgx 
   shiny::observeEvent(
     {
       auth$logged

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, enable_upload, load_example) {
+WelcomeBoard <- function(id, auth, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -32,6 +32,8 @@ WelcomeBoard <- function(id, auth, enable_upload, load_example) {
     })
 
     observeEvent(input$btn_upload_data, {
+
+      enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
         bigdash.openSidebar()
         bigdash.selectTab(session, "upload-tab")

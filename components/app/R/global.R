@@ -146,11 +146,6 @@ if (file.exists("global.R")) {
   source(file.path(OPG, "components/00SourceAll.R"), chdir = TRUE)
 }
 
-## You can add here new files explicitly, but eventually 00Headers.R
-## should contains all files. Update using .../dev/02_dev.R script.
-
-
-
 message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
@@ -168,8 +163,7 @@ if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
 
 
 if (opt$AUTHENTICATION %in% c("firebase", "email") && !file.exists("firebase.rds")) {
-  message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
-
+  message("[GLOBAL] WARNING: Missing firebase.rds!")
   stop("[GLOBAL] FATAL : missing firebase.rds file")
 }
 
@@ -189,20 +183,17 @@ message("************************************************")
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
-  "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell", "corr", "bio", "cmap",
-  "wgcna", "tcga", "comp", "user", "pcsf"
+  "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
+  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf"
 )
 if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
-## disable connectivity map if we have no signature database folder
-
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
 ## --------------------------------------------------------------------
 ## add handlerManager for log/crash reports
-
 
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
