@@ -31,7 +31,7 @@ NoAuthenticationModule <- function(id,
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
-        logged = FALSE,
+        logged = NULL,
         name = "",
         email = "",
         level = "",
@@ -219,7 +219,7 @@ FirebaseAuthenticationModule <- function(id,
     ns <- session$ns
     USER <- shiny::reactiveValues(
       method = "firebase",
-      logged = FALSE,
+      logged = NULL,
       name = "",
       password = "",
       email = "",
@@ -448,7 +448,7 @@ EmailAuthenticationModule <- function(id,
     ns <- session$ns
     USER <- shiny::reactiveValues(
       method = 'email',
-      logged = FALSE,
+      logged = NULL,
       name = "",
       password = "",
       email = "",
@@ -656,7 +656,7 @@ PasswordAuthenticationModule <- function(id,
     ns <- session$ns
     USER <- shiny::reactiveValues(
       method = 'password',
-      logged = FALSE,
+      logged = NULL,
       name = NA,
       email = NA,
       password = NA,

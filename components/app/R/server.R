@@ -648,6 +648,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## -------------------------------------------------------------
 
   shiny::observe({
+    req(auth$logged)
     ## trigger on change of USER
     logged <- auth$logged
     info("[server.R] change in user log status : logged = ", logged)
@@ -672,6 +673,8 @@ Upgrade today and experience advanced analysis features without the time limit.<
       shinyjs::runjs("logout()")
     }
   })
+
+  shinyjs::runjs("logout()")
 
   ## logout helper function
   logout.JScallback <- "logout()"

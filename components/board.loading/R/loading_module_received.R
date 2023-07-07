@@ -23,7 +23,7 @@ upload_module_received_server <- function(id,
 
       ## ------------ get received files
       getReceivedFiles <- shiny::reactive({
-        req(auth)
+        req(auth$logged)
         if (!auth$logged) {
           return(c())
         }

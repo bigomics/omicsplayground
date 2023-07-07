@@ -21,7 +21,7 @@ upload_module_shared_server <- function(id,
 
       ## ------------ get received files
       getSharedFiles <- shiny::reactive({
-        req(auth)
+        req(auth$logged)
         if (!auth$logged) {
           return(c())
         }
