@@ -238,35 +238,8 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    load_react <- reactive({
-      btn <- input$loadbutton
-      logged <- isolate(auth$logged()) ## avoid reloading when logout/login
-      !is.null(btn) && logged
-    })
-
-
-    shiny::observeEvent(load_react(), {
-      if (!load_react()) {
-        return(NULL)
-      }
-
-      on.exit({
-        bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
-      })
-
-      pgxfile <- NULL
-
-      ## Observe button press (over-rides URL query)
-      btn <- input$loadbutton
-      if (!is.null(btn) && btn != 0) {
-        pgxfile <- table_selected_pgx()
-      }
-
-      ## check if file is there
-      if (is.na(pgxfile) || is.null(pgxfile) || pgxfile == "" || length(pgxfile) == 0) {
-        message("[LoadingBoard@load_react] ERROR file empty : ", pgxfile, "\n")
-        return(NULL)
-      }
+    shiny::observeEvent(input$loadbutton, {
+      pgxfile <- table_selected_pgx()
 
       pgxfilename <- file.path(getPGXDIR(), pgxfile)
       if (!file.exists(pgxfilename)) {
@@ -274,7 +247,6 @@ loading_table_datasets_server <- function(id,
         return(NULL)
       }
 
-      ## load PGX go to dataview
       loadAndActivatePGX(pgxfile)
     })
 
