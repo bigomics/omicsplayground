@@ -411,6 +411,9 @@ server = function(input, output, session) {
     output$current_user <- shiny::renderText({
         ## trigger on change of user
         user <- env[["load"]][["auth"]]$email()
+        if(is.null(user) || is.na(user) || user=="") {
+          user <- env[["load"]][["auth"]]$name()
+        }
         user
     })
    
