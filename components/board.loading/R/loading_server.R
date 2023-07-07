@@ -51,86 +51,83 @@ LoadingBoard <- function(id,
       refresh = refresh_shared
     )
 
-    if (enable_user_share == FALSE) {
-      output$sharing_alert <- renderUI({
-        bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
-      })
+    output$sharing_alert <- renderUI({
+      if (!auth$options$ENABLE_USER_SHARE) {
+        return(
+          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+        )
+      }
+      received_files <- pgxreceived$getReceivedFiles()
+      shared_files <- pgxshared$getSharedFiles()
+      num_received <- length(received_files)
+      num_shared <- length(shared_files)
 
-      output$sharing_panel_ui <- renderUI(
-        "The demo version does not allow sharing of datasets."
+
+      if (num_received == 0 && num_shared == 0) {
+        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+        return(tag)
+      }
+
+
+      ## If not show alerts for sharing
+      msg <- c()
+      if (num_received > 0) {
+        msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
+      }
+      if (num_shared > 0) {
+        msg1 <- paste("You have still <strong>", num_shared, "shared datasets</strong> waiting in the queue.")
+        msg <- c(msg, msg1)
+      }
+      bs_alert(
+        style = "warning",
+        conditional = FALSE,
+        shiny::HTML(paste(msg, "Please check the Sharing panel."))
       )
-    }
+    })
 
-    if (enable_user_share == TRUE) {
-      output$sharing_alert <- renderUI({
-        received_files <- pgxreceived$getReceivedFiles()
-        shared_files <- pgxshared$getSharedFiles()
-        num_received <- length(received_files)
-        num_shared <- length(shared_files)
+    output$sharing_panel_ui <- renderUI({
+      if (!auth$options$ENABLE_USER_SHARE) {
+        return(
+          "The demo version does not allow sharing of datasets."
+        )
+      }
+      received_files <- pgxreceived$getReceivedFiles()
+      shared_files <- pgxshared$getSharedFiles()
+      num_received <- length(received_files)
+      num_shared <- length(shared_files)
 
+      if (num_received == 0 && num_shared == 0) {
+        return(paste("No datasets being shared."))
+      }
 
-        if (num_received == 0 && num_shared == 0) {
-          tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
-          return(tag)
-        }
-
-
-        ## If not show alerts for sharing
-        msg <- c()
+      out <- tagList()
+      if (length(out) == 0) {
         if (num_received > 0) {
-          msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
+          out1 <- shiny::wellPanel(
+            shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
+            br(), br(),
+            pgxreceived$receivedPGXtable(),
+            br()
+          )
+          out <- tagList(out, out1)
         }
         if (num_shared > 0) {
-          msg1 <- paste("You have still <strong>", num_shared, "shared datasets</strong> waiting in the queue.")
-          msg <- c(msg, msg1)
-        }
-        bs_alert(
-          style = "warning",
-          conditional = FALSE,
-          shiny::HTML(paste(msg, "Please check the Sharing panel."))
-        )
-      })
-
-      output$sharing_panel_ui <- renderUI({
-        received_files <- pgxreceived$getReceivedFiles()
-        shared_files <- pgxshared$getSharedFiles()
-        num_received <- length(received_files)
-        num_shared <- length(shared_files)
-
-        if (num_received == 0 && num_shared == 0) {
-          return(paste("No datasets being shared."))
-        }
-
-        out <- tagList()
-        if (length(out) == 0) {
-          if (num_received > 0) {
-            out1 <- shiny::wellPanel(
-              shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-              br(), br(),
-              pgxreceived$receivedPGXtable(),
-              br()
-            )
-            out <- tagList(out, out1)
-          }
-          if (num_shared > 0) {
-            out2 <- shiny::wellPanel(
-              shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-              br(), br(),
-              pgxshared$sharedPGXtable(),
-              br()
-            )
-            if (length(out) == 0) {
-              out <- out2
-            } else {
-              out <- tagList(out, br(), out2)
-            }
+          out2 <- shiny::wellPanel(
+            shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
+            br(), br(),
+            pgxshared$sharedPGXtable(),
+            br()
+          )
+          if (length(out) == 0) {
+            out <- out2
+          } else {
+            out <- tagList(out, br(), out2)
           }
         }
+      }
 
-        return(out)
-      })
-    } ## end of Shared tabPanel
-
+      return(out)
+    })
 
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
