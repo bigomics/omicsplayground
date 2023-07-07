@@ -437,9 +437,6 @@ app_server <- function(input, output, session) {
 
     ## remove loading modal from LoadingBoard
     shiny::removeModal()
-
-    # show hidden tabs
-    bigdash.showTabsGoToDataView(session) # see ui-bigdashplus.R
   })
 
 
