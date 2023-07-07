@@ -35,7 +35,8 @@ upload_module_received_server <- function(id,
         refresh_table()
         pgxfiles <- dir(
           path = pgx_shared_dir,
-          pattern = paste0("__to__", auth$email(), "__from__.*__$")
+          pattern = paste0("__to__", auth$email(), "__from__.*__$"),
+          ignore.case = TRUE
         )
         return(pgxfiles)
       })

@@ -366,8 +366,8 @@ loading_table_datasets_server <- function(id,
           )
         }
 
+        ## instead of disabling we grey out and have a popup message
         ##        if(enable_delete) {
-
         if (TRUE) {
           delete_pgx_menuitem <- shiny::actionButton(
             ns(paste0("delete_dataset_row_", i)),
@@ -683,6 +683,7 @@ loading_table_datasets_server <- function(id,
       if (!is.null(input$share_user2) && input$share_user2 != "") {
         share_user <- input$share_user2
       }
+      share_user <- tolower(share_user) ## force lower case email
       share_user
     })
 
@@ -740,9 +741,7 @@ loading_table_datasets_server <- function(id,
               "Please contact your administrator."
             )
           )
-
           share_pgx(NULL)
-
           return()
         }
 
@@ -755,7 +754,6 @@ loading_table_datasets_server <- function(id,
               "address to share pgx files with other users."
             )
           )
-
           share_pgx(NULL)
           return()
         }
@@ -772,9 +770,7 @@ loading_table_datasets_server <- function(id,
               "Please contact your administrator."
             )
           )
-
           share_pgx(NULL)
-
           return()
         }
 
