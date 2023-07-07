@@ -64,6 +64,11 @@ LoadingBoard <- function(id,
     )
 
     if (enable_user_share==FALSE) {
+      
+      output$sharing_alert <- renderUI({
+        bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+      })
+
       output$sharing_panel_ui <- renderUI(
         "The demo version does not allow sharing of datasets."
       )
