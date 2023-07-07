@@ -78,11 +78,10 @@ loading_table_datasets_server <- function(id,
 
 
     getPGXINFO <- shiny::reactive({
-      req(auth)
+      req(auth$logged() == TRUE)
       if (!auth$logged()) {
         return(NULL)
       }
-
       ## upstream trigger
 
       reload_pgxdir()
@@ -318,7 +317,7 @@ loading_table_datasets_server <- function(id,
             onclick = paste0('Shiny.onInputChange(\"', ns("share_public_pgx"), '\",this.id,{priority: "event"})')
           )
         }
-        if (enable_user_share) {
+        if (auth$opt()$ENABLE_USER_SHARE) {
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
             label = "Share with user",

@@ -755,6 +755,21 @@ PasswordAuthenticationModule <- function(id,
         USER$level <- cred$level
         USER$limit <- cred$limit
         USER$logged <- TRUE
+
+        # set options
+        userpgx <- file.path(PGX.DIR, USER$username)
+        user_opt_file <- file.path(userpgx, "OPTIONS")
+        new_opt <- opt
+        if (!file.exists(user_opt_file)) {
+          file.copy(from = opt.file, to = user_opt_file)
+        } else {
+          user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+          for (opt_name in names(user_opt)) {
+            new_opt[[opt_name]] <- user_opt[[opt_name]]
+          }
+        }
+        USER$opt <- new_opt
+
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
         message("[PasswordAuthenticationModule::login] login invalid!")
@@ -785,7 +800,8 @@ PasswordAuthenticationModule <- function(id,
       email  = shiny::reactive(USER$email),
       level  = shiny::reactive(USER$level),
       logged = shiny::reactive(USER$logged),
-      limit  = shiny::reactive(USER$limit)
+      limit  = shiny::reactive(USER$limit),
+      opt = shiny::reactive(USER$opt)
     )
     return(rt)
   })
