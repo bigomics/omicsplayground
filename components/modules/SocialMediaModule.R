@@ -45,7 +45,6 @@ SocialMediaModule <- function(id, r.show = reactive(0)) {
 
     output$modal <- renderUI({
       do.show <- r.show()
-      message("do.show = ", do.show)
       if (do.show == 0) {
         return(NULL)
       }

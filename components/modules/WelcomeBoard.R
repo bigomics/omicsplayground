@@ -59,20 +59,17 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
       bigdash.selectTab(session, "load-tab")
     })
 
-    chatbox_rds <- "chatbox_data.rds"
-    if(!file.exists(chatbox_rds)) {
-      df <- data.frame(rowid = numeric(),
-        user = character(),
-        text = character(),
-        time = double())
-      saveRDS(df, chatbox_rds)
-    }
+  ## -------------------------------------------------------------
+  ## Chatbox
+  ## -------------------------------------------------------------
+  if(opt$ENABLE_CHIRP) {
     shinyChatR::chat_server(
       "chatbox",
-      rds_path = chatbox_rds,
+      db_file = file.path(OPG,"chirp_data.db"),
+      ##csv_file = file.path(OPG,"chirp_data.csv"),            
       chat_user = getFirstName
     )
-
+  }
     
   })
 }
@@ -133,21 +130,32 @@ WelcomeBoardUI <- function(id) {
       )
     )
 
-  ## --------------------- page ------------------------------------------
-  div(
-    id = "welcome-page",
-    div( class = "row justify-content-center",
-      div( class = "col-md-10",
+  div.chirp <- NULL
+  if(opt$ENABLE_CHIRP) {
+    ## offcanvas chatbox 
+    div.chirp <- bsutils::offcanvas(
+      bsutils::offcanvasButton("Chirp!",id="chirp-button",
+        style="width:auto;position:absolute;top:60px;right:30px;background-color:white;padding:5px 12px;font-size:14px;"),
+      bsutils::offcanvasContent(
+        .position = "end",
         bslib::card(
           full_screen = TRUE,
-          height = "200px",
-          style = "border-width: 1px",
+          style = "border-width: 0px;",
+          height = "92vh",
           bslib::card_body(
-            shinyChatR::chat_ui(ns("chatbox"), height='100px', width='100%')
+            shinyChatR::chat_ui(ns("chatbox"),
+              title = "Chirp with others on the Playground!",
+              height='70vh', width='100%')
           )
         )
       )
-    ),
+    )
+  }
+  
+  ## --------------------- page ------------------------------------------
+  div(
+    id = "welcome-page",
+    div.chirp,
     div(
       class = "row",
       div(

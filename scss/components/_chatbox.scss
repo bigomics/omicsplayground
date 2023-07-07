@@ -1,0 +1,38 @@
+html {
+    
+    .chatContainer {
+        background-color: white;
+	box-shadow: none;
+    }
+    
+    .offcanvas.offcanvas-bottom {
+	right: auto;
+	left: auto;
+	width: 60%;
+	background-color: transparent;
+    }
+
+    .chatMessage {
+	float: left;
+	text-align: left;
+	margin-bottom: 5px;
+	padding: 2px 20px;
+	border-radius: 5px;
+//	color: black;
+//	background-color: #ddd;	
+	clear: both;
+	box-shadow: none;
+    }
+
+    .chatMessage > p {
+	margin: 0.1rem;
+    }
+
+    .chatTitle {
+	font-size: 16px;
+	font-weight: 600;
+	margin-bottom: 10px;
+    }
+
+    
+}
