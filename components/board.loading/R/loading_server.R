@@ -70,7 +70,6 @@ LoadingBoard <- function(id,
     }
     
     if (enable_user_share==TRUE) {
-
       output$sharing_alert <- renderUI({
         received_files <- pgxreceived$getReceivedFiles()
         shared_files <- pgxshared$getSharedFiles()
@@ -101,7 +100,6 @@ LoadingBoard <- function(id,
       })
 
       output$sharing_panel_ui <- renderUI({
-        
         received_files <- pgxreceived$getReceivedFiles()
         shared_files <- pgxshared$getSharedFiles()
         num_received <- length(received_files)
@@ -137,19 +135,9 @@ LoadingBoard <- function(id,
           }
         }
          
-        bslib::layout_column_wrap(
-          width = 1,
-          heights_equal = "row",
-          height = "calc(100vh - 180px)",
-          bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
-          bslib::layout_column_wrap(
-            width = 1,
-            height = "calc(100vh - 180px)",
-            out
-          )
-        )
+        return(out)
       })
-    } ## end of Public tabPanel
+    } ## end of Shared tabPanel
 
 
     ## ======================================================================

@@ -96,8 +96,18 @@ LoadingUI <- function(id) {
     
   sharing_tabpanel <- shiny::tabPanel(
     "Sharing",
-    uiOutput(ns("sharing_panel_ui")
-    )
+    bslib::layout_column_wrap(
+          width = 1,
+          heights_equal = "row",
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+          bslib::layout_column_wrap(
+            width = 1,
+            height = "calc(100vh - 180px)",
+            uiOutput(ns("sharing_panel_ui")
+          )
+        )
+      )
   )
   
   ## ------------------------------------------------------------------------
