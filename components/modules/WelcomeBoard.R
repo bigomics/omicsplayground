@@ -8,7 +8,7 @@ WelcomeBoard <- function(id, auth, enable_upload, load_example) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
-      name <- auth$username
+      name <- auth$name
       dbg("[WelcomeBoard] name =", name)
       if (name %in% c("", NA, NULL)) {
         welcome <- "Welcome back..."

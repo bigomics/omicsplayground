@@ -16,11 +16,14 @@ NoAuthenticationModule <- function(id,
       message("[NoAuthenticationModule] >>>> using no authentication <<<<")
       ns <- session$ns
       USER <- shiny::reactiveValues(
+        method = "none",
         logged = FALSE,
         name = "",
         email = "",
         level = "",
-        limit = ""
+        limit = "",
+        stripe_id = "",
+        href = ""
       )
 
       resetUSER <- function() {
@@ -45,6 +48,7 @@ NoAuthenticationModule <- function(id,
         }
         USER$name <- username
         USER$email <- email
+
       }
 
       output$showLogin <- shiny::renderUI({
@@ -57,24 +61,26 @@ NoAuthenticationModule <- function(id,
         shiny::removeModal()
         USER$logged <- TRUE
 
-        session$sendCustomMessage("set-user", list(user = "User"))
+        # set options
+        userpgx <- PGX.DIR
+        user_opt_file <- file.path(userpgx, "OPTIONS")
+        new_opt <- opt
+        if (!file.exists(user_opt_file)) {
+          file.copy(from = opt.file, to = user_opt_file)
+        } else {
+          user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+          for (opt_name in names(user_opt)) {
+            new_opt[[opt_name]] <- user_opt[[opt_name]]
+          }
+        }
+        USER$options <- new_opt
       })
 
       observeEvent(input$userLogout, {
         resetUSER()
       })
 
-      rt <- list(
-        method = "none",
-        name = shiny::reactive(USER$name),
-        email = shiny::reactive(USER$email),
-        level = shiny::reactive(USER$level),
-        logged = shiny::reactive(USER$logged),
-        limit = shiny::reactive(USER$limit),
-        stripe_id = shiny::reactive(""),
-        href = shiny::reactive("")
-      )
-      return(rt)
+      return(USER)
     } ## end-of-server
   )
 }
@@ -209,6 +215,7 @@ FirebaseAuthenticationModule <- function(id,
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
+      method = "firebase",
       logged = FALSE,
       name = "",
       password = "",
@@ -349,6 +356,21 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$name)) USER$name <- ""
       if (is.null(USER$email)) USER$email <- ""
 
+
+      # set options
+      userpgx <- file.path(PGX.DIR, USER$email)
+      user_opt_file <- file.path(userpgx, "OPTIONS")
+      new_opt <- opt
+      if (!file.exists(user_opt_file)) {
+        file.copy(from = opt.file, to = user_opt_file)
+      } else {
+        user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+        for (opt_name in names(user_opt)) {
+          new_opt[[opt_name]] <- user_opt[[opt_name]]
+        }
+      }
+      USER$options <- new_opt
+
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -401,17 +423,7 @@ FirebaseAuthenticationModule <- function(id,
       session$sendCustomMessage("manage-sub", content$url)
     })
 
-    rt <- list(
-      method = "firebase",
-      name = shiny::reactive(USER$name),
-      email = shiny::reactive(USER$email),
-      level = shiny::reactive(USER$level),
-      logged = shiny::reactive(USER$logged),
-      limit = shiny::reactive(USER$limit),
-      stripe_id = shiny::reactive(USER$stripe_id),
-      href = shiny::reactive(USER$href)
-    )
-    return(rt)
+    return(USER)
   })
 }
 
@@ -436,13 +448,14 @@ EmailAuthenticationModule <- function(id,
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
+      method = 'email',
       logged = FALSE,
       name = "",
       password = "",
       email = "",
       level = "",
       limit = "",
-      token = NULL,
+      token = "",
       uid = NULL,
       stripe_id = NULL,
       href = NULL
@@ -620,19 +633,24 @@ EmailAuthenticationModule <- function(id,
       if (is.null(USER$name)) USER$name <- ""
       if (is.null(USER$email)) USER$email <- ""
 
+      # set options
+      userpgx <- file.path(PGX.DIR, USER$email)
+      user_opt_file <- file.path(userpgx, "OPTIONS")
+      new_opt <- opt
+      if (!file.exists(user_opt_file)) {
+        file.copy(from = opt.file, to = user_opt_file)
+      } else {
+        user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+        for (opt_name in names(user_opt)) {
+          new_opt[[opt_name]] <- user_opt[[opt_name]]
+        }
+      }
+      USER$options <- new_opt
+
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
-    rt <- list(
-      method = "email",
-      name   = shiny::reactive(USER$name),
-      email  = shiny::reactive(USER$email),
-      level  = shiny::reactive(USER$level),
-      logged = shiny::reactive(USER$logged),
-      limit  = shiny::reactive(USER$limit),
-      href   = shiny::reactive(USER$href)
-    )
-    return(rt)
+    return(USER)
   })
 }
 
@@ -649,11 +667,12 @@ PasswordAuthenticationModule <- function(id,
     USER <- shiny::reactiveValues(
       method = 'password',
       logged = FALSE,
-      username = NA,
+      name = NA,
       email = NA,
       password = NA,
       level = "",
-      limit = ""
+      limit = "",
+      options = opt
     )
 
     resetUSER <- function() {
@@ -743,14 +762,14 @@ PasswordAuthenticationModule <- function(id,
         shiny::removeModal()
         sel <- which(CREDENTIALS$username == login_username)[1]
         cred <- CREDENTIALS[sel, ]
-        USER$username <- cred$username
+        USER$name <- cred$username
         USER$email <- cred$email
         USER$level <- cred$level
         USER$limit <- cred$limit
         USER$logged <- TRUE
 
         # set options
-        userpgx <- file.path(PGX.DIR, USER$username)
+        userpgx <- file.path(PGX.DIR, USER$name)
         user_opt_file <- file.path(userpgx, "OPTIONS")
         new_opt <- opt
         if (!file.exists(user_opt_file)) {

@@ -162,7 +162,7 @@ app_server <- function(input, output, session) {
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
-    if (!auth$logged()) {
+    if (!auth$logged) {
       return(NULL)
     }
     userpgx <- PGX.DIR
@@ -171,7 +171,7 @@ app_server <- function(input, output, session) {
       userpgx <- file.path(PGX.DIR, auth$email)
     } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$username)
+      userpgx <- file.path(PGX.DIR, auth$name)
     } else {
       userpgx <- PGX.DIR
     }
@@ -436,7 +436,7 @@ app_server <- function(input, output, session) {
   output$current_user <- shiny::renderText({
     ## trigger on change of user
     user <- auth$email
-    if (user %in% c("", NA, NULL)) user <- auth$username
+    if (user %in% c("", NA, NULL)) user <- auth$name
     if (user %in% c("", NA, NULL)) user <- "User"
     user
   })
@@ -467,7 +467,7 @@ app_server <- function(input, output, session) {
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-      is.logged <- auth$logged()
+      is.logged <- auth$logged
 
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {

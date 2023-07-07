@@ -30,14 +30,6 @@ $(document).on('shiny:connected', function() {
         if (message.resize) $(window).resize();
     })
 
-    Shiny.addCustomMessageHandler('set-user', (msg) => {
-        $('#authentication-user').text(msg.user);
-        user = msg.user;
-	pricing = msg.pricing;
-	if(msg.level == "premium"){
-	    // $('#authentication-upgrade').hide();  // really?
-	}
-    });
 
 
 });  // end of on.shiny.connected
