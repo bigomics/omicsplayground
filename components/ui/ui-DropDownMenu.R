@@ -41,7 +41,7 @@ $('#", id, "').on('shown.bs.dropdown', function () {
 $('#", id, "').on('hidden.bs.dropdown', function () {
   restoreDropdownMenu();
 });
-")  ## end of paste0
+") ## end of paste0
 }
 
 DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, width = "auto", margin = "10px") {
