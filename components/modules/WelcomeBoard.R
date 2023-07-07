@@ -32,7 +32,6 @@ WelcomeBoard <- function(id, auth, load_example) {
     })
 
     observeEvent(input$btn_upload_data, {
-
       enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
         bigdash.openSidebar()

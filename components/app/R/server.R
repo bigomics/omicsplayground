@@ -450,7 +450,7 @@ app_server <- function(input, output, session) {
     }
   })
 
-  ## upon change of user OR beta toggle OR new pgx 
+  ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
       auth$logged

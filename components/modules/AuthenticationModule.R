@@ -5,10 +5,10 @@
 
 create_or_read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
-  new_opt <- opt  ## opt from global
+  new_opt <- opt ## opt from global
   if (!file.exists(user_opt_file)) {
     ## IK: no need
-    ## file.copy(from = opt.file, to = user_opt_file)  
+    ## file.copy(from = opt.file, to = user_opt_file)
   } else {
     user_opt <- playbase::pgx.readOptions(file = user_opt_file)
     for (opt_name in names(user_opt)) {
