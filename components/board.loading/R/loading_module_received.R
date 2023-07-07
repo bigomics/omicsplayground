@@ -14,7 +14,8 @@ upload_module_received_server <- function(id,
                                           getPGXDIR,
                                           max_datasets,
                                           enable_delete = TRUE,
-                                          r_global) {
+                                          reload_pgxdir,
+                                          current_page) {
   shiny::moduleServer(
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
@@ -48,9 +49,9 @@ upload_module_received_server <- function(id,
       }
 
       receivedPGXtable <- shiny::eventReactive(
-        c(r_global$nav, getReceivedFiles()),
+        c(current_page(), getReceivedFiles()),
         {
-          req(r_global$nav == "load-tab")
+          req(current_page() == "load-tab")
           shared_files <- getReceivedFiles()
           if (length(shared_files) == 0) {
             return(NULL)
@@ -167,7 +168,11 @@ upload_module_received_server <- function(id,
           }
 
           ## reload pgx dir so the newly accepted pgx files are registered in user table
-          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+          if (is.null(reload_pgxdir())) {
+              reload_pgxdir(1)
+          } else {
+              reload_pgxdir(reload_pgxdir() + 1)
+          }
 
           ## remove the accepted pgx from the table
           refresh_table(refresh_table() + 1)

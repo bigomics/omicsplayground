@@ -40,7 +40,7 @@ loading_table_datasets_public_server <- function(id,
                                                  auth,
                                                  enable_delete,
                                                  limits,
-                                                 r_global) {
+                                                 reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
     getPGXINFO_PUBLIC <- shiny::reactive({
       req(auth)
@@ -174,7 +174,11 @@ loading_table_datasets_public_server <- function(id,
         )
       )
 
-      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+      if (is.null(reload_pgxdir())) {
+          reload_pgxdir(1)
+      } else {
+          reload_pgxdir(reload_pgxdir() + 1)
+      }
     })
 
     pgxTable_DT <- reactive({

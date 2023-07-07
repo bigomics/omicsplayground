@@ -33,8 +33,7 @@ upload_module_computepgx_server <- function(
     max.genes = 20000,
     max.genesets = 10000,
     max.datasets = 100,
-    height = 720,
-    r_global) {
+    height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {

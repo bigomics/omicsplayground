@@ -62,11 +62,11 @@ loading_table_datasets_server <- function(id,
                                           pgx_shared_dir,
                                           pgx_public_dir,
                                           auth,
-                                          r_global,
                                           loadAndActivatePGX,
                                           loadPGX,
                                           refresh_shared,
                                           reload_pgxdir_public,
+                                          reload_pgxdir,
                                           enable_pgxdownload = FALSE,
                                           enable_delete = FALSE,
                                           enable_public_share = TRUE,
@@ -85,7 +85,7 @@ loading_table_datasets_server <- function(id,
 
       ## upstream trigger
 
-      r_global$reload_pgxdir
+      reload_pgxdir()
       pgxdir <- getPGXDIR()
 
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
@@ -281,7 +281,6 @@ loading_table_datasets_server <- function(id,
     ## ---------------------------- create table module -----------------------------------
 
     table_data <- shiny::reactive({
-      # r_global$reload_pgxdir
       df <- getFilteredPGXINFO()
 
       if (is.null(df)) {
@@ -646,7 +645,11 @@ loading_table_datasets_server <- function(id,
               info <- info[-idx, ]
               write.csv(info, file.path(pgx.path, "datasets-info.csv"))
             }
-            r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+            if (is.null(reload_pgxdir())) {
+                reload_pgxdir(1)
+            } else {
+                reload_pgxdir(reload_pgxdir() + 1)
+            }
           }
         }
 

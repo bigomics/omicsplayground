@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, enable_upload, r_global) {
+WelcomeBoard <- function(id, auth, enable_upload, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -24,7 +24,11 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
     })
 
     observeEvent(input$btn_example_data, {
-      r_global$load_example_trigger <- r_global$load_example_trigger + 1
+        if (is.null(load_example())) {
+            load_example(1)
+        } else {
+            load_example(load_example() + 1)
+        }
     })
 
     observeEvent(input$btn_upload_data, {

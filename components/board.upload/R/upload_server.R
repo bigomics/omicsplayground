@@ -14,7 +14,8 @@ UploadBoard <- function(id,
                         ),
                         enable_userdir = TRUE,
                         enable_delete = TRUE,
-                        r_global) {
+                        reload_pgxdir,
+                        load_uploaded_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -129,14 +130,18 @@ UploadBoard <- function(id,
         )
       })
 
-      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+      if (is.null(reload_pgxdir())) {
+          reload_pgxdir(1)
+      } else {
+          reload_pgxdir(reload_pgxdir() + 1)
+      }
 
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
         if (input$confirmload) {
-          r_global$load_data_from_upload <- new_pgx$name
-          bigdash.selectTab(session, selected = "load-tab")
+            bigdash.selectTab(session, selected = "load-tab")
+          load_uploaded_data(new_pgx$name)
         }
       }
 
@@ -696,8 +701,7 @@ UploadBoard <- function(id,
       max.genes = as.integer(limits["genes"]),
       max.genesets = as.integer(limits["genesets"]),
       max.datasets = as.integer(limits["datasets"]),
-      height = height,
-      r_global = r_global
+      height = height
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -768,9 +772,6 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
-    res <- list(
-      loaded = reactive(r_global$loadedDataset)
-    )
-    return(res)
+    # board does not return anything
   })
 }

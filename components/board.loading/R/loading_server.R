@@ -12,18 +12,21 @@ LoadingBoard <- function(id,
                            "datasets" = 10
                          ),
                          pgx_topdir,
+                         load_example,
+                         reload_pgxdir,
+                         current_page,
+                         load_uploaded_data,
                          enable_userdir = TRUE,
                          enable_pgxdownload = TRUE,
                          enable_delete = TRUE,
                          enable_user_share = TRUE,
-                         enable_public_share = TRUE,
-                         r_global) {
+                         enable_public_share = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
+    is_data_loaded <- reactiveVal(NULL)
 
     ## static, not changing
     pgx_shared_dir <- stringr::str_replace_all(pgx_topdir, c("data" = "data_shared"))
@@ -51,7 +54,8 @@ LoadingBoard <- function(id,
       getPGXDIR = getPGXDIR,
       max_datasets = limits["datasets"],
       enable_delete = enable_delete,
-      r_global = r_global
+      reload_pgxdir = reload_pgxdir,
+      current_page = current_page
     )
 
     pgxshared <- upload_module_shared_server(
@@ -59,7 +63,7 @@ LoadingBoard <- function(id,
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
       sendShareMessage = sendShareMessage,
-      r_global = r_global,
+      current_page = current_page,
       refresh = refresh_shared
     )
 
@@ -135,10 +139,10 @@ LoadingBoard <- function(id,
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
-    observeEvent(r_global$load_example_trigger,
+    observeEvent(load_example(),
       {
         # get the row which corresponds to "example-data"
-        data_names <- as.character(pgxtable_data()$dataset)
+        data_names <- as.character(pgxtable$data()$dataset)
         example_row <- which(data_names == "example-data")[1]
         has.exampledata <- ("example-data" %in% data_names)
 
@@ -171,33 +175,26 @@ LoadingBoard <- function(id,
 
     pgxtable <- loading_table_datasets_server(
       id = "pgxtable",
-      ## getPGXINFO = getPGXINFO,
       getPGXDIR = getPGXDIR,
       pgx_shared_dir = pgx_shared_dir,
       pgx_public_dir = pgx_public_dir,
       pgx_topdir = pgx_topdir,
       auth = auth,
-      r_global = r_global,
       loadAndActivatePGX = loadAndActivatePGX,
       loadPGX = loadPGX,
       refresh_shared = refresh_shared,
       reload_pgxdir_public = reload_pgxdir_public,
+      reload_pgxdir = reload_pgxdir,
       enable_pgxdownload = enable_pgxdownload,
       enable_delete = enable_delete,
       enable_public_share = enable_public_share,
       enable_user_share = enable_user_share
     )
 
-    pgxtable_data <- reactive({
-      shiny::req(pgxtable)
-      pgxtable$data()
-    })
-
-
     loading_tsne_server(
       id = "tsne",
       pgx.dir = getPGXDIR,
-      info.table = reactive(pgxtable_data()),
+      info.table = reactive(pgxtable$data()),
       r_selected = reactive(pgxtable$rows_all()),
       watermark = WATERMARK
     )
@@ -212,7 +209,7 @@ LoadingBoard <- function(id,
         auth = auth,
         enable_delete = enable_delete,
         limits = limits,
-        r_global = r_global
+        reload_pgxdir = reload_pgxdir
       )
 
       loading_tsne_server(
@@ -398,21 +395,23 @@ LoadingBoard <- function(id,
       bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
 
       ## notify new data uploaded
-      r_global$loadedDataset <- r_global$loadedDataset + 1
+      if (is.null(is_data_loaded())) {
+          is_data_loaded(1)
+      } else {
+          is_data_loaded(is_data_loaded() + 1)
+      }
     }
 
 
-    observeEvent(r_global$load_data_from_upload,
+    observeEvent(load_uploaded_data(),
       {
-        data_names <- as.character(pgxtable_data()$dataset)
+        data_names <- as.character(pgxtable$data()$dataset)
         data_names <- sub("[.]pgx$", "", data_names)
-        upload_pgx <- sub("[.]pgx$", "", r_global$load_data_from_upload)
+        upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())
         dbg("[load_data_from_upload] upload_pgx = ", upload_pgx)
         loadAndActivatePGX(upload_pgx)
-        ## loadRowManual(loadRowManual() + 1)
-        r_global$load_data_from_upload <- NULL
-      },
-      ignoreNULL = TRUE
+        load_uploaded_data(NULL)
+      }
     )
 
 
@@ -421,7 +420,7 @@ LoadingBoard <- function(id,
     ## ================================================================================
 
     pgx_stats <- reactive({
-      pgx <- pgxtable_data()
+      pgx <- pgxtable$data()
       shiny::req(pgx)
       ndatasets <- nrow(pgx)
       nsamples <- sum(as.integer(pgx$nsamples), na.rm = TRUE)
@@ -442,7 +441,7 @@ LoadingBoard <- function(id,
     ## Board return object
     ## ------------------------------------------------
     res <- list(
-      loaded = reactive(r_global$loadedDataset)
+      is_data_loaded = is_data_loaded
     )
     return(res)
   })
