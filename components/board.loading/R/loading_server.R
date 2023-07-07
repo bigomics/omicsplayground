@@ -67,8 +67,7 @@ LoadingBoard <- function(id,
       refresh = refresh_shared
     )
 
-    if (enable_user_share==FALSE) {
-      
+    if (enable_user_share == FALSE) {
       output$sharing_alert <- renderUI({
         bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
       })
@@ -77,8 +76,8 @@ LoadingBoard <- function(id,
         "The demo version does not allow sharing of datasets."
       )
     }
-    
-    if (enable_user_share==TRUE) {
+
+    if (enable_user_share == TRUE) {
       output$sharing_alert <- renderUI({
         received_files <- pgxreceived$getReceivedFiles()
         shared_files <- pgxshared$getSharedFiles()
@@ -113,13 +112,13 @@ LoadingBoard <- function(id,
         shared_files <- pgxshared$getSharedFiles()
         num_received <- length(received_files)
         num_shared <- length(shared_files)
-        
+
         if (num_received == 0 && num_shared == 0) {
           return(paste("No datasets being shared."))
         }
 
         out <- tagList()
-        if (length(out) == 0){
+        if (length(out) == 0) {
           if (num_received > 0) {
             out1 <- shiny::wellPanel(
               shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
@@ -143,7 +142,7 @@ LoadingBoard <- function(id,
             }
           }
         }
-         
+
         return(out)
       })
     } ## end of Shared tabPanel
