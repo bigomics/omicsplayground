@@ -9,19 +9,39 @@
 # It also has logic implemented so that when clicking a different dropdown item,
 # the active one gets desactivated.
 jsCode <- function(id) {
-  paste0(
-    "$('#", id, "').on('click', function(){
-    if($('#", id, "').hasClass('active')){
-         $('#", id, "').toggleClass('active');
+  paste0("
+$('#", id, "').on('click', function(){
+  if($('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
     return 0;
-      }
-      $('.dropdown-button.active').toggleClass('active');
-      if(!$('#", id, "').hasClass('active')){
-         $('#", id, "').toggleClass('active');
-      }
-
-})"
-  )
+  }
+  $('.dropdown-button.active').toggleClass('active');
+  if(!$('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
+  }
+})
+function restoreDropdownMenu() {
+  var menuBody = $('body > .dropdown-menu-body');
+  if (menuBody.length > 0) {
+    menuBody.removeClass('dropdown-menu-body');
+    var id = menuBody.attr('data-toggle-id');
+    $('#' + id).parent().append(menuBody.detach());
+  }
+}
+$('#", id, "').on('shown.bs.dropdown', function () {
+  restoreDropdownMenu();
+  if (!this.id) {
+    console.error('Expected dropdown toggle to have an id attribute');
+  }
+  var menu = $(this).parent().find('.dropdown-menu');
+  menu.addClass('dropdown-menu-body');
+  menu.attr('data-toggle-id', this.id);
+  $('body').append(menu.detach());
+});
+$('#", id, "').on('hidden.bs.dropdown', function () {
+  restoreDropdownMenu();
+});
+")  ## end of paste0
 }
 
 DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, width = "auto", margin = "10px") {
