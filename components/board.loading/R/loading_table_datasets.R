@@ -758,7 +758,7 @@ loading_table_datasets_server <- function(id,
         return()
       }
 
-      if (!is_valid_email(share_user)) {
+      if (!is_valid_email(share_user) && auth$method != 'password') {
         output$error_alert <- renderText({
           "Email is not valid. Please use only work or business emails."
         })
@@ -810,11 +810,13 @@ loading_table_datasets_server <- function(id,
         ## folder with the name of the sender and receiver in the
         ## file name.
         share_user <- input_share_user()
+        current_user <- auth$email
+        if (auth$method == "password") current_user <- auth$name
         new_pgx_file <- file.path(
           pgx_shared_dir,
           paste0(
             pgx_name, ".pgx", "__to__", share_user,
-            "__from__", auth$email, "__"
+            "__from__", current_user, "__"
           )
         )
 

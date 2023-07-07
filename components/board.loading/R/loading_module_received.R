@@ -32,9 +32,12 @@ upload_module_received_server <- function(id,
         }
         ## allow trigger for when a shared pgx is accepted / decline
         refresh_table()
+
+        current_user <- auth$email
+        if (auth$method == "password") current_user <- auth$name
         pgxfiles <- dir(
           path = pgx_shared_dir,
-          pattern = paste0("__to__", auth$email, "__from__.*__$"),
+          pattern = paste0("__to__", current_user, "__from__.*__$"),
           ignore.case = TRUE
         )
         return(pgxfiles)
