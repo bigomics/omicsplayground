@@ -1,3 +1,6 @@
+v2.8.27
+- Fix in current user display. Fix example data copy if not exists.
+
 v2.8.26
 - Enable login with username (instead of email) 
 
