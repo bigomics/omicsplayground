@@ -112,7 +112,6 @@ app_server <- function(input, output, session) {
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
-    enable_upload = opt$ENABLE_UPLOAD,
     load_example = load_example
   )
   env$user_profile <- UserProfileBoard("user_profile", user = auth)
@@ -132,12 +131,7 @@ app_server <- function(input, output, session) {
     load_example = load_example,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
-    load_uploaded_data = load_uploaded_data,
-    enable_userdir = opt$ENABLE_USERDIR,
-    enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-    enable_user_share = opt$ENABLE_USER_SHARE,
-    enable_delete = opt$ENABLE_DELETE,
-    enable_public_share = opt$ENABLE_PUBLIC_SHARE
+    load_uploaded_data = load_uploaded_data
   )
 
   ## Modules needed from the start
@@ -149,7 +143,6 @@ app_server <- function(input, output, session) {
       auth = auth,
       getPGXDIR = getPgxDir,
       limits = limits,
-      enable_userdir = opt$ENABLE_USERDIR,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
@@ -173,10 +166,10 @@ app_server <- function(input, output, session) {
       return(NULL)
     }
     userpgx <- PGX.DIR
-    if (opt$ENABLE_USERDIR &&
+    if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("email", "auth-email", "firebase")) {
       userpgx <- file.path(PGX.DIR, auth$email)
-    } else if (opt$ENABLE_USERDIR &&
+    } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
       userpgx <- file.path(PGX.DIR, auth$username)
     } else {

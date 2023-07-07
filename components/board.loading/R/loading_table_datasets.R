@@ -56,7 +56,6 @@ loading_table_datasets_ui <- function(
 }
 
 loading_table_datasets_server <- function(id,
-                                          ## getPGXINFO,
                                           getPGXDIR,
                                           pgx_topdir,
                                           pgx_shared_dir,
@@ -66,11 +65,7 @@ loading_table_datasets_server <- function(id,
                                           loadPGX,
                                           refresh_shared,
                                           reload_pgxdir_public,
-                                          reload_pgxdir,
-                                          enable_pgxdownload = FALSE,
-                                          enable_delete = FALSE,
-                                          enable_public_share = TRUE,
-                                          enable_user_share = TRUE) {
+                                          reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -295,7 +290,7 @@ loading_table_datasets_server <- function(id,
         share_dataset_menuitem <- NULL
         delete_pgx_menuitem <- NULL
 
-        if (enable_pgxdownload) {
+        if (auth$options$ENABLE_PGX_DOWNLOAD) {
           download_pgx_menuitem <- shiny::actionButton(
             ns(paste0("download_pgx_row_", i)),
             label = "Download PGX",
@@ -306,7 +301,7 @@ loading_table_datasets_server <- function(id,
             onclick = paste0('Shiny.onInputChange(\"', ns("download_pgx"), '\",this.id,{priority: "event"})')
           )
         }
-        if (enable_public_share) {
+        if (auth$options$ENABLE_PUBLIC_SHARE) {
           share_public_menuitem <- shiny::actionButton(
             ns(paste0("share_public_row_", i)),
             label = "Share public",
@@ -616,7 +611,7 @@ loading_table_datasets_server <- function(id,
           }
         }
 
-        if (enable_delete) {
+        if (auth$options$ENABLE_DELETE) {
           shinyalert::shinyalert(
             "Delete this dataset?",
             paste("Are you sure you want\nto delete '", pgxfile, "'?"),

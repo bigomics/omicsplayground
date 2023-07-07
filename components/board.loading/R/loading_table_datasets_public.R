@@ -38,7 +38,6 @@ loading_table_datasets_public_server <- function(id,
                                                  pgx_public_dir,
                                                  reload_pgxdir_public,
                                                  auth,
-                                                 enable_delete,
                                                  limits,
                                                  reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
@@ -135,7 +134,7 @@ loading_table_datasets_public_server <- function(id,
 
       ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
       numpgx <- length(dir(pgx_path, pattern = "*.pgx$"))
-      if (!enable_delete) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
+      if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
       maxpgx <- as.integer(limits["datasets"])
       if (numpgx >= maxpgx) {
         ## should use sprintf or glue here...
