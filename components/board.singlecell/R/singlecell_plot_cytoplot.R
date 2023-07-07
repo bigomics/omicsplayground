@@ -46,7 +46,7 @@ singlecell_plot_cytoplot_ui <- function(
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c( 'png', 'pdf'),#FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
+    download.fmt = c( 'png', 'pdf'),
     height = height,
     width = width
   )
@@ -58,7 +58,7 @@ singlecell_plot_cytoplot_ui <- function(
 #'
 #' @param id
 #'
-# ' @export
+#'@export
 singlecell_plot_cytoplot_server <- function(id,
                                             pgx,
                                             pfGetClusterPositions,
