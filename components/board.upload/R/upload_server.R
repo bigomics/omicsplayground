@@ -131,16 +131,16 @@ UploadBoard <- function(id,
       })
 
       if (is.null(reload_pgxdir())) {
-          reload_pgxdir(1)
+        reload_pgxdir(1)
       } else {
-          reload_pgxdir(reload_pgxdir() + 1)
+        reload_pgxdir(reload_pgxdir() + 1)
       }
 
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
         if (input$confirmload) {
-            bigdash.selectTab(session, selected = "load-tab")
+          bigdash.selectTab(session, selected = "load-tab")
           load_uploaded_data(new_pgx$name)
         }
       }

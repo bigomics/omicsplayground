@@ -646,9 +646,9 @@ loading_table_datasets_server <- function(id,
               write.csv(info, file.path(pgx.path, "datasets-info.csv"))
             }
             if (is.null(reload_pgxdir())) {
-                reload_pgxdir(1)
+              reload_pgxdir(1)
             } else {
-                reload_pgxdir(reload_pgxdir() + 1)
+              reload_pgxdir(reload_pgxdir() + 1)
             }
           }
         }

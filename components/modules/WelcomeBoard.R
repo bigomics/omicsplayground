@@ -24,11 +24,11 @@ WelcomeBoard <- function(id, auth, enable_upload, load_example) {
     })
 
     observeEvent(input$btn_example_data, {
-        if (is.null(load_example())) {
-            load_example(1)
-        } else {
-            load_example(load_example() + 1)
-        }
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
     })
 
     observeEvent(input$btn_upload_data, {

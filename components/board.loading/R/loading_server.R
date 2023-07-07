@@ -396,23 +396,21 @@ LoadingBoard <- function(id,
 
       ## notify new data uploaded
       if (is.null(is_data_loaded())) {
-          is_data_loaded(1)
+        is_data_loaded(1)
       } else {
-          is_data_loaded(is_data_loaded() + 1)
+        is_data_loaded(is_data_loaded() + 1)
       }
     }
 
 
-    observeEvent(load_uploaded_data(),
-      {
-        data_names <- as.character(pgxtable$data()$dataset)
-        data_names <- sub("[.]pgx$", "", data_names)
-        upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())
-        dbg("[load_data_from_upload] upload_pgx = ", upload_pgx)
-        loadAndActivatePGX(upload_pgx)
-        load_uploaded_data(NULL)
-      }
-    )
+    observeEvent(load_uploaded_data(), {
+      data_names <- as.character(pgxtable$data()$dataset)
+      data_names <- sub("[.]pgx$", "", data_names)
+      upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())
+      dbg("[load_data_from_upload] upload_pgx = ", upload_pgx)
+      loadAndActivatePGX(upload_pgx)
+      load_uploaded_data(NULL)
+    })
 
 
     ## ================================================================================

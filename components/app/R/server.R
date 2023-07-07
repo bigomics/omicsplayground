@@ -111,9 +111,9 @@ app_server <- function(input, output, session) {
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
-               auth = auth,
-               enable_upload = opt$ENABLE_UPLOAD,
-               load_example = load_example
+    auth = auth,
+    enable_upload = opt$ENABLE_UPLOAD,
+    load_example = load_example
   )
   env$user_profile <- UserProfileBoard("user_profile", user = auth)
   env$user_settings <- UserSettingsBoard("user_settings", user = auth)
@@ -186,109 +186,108 @@ app_server <- function(input, output, session) {
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
-
     if (env$load$is_data_loaded() == 1) {
-        additional_ui_tabs <- tagList(
-            bigdash::bigTabItem(
-                "dataview-tab",
-                DataViewInputs("dataview"),
-                DataViewUI("dataview")
-            ),
-            bigdash::bigTabItem(
-                "clustersamples-tab",
-                ClusteringInputs("clustersamples"),
-                ClusteringUI("clustersamples")
-            ),
-            bigdash::bigTabItem(
-                "clusterfeatures-tab",
-                FeatureMapInputs("clusterfeatures"),
-                FeatureMapUI("clusterfeatures")
-            ),
-            bigdash::bigTabItem(
-                "wgcna-tab",
-                WgcnaInputs("wgcna"),
-                WgcnaUI("wgcna")
-            ),
-            bigdash::bigTabItem(
-                "pcsf-tab",
-                PcsfInputs("pcsf"),
-                PcsfUI("pcsf")
-            ),
-            bigdash::bigTabItem(
-                "diffexpr-tab",
-                ExpressionInputs("diffexpr"),
-                ExpressionUI("diffexpr")
-            ),
-            bigdash::bigTabItem(
-                "corr-tab",
-                CorrelationInputs("corr"),
-                CorrelationUI("corr")
-            ),
-            bigdash::bigTabItem(
-                "enrich-tab",
-                EnrichmentInputs("enrich"),
-                EnrichmentUI("enrich")
-            ),
-            bigdash::bigTabItem(
-                "pathway-tab",
-                FunctionalInputs("pathway"),
-                FunctionalUI("pathway")
-            ),
-            bigdash::bigTabItem(
-                "wordcloud-tab",
-                WordCloudInputs("wordcloud"),
-                WordCloudUI("wordcloud")
-            ),
-            bigdash::bigTabItem(
-                "drug-tab",
-                DrugConnectivityInputs("drug"),
-                DrugConnectivityUI("drug")
-            ),
-            bigdash::bigTabItem(
-                "isect-tab",
-                IntersectionInputs("isect"),
-                IntersectionUI("isect")
-            ),
-            bigdash::bigTabItem(
-                "sig-tab",
-                SignatureInputs("sig"),
-                SignatureUI("sig")
-            ),
-            bigdash::bigTabItem(
-                "bio-tab",
-                BiomarkerInputs("bio"),
-                BiomarkerUI("bio")
-            ),
-            bigdash::bigTabItem(
-                "cmap-tab",
-                ConnectivityInputs("cmap"),
-                ConnectivityUI("cmap")
-            ),
-            bigdash::bigTabItem(
-                "comp-tab",
-                CompareInputs("comp"),
-                CompareUI("comp")
-            ),
-            bigdash::bigTabItem(
-                "tcga-tab",
-                TcgaInputs("tcga"),
-                TcgaUI("tcga")
-            ),
-            bigdash::bigTabItem(
-                "cell-tab",
-                SingleCellInputs("cell"),
-                SingleCellUI("cell")
-            )
+      additional_ui_tabs <- tagList(
+        bigdash::bigTabItem(
+          "dataview-tab",
+          DataViewInputs("dataview"),
+          DataViewUI("dataview")
+        ),
+        bigdash::bigTabItem(
+          "clustersamples-tab",
+          ClusteringInputs("clustersamples"),
+          ClusteringUI("clustersamples")
+        ),
+        bigdash::bigTabItem(
+          "clusterfeatures-tab",
+          FeatureMapInputs("clusterfeatures"),
+          FeatureMapUI("clusterfeatures")
+        ),
+        bigdash::bigTabItem(
+          "wgcna-tab",
+          WgcnaInputs("wgcna"),
+          WgcnaUI("wgcna")
+        ),
+        bigdash::bigTabItem(
+          "pcsf-tab",
+          PcsfInputs("pcsf"),
+          PcsfUI("pcsf")
+        ),
+        bigdash::bigTabItem(
+          "diffexpr-tab",
+          ExpressionInputs("diffexpr"),
+          ExpressionUI("diffexpr")
+        ),
+        bigdash::bigTabItem(
+          "corr-tab",
+          CorrelationInputs("corr"),
+          CorrelationUI("corr")
+        ),
+        bigdash::bigTabItem(
+          "enrich-tab",
+          EnrichmentInputs("enrich"),
+          EnrichmentUI("enrich")
+        ),
+        bigdash::bigTabItem(
+          "pathway-tab",
+          FunctionalInputs("pathway"),
+          FunctionalUI("pathway")
+        ),
+        bigdash::bigTabItem(
+          "wordcloud-tab",
+          WordCloudInputs("wordcloud"),
+          WordCloudUI("wordcloud")
+        ),
+        bigdash::bigTabItem(
+          "drug-tab",
+          DrugConnectivityInputs("drug"),
+          DrugConnectivityUI("drug")
+        ),
+        bigdash::bigTabItem(
+          "isect-tab",
+          IntersectionInputs("isect"),
+          IntersectionUI("isect")
+        ),
+        bigdash::bigTabItem(
+          "sig-tab",
+          SignatureInputs("sig"),
+          SignatureUI("sig")
+        ),
+        bigdash::bigTabItem(
+          "bio-tab",
+          BiomarkerInputs("bio"),
+          BiomarkerUI("bio")
+        ),
+        bigdash::bigTabItem(
+          "cmap-tab",
+          ConnectivityInputs("cmap"),
+          ConnectivityUI("cmap")
+        ),
+        bigdash::bigTabItem(
+          "comp-tab",
+          CompareInputs("comp"),
+          CompareUI("comp")
+        ),
+        bigdash::bigTabItem(
+          "tcga-tab",
+          TcgaInputs("tcga"),
+          TcgaUI("tcga")
+        ),
+        bigdash::bigTabItem(
+          "cell-tab",
+          SingleCellInputs("cell"),
+          SingleCellUI("cell")
         )
+      )
 
-        shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
-            shiny::insertUI(
-                selector = "#big-tabs",
-                where = "beforeEnd",
-                ui = additional_ui_tabs,
-                immediate = TRUE
-            )
-        })
+      shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
+        shiny::insertUI(
+          selector = "#big-tabs",
+          where = "beforeEnd",
+          ui = additional_ui_tabs,
+          immediate = TRUE
+        )
+      })
     }
 
     shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
@@ -403,10 +402,10 @@ app_server <- function(input, output, session) {
     })
 
     if (env$load$is_data_loaded() == 1) {
-        # this is a function - like "handleSettings()" in bigdash- needed to
-        # make the settings sidebar show up for the inserted tabs
-        shinyjs::runjs(
-            "  $('.big-tab')
+      # this is a function - like "handleSettings()" in bigdash- needed to
+      # make the settings sidebar show up for the inserted tabs
+      shinyjs::runjs(
+        "  $('.big-tab')
     .each((index, el) => {
       let settings = $(el)
         .find('.tab-settings')
@@ -415,7 +414,7 @@ app_server <- function(input, output, session) {
       $(settings).data('target', $(el).data('name'));
       $(settings).appendTo('#settings-content');
     });"
-        )
+      )
     }
 
     bigdash.selectTab(session, selected = "dataview-tab")
