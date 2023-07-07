@@ -240,16 +240,17 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         dbg("[LoadingBoard::getPGXDIR] authentication = ",authentication)
         dbg("[LoadingBoard::getPGXDIR] pgx_dir = ",pgx_dir)
         dbg("[LoadingBoard::getPGXDIR] user = ",user)        
+        
+        valid.user <-(!is.null(user) && !is.na(user) && user != "")         
 
-        ##USERDIR=FALSE
-        if(enable_userdir) {
-            pdir <- paste0(pdir,"/",user)
-            if(!is.null(user) && !is.na(user) && user!="") pdir <- paste0(pdir,'/')
-            if(!dir.exists(pdir)) {
+        if(valid.user && enable_userdir) {
+            pdir <- file.path(pdir,user)
+            example.file <- file.path(pgx_dir, "example-data.pgx")
+            if(!dir.exists(pdir) && file.exists(example.file)) {
                 dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ",pdir)
                 dir.create(pdir)
-                dbg("[LoadingBoard:getPGXDIR] copy example pgx")                
-                file.copy(file.path(pgx_dir,"example-data.pgx"),pdir)
+                dbg("[LoadingBoard:getPGXDIR] copying example pgx")                
+                file.copy(example.file,pdir)
             }
         }
         dbg("[LoadingBoard::getPGXDIR] user.pgxdir = ",pdir)
