@@ -301,7 +301,7 @@ loading_table_datasets_server <- function(id,
             onclick = paste0('Shiny.onInputChange(\"', ns("download_pgx"), '\",this.id,{priority: "event"})')
           )
         }
-        if (auth$options$ENABLE_PUBLIC_SHARE) {
+        if (auth$options$ENABLE_PUBLIC_SHARE && dir.exists(pgx_public_dir)) {
           share_public_menuitem <- shiny::actionButton(
             ns(paste0("share_public_row_", i)),
             label = "Share public",
@@ -312,7 +312,7 @@ loading_table_datasets_server <- function(id,
             onclick = paste0('Shiny.onInputChange(\"', ns("share_public_pgx"), '\",this.id,{priority: "event"})')
           )
         }
-        if (auth$options$ENABLE_USER_SHARE) {
+        if (auth$options$ENABLE_USER_SHARE && dir.exists(pgx_shared_dir)) {
           share_dataset_menuitem <- shiny::actionButton(
             ns(paste0("share_dataset_row_", i)),
             label = "Share with user",
