@@ -109,11 +109,6 @@ loading_table_datasets_server <- function(id,
 
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets
-      req(auth)
-      if (!auth$logged()) {
-        warning("[LoadingBoard:getFilteredPGXINFO] user not logged in!")
-        return(NULL)
-      }
       df <- getPGXINFO()
       if (is.null(df)) {
         return(NULL)
@@ -286,9 +281,6 @@ loading_table_datasets_server <- function(id,
         )
       }
       validate(need(nrow(df) > 0, "Need at least one dataset!"))
-
-      ## need this, otherwise there is an error on user logout
-      if (length(df$dataset) == 0) df <- NULL
 
       df$creator <- NULL
       target1 <- grep("date", colnames(df))
