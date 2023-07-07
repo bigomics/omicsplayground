@@ -758,7 +758,7 @@ loading_table_datasets_server <- function(id,
         return()
       }
 
-      if (!is_valid_email(share_user) && auth$method != 'password') {
+      if (!is_valid_email(share_user) && auth$method != "password") {
         output$error_alert <- renderText({
           "Email is not valid. Please use only work or business emails."
         })
