@@ -510,9 +510,9 @@ app_server <- function(input, output, session) {
 
       ## DEVELOPER only tabs (still too alpha)
       info("[server.R] disabling alpha features")
-#      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
-#      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
-#      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
 
       info("[server.R] trigger on change dataset done!")
     }
