@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_cytoplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   cyto.opts <- shiny::tagList(
@@ -33,7 +33,7 @@ singlecell_plot_cytoplot_ui <- function(
       "Choose your prefered gene on the y-axis.",
       placement = "top", options = list(container = "body")
     ),
-    withTooltip(shiny::sliderInput(parent("nbins"), label = "nbins:", min = 0, max = 50, value =5, step = 5),
+    withTooltip(shiny::sliderInput(parent("nbins"), label = "nbins:", min = 0, max = 50, value = 5, step = 5),
       "Select the maximum number of bins for histogram distribution.",
       placement = "top", options = list(container = "body")
     ),
@@ -46,7 +46,7 @@ singlecell_plot_cytoplot_ui <- function(
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c( 'png', 'pdf'),
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )
@@ -99,38 +99,38 @@ singlecell_plot_cytoplot_server <- function(id,
 
       gene1 <- cytovar1
       gene2 <- cytovar2
-      
+
       ## if(gene1 == gene2) return(NULL)
       par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
-      playbase::plotlyCytoplot(pgx, 
-                               gene1, 
-                               gene2, 
-                               nbinsx = nbins, 
-                               nbinsy = nbins, 
-                               marker.size = 7,
-                               samples = kk, 
-                               lab.unit = "(log2CPM)", 
-                               contour.coloring = 'none'
+      playbase::plotlyCytoplot(pgx,
+        gene1,
+        gene2,
+        nbinsx = nbins,
+        nbinsy = nbins,
+        marker.size = 7,
+        samples = kk,
+        lab.unit = "(log2CPM)",
+        contour.coloring = "none"
       )
     })
 
     plotly.RENDER <- function() {
-       cyto.plotFUNC()
+      cyto.plotFUNC()
     }
 
     plotly_modal.RENDER <- function() {
-       cyto.plotFUNC()
+      cyto.plotFUNC()
     }
 
     PlotModuleServer(
-    "plotmodule",
-    func = plotly.RENDER,
-    func2 = plotly_modal.RENDER,
-    plotlib = "plotly",
-    res = c(90, 130), ## resolution of plots
-    pdf.width = 9,
-    pdf.height = 7,
-    add.watermark = watermark
+      "plotmodule",
+      func = plotly.RENDER,
+      func2 = plotly_modal.RENDER,
+      plotlib = "plotly",
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 9,
+      pdf.height = 7,
+      add.watermark = watermark
     )
   }) ## end of moduleServer
 }

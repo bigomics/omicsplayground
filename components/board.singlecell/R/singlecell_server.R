@@ -46,7 +46,7 @@ SingleCellBoard <- function(id, pgx) {
       ## update cluster methods if available in object
       if ("cluster" %in% names(pgx)) {
         clustmethods <- names(pgx$cluster$pos)
-        clustmethods <- grep("3d",clustmethods,value=TRUE,invert=TRUE,ignore.case=TRUE) ## no 3D
+        clustmethods <- grep("3d", clustmethods, value = TRUE, invert = TRUE, ignore.case = TRUE) ## no 3D
         clustmethods <- c("default", clustmethods)
         shiny::updateSelectInput(session, "clustmethod",
           choices = clustmethods
@@ -102,7 +102,7 @@ SingleCellBoard <- function(id, pgx) {
       pheno1 <- c("<cell type>", pheno0) # pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
-      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1,,selected = pheno1[1])
+      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
     })
 
@@ -139,7 +139,6 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
       shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
       shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
-
     })
 
 
@@ -177,7 +176,7 @@ SingleCellBoard <- function(id, pgx) {
       pos <- scale(pos) ## scale
       colnames(pos) <- paste0("dim", 1:ncol(pos))
       rownames(pos) <- colnames(zx)
-      
+
       # code snipped from pfGetClusterPositions2, pfGetClusterPositions2 is currently never called
 
       # dbg("[pfGetClusterPositions2] computing distances and clusters...")
