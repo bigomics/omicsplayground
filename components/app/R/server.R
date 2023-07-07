@@ -147,6 +147,7 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
+      getPGXDIR = getPgxDir,
       limits = limits,
       enable_userdir = opt$ENABLE_USERDIR,
       reload_pgxdir = reload_pgxdir,

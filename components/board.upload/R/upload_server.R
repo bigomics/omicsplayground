@@ -7,6 +7,7 @@ UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
+                        getPGXDIR,
                         limits = c(
                           "samples" = 1000, "comparisons" = 20,
                           "genes" = 20000, "genesets" = 10000,
@@ -78,25 +79,6 @@ UploadBoard <- function(id,
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
-
-    getPGXDIR <- shiny::reactive({
-      email <- "../me@company.com"
-      email <- auth$email()
-      email <- gsub(".*\\/", "", email)
-      pdir <- pgx_dir ## from module input
-
-      if (enable_userdir) {
-        pdir <- paste0(pdir, "/", email)
-        if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
-        if (!dir.exists(pdir)) {
-          dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ", pdir)
-          dir.create(pdir)
-          dbg("[LoadingBoard:getPGXDIR] copy example pgx")
-          file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
-        }
-      }
-      pdir
-    })
 
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
