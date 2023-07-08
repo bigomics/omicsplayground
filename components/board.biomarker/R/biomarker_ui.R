@@ -47,7 +47,14 @@ BiomarkerInputs <- function(id) {
         )
       ),
       shiny::br(),
-      uiOutput(ns("biom_button"))
+      withTooltip(
+        shiny::actionButton(ns("pdx_runbutton"),
+          label = "Compute",
+          class = "btn-outline-primary"
+        ),
+        "Click to start biomarker computation.",
+        placement = "right"
+      )
     )
   )
 }
