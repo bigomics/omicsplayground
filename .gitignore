@@ -58,6 +58,7 @@ logs/*.rds
 # Sensitive files #
 ####################
 firebase.rds
+gmail_creds
 test-firestore.R
 .httr-oauth
 bigomics-extra.js

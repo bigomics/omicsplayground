@@ -59,17 +59,17 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
       bigdash.selectTab(session, "load-tab")
     })
 
-  ## -------------------------------------------------------------
-  ## Chatbox
-  ## -------------------------------------------------------------
-  if(opt$ENABLE_CHIRP) {
-    shinyChatR::chat_server(
-      "chatbox",
-      db_file = file.path(OPG,"chirp_data.db"),
-      ##csv_file = file.path(OPG,"chirp_data.csv"),            
-      chat_user = getFirstName
-    )
-  }
+    ## -------------------------------------------------------------
+    ## Chatbox
+    ## -------------------------------------------------------------
+    if(opt$ENABLE_CHIRP) {
+      shinyChatR::chat_server(
+        "chatbox",
+        db_file = file.path(OPG,"etc/chirp_data.db"),
+        ##csv_file = file.path(OPG,"chirp_data.csv"),            
+        chat_user = getFirstName
+      )
+    }
     
   })
 }

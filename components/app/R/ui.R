@@ -287,7 +287,7 @@ app_ui <- function() {
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
     )
-
+    
     bigdash::bigPage(
       header,
       title = "Omics Playground v3",
