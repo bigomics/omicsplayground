@@ -74,7 +74,8 @@ app_server <- function(input, output, session) {
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
-      mail_creds = "gmail_creds"
+      mail_creds = "dry-run"
+      ##mail_creds = "gmail_creds"      
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
