@@ -43,7 +43,7 @@ NoAuthenticationModule <- function(id,
 
       resetUSER <- function() {
         USER$logged <- FALSE
-        USER$name <- ""
+        USER$username <- ""
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
@@ -61,7 +61,7 @@ NoAuthenticationModule <- function(id,
         } else {
           USER$logged <- TRUE
         }
-        USER$name <- username
+        USER$username <- username
         USER$email <- email
       }
 
@@ -243,7 +243,7 @@ FirebaseAuthenticationModule <- function(id,
 
     resetUSER <- function() {
       USER$logged <- FALSE
-      USER$name <- ""
+      USER$username <- ""
       USER$password <- ""
       USER$email <- ""
       USER$level <- ""
@@ -355,12 +355,12 @@ FirebaseAuthenticationModule <- function(id,
 
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
-      USER$name <- response$response$displayName
+      USER$username <- response$response$displayName
       USER$email <- response$response$email
 
-      if (!is.null(USER$name)) USER$name <- as.character(USER$name)
+      if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
-      if (is.null(USER$name)) USER$name <- ""
+      if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
@@ -472,7 +472,7 @@ EmailAuthenticationModule <- function(id,
       message("[FirebaseAuthenticationModule] resetting USER... ")
 
       USER$logged <- FALSE
-      USER$name <- ""
+      USER$username <- ""
       USER$password <- ""
       USER$email <- ""
       USER$level <- ""
@@ -622,12 +622,12 @@ EmailAuthenticationModule <- function(id,
 
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
-      USER$name <- response$response$displayName
+      USER$username <- response$response$displayName
       USER$email <- response$response$email
 
-      if (!is.null(USER$name)) USER$name <- as.character(USER$name)
+      if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
-      if (is.null(USER$name)) USER$name <- ""
+      if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
@@ -735,7 +735,7 @@ PasswordAuthenticationModule <- function(id,
         shiny::removeModal()
         sel <- which(CREDENTIALS$username == login_username)[1]
         cred <- CREDENTIALS[sel, ]
-        USER$name <- cred$username
+        USER$username <- cred$username
         USER$email <- cred$email
         USER$level <- cred$level
         USER$limit <- cred$limit
@@ -743,7 +743,7 @@ PasswordAuthenticationModule <- function(id,
 
         # set options
         USER$options <- create_or_read_user_options(
-          file.path(PGX.DIR, USER$name)
+          file.path(PGX.DIR, USER$username)
         )
 
         session$sendCustomMessage("set-user", list(user = USER$username))

@@ -801,17 +801,12 @@ loading_table_datasets_server <- function(id,
         pgx_path <- getPGXDIR()
         pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
 
-        dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_name = ", pgx_name)
-
-        dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_path = ", pgx_path)
-        dbg("[LoadingBoard:observeEvent(input$share_confirm)] pgx_file = ", pgx_file)
-
         ## The shared file will be copied to the data_shared
         ## folder with the name of the sender and receiver in the
         ## file name.
         share_user <- input_share_user()
         current_user <- auth$email
-        if (auth$method == "password") current_user <- auth$name
+        if (auth$method == "password") current_user <- auth$username
         new_pgx_file <- file.path(
           pgx_shared_dir,
           paste0(
@@ -866,7 +861,6 @@ loading_table_datasets_server <- function(id,
         # send email to user
         sender <- auth$email
         sendShareMessage(pgx_name, sender, share_user, path_to_creds = "gmail_creds")
-
 
         refresh_shared(refresh_shared() + 1)
       }
