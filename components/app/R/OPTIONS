@@ -1,10 +1,10 @@
 TITLE               = 'Omics Playground'
-AUTHENTICATION      = none
+#AUTHENTICATION      = none
 #AUTHENTICATION     = password
 #AUTHENTICATION     = email
 #AUTHENTICATION     = auth-email
 #AUTHENTICATION     = firebase
-#AUTHENTICATION     = login-code
+AUTHENTICATION     = login-code
 #DOMAIN             = @bigomics.ch$|@demo.com$
 ENABLE_USERDIR      = TRUE
 ENABLE_UPLOAD       = TRUE

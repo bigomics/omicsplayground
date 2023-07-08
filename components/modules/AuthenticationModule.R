@@ -804,8 +804,8 @@ LoginCodeAuthenticationModule <- function(id, mail_creds) {
         with.email = TRUE,
         with.username = FALSE,
         with.password = FALSE,
-        title = "Enter your email",
-        subtitle = "Register or Sign in. Enter your email and we'll send you a login code for secure access.",
+        title = "Enter Email",
+        subtitle = "To register or sign in, enter your email and we'll send you a login code for secure access.",
         button.text = "Send code!"
       )
     shiny::showModal(login_modal)  ## need first time
