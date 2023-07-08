@@ -116,8 +116,8 @@ app_server <- function(input, output, session) {
     auth = auth,
     load_example = load_example
   )
-  env$user_profile <- UserProfileBoard("user_profile", user = auth)
-  env$user_settings <- UserSettingsBoard("user_settings", user = auth)
+  env$user_profile <- UserProfileBoard("user_profile", auth = auth)
+  env$user_settings <- UserSettingsBoard("user_settings", auth = auth)
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
@@ -147,18 +147,6 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data
     )
   }
-
-  ## If user logs off, we clear the data
-  observeEvent(auth$logged, {
-    is.logged <- auth$logged
-    length.pgx <- length(names(PGX))
-    if (!is.logged && length.pgx > 0) {
-      for (i in 1:length.pgx) {
-        PGX[[names(PGX)[i]]] <<- NULL
-      }
-      session$user <- NA
-    }
-  })
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
@@ -462,10 +450,22 @@ app_server <- function(input, output, session) {
 
   ## upon change of user
   observeEvent(auth$logged, {
-    shiny::req(auth$logged)
     if (auth$logged) {
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
+
+      # check personal email
+      if (auth$method == "email") {
+        check_personal_email(auth, PGX.DIR)
+      }
+    } else {
+      # clear PGX data when user logs out
+      length.pgx <- length(names(PGX))
+      if (length.pgx > 0) {
+        for (i in 1:length.pgx) {
+          PGX[[names(PGX)[i]]] <<- NULL
+        }
+      }
     }
   })
 
@@ -559,11 +559,6 @@ app_server <- function(input, output, session) {
       reset = reactive(rv.timer$reset),
       run = reactive(rv.timer$run)
     )
-
-    observe({
-      info("[server.R] timer = ", timer$timer())
-      info("[server.R] lapse_time = ", timer$lapse_time())
-    })
 
     observeEvent(timer$warn(), {
       info("[server.R] timer$warn = ", timer$warn())
@@ -670,33 +665,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## -------------------------------------------------------------
   ## Session logout functions
   ## -------------------------------------------------------------
-
-  shiny::observe({
-    shiny::req(auth$logged)
-    ## trigger on change of USER
-    logged <- auth$logged
-    info("[server.R] change in user log status : logged = ", logged)
-
-    if (logged) {
-      session$user <- auth$email
-    } else {
-      session$user <- "nobody"
-    }
-
-    ## This checks for personal email adress and asks to change to
-    ## a business email adress. This will affect also old users.
-    if (opt$AUTHENTICATION == "email" && logged) {
-      check_personal_email(auth, PGX.DIR)
-    }
-
-    ## --------- force logout callback??? --------------
-    if (!opt$AUTHENTICATION %in% c("firebase", "email") && !logged) {
-      ## Forcing logout ensures "clean" sessions. For firebase
-      ## we allow sticky sessions.
-      message("[server.R] user not logged in? forcing logout() JS callback...")
-      shinyjs::runjs("logout()")
-    }
-  })
 
   ## logout helper function
   logout.JScallback <- "logout()"
