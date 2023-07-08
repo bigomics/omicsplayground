@@ -19,14 +19,14 @@ WelcomeBoard <- function(id, auth, load_example) {
       dbg("[WelcomeBoard:output$welcome] auth$logged = ", auth$logged)
 
       if (is.null(name) || name %in% c("", NA)) {
-        welcome <- "Welcome back..."
+        welcome <- '...'
       } else {
         first.name <- strsplit(name, split = "[@ .]")[[1]][1]
         first.name <- paste0(
           toupper(substring(first.name, 1, 1)),
           substring(first.name, 2, nchar(first.name))
         )
-        welcome <- paste0("Welcome back ", first.name, "...")
+        welcome <- paste0(" ", first.name, "...")
       }
       welcome
     })
@@ -129,7 +129,9 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
+        div('Welcome back',
+            shiny::textOutput(ns("welcome"), inline=TRUE),
+            id = "welcome-text"),
         div("What would you like to do today?", id = "welcome-subtext"),
         br(),
         br()
