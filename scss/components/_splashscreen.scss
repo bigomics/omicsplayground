@@ -48,10 +48,15 @@ html {
 	    margin-bottom: 0.5rem;
 	}
 
-
 	#splash-panel .shiny-input-container {
 	    width: 100%;
 	    max-width: 100%;	    
+	}
+	
+	#splash-buttons .btn-xl {
+	    padding: 8px 20px;
+	    font-size: 28px;
+	    border-radius: 8px;	    
 	}
 	
 	button#auth-emailSubmit {

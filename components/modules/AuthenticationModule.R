@@ -45,8 +45,8 @@ NoAuthenticationModule <- function(id,
         with.username = FALSE,
         with.email = FALSE,
         with.password = FALSE,
-        title = "Ready to explore your data?",
-        subtitle = "",
+        title = "Sign in",
+        subtitle = "Ready to explore your data?",
         button.text = "Sure I am!"
       )
       shiny::showModal(m)
@@ -903,7 +903,7 @@ LoginCodeAuthenticationModule <- function(id, mail_creds) {
           title = "Enter Code",
           subtitle = "Enter the login code that we have just sent to you.",
           button.text = "Submit",
-          cancel.button = TRUE,
+          add.cancel = TRUE,
           cancel.text = "Cancel"          
         )
         shiny::showModal(login_modal2)
@@ -1030,7 +1030,7 @@ splashLoginModal <- function(ns = NULL,
                              with.firebase_emailonly = FALSE,
                              button.text = "Login",
                              cancel.text = "cancel",                             
-                             cancel.button = FALSE,
+                             add.cancel = FALSE,
                              title = "Log in",
                              subtitle = "") {
   if (is.null(ns)) {
@@ -1199,16 +1199,16 @@ splashLoginModal <- function(ns = NULL,
     )
   }
 
-  if(cancel.button) {
+  if(add.cancel) {
     div.button <- div(
       id = "splash-buttons",
-      class = "pt-4",
+      class = "pt-2",
       shiny::fillRow(
         flex = c(1,NA,NA,1),
         br(),
-        actionButton(ns("cancel_btn"), cancel.text, class = "btn-light btn-l",
+        actionButton(ns("cancel_btn"), cancel.text, class = "btn-light btn-xl",
           style="margin: 4px;"),
-        actionButton(ns("login_btn"), button.text, class = "btn-warning btn-l blink",
+        actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl",
           style="margin: 4px;"),
         br()
       )
@@ -1216,11 +1216,10 @@ splashLoginModal <- function(ns = NULL,
   } else {
     div.button <- div(
       id = "splash-buttons",
-      class = "pt-4",
-      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-l blink")      
+      class = "pt-2",
+      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl")    
     )
   }
-
 
   ## splash.panel=div();ns=function(x)
   splash.content <- NULL
