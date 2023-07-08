@@ -152,6 +152,7 @@ app_server <- function(input, output, session) {
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
+    shiny::req(auth$logged)
     if (!auth$logged) {
       return(NULL)
     }
@@ -424,10 +425,13 @@ app_server <- function(input, output, session) {
   })
 
   output$current_user <- shiny::renderText({
+    shiny::req(auth$logged)
+    if(!auth$logged) return("(nobody)")
     ## trigger on change of user
     user <- auth$email
-    if (user %in% c("", NA, NULL)) user <- auth$username
-    if (user %in% c("", NA, NULL)) user <- "User"
+    dbg("[server:output$current_user] user = ",user)
+    if (is.null(user) || user %in% c("", NA)) user <- auth$username
+    if (is.null(user) || user %in% c("", NA)) user <- "User"
     user
   })
 
@@ -444,6 +448,7 @@ app_server <- function(input, output, session) {
 
   ## upon change of user
   observeEvent(auth$logged, {
+    shiny::req(auth$logged)    
     if (auth$logged) {
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
@@ -653,7 +658,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## -------------------------------------------------------------
 
   shiny::observe({
-    req(auth$logged)
+    shiny::req(auth$logged)
     ## trigger on change of USER
     logged <- auth$logged
     info("[server.R] change in user log status : logged = ", logged)

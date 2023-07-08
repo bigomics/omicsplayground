@@ -33,12 +33,10 @@ NoAuthenticationModule <- function(id,
       USER <- shiny::reactiveValues(
         method = "none",
         logged = NULL,
-        name = "",
+        username = "",
         email = "",
         level = "",
-        limit = "",
-        stripe_id = "",
-        href = ""
+        limit = ""
       )
 
       m <- splashLoginModal(
@@ -222,7 +220,7 @@ FirebaseAuthenticationModule <- function(id,
     USER <- shiny::reactiveValues(
       method = "firebase",
       logged = NULL,
-      name = "",
+      username = "",
       password = "",
       email = "",
       level = "",
@@ -451,7 +449,7 @@ EmailAuthenticationModule <- function(id,
     USER <- shiny::reactiveValues(
       method = "email",
       logged = NULL,
-      name = "",
+      username = "",
       password = "",
       email = "",
       level = "",
@@ -661,7 +659,7 @@ PasswordAuthenticationModule <- function(id,
     USER <- shiny::reactiveValues(
       method = "password",
       logged = NULL,
-      name = NA,
+      username = NA,
       email = NA,
       password = NA,
       level = "",

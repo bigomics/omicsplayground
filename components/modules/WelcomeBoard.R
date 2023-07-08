@@ -8,9 +8,15 @@ WelcomeBoard <- function(id, auth, load_example) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
+      shiny::req(auth$logged)
+      if(!auth$logged) return(NULL)
+      
       name <- auth$username
+      dbg("[WelcomeBoard:output$welcome] auth$method = ",auth$method)            
+      dbg("[WelcomeBoard:output$welcome] auth$name = ",name)
+      dbg("[WelcomeBoard:output$welcome] auth$logged = ",auth$logged)
 
-      if (name %in% c("", NA, NULL)) {
+      if (is.null(name) || name %in% c("", NA)) {
         welcome <- "Welcome back..."
       } else {
         first.name <- strsplit(name, split = "[@ .]")[[1]][1]
@@ -32,6 +38,7 @@ WelcomeBoard <- function(id, auth, load_example) {
     })
 
     observeEvent(input$btn_upload_data, {
+      shiny::req(auth$options)
       enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
         bigdash.openSidebar()
