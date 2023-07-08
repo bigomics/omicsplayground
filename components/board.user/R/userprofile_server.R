@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserProfileBoard <- function(id, user) {
+UserProfileBoard <- function(id, auth) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     dbg("[UserProfileBoard] >>> initializing UserBoard...")
@@ -20,8 +20,8 @@ UserProfileBoard <- function(id, user) {
       ))
     })
 
-    observeEvent(user$logged, {
-      if (!user$logged) {
+    observeEvent(auth$logged, {
+      if (!auth$logged) {
         return()
       }
 
@@ -37,26 +37,26 @@ UserProfileBoard <- function(id, user) {
 
     output$plan <- renderUI({
       plan_class <- "info"
-      if (user$level() == "premium") {
+      if (auth$level == "premium") {
         plan_class <- "success"
       }
       cl <- sprintf("badge badge-%s", plan_class)
       p(
         span("Subscription level", style = "color:grey;"),
-        span(class = cl, tools::toTitleCase(user$level()))
+        span(class = cl, tools::toTitleCase(auth$level))
       )
     })
 
     observeEvent(input$manage, {
-      dbg("[UserBoard] !!! user$email() = ", user$email())
-      dbg("[UserBoard] !!! user$stripe_id() = ", user$stripe_id())
-      dbg("[UserBoard] !!! user$href = ", user$href())
+      dbg("[UserBoard] !!! auth$email = ", auth$email)
+      dbg("[UserBoard] !!! auth$stripe_id = ", auth$stripe_id)
+      dbg("[UserBoard] !!! auth$href = ", auth$href)
 
       response <- httr::POST(
         "https://api.stripe.com/v1/billing_portal/sessions",
         body = list(
-          customer = user$stripe_id(),
-          return_url = user$href()
+          customer = auth$stripe_id,
+          return_url = auth$href
         ),
         httr::authenticate(
           Sys.getenv("OMICS_STRIPE_KEY"),
@@ -75,9 +75,9 @@ UserProfileBoard <- function(id, user) {
         dbg("[UserBoard::userdata]  renderDataTable")
         cl <- "badge badge-info"
         values <- c(
-          Name   = user$name(),
-          Email  = user$email(),
-          Plan   = user$level(),
+          Name   = auth$username,
+          Email  = auth$email,
+          Plan   = auth$level,
           Start  = "",
           End    = "",
           Status = "active"

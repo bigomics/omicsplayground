@@ -209,7 +209,8 @@ loading_table_datasets_server <- function(id,
           if ("creator" %in% names(pgx0) && !unknown.creator) {
             file.copy(from = pgx_file, to = new_pgx_file)
           } else {
-            pgx0$creator <- session$user ## really?
+            pgx0$creator <- auth$email
+            if (auth$method == "password") pgx0$creator <- auth$username
             if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
             playbase::pgx.save(pgx0, file = new_pgx_file)
           }
@@ -833,7 +834,8 @@ loading_table_datasets_server <- function(id,
           if ("creator" %in% names(pgx0) && !unknown.creator) {
             file.copy(from = pgx_file, to = new_pgx_file)
           } else {
-            pgx0$creator <- session$user ## really?
+            pgx0$creator <- auth$email
+            if (auth$method == "password") pgx0$creator <- auth$username
             if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
             playbase::pgx.save(pgx0, file = new_pgx_file)
           }
