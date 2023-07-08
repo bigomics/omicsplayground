@@ -791,7 +791,7 @@ LoginCodeAuthenticationModule <- function(id, mail_creds) {
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
-      method = "login_code",
+      method = "login-code",
       logged = NULL,
       name = NA,
       email = NA,
@@ -902,7 +902,7 @@ LoginCodeAuthenticationModule <- function(id, mail_creds) {
         login_code <- "hello123"
         sendLoginCode(login_email, login_code)           
         USER$email <- login_email
-        USER$name  <- login_email        
+        USER$username  <- login_email        
         
         ## change buttons and field
         updateTextInput(session, "login_email", NULL, placeholder = "enter code")
@@ -931,7 +931,7 @@ LoginCodeAuthenticationModule <- function(id, mail_creds) {
           output$login_warning <- shiny::renderText("")
           shiny::removeModal()
 
-          USER$level <- ""
+          USER$level <- NA
           USER$limit <- cred$limit
           USER$logged <- TRUE
           USER$options <- create_or_read_user_options(

@@ -71,6 +71,11 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN,
       credentials.file = "CREDENTIALS"
     )
+  } else if (authentication == "login-code") {
+    auth <- LoginCodeAuthenticationModule(
+      id = "auth",
+      mail_creds = "gmail_creds"
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(
@@ -425,6 +430,8 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
+    shiny::req(auth$logged)
+    if(!auth$logged) return("(not logged in)")
     user <- auth$email
     if (user %in% c("", NA, NULL)) user <- auth$username
     if (user %in% c("", NA, NULL)) user <- "User"
