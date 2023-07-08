@@ -149,7 +149,7 @@ message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
-opt.file <- file.path(APPDIR, "OPTIONS")
+opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file) ## THIS IS GLOBAL!!!
 

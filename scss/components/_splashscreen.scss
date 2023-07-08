@@ -29,7 +29,7 @@ html {
 	}
 
 	#splash-panel {
-	    margin-top: 80%;
+	    margin-top: 65%;
 	    text-align: center;
 	    max-width: 350px;
 	}
@@ -54,8 +54,8 @@ html {
 	}
 	
 	#splash-buttons .btn-xl {
-	    padding: 8px 20px;
-	    font-size: 28px;
+	    padding: 5px 20px;
+	    font-size: 24px;
 	    border-radius: 8px;	    
 	}
 	
@@ -82,9 +82,15 @@ html {
 	    background-color: #4267B2;
 	    color: white !important;
 	}
+
 	.apple-button {
 	    background-color: #ccc;
-	    color: black !important;
+	    color: white !important;
+	}
+
+	.twitter-button {
+	    background-color: #26a7de;
+	    color: white !important;
 	}
 
 	a#auth-launchGoogle {
@@ -97,6 +103,10 @@ html {
 	}
 	a#auth-launchApple {
 	    color: black !important;	    
+	    text-decoration: none !important;	    
+	}
+	a#auth-launchTwitter {
+	    color: white !important;	    
 	    text-decoration: none !important;	    
 	}
 	
