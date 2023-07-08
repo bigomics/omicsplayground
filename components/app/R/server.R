@@ -443,7 +443,7 @@ app_server <- function(input, output, session) {
       bigdash.toggleTab(session, "upload-tab", enable_upload)
 
       # check personal email
-      if (auth$method == 'email') {
+      if (auth$method == "email") {
         check_personal_email(auth, PGX.DIR)
       }
     } else {
