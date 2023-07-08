@@ -41,6 +41,17 @@ NoAuthenticationModule <- function(id,
         href = ""
       )
 
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        subtitle = "",
+        title = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+
       resetUSER <- function() {
         USER$logged <- FALSE
         USER$username <- ""
@@ -48,15 +59,6 @@ NoAuthenticationModule <- function(id,
         USER$level <- ""
         USER$limit <- ""
         if (show_modal) {
-          m <- splashLoginModal(
-            ns = ns,
-            with.username = FALSE,
-            with.email = FALSE,
-            with.password = FALSE,
-            subtitle = "",
-            title = "Ready to explore your data?",
-            button.text = "Sure I am!"
-          )
           shiny::showModal(m)
         } else {
           USER$logged <- TRUE
@@ -236,6 +238,8 @@ FirebaseAuthenticationModule <- function(id,
 
     firebase2 <- firebase::FirebaseEmailLink$
       new(persistence = "local")
+
+    shinyjs::runjs("logout()")
 
     observeEvent(input$launchGoogle, {
       firebase$launch_google(flow = "popup")
@@ -468,6 +472,8 @@ EmailAuthenticationModule <- function(id,
       firebase$launch_google(flow = "popup")
     })
 
+    shinyjs::runjs("logout()")
+
     resetUSER <- function() {
       message("[FirebaseAuthenticationModule] resetting USER... ")
 
@@ -663,6 +669,17 @@ PasswordAuthenticationModule <- function(id,
       options = opt
     )
 
+    m <- splashLoginModal(
+      ns = ns,
+      with.email = FALSE,
+      with.username = TRUE,
+      with.password = TRUE,
+      title = "Log in",
+      subtitle = "Ready to explore your data?",
+      button.text = "Start!"
+    )
+    shiny::showModal(m)
+
     resetUSER <- function() {
       USER$logged <- FALSE
       USER$username <- NA
@@ -671,15 +688,6 @@ PasswordAuthenticationModule <- function(id,
       USER$level <- ""
       USER$limit <- ""
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.email = FALSE,
-        with.username = TRUE,
-        with.password = TRUE,
-        title = "Log in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Start!"
-      )
       shiny::showModal(m)
     }
 

@@ -679,8 +679,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
     }
   })
 
-  shinyjs::runjs("logout()")
-
   ## logout helper function
   logout.JScallback <- "logout()"
   if (opt$AUTHENTICATION == "shinyproxy") {
