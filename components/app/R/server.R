@@ -161,7 +161,7 @@ app_server <- function(input, output, session) {
       userpgx <- file.path(PGX.DIR, auth$email)
     } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$name)
+      userpgx <- file.path(PGX.DIR, auth$username)
     } else {
       userpgx <- PGX.DIR
     }
@@ -426,7 +426,7 @@ app_server <- function(input, output, session) {
   output$current_user <- shiny::renderText({
     ## trigger on change of user
     user <- auth$email
-    if (user %in% c("", NA, NULL)) user <- auth$name
+    if (user %in% c("", NA, NULL)) user <- auth$username
     if (user %in% c("", NA, NULL)) user <- "User"
     user
   })
@@ -678,8 +678,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
       shinyjs::runjs("logout()")
     }
   })
-
-  shinyjs::runjs("logout()")
 
   ## logout helper function
   logout.JScallback <- "logout()"

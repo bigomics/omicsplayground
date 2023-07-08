@@ -41,27 +41,29 @@ NoAuthenticationModule <- function(id,
         href = ""
       )
 
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        subtitle = "",
+        title = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+
       resetUSER <- function() {
         USER$logged <- FALSE
-        USER$name <- ""
+        USER$username <- ""
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
         if (show_modal) {
-          m <- splashLoginModal(
-            ns = ns,
-            with.username = FALSE,
-            with.email = FALSE,
-            with.password = FALSE,
-            subtitle = "",
-            title = "Ready to explore your data?",
-            button.text = "Sure I am!"
-          )
           shiny::showModal(m)
         } else {
           USER$logged <- TRUE
         }
-        USER$name <- username
+        USER$username <- username
         USER$email <- email
       }
 
@@ -237,13 +239,15 @@ FirebaseAuthenticationModule <- function(id,
     firebase2 <- firebase::FirebaseEmailLink$
       new(persistence = "local")
 
+    shinyjs::runjs("logout()")
+
     observeEvent(input$launchGoogle, {
       firebase$launch_google(flow = "popup")
     })
 
     resetUSER <- function() {
       USER$logged <- FALSE
-      USER$name <- ""
+      USER$username <- ""
       USER$password <- ""
       USER$email <- ""
       USER$level <- ""
@@ -355,12 +359,12 @@ FirebaseAuthenticationModule <- function(id,
 
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
-      USER$name <- response$response$displayName
+      USER$username <- response$response$displayName
       USER$email <- response$response$email
 
-      if (!is.null(USER$name)) USER$name <- as.character(USER$name)
+      if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
-      if (is.null(USER$name)) USER$name <- ""
+      if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
@@ -468,11 +472,13 @@ EmailAuthenticationModule <- function(id,
       firebase$launch_google(flow = "popup")
     })
 
+    shinyjs::runjs("logout()")
+
     resetUSER <- function() {
       message("[FirebaseAuthenticationModule] resetting USER... ")
 
       USER$logged <- FALSE
-      USER$name <- ""
+      USER$username <- ""
       USER$password <- ""
       USER$email <- ""
       USER$level <- ""
@@ -622,12 +628,12 @@ EmailAuthenticationModule <- function(id,
 
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
-      USER$name <- response$response$displayName
+      USER$username <- response$response$displayName
       USER$email <- response$response$email
 
-      if (!is.null(USER$name)) USER$name <- as.character(USER$name)
+      if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
-      if (is.null(USER$name)) USER$name <- ""
+      if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
@@ -663,6 +669,17 @@ PasswordAuthenticationModule <- function(id,
       options = opt
     )
 
+    m <- splashLoginModal(
+      ns = ns,
+      with.email = FALSE,
+      with.username = TRUE,
+      with.password = TRUE,
+      title = "Log in",
+      subtitle = "Ready to explore your data?",
+      button.text = "Start!"
+    )
+    shiny::showModal(m)
+
     resetUSER <- function() {
       USER$logged <- FALSE
       USER$username <- NA
@@ -671,15 +688,6 @@ PasswordAuthenticationModule <- function(id,
       USER$level <- ""
       USER$limit <- ""
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.email = FALSE,
-        with.username = TRUE,
-        with.password = TRUE,
-        title = "Log in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Start!"
-      )
       shiny::showModal(m)
     }
 
@@ -735,7 +743,7 @@ PasswordAuthenticationModule <- function(id,
         shiny::removeModal()
         sel <- which(CREDENTIALS$username == login_username)[1]
         cred <- CREDENTIALS[sel, ]
-        USER$name <- cred$username
+        USER$username <- cred$username
         USER$email <- cred$email
         USER$level <- cred$level
         USER$limit <- cred$limit
@@ -743,7 +751,7 @@ PasswordAuthenticationModule <- function(id,
 
         # set options
         USER$options <- create_or_read_user_options(
-          file.path(PGX.DIR, USER$name)
+          file.path(PGX.DIR, USER$username)
         )
 
         session$sendCustomMessage("set-user", list(user = USER$username))

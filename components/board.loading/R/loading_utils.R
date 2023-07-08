@@ -3,9 +3,6 @@
 ## -------------------------------------------------------------------
 
 sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail_creds") {
-  dbg("[sendShareMessage] pgxname = ", pgxname)
-  dbg("[sendShareMessage] sender = ", sender)
-  dbg("[sendShareMessage] share_user = ", share_user)
 
   if (!file.exists(path_to_creds)) {
     return(NULL)

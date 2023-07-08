@@ -250,7 +250,7 @@ LoadingBoard <- function(id,
     getPGXDIR <- shiny::reactive({
       ## react on change of auth user
       user <- auth$email
-      if (auth$method == "password") user <- auth$name
+      if (auth$method == "password") user <- auth$username
       user <- gsub(".*\\/", "", user) ## get rid of dangerous characters that can skip folders...
       pdir <- pgx_topdir ## from module input
       dbg("[LoadingBoard::getPGXDIR] authentication = ", auth$method)
