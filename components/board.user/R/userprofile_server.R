@@ -75,7 +75,7 @@ UserProfileBoard <- function(id, auth) {
         dbg("[UserBoard::userdata]  renderDataTable")
         cl <- "badge badge-info"
         values <- c(
-          Name   = auth$name,
+          Name   = auth$username,
           Email  = auth$email,
           Plan   = auth$level,
           Start  = "",
