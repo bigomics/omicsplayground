@@ -9,12 +9,14 @@ WelcomeBoard <- function(id, auth, load_example) {
 
     output$welcome <- shiny::renderText({
       shiny::req(auth$logged)
-      if(!auth$logged) return(NULL)
-      
+      if (!auth$logged) {
+        return(NULL)
+      }
+
       name <- auth$username
-      dbg("[WelcomeBoard:output$welcome] auth$method = ",auth$method)            
-      dbg("[WelcomeBoard:output$welcome] auth$name = ",name)
-      dbg("[WelcomeBoard:output$welcome] auth$logged = ",auth$logged)
+      dbg("[WelcomeBoard:output$welcome] auth$method = ", auth$method)
+      dbg("[WelcomeBoard:output$welcome] auth$name = ", name)
+      dbg("[WelcomeBoard:output$welcome] auth$logged = ", auth$logged)
 
       if (is.null(name) || name %in% c("", NA)) {
         welcome <- "Welcome back..."
