@@ -774,6 +774,176 @@ PasswordAuthenticationModule <- function(id,
 }
 
 ## ================================================================================
+## PasswordAuthenticationModule (ask login.name + password)
+## ================================================================================
+
+LoginCodeAuthenticationModule <- function(id, mail_creds) {
+  shiny::moduleServer(id, function(input, output, session) {
+    message("[AuthenticationModule] >>>> using secret authentication <<<<")
+
+    ns <- session$ns
+    USER <- shiny::reactiveValues(
+      method = "login_code",
+      logged = NULL,
+      name = NA,
+      email = NA,
+      level = "",
+      limit = "",
+      options = opt  ## global
+    )
+
+    email_sent <- FALSE
+    login_code <- NULL
+    
+    resetUSER <- function() {
+      USER$logged <- FALSE
+      USER$username <- NA
+      USER$email <- NA
+      USER$password <- NA
+      USER$level <- ""
+      USER$limit <- ""
+
+      email_sent <- FALSE
+      login_code <- NULL
+      
+      m <- splashLoginModal(
+        ns = ns,
+        with.email = TRUE,
+        with.username = FALSE,
+        with.password = FALSE,
+        title = "Log in",
+        subtitle = "Enter your email and we'll send you a magic link for password-free access.",
+        button.text = "Send!"
+      )
+      shiny::showModal(m)
+    }
+
+    sendLoginCode <- function(user_email, login_code) {
+      if (!file.exists(path_to_creds)) {
+        return(NULL)
+      }
+      blastula::smtp_send(
+        blastula::compose_email(
+          body = blastula::md(
+            glue::glue(
+              "Hello!",
+              "Here is your login code to enter OmicsPlayground:",
+              "{login_code}"
+            )
+          ),
+          footer = blastula::md(
+            glue::glue("Email sent on {blastula::add_readable_time()}.")
+          )
+        ),
+        from = "app@bigomics.ch",
+        to = user_email,
+        subject = paste("Your login secret to OmicsPlayground"),
+        credentials = blastula::creds_file(mail_creds)
+      )
+    }
+
+    output$showLogin <- shiny::renderUI({
+      email_sent <- FALSE
+      login_code <- NULL
+      m <- splashLoginModal(
+        ns = ns,
+        with.email = TRUE,
+        with.username = FALSE,
+        with.password = FALSE,
+        title = "Log in",
+        subtitle = "Enter your email and we'll send you a magic link for password-free access.",
+        button.text = "Send email"
+      )
+      shiny::showModal(m)
+    })
+
+    output$login_warning <- shiny::renderText("")
+
+    shiny::observeEvent(input$login_btn, {
+      if(!email_sent) {
+        login_email <- input$login_email
+
+        if (is.null(login_email) || login_email == "") {
+          output$login_warning <- shiny::renderText("missing email")
+          shinyjs::delay(2000, {
+            output$login_warning <- shiny::renderText("")
+          })
+          return(NULL)
+        }
+        
+        is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn",
+          login_email)
+        valid_email <- grepl(".*@.*[.].*", login_email)
+      
+        if (!valid_email) {
+          output$login_warning <- shiny::renderText("not a valid email")
+          shinyjs::delay(2000, {
+            output$login_warning <- shiny::renderText("")
+          })
+          return(NULL)
+        }
+        if (is_personal) {
+          output$login_warning <- shiny::renderText("no personal emails")
+          shinyjs::delay(2000, {
+            output$login_warning <- shiny::renderText("")
+          })
+          return(NULL)
+        }
+
+        ## MAIL CODE TO USER
+        login_code <- "hello123"
+        sendLoginCode(login_email, login_code)           
+        USER$email <- login_email
+        USER$name  <- login_email        
+        
+        ## change buttons and field
+        updateTextInput(session, "login_email", NULL, placeholder = "enter code")
+        updateActionButton(session, "login_btn", label="Enter code")      
+
+        shinyalert::shinyalert(title="", text="We emailed you the code.")
+      }
+    })
+
+    shiny::observeEvent(input$login_btn, {
+      if(email_sent) {
+
+        input_code <- input$login_email
+        login.OK <- (input_code == login_code)
+
+        if (!login.OK) {
+          output$login_warning <- shiny::renderText("code not valid")
+          shinyjs::delay(2000, {
+            output$login_warning <- shiny::renderText("")
+          })
+          return(NULL)
+        }
+        
+        if (login.OK) {
+          message("[LoginCodeAuthenticationModule::login] PASSED : login OK! ")
+          output$login_warning <- shiny::renderText("")
+          shiny::removeModal()
+
+          USER$level <- ""
+          USER$limit <- cred$limit
+          USER$logged <- TRUE
+          USER$options <- create_or_read_user_options(
+            file.path(PGX.DIR, USER$email)
+          )
+          
+          session$sendCustomMessage("set-user", list(user = USER$username))
+        }
+      }
+    })
+
+    observeEvent(input$userLogout, {
+      resetUSER()
+    })
+
+    return(USER)
+  })
+}
+
+## ================================================================================
 ## HELPER FUNCTIONS
 ## ================================================================================
 
