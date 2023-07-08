@@ -144,6 +144,22 @@ app_server <- function(input, output, session) {
     )
   }
 
+  getFirstName1 <- reactive({
+    name <- auth$name()
+    if(is.null(name) || is.na(name) || name=='') name <- auth$email()
+    getFirstName(name, session)  ## in app/R/utils.R
+  })
+
+  ## Chatbox
+  if(opt$ENABLE_CHIRP) {
+    shinyChatR::chat_server(
+      "chatbox",
+      db_file = file.path(OPG,"etc/chirp_data.db"),
+      ##csv_file = file.path(OPG,"chirp_data.csv"),            
+      chat_user = getFirstName1
+    )
+  }
+    
   ## If user logs off, we clear the data
   observeEvent(auth$logged(), {
     is.logged <- auth$logged()

@@ -7,24 +7,14 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    getFirstName <- reactive({
+    getFirstName1 <- reactive({
       name <- auth$name()
       if(is.null(name) || is.na(name) || name=='') name <- auth$email()
-      if(is.null(name) || is.na(name) || name=='') {
-        name <- "anonymous"
-        name <- paste0("user",substring(session$token,1,4))
-        return(name)
-      }
-      first.name <- strsplit(name, split = "[@ .]")[[1]][1]
-      first.name <- paste0(
-        toupper(substring(first.name, 1, 1)),
-        substring(first.name, 2, nchar(first.name))
-      )
-      first.name
+      getFirstName(name, session)  ## in app/R/utils.R
     })
     
     output$welcome <- shiny::renderText({
-      name <- getFirstName()
+      name <- getFirstName1()
       if(grepl("^user",name)) name <- ""
       if (name %in% c("", NA, NULL,"anonymous")) {
         welcome <- "Welcome back..."
@@ -59,17 +49,6 @@ WelcomeBoard <- function(id, auth, enable_upload, r_global) {
       bigdash.selectTab(session, "load-tab")
     })
 
-    ## -------------------------------------------------------------
-    ## Chatbox
-    ## -------------------------------------------------------------
-    if(opt$ENABLE_CHIRP) {
-      shinyChatR::chat_server(
-        "chatbox",
-        db_file = file.path(OPG,"etc/chirp_data.db"),
-        ##csv_file = file.path(OPG,"chirp_data.csv"),            
-        chat_user = getFirstName
-      )
-    }
     
   })
 }
@@ -129,33 +108,10 @@ WelcomeBoardUI <- function(id) {
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )
-
-  div.chirp <- NULL
-  if(opt$ENABLE_CHIRP) {
-    ## offcanvas chatbox 
-    div.chirp <- bsutils::offcanvas(
-      bsutils::offcanvasButton("Chirp!",id="chirp-button",
-        style="width:auto;position:absolute;top:60px;right:30px;background-color:white;padding:5px 12px;font-size:14px;"),
-      bsutils::offcanvasContent(
-        .position = "end",
-        bslib::card(
-          full_screen = TRUE,
-          style = "border-width: 0px;",
-          height = "92vh",
-          bslib::card_body(
-            shinyChatR::chat_ui(ns("chatbox"),
-              title = "Chirp with others on the Playground!",
-              height='70vh', width='100%')
-          )
-        )
-      )
-    )
-  }
   
   ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",
-    div.chirp,
     div(
       class = "row",
       div(

@@ -287,7 +287,30 @@ app_ui <- function() {
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
     )
-    
+
+    ## offcanvas chatbox 
+    div.chirp <- NULL
+    if(opt$ENABLE_CHIRP) {
+      div.chirp <- bsutils::offcanvas(
+        bsutils::offcanvasButton("Chirp!",id="chirp-button",
+          style="width:auto;position:absolute;top:11px;right:280px;background-color:white;padding:2px 12px;font-size:13px;"),
+        bsutils::offcanvasContent(
+          .position = "end",
+          bslib::card(
+            full_screen = TRUE,
+            style = "border-width: 0px;",
+            height = "92vh",
+            bslib::card_body(
+              shinyChatR::chat_ui("chatbox",
+                title = "Chirp with friends on the Playground!",
+                height='70vh', width='100%')
+            )
+          )
+        )
+      )
+    }
+
+    ## ------------------------- bigPage ----------------------------------
     bigdash::bigPage(
       header,
       title = "Omics Playground v3",
@@ -499,6 +522,7 @@ app_ui <- function() {
                     immune cell types, expressed genes and pathway activation."
         )
       ),
+      div.chirp,
       bigdash::bigTabs(
         bigdash::bigTabItem(
           "welcome-tab",

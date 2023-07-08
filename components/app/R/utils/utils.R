@@ -10,6 +10,20 @@
 #########################################################################
 
 
+getFirstName <- function(name, session=session) {
+  if(is.null(name) || is.na(name) || name=='') {
+    name <- "anonymous"
+    name <- paste0("user",substring(session$token,1,4))
+    return(name)
+  }
+  first.name <- strsplit(name, split = "[@ .]")[[1]][1]
+  first.name <- paste0(
+    toupper(substring(first.name, 1, 1)),
+    substring(first.name, 2, nchar(first.name))
+  )
+  first.name
+}
+
 req2 <- function(x) {
   if ("reactivevalues" %in% class(x)) {
     if (length(names(x)) == 0) {
