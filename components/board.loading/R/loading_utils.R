@@ -3,7 +3,6 @@
 ## -------------------------------------------------------------------
 
 sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail_creds") {
-
   if (!file.exists(path_to_creds)) {
     return(NULL)
   }
