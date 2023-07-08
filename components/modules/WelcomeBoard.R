@@ -26,24 +26,16 @@ WelcomeBoard <- function(id, auth, load_example) {
       my.hello <- sample(all.hello,1)
       
       if (is.null(name) || name %in% c("", NA)) {
-<<<<<<< HEAD
         ##welcome <- "Welcome back..."
         welcome <- paste0(my.hello,"!")
-=======
-        welcome <- "..."
->>>>>>> 33a344a9c41d86eb540dd4c84043c1f741df9d70
       } else {
         first.name <- strsplit(name, split = "[@ .]")[[1]][1]
         first.name <- paste0(
           toupper(substring(first.name, 1, 1)),
           substring(first.name, 2, nchar(first.name))
         )
-<<<<<<< HEAD
         ##welcome <- paste0("Welcome back ", first.name, "...")
         welcome <- paste0(my.hello," ", first.name, "!")        
-=======
-        welcome <- paste0(" ", first.name, "...")
->>>>>>> 33a344a9c41d86eb540dd4c84043c1f741df9d70
       }
       welcome
     })
