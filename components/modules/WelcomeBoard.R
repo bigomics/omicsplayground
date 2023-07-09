@@ -14,8 +14,6 @@ WelcomeBoard <- function(id, auth, load_example) {
       }
 
       name <- auth$username
-      first.name <- getFirstName(name)  ## in app/R/utils.R
-      
       all.hello <- c(
         "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
         "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
@@ -26,11 +24,7 @@ WelcomeBoard <- function(id, auth, load_example) {
         ## welcome <- "Welcome back..."
         welcome <- paste0(my.hello, "!")
       } else {
-        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
-        first.name <- paste0(
-          toupper(substring(first.name, 1, 1)),
-          substring(first.name, 2, nchar(first.name))
-        )
+        first.name <- getFirstName(name)  ## in app/R/utils.R
         ## welcome <- paste0("Welcome back ", first.name, "...")
         welcome <- paste0(my.hello, " ", first.name, "!")
       }
@@ -137,7 +131,8 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div("Welcome back",
+        div(
+          "Welcome back! ",
           shiny::textOutput(ns("welcome"), inline = TRUE),
           id = "welcome-text"
         ),
