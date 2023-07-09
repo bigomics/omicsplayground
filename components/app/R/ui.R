@@ -289,9 +289,10 @@ app_ui <- function() {
     )
 
     ## offcanvas chatbox
-    div.chirp <- NULL
+    div.chirpbox <- NULL
+    div.chirpbutton <- NULL
     if (opt$ENABLE_CHIRP) {
-      div.chirp <- bsutils::offcanvas(
+      div.chirpbox <- bsutils::offcanvas(
         bsutils::offcanvasButton("Chirp!", id = "actual-chirp-button", style = "display:none;"),
         bsutils::offcanvasContent(
           .position = "end",
@@ -308,6 +309,7 @@ app_ui <- function() {
           )
         )
       )
+      div.chirpbutton <-  shiny::actionButton("chirp_button", "Chirp!", width = "auto")
     }
 
     ## ------------------------- bigPage ----------------------------------
@@ -330,7 +332,7 @@ app_ui <- function() {
           condition = "input.nav != 'welcome-tab'",
           shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
         ),
-        shiny::actionButton("chirp_button", "Chirp!", width = "auto"),
+        div.chirpbutton,
         bigdash::navbarDropdown(
           "Support",
           bigdash::navbarDropdownItem(
@@ -523,7 +525,7 @@ app_ui <- function() {
                     immune cell types, expressed genes and pathway activation."
         )
       ),
-      div.chirp,
+      div.chirpbox,
       bigdash::bigTabs(
         bigdash::bigTabItem(
           "welcome-tab",
