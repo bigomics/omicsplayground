@@ -14,9 +14,6 @@ WelcomeBoard <- function(id, auth, load_example) {
       }
 
       name <- auth$username
-      dbg("[WelcomeBoard:output$welcome] auth$method = ", auth$method)
-      dbg("[WelcomeBoard:output$welcome] auth$username = ", name)
-      dbg("[WelcomeBoard:output$welcome] auth$logged = ", auth$logged)
 
       all.hello <- c(
         "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
@@ -24,7 +21,6 @@ WelcomeBoard <- function(id, auth, load_example) {
         "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
       )
       my.hello <- sample(all.hello, 1)
-
       if (is.null(name) || name %in% c("", NA)) {
         ## welcome <- "Welcome back..."
         welcome <- paste0(my.hello, "!")
