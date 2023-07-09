@@ -3,21 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-create_or_read_user_options <- function(user_dir) {
-  user_opt_file <- file.path(user_dir, "OPTIONS")
-  new_opt <- opt ## opt from global
-  if (!file.exists(user_opt_file)) {
-    ## IK: no need
-    ## file.copy(from = opt.file, to = user_opt_file)
-  } else {
-    user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-    for (opt_name in names(user_opt)) {
-      new_opt[[opt_name]] <- user_opt[[opt_name]]
-    }
-  }
-  new_opt
-}
-
 AuthenticationUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 }
@@ -93,174 +78,6 @@ NoAuthenticationModule <- function(id,
 ## ================================================================================
 ## FirebaseAuthenticationModule
 ## ================================================================================
-
-upgrade.dialog <- function(ns, current.plan) {
-  btn_basic <- "Go Basic!"
-  btn_starter <- "Get Starter!"
-  btn_premium <- "Get Premium!"
-  if (current.plan == "free") btn_basic <- "Current Plan"
-  if (current.plan == "starter") btn_starter <- "Current Plan"
-  if (current.plan == "premium") btn_premium <- "Current Plan"
-
-  modalDialog(
-    title = h3("Find the right OmicsPlayground plan for you"),
-    size = "m",
-    div(
-      class = "row",
-      style = "padding-left:4rem;padding-right:4rem;text-align:center;",
-      div(
-        class = "col-md-4",
-        style = "background:#F2FAFF;",
-        HTML("<h4><b>Basic</b></h4>"),
-        p("Try for free"),
-        h3("Free!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 3 datasets"),
-          tags$li("45 minutes time limit"),
-          tags$li("Up to 25 samples / dataset"),
-          tags$li("Up to 5 comparisons")
-        ),
-        shiny::actionButton(ns("get_basic"), btn_basic),
-        br()
-      ),
-      div(
-        class = "col-md-4",
-        style = "background:#E8F8FF;",
-        h4(HTML("<b>Starter</b>")),
-        p("Great to start"),
-        h3("Soon!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 10 datasets"),
-          tags$li("3 hours time limit"),
-          tags$li("Up to 100 samples / dataset"),
-          tags$li("Up to 10 comparisons")
-        ),
-        shiny::actionButton(ns("get_starter"), btn_starter),
-        br()
-      ),
-      div(
-        class = "col-md-4",
-        style = "background:#E2F4FF;",
-        HTML("<h4><b>Premium</b></h4>"),
-        p("For power users or small groups"),
-        h3("Soon!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 100 datasets"),
-          tags$li("8 hours time limit"),
-          tags$li("Up to 2000 samples / dataset"),
-          tags$li("Up to 100 comparisons")
-        ),
-        shiny::actionButton(ns("get_premium"), btn_premium),
-        br()
-      )
-    ), ## content div
-    div(
-      style = "margin-top:3rem;text-align:center;",
-      HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
-    ),
-    footer = tagList(
-      fillRow(
-        flex = c(NA, 0.03, NA, 1, NA, NA),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "yearlyCheck",
-            type = "radio",
-            name = "yearly",
-            onclick = "priceChange(name)",
-            checked = TRUE
-          ),
-          "Billed yearly"
-        ),
-        br(),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "monthlyCheck",
-            type = "radio",
-            name = "monthly",
-            onclick = "priceChange(name)"
-          ),
-          "Billed monthly"
-        ),
-        br(),
-        shiny::actionButton(ns("manage"), "Manage Subscription"),
-        modalButton("Dismiss")
-      )
-    )
-  ) ## modalDialog
-}
-
-js.emailFeedbackMessage <- function(session, msg, type = "error") {
-  session$sendCustomMessage(
-    "email-feedback",
-    list(
-      type = type,
-      msg = msg
-    )
-  )
-}
-
-checkAuthorizedDomain <- function(email, domain) {
-  if (is.null(domain) || domain == "" || domain == "*") {
-    return(TRUE)
-  }
-  domain1 <- strsplit(domain, split = "\\|")[[1]]
-  domain1 <- paste0(paste0("@", domain1, "$"), collapse = "|")
-  authorized <- grepl(domain1, email)
-  authorized
-}
-
-checkAuthorizedUser <- function(email, credentials_file = NULL) {
-  if (is.null(credentials_file) || credentials_file == FALSE) {
-    return(TRUE)
-  }
-  if (!file.exists(credentials_file)) {
-    return(TRUE)
-  }
-  CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
-  valid_user <- email %in% CREDENTIALS$email
-  if (!valid_user) {
-    return(FALSE)
-  }
-  sel <- match(email, CREDENTIALS$email)
-  valid_date <- as.Date(CREDENTIALS$expiry[sel]) > as.Date(Sys.time())
-  authorized <- valid_user && valid_date
-  authorized
-}
-
-checkValidEmailFormat <- function(email) {
-  grepl(".*@.*[.].*", email)
-}
-
-checkPersonalEmail <- function(email) {
-  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", email)
-}
-
-checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {
-  dbg("[AuthenticationModule:checkEmail]")
-  chk <- list()
-  if (!checkValidEmailFormat(email)) {
-    return(list(valid = FALSE, msg = "not a valid email"))
-  }
-  if (!checkAuthorizedDomain(email, domain)) {
-    return(list(valid = FALSE, msg = "domain not authorized"))
-  }
-  if (!checkAuthorizedUser(email, credentials_file)) {
-    return(list(valid = FALSE, msg = "not authorized user"))
-  }
-  if (check.personal) {
-    if (checkPersonalEmail(email)) {
-      return(list(valid = FALSE, msg = "No personal email allowed. Please provide your business, academic or institutional email."))
-    }
-  }
-  list(valid = TRUE, "email ok")
-}
-
-
 
 FirebaseAuthenticationModule <- function(id,
                                          domain = NULL,
@@ -371,7 +188,7 @@ FirebaseAuthenticationModule <- function(id,
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       ## or against a subscription list.
-      check <- checkEmail(login_email, domain, credentials_file)
+      check <- checkEmail(input$emailInput, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         sendEmailLink(NULL)
@@ -537,12 +354,12 @@ EmailLinkAuthenticationModule <- function(id,
                                           credentials_file = NULL,
                                           firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using email link (using Firebase) authentication <<<<")
+    message("[EmailLinkAuthenticationModule] >>>> using email link (Firebase) authentication <<<<")
 
     if (file.exists(firebase.rds)) {
       firebase_config <- firebase:::read_config(firebase.rds)
     } else {
-      stop("[FATAL ERROR] no firebase.rds file found. please create.")
+      stop("[EmailLinkAuthenticationModule] FATAL ERROR : no firebase.rds file")
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
@@ -576,7 +393,7 @@ EmailLinkAuthenticationModule <- function(id,
     shinyjs::runjs("logout()")
 
     resetUSER <- function() {
-      message("[FirebaseAuthenticationModule] resetting USER... ")
+      message("[EmailLinkAuthenticationModule] resetting USER... ")
 
       USER$logged <- FALSE
       USER$username <- ""
@@ -588,7 +405,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## sign out (THIS LOOSES PERSISTENCE!)
       firebase$sign_out()
-      dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
+      dbg("[EmailLinkAuthenticationModule] *** signing out of firebase **** ")
 
       title <- HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
       if (!is.null(credentials_file) && file.exists(credentials_file)) {
@@ -617,17 +434,17 @@ EmailLinkAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
-        dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")
+        dbg("[EmailLinkAuthenticationModule] USER is already logged in! no modal")
         return()
       }
 
       first_time <<- FALSE
-      message("[FirebaseAuthenticationModule] USER not logged in!")
+      message("[EmailLinkAuthenticationModule] USER not logged in!")
       resetUSER()
     })
 
     observeEvent(input$userLogout, {
-      message("[FirebaseAuthenticationModule] userLogout triggered!")
+      message("[EmailLinkAuthenticationModule] userLogout triggered!")
       resetUSER()
     })
 
@@ -649,34 +466,18 @@ EmailLinkAuthenticationModule <- function(id,
         email_waiter$hide()
       })
 
-      if (input$emailInput == "") {
-        js.emailFeedbackMessage(session, "Missing email", "error")
-        return()
-      }
-
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
-      authorized_domain <- checkAuthorizedDomain(input$emailInput, domain)
-      if (!authorized_domain) {
-        js.emailFeedbackMessage(session, "domain not authorized", "error")
-        shiny::updateTextInput(session, "emailInput", value = "")
-        return()
-      }
 
-      ## >>> We could cross-check here for valid email against a subscription list.
-      authorized_user <- checkAuthorizedUser(email, credentials_file)
-      if (!authorized_user) {
-        js.emailFeedbackMessage(session, "user not authorized", "error")
-        return()
-      }
-
-      ## if it is a new user we ask for business email, old users can go
-      is_personal_email <- grepl("gmail|ymail|outlook|yahoo.com$|mail.com$|icloud.com$|msn.com$", input$emailInput)
+      ## if it is a new user we check their email, old users can go
       existing_user_dirs <- basename(list.dirs(pgx_dir))
       new_user <- !(input$emailInput %in% existing_user_dirs)
-      if (is_personal_email && new_user) {
-        js.emailFeedbackMessage(session, "No personal email allowed. Please use your business, academic or institutional email.", "error")
-        return()
+      if (new_user) {
+        check <- checkEmail(input$emailInput, domain, credentials_file, check.personal = TRUE)
+        if (!check$valid) {
+          js.emailFeedbackMessage(session, check$msg, "error")
+          return(NULL)
+        }
       }
 
       ## >>> OK let's send auth request
@@ -697,16 +498,15 @@ EmailLinkAuthenticationModule <- function(id,
       response <- firebase$get_signed_in()
 
       if (!response$success) {
-        warning("[FirebaseAuthenticationModule] sign in NOT succesful")
+        info("[EmailLinkAuthenticationModule] WARNING : Firebase signin NOT succesful")
         resetUSER()
         return()
       }
 
       on.exit({
-        dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
+        dbg("[EmailLinkAuthenticationModule:observeEvent(firebase$get_signed_in)] on.exit")
         if (USER$logged) removeModal()
       })
-
 
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
@@ -1065,442 +865,5 @@ LoginCodeAuthenticationModule <- function(id,
 }
 
 ## ================================================================================
-## UI FUNCTIONS
+## ================================= END OF FILE ==================================
 ## ================================================================================
-
-splashHelloModal <- function(name, msg = NULL, ns = NULL, duration = 3500) {
-  if (is.null(ns)) {
-    ns <- function(e) {
-      return(e)
-    }
-  }
-  message("[AuthenticationModule::splashHelloModel]")
-
-  all.hello <- c(
-    "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
-    "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour",
-    "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
-  )
-  title <- paste(paste0(sample(all.hello, 3), "!"), collapse = " ")
-  if (!is.null(name) && !is.na(name) && !name %in% c("NA", "")) {
-    first.name <- strsplit(as.character(name), split = " ")[[1]][1]
-    first.name <- paste0(
-      toupper(substring(first.name, 1, 1)),
-      substring(first.name, 2, 999)
-    )
-    title <- paste(paste0(sample(all.hello, 1), " ", first.name, "!"), collapse = " ")
-  }
-  subtitle <- "Have a good day!"
-  subtitle <- "We wish you many great discoveries today!"
-  if (!is.null(msg)) subtitle <- msg
-  splash.title <- shiny::div(
-    shiny::br(), br(), br(), br(),
-    shiny::div(shiny::HTML(title), style = "font-size:70px;font-weight:700;line-height:1em;width:130%;"),
-    shiny::br(),
-    shiny::div(shiny::HTML(subtitle), style = "font-size:30px;line-height:1em;margin-top:0.6em;width:130%;"),
-    shiny::br(), br(), br()
-  )
-  body <- shiny::tagList(
-    shiny::div(id = "splash-title", splash.title)
-  )
-  m <- splashScreen("", body,
-    ns = ns, easyClose = TRUE, fade = TRUE,
-    buttons = FALSE, footer = FALSE
-  )
-  if (duration > 0) {
-    cat("closing hello in", round(duration / 1000, 1), "seconds...\n")
-    shinyjs::delay(duration, shiny::removeModal())
-  }
-  return(m)
-}
-
-splashLoginModal <- function(ns = NULL,
-                             with.email = TRUE,
-                             with.password = TRUE,
-                             with.username = FALSE,
-                             with.firebase = FALSE,
-                             with.firebase_emailonly = FALSE,
-                             button.text = "Login",
-                             cancel.text = "cancel",
-                             add.cancel = FALSE,
-                             title = "Log in",
-                             subtitle = "") {
-  if (is.null(ns)) {
-    ns <- function(e) {
-      return(e)
-    }
-  }
-
-  slogan <- list()
-  slogan[[1]] <- c("Big Omics Data", "Isn't big anymore with BigOmics Playground")
-  slogan[[2]] <- c("Great Discoveries", "Start on BigOmics Playground")
-  slogan[[3]] <- c("Fasten Your Seat Belts!", "Hi-speed analytics")
-  slogan[[4]] <- c("Do-it-yourself Omics Analytics", "Yes you can!")
-  slogan[[5]] <- c("Twenty-Four Seven", "Your Playground doesn't go on coffee breaks")
-  slogan[[6]] <- c("Analyze with confidence", "Be a data rockstar, a Freddie Mercury of omics!")
-  slogan[[7]] <- c("Play-Explore-Discover", "Get deeper insights with BigOmics Playground")
-  slogan[[8]] <- c("Skip the Queue", "Take the fast lane. Self-service analytics.")
-  slogan[[9]] <- c("Look Ma! No help!", "I did it without a bioinformatician")
-  slogan[[10]] <- c("Easy-peasy insight!", "Get insight from your data the easy way")
-  slogan[[11]] <- c("Zoom-zoom-insight!", "Get faster insight from your data")
-  slogan[[12]] <- c("Click-click-eureka!", "Owe yourself that <i>eureka!</i> moment")
-  slogan[[13]] <- c("I Love Omics Data!", "Unleash your inner nerd with BigOmics Playground")
-  slogan[[14]] <- c("More Omics Data", "Is all I want for my birthday")
-  slogan[[15]] <- c("Keep Exploring", "Never stop discovering with BigOmics Playground")
-  slogan[[16]] <- c("Real Bioinformaticians", "Do it with BigOmics Playground")
-  slogan[[17]] <- c("Real Biologists", "Do it with BigOmics Playground")
-  slogan[[18]] <- c("Ich bin doch nicht bl\u00F6d!", "Of course I use BigOmics Playground")
-  slogan[[19]] <- c("Non sono mica scemo!", "Of course I use BigOmics Playground")
-  slogan[[20]] <- c("The Unexplored Plan", "When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
-  slogan[[21]] <- c("Explore More", "The more you explore, the more you learn and grow")
-  slogan[[22]] <- c("Discover New Oceans", "Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
-  slogan[[23]] <- c("Love Adventurous Life", "Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
-  slogan[[24]] <- c("Succes is Exploration", "Find the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
-  slogan[[25]] <- c("Look Ma! No help!", "I did it without a bioinformagician")
-  slogan[[26]] <- c("May the Force of Omics be with you", "Train hard youngling, one day a master you become")
-
-  slogan <- sample(slogan, 1)[[1]]
-  slogan.len <- nchar(paste(slogan, collapse = " "))
-  if (slogan.len < 80) slogan[1] <- paste0("<br>", slogan[1])
-  splash.title <- shiny::div(
-    id = "splash-title",
-    class = "text-white",
-    shiny::div(shiny::HTML(slogan[1]), style = "font-size:3rem;font-weight:700;line-height:1em;width:130%;"),
-    shiny::div(shiny::HTML(slogan[2]), style = "font-size:1.6rem;line-height:1.1em;margin-top:0.5em;width:130%;")
-  )
-
-  div.password <- div()
-  div.email <- div()
-  div.username <- div()
-  div.firebase <- div()
-  div.title <- div()
-  div.subtitle <- div()
-
-  if (with.email) {
-    div.email <- div(
-      id = "splash-email",
-      textInput(ns("login_email"), NULL, placeholder = "your email")
-    )
-  }
-  if (with.username) {
-    div.username <- div(
-      id = "splash-username",
-      textInput(ns("login_username"), NULL, placeholder = "your username")
-    )
-  }
-  if (with.password) {
-    div.password <- div(
-      id = "splash-password",
-      passwordInput(ns("login_password"), NULL, placeholder = "your password")
-    )
-  }
-  if (with.firebase) {
-    div.firebase <- div(
-      class = "card",
-      div(
-        class = "card-body",
-        h1(
-          title,
-          class = "card-title pb-2"
-        ),
-        div(
-          subtitle
-        ),
-        textInput(
-          ns("emailInput"),
-          "",
-          placeholder = "Your email",
-          width = "100%"
-        ),
-        actionButton(
-          ns("emailSubmit"),
-          "Send link",
-          class = "btn-warning"
-        ),
-        p(
-          id = "emailFeedbackShow"
-        ),
-        hr(style = "color:#888;opacity:1;margin-top:30px;"),
-        h5(
-          "or",
-          class = "text-center pb-4 pt-1",
-          style = "margin-top:-35px;background:white;width:50px;margin-left:auto;margin-right:auto;"
-        ),
-        div(
-          class = "social-button google-button",
-          actionLink(
-            ns("launchGoogle"),
-            HTML("&nbsp; Sign in with Google"),
-            icon = shiny::icon("google", style = "font-size:18px;")
-          )
-        ),
-        div(
-          class = "social-button facebook-button",
-          actionLink(
-            ns("launchFacebook"),
-            HTML("&nbsp; Sign in with Facebook"),
-            icon = shiny::icon("facebook", style = "font-size:18px;")
-          )
-        ),
-        ## div(
-        ##   class = "social-button apple-button",
-        ##   actionLink(
-        ##     ns("launchApple"),
-        ##     HTML("&nbsp; Sign in with Apple"),
-        ##     icon = shiny::icon("apple", style="font-size:18px;")
-        ##   )
-        ## ),
-        div(
-          class = "social-button twitter-button",
-          actionLink(
-            ns("launchTwitter"),
-            HTML("&nbsp; Sign in with Twitter"),
-            icon = shiny::icon("twitter", style = "font-size:18px;")
-          )
-        )
-      )
-    )
-  }
-  if (with.firebase_emailonly) {
-    div.firebase <- div(
-      class = "card",
-      div(
-        class = "card-body",
-        h1(
-          title,
-          class = "card-title pb-2"
-        ),
-        div(
-          subtitle
-        ),
-        textInput(
-          ns("emailInput"),
-          "",
-          placeholder = "Your email",
-          width = "100%"
-        ),
-        actionButton(
-          ns("emailSubmit"),
-          "Send link",
-          class = "btn-warning"
-        ),
-        p(
-          id = "emailFeedbackShow"
-        )
-      )
-    )
-  }
-
-  if (!is.null(title) && title != "") {
-    div.title <- div(
-      id = "splash-login-title",
-      class = "pb-3",
-      h1(title, style = "color:black;line-height:1em;")
-    )
-  }
-
-  if (!is.null(subtitle) && subtitle != "") {
-    div.subtitle <- div(
-      id = "splash-login-subtitle",
-      class = "pt-0 pb-2",
-      h6(subtitle, style = "color:black;font-weight:400;")
-    )
-  }
-
-  if (add.cancel) {
-    div.button <- div(
-      id = "splash-buttons",
-      class = "pt-2",
-      shiny::fillRow(
-        flex = c(1, NA, NA, 1),
-        br(),
-        actionButton(ns("cancel_btn"), cancel.text,
-          class = "btn-light btn-xl",
-          style = "margin: 4px;"
-        ),
-        actionButton(ns("login_btn"), button.text,
-          class = "btn-warning btn-xl",
-          style = "margin: 4px;"
-        ),
-        br()
-      )
-    )
-  } else {
-    div.button <- div(
-      id = "splash-buttons",
-      class = "pt-2",
-      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl")
-    )
-  }
-
-  ## splash.panel=div();ns=function(x)
-  splash.content <- NULL
-  if (with.firebase || with.firebase_emailonly) {
-    splash.content <- div.firebase
-  } else {
-    splash.content <- shiny::wellPanel(
-      ## style = "padding: 40px 20px; background-color: #ffffff22;",
-      style = "padding: 35px 25px; background-color:white; color:black;",
-      id = "splash-login",
-      div.title,
-      div.subtitle,
-      div.username,
-      div.email,
-      div.password,
-      div.button
-    )
-  }
-
-  body <- div(
-    id = "splash-content",
-    splash.content
-  )
-
-  m <- splashScreen(title = splash.title, body = body, ns = ns)
-  return(m)
-}
-
-splashscreen.buttons <- function() {
-  tagList(
-    shiny::tags$a(
-      shiny::img(
-        id = "splash-logo2",
-        src = "static/bigomics-logo.png"
-      ),
-      href = "https://www.bigomics.ch",
-      target = "_blank"
-    ),
-    div(
-      class = "btn-group",
-      role = "group",
-      div(
-        class = "btn-group",
-        role = "group",
-        tags$button(
-          "Get support",
-          id = "splash-toggle-support",
-          type = "button",
-          class = "btn btn-outline-primary dropdown-toggle",
-          `data-bs-toggle` = "dropdown",
-          `aria-expanded` = "false"
-        ),
-        tags$ul(
-          class = "dropdown-menu",
-          `aria-labelledby` = "splash-toggle-support",
-          tags$li(
-            shiny::tags$a(
-              "Watch tutorials",
-              class = "dropdown-item",
-              href = "https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A",
-              target = "_blank"
-            )
-          ),
-          tags$li(
-            shiny::tags$a(
-              "Read documentation",
-              class = "dropdown-item",
-              href = "https://omicsplayground.readthedocs.io",
-              target = "_blank"
-            ),
-          ),
-          tags$li(
-            shiny::tags$a(
-              "User forum",
-              class = "dropdown-item",
-              href = "https://groups.google.com/d/forum/omicsplayground",
-              target = "_blank"
-            )
-          )
-        )
-      ),
-      div(
-        class = "btn-group",
-        role = "group",
-        tags$button(
-          "I'm a developer",
-          id = "splash-toggle-dev",
-          type = "button",
-          class = "btn btn-outline-primary dropdown-toggle",
-          `data-bs-toggle` = "dropdown",
-          `aria-expanded` = "false"
-        ),
-        tags$ul(
-          class = "dropdown-menu",
-          `aria-labelledby` = "splash-toggle-dev",
-          tags$li(
-            shiny::tags$a(
-              "Get the source",
-              class = "dropdown-item",
-              href = "https://github.com/bigomics/omicsplayground",
-              target = "_blank"
-            )
-          ),
-          tags$li(
-            shiny::tags$a(
-              "Docker image",
-              class = "dropdown-item",
-              href = "https://hub.docker.com/r/bigomics/omicsplayground",
-              target = "_blank"
-            )
-          ),
-          tags$li(
-            shiny::tags$a(
-              "Buy us a coffee!",
-              class = "dropdown-item",
-              href = "https://www.buymeacoffee.com/bigomics",
-              target = "_blank"
-            )
-          )
-        )
-      )
-    )
-  )
-}
-
-splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE,
-                         buttons = TRUE, footer = TRUE) {
-  if (is.null(ns)) {
-    ns <- function(e) {
-      return(e)
-    }
-  }
-
-  div.buttons <- shiny::modalButton("Dismiss")
-  if (buttons) {
-    div.buttons <- splashscreen.buttons()
-  }
-  if (!footer) {
-    div.buttons <- NULL
-  }
-
-  ## return modalDialog
-  m <- modalDialog2(
-    id = "splash-fullscreen",
-    class = "bg-primary",
-    header = div.buttons,
-    shiny::div(
-      class = "row",
-      shiny::div(
-        class = "col-md-4 offset-md-2",
-        title,
-        br(),
-        br(),
-        shiny::img(src = "static/mascotte-sc.png", class = "img-fluid", id = "splash-image"),
-      ),
-      shiny::div(
-        class = "col-md-3 offset-md-2",
-        shiny::div(
-          id = "splash-panel",
-          body,
-          div(textOutput(ns("login_warning")), style = "color:white;font-size:1.2em;"),
-        ),
-      )
-    ),
-    footer = NULL,
-    size = "fullscreen",
-    easyClose = easyClose,
-    fade = fade
-  ) ## end of modalDialog
-
-  return(m)
-}
