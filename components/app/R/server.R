@@ -17,7 +17,7 @@ app_server <- function(input, output, session) {
 
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-  info("[server.R] getwd = ", getwd())
+  info("[server.R] getwd = ", normalizePath(getwd()))
   info("[server.R] HONCHO_URL = ", opt$HONCHO_URL)
   info("[server.R] SESSION = ", session$token)
 
@@ -48,10 +48,19 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   auth <- NULL ## shared in module
+  credentials_file <- file.path(ETC, "CREDENTIALS")
+  has.credentials <- file.exists(credentials_file)
+  if (is.null(opt$USE_CREDENTIALS) ||
+    !opt$USE_CREDENTIALS ||
+    !has.credentials) {
+    credentials_file <- NULL
+  }
+  dbg("[server.R:app_server] credentials_file =", credentials_file)
+
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
-      credentials.file = "CREDENTIALS"
+      credentials_file = credentials_file
     )
   } else if (authentication == "firebase") {
     auth <- FirebaseAuthenticationModule(
@@ -59,17 +68,18 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN
     )
   } else if (authentication == "email") {
-    auth <- EmailAuthenticationModule(
-      id = "auth",
-      pgx_dir = PGX.DIR,
-      domain = opt$DOMAIN
-    )
-  } else if (authentication == "auth-email") {
-    auth <- EmailAuthenticationModule(
+    auth <- EmailLinkAuthenticationModule(
       id = "auth",
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
-      credentials.file = "CREDENTIALS"
+      credentials_file = credentials_file
+    )
+  } else if (authentication == "login-code") {
+    auth <- LoginCodeAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      credentials_file = credentials_file
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -437,6 +447,10 @@ app_server <- function(input, output, session) {
       return("(nobody)")
     }
     ## trigger on change of user
+    shiny::req(auth$logged)
+    if (!auth$logged) {
+      return("(not logged in)")
+    }
     user <- auth$email
     dbg("[server:output$current_user] user = ", user)
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
