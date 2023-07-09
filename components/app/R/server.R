@@ -149,23 +149,26 @@ app_server <- function(input, output, session) {
   }
 
   ## Chatbox
-  if(opt$ENABLE_CHIRP) {
+  if (opt$ENABLE_CHIRP) {
+    observeEvent( input$chirp_button, {
+      shinyjs::click( id="actual-chirp-button" )
+    })
     r_chirp_name <- reactive({
       name <- auth$username
-      if(is.null(name) || is.na(name) || name=='') name <- auth$email
-      if(is.null(name) || is.na(name) || name=='') {
-        name <- paste0("user",substring(session$token,1,3))
+      if (is.null(name) || is.na(name) || name == "") name <- auth$email
+      if (is.null(name) || is.na(name) || name == "") {
+        name <- paste0("user", substring(session$token, 1, 3))
       }
-      name <- getFirstName(name)  ## in app/R/utils.R
+      name <- getFirstName(name) ## in app/R/utils.R
     })
     shinyChatR::chat_server(
       "chatbox",
-      db_file = file.path(ETC,"chirp_data.db"),
-      ##csv_file = file.path(ETC,"chirp_data.csv"),            
+      db_file = file.path(ETC, "chirp_data.db"),
+      ## csv_file = file.path(ETC,"chirp_data.csv"),
       chat_user = r_chirp_name
     )
   }
-    
+
 
   #' Get user-pgx folder
   getPgxDir <- reactive({

@@ -288,11 +288,11 @@ app_ui <- function() {
       .where = "declarations"
     )
 
-    ## offcanvas chatbox 
+    ## offcanvas chatbox
     div.chirp <- NULL
-    if(opt$ENABLE_CHIRP) {
+    if (opt$ENABLE_CHIRP) {
       div.chirp <- bsutils::offcanvas(
-        bsutils::offcanvasButton("Chirp!",id="chirp-button"),
+        bsutils::offcanvasButton("Chirp!", id="actual-chirp-button", style="display:none;"),
         bsutils::offcanvasContent(
           .position = "end",
           bslib::card(
@@ -302,7 +302,8 @@ app_ui <- function() {
             bslib::card_body(
               shinyChatR::chat_ui("chatbox",
                 title = "Chirp with friends on the Playground!",
-                height='70vh', width='100%')
+                height = "70vh", width = "100%"
+              )
             )
           )
         )
@@ -329,6 +330,7 @@ app_ui <- function() {
           condition = "input.nav != 'welcome-tab'",
           shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
         ),
+        shiny::actionButton("chirp_button", "Chirp!", width="auto"),
         bigdash::navbarDropdown(
           "Support",
           bigdash::navbarDropdownItem(
