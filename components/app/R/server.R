@@ -50,9 +50,8 @@ app_server <- function(input, output, session) {
   auth <- NULL ## shared in module
   credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
-  if (is.null(opt$USE_CREDENTIALS) ||
-    !opt$USE_CREDENTIALS ||
-    !has.credentials) {
+  if ((is.null(opt$USE_CREDENTIALS) || !opt$USE_CREDENTIALS ||
+         !has.credentials) && authentication != "password" ) {
     credentials_file <- NULL
   }
   dbg("[server.R:app_server] credentials_file =", credentials_file)
@@ -67,7 +66,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       domain = opt$DOMAIN
     )
-  } else if (authentication == "email") {
+  } else if (authentication == "email-link") {
     auth <- EmailLinkAuthenticationModule(
       id = "auth",
       pgx_dir = PGX.DIR,
@@ -163,9 +162,10 @@ app_server <- function(input, output, session) {
     })
     shinyChatR::chat_server(
       "chatbox",
-      db_file = file.path(ETC, "chirp_data.db"),
-      ## csv_file = file.path(ETC,"chirp_data.csv"),
-      chat_user = r_chirp_name
+      ## db_file = file.path(ETC, "chirp_data.db"),
+      csv_path = file.path(ETC,"chirp_data.csv"),
+      chat_user = r_chirp_name,
+      nlast = 100
     )
   }
 

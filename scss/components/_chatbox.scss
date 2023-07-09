@@ -2,13 +2,12 @@ html {
     
     #chirp_button {
         width: auto;
-	position: absolute;
-	top: 11px;
-	right: 290px;
 	background-color: white;
-	padding:2px 12px;
-	font-size:13px;
+	padding: 2px 12px;
+	font-size: 13px;
 	color:#3181DE;
+	margin: 6px 12px 6px 0px;
+	height: 25px;
     }
 
     .chatContainer {
