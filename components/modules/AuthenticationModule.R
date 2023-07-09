@@ -253,7 +253,7 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
     return(list(valid = FALSE, msg = "not authorized user"))
   }
   if (check.personal) {
-    if (heckPersonalEmail(email)) {
+    if (checkPersonalEmail(email)) {
       return(list(valid = FALSE, msg = "No personal email allowed. Please provide your business, academic or institutional email."))
     }
   }
