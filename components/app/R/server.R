@@ -687,6 +687,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
       message("[server.R] user not logged in? forcing logout() JS callback...")
       shinyjs::runjs("logout()")
     }
+
+    # Trigger timer_heartbeat to register user login
+    timer_heartbeat <- reactiveTimer(120000, session)
   })
 
   ## logout helper function
@@ -750,6 +753,49 @@ Upgrade today and experience advanced analysis features without the time limit.<
   message("[server.R] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
   total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
   message("[server.R] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
+
+  ## -------------------------------------------------------------
+  ## User heartbeat + login/logout traceability
+  ## -------------------------------------------------------------
+  # Initialize the reactiveTimer to update every 2 minutes
+  timer_heartbeat <- reactiveTimer(120000, session)
+
+  user_email <- function(auth){
+    auth$email()
+  }
+
+  observe({timer_heartbeat()
+    # Generate the heartbeat message
+    current_time <- Sys.time()
+    email <- user_email(auth)
+    if(is.na(email)) return()
+
+    dbg("Heartbeat triggered")
+
+    heartbeat_msg <- paste0(email, "\theartbeat\t", current_time)
+    # File path
+    file_path <- paste0(TRACE.DIR, "/trace_log.txt")
+    # Check if the file exists
+
+    if(file.exists(file_path)) {
+      # Read the lines from the file
+      lines <- readLines(file_path)
+      # Find the index of the line with the user's email and "heartbeat"
+      index <- grep(paste0(user_email(auth), "\theartbeat\t"), lines)
+      # If a line was found, replace it with the new heartbeat line
+      # Otherwise, append the new heartbeat line to the end
+      if(length(index) > 0) {
+        lines[index] <- heartbeat_msg
+      } else {
+        lines <- c(lines, heartbeat_msg)
+      }
+      # Write the lines back to the file
+      writeLines(lines, file_path)
+    } else {
+      # If the file doesn't exist, create it with the heartbeat line
+      writeLines(heartbeat_msg, file_path)
+    }
+  })
 
 
   ## clean up any remanining UI from previous aborted processx
