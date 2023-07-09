@@ -72,7 +72,7 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
       credentials_file = credentials_file,
-      firebase.rds = "firebase.rds"      
+      firebase.rds = "firebase.rds"
     )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
