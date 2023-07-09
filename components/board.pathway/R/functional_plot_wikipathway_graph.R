@@ -28,7 +28,7 @@ functional_plot_wikipathway_graph_ui <- function(
     id = ns("plotmodule"),
     title = title,
     label = label,
-    plotlib = "renderUI",
+    plotlib = "svgPanZoom",
     info.text = info.text,
     info.width = info.width,
     options = NULL,
@@ -55,7 +55,7 @@ functional_plot_wikipathway_graph_server <- function(id,
   moduleServer( id, function(input, output, session) {
 
       ## reactive or function? that's the question...
-      plot_data <- shiny::reactive({      
+      plot_data <- shiny::reactive({
         svg.dir <- pgx.system.file("svg/", package="pathway")
         svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(
@@ -71,7 +71,7 @@ functional_plot_wikipathway_graph_server <- function(id,
 
         res <- plot_data()
         shiny::req(res, res$df)
-        
+
         df <- res$df
         comparison <- res$fa_contrast
         wikipathway_table <- res$wikipathway_table
@@ -125,9 +125,9 @@ functional_plot_wikipathway_graph_server <- function(id,
           pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
 
-        if(only_id) {
-          return(pathway.id)
-        }
+        # if(only_id) {
+        #   return(pathway.id)
+        # }
 
         if (!interactive()) {
           progress <- shiny::Progress$new()
@@ -147,39 +147,55 @@ functional_plot_wikipathway_graph_server <- function(id,
         )
       }
 
-      WPembed_frame <- function(){
-        shiny::div(
-          style = "height: 28vh; width: 100%;",
-          tags$iframe(
-            src = paste0(
-              "https://pathway-viewer.toolforge.org/embed/",
-              getPathwayImage(only_id = TRUE)
-            ), 
-            height = "100%",
-            width = "100%"
+      # WPembed_frame <- function(){
+      #   shiny::div(
+      #     style = "height: 28vh; width: 100%;",
+      #     tags$iframe(
+      #       src = paste0(
+      #         "https://pathway-viewer.toolforge.org/embed/",
+      #         getPathwayImage(only_id = TRUE)
+      #       ),
+      #       height = "100%",
+      #       width = "100%"
+      #     )
+      #   )
+      # }
+
+      plot_RENDER <- function() {
+          img <- getPathwayImage()
+          shiny::req(img$width, img$height)
+          filename <- img$src
+          img.svg <-  readChar(filename, nchars = file.info(filename)$size)
+          pz <- svgPanZoom::svgPanZoom(
+              img.svg,
+              controlIconsEnabled = TRUE,
+              zoomScaleSensitivity = 0.4,
+              minZoom = 1,
+              maxZoom = 5,
+              viewBox = FALSE
           )
-        )
+          return(pz)
       }
 
-      WPembed_frame_modal <- function(){
-        shiny::div(
-          style = "height: 75vh; width: 100%;",
-          tags$iframe(
-            src = paste0(
-              "https://pathway-viewer.toolforge.org/embed/",
-              getPathwayImage(only_id = TRUE)
-            ), 
-            height = "100%",
-            width = "100%"
-          )
-        )
-      }
+      # WPembed_frame_modal <- function(){
+      #   shiny::div(
+      #     style = "height: 75vh; width: 100%;",
+      #     tags$iframe(
+      #       src = paste0(
+      #         "https://pathway-viewer.toolforge.org/embed/",
+      #         getPathwayImage(only_id = TRUE)
+      #       ),
+      #       height = "100%",
+      #       width = "100%"
+      #     )
+      #   )
+      # }
 
       PlotModuleServer(
         "plotmodule",
-        plotlib = "renderUI",
-        func = WPembed_frame,
-        func2 = WPembed_frame_modal,
+        plotlib = "svgPanZoom",
+        func = plot_RENDER,
+        # func2 = WPembed_frame_modal,
         add.watermark = watermark
       )
 
