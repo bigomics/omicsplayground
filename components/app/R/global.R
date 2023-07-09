@@ -161,12 +161,6 @@ if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
   opt$AUTHENTICATION <- auth
 }
 
-
-if (opt$AUTHENTICATION %in% c("firebase", "email") && !file.exists("firebase.rds")) {
-  message("[GLOBAL] WARNING: Missing firebase.rds!")
-  stop("[GLOBAL] FATAL : missing firebase.rds file")
-}
-
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK
 TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
