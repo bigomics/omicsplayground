@@ -309,7 +309,7 @@ app_ui <- function() {
           )
         )
       )
-      div.chirpbutton <-  shiny::actionButton("chirp_button", "Chirp!", width = "auto")
+      div.chirpbutton <- shiny::actionButton("chirp_button", "Chirp!", width = "auto")
     }
 
     ## ------------------------- bigPage ----------------------------------
