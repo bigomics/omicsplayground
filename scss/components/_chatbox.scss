@@ -1,0 +1,49 @@
+html {
+    
+    #chirp_button {
+        width: auto;
+	background-color: white;
+	padding: 2px 12px;
+	font-size: 13px;
+	color:#3181DE;
+	margin: 6px 12px 6px 0px;
+	height: 25px;
+    }
+
+    .chatContainer {
+        background-color: white;
+	box-shadow: none;
+    }
+    
+    .offcanvas.offcanvas-bottom {
+	right: auto;
+	left: auto;
+	width: 60%;
+	background-color: transparent;
+    }
+
+    .chatMessage {
+	float: left;
+	text-align: left;
+	margin-bottom: 5px;
+	padding: 2px 20px;
+	border-radius: 5px;
+//	color: black;
+//	background-color: #ddd;	
+	clear: both;
+	box-shadow: none;
+    }
+
+    .chatMessage > p {
+	margin: 0.1rem;
+    }
+
+    .chatTitle {
+	font-size: 16px;
+	font-weight: 600;
+	margin-bottom: 10px;
+	text-align: center;
+    }
+
+    
+}

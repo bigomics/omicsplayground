@@ -3,24 +3,38 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, enable_upload, load_example) {
+WelcomeBoard <- function(id, auth, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
-      name <- auth$name()
-      dbg("[WelcomeBoard] name =", name)
-      if (name %in% c("", NA, NULL)) {
-        welcome <- "Welcome back..."
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+
+      name <- auth$username
+      if (is.null(name) || name %in% c("", NA)) {
+        welcome <- paste0("Welcome back...")
       } else {
-        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
-        first.name <- paste0(
-          toupper(substring(first.name, 1, 1)),
-          substring(first.name, 2, nchar(first.name))
-        )
+        first.name <- getFirstName(name) ## in app/R/utils.R
         welcome <- paste0("Welcome back ", first.name, "...")
       }
       welcome
+    })
+
+    output$welcome2 <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+      all.hello <- c(
+        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+      )
+      hello1 <- sample(all.hello, 1)
+      paste0(hello1, "! What would you like to do today?")
     })
 
     observeEvent(input$btn_example_data, {
@@ -32,6 +46,8 @@ WelcomeBoard <- function(id, auth, enable_upload, load_example) {
     })
 
     observeEvent(input$btn_upload_data, {
+      shiny::req(auth$options)
+      enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
         bigdash.openSidebar()
         bigdash.selectTab(session, "upload-tab")
@@ -105,7 +121,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Created with love"), br(),
         "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-        br(), "Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
+        br(), "© 2000-2023 BigOmics Analytics, Inc.", br(),
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )
@@ -119,8 +135,8 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
-        div("What would you like to do today?", id = "welcome-subtext"),
+        div(shiny::textOutput(ns("welcome"), inline = TRUE), id = "welcome-text"),
+        div(shiny::textOutput(ns("welcome2"), inline = TRUE), id = "welcome-subtext"),
         br(),
         br()
       )

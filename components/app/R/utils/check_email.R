@@ -3,8 +3,12 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+#'
+#'
+#'
 check_personal_email <- function(auth, pgx_dir, title = NULL, text = NULL) {
-  email <- auth$email()
+  email <- auth$email
   is_personal_email <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", email)
   existing_user_dirs <- basename(list.dirs(pgx_dir))
   user_exists <- (email %in% existing_user_dirs)
@@ -26,8 +30,6 @@ check_personal_email <- function(auth, pgx_dir, title = NULL, text = NULL) {
         ## check if new email is valid
         newemail_is_personal <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", new_email)
         valid_email <- grepl(".*@.*[.].*", new_email)
-        dbg("[check_personal_email] newemail_is_personal = ", newemail_is_personal)
-        dbg("[check_personal_email] valid_email = ", valid_email)
         if (!valid_email) {
           dbg("[check_personal_email] ERROR!!", new_email, "is invalid")
           title <- "Invalid email"

@@ -17,7 +17,7 @@ app_server <- function(input, output, session) {
 
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-  info("[server.R] getwd = ", getwd())
+  info("[server.R] getwd = ", normalizePath(getwd()))
   info("[server.R] HONCHO_URL = ", opt$HONCHO_URL)
   info("[server.R] SESSION = ", session$token)
 
@@ -43,41 +43,43 @@ app_server <- function(input, output, session) {
   session.start_time <- -1
   authentication <- opt$AUTHENTICATION
 
-  limits <- c(
-    "samples" = opt$MAX_SAMPLES,
-    "comparisons" = opt$MAX_COMPARISONS,
-    "genes" = opt$MAX_GENES,
-    "genesets" = opt$MAX_GENESETS,
-    "datasets" = opt$MAX_DATASETS
-  )
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
 
   auth <- NULL ## shared in module
+  credentials_file <- file.path(ETC, "CREDENTIALS")
+  has.credentials <- file.exists(credentials_file)
+  if ((is.null(opt$USE_CREDENTIALS) || !opt$USE_CREDENTIALS ||
+    !has.credentials) && authentication != "password") {
+    credentials_file <- NULL
+  }
+
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
-      credentials.file = "CREDENTIALS"
+      credentials_file = credentials_file
     )
   } else if (authentication == "firebase") {
     auth <- FirebaseAuthenticationModule(
       id = "auth",
-      domain = opt$DOMAIN
+      domain = opt$DOMAIN,
+      firebase.rds = "firebase.rds"
     )
-  } else if (authentication == "email") {
-    auth <- EmailAuthenticationModule(
-      id = "auth",
-      pgx_dir = PGX.DIR,
-      domain = opt$DOMAIN
-    )
-  } else if (authentication == "auth-email") {
-    auth <- EmailAuthenticationModule(
+  } else if (authentication == "email-link") {
+    auth <- EmailLinkAuthenticationModule(
       id = "auth",
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
-      credentials.file = "CREDENTIALS"
+      credentials_file = credentials_file,
+      firebase.rds = "firebase.rds"
+    )
+  } else if (authentication == "login-code") {
+    auth <- LoginCodeAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      credentials_file = credentials_file
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -112,11 +114,10 @@ app_server <- function(input, output, session) {
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
-    enable_upload = opt$ENABLE_UPLOAD,
     load_example = load_example
   )
-  env$user_profile <- UserProfileBoard("user_profile", user = auth)
-  env$user_settings <- UserSettingsBoard("user_settings", user = auth)
+  env$user_profile <- UserProfileBoard("user_profile", auth = auth)
+  env$user_settings <- UserSettingsBoard("user_settings", auth = auth)
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
@@ -127,17 +128,11 @@ app_server <- function(input, output, session) {
     id = "load",
     pgx = PGX,
     auth = auth,
-    limits = limits,
     pgx_topdir = PGX.DIR,
     load_example = load_example,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
-    load_uploaded_data = load_uploaded_data,
-    enable_userdir = opt$ENABLE_USERDIR,
-    enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-    enable_user_share = opt$ENABLE_USER_SHARE,
-    enable_delete = opt$ENABLE_DELETE,
-    enable_public_share = opt$ENABLE_PUBLIC_SHARE
+    load_uploaded_data = load_uploaded_data
   )
 
   ## Modules needed from the start
@@ -147,37 +142,48 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
-      limits = limits,
-      enable_userdir = opt$ENABLE_USERDIR,
+      getPGXDIR = getPgxDir,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
   }
 
-  ## If user logs off, we clear the data
-  observeEvent(auth$logged(), {
-    is.logged <- auth$logged()
-    length.pgx <- length(names(PGX))
-    if (!is.logged && length.pgx > 0) {
-      for (i in 1:length.pgx) {
-        PGX[[names(PGX)[i]]] <<- NULL
+  ## Chatbox
+  if (opt$ENABLE_CHIRP) {
+    observeEvent(input$chirp_button, {
+      shinyjs::click(id = "actual-chirp-button")
+    })
+    r_chirp_name <- reactive({
+      name <- auth$username
+      if (is.null(name) || is.na(name) || name == "") name <- auth$email
+      if (is.null(name) || is.na(name) || name == "") {
+        name <- paste0("user", substring(session$token, 1, 3))
       }
-      session$user <- NA
-    }
-  })
+      name <- getFirstName(name) ## in app/R/utils.R
+    })
+    shinyChatR::chat_server(
+      "chatbox",
+      ## db_file = file.path(ETC, "chirp_data.db"),
+      csv_path = file.path(ETC, "chirp_data.csv"),
+      chat_user = r_chirp_name,
+      nlast = 100
+    )
+  }
+
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
-    if (!auth$logged()) {
+    shiny::req(auth$logged)
+    if (!auth$logged) {
       return(NULL)
     }
     userpgx <- PGX.DIR
-    if (opt$ENABLE_USERDIR &&
-      authentication %in% c("email", "auth-email", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email())
-    } else if (opt$ENABLE_USERDIR &&
+    if (auth$options$ENABLE_USERDIR &&
+      authentication %in% c("email-link", "login-code", "firebase")) {
+      userpgx <- file.path(PGX.DIR, auth$email)
+    } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$name())
+      userpgx <- file.path(PGX.DIR, auth$username)
     } else {
       userpgx <- PGX.DIR
     }
@@ -440,10 +446,19 @@ app_server <- function(input, output, session) {
   })
 
   output$current_user <- shiny::renderText({
+    shiny::req(auth$logged)
+    if (!auth$logged) {
+      return("(nobody)")
+    }
     ## trigger on change of user
-    user <- auth$email()
-    if (user %in% c("", NA, NULL)) user <- auth$name()
-    if (user %in% c("", NA, NULL)) user <- "User"
+    shiny::req(auth$logged)
+    if (!auth$logged) {
+      return("(not logged in)")
+    }
+    user <- auth$email
+    dbg("[server:output$current_user] user = ", user)
+    if (is.null(user) || user %in% c("", NA)) user <- auth$username
+    if (is.null(user) || user %in% c("", NA)) user <- "User"
     user
   })
 
@@ -458,11 +473,32 @@ app_server <- function(input, output, session) {
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
 
-  bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+  ## upon change of user
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      bigdash.toggleTab(session, "upload-tab", enable_upload)
 
+      # check personal email for old users and ask them to change
+      # their email
+      if (auth$method %in% c("email-link", "firebase", "login-code")) {
+        check_personal_email(auth, PGX.DIR)
+      }
+    } else {
+      # clear PGX data when user logs out
+      length.pgx <- length(names(PGX))
+      if (length.pgx > 0) {
+        for (i in 1:length.pgx) {
+          PGX[[names(PGX)[i]]] <<- NULL
+        }
+      }
+    }
+  })
+
+  ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
-      auth$logged()
+      auth$logged
       env$user_settings$enable_beta()
       PGX$name
     },
@@ -473,7 +509,7 @@ app_server <- function(input, output, session) {
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-      is.logged <- auth$logged()
+      is.logged <- auth$logged
 
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {
@@ -509,11 +545,9 @@ app_server <- function(input, output, session) {
 
       ## DEVELOPER only tabs (still too alpha)
       info("[server.R] disabling alpha features")
-      toggleTab("corr-tabs", "Functional", DEV) ## too slow
-      toggleTab("corr-tabs", "Differential", DEV)
-      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
-      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
-      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
 
       info("[server.R] trigger on change dataset done!")
     }
@@ -552,11 +586,6 @@ app_server <- function(input, output, session) {
       run = reactive(rv.timer$run)
     )
 
-    observe({
-      info("[server.R] timer = ", timer$timer())
-      info("[server.R] lapse_time = ", timer$lapse_time())
-    })
-
     observeEvent(timer$warn(), {
       info("[server.R] timer$warn = ", timer$warn())
       if (timer$warn() == 0) {
@@ -575,7 +604,7 @@ app_server <- function(input, output, session) {
     })
 
     r.timeout <- reactive({
-      timer$timeout() && auth$logged()
+      timer$timeout() && auth$logged
     })
 
     ## Choose type of referral modal upon timeout:
@@ -604,9 +633,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
       }
     })
 
-    shiny::observeEvent(auth$logged(), {
+    shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
-      logged <- auth$logged()
+      logged <- auth$logged
       info("[server.R & TIMEOUT>0] change in user log status : logged = ", logged)
 
       ## --------- start timer --------------

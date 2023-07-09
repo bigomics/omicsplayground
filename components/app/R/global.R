@@ -56,8 +56,10 @@ get_opg_root <- function() {
 ## Set folders
 
 OPG <- get_opg_root()
+ETC <- file.path(OPG, "etc")
 RDIR <- file.path(OPG, "components/base/R")
 APPDIR <- file.path(OPG, "components/app/R")
+ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 PGX.DIR <- file.path(OPG, "data")
@@ -114,8 +116,6 @@ library(magrittr)
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 
-
-
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
@@ -153,16 +153,11 @@ if (file.exists("global.R")) {
   source(file.path(OPG, "components/00SourceAll.R"), chdir = TRUE)
 }
 
-## You can add here new files explicitly, but eventually 00Headers.R
-## should contains all files. Update using .../dev/02_dev.R script.
-
-
-
 message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
-opt.file <- file.path(APPDIR, "OPTIONS")
+opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file) ## THIS IS GLOBAL!!!
 
@@ -171,13 +166,6 @@ if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
   auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
   message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ", auth)
   opt$AUTHENTICATION <- auth
-}
-
-
-if (opt$AUTHENTICATION %in% c("firebase", "email") && !file.exists("firebase.rds")) {
-  message("[GLOBAL] WARNING: Missing firebase.rds! reverting to 'password'")
-
-  stop("[GLOBAL] FATAL : missing firebase.rds file")
 }
 
 ## copy to global.R environment
@@ -196,20 +184,17 @@ message("************************************************")
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
-  "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell", "corr", "bio", "cmap",
-  "wgcna", "tcga", "comp", "user", "pcsf"
+  "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
+  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf"
 )
 if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
-## disable connectivity map if we have no signature database folder
-
 ## --------------------------------------------------------------------
 ## --------------------- HANDLER MANAGER ------------------------------
 ## --------------------------------------------------------------------
 ## add handlerManager for log/crash reports
-
 
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
