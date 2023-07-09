@@ -549,7 +549,7 @@ EmailLinkAuthenticationModule <- function(id,
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
-      method = "email",
+      method = "email-link",
       logged = FALSE,
       username = "",
       password = "",

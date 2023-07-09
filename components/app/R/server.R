@@ -54,7 +54,6 @@ app_server <- function(input, output, session) {
          !has.credentials) && authentication != "password" ) {
     credentials_file <- NULL
   }
-  dbg("[server.R:app_server] credentials_file =", credentials_file)
 
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
@@ -178,7 +177,7 @@ app_server <- function(input, output, session) {
     }
     userpgx <- PGX.DIR
     if (auth$options$ENABLE_USERDIR &&
-      authentication %in% c("email", "auth-email", "firebase")) {
+      authentication %in% c("email-link", "login-code", "firebase")) {
       userpgx <- file.path(PGX.DIR, auth$email)
     } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
@@ -478,8 +477,9 @@ app_server <- function(input, output, session) {
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
 
-      # check personal email
-      if (auth$method == "email") {
+      # check personal email for old users and ask them to change
+      # their email
+      if (auth$method %in% c("email-link","firebase","login-code")) {
         check_personal_email(auth, PGX.DIR)
       }
     } else {
