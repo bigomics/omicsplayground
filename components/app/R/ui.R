@@ -292,7 +292,7 @@ app_ui <- function() {
     div.chirp <- NULL
     if (opt$ENABLE_CHIRP) {
       div.chirp <- bsutils::offcanvas(
-        bsutils::offcanvasButton("Chirp!", id="actual-chirp-button", style="display:none;"),
+        bsutils::offcanvasButton("Chirp!", id = "actual-chirp-button", style = "display:none;"),
         bsutils::offcanvasContent(
           .position = "end",
           bslib::card(
@@ -330,7 +330,7 @@ app_ui <- function() {
           condition = "input.nav != 'welcome-tab'",
           shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
         ),
-        shiny::actionButton("chirp_button", "Chirp!", width="auto"),
+        shiny::actionButton("chirp_button", "Chirp!", width = "auto"),
         bigdash::navbarDropdown(
           "Support",
           bigdash::navbarDropdownItem(

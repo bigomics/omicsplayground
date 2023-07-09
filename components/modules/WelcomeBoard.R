@@ -23,11 +23,11 @@ WelcomeBoard <- function(id, auth, load_example) {
       name <- auth$username
       if (is.null(name) || name %in% c("", NA)) {
         ## welcome <- "Welcome back..."
-        welcome <- paste0("Welcome back! ",my.hello, "!")
+        welcome <- paste0("Welcome back! ", my.hello, "!")
       } else {
-        first.name <- getFirstName(name)  ## in app/R/utils.R
+        first.name <- getFirstName(name) ## in app/R/utils.R
         ## welcome <- paste0("Welcome back ", first.name, "...")
-        welcome <- paste0("Welcome back! ",my.hello, " ", first.name, "!")
+        welcome <- paste0("Welcome back! ", my.hello, " ", first.name, "!")
       }
       welcome
     })
@@ -130,7 +130,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div(          
+        div(
           shiny::textOutput(ns("welcome"), inline = TRUE),
           id = "welcome-text"
         ),

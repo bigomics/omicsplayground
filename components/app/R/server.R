@@ -150,8 +150,8 @@ app_server <- function(input, output, session) {
 
   ## Chatbox
   if (opt$ENABLE_CHIRP) {
-    observeEvent( input$chirp_button, {
-      shinyjs::click( id="actual-chirp-button" )
+    observeEvent(input$chirp_button, {
+      shinyjs::click(id = "actual-chirp-button")
     })
     r_chirp_name <- reactive({
       name <- auth$username
