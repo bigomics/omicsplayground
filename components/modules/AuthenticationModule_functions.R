@@ -159,8 +159,12 @@ checkAuthorizedUser <- function(email, credentials_file = NULL) {
 }
 
 checkValidEmailFormat <- function(email) {
-  if(is.null(email)) return(FALSE)
-  if(email %in% c(""," ",NA)) return(FALSE)  
+  if (is.null(email)) {
+    return(FALSE)
+  }
+  if (email %in% c("", " ", NA)) {
+    return(FALSE)
+  }
   grepl(".*@.*[.].*", email)
 }
 
@@ -187,5 +191,3 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
   }
   list(valid = TRUE, "email ok")
 }
-
-
