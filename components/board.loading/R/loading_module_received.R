@@ -13,8 +13,8 @@ upload_module_received_server <- function(id,
                                           pgx_shared_dir,
                                           getPGXDIR,
                                           max_datasets,
-                                          enable_delete = TRUE,
-                                          r_global) {
+                                          reload_pgxdir,
+                                          current_page) {
   shiny::moduleServer(
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
@@ -23,18 +23,22 @@ upload_module_received_server <- function(id,
 
       ## ------------ get received files
       getReceivedFiles <- shiny::reactive({
-        req(auth)
-        if (!auth$logged()) {
+        req(auth$logged)
+        if (!auth$logged) {
           return(c())
         }
-        if (auth$email() == "") {
+        if (auth$email == "") {
           return(c())
         }
         ## allow trigger for when a shared pgx is accepted / decline
         refresh_table()
+
+        current_user <- auth$email
+        if (auth$method == "password") current_user <- auth$username
         pgxfiles <- dir(
           path = pgx_shared_dir,
-          pattern = paste0("__to__", auth$email(), "__from__.*__$")
+          pattern = paste0("__to__", current_user, "__from__.*__$"),
+          ignore.case = TRUE
         )
         return(pgxfiles)
       })
@@ -48,9 +52,9 @@ upload_module_received_server <- function(id,
       }
 
       receivedPGXtable <- shiny::eventReactive(
-        c(r_global$nav, getReceivedFiles()),
+        c(current_page(), getReceivedFiles()),
         {
-          req(r_global$nav == "load-tab")
+          req(current_page() == "load-tab")
           shared_files <- getReceivedFiles()
           if (length(shared_files) == 0) {
             return(NULL)
@@ -126,7 +130,7 @@ upload_module_received_server <- function(id,
 
           ## check number of datasets
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-          if (!enable_delete) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
+          if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(max_datasets)
           if (numpgx >= maxpgx) {
             ## should use sprintf or glue here...
@@ -167,7 +171,11 @@ upload_module_received_server <- function(id,
           }
 
           ## reload pgx dir so the newly accepted pgx files are registered in user table
-          r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+          if (is.null(reload_pgxdir())) {
+            reload_pgxdir(1)
+          } else {
+            reload_pgxdir(reload_pgxdir() + 1)
+          }
 
           ## remove the accepted pgx from the table
           refresh_table(refresh_table() + 1)

@@ -140,13 +140,16 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
       ## filter with datatable active rows
       active_datasets <- info.table()$dataset[r_selected()]
       df <- df[which(df$dataset %in% active_datasets), , drop = FALSE]
-      dataset_pos <- dataset_pos[which(rownames(dataset_pos) %in% active_datasets), , drop = FALSE]
+      sel <- which(rownames(dataset_pos) %in% active_datasets)
+      dataset_pos <- dataset_pos[sel, , drop = FALSE]
 
       marker_size <- ifelse(nrow(df) > 60, 8, 11)
       marker_size <- ifelse(nrow(df) > 120, 5, marker_size)
       font_size <- marker_size**0.55 * 5
 
       fig <- plotly::plot_ly(
+        type = "scatter",
+        mode = "markers",
         data = df,
         x = ~x,
         y = ~y,
@@ -155,7 +158,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           ifelse(nrow(df), "<br>Comparison:", ""), comparison
         ),
         color = ~dataset,
-        #
         marker = list(
           size = marker_size,
           line = list(
@@ -165,9 +167,6 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         )
       )
 
-      dy <- diff(range(dataset_pos[, "y"]))
-      dbg("[loading_tsneplot.R] range.y=", dy)
-
       fig <- fig %>%
         plotly::add_annotations(
           x = dataset_pos[, "x"],
@@ -176,10 +175,9 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           font = list(size = font_size),
           xref = "x",
           yref = "y",
-          #
           xanchor = "middle",
           yanchor = "bottom",
-          yshift = 0.02 * dy,
+          yshift = 0,
           showarrow = FALSE
         )
 

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserSettingsBoard <- function(id, user) {
+UserSettingsBoard <- function(id, auth) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     dbg("[UserSettingsBoard] >>> initializing User Settings...")

@@ -27,14 +27,13 @@ upload_module_computepgx_server <- function(
     metaRT,
     lib.dir,
     pgx.dirRT,
+    auth,
     enable_button = TRUE,
-    enable_delete = TRUE,
     alertready = TRUE,
     max.genes = 20000,
     max.genesets = 10000,
     max.datasets = 100,
-    height = 720,
-    r_global) {
+    height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -323,7 +322,7 @@ upload_module_computepgx_server <- function(
 
         pgxdir <- pgx.dirRT()
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-        if (!opt$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
+        if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
         if (numpgx >= max.datasets) {
           ### should use sprintf here...
 
@@ -430,7 +429,8 @@ upload_module_computepgx_server <- function(
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
-        creator <- session$user
+        creator <- auth$email
+        if (auth$method == "password") creator <- auth$username
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         dbg("[ComputePgxModule.R] libx.dir = ", libx.dir)
 
@@ -624,7 +624,7 @@ upload_module_computepgx_server <- function(
           shiny::removeUI(selector = ".current-dataset > #spinner-container")
         }
 
-        MAX_DS_PROCESS = 1
+        MAX_DS_PROCESS <- 1
         if (process_counter() < MAX_DS_PROCESS) {
           shinyjs::enable("compute")
         } else {

@@ -3,32 +3,56 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, enable_upload, r_global) {
+WelcomeBoard <- function(id, auth, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-
-    getFirstName1 <- reactive({
-      name <- auth$name()
-      if(is.null(name) || is.na(name) || name=='') name <- auth$email()
-      getFirstName(name, session)  ## in app/R/utils.R
-    })
     
     output$welcome <- shiny::renderText({
-      name <- getFirstName1()
-      if(grepl("^user",name)) name <- ""
-      if (name %in% c("", NA, NULL,"anonymous")) {
-        welcome <- "Welcome back..."
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+
+      dbg("[WelcomeBoard:output$welcome] auth$username = ", auth$username)
+      dbg("[WelcomeBoard:output$welcome] auth$email = ", auth$email)
+
+      name <- auth$username
+      first.name <- getFirstName(name)  ## in app/R/utils.R
+      dbg("[WelcomeBoard:output$welcome] first.name = ", first.name)
+      
+      all.hello <- c(
+        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+      )
+      my.hello <- sample(all.hello, 1)
+
+      if (is.null(name) || name %in% c("", NA)) {
+        ## welcome <- "Welcome back..."
+        welcome <- paste0(my.hello, "!")
       } else {
-        welcome <- paste0("Welcome back ", name, "...")
+        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
+        first.name <- paste0(
+          toupper(substring(first.name, 1, 1)),
+          substring(first.name, 2, nchar(first.name))
+        )
+        ## welcome <- paste0("Welcome back ", first.name, "...")
+        welcome <- paste0(my.hello, " ", first.name, "!")
       }
       welcome
     })
 
     observeEvent(input$btn_example_data, {
-      r_global$load_example_trigger <- r_global$load_example_trigger + 1
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
     })
 
     observeEvent(input$btn_upload_data, {
+      shiny::req(auth$options)
+      enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
         bigdash.openSidebar()
         bigdash.selectTab(session, "upload-tab")
@@ -118,7 +142,10 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div(shiny::textOutput(ns("welcome")), id = "welcome-text"),
+        div("Welcome back",
+          shiny::textOutput(ns("welcome"), inline = TRUE),
+          id = "welcome-text"
+        ),
         div("What would you like to do today?", id = "welcome-subtext"),
         br(),
         br()

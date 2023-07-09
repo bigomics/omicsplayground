@@ -11,7 +11,7 @@ upload_module_shared_server <- function(id,
                                         auth,
                                         pgx_shared_dir,
                                         sendShareMessage,
-                                        r_global,
+                                        current_page,
                                         refresh) {
   shiny::moduleServer(
     id, function(input, output, session) {
@@ -21,11 +21,11 @@ upload_module_shared_server <- function(id,
 
       ## ------------ get received files
       getSharedFiles <- shiny::reactive({
-        req(auth)
-        if (!auth$logged()) {
+        req(auth$logged)
+        if (!auth$logged) {
           return(c())
         }
-        if (auth$email() == "") {
+        if (auth$email == "") {
           return(c())
         }
         ## allow trigger for when a shared pgx is accepted / decline
@@ -33,7 +33,8 @@ upload_module_shared_server <- function(id,
         refresh()
         pgxfiles <- dir(
           path = pgx_shared_dir,
-          pattern = paste0("__to__.*__from__", auth$email(), "__$")
+          pattern = paste0("__to__.*__from__", auth$email, "__$"),
+          ignore.case = TRUE
         )
         return(pgxfiles)
       })
@@ -47,9 +48,9 @@ upload_module_shared_server <- function(id,
       }
 
       sharedPGXtable <- shiny::eventReactive(
-        c(r_global$nav, getSharedFiles()),
+        c(current_page(), getSharedFiles()),
         {
-          req(r_global$nav == "load-tab")
+          req(current_page() == "load-tab")
           shared_files <- getSharedFiles()
           if (length(shared_files) == 0) {
             return(NULL)

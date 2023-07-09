@@ -58,6 +58,8 @@ logs/*.rds
 # Sensitive files #
 ####################
 firebase.rds
+chirp_data.db
+chirp_data.csv
 gmail_creds
 test-firestore.R
 .httr-oauth

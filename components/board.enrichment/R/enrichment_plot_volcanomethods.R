@@ -19,7 +19,7 @@ enrichment_plot_volcanomethods_ui <- function(
       placement = "right", options = list(container = "body")
     )
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     plotlib = "grid",
@@ -101,10 +101,10 @@ enrichment_plot_volcanomethods_server <- function(id,
           #
 
           ymax1 <- ymax
-          if(input$scale_per_method) {
-            ymax1 <- 1.2*quantile(xy[,2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
+          if (input$scale_per_method) {
+            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
           }
-          
+
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
             title = tt,

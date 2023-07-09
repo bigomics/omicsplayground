@@ -43,14 +43,6 @@ app_server <- function(input, output, session) {
   session.start_time <- -1
   authentication <- opt$AUTHENTICATION
 
-  limits <- c(
-    "samples" = opt$MAX_SAMPLES,
-    "comparisons" = opt$MAX_COMPARISONS,
-    "genes" = opt$MAX_GENES,
-    "genesets" = opt$MAX_GENESETS,
-    "datasets" = opt$MAX_DATASETS
-  )
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -105,224 +97,190 @@ app_server <- function(input, output, session) {
   PGX <- reactiveValues()
 
   ## Global reactive values for app-wide triggering
-  r_global <- reactiveValues(
-    load_example_trigger = 0,
-    reload_pgxdir = 0,
-    loadedDataset = 0
-  )
+  load_example <- reactiveVal(NULL)
+  load_uploaded_data <- reactiveVal(NULL)
+  reload_pgxdir <- reactiveVal(NULL)
 
-  # set the active tab and share it globally
-  observeEvent(input$nav, {
-    r_global$nav <- input$nav
-  })
+  ## Default boards ------------------------------------------
+  WelcomeBoard("welcome",
+    auth = auth,
+    load_example = load_example
+  )
+  env$user_profile <- UserProfileBoard("user_profile", auth = auth)
+  env$user_settings <- UserSettingsBoard("user_settings", auth = auth)
+
+  ## Do not display "Welcome" tab on the menu
+  bigdash.hideMenuItem(session, "welcome-tab")
+  shinyjs::runjs("sidebarClose()")
 
   ## Modules needed from the start
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
     auth = auth,
-    limits = limits,
     pgx_topdir = PGX.DIR,
-    enable_userdir = opt$ENABLE_USERDIR,
-    enable_pgxdownload = opt$ENABLE_PGX_DOWNLOAD,
-    enable_user_share = opt$ENABLE_USER_SHARE,
-    enable_delete = opt$ENABLE_DELETE,
-    enable_public_share = opt$ENABLE_PUBLIC_SHARE,
-    r_global = r_global
+    load_example = load_example,
+    reload_pgxdir = reload_pgxdir,
+    current_page = reactive(input$nav),
+    load_uploaded_data = load_uploaded_data
   )
 
   ## Modules needed from the start
   if (opt$ENABLE_UPLOAD) {
-    env$upload <- UploadBoard(
+    UploadBoard(
       id = "upload",
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
-      limits = limits,
-      enable_userdir = opt$ENABLE_USERDIR,
-      r_global = r_global
+      getPGXDIR = getPgxDir,
+      reload_pgxdir = reload_pgxdir,
+      load_uploaded_data = load_uploaded_data
     )
   }
-
-  getFirstName1 <- reactive({
-    name <- auth$name()
-    if(is.null(name) || is.na(name) || name=='') name <- auth$email()
-    getFirstName(name, session)  ## in app/R/utils.R
-  })
 
   ## Chatbox
   if(opt$ENABLE_CHIRP) {
+    r_chirp_name <- reactive({
+      name <- auth$username
+      if(is.null(name) || is.na(name) || name=='') name <- auth$email
+      if(is.null(name) || is.na(name) || name=='') {
+        name <- paste0("user",substring(session$token,1,3))
+      }
+      name <- getFirstName(name)  ## in app/R/utils.R
+    })
     shinyChatR::chat_server(
       "chatbox",
-      db_file = file.path(OPG,"etc/chirp_data.db"),
-      ##csv_file = file.path(OPG,"chirp_data.csv"),            
-      chat_user = getFirstName1
+      db_file = file.path(ETC,"chirp_data.db"),
+      ##csv_file = file.path(ETC,"chirp_data.csv"),            
+      chat_user = r_chirp_name
     )
   }
     
-  ## If user logs off, we clear the data
-  observeEvent(auth$logged(), {
-    is.logged <- auth$logged()
-    length.pgx <- length(names(PGX))
-    if (!is.logged && length.pgx > 0) {
-      for (i in 1:length.pgx) {
-        PGX[[names(PGX)[i]]] <<- NULL
-      }
-      session$user <- NA
-    }
-  })
-
-  is_data_loaded <- reactive({
-    has_data <- env$load$loaded()
-    if (opt$ENABLE_UPLOAD) has_data <- (has_data || env$upload$loaded())
-    has_data
-  })
 
   #' Get user-pgx folder
   getPgxDir <- reactive({
-    if (!auth$logged()) {
+    shiny::req(auth$logged)
+    if (!auth$logged) {
       return(NULL)
     }
     userpgx <- PGX.DIR
-    if (opt$ENABLE_USERDIR &&
+    if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("email", "auth-email", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email())
-    } else if (opt$ENABLE_USERDIR &&
+      userpgx <- file.path(PGX.DIR, auth$email)
+    } else if (auth$options$ENABLE_USERDIR &&
       authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$name())
+      userpgx <- file.path(PGX.DIR, auth$username)
     } else {
       userpgx <- PGX.DIR
     }
     userpgx
   })
 
-  ## Default boards ------------------------------------------
-  WelcomeBoard("welcome",
-    auth = auth,
-    enable_upload = opt$ENABLE_UPLOAD,
-    r_global = r_global
-  )
-  env$user_profile <- UserProfileBoard("user_profile", user = auth)
-  env$user_settings <- UserSettingsBoard("user_settings", user = auth)
-
-  ## Do not display "Welcome" tab on the menu
-  bigdash.hideMenuItem(session, "welcome-tab")
-  shinyjs::runjs("sidebarClose()")
-
   ## Modules needed after dataset is loaded (deferred) --------------
-  modules_loaded <- FALSE
-  observeEvent(is_data_loaded(), {
-    if (is_data_loaded() == 0) {
-      return(NULL)
-    }
-
-    if (modules_loaded) {
-      shiny::removeModal() ## remove modal from LoadingBoard
-      return(NULL)
-    }
-    modules_loaded <<- TRUE
-
-    additional_ui_tabs <- tagList(
-      bigdash::bigTabItem(
-        "dataview-tab",
-        DataViewInputs("dataview"),
-        DataViewUI("dataview")
-      ),
-      bigdash::bigTabItem(
-        "clustersamples-tab",
-        ClusteringInputs("clustersamples"),
-        ClusteringUI("clustersamples")
-      ),
-      bigdash::bigTabItem(
-        "clusterfeatures-tab",
-        FeatureMapInputs("clusterfeatures"),
-        FeatureMapUI("clusterfeatures")
-      ),
-      bigdash::bigTabItem(
-        "wgcna-tab",
-        WgcnaInputs("wgcna"),
-        WgcnaUI("wgcna")
-      ),
-      bigdash::bigTabItem(
-        "pcsf-tab",
-        PcsfInputs("pcsf"),
-        PcsfUI("pcsf")
-      ),
-      bigdash::bigTabItem(
-        "diffexpr-tab",
-        ExpressionInputs("diffexpr"),
-        ExpressionUI("diffexpr")
-      ),
-      bigdash::bigTabItem(
-        "corr-tab",
-        CorrelationInputs("corr"),
-        CorrelationUI("corr")
-      ),
-      bigdash::bigTabItem(
-        "enrich-tab",
-        EnrichmentInputs("enrich"),
-        EnrichmentUI("enrich")
-      ),
-      bigdash::bigTabItem(
-        "pathway-tab",
-        FunctionalInputs("pathway"),
-        FunctionalUI("pathway")
-      ),
-      bigdash::bigTabItem(
-        "wordcloud-tab",
-        WordCloudInputs("wordcloud"),
-        WordCloudUI("wordcloud")
-      ),
-      bigdash::bigTabItem(
-        "drug-tab",
-        DrugConnectivityInputs("drug"),
-        DrugConnectivityUI("drug")
-      ),
-      bigdash::bigTabItem(
-        "isect-tab",
-        IntersectionInputs("isect"),
-        IntersectionUI("isect")
-      ),
-      bigdash::bigTabItem(
-        "sig-tab",
-        SignatureInputs("sig"),
-        SignatureUI("sig")
-      ),
-      bigdash::bigTabItem(
-        "bio-tab",
-        BiomarkerInputs("bio"),
-        BiomarkerUI("bio")
-      ),
-      bigdash::bigTabItem(
-        "cmap-tab",
-        ConnectivityInputs("cmap"),
-        ConnectivityUI("cmap")
-      ),
-      bigdash::bigTabItem(
-        "comp-tab",
-        CompareInputs("comp"),
-        CompareUI("comp")
-      ),
-      bigdash::bigTabItem(
-        "tcga-tab",
-        TcgaInputs("tcga"),
-        TcgaUI("tcga")
-      ),
-      bigdash::bigTabItem(
-        "cell-tab",
-        SingleCellInputs("cell"),
-        SingleCellUI("cell")
+  observeEvent(env$load$is_data_loaded(), {
+    if (env$load$is_data_loaded() == 1) {
+      additional_ui_tabs <- tagList(
+        bigdash::bigTabItem(
+          "dataview-tab",
+          DataViewInputs("dataview"),
+          DataViewUI("dataview")
+        ),
+        bigdash::bigTabItem(
+          "clustersamples-tab",
+          ClusteringInputs("clustersamples"),
+          ClusteringUI("clustersamples")
+        ),
+        bigdash::bigTabItem(
+          "clusterfeatures-tab",
+          FeatureMapInputs("clusterfeatures"),
+          FeatureMapUI("clusterfeatures")
+        ),
+        bigdash::bigTabItem(
+          "wgcna-tab",
+          WgcnaInputs("wgcna"),
+          WgcnaUI("wgcna")
+        ),
+        bigdash::bigTabItem(
+          "pcsf-tab",
+          PcsfInputs("pcsf"),
+          PcsfUI("pcsf")
+        ),
+        bigdash::bigTabItem(
+          "diffexpr-tab",
+          ExpressionInputs("diffexpr"),
+          ExpressionUI("diffexpr")
+        ),
+        bigdash::bigTabItem(
+          "corr-tab",
+          CorrelationInputs("corr"),
+          CorrelationUI("corr")
+        ),
+        bigdash::bigTabItem(
+          "enrich-tab",
+          EnrichmentInputs("enrich"),
+          EnrichmentUI("enrich")
+        ),
+        bigdash::bigTabItem(
+          "pathway-tab",
+          FunctionalInputs("pathway"),
+          FunctionalUI("pathway")
+        ),
+        bigdash::bigTabItem(
+          "wordcloud-tab",
+          WordCloudInputs("wordcloud"),
+          WordCloudUI("wordcloud")
+        ),
+        bigdash::bigTabItem(
+          "drug-tab",
+          DrugConnectivityInputs("drug"),
+          DrugConnectivityUI("drug")
+        ),
+        bigdash::bigTabItem(
+          "isect-tab",
+          IntersectionInputs("isect"),
+          IntersectionUI("isect")
+        ),
+        bigdash::bigTabItem(
+          "sig-tab",
+          SignatureInputs("sig"),
+          SignatureUI("sig")
+        ),
+        bigdash::bigTabItem(
+          "bio-tab",
+          BiomarkerInputs("bio"),
+          BiomarkerUI("bio")
+        ),
+        bigdash::bigTabItem(
+          "cmap-tab",
+          ConnectivityInputs("cmap"),
+          ConnectivityUI("cmap")
+        ),
+        bigdash::bigTabItem(
+          "comp-tab",
+          CompareInputs("comp"),
+          CompareUI("comp")
+        ),
+        bigdash::bigTabItem(
+          "tcga-tab",
+          TcgaInputs("tcga"),
+          TcgaUI("tcga")
+        ),
+        bigdash::bigTabItem(
+          "cell-tab",
+          SingleCellInputs("cell"),
+          SingleCellUI("cell")
+        )
       )
-    )
 
-    shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
-      shiny::insertUI(
-        selector = "#big-tabs",
-        where = "beforeEnd",
-        ui = additional_ui_tabs,
-        immediate = TRUE
-      )
-    })
+      shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
+        shiny::insertUI(
+          selector = "#big-tabs",
+          where = "beforeEnd",
+          ui = additional_ui_tabs,
+          immediate = TRUE
+        )
+      })
+    }
 
     shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
       if (ENABLED["dataview"]) {
@@ -435,10 +393,11 @@ app_server <- function(input, output, session) {
       info("[server.R] calling modules done!")
     })
 
-    # this is a function - like "handleSettings()" in bigdash- needed to
-    # make the settings sidebar show up for the inserted tabs
-    shinyjs::runjs(
-      "  $('.big-tab')
+    if (env$load$is_data_loaded() == 1) {
+      # this is a function - like "handleSettings()" in bigdash- needed to
+      # make the settings sidebar show up for the inserted tabs
+      shinyjs::runjs(
+        "  $('.big-tab')
     .each((index, el) => {
       let settings = $(el)
         .find('.tab-settings')
@@ -447,15 +406,16 @@ app_server <- function(input, output, session) {
       $(settings).data('target', $(el).data('name'));
       $(settings).appendTo('#settings-content');
     });"
-    )
+      )
+    }
+
     bigdash.selectTab(session, selected = "dataview-tab")
     bigdash.openSettings()
 
     ## remove loading modal from LoadingBoard
     shiny::removeModal()
 
-    # show hidden tabs
-    bigdash.showTabsGoToDataView(session) # see ui-bigdashplus.R
+    bigdash.showTabsGoToDataView(session)
   })
 
 
@@ -472,10 +432,15 @@ app_server <- function(input, output, session) {
   })
 
   output$current_user <- shiny::renderText({
+    shiny::req(auth$logged)
+    if (!auth$logged) {
+      return("(nobody)")
+    }
     ## trigger on change of user
-    user <- auth$email()
-    if (user %in% c("", NA, NULL)) user <- auth$name()
-    if (user %in% c("", NA, NULL)) user <- "User"
+    user <- auth$email
+    dbg("[server:output$current_user] user = ", user)
+    if (is.null(user) || user %in% c("", NA)) user <- auth$username
+    if (is.null(user) || user %in% c("", NA)) user <- "User"
     user
   })
 
@@ -490,11 +455,31 @@ app_server <- function(input, output, session) {
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
 
-  bigdash.toggleTab(session, "upload-tab", opt$ENABLE_UPLOAD)
+  ## upon change of user
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      bigdash.toggleTab(session, "upload-tab", enable_upload)
 
+      # check personal email
+      if (auth$method == "email") {
+        check_personal_email(auth, PGX.DIR)
+      }
+    } else {
+      # clear PGX data when user logs out
+      length.pgx <- length(names(PGX))
+      if (length.pgx > 0) {
+        for (i in 1:length.pgx) {
+          PGX[[names(PGX)[i]]] <<- NULL
+        }
+      }
+    }
+  })
+
+  ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
-      auth$logged()
+      auth$logged
       env$user_settings$enable_beta()
       PGX$name
     },
@@ -505,7 +490,7 @@ app_server <- function(input, output, session) {
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-      is.logged <- auth$logged()
+      is.logged <- auth$logged
 
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {
@@ -534,18 +519,16 @@ app_server <- function(input, output, session) {
       ## Dynamically show upon availability in pgx object
       info("[server.R] disabling extra features")
       tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-##      tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
+      ##      tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
       tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
       tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
       tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
 
       ## DEVELOPER only tabs (still too alpha)
       info("[server.R] disabling alpha features")
-      toggleTab("corr-tabs", "Functional", DEV) ## too slow
-      toggleTab("corr-tabs", "Differential", DEV)
-      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
-      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
-      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
+      #      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
 
       info("[server.R] trigger on change dataset done!")
     }
@@ -584,11 +567,6 @@ app_server <- function(input, output, session) {
       run = reactive(rv.timer$run)
     )
 
-    observe({
-      info("[server.R] timer = ", timer$timer())
-      info("[server.R] lapse_time = ", timer$lapse_time())
-    })
-
     observeEvent(timer$warn(), {
       info("[server.R] timer$warn = ", timer$warn())
       if (timer$warn() == 0) {
@@ -607,7 +585,7 @@ app_server <- function(input, output, session) {
     })
 
     r.timeout <- reactive({
-      timer$timeout() && auth$logged()
+      timer$timeout() && auth$logged
     })
 
     ## Choose type of referral modal upon timeout:
@@ -636,9 +614,9 @@ Upgrade today and experience advanced analysis features without the time limit.<
       }
     })
 
-    shiny::observeEvent(auth$logged(), {
+    shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
-      logged <- auth$logged()
+      logged <- auth$logged
       info("[server.R & TIMEOUT>0] change in user log status : logged = ", logged)
 
       ## --------- start timer --------------
@@ -694,32 +672,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## -------------------------------------------------------------
   ## Session logout functions
   ## -------------------------------------------------------------
-
-  shiny::observe({
-    ## trigger on change of USER
-    logged <- auth$logged()
-    info("[server.R] change in user log status : logged = ", logged)
-
-    if (logged) {
-      session$user <- auth$email()
-    } else {
-      session$user <- "nobody"
-    }
-
-    ## This checks for personal email adress and asks to change to
-    ## a business email adress. This will affect also old users.
-    if (opt$AUTHENTICATION == "email" && logged) {
-      check_personal_email(auth, PGX.DIR)
-    }
-
-    ## --------- force logout callback??? --------------
-    if (!opt$AUTHENTICATION %in% c("firebase", "email") && !logged) {
-      ## Forcing logout ensures "clean" sessions. For firebase
-      ## we allow sticky sessions.
-      message("[server.R] user not logged in? forcing logout() JS callback...")
-      shinyjs::runjs("logout()")
-    }
-  })
 
   ## logout helper function
   logout.JScallback <- "logout()"
