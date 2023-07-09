@@ -6,7 +6,7 @@
 
 #'
 #'
-#' 
+#'
 check_personal_email <- function(auth, pgx_dir, title = NULL, text = NULL) {
   email <- auth$email
   is_personal_email <- grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", email)

@@ -481,7 +481,7 @@ app_server <- function(input, output, session) {
 
       # check personal email for old users and ask them to change
       # their email
-      if (auth$method %in% c("email-link","firebase","login-code")) {
+      if (auth$method %in% c("email-link", "firebase", "login-code")) {
         check_personal_email(auth, PGX.DIR)
       }
     } else {
