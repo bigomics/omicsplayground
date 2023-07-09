@@ -67,8 +67,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         return(res)
       })
 
-      getPathwayImage <- function(only_id = FALSE) {
-
+      getPathwayImage <- shiny::reactive({
         res <- plot_data()
         shiny::req(res, res$df)
 
@@ -125,10 +124,6 @@ functional_plot_wikipathway_graph_server <- function(id,
           pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
 
-        # if(only_id) {
-        #   return(pathway.id)
-        # }
-
         if (!interactive()) {
           progress <- shiny::Progress$new()
           on.exit(progress$close())
@@ -145,7 +140,7 @@ functional_plot_wikipathway_graph_server <- function(id,
           width = "100%", height = "100%", ## actual size: 1040x800
           alt = "wikipathway SVG"
         )
-      }
+      })
 
       # WPembed_frame <- function(){
       #   shiny::div(
