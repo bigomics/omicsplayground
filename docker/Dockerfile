@@ -32,6 +32,8 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 WORKDIR /
 #RUN pip3 install umap-learn
 #RUN R -e "devtools::install_github('m-jahn/fluctuator')"
+RUN R -e "devtools::install_github('bigomics/shinyChatR')"
+RUN R -e "devtools::install_github('JohnCoene/bsutils')"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
 RUN R -e "BiocManager::install(c('topGO','survcomp'))"
 RUN R -e "install.packages(c('BH','plsRcox'))"  

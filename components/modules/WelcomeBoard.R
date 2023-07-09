@@ -6,7 +6,7 @@
 WelcomeBoard <- function(id, auth, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-
+    
     output$welcome <- shiny::renderText({
       shiny::req(auth$logged)
       if (!auth$logged) {
@@ -14,7 +14,8 @@ WelcomeBoard <- function(id, auth, load_example) {
       }
 
       name <- auth$username
-
+      first.name <- getFirstName(name)  ## in app/R/utils.R
+      
       all.hello <- c(
         "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
         "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
@@ -66,6 +67,8 @@ WelcomeBoard <- function(id, auth, load_example) {
       bigdash.openSidebar()
       bigdash.selectTab(session, "load-tab")
     })
+
+    
   })
 }
 
@@ -120,11 +123,11 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Created with love"), br(),
         "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-        br(), "Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
+        br(), "© 2000-2023 BigOmics Analytics, Inc.", br(),
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )
-
+  
   ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",

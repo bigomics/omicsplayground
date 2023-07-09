@@ -56,6 +56,7 @@ get_opg_root <- function() {
 ## Set folders
 
 OPG <- get_opg_root()
+ETC <- file.path(OPG, "etc")
 RDIR <- file.path(OPG, "components/base/R")
 APPDIR <- file.path(OPG, "components/app/R")
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
