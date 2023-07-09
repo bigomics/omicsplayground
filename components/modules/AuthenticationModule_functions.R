@@ -4,7 +4,7 @@
 ##
 
 
-create_or_read_user_options <- function(user_dir) {
+read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
   if (!file.exists(user_opt_file)) {
@@ -18,7 +18,6 @@ create_or_read_user_options <- function(user_dir) {
   }
   new_opt
 }
-
 
 upgrade.dialog <- function(ns, current.plan) {
   btn_basic <- "Go Basic!"
@@ -182,7 +181,7 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
   }
   if (check.personal) {
     if (checkPersonalEmail(email)) {
-      return(list(valid = FALSE, msg = "No personal email allowed. Please provide your business, academic or institutional email."))
+      return(list(valid = FALSE, msg = "No personal email allowed. Please use your business, academic or institutional email."))
     }
   }
   list(valid = TRUE, "email ok")

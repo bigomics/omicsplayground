@@ -62,7 +62,7 @@ NoAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # set options
-        USER$options <- create_or_read_user_options(PGX.DIR)
+        USER$options <- read_user_options(PGX.DIR)
       })
 
       observeEvent(input$userLogout, {
@@ -122,6 +122,8 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     resetUSER <- function() {
+
+      dbg("[FirebaseAuthenticationModule] resetUSER ")      
       USER$logged <- FALSE
       USER$username <- ""
       USER$password <- ""
@@ -157,7 +159,7 @@ FirebaseAuthenticationModule <- function(id,
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
         # set options
-        USER$options <- create_or_read_user_options(
+        USER$options <- read_user_options(
           file.path(PGX.DIR, USER$email)
         )
         return()
@@ -167,7 +169,7 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     observeEvent(input$userLogout, {
-      message("[FirebaseAuthenticationModule] userLogout triggered!")
+      dbg("[FirebaseAuthenticationModule] oberveEvent:userLogout triggered!")
       resetUSER()
     })
 
@@ -191,6 +193,7 @@ FirebaseAuthenticationModule <- function(id,
       check <- checkEmail(input$emailInput, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
+        shiny::updateTextInput(session, "emailInput", value = "")
         sendEmailLink(NULL)
         email_waiter$hide()
         return(NULL)
@@ -214,18 +217,18 @@ FirebaseAuthenticationModule <- function(id,
       response <- firebase$get_signed_in()
 
       if (!response$success) {
-        warning("[FirebaseAuthenticationModule] sign in NOT succesful")
+        info("[FirebaseAuthenticationModule] WARNING : Firebase sign in NOT succesful")
         resetUSER()
         return()
       }
-
+      
       ## even if the response is fine, we still need to check against
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
       user_email <- response$response$email
       check2 <- checkEmail(user_email, domain, credentials_file)
       if (!check2$valid) {
-        dbg("[Auth:observeEvent(firebase$get_signed_in()] check2$msg = ", check2$msg)
+
         shinyalert::shinyalert(
           title = "",
           text = paste("Sorry.", check2$msg),
@@ -236,7 +239,7 @@ FirebaseAuthenticationModule <- function(id,
       }
 
       on.exit({
-        dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
+        dbg("[FirebaseAuthenticationModule:Obsev(get_signed_in())] on.exit")
         if (USER$logged) removeModal()
       })
 
@@ -251,7 +254,7 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
-      USER$options <- create_or_read_user_options(
+      USER$options <- read_user_options(
         file.path(PGX.DIR, USER$email)
       )
 
@@ -461,23 +464,15 @@ EmailLinkAuthenticationModule <- function(id,
     observeEvent(input$emailSubmit, {
       email_waiter$show()
 
-      on.exit({
-        shiny::updateTextInput(session, "emailInput", value = "")
-        email_waiter$hide()
-      })
-
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
-
-      ## if it is a new user we check their email, old users can go
-      existing_user_dirs <- basename(list.dirs(pgx_dir))
-      new_user <- !(input$emailInput %in% existing_user_dirs)
-      if (new_user) {
-        check <- checkEmail(input$emailInput, domain, credentials_file, check.personal = TRUE)
-        if (!check$valid) {
-          js.emailFeedbackMessage(session, check$msg, "error")
-          return(NULL)
-        }
+      check <- checkEmail(input$emailInput, domain, credentials_file)
+      if (!check$valid) {
+        js.emailFeedbackMessage(session, check$msg, "error")
+        shiny::updateTextInput(session, "emailInput", value = "")        
+        sendEmailLink(NULL)
+        email_waiter$hide()
+        return(NULL)
       }
 
       ## >>> OK let's send auth request
@@ -519,7 +514,7 @@ EmailLinkAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # set options
-      USER$options <- create_or_read_user_options(
+      USER$options <- read_user_options(
         file.path(PGX.DIR, USER$email)
       )
 
@@ -624,7 +619,7 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # set options
-        USER$options <- create_or_read_user_options(
+        USER$options <- read_user_options(
           file.path(PGX.DIR, USER$username)
         )
 
@@ -841,7 +836,7 @@ LoginCodeAuthenticationModule <- function(id,
           message("[LoginCodeAuthenticationModule::login] 3 : login OK! ")
           output$login_warning <- shiny::renderText("")
           USER$logged <- TRUE
-          USER$options <- create_or_read_user_options(
+          USER$options <- read_user_options(
             file.path(PGX.DIR, USER$email)
           )
           session$sendCustomMessage("set-user", list(user = USER$username))
