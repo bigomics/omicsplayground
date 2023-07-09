@@ -119,6 +119,7 @@ upgrade.dialog <- function(ns, current.plan) {
   ) ## modalDialog
 }
 
+
 js.emailFeedbackMessage <- function(session, msg, type = "error") {
   session$sendCustomMessage(
     "email-feedback",
@@ -128,6 +129,10 @@ js.emailFeedbackMessage <- function(session, msg, type = "error") {
     )
   )
 }
+
+##-----------------------------------------------------------------
+## Email checking functions
+##-----------------------------------------------------------------
 
 checkAuthorizedDomain <- function(email, domain) {
   if (is.null(domain) || domain == "" || domain == "*") {
@@ -172,7 +177,6 @@ checkPersonalEmail <- function(email) {
 }
 
 checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {
-  dbg("[AuthenticationModule:checkEmail]")
   chk <- list()
   if (!checkValidEmailFormat(email)) {
     return(list(valid = FALSE, msg = "not a valid email"))
@@ -190,3 +194,9 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
   }
   list(valid = TRUE, "email ok")
 }
+
+
+
+## ================================================================================
+## ================================= END OF FILE ==================================
+## ================================================================================
