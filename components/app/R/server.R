@@ -48,15 +48,15 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   auth <- NULL ## shared in module
-  credentials_file <- file.path(ETC,"CREDENTIALS")
+  credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
-  if(is.null(opt$USE_CREDENTIALS)
-    || !opt$USE_CREDENTIALS
-    || !has.credentials ) {
+  if (is.null(opt$USE_CREDENTIALS) ||
+    !opt$USE_CREDENTIALS ||
+    !has.credentials) {
     credentials_file <- NULL
   }
   dbg("[server.R:app_server] credentials_file =", credentials_file)
-  
+
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
@@ -77,7 +77,7 @@ app_server <- function(input, output, session) {
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
-      mail_creds = file.path(ETC,"gmail_creds"),
+      mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
       credentials_file = credentials_file
     )
@@ -429,7 +429,9 @@ app_server <- function(input, output, session) {
     }
     ## trigger on change of user
     shiny::req(auth$logged)
-    if(!auth$logged) return("(not logged in)")
+    if (!auth$logged) {
+      return("(not logged in)")
+    }
     user <- auth$email
     dbg("[server:output$current_user] user = ", user)
     if (is.null(user) || user %in% c("", NA)) user <- auth$username

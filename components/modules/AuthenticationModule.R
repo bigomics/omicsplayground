@@ -205,19 +205,27 @@ js.emailFeedbackMessage <- function(session, msg, type = "error") {
 }
 
 checkAuthorizedDomain <- function(email, domain) {
-  if (is.null(domain) || domain == "" || domain=="*") return(TRUE)
-  domain1 <- strsplit(domain, split="\\|")[[1]]
-  domain1 <- paste0(paste0("@",domain1,"$"),collapse="|")
+  if (is.null(domain) || domain == "" || domain == "*") {
+    return(TRUE)
+  }
+  domain1 <- strsplit(domain, split = "\\|")[[1]]
+  domain1 <- paste0(paste0("@", domain1, "$"), collapse = "|")
   authorized <- grepl(domain1, email)
   authorized
 }
 
-checkAuthorizedUser <- function(email, credentials_file=NULL) {
-  if(is.null(credentials_file) || credentials_file==FALSE) return(TRUE)
-  if (!file.exists(credentials_file)) return(TRUE)
+checkAuthorizedUser <- function(email, credentials_file = NULL) {
+  if (is.null(credentials_file) || credentials_file == FALSE) {
+    return(TRUE)
+  }
+  if (!file.exists(credentials_file)) {
+    return(TRUE)
+  }
   CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
   valid_user <- email %in% CREDENTIALS$email
-  if(!valid_user) return(FALSE)
+  if (!valid_user) {
+    return(FALSE)
+  }
   sel <- match(email, CREDENTIALS$email)
   valid_date <- as.Date(CREDENTIALS$expiry[sel]) > as.Date(Sys.time())
   authorized <- valid_user && valid_date
@@ -229,27 +237,27 @@ checkValidEmailFormat <- function(email) {
 }
 
 checkPersonalEmail <- function(email) {
-  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn",email)
+  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn", email)
 }
 
-checkEmail <- function(email, domain=NULL, credentials_file=NULL, check.personal=TRUE) {
+checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {
   dbg("[AuthenticationModule:checkEmail]")
   chk <- list()
-  if(!checkValidEmailFormat(email)) {
-    return( list(valid=FALSE, msg="not a valid email"))
+  if (!checkValidEmailFormat(email)) {
+    return(list(valid = FALSE, msg = "not a valid email"))
   }
-  if(!checkAuthorizedDomain(email, domain)) {
-    return( list(valid=FALSE, msg="domain not authorized"))
+  if (!checkAuthorizedDomain(email, domain)) {
+    return(list(valid = FALSE, msg = "domain not authorized"))
   }
-  if(!checkAuthorizedUser(email, credentials_file)) {
-    return( list(valid=FALSE, msg="not authorized user"))
+  if (!checkAuthorizedUser(email, credentials_file)) {
+    return(list(valid = FALSE, msg = "not authorized user"))
   }
-  if(check.personal) {
-    if(heckPersonalEmail(email)) {
-      return( list(valid=FALSE, msg="No personal email allowed. Please provide your business, academic or institutional email."))
+  if (check.personal) {
+    if (heckPersonalEmail(email)) {
+      return(list(valid = FALSE, msg = "No personal email allowed. Please provide your business, academic or institutional email."))
     }
   }
-  list(valid=TRUE,"email ok")
+  list(valid = TRUE, "email ok")
 }
 
 
@@ -281,7 +289,7 @@ FirebaseAuthenticationModule <- function(id,
       uid = NULL,
       stripe_id = NULL,
       href = NULL,
-      options = opt      
+      options = opt
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -357,14 +365,13 @@ FirebaseAuthenticationModule <- function(id,
     sendEmailLink <- reactiveVal(NULL)
 
     observeEvent(input$emailSubmit, {
-
       shiny::req(input$emailInput)
       email_waiter$show()
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       ## or against a subscription list.
-      check <- checkEmail(login_email, domain, credentials_file)        
+      check <- checkEmail(login_email, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         sendEmailLink(NULL)
@@ -399,18 +406,18 @@ FirebaseAuthenticationModule <- function(id,
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
       user_email <- response$response$email
-      check2 <- checkEmail(user_email, domain, credentials_file)        
+      check2 <- checkEmail(user_email, domain, credentials_file)
       if (!check2$valid) {
-        dbg("[Auth:observeEvent(firebase$get_signed_in()] check2$msg = ",check2$msg)
+        dbg("[Auth:observeEvent(firebase$get_signed_in()] check2$msg = ", check2$msg)
         shinyalert::shinyalert(
           title = "",
-          text = paste("Sorry.",check2$msg),
+          text = paste("Sorry.", check2$msg),
           size = "xs"
-        )        
+        )
         ## js.emailFeedbackMessage(session, check2$msg, "error")
         return(NULL)
       }
-      
+
       on.exit({
         dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")
         if (USER$logged) removeModal()
@@ -483,7 +490,7 @@ FirebaseAuthenticationModule <- function(id,
       session$sendCustomMessage("manage-sub", content$url)
     })
 
-    observeEvent( input$launchFacebook,{
+    observeEvent(input$launchFacebook, {
       shinyalert::shinyalert(
         title = "",
         text = "Sorry. Facebook login is not yet avaible.",
@@ -491,7 +498,7 @@ FirebaseAuthenticationModule <- function(id,
       )
     })
 
-    observeEvent( input$launchApple,{
+    observeEvent(input$launchApple, {
       shinyalert::shinyalert(
         title = "",
         text = "Sorry. Apple login is not yet avaible.",
@@ -499,15 +506,15 @@ FirebaseAuthenticationModule <- function(id,
       )
     })
 
-    observeEvent( input$launchMicrosoft,{
+    observeEvent(input$launchMicrosoft, {
       shinyalert::shinyalert(
         title = "",
         text = "Sorry. Microsoft login is not yet avaible.",
         size = "xs"
       )
     })
-    
-    observeEvent( input$launchTwitter,{
+
+    observeEvent(input$launchTwitter, {
       shinyalert::shinyalert(
         title = "",
         text = "Sorry. Twitter login is not yet avaible.",
@@ -515,10 +522,9 @@ FirebaseAuthenticationModule <- function(id,
       )
     })
 
-        
+
     return(USER)
   })
-
 }
 
 ## ================================================================================
@@ -539,8 +545,8 @@ EmailLinkAuthenticationModule <- function(id,
       stop("[FATAL ERROR] no firebase.rds file found. please create.")
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
-    if(!is.null(credentials_file) && credentials_file==FALSE) credentials_file <- NULL
-    
+    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
+
     ns <- session$ns
     USER <- shiny::reactiveValues(
       method = "email",
@@ -554,7 +560,7 @@ EmailLinkAuthenticationModule <- function(id,
       uid = NA,
       stripe_id = NA,
       href = NA,
-      options = opt      
+      options = opt
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -642,7 +648,7 @@ EmailLinkAuthenticationModule <- function(id,
         shiny::updateTextInput(session, "emailInput", value = "")
         email_waiter$hide()
       })
-    
+
       if (input$emailInput == "") {
         js.emailFeedbackMessage(session, "Missing email", "error")
         return()
@@ -675,11 +681,11 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(input$emailInput)  ## can take a while...
+      sendEmailLink(input$emailInput) ## can take a while...
     })
 
     observeEvent(sendEmailLink(),
-    {
+      {
         firebase2$send_email(sendEmailLink())
         sendEmailLink(NULL)
         email_waiter$hide()
@@ -734,7 +740,7 @@ PasswordAuthenticationModule <- function(id,
     message("[AuthenticationModule] >>>> using password authentication <<<<")
 
     ns <- session$ns
-    if(!is.null(credentials_file) && credentials_file==FALSE) credentials_file <- NULL
+    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     USER <- shiny::reactiveValues(
       method = "password",
@@ -756,7 +762,7 @@ PasswordAuthenticationModule <- function(id,
       subtitle = "Ready to explore your data?",
       button.text = "Start!"
     )
-    shiny::showModal(login_modal)  ## need first time
+    shiny::showModal(login_modal) ## need first time
 
     resetUSER <- function() {
       USER$logged <- FALSE
@@ -856,18 +862,17 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
-                                          credentials_file = NULL
-                                          ) {
+                                          credentials_file = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
     ## user mail_creds="" for dry-run
-    if(!file.exists(mail_creds)) {
+    if (!file.exists(mail_creds)) {
       ## we continue but email is not working
       warning("[LoginCodeAuthenticationModule] ERROR : missing mail_creds file!!!")
     }
-    if(!is.null(credentials_file) && credentials_file==FALSE) credentials_file <- NULL
-    
+    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
+
     ns <- session$ns
     USER <- shiny::reactiveValues(
       method = "login-code",
@@ -876,23 +881,23 @@ LoginCodeAuthenticationModule <- function(id,
       email = NA,
       level = "",
       limit = "",
-      options = opt  ## global
+      options = opt ## global
     )
 
     email_sent <- FALSE
     login_code <- NULL
-        
+
     login_modal <- splashLoginModal(
-        ns = ns,
-        with.email = TRUE,
-        with.username = FALSE,
-        with.password = FALSE,
-        title = "Enter Email",
-        subtitle = "To register or sign in, enter your email and we'll send you a login code.",
-        button.text = "Send code!"
-      )
-    shiny::showModal(login_modal)  ## need first time
-    
+      ns = ns,
+      with.email = TRUE,
+      with.username = FALSE,
+      with.password = FALSE,
+      title = "Enter Email",
+      subtitle = "To register or sign in, enter your email and we'll send you a login code.",
+      button.text = "Send code!"
+    )
+    shiny::showModal(login_modal) ## need first time
+
     resetUSER <- function() {
       USER$logged <- FALSE
       USER$username <- NA
@@ -903,8 +908,8 @@ LoginCodeAuthenticationModule <- function(id,
 
       email_sent <<- FALSE
       login_code <<- NULL
-      updateTextInput(session, "login_email", value="")
-      updateTextInput(session, "login_password", value="")
+      updateTextInput(session, "login_email", value = "")
+      updateTextInput(session, "login_password", value = "")
       shiny::showModal(login_modal)
     }
 
@@ -927,7 +932,7 @@ LoginCodeAuthenticationModule <- function(id,
 <p>Thanks,
 
 <p>BigOmics Team"
-)
+            )
           ),
           footer = blastula::md(
             "BigOmics - Advanced omics analysis for everyone."
@@ -948,19 +953,18 @@ LoginCodeAuthenticationModule <- function(id,
 
     output$login_warning <- shiny::renderText("")
 
-    ##--------------------------------------
+    ## --------------------------------------
     ## Step 1: react on send email button
-    ##--------------------------------------    
-    shiny::observeEvent( input$login_btn, {
+    ## --------------------------------------
+    shiny::observeEvent(input$login_btn, {
       shiny::req(input$login_email)
-      
-      if(!email_sent) {
 
+      if (!email_sent) {
         login_email <- input$login_email
-        
+
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
-        check <- checkEmail(login_email, domain, credentials_file)        
+        check <- checkEmail(login_email, domain, credentials_file)
         if (!check$valid) {
           output$login_warning <- shiny::renderText(check$msg)
           shinyjs::delay(3000, {
@@ -969,16 +973,16 @@ LoginCodeAuthenticationModule <- function(id,
           return(NULL)
         }
 
-        
+
         ## MAIL CODE TO USER
-        ##login_code <- "hello123"
-        ##login_code <<- paste0(sample(c(letters,LETTERS,0:9),12),collapse='')
-        login_code <<- paste0(sample(c(LETTERS),6),collapse='')
-        dbg("[LoginCodeAuthenticationModule:observeEvent( input$login_btn] new_code = ",login_code)
-        sendLoginCode(login_email, login_code, mail_creds=mail_creds)           
+        ## login_code <- "hello123"
+        ## login_code <<- paste0(sample(c(letters,LETTERS,0:9),12),collapse='')
+        login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
+        dbg("[LoginCodeAuthenticationModule:observeEvent( input$login_btn] new_code = ", login_code)
+        sendLoginCode(login_email, login_code, mail_creds = mail_creds)
         USER$email <- login_email
-        USER$username  <- login_email
-        USER$logged  <- FALSE
+        USER$username <- login_email
+        USER$logged <- FALSE
         email_sent <<- TRUE
 
         ## change buttons and field
@@ -991,38 +995,36 @@ LoginCodeAuthenticationModule <- function(id,
           subtitle = "Enter the login code that we have just sent to you.",
           button.text = "Submit",
           add.cancel = TRUE,
-          cancel.text = "Cancel"          
+          cancel.text = "Cancel"
         )
         shiny::showModal(login_modal2)
-        updateTextInput(session, "login_email", value="")
-        updateTextInput(session, "login_password", value="", placeholder="enter code")
-        
+        updateTextInput(session, "login_email", value = "")
+        updateTextInput(session, "login_password", value = "", placeholder = "enter code")
+
         shinyalert::shinyalert(
-          title="",
-          text="We have emailed you a login code. Please check your mailbox.",
+          title = "",
+          text = "We have emailed you a login code. Please check your mailbox.",
           size = "xs"
         )
-
       }
     })
 
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
-    entered_code <- reactiveVal("")  
+    entered_code <- reactiveVal("")
     observeEvent(input$login_password, {
       entered_code(input$login_password)
     })
 
-    ##--------------------------------------
+    ## --------------------------------------
     ## Step 2: react on submit CODE button
-    ##--------------------------------------
+    ## --------------------------------------
     shiny::observeEvent(input$login_btn, {
-      ##shiny::req(input$login_password)
-      shiny::req(entered_code())      
-      
-      if(email_sent) {
+      ## shiny::req(input$login_password)
+      shiny::req(entered_code())
 
-        #input_code <- input$login_password
+      if (email_sent) {
+        # input_code <- input$login_password
         input_code <- entered_code()
         login.OK <- (input_code == login_code)
 
@@ -1031,10 +1033,10 @@ LoginCodeAuthenticationModule <- function(id,
           shinyjs::delay(2000, {
             output$login_warning <- shiny::renderText("")
           })
-          updateTextInput(session, "login_password", value="")
+          updateTextInput(session, "login_password", value = "")
           return(NULL)
         }
-        
+
         if (login.OK) {
           message("[LoginCodeAuthenticationModule::login] 3 : login OK! ")
           output$login_warning <- shiny::renderText("")
@@ -1043,8 +1045,8 @@ LoginCodeAuthenticationModule <- function(id,
             file.path(PGX.DIR, USER$email)
           )
           session$sendCustomMessage("set-user", list(user = USER$username))
-          entered_code("")  ## important for next user
-          
+          entered_code("") ## important for next user
+
           shiny::removeModal()
         }
       }
@@ -1053,7 +1055,7 @@ LoginCodeAuthenticationModule <- function(id,
     shiny::observeEvent(input$cancel_btn, {
       resetUSER()
     })
-    
+
     observeEvent(input$userLogout, {
       resetUSER()
     })
@@ -1119,7 +1121,7 @@ splashLoginModal <- function(ns = NULL,
                              with.firebase = FALSE,
                              with.firebase_emailonly = FALSE,
                              button.text = "Login",
-                             cancel.text = "cancel",                             
+                             cancel.text = "cancel",
                              add.cancel = FALSE,
                              title = "Log in",
                              subtitle = "") {
@@ -1229,7 +1231,7 @@ splashLoginModal <- function(ns = NULL,
           actionLink(
             ns("launchGoogle"),
             HTML("&nbsp; Sign in with Google"),
-            icon = shiny::icon("google", style="font-size:18px;")
+            icon = shiny::icon("google", style = "font-size:18px;")
           )
         ),
         div(
@@ -1237,7 +1239,7 @@ splashLoginModal <- function(ns = NULL,
           actionLink(
             ns("launchFacebook"),
             HTML("&nbsp; Sign in with Facebook"),
-            icon = shiny::icon("facebook", style="font-size:18px;")
+            icon = shiny::icon("facebook", style = "font-size:18px;")
           )
         ),
         ## div(
@@ -1253,10 +1255,9 @@ splashLoginModal <- function(ns = NULL,
           actionLink(
             ns("launchTwitter"),
             HTML("&nbsp; Sign in with Twitter"),
-            icon = shiny::icon("twitter", style="font-size:18px;")
+            icon = shiny::icon("twitter", style = "font-size:18px;")
           )
         )
-
       )
     )
   }
@@ -1306,17 +1307,21 @@ splashLoginModal <- function(ns = NULL,
     )
   }
 
-  if(add.cancel) {
+  if (add.cancel) {
     div.button <- div(
       id = "splash-buttons",
       class = "pt-2",
       shiny::fillRow(
-        flex = c(1,NA,NA,1),
+        flex = c(1, NA, NA, 1),
         br(),
-        actionButton(ns("cancel_btn"), cancel.text, class = "btn-light btn-xl",
-          style="margin: 4px;"),
-        actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl",
-          style="margin: 4px;"),
+        actionButton(ns("cancel_btn"), cancel.text,
+          class = "btn-light btn-xl",
+          style = "margin: 4px;"
+        ),
+        actionButton(ns("login_btn"), button.text,
+          class = "btn-warning btn-xl",
+          style = "margin: 4px;"
+        ),
         br()
       )
     )
@@ -1324,7 +1329,7 @@ splashLoginModal <- function(ns = NULL,
     div.button <- div(
       id = "splash-buttons",
       class = "pt-2",
-      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl")    
+      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl")
     )
   }
 
@@ -1334,8 +1339,8 @@ splashLoginModal <- function(ns = NULL,
     splash.content <- div.firebase
   } else {
     splash.content <- shiny::wellPanel(
-      ##style = "padding: 40px 20px; background-color: #ffffff22;",
-      style = "padding: 35px 25px; background-color:white; color:black;",      
+      ## style = "padding: 40px 20px; background-color: #ffffff22;",
+      style = "padding: 35px 25px; background-color:white; color:black;",
       id = "splash-login",
       div.title,
       div.subtitle,
