@@ -64,6 +64,11 @@ PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 TRACE.DIR <- file.path(OPG, "trace")
 
+# Create TRACE.DIR if non existent
+if(!dir.exists(TRACE.DIR)){
+  dir.create(TRACE.DIR)
+}
+
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
   package <- sub("^board.", "", package)
