@@ -131,16 +131,8 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-<<<<<<< HEAD
         div( shiny::textOutput(ns("welcome"), inline = TRUE),id = "welcome-text"),
         div( shiny::textOutput(ns("welcome2"), inline = TRUE),id = "welcome-subtext"),        
-=======
-        div(
-          shiny::textOutput(ns("welcome"), inline = TRUE),
-          id = "welcome-text"
-        ),
-        div("What would you like to do today?", id = "welcome-subtext"),
->>>>>>> b63020eea652e522c1b85fe3a718d310525f3a1d
         br(),
         br()
       )
