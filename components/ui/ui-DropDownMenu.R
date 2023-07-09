@@ -8,7 +8,48 @@
 # defined on `scss/components/_dropdownmenu.scss` when clicking a dropdown button.
 # It also has logic implemented so that when clicking a different dropdown item,
 # the active one gets desactivated.
-jsCode <- function(id) {
+
+## second version of Carson (see email 9jul23)
+dropdown.jsCode.SAVE <- function(id) {
+  paste0("
+$('#", id, "').on('click', function(){
+  if($('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
+    return 0;
+  }
+  $('.dropdown-button.active').toggleClass('active');
+  if(!$('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
+  }
+})
+function restoreDropdownMenu() {
+  var menuBody = $('body > .dropdown-menu-body');
+  if (menuBody.length > 0) {
+    menuBody.removeClass('dropdown-menu-body');
+    var id = menuBody.attr('data-toggle-id');
+    $('#' + id).parent().append(menuBody.detach());
+  }
+}
+$('#", id, "').on('shown.bs.dropdown', function () {
+  restoreDropdownMenu();
+  if (!this.id) {
+    console.error('Expected dropdown toggle to have an id attribute');
+  }
+  setTimeout(function() {
+    var menu = $(this).parent().find('.dropdown-menu');
+    menu.addClass('dropdown-menu-body');
+    menu.attr('data-toggle-id', this.id);
+    $('body').append(menu.detach());
+  },1);
+});
+$('#", id, "').on('hidden.bs.dropdown', function () {
+  restoreDropdownMenu();
+});
+") ## end of paste0
+}
+
+## first version of Carson
+dropdown.jsCode <- function(id) {
   paste0("
 $('#", id, "').on('click', function(){
   if($('#", id, "').hasClass('active')){
@@ -78,7 +119,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
         error = function(w) {}
       )
     ),
-    tags$script(HTML(jsCode(id)))
+    tags$script(HTML(dropdown.jsCode(id)))
   )
 }
 
@@ -119,6 +160,6 @@ actionMenu <- function(..., size = "default", status = "default", icon = NULL, m
         error = function(w) {}
       )
     ),
-    tags$script(HTML(jsCode(id)))
+    tags$script(HTML(dropdown.jsCode(id)))
   )
 }
