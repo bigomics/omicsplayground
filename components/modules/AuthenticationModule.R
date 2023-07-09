@@ -122,8 +122,7 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     resetUSER <- function() {
-
-      dbg("[FirebaseAuthenticationModule] resetUSER ")      
+      dbg("[FirebaseAuthenticationModule] resetUSER ")
       USER$logged <- FALSE
       USER$username <- ""
       USER$password <- ""
@@ -221,14 +220,13 @@ FirebaseAuthenticationModule <- function(id,
         resetUSER()
         return()
       }
-      
+
       ## even if the response is fine, we still need to check against
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
       user_email <- response$response$email
       check2 <- checkEmail(user_email, domain, credentials_file)
       if (!check2$valid) {
-
         shinyalert::shinyalert(
           title = "",
           text = paste("Sorry.", check2$msg),
@@ -469,7 +467,7 @@ EmailLinkAuthenticationModule <- function(id,
       check <- checkEmail(input$emailInput, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
-        shiny::updateTextInput(session, "emailInput", value = "")        
+        shiny::updateTextInput(session, "emailInput", value = "")
         sendEmailLink(NULL)
         email_waiter$hide()
         return(NULL)
