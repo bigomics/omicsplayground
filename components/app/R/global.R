@@ -62,6 +62,7 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
+TRACE.DIR <- file.path(OPG, "trace")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -133,6 +134,7 @@ message("RDIR =", RDIR)
 message("FILES =", FILES)
 message("FILESX =", FILESX)
 message("PGX.DIR =", PGX.DIR)
+message("TRACE.DIR =", TRACE.DIR)
 message("APPDIR =", APPDIR)
 message("SHINYPROXY = ", SHINYPROXY)
 
