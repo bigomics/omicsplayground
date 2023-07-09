@@ -722,8 +722,43 @@ PasswordAuthenticationModule <- function(id,
       valid.user <- isTRUE(length(sel) > 0)
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
-      login.OK <- (valid.user && valid.pw && valid.date)
 
+      # Check session trace is not too recent (repeated user login)
+      file_path <- paste0(TRACE.DIR, "/trace_log.txt")
+      if(file.exists(file_path)) {
+        df <- read.table(
+          file_path,
+          sep = "\t",
+          header = FALSE,
+          col.names = c("email", "event", "timestamp")
+        )
+        df$timestamp <- as.POSIXct(df$timestamp)
+        current_email <- CREDENTIALS[sel, "email"]
+        user_rows <- df[df$email == current_email, ]
+        if(nrow(user_rows) > 0) {
+          user_rows <- user_rows[order(user_rows$timestamp), ]
+          last_event <- tail(user_rows, n = 1)
+          if(last_event$event == "logout") {
+            # Last event was a logout. Allow login.
+            valid.trace <- TRUE
+          } else if(any(last_event$event %in% c("heartbeat", "login"))) {
+            if (difftime(Sys.time(), last_event$timestamp, units = "mins") < 2) {
+              # The last heartbeat is from less than two minutes ago. Do not allow login
+              valid.trace <- FALSE
+            } else {
+              # The last heartbeat is from more than two minutes ago. Allow login
+              valid.trace <- TRUE
+            }
+          }
+        } else{
+          # If user is not yet traced, allow login
+          valid.trace <- TRUE
+        }
+      } else {
+        valid.trace <- TRUE
+      }
+
+      login.OK <- (valid.user && valid.pw && valid.date && valid.trace)
 
       if (1) {
         message("--------- password login ---------")
@@ -741,13 +776,10 @@ PasswordAuthenticationModule <- function(id,
         message("----------------------------------")
       }
 
-
       if (login.OK) {
         message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
         output$login_warning <- shiny::renderText("")
         shiny::removeModal()
-        ## USER$name   <- input$login_username
-        ## USER$email <- CREDENTIALS[sel,"email"]
         sel <- which(CREDENTIALS$username == login_username)[1]
         cred <- CREDENTIALS[sel, ]
         USER$username <- cred$username
@@ -755,6 +787,13 @@ PasswordAuthenticationModule <- function(id,
         USER$level <- cred$level
         USER$limit <- cred$limit
         USER$logged <- TRUE
+        file_path <- paste0(TRACE.DIR, "/trace_log.txt")
+        if(file.exists(file_path)) {
+          lines <- readLines(file_path)
+          login_msg <- paste0(USER$email, "\tlogin\t", Sys.time())
+          lines <- c(lines, login_msg)
+          writeLines(lines, file_path)
+        }
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
         message("[PasswordAuthenticationModule::login] login invalid!")
@@ -767,6 +806,9 @@ PasswordAuthenticationModule <- function(id,
         if (!valid.user) {
           output$login_warning <- shiny::renderText("Invalid user")
         }
+        if (!valid.trace){
+          output$login_warning <- shiny::renderText("User already in use. Wait 2 minutes and try again")
+        }
         shinyjs::delay(2000, {
           output$login_warning <- shiny::renderText("")
         })
@@ -775,6 +817,15 @@ PasswordAuthenticationModule <- function(id,
     })
 
     observeEvent(input$userLogout, {
+      if(!is.na(USER$email)){
+        file_path <- paste0(TRACE.DIR, "/trace_log.txt")
+        if(file.exists(file_path)) {
+          lines <- readLines(file_path)
+          logout_msg <- paste0(USER$email, "\tlogout\t", Sys.time())
+          lines <- c(lines, logout_msg)
+          writeLines(lines, file_path)
+        }
+      }
       resetUSER()
     })
 
