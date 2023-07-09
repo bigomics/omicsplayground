@@ -1,5 +1,16 @@
 html {
     
+    #chirp-button {
+        width: auto;
+	position: absolute;
+	top: 11px;
+	right: 290px;
+	background-color: white;
+	padding:2px 12px;
+	font-size:13px;
+	color:#3181DE;
+    }
+
     .chatContainer {
         background-color: white;
 	box-shadow: none;
@@ -32,6 +43,7 @@ html {
 	font-size: 16px;
 	font-weight: 600;
 	margin-bottom: 10px;
+	text-align: center;
     }
 
     

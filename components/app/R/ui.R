@@ -292,8 +292,7 @@ app_ui <- function() {
     div.chirp <- NULL
     if(opt$ENABLE_CHIRP) {
       div.chirp <- bsutils::offcanvas(
-        bsutils::offcanvasButton("Chirp!",id="chirp-button",
-          style="width:auto;position:absolute;top:11px;right:280px;background-color:white;padding:2px 12px;font-size:13px;"),
+        bsutils::offcanvasButton("Chirp!",id="chirp-button"),
         bsutils::offcanvasContent(
           .position = "end",
           bslib::card(
