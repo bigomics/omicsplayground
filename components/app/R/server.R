@@ -51,7 +51,7 @@ app_server <- function(input, output, session) {
   credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
   if ((is.null(opt$USE_CREDENTIALS) || !opt$USE_CREDENTIALS ||
-         !has.credentials) && authentication != "password" ) {
+    !has.credentials) && authentication != "password") {
     credentials_file <- NULL
   }
 
@@ -162,7 +162,7 @@ app_server <- function(input, output, session) {
     shinyChatR::chat_server(
       "chatbox",
       ## db_file = file.path(ETC, "chirp_data.db"),
-      csv_path = file.path(ETC,"chirp_data.csv"),
+      csv_path = file.path(ETC, "chirp_data.csv"),
       chat_user = r_chirp_name,
       nlast = 100
     )
