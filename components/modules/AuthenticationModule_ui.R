@@ -243,7 +243,7 @@ splashLoginModal <- function(ns = NULL,
       div.button
     )
   }
-  
+
   body <- div(
     id = "splash-content",
     splash.content
@@ -251,10 +251,10 @@ splashLoginModal <- function(ns = NULL,
 
   footer <- div(
     id = "splash-footer",
-    style="position: absolute; bottom:5px; left:10px; color:#ffffff88; font-size:0.8em;",
-    getAppVersion(add.auth=TRUE)
+    style = "position: absolute; bottom:5px; left:10px; color:#ffffff88; font-size:0.8em;",
+    getAppVersion(add.auth = TRUE)
   )
-  
+
   m <- splashScreen(title = splash.title, body = body, ns = ns, footer2 = footer)
   return(m)
 }
@@ -357,7 +357,7 @@ splashscreen.buttons <- function() {
 }
 
 splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE,
-                         buttons = TRUE, footer = NULL, footer2=NULL) {
+                         buttons = TRUE, footer = NULL, footer2 = NULL) {
   if (is.null(ns)) {
     ns <- function(e) {
       return(e)
