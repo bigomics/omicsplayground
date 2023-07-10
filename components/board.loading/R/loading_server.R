@@ -267,7 +267,7 @@ LoadingBoard <- function(id,
           file.copy(example.file, user_dir)
         }
       }
-      
+
       dbg("[LoadingBoard::getPGXDIR] user_dir = ", user_dir)
       user_dir
     })
