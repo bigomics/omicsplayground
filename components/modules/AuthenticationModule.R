@@ -160,7 +160,7 @@ FirebaseAuthenticationModule <- function(id,
       if (USER$logged && !first_time) {
         # set options
         user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(user_dir, PGX.DIR) 
+        create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
         return()
       }
@@ -254,7 +254,7 @@ FirebaseAuthenticationModule <- function(id,
 
       # create user dir (if needed) and set options
       user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(user_dir, PGX.DIR)       
+      create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
@@ -514,7 +514,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       # create user dir (if needed) and set options
       user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(user_dir, PGX.DIR)       
+      create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
@@ -619,7 +619,7 @@ PasswordAuthenticationModule <- function(id,
 
         # Create user dir (if needed) and set user options
         user_dir <- file.path(PGX.DIR, USER$username)
-        create_user_dir_if_needed(user_dir, PGX.DIR)       
+        create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
 
         session$sendCustomMessage("set-user", list(user = USER$username))
@@ -839,7 +839,7 @@ LoginCodeAuthenticationModule <- function(id,
 
           ## create dir if needed and read user options
           user_dir <- file.path(PGX.DIR, USER$email)
-          create_user_dir_if_needed(user_dir, PGX.DIR)       
+          create_user_dir_if_needed(user_dir, PGX.DIR)
           USER$options <- read_user_options(user_dir)
 
           session$sendCustomMessage("set-user", list(user = USER$username))
