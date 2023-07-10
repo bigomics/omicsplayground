@@ -6,7 +6,12 @@ wikipathview <- function(wp, val, dir) {
 
     url <- paste0("https://www.wikipathways.org/wikipathways-assets/pathways/", wp, "/", wp, ".svg")
     destfile <- tempfile(fileext = ".svg")
-    download.file(url, destfile)
+    down <- tryCatch({
+        download.file(url, destfile)
+    }, error = function(w){
+        return(NULL)
+    }) |> is.null()
+    if(down){return(NULL)}
 
     # Read the file line by line
     lines <- readLines(destfile)
@@ -15,12 +20,6 @@ wikipathview <- function(wp, val, dir) {
     lines <- gsub('xmlns="http://www.w3.org/2000/svg"',
                   'xmlns:svg="http://www.w3.org/2000/svg"',
                   lines)
-    # lines <- gsub('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"',
-    #               '<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"',
-    #               lines)
-            # lines <- gsub('<svg xmlns:xlink="http://www.w3.org/1999/xlink"',
-            #               '<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"',
-            #               lines)
 
     # Write the lines back to the file
     writeLines(lines, destfile)
@@ -29,7 +28,6 @@ wikipathview <- function(wp, val, dir) {
     doc  <- read_xml(destfile)
 
     # Find all 'text' elements
-    # label_nodes <- xml_find_all(svg, ".//text[tspan[text() = 'C1S' or text() = 'C3']]")
     label_nodes <- xml_find_all(doc, ".//text")
     labels <- xml2::xml_text(label_nodes)
 
@@ -49,7 +47,6 @@ wikipathview <- function(wp, val, dir) {
         found_indexes <- which(labels %in% names(val))
         labels <- labels[found_indexes]
         rect_nodes <- rect_nodes[found_indexes]
-        # text_labels <- labels$labels[labels$labels %in% names(val)]
         val <- val[labels]
         rr <- as.character(round(66 * pmin(1, abs(val / 2.0))**0.5))
         rr <- stringr::str_pad(rr, width = 2, pad = "0")
