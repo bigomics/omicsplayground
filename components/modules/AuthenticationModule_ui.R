@@ -388,7 +388,7 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
         shiny::div(
           id = "splash-panel",
           body,
-          div(textOutput(ns("login_warning")), style = "color:white;font-size:1.2em;"),
+          div(textOutput(ns("login_warning")), style = "color:white;font-size:1.2em;padding-top:8px;line-height:1.1em;"),
         ),
       )
     ),

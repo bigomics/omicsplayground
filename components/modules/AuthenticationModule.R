@@ -586,14 +586,14 @@ PasswordAuthenticationModule <- function(id,
 
       if (is.null(login_username) || login_username == "") {
         output$login_warning <- shiny::renderText("missing username")
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         return(NULL)
       }
       if (is.null(login_password) || login_password == "") {
         output$login_warning <- shiny::renderText("missing password")
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         return(NULL)
@@ -634,7 +634,7 @@ PasswordAuthenticationModule <- function(id,
         if (!valid.user) {
           output$login_warning <- shiny::renderText("Invalid user")
         }
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         USER$logged <- FALSE
@@ -761,7 +761,7 @@ LoginCodeAuthenticationModule <- function(id,
         check <- checkEmail(login_email, domain, credentials_file)
         if (!check$valid) {
           output$login_warning <- shiny::renderText(check$msg)
-          shinyjs::delay(3000, {
+          shinyjs::delay(4000, {
             output$login_warning <- shiny::renderText("")
           })
           return(NULL)
@@ -825,7 +825,7 @@ LoginCodeAuthenticationModule <- function(id,
 
         if (!login.OK) {
           output$login_warning <- shiny::renderText("invalid code")
-          shinyjs::delay(2000, {
+          shinyjs::delay(4000, {
             output$login_warning <- shiny::renderText("")
           })
           updateTextInput(session, "login_password", value = "")
