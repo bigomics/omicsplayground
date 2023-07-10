@@ -9,6 +9,14 @@
 ##                                                                     ##
 #########################################################################
 
+getAppVersion <- function(add.auth=FALSE) {
+  version <- scan(file.path(OPG, "VERSION"), character())[1]
+  if(add.auth) {
+    auth.method <- paste0(opt$AUTHENTICATION, ifelse(opt$USE_CREDENTIALS,"+cred",""))
+    version <- paste0(version,"/",auth.method)
+  }
+  version
+}
 
 getFirstName <- function(name) {
   first.name <- strsplit(name, split = "[@ .]")[[1]][1]

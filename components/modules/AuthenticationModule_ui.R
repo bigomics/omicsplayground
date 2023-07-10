@@ -7,52 +7,6 @@
 ## ================ AUTHENTICATION_MODULE UI FUNCTIONS ============================
 ## ================================================================================
 
-splashHelloModal <- function(name, msg = NULL, ns = NULL, duration = 3500) {
-  if (is.null(ns)) {
-    ns <- function(e) {
-      return(e)
-    }
-  }
-  message("[AuthenticationModule::splashHelloModel]")
-
-  all.hello <- c(
-    "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
-    "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour",
-    "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
-  )
-  title <- paste(paste0(sample(all.hello, 3), "!"), collapse = " ")
-  if (!is.null(name) && !is.na(name) && !name %in% c("NA", "")) {
-    first.name <- strsplit(as.character(name), split = " ")[[1]][1]
-    first.name <- paste0(
-      toupper(substring(first.name, 1, 1)),
-      substring(first.name, 2, 999)
-    )
-    title <- paste(paste0(sample(all.hello, 1), " ", first.name, "!"), collapse = " ")
-  }
-  subtitle <- "Have a good day!"
-  subtitle <- "We wish you many great discoveries today!"
-  if (!is.null(msg)) subtitle <- msg
-  splash.title <- shiny::div(
-    shiny::br(), br(), br(), br(),
-    shiny::div(shiny::HTML(title), style = "font-size:70px;font-weight:700;line-height:1em;width:130%;"),
-    shiny::br(),
-    shiny::div(shiny::HTML(subtitle), style = "font-size:30px;line-height:1em;margin-top:0.6em;width:130%;"),
-    shiny::br(), br(), br()
-  )
-  body <- shiny::tagList(
-    shiny::div(id = "splash-title", splash.title)
-  )
-  m <- splashScreen("", body,
-    ns = ns, easyClose = TRUE, fade = TRUE,
-    buttons = FALSE, footer = FALSE
-  )
-  if (duration > 0) {
-    cat("closing hello in", round(duration / 1000, 1), "seconds...\n")
-    shinyjs::delay(duration, shiny::removeModal())
-  }
-  return(m)
-}
-
 splashLoginModal <- function(ns = NULL,
                              with.email = TRUE,
                              with.password = TRUE,
@@ -289,13 +243,19 @@ splashLoginModal <- function(ns = NULL,
       div.button
     )
   }
-
+  
   body <- div(
     id = "splash-content",
     splash.content
   )
 
-  m <- splashScreen(title = splash.title, body = body, ns = ns)
+  footer <- div(
+    id = "splash-footer",
+    style="position: absolute; bottom:5px; left:10px; color:#ffffff88; font-size:0.8em;",
+    getAppVersion(add.auth=TRUE)
+  )
+  
+  m <- splashScreen(title = splash.title, body = body, ns = ns, footer2 = footer)
   return(m)
 }
 
@@ -397,7 +357,7 @@ splashscreen.buttons <- function() {
 }
 
 splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE,
-                         buttons = TRUE, footer = TRUE) {
+                         buttons = TRUE, footer = NULL, footer2=NULL) {
   if (is.null(ns)) {
     ns <- function(e) {
       return(e)
@@ -407,9 +367,6 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
   div.buttons <- shiny::modalButton("Dismiss")
   if (buttons) {
     div.buttons <- splashscreen.buttons()
-  }
-  if (!footer) {
-    div.buttons <- NULL
   }
 
   ## return modalDialog
@@ -435,7 +392,8 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
         ),
       )
     ),
-    footer = NULL,
+    footer2,
+    footer = footer,
     size = "fullscreen",
     easyClose = easyClose,
     fade = fade
