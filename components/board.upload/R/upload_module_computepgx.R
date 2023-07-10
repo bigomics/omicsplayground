@@ -616,12 +616,12 @@ upload_module_computepgx_server <- function(
       observe({
         if (process_counter() > 0) {
           shiny::insertUI(
-            selector = ".current-dataset",
+            selector = "#current_dataset",
             where = "beforeEnd",
             ui = loading_spinner("Computation in progress...")
           )
         } else if (process_counter() == 0) {
-          shiny::removeUI(selector = ".current-dataset > #spinner-container")
+          shiny::removeUI(selector = "#current_dataset > #spinner-container")
         }
 
         MAX_DS_PROCESS <- 1

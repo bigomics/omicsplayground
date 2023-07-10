@@ -173,6 +173,7 @@ loading_spinner <- function(text = "Loading...") {
       class = "spinner-wrapper",
       shiny::tags$div(
         class = "spinner-border text-primary", role = "status",
+        style='font-size:0.4em;height:4em;width:4em;',
         shiny::tags$span(class = "visually-hidden", "Loading...")
       ),
       shiny::tags$p(class = "spinner-text", text) # Add a class to the text element
