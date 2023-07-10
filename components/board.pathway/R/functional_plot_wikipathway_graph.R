@@ -142,20 +142,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         )
       })
 
-      # WPembed_frame <- function(){
-      #   shiny::div(
-      #     style = "height: 28vh; width: 100%;",
-      #     tags$iframe(
-      #       src = paste0(
-      #         "https://pathway-viewer.toolforge.org/embed/",
-      #         getPathwayImage(only_id = TRUE)
-      #       ),
-      #       height = "100%",
-      #       width = "100%"
-      #     )
-      #   )
-      # }
-
       plot_RENDER <- function() {
           img <- getPathwayImage()
           shiny::req(img$width, img$height)
@@ -172,26 +158,10 @@ functional_plot_wikipathway_graph_server <- function(id,
           return(pz)
       }
 
-      # WPembed_frame_modal <- function(){
-      #   shiny::div(
-      #     style = "height: 75vh; width: 100%;",
-      #     tags$iframe(
-      #       src = paste0(
-      #         "https://pathway-viewer.toolforge.org/embed/",
-      #         getPathwayImage(only_id = TRUE)
-      #       ),
-      #       height = "100%",
-      #       width = "100%"
-      #     )
-      #   )
-      # }
-
       PlotModuleServer(
         "plotmodule",
         plotlib = "svgPanZoom",
         func = plot_RENDER,
-        # func2 = WPembed_frame_modal,
-        add.watermark = watermark
       )
 
     } ## end of moduleServer
