@@ -769,9 +769,10 @@ LoginCodeAuthenticationModule <- function(id,
 
         ## MAIL CODE TO USER
         ## login_code <- "hello123"
-        ## login_code <<- paste0(sample(c(letters,LETTERS,0:9),12),collapse='')
-        login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-        dbg("[LoginCodeAuthenticationModule:observeEvent( input$login_btn] new_code = ", login_code)
+        ##login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
+        login_code <<- paste(sapply(1:3,function(i)paste(sample(LETTERS,4),collapse='')),collapse='-')
+        dbg("[LoginCodeAuthenticationModule:observeEvent(input$login_btn)] login_code = ", login_code)
+
         sendLoginCode(login_email, login_code, mail_creds = mail_creds)
         USER$email <- login_email
         USER$username <- login_email
