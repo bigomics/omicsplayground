@@ -151,6 +151,7 @@ FirebaseAuthenticationModule <- function(id,
       shiny::showModal(m)
     }
 
+    ### I don't understand this???... (IK 10jul23)
     first_time <- TRUE
     observeEvent(USER$logged, {
       ## no need to show the modal if the user is logged this is due
@@ -158,9 +159,9 @@ FirebaseAuthenticationModule <- function(id,
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
         # set options
-        USER$options <- read_user_options(
-          file.path(PGX.DIR, USER$email)
-        )
+        user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(user_dir, PGX.DIR) 
+        USER$options <- read_user_options(user_dir)
         return()
       }
       first_time <<- FALSE
@@ -251,10 +252,10 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
-      # set options
-      USER$options <- read_user_options(
-        file.path(PGX.DIR, USER$email)
-      )
+      # create user dir (if needed) and set options
+      user_dir <- file.path(PGX.DIR, USER$email)
+      create_user_dir_if_needed(user_dir, PGX.DIR)       
+      USER$options <- read_user_options(user_dir)
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -511,10 +512,10 @@ EmailLinkAuthenticationModule <- function(id,
       if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
-      # set options
-      USER$options <- read_user_options(
-        file.path(PGX.DIR, USER$email)
-      )
+      # create user dir (if needed) and set options
+      user_dir <- file.path(PGX.DIR, USER$email)
+      create_user_dir_if_needed(user_dir, PGX.DIR)       
+      USER$options <- read_user_options(user_dir)
 
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -616,10 +617,10 @@ PasswordAuthenticationModule <- function(id,
         USER$limit <- cred$limit
         USER$logged <- TRUE
 
-        # set options
-        USER$options <- read_user_options(
-          file.path(PGX.DIR, USER$username)
-        )
+        # Create user dir (if needed) and set user options
+        user_dir <- file.path(PGX.DIR, USER$username)
+        create_user_dir_if_needed(user_dir, PGX.DIR)       
+        USER$options <- read_user_options(user_dir)
 
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
@@ -835,9 +836,12 @@ LoginCodeAuthenticationModule <- function(id,
           message("[LoginCodeAuthenticationModule::login] 3 : login OK! ")
           output$login_warning <- shiny::renderText("")
           USER$logged <- TRUE
-          USER$options <- read_user_options(
-            file.path(PGX.DIR, USER$email)
-          )
+
+          ## create dir if needed and read user options
+          user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(user_dir, PGX.DIR)       
+          USER$options <- read_user_options(user_dir)
+
           session$sendCustomMessage("set-user", list(user = USER$username))
           entered_code("") ## important for next user
 

@@ -4,6 +4,16 @@
 ##
 
 
+create_user_dir_if_needed <- function(user_dir, pgxdir) {
+  if(!dir.exists(user_dir)) {
+    dir.create(user_dir)
+    example_file <- file.path(pgxdir,'example-data.pgx')
+    if(file.exists(example_file)) {
+      file.copy(example_file, user_dir)
+    }
+  }
+}
+
 read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global

@@ -178,11 +178,9 @@ app_server <- function(input, output, session) {
       return(NULL)
     }
     userpgx <- PGX.DIR
-    if (auth$options$ENABLE_USERDIR &&
-      authentication %in% c("email-link", "login-code", "firebase")) {
+    if (authentication %in% c("email-link", "login-code", "firebase")) {
       userpgx <- file.path(PGX.DIR, auth$email)
-    } else if (auth$options$ENABLE_USERDIR &&
-      authentication %in% c("password")) {
+    } else if (authentication %in% c("password")) {
       userpgx <- file.path(PGX.DIR, auth$username)
     } else {
       userpgx <- PGX.DIR
