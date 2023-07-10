@@ -83,7 +83,7 @@ splashLoginModal <- function(ns = NULL,
     )
   }
   if (with.password) {
-    if(hide.password) {
+    if (hide.password) {
       div.password <- div(
         id = "splash-password",
         passwordInput(ns("login_password"), NULL, placeholder = "your password")
