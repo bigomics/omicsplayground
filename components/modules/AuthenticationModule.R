@@ -151,12 +151,12 @@ FirebaseAuthenticationModule <- function(id,
       shiny::showModal(m)
     }
 
-    ### I don't understand this???... (IK 10jul23)
+    ### I don't really understand this???... (IK 10jul23)
     first_time <- TRUE
     observeEvent(USER$logged, {
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
-      ## we force reset/logout to delete sleeping logins.
+      ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
         # set options
         user_dir <- file.path(PGX.DIR, USER$email)
@@ -167,9 +167,8 @@ FirebaseAuthenticationModule <- function(id,
       first_time <<- FALSE
       resetUSER()
     })
-
+    
     observeEvent(input$userLogout, {
-      dbg("[FirebaseAuthenticationModule] oberveEvent:userLogout triggered!")
       resetUSER()
     })
 
@@ -517,6 +516,7 @@ EmailLinkAuthenticationModule <- function(id,
       create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
 
+      session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -622,9 +622,10 @@ PasswordAuthenticationModule <- function(id,
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
 
+        ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
+
       } else {
-        message("[PasswordAuthenticationModule::login] login invalid!")
         if (!valid.date) {
           output$login_warning <- shiny::renderText("Registration expired")
         }
@@ -834,7 +835,7 @@ LoginCodeAuthenticationModule <- function(id,
         }
 
         if (login.OK) {
-          message("[LoginCodeAuthenticationModule::login] 3 : login OK! ")
+
           output$login_warning <- shiny::renderText("")
           USER$logged <- TRUE
 
@@ -843,7 +844,7 @@ LoginCodeAuthenticationModule <- function(id,
           create_user_dir_if_needed(user_dir, PGX.DIR)
           USER$options <- read_user_options(user_dir)
 
-          session$sendCustomMessage("set-user", list(user = USER$username))
+          session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
 
           shiny::removeModal()
