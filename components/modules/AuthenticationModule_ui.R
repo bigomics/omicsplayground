@@ -13,6 +13,7 @@ splashLoginModal <- function(ns = NULL,
                              with.username = FALSE,
                              with.firebase = FALSE,
                              with.firebase_emailonly = FALSE,
+                             hide.password = TRUE,
                              button.text = "Login",
                              cancel.text = "cancel",
                              add.cancel = FALSE,
@@ -82,10 +83,17 @@ splashLoginModal <- function(ns = NULL,
     )
   }
   if (with.password) {
-    div.password <- div(
-      id = "splash-password",
-      passwordInput(ns("login_password"), NULL, placeholder = "your password")
-    )
+    if(hide.password) {
+      div.password <- div(
+        id = "splash-password",
+        passwordInput(ns("login_password"), NULL, placeholder = "your password")
+      )
+    } else {
+      div.password <- div(
+        id = "splash-password",
+        textInput(ns("login_password"), NULL, placeholder = "your password")
+      )
+    }
   }
   if (with.firebase) {
     div.firebase <- div(
