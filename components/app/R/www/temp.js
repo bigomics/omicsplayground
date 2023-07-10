@@ -438,21 +438,17 @@ Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
 
 /* ********************* HUBSPOT HANDLER **************************** */
 $(document).ready(function() {
-    console.log('*** setting up HSQ ***');
-    /* Default installation */
     /* From https://stackoverflow.com/questions/74643167 */
-    /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
     $(".tab-trigger").on("click", function(e) {
 	var tabId = $(e.target).data("target");
 	let hasHsq = (typeof window._hsq !== 'undefined' && window._hsq !== null)
  	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
-	
-	// console.log('[tab-trigger:click] user = ' + user);	
+	console.log('[tab-trigger:click] user = ' + user);	
 	if(hasHsq && user !== '' && user !== 'undefined') {
 	    var _hsq = window._hsq = window._hsq || [];
 	    var orginalTitle = document.title;
 	    document.title = orginalTitle + ' > ' + tabId ;
-	    // console.log('[_hsq.push] ' + document.title);	    
+	    console.log('[_hsq.push] ' + document.title);	    
 	    _hsq.push(["identify", { email: user }]);  // set to current user
 	    _hsq.push(['setPath', '#' + tabId]);
 	    _hsq.push(['trackPageView']);
