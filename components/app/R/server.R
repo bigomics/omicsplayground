@@ -483,7 +483,7 @@ app_server <- function(input, output, session) {
         check_personal_email(auth, PGX.DIR)
       }
     } else {
-      # clear PGX data when user logs out
+      # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
       if (length.pgx > 0) {
         for (i in 1:length.pgx) {
@@ -570,8 +570,7 @@ app_server <- function(input, output, session) {
     }
     WARN_BEFORE <- round(TIMEOUT / 6)
 
-    info("[server.R] Creating TimerModule...")
-    info("[server.R] TIMEOUT = ", TIMEOUT, "(s)")
+    info("[server.R] Creating TimerModule: TIMEOUT = ", TIMEOUT, "(s)")
     info("[server.R] WARN_BEFORE = ", WARN_BEFORE)
 
     timer <- TimerModule(
@@ -585,7 +584,6 @@ app_server <- function(input, output, session) {
     )
 
     observeEvent(timer$warn(), {
-      info("[server.R] timer$warn = ", timer$warn())
       if (timer$warn() == 0) {
         return()
       } ## skip first atInit call
