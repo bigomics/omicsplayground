@@ -244,7 +244,6 @@ loading_table_datasets_server <- function(id,
 
     table_data <- shiny::reactive({
       df <- getFilteredPGXINFO()
-
       if (is.null(df)) {
         return(NULL)
       }
@@ -259,14 +258,10 @@ loading_table_datasets_server <- function(id,
 
 
     pgxTable_DT <- reactive({
-      df <- table_data()
-      shiny::req(df)
-      if (is.null(df)) {
-        return(NULL)
-      }
 
+      df <- table_data()
       is.dt <- is.data.frame(df)
-      if (!is.dt || nrow(df) == 0) {
+      if (is.null(df) || !is.dt || nrow(df) == 0) {
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste(
