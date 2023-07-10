@@ -258,7 +258,6 @@ loading_table_datasets_server <- function(id,
 
 
     pgxTable_DT <- reactive({
-
       df <- table_data()
       is.dt <- is.data.frame(df)
       if (is.null(df) || !is.dt || nrow(df) == 0) {
