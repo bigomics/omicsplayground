@@ -167,7 +167,7 @@ FirebaseAuthenticationModule <- function(id,
       first_time <<- FALSE
       resetUSER()
     })
-    
+
     observeEvent(input$userLogout, {
       resetUSER()
     })
@@ -624,7 +624,6 @@ PasswordAuthenticationModule <- function(id,
 
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
-
       } else {
         if (!valid.date) {
           output$login_warning <- shiny::renderText("Registration expired")
@@ -835,7 +834,6 @@ LoginCodeAuthenticationModule <- function(id,
         }
 
         if (login.OK) {
-
           output$login_warning <- shiny::renderText("")
           USER$logged <- TRUE
 
