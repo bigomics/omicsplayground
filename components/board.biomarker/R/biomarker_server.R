@@ -94,6 +94,23 @@ BiomarkerBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "pdx_filter", choices = ft, selected = "<all>")
     })
 
+    # Enable or disable the run button in the UI
+    # if the pdx_predicted overlaps with the pdx_samplefilter variable
+    shiny::observeEvent(input$pdx_samplefilter, {
+      shiny::req(pgx$Y)
+      if(!is.null(input$pdx_samplefilter)) {
+        # Get the variable name for each pdx_samplefilter
+          col_filter <- data.table::tstrsplit(input$pdx_samplefilter, "=", keep = 1)[[1]]
+      } else {
+        col_filter <- 1
+      }
+      if (!input$pdx_predicted %in% col_filter) {
+        shinyjs::enable("pdx_runbutton")
+      } else {
+        shinyjs::disable("pdx_runbutton")
+      }
+    })
+
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
       if (is.null(pgx)) {
