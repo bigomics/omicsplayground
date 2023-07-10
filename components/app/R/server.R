@@ -444,19 +444,15 @@ app_server <- function(input, output, session) {
   })
 
   output$current_user <- shiny::renderText({
-    shiny::req(auth$logged)
-    if (!auth$logged) {
-      return("(nobody)")
-    }
     ## trigger on change of user
     shiny::req(auth$logged)
     if (!auth$logged) {
       return("(not logged in)")
     }
     user <- auth$email
-    dbg("[server:output$current_user] user = ", user)
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
     if (is.null(user) || user %in% c("", NA)) user <- "User"
+    dbg("[server:output$current_user] user = ", user)
     user
   })
 
@@ -672,7 +668,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
           style = "text-align:center; line-height: 1em;"
         ),
         footer = div(
-          "Copyright © 2000-2023 BigOmics Analytics, Inc.",
+          "© 2000-2023 BigOmics Analytics, Inc.",
           br(), br(),
           paste("Credits:", authors),
           style = "font-size: 0.8em; line-height: 0.9em; text-align:center;"
