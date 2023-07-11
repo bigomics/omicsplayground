@@ -75,7 +75,8 @@ $('#", id, "').on('shown.bs.dropdown', function () {
   var menu = $(this).parent().find('.dropdown-menu');
   menu.addClass('dropdown-menu-body');
   menu.attr('data-toggle-id', this.id);
-  $('body').append(menu.detach());
+  menu.detach();
+  setTimeout(function() { $('body').append(menu); }, 0);
 });
 $('#", id, "').on('hidden.bs.dropdown', function () {
   restoreDropdownMenu();
