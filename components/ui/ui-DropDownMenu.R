@@ -11,7 +11,27 @@
 
 ## second version of Carson (see email 9jul23)
 dropdown.jsCode.SAVE <- function(id) {
-  paste0("
+  paste0(
+    "
+    $('#", id, "').on('click', function(){
+    if($('#", id, "').hasClass('active')){
+      $('#", id, "').toggleClass('active');
+      return 0;
+    }
+    $('.dropdown-button.active').toggleClass('active');
+    if(!$('#", id, "').hasClass('active')){
+      $('#", id, "').toggleClass('active');
+    }
+    })
+    function restoreDropdownMenu() {
+      var menuBody = $('body > .dropdown-menu-body');
+      if (menuBody.length > 0) {
+        menuBody.removeClass('dropdown-menu-body');
+        var id = menuBody.attr('data-toggle-id');
+        $('#' + id).parent().append(menuBody.detach());
+      }
+    }
+    
     $('#", id, "').on('shown.bs.dropdown', function () {
       restoreDropdownMenu();
       if (!this.id) {
@@ -22,7 +42,8 @@ dropdown.jsCode.SAVE <- function(id) {
       menu.attr('data-toggle-id', this.id);
       menu.detach();
       setTimeout(function() { $('body').append(menu); }, 0);
-") ## end of paste0
+      "
+    ) ## end of paste0
 }
 
 ## first version of Carson
