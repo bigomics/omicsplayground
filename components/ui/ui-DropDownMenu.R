@@ -84,6 +84,13 @@ $('#", id, "').on('hidden.bs.dropdown', function () {
 ") ## end of paste0
 }
 
+dropdown.assets <- function(id) {
+  tagList(
+    shiny::singleton(tags$style(HTML(".dropdown-menu:not(.dropdown-menu-body) { display: none; }"))),
+    tags$script(HTML(dropdown.jsCode(id)))
+  )
+}
+
 DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, width = "auto", margin = "10px") {
   id <- bigdash:::make_id()
   tags$div(
@@ -118,7 +125,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
         error = function(w) {}
       )
     ),
-    tags$script(HTML(dropdown.jsCode(id)))
+    dropdown.assets(id)
   )
 }
 
@@ -159,6 +166,6 @@ actionMenu <- function(..., size = "default", status = "default", icon = NULL, m
         error = function(w) {}
       )
     ),
-    tags$script(HTML(dropdown.jsCode(id)))
+    dropdown.assets(id)
   )
 }
