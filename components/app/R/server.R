@@ -170,24 +170,6 @@ app_server <- function(input, output, session) {
     )
   }
 
-
-  #' Get user-pgx folder
-  getPgxDir <- reactive({
-    shiny::req(auth$logged)
-    if (!auth$logged) {
-      return(NULL)
-    }
-    userpgx <- PGX.DIR
-    if (authentication %in% c("email-link", "login-code", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email)
-    } else if (authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$username)
-    } else {
-      userpgx <- PGX.DIR
-    }
-    userpgx
-  })
-
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
