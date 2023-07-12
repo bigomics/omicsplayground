@@ -7,7 +7,6 @@ UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
-                        getPGXDIR,
                         limits = c(
                           "samples" = 1000, "comparisons" = 20,
                           "genes" = 20000, "genesets" = 10000,
@@ -91,8 +90,7 @@ UploadBoard <- function(id,
       pgxname <- sub("[.]pgx$", "", new_pgx$name)
       pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
       pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-
-      pgxdir <- getPGXDIR()
+      pgxdir <- auth$options$user_dir 
       fn <- file.path(pgxdir, pgxname)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -676,7 +674,7 @@ UploadBoard <- function(id,
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
-      pgx.dirRT = shiny::reactive(getPGXDIR()),
+      pgx.dirRT = auth$options$user_dir,
       auth = auth,
       max.genes = as.integer(auth$options$MAX_GENES),
       max.genesets = as.integer(auth$options$MAX_GENESETS),
