@@ -323,14 +323,14 @@ app_ui <- function() {
           width = "110",
         ),
         center = tags$div(
-            shiny::conditionalPanel(
-                condition = "input.nav == 'welcome-tab'",
-                shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
-            ),
-            shiny::conditionalPanel(
-                condition = "input.nav != 'welcome-tab'",
-                shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
-            )
+          shiny::conditionalPanel(
+            condition = "input.nav == 'welcome-tab'",
+            shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
+          ),
+          shiny::conditionalPanel(
+            condition = "input.nav != 'welcome-tab'",
+            shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+          )
         ),
         div.chirpbutton,
         bigdash::navbarDropdown(
