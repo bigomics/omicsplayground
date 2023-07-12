@@ -150,7 +150,7 @@ checkAuthorizedDomain <- function(email, domain) {
   }
   domain1 <- strsplit(domain, split = "\\|")[[1]]
   domain1 <- paste0(paste0("@", domain1, "$"), collapse = "|")
-  authorized <- grepl(domain1, email)
+  authorized <- grepl(tolower(domain1), tolower(email))
   authorized
 }
 
@@ -162,11 +162,11 @@ checkAuthorizedUser <- function(email, credentials_file = NULL) {
     return(TRUE)
   }
   CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
-  valid_user <- email %in% CREDENTIALS$email
+  valid_user <- tolower(email) %in% tolower(CREDENTIALS$email)
   if (!valid_user) {
     return(FALSE)
   }
-  sel <- match(email, CREDENTIALS$email)
+  sel <- match(tolower(email), tolower(CREDENTIALS$email))
   valid_date <- as.Date(CREDENTIALS$expiry[sel]) > as.Date(Sys.time())
   authorized <- valid_user && valid_date
   authorized
@@ -183,7 +183,7 @@ checkValidEmailFormat <- function(email) {
 }
 
 checkPersonalEmail <- function(email) {
-  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", email)
+  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", tolower(email))
 }
 
 checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {

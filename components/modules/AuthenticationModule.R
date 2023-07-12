@@ -189,7 +189,8 @@ FirebaseAuthenticationModule <- function(id,
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       ## or against a subscription list.
-      check <- checkEmail(input$emailInput, domain, credentials_file)
+      email <- tolower(input$emailInput)
+      check <- checkEmail(email, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -200,7 +201,7 @@ FirebaseAuthenticationModule <- function(id,
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(input$emailInput)
+      sendEmailLink(email)
     })
 
     observeEvent(sendEmailLink(),
@@ -224,7 +225,7 @@ FirebaseAuthenticationModule <- function(id,
       ## even if the response is fine, we still need to check against
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
-      user_email <- response$response$email
+      user_email <- tolower(response$response$email)
       check2 <- checkEmail(user_email, domain, credentials_file)
       if (!check2$valid) {
         shinyalert::shinyalert(
@@ -244,7 +245,7 @@ FirebaseAuthenticationModule <- function(id,
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
       USER$username <- response$response$displayName
-      USER$email <- response$response$email
+      USER$email <- user_email
 
       if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
@@ -464,7 +465,8 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
-      check <- checkEmail(input$emailInput, domain, credentials_file)
+      email <- tolower(input$emailInput)
+      check <- checkEmail(email, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -475,7 +477,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(input$emailInput) ## can take a while...
+      sendEmailLink(email) ## can take a while...
     })
 
     observeEvent(sendEmailLink(),
@@ -754,7 +756,7 @@ LoginCodeAuthenticationModule <- function(id,
       shiny::req(input$login_email)
 
       if (!email_sent) {
-        login_email <- input$login_email
+        login_email <- tolower(input$login_email)
 
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
