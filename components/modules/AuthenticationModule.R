@@ -159,7 +159,12 @@ FirebaseAuthenticationModule <- function(id,
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
         # set options
-        user_dir <- file.path(PGX.DIR, USER$email)
+        if(USER$options$ENABLE_USERDIR == TRUE){
+           user_dir <- file.path(PGX.DIR, USER$email) 
+        }
+        if(USER$options$ENABLE_USERDIR == FALSE){
+          user_dir <- file.path(PGX.DIR) 
+        }
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
         return()
