@@ -257,7 +257,7 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # create user dir (if needed) and set options
-      if(user$options$ == true){
+      if(USER$options$ENABLE_USERDIR == true){
         user_dir <- file.path(pgx.dir, user$email) 
         }
       if(USER$options$ENABLE_USERDIR == false){
