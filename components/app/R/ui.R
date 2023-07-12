@@ -317,18 +317,20 @@ app_ui <- function() {
       theme = big_theme2,
       sidebar = sidebar,
       navbar = bigdash::navbar(
-        tags$img(
+        title = tags$img(
           id = "logo-bigomics",
           src = "assets/img/bigomics.png",
           width = "110",
         ),
-        shiny::conditionalPanel(
-          condition = "input.nav == 'welcome-tab'",
-          shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
-        ),
-        shiny::conditionalPanel(
-          condition = "input.nav != 'welcome-tab'",
-          shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+        center = tags$div(
+            shiny::conditionalPanel(
+                condition = "input.nav == 'welcome-tab'",
+                shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
+            ),
+            shiny::conditionalPanel(
+                condition = "input.nav != 'welcome-tab'",
+                shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+            )
         ),
         div.chirpbutton,
         bigdash::navbarDropdown(
