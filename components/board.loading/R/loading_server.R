@@ -248,6 +248,7 @@ LoadingBoard <- function(id,
     ## Get the pgx folder. If user folders are enabled, the user email
     ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
+      dbg("[LoadingBoard::getPGXDIR] user_dir = ", auth$options$user_dir)
       return(auth$options$user_dir)
     })
 
