@@ -320,7 +320,7 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        pgxdir <- pgx.dirRT()
+        pgxdir <- pgx.dirRT
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
         if (numpgx >= max.datasets) {
