@@ -93,7 +93,7 @@ UploadBoard <- function(id,
       pgxname <- sub("[.]pgx$", "", new_pgx$name)
       pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
       pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-      pgxdir <- auth$options$user_dir
+      pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxname)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -693,7 +693,7 @@ UploadBoard <- function(id,
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
-      pgx.dirRT = auth$options$user_dir,
+      pgx.dirRT = auth$user_dir,
       auth = auth,
       max.genes = as.integer(auth$options$MAX_GENES),
       max.genesets = as.integer(auth$options$MAX_GENESETS),

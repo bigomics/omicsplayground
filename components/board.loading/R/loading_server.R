@@ -36,7 +36,6 @@ LoadingBoard <- function(id,
       id = "received",
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
-      getPGXDIR = getPGXDIR,
       max_datasets = auth$options$MAX_DATASETS,
       reload_pgxdir = reload_pgxdir,
       current_page = current_page
@@ -168,7 +167,6 @@ LoadingBoard <- function(id,
 
     pgxtable <- loading_table_datasets_server(
       id = "pgxtable",
-      getPGXDIR = getPGXDIR,
       pgx_shared_dir = pgx_shared_dir,
       pgx_public_dir = pgx_public_dir,
       pgx_topdir = pgx_topdir,
@@ -182,7 +180,7 @@ LoadingBoard <- function(id,
 
     loading_tsne_server(
       id = "tsne",
-      pgx.dir = getPGXDIR,
+      pgx.dirRT = reactive(auth$user_dir),
       info.table = reactive(pgxtable$data()),
       r_selected = reactive(pgxtable$rows_all()),
       watermark = WATERMARK
@@ -192,7 +190,6 @@ LoadingBoard <- function(id,
     if (enable_public_tabpanel) {
       pgxtable_public <- loading_table_datasets_public_server(
         id = "pgxtable_public",
-        getPGXDIR = getPGXDIR,
         pgx_public_dir = pgx_public_dir,
         reload_pgxdir_public = reload_pgxdir_public,
         auth = auth,
@@ -241,17 +238,6 @@ LoadingBoard <- function(id,
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
     )
 
-    ## -----------------------------------------------------------------------------
-    ## READ initial PGX file info
-    ## -----------------------------------------------------------------------------
-
-    ## Get the pgx folder. If user folders are enabled, the user email
-    ## is appended to the pgx dirname.
-    getPGXDIR <- shiny::reactive({
-      dbg("[LoadingBoard::getPGXDIR] user_dir = ", auth$options$user_dir)
-      return(auth$options$user_dir)
-    })
-
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -264,9 +250,7 @@ LoadingBoard <- function(id,
       }
 
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      pgxdir <- getPGXDIR()
-      pgx.path <- pgxdir[file.exists(file.path(pgxdir, pgxfile))][1]
-      pgxfile1 <- file.path(pgx.path, pgxfile)
+      pgxfile1 <- file.path(auth$user_dir, pgxfile)
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
@@ -293,14 +277,14 @@ LoadingBoard <- function(id,
         return(NULL)
       }
       file <- paste0(sub("[.]pgx$", "", file), ".pgx") ## add/replace .pgx
-      pgxdir <- getPGXDIR()[1]
+      pgxdir <- auth$user_dir
       if (dir.exists(pgxdir)) {
         file1 <- file.path(pgxdir, file)
         shiny::withProgress(message = "Saving PGX data...", value = 0.33, {
           playbase::pgx.save(pgx, file = file1)
         })
       } else {
-        warning("[LoadingBoard::savePGX] ***ERROR*** dir not found : ", pgxdir)
+        warning("[LoadingBoard::savePGX] ***ERROR*** pgxdir not found : ", pgxdir)
       }
       return(NULL)
     }

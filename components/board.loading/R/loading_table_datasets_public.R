@@ -34,7 +34,6 @@ loading_table_datasets_public_ui <- function(
 }
 
 loading_table_datasets_public_server <- function(id,
-                                                 getPGXDIR,
                                                  pgx_public_dir,
                                                  reload_pgxdir_public,
                                                  auth,
@@ -124,11 +123,11 @@ loading_table_datasets_public_server <- function(id,
       ignoreNULL = FALSE
     )
 
-    observeEvent(input$importbutton, {
+    observeEvent( input$importbutton, {
       selected_row <- pgxtable_public$rows_selected()
       pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
-      pgx_path <- getPGXDIR()
+      pgx_path <- auth$user_dir
       new_pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
 
       ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
