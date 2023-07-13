@@ -424,6 +424,14 @@ upload_module_computepgx_server <- function(
         # Create temporary folder
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+        
+        # if no temp_dir (happens when we auto-load example data via button), create a temp dir
+        if (is.null(temp_dir())) {
+          temp_dir(tempfile(pattern = "pgx_"))
+          dir.create(temp_dir())
+          dbg("[compute PGX process] : tempFile", temp_dir())
+        }
+        
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
