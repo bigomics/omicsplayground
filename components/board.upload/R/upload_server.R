@@ -247,6 +247,10 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
 
+             # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_counts.csv"), row.names = TRUE)
+
+
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
               if (length(COUNTS_check$check) > 0) {
@@ -281,6 +285,9 @@ UploadBoard <- function(id,
 
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_samples.csv"), row.names = TRUE)
+
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -309,6 +316,8 @@ UploadBoard <- function(id,
 
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_contrasts.csv"), row.names = TRUE)
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
