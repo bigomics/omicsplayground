@@ -23,7 +23,7 @@ NoAuthenticationModule <- function(id,
         level = "",
         limit = "",
         options = opt,
-        user_dir = PGX.DIR  ## global
+        user_dir = PGX.DIR ## global
       )
 
       m <- splashLoginModal(
@@ -389,7 +389,7 @@ EmailLinkAuthenticationModule <- function(id,
       stripe_id = NA,
       href = NA,
       options = opt,
-      user_dir = PGX.DIR      
+      user_dir = PGX.DIR
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -635,14 +635,14 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # Create user dir (if needed) and set user options
-        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ",opt$ENABLE_USERDIR)
+        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ", opt$ENABLE_USERDIR)
         if (opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR, USER$username)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         } else {
           USER$user_dir <- file.path(PGX.DIR)
         }
-        dbg("[PasswordAuthenticationModule] user_dir = ",USER$user_dir)
+        dbg("[PasswordAuthenticationModule] user_dir = ", USER$user_dir)
         USER$options <- read_user_options(USER$user_dir)
 
         ## need for JS hsq tracking
@@ -871,7 +871,7 @@ LoginCodeAuthenticationModule <- function(id,
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
           shiny::removeModal()
-          
+
           USER$logged <- TRUE
         }
       }
