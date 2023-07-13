@@ -248,28 +248,8 @@ LoadingBoard <- function(id,
     ## Get the pgx folder. If user folders are enabled, the user email
     ## is appended to the pgx dirname.
     getPGXDIR <- shiny::reactive({
-      ## react on change of auth user
-      user <- auth$email
-      if (auth$method == "password") user <- auth$username
-      user <- gsub(".*\\/", "", user) ## get rid of dangerous characters that can skip folders...
-      user_dir <- pgx_topdir ## from module input
-      valid.user <- (!is.null(user) && !is.na(user) && user != "")
-
-      ## Append email or name to the pgx path.
-      if (valid.user) {
-        user_dir <- file.path(user_dir, user)
-
-        # If dir not exists, create and copy example pgx file. THIS IS
-        # NOW DONE IN AUTHENTICATION AND COULD BE REMOVED??? IK
-        example.file <- file.path(pgx_topdir, "example-data.pgx")
-        if (!dir.exists(user_dir) && file.exists(example.file)) {
-          dir.create(user_dir)
-          file.copy(example.file, user_dir)
-        }
-      }
-
-      dbg("[LoadingBoard::getPGXDIR] user_dir = ", user_dir)
-      user_dir
+      dbg("[LoadingBoard::getPGXDIR] user_dir = ", auth$options$user_dir)
+      return(auth$options$user_dir)
     })
 
 

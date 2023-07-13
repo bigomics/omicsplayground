@@ -142,7 +142,6 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
-      getPGXDIR = getPgxDir,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
@@ -169,24 +168,6 @@ app_server <- function(input, output, session) {
       nlast = 100
     )
   }
-
-
-  #' Get user-pgx folder
-  getPgxDir <- reactive({
-    shiny::req(auth$logged)
-    if (!auth$logged) {
-      return(NULL)
-    }
-    userpgx <- PGX.DIR
-    if (authentication %in% c("email-link", "login-code", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email)
-    } else if (authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$username)
-    } else {
-      userpgx <- PGX.DIR
-    }
-    userpgx
-  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -373,7 +354,7 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["cmap"]) {
         info("[server.R] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = getPgxDir)
+        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = auth$options$user_dir)
       }
 
       if (ENABLED["cell"]) {

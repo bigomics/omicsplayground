@@ -26,6 +26,8 @@ read_user_options <- function(user_dir) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
   }
+  # add user dir to opt file
+  new_opt$user_dir <- user_dir
   new_opt
 }
 
