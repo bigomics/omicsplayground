@@ -4,6 +4,16 @@
 ##
 
 
+create_user_dir_if_needed <- function(user_dir, pgxdir) {
+  if (!dir.exists(user_dir)) {
+    dir.create(user_dir)
+    example_file <- file.path(pgxdir, "example-data.pgx")
+    if (file.exists(example_file)) {
+      file.copy(example_file, user_dir)
+    }
+  }
+}
+
 read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
@@ -12,10 +22,23 @@ read_user_options <- function(user_dir) {
     ## file.copy(from = opt.file, to = user_opt_file)
   } else {
     user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+
+    ## restrict user options only to these options.
+    ALLOWED_USER_OPTS <- c(
+      "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
+      "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
+      "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
+      "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
+      "TIMEOUT", "WATERMARK"
+    )
+    user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
+
     for (opt_name in names(user_opt)) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
   }
+  # add user dir to opt file
+  new_opt$user_dir <- user_dir
   new_opt
 }
 
@@ -140,7 +163,7 @@ checkAuthorizedDomain <- function(email, domain) {
   }
   domain1 <- strsplit(domain, split = "\\|")[[1]]
   domain1 <- paste0(paste0("@", domain1, "$"), collapse = "|")
-  authorized <- grepl(domain1, email)
+  authorized <- grepl(tolower(domain1), tolower(email))
   authorized
 }
 
@@ -152,11 +175,11 @@ checkAuthorizedUser <- function(email, credentials_file = NULL) {
     return(TRUE)
   }
   CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
-  valid_user <- email %in% CREDENTIALS$email
+  valid_user <- tolower(email) %in% tolower(CREDENTIALS$email)
   if (!valid_user) {
     return(FALSE)
   }
-  sel <- match(email, CREDENTIALS$email)
+  sel <- match(tolower(email), tolower(CREDENTIALS$email))
   valid_date <- as.Date(CREDENTIALS$expiry[sel]) > as.Date(Sys.time())
   authorized <- valid_user && valid_date
   authorized
@@ -173,7 +196,7 @@ checkValidEmailFormat <- function(email) {
 }
 
 checkPersonalEmail <- function(email) {
-  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", email)
+  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", tolower(email))
 }
 
 checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {

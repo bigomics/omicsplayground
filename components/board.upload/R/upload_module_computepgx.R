@@ -23,6 +23,7 @@ upload_module_computepgx_server <- function(
     countsRT,
     samplesRT,
     contrastsRT,
+    temp_dir,
     batchRT,
     metaRT,
     lib.dir,
@@ -257,7 +258,6 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       process_obj <- reactiveVal(NULL)
       computedPGX <- shiny::reactiveVal(NULL)
-      temp_dir <- reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
@@ -320,7 +320,7 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        pgxdir <- pgx.dirRT()
+        pgxdir <- pgx.dirRT
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
         if (numpgx >= max.datasets) {
@@ -392,16 +392,6 @@ upload_module_computepgx_server <- function(
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-        message("[ComputePgxServer:@compute] start computations...")
-        message("[ComputePgxServer::@compute] gx.methods = ", paste(gx.methods, collapse = " "))
-        message("[ComputePgxServer::@compute] gset.methods = ", paste(gset.methods, collapse = " "))
-        message("[ComputePgxServer::@compute] extra.methods = ", paste(extra.methods, collapse = " "))
-
-
-        ## Create a Progress object
-
-
-
 
         flt <- ""
         use.design <- TRUE
@@ -416,17 +406,17 @@ upload_module_computepgx_server <- function(
         filter.genes <- ("remove.notexpressed" %in% flt)
         use.design <- !("noLM.prune" %in% input$dev_options)
         prune.samples <- ("noLM.prune" %in% input$dev_options)
-
-        # create folder with random name to store the csv files
-
-        # Generate random name for temporary folder
-
-        # Create temporary folder
-        temp_dir(tempfile(pattern = "pgx_"))
-        dir.create(temp_dir())
-        dbg("[compute PGX process] : tempFile", temp_dir())
-
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+        # if no temp_dir (happens when we auto-load example data via
+        # button), create a temp dir. In this case we don't care it
+        # will use /tmp
+        if (is.null(temp_dir())) {
+          temp_dir(tempfile(pattern = "pgx_"))
+          dir.create(temp_dir())
+          dbg("[compute PGX process] : tempFile", temp_dir())
+        }
+
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
@@ -434,13 +424,10 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         dbg("[ComputePgxModule.R] libx.dir = ", libx.dir)
 
-
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
 
-
         # Define create_pgx function arguments
-
         params <- list(
           samples = samples,
           counts = counts,
@@ -468,7 +455,6 @@ upload_module_computepgx_server <- function(
           datatype = input$upload_datatype,
           description = input$upload_description,
           creator = creator,
-          this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
           date = this.date
         )
 
@@ -556,8 +542,10 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(temp_dir = temp_dir, nr = nr)
+              temp_dir(NULL)
             } else {
               on_process_error(nr = nr)
+              temp_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 
@@ -601,7 +589,10 @@ upload_module_computepgx_server <- function(
         } else {
           message("[compute PGX process] : Error: Result file not found")
         }
-        unlink(temp_dir, recursive = TRUE)
+        ## remove temp dir only if "user_input/raw_" is present in temp_dir
+        if (grepl("raw_", temp_dir())) {
+          unlink(temp_dir, recursive = TRUE)
+        }
       }
 
       on_process_error <- function(nr) {
@@ -616,12 +607,12 @@ upload_module_computepgx_server <- function(
       observe({
         if (process_counter() > 0) {
           shiny::insertUI(
-            selector = ".current-dataset",
+            selector = "#current_dataset",
             where = "beforeEnd",
             ui = loading_spinner("Computation in progress...")
           )
         } else if (process_counter() == 0) {
-          shiny::removeUI(selector = ".current-dataset > #spinner-container")
+          shiny::removeUI(selector = "#current_dataset > #spinner-container")
         }
 
         MAX_DS_PROCESS <- 1

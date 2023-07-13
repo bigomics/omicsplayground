@@ -83,8 +83,6 @@ bigdash.hideTab <- function(session, tab) {
 }
 
 bigdash.toggleTab <- function(session, tab, state) {
-  message("[bigdash.toggleTab] tab = ", tab)
-  message("[bigdash.toggleTab] state = ", state)
   if (state) bigdash.showTab(session, tab)
   if (!state) bigdash.hideTab(session, tab)
 }

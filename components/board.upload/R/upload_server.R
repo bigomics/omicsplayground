@@ -7,7 +7,6 @@ UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
-                        getPGXDIR,
                         limits = c(
                           "samples" = 1000, "comparisons" = 20,
                           "genes" = 20000, "genesets" = 10000,
@@ -22,6 +21,9 @@ UploadBoard <- function(id,
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
 
     rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
+
+    # this directory is used to save pgx files, logs, inputs, etc..
+    temp_dir <- reactiveVal(NULL)
 
     shiny::observe({
       rv$contr <- contrRT()
@@ -91,8 +93,7 @@ UploadBoard <- function(id,
       pgxname <- sub("[.]pgx$", "", new_pgx$name)
       pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
       pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-
-      pgxdir <- getPGXDIR()
+      pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxname)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -191,6 +192,15 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
+
+      # only create directory once, even if user uploads files at different times
+      if (is.null(temp_dir())) {
+        auth_id <- ifelse(!auth$email %in% c("",NA), auth$email, auth$username)
+        prefix <- paste0("raw_",auth_id,"_")
+        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR,"USER_INPUT")))
+        dir.create(temp_dir(), recursive = TRUE)
+        dbg("[compute PGX process] : tempFile", temp_dir())
+      }
       message("[upload_files] >>> reading uploaded files")
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
@@ -243,6 +253,9 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
 
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_counts.csv"), row.names = TRUE)
+
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
               if (length(COUNTS_check$check) > 0) {
@@ -277,6 +290,8 @@ UploadBoard <- function(id,
 
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_samples.csv"), row.names = TRUE)
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -305,6 +320,8 @@ UploadBoard <- function(id,
 
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_contrasts.csv"), row.names = TRUE)
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
@@ -671,12 +688,13 @@ UploadBoard <- function(id,
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
+      temp_dir = temp_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
-      pgx.dirRT = shiny::reactive(getPGXDIR()),
+      pgx.dirRT = auth$user_dir,
       auth = auth,
       max.genes = as.integer(auth$options$MAX_GENES),
       max.genesets = as.integer(auth$options$MAX_GENESETS),

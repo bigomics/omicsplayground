@@ -24,7 +24,6 @@ TimerModule <- function(id,
 
     nwarn <- 0
     warn_start <- timeout - max_warn * warn_before
-    message("[timer_module] warn_start = ", warn_start)
 
     if (warn_start < 0) {
       stop("invalid and max_warn and warn_before")
@@ -65,7 +64,7 @@ TimerModule <- function(id,
         message("[TimerModule:timeout.trigger] stopped by control")
         shiny::invalidateLater(Inf)
       } else if (is_lapsed) {
-        message("**** TIME OUT! time out at = ", lapse_time())
+        message("[TimerModule:timeout.trigger] time out at = ", lapse_time())
         shiny::invalidateLater(Inf)
       } else {
         shiny::invalidateLater(timeout * 1000)
@@ -83,12 +82,11 @@ TimerModule <- function(id,
         message("[TimerModule:warn.trigger] stopped by control")
         shiny::invalidateLater(Inf)
       } else if (is_warned && nwarn < max_warn) {
-        message("**** giving warn! lapse_time = ", lapse_time())
+        message("[TimerModule:warn.trigger] giving warning at lapse_time = ", lapse_time())
         message("**** nwarn = ", nwarn)
         shiny::invalidateLater(warn_before * 1000)
         nwarn <<- nwarn + 1
       } else if (is_warned && nwarn == max_warn) {
-        message("sorry no warn left")
         shiny::invalidateLater(Inf)
       } else {
         shiny::invalidateLater(warn_start * 1000)

@@ -56,7 +56,6 @@ loading_table_datasets_ui <- function(
 }
 
 loading_table_datasets_server <- function(id,
-                                          getPGXDIR,
                                           pgx_topdir,
                                           pgx_shared_dir,
                                           pgx_public_dir,
@@ -80,7 +79,7 @@ loading_table_datasets_server <- function(id,
       ## upstream trigger
 
       reload_pgxdir()
-      pgxdir <- getPGXDIR()
+      pgxdir <- auth$user_dir
 
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
         need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb = FALSE)
@@ -108,7 +107,7 @@ loading_table_datasets_server <- function(id,
         return(NULL)
       }
 
-      pgxdir <- getPGXDIR()
+      pgxdir <- auth$user_dir
       pgxfiles <- dir(pgxdir, pattern = ".pgx$")
       sel <- sub("[.]pgx$", "", df$dataset) %in% sub("[.]pgx$", "", pgxfiles)
       df <- df[sel, , drop = FALSE]
@@ -179,15 +178,8 @@ loading_table_datasets_server <- function(id,
         selected_row <- as.numeric(stringr::str_split(input$share_public_pgx, "_row_")[[1]][2])
         pgx_name <- table_data()[selected_row, "dataset"]
         pgx_name <- sub("[.]pgx$", "", pgx_name)
-        pgx_path <- getPGXDIR()
-        pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
+        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         new_pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
-        pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
-
-        new_pgx_file <- file.path(
-          pgx_public_dir,
-          paste0(pgx_name, ".pgx")
-        )
 
         ## abort if file exists
         if (file.exists(new_pgx_file)) {
@@ -230,8 +222,7 @@ loading_table_datasets_server <- function(id,
 
     shiny::observeEvent(input$loadbutton, {
       pgxfile <- table_selected_pgx()
-
-      pgxfilename <- file.path(getPGXDIR(), pgxfile)
+      pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
         message("[LoadingBoard@load_react] ERROR pgxfile not found : ", pgxfilename, "\n")
         return(NULL)
@@ -244,7 +235,6 @@ loading_table_datasets_server <- function(id,
 
     table_data <- shiny::reactive({
       df <- getFilteredPGXINFO()
-
       if (is.null(df)) {
         return(NULL)
       }
@@ -260,13 +250,8 @@ loading_table_datasets_server <- function(id,
 
     pgxTable_DT <- reactive({
       df <- table_data()
-      shiny::req(df)
-      if (is.null(df)) {
-        return(NULL)
-      }
-
       is.dt <- is.data.frame(df)
-      if (!is.dt || nrow(df) == 0) {
+      if (is.null(df) || !is.dt || nrow(df) == 0) {
         shinyalert::shinyalert(
           title = "Empty?",
           text = paste(
@@ -436,13 +421,12 @@ loading_table_datasets_server <- function(id,
 
         row_edited <- match(dataset_edited, pgxinfo$dataset)
         pgxinfo[row_edited, col_edited] <- val
-        pgxdir <- getPGXDIR()
-        fname <- file.path(pgxdir, "datasets-info.csv")
+        fname <- file.path(auth$user_dir, "datasets-info.csv")
         write.csv(pgxinfo, fname)
 
         ## also rewrite description in actual pgx file
         pgx_name <- dataset_edited
-        pgx_file <- file.path(pgxdir, paste0(pgx_name, ".pgx"))
+        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
 
 
@@ -585,9 +569,7 @@ loading_table_datasets_server <- function(id,
         pgxfile <- as.character(df$dataset[row_idx])
         pgxname <- sub("[.]pgx$", "", pgxfile)
         pgxfile <- paste0(pgxname, ".pgx") ## add/replace .pgx
-
-        pgx.path <- getPGXDIR()
-        pgxfile1 <- file.path(pgx.path, pgxfile)
+        pgxfile1 <- file.path(auth$user_dir, pgxfile)
         sel <- NULL
 
         deletePGX <- function(x) {
@@ -595,14 +577,12 @@ loading_table_datasets_server <- function(id,
             pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
             file.rename(pgxfile1, pgxfile2)
             ## !!!! we should also delete entry in PGXINFO and allFC !!!
-
             ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
-
-            info <- read.csv(file.path(pgx.path, "datasets-info.csv"), row.names = 1)
+            info <- read.csv(file.path(auth$user_dir, "datasets-info.csv"), row.names = 1)
             idx <- match(pgxname, info$dataset)
             if (length(idx)) {
               info <- info[-idx, ]
-              write.csv(info, file.path(pgx.path, "datasets-info.csv"))
+              write.csv(info, file.path(auth$user_dir, "datasets-info.csv"))
             }
             if (is.null(reload_pgxdir())) {
               reload_pgxdir(1)
@@ -799,8 +779,7 @@ loading_table_datasets_server <- function(id,
       if (input$share_confirm) {
         pgx_name <- selected_sharePGX()
         pgx_name <- sub("[.]pgx$", "", pgx_name)
-        pgx_path <- getPGXDIR()
-        pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
+        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
 
         ## The shared file will be copied to the data_shared
         ## folder with the name of the sender and receiver in the

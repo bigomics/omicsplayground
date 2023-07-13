@@ -33,10 +33,9 @@ app_ui <- function() {
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     id <- "maintabs"
     header <- shiny::tagList(
-      shiny::tags$head(shiny::tags$script(src = "temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "bigomics-extra.js")), ## chatra,clarity
       shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
-      gtag2, ## Google Tags???
+      ##    gtag2, ## Google Tag Manager???
+      shiny::tags$head(shiny::tags$script(src = "temp.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "favicon.ico")),
       shinyjs::useShinyjs(),
@@ -44,7 +43,6 @@ app_ui <- function() {
       sever::useSever(),
       bigLoaders::addBigLoaderDeps(),
       firebase::useFirebase(firestore = TRUE, analytics = TRUE),
-      shiny::tags$script(async = NA, src = "https://platform.twitter.com/widgets.js"),
       shinybusy::busy_start_up(
         text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
         background = "#2780e3", color = "#ffffff",
@@ -319,18 +317,20 @@ app_ui <- function() {
       theme = big_theme2,
       sidebar = sidebar,
       navbar = bigdash::navbar(
-        tags$img(
+        title = tags$img(
           id = "logo-bigomics",
           src = "assets/img/bigomics.png",
           width = "110",
         ),
-        shiny::conditionalPanel(
-          condition = "input.nav == 'welcome-tab'",
-          shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
-        ),
-        shiny::conditionalPanel(
-          condition = "input.nav != 'welcome-tab'",
-          shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+        center = tags$div(
+          shiny::conditionalPanel(
+            condition = "input.nav == 'welcome-tab'",
+            shiny::div(paste("Omics Playground", VERSION), class = "current-dataset"),
+          ),
+          shiny::conditionalPanel(
+            condition = "input.nav != 'welcome-tab'",
+            shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+          )
         ),
         div.chirpbutton,
         bigdash::navbarDropdown(

@@ -22,7 +22,8 @@ NoAuthenticationModule <- function(id,
         email = "",
         level = "",
         limit = "",
-        options = opt
+        options = opt,
+        user_dir = PGX.DIR ## global
       )
 
       m <- splashLoginModal(
@@ -106,7 +107,8 @@ FirebaseAuthenticationModule <- function(id,
       uid = NULL,
       stripe_id = NULL,
       href = NULL,
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -151,16 +153,21 @@ FirebaseAuthenticationModule <- function(id,
       shiny::showModal(m)
     }
 
+    ### I don't really understand this???... (IK 10jul23)
     first_time <- TRUE
     observeEvent(USER$logged, {
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
-      ## we force reset/logout to delete sleeping logins.
+      ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
         # set options
-        USER$options <- read_user_options(
-          file.path(PGX.DIR, USER$email)
-        )
+        if (opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        USER$options <- read_user_options(USER$user_dir)
         return()
       }
       first_time <<- FALSE
@@ -168,7 +175,6 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     observeEvent(input$userLogout, {
-      dbg("[FirebaseAuthenticationModule] oberveEvent:userLogout triggered!")
       resetUSER()
     })
 
@@ -189,7 +195,8 @@ FirebaseAuthenticationModule <- function(id,
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       ## or against a subscription list.
-      check <- checkEmail(input$emailInput, domain, credentials_file)
+      email <- tolower(input$emailInput)
+      check <- checkEmail(email, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -200,7 +207,7 @@ FirebaseAuthenticationModule <- function(id,
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(input$emailInput)
+      sendEmailLink(email)
     })
 
     observeEvent(sendEmailLink(),
@@ -224,7 +231,7 @@ FirebaseAuthenticationModule <- function(id,
       ## even if the response is fine, we still need to check against
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
-      user_email <- response$response$email
+      user_email <- tolower(response$response$email)
       check2 <- checkEmail(user_email, domain, credentials_file)
       if (!check2$valid) {
         shinyalert::shinyalert(
@@ -244,18 +251,21 @@ FirebaseAuthenticationModule <- function(id,
       USER$logged <- TRUE
       USER$uid <- as.character(response$response$uid)
       USER$username <- response$response$displayName
-      USER$email <- response$response$email
+      USER$email <- user_email
 
       if (!is.null(USER$username)) USER$username <- as.character(USER$username)
       if (!is.null(USER$email)) USER$email <- as.character(USER$email)
       if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
-      # set options
-      USER$options <- read_user_options(
-        file.path(PGX.DIR, USER$email)
-      )
-
+      # create user dir (if needed) and set options
+      if (opt$ENABLE_USERDIR == TRUE) {
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      } else {
+        USER$user_dir <- file.path(PGX.DIR)
+      }
+      USER$options <- read_user_options(USER$user_dir)
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -378,7 +388,8 @@ EmailLinkAuthenticationModule <- function(id,
       uid = NA,
       stripe_id = NA,
       href = NA,
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -464,7 +475,8 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
-      check <- checkEmail(input$emailInput, domain, credentials_file)
+      email <- tolower(input$emailInput)
+      check <- checkEmail(email, domain, credentials_file)
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -475,7 +487,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(input$emailInput) ## can take a while...
+      sendEmailLink(email) ## can take a while...
     })
 
     observeEvent(sendEmailLink(),
@@ -511,11 +523,16 @@ EmailLinkAuthenticationModule <- function(id,
       if (is.null(USER$username)) USER$username <- ""
       if (is.null(USER$email)) USER$email <- ""
 
-      # set options
-      USER$options <- read_user_options(
-        file.path(PGX.DIR, USER$email)
-      )
+      # create user dir (if needed) and set options
+      if (opt$ENABLE_USERDIR) {
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      } else {
+        USER$user_dir <- file.path(PGX.DIR)
+      }
+      USER$options <- read_user_options(USER$user_dir)
 
+      session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -543,7 +560,8 @@ PasswordAuthenticationModule <- function(id,
       password = NA,
       level = "",
       limit = "",
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR
     )
 
     login_modal <- splashLoginModal(
@@ -585,14 +603,14 @@ PasswordAuthenticationModule <- function(id,
 
       if (is.null(login_username) || login_username == "") {
         output$login_warning <- shiny::renderText("missing username")
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         return(NULL)
       }
       if (is.null(login_password) || login_password == "") {
         output$login_warning <- shiny::renderText("missing password")
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         return(NULL)
@@ -668,6 +686,7 @@ PasswordAuthenticationModule <- function(id,
         USER$level <- cred$level
         USER$limit <- cred$limit
         USER$logged <- TRUE
+
         file_path <- paste0(TRACE.DIR, "/trace_log.txt")
         if(file.exists(file_path)) {
           lines <- readLines(file_path)
@@ -675,13 +694,21 @@ PasswordAuthenticationModule <- function(id,
           lines <- c(lines, login_msg)
           writeLines(lines, file_path)
         }
-        # set options
-        USER$options <- read_user_options(
-          file.path(PGX.DIR, USER$username)
-        )
+
+        # Create user dir (if needed) and set user options
+        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ", opt$ENABLE_USERDIR)
+        if (opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR, USER$username)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        dbg("[PasswordAuthenticationModule] user_dir = ", USER$user_dir)
+        USER$options <- read_user_options(USER$user_dir)
+
+        ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
-        message("[PasswordAuthenticationModule::login] login invalid!")
         if (!valid.date) {
           output$login_warning <- shiny::renderText("Registration expired")
         }
@@ -691,10 +718,11 @@ PasswordAuthenticationModule <- function(id,
         if (!valid.user) {
           output$login_warning <- shiny::renderText("Invalid user")
         }
+
         if (!valid.trace){
           output$login_warning <- shiny::renderText("User already in use. Wait 2 minutes and try again")
         }
-        shinyjs::delay(2000, {
+        shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         USER$logged <- FALSE
@@ -744,7 +772,8 @@ LoginCodeAuthenticationModule <- function(id,
       email = NA,
       level = "",
       limit = "",
-      options = opt ## global
+      options = opt, ## global
+      user_dir = PGX.DIR ## global
     )
 
     email_sent <- FALSE
@@ -823,25 +852,25 @@ LoginCodeAuthenticationModule <- function(id,
       shiny::req(input$login_email)
 
       if (!email_sent) {
-        login_email <- input$login_email
+        login_email <- tolower(input$login_email)
 
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         check <- checkEmail(login_email, domain, credentials_file)
         if (!check$valid) {
           output$login_warning <- shiny::renderText(check$msg)
-          shinyjs::delay(3000, {
+          shinyjs::delay(4000, {
             output$login_warning <- shiny::renderText("")
           })
           return(NULL)
         }
 
-
         ## MAIL CODE TO USER
         ## login_code <- "hello123"
-        ## login_code <<- paste0(sample(c(letters,LETTERS,0:9),12),collapse='')
-        login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-        dbg("[LoginCodeAuthenticationModule:observeEvent( input$login_btn] new_code = ", login_code)
+        ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
+        login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
+
+        info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
         sendLoginCode(login_email, login_code, mail_creds = mail_creds)
         USER$email <- login_email
         USER$username <- login_email
@@ -854,6 +883,7 @@ LoginCodeAuthenticationModule <- function(id,
           with.email = FALSE,
           with.username = FALSE,
           with.password = TRUE,
+          hide.password = FALSE,
           title = "Enter Code",
           subtitle = "Enter the login code that we have just sent to you.",
           button.text = "Submit",
@@ -893,7 +923,7 @@ LoginCodeAuthenticationModule <- function(id,
 
         if (!login.OK) {
           output$login_warning <- shiny::renderText("invalid code")
-          shinyjs::delay(2000, {
+          shinyjs::delay(4000, {
             output$login_warning <- shiny::renderText("")
           })
           updateTextInput(session, "login_password", value = "")
@@ -901,16 +931,22 @@ LoginCodeAuthenticationModule <- function(id,
         }
 
         if (login.OK) {
-          message("[LoginCodeAuthenticationModule::login] 3 : login OK! ")
           output$login_warning <- shiny::renderText("")
-          USER$logged <- TRUE
-          USER$options <- read_user_options(
-            file.path(PGX.DIR, USER$email)
-          )
-          session$sendCustomMessage("set-user", list(user = USER$username))
-          entered_code("") ## important for next user
 
+          ## create dir if needed and read user options
+          if (opt$ENABLE_USERDIR) {
+            USER$user_dir <- file.path(PGX.DIR, USER$email)
+            create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          } else {
+            USER$user_dir <- file.path(PGX.DIR)
+          }
+          USER$options <- read_user_options(USER$user_dir)
+
+          session$sendCustomMessage("set-user", list(user = USER$email))
+          entered_code("") ## important for next user
           shiny::removeModal()
+
+          USER$logged <- TRUE
         }
       }
     })
@@ -923,6 +959,27 @@ LoginCodeAuthenticationModule <- function(id,
       resetUSER()
     })
 
+    first_time <- TRUE
+    observeEvent(USER$logged, {
+      ## no need to show the modal if the user is logged this is due
+      ## to persistence. But if it is the first time of the session
+      ## we force reset/logout to delete sleeping (persistent?) logins.
+      if (USER$logged && !first_time) {
+        if (opt$ENABLE_USERDIR) {
+          user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(user_dir, PGX.DIR)
+          USER$user_dir <- user_dir
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        dbg("[USER RELOGGED PGX FOLDER:", USER$user_dir)
+        # set options
+        USER$options <- read_user_options(USER$user_dir)
+        return()
+      }
+      first_time <<- FALSE
+      resetUSER()
+    })
     return(USER)
   })
 }

@@ -142,7 +142,6 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
-      getPGXDIR = getPgxDir,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
@@ -169,26 +168,6 @@ app_server <- function(input, output, session) {
       nlast = 100
     )
   }
-
-
-  #' Get user-pgx folder
-  getPgxDir <- reactive({
-    shiny::req(auth$logged)
-    if (!auth$logged) {
-      return(NULL)
-    }
-    userpgx <- PGX.DIR
-    if (auth$options$ENABLE_USERDIR &&
-      authentication %in% c("email-link", "login-code", "firebase")) {
-      userpgx <- file.path(PGX.DIR, auth$email)
-    } else if (auth$options$ENABLE_USERDIR &&
-      authentication %in% c("password")) {
-      userpgx <- file.path(PGX.DIR, auth$username)
-    } else {
-      userpgx <- PGX.DIR
-    }
-    userpgx
-  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -375,7 +354,7 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["cmap"]) {
         info("[server.R] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = getPgxDir)
+        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = auth$user_dir)
       }
 
       if (ENABLED["cell"]) {
@@ -446,19 +425,15 @@ app_server <- function(input, output, session) {
   })
 
   output$current_user <- shiny::renderText({
-    shiny::req(auth$logged)
-    if (!auth$logged) {
-      return("(nobody)")
-    }
     ## trigger on change of user
     shiny::req(auth$logged)
     if (!auth$logged) {
       return("(not logged in)")
     }
     user <- auth$email
-    dbg("[server:output$current_user] user = ", user)
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
     if (is.null(user) || user %in% c("", NA)) user <- "User"
+    dbg("[server:output$current_user] user = ", user)
     user
   })
 
@@ -485,7 +460,7 @@ app_server <- function(input, output, session) {
         check_personal_email(auth, PGX.DIR)
       }
     } else {
-      # clear PGX data when user logs out
+      # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
       if (length.pgx > 0) {
         for (i in 1:length.pgx) {
@@ -572,8 +547,7 @@ app_server <- function(input, output, session) {
     }
     WARN_BEFORE <- round(TIMEOUT / 6)
 
-    info("[server.R] Creating TimerModule...")
-    info("[server.R] TIMEOUT = ", TIMEOUT, "(s)")
+    info("[server.R] Creating TimerModule: TIMEOUT = ", TIMEOUT, "(s)")
     info("[server.R] WARN_BEFORE = ", WARN_BEFORE)
 
     timer <- TimerModule(
@@ -587,7 +561,6 @@ app_server <- function(input, output, session) {
     )
 
     observeEvent(timer$warn(), {
-      info("[server.R] timer$warn = ", timer$warn())
       if (timer$warn() == 0) {
         return()
       } ## skip first atInit call
@@ -676,7 +649,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
           style = "text-align:center; line-height: 1em;"
         ),
         footer = div(
-          "Copyright © 2000-2023 BigOmics Analytics, Inc.",
+          "© 2000-2023 BigOmics Analytics, Inc.",
           br(), br(),
           paste("Credits:", authors),
           style = "font-size: 0.8em; line-height: 0.9em; text-align:center;"

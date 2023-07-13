@@ -11,7 +11,6 @@ upload_module_received_ui <- function(id, height = 720) {
 upload_module_received_server <- function(id,
                                           auth,
                                           pgx_shared_dir,
-                                          getPGXDIR,
                                           max_datasets,
                                           reload_pgxdir,
                                           current_page) {
@@ -124,7 +123,7 @@ upload_module_received_server <- function(id,
           new_pgx_name <- sub("__to__.*", "", pgx_name)
 
           ## rename the file to be a valid pgx file
-          pgxdir <- getPGXDIR()
+          pgxdir <- auth$user_dir
           file_from <- file.path(pgx_shared_dir, pgx_name)
           file_to <- file.path(pgxdir, new_pgx_name)
 
