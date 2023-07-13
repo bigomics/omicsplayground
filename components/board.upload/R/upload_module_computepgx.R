@@ -561,7 +561,6 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(temp_dir = temp_dir, nr = nr)
-              browser()
               temp_dir(NULL)
             } else {
               on_process_error(nr = nr)
