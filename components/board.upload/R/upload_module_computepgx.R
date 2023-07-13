@@ -422,8 +422,6 @@ upload_module_computepgx_server <- function(
         # Generate random name for temporary folder
 
         # Create temporary folder
-        browser()
-
 
         temp_dir(tempfile(pattern = "/log_input/pgx_", tmpdir = dirname(OPG)))
         dir.create(temp_dir())
@@ -605,9 +603,9 @@ upload_module_computepgx_server <- function(
           message("[compute PGX process] : Error: Result file not found")
         }
         ## remove temp dir only if "log_input/pgx_" is present in temp_dir
-        if (grepl("log_input/pgx_", temp_dir){
+        if (grepl("log_input/pgx_", temp_dir())){
           unlink(temp_dir, recursive = TRUE)
-        })        
+        }        
       }
 
       on_process_error <- function(nr) {
