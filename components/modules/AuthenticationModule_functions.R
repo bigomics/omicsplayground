@@ -22,6 +22,16 @@ read_user_options <- function(user_dir) {
     ## file.copy(from = opt.file, to = user_opt_file)
   } else {
     user_opt <- playbase::pgx.readOptions(file = user_opt_file)
+
+    ## restrict user options only to these options.
+    ALLOWED_USER_OPTS <- c(
+      "ENABLE_CHIRP","ENABLE_DELETE","ENABLE_PGX_DOWNLOAD",
+      "ENABLE_PUBLIC_SHARE","ENABLE_UPLOAD","ENABLE_USER_SHARE",
+      "MAX_DATASETS","MAX_SAMPLES","MAX_COMPARISONS",
+      "MAX_GENES","MAX_GENESETS","MAX_SHARED_QUEUE",
+      "TIMEOUT","WATERMARK")
+    user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
+
     for (opt_name in names(user_opt)) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
