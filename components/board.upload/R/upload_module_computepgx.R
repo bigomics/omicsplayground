@@ -422,7 +422,10 @@ upload_module_computepgx_server <- function(
         # Generate random name for temporary folder
 
         # Create temporary folder
-        temp_dir(tempfile(pattern = "pgx_"))
+        browser()
+
+
+        temp_dir(tempfile(pattern = "/log_input/pgx_", tmpdir = dirname(OPG)))
         dir.create(temp_dir())
         dbg("[compute PGX process] : tempFile", temp_dir())
 
