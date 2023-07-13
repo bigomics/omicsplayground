@@ -424,14 +424,14 @@ upload_module_computepgx_server <- function(
         # Create temporary folder
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-        
+
         # if no temp_dir (happens when we auto-load example data via button), create a temp dir
         if (is.null(temp_dir())) {
           temp_dir(tempfile(pattern = "pgx_"))
           dir.create(temp_dir())
           dbg("[compute PGX process] : tempFile", temp_dir())
         }
-        
+
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
@@ -609,10 +609,9 @@ upload_module_computepgx_server <- function(
           message("[compute PGX process] : Error: Result file not found")
         }
         ## remove temp dir only if "log_input/pgx_" is present in temp_dir
-        if (grepl("pgx_", temp_dir())){
+        if (grepl("pgx_", temp_dir())) {
           unlink(temp_dir, recursive = TRUE)
         }
-
       }
 
       on_process_error <- function(nr) {

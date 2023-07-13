@@ -162,13 +162,13 @@ FirebaseAuthenticationModule <- function(id,
         user_dir <- file.path(PGX.DIR, USER$email)
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
-        if(opt$ENABLE_USERDIR == TRUE){
+        if (opt$ENABLE_USERDIR == TRUE) {
           USER$options$user_dir <- user_dir
         }
-        if(opt$ENABLE_USERDIR == FALSE){
+        if (opt$ENABLE_USERDIR == FALSE) {
           USER$options$user_dir <- file.path(PGX.DIR)
         }
-       dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir) 
+        dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir)
         return()
       }
       first_time <<- FALSE
@@ -264,10 +264,10 @@ FirebaseAuthenticationModule <- function(id,
       create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
 
-      if(opt$ENABLE_USERDIR == TRUE){
-         USER$options$user_dir <- user_dir
+      if (opt$ENABLE_USERDIR == TRUE) {
+        USER$options$user_dir <- user_dir
       }
-      if(opt$ENABLE_USERDIR == FALSE){
+      if (opt$ENABLE_USERDIR == FALSE) {
         USER$options$user_dir <- file.path(PGX.DIR)
       }
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
@@ -530,11 +530,11 @@ EmailLinkAuthenticationModule <- function(id,
       user_dir <- file.path(PGX.DIR, USER$email)
       create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
-      
-      if(opt$ENABLE_USERDIR == TRUE){
-         USER$options$user_dir <- user_dir
+
+      if (opt$ENABLE_USERDIR == TRUE) {
+        USER$options$user_dir <- user_dir
       }
-      if(opt$ENABLE_USERDIR == FALSE){
+      if (opt$ENABLE_USERDIR == FALSE) {
         USER$options$user_dir <- file.path(PGX.DIR)
       }
 
@@ -641,11 +641,11 @@ PasswordAuthenticationModule <- function(id,
 
         # Create user dir (if needed) and set user options
         user_dir <- file.path(PGX.DIR, USER$email)
-        if(opt$ENABLE_USERDIR == TRUE){
-           
+        if (opt$ENABLE_USERDIR == TRUE) {
+
         }
-        if(USER$options$ENABLE_USERDIR == FALSE){
-          user_dir <- file.path(PGX.DIR) 
+        if (USER$options$ENABLE_USERDIR == FALSE) {
+          user_dir <- file.path(PGX.DIR)
         }
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
@@ -868,14 +868,14 @@ LoginCodeAuthenticationModule <- function(id,
           user_dir <- file.path(PGX.DIR, USER$email)
           create_user_dir_if_needed(user_dir, PGX.DIR)
           USER$options <- read_user_options(user_dir)
-          
-          if(opt$ENABLE_USERDIR == TRUE){
-              USER$options$user_dir <- user_dir
+
+          if (opt$ENABLE_USERDIR == TRUE) {
+            USER$options$user_dir <- user_dir
           }
-          if(opt$ENABLE_USERDIR == FALSE){
+          if (opt$ENABLE_USERDIR == FALSE) {
             USER$options$user_dir <- file.path(PGX.DIR)
           }
-          
+
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
 
@@ -892,7 +892,7 @@ LoginCodeAuthenticationModule <- function(id,
       resetUSER()
     })
 
-    first_time = TRUE
+    first_time <- TRUE
     observeEvent(USER$logged, {
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
@@ -900,14 +900,14 @@ LoginCodeAuthenticationModule <- function(id,
       if (USER$logged && !first_time) {
         # set options
         user_dir <- file.path(PGX.DIR, USER$email)
-        
+
         dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir)
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
-        if(opt$ENABLE_USERDIR == TRUE){
+        if (opt$ENABLE_USERDIR == TRUE) {
           USER$options$user_dir <- user_dir
         }
-        if(opt$ENABLE_USERDIR == FALSE){
+        if (opt$ENABLE_USERDIR == FALSE) {
           USER$options$user_dir <- file.path(PGX.DIR)
         }
         return()
