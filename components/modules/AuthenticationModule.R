@@ -22,7 +22,8 @@ NoAuthenticationModule <- function(id,
         email = "",
         level = "",
         limit = "",
-        options = opt
+        options = opt,
+        user_dir = PGX.DIR  ## global
       )
 
       m <- splashLoginModal(
@@ -106,7 +107,8 @@ FirebaseAuthenticationModule <- function(id,
       uid = NULL,
       stripe_id = NULL,
       href = NULL,
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -159,16 +161,13 @@ FirebaseAuthenticationModule <- function(id,
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
         # set options
-        user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(user_dir, PGX.DIR)
-        USER$options <- read_user_options(user_dir)
-        if (opt$ENABLE_USERDIR == TRUE) {
-          USER$options$user_dir <- user_dir
+        if (opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
         }
-        if (opt$ENABLE_USERDIR == FALSE) {
-          USER$options$user_dir <- file.path(PGX.DIR)
-        }
-        dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir)
+        USER$options <- read_user_options(USER$user_dir)
         return()
       }
       first_time <<- FALSE
@@ -260,16 +259,13 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # create user dir (if needed) and set options
-      user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(user_dir, PGX.DIR)
-      USER$options <- read_user_options(user_dir)
-
       if (opt$ENABLE_USERDIR == TRUE) {
-        USER$options$user_dir <- user_dir
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      } else {
+        USER$user_dir <- file.path(PGX.DIR)
       }
-      if (opt$ENABLE_USERDIR == FALSE) {
-        USER$options$user_dir <- file.path(PGX.DIR)
-      }
+      USER$options <- read_user_options(USER$user_dir)
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
@@ -392,7 +388,8 @@ EmailLinkAuthenticationModule <- function(id,
       uid = NA,
       stripe_id = NA,
       href = NA,
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR      
     )
 
     firebase <- firebase::FirebaseSocial$
@@ -527,16 +524,13 @@ EmailLinkAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # create user dir (if needed) and set options
-      user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(user_dir, PGX.DIR)
-      USER$options <- read_user_options(user_dir)
-
-      if (opt$ENABLE_USERDIR == TRUE) {
-        USER$options$user_dir <- user_dir
+      if (opt$ENABLE_USERDIR) {
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      } else {
+        USER$user_dir <- file.path(PGX.DIR)
       }
-      if (opt$ENABLE_USERDIR == FALSE) {
-        USER$options$user_dir <- file.path(PGX.DIR)
-      }
+      USER$options <- read_user_options(USER$user_dir)
 
       session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
@@ -566,7 +560,8 @@ PasswordAuthenticationModule <- function(id,
       password = NA,
       level = "",
       limit = "",
-      options = opt
+      options = opt,
+      user_dir = PGX.DIR
     )
 
     login_modal <- splashLoginModal(
@@ -640,15 +635,15 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # Create user dir (if needed) and set user options
-        user_dir <- file.path(PGX.DIR, USER$email)
-        if (opt$ENABLE_USERDIR == TRUE) {
-
+        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ",opt$ENABLE_USERDIR)
+        if (opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR, USER$username)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
         }
-        if (opt$ENABLE_USERDIR == FALSE) {
-          user_dir <- file.path(PGX.DIR)
-        }
-        create_user_dir_if_needed(user_dir, PGX.DIR)
-        USER$options <- read_user_options(user_dir)
+        dbg("[PasswordAuthenticationModule] user_dir = ",USER$user_dir)
+        USER$options <- read_user_options(USER$user_dir)
 
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
@@ -703,7 +698,8 @@ LoginCodeAuthenticationModule <- function(id,
       email = NA,
       level = "",
       limit = "",
-      options = opt ## global
+      options = opt, ## global
+      user_dir = PGX.DIR ## global
     )
 
     email_sent <- FALSE
@@ -862,24 +858,21 @@ LoginCodeAuthenticationModule <- function(id,
 
         if (login.OK) {
           output$login_warning <- shiny::renderText("")
-          USER$logged <- TRUE
 
           ## create dir if needed and read user options
-          user_dir <- file.path(PGX.DIR, USER$email)
-          create_user_dir_if_needed(user_dir, PGX.DIR)
-          USER$options <- read_user_options(user_dir)
-
-          if (opt$ENABLE_USERDIR == TRUE) {
-            USER$options$user_dir <- user_dir
+          if (opt$ENABLE_USERDIR) {
+            USER$user_dir <- file.path(PGX.DIR, USER$email)
+            create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          } else {
+            USER$user_dir <- file.path(PGX.DIR)
           }
-          if (opt$ENABLE_USERDIR == FALSE) {
-            USER$options$user_dir <- file.path(PGX.DIR)
-          }
+          USER$options <- read_user_options(USER$user_dir)
 
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
-
           shiny::removeModal()
+          
+          USER$logged <- TRUE
         }
       }
     })
@@ -898,18 +891,16 @@ LoginCodeAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
+        if (opt$ENABLE_USERDIR) {
+          user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(user_dir, PGX.DIR)
+          USER$user_dir <- user_dir
+        } else {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        dbg("[USER RELOGGED PGX FOLDER:", USER$user_dir)
         # set options
-        user_dir <- file.path(PGX.DIR, USER$email)
-
-        dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir)
-        create_user_dir_if_needed(user_dir, PGX.DIR)
-        USER$options <- read_user_options(user_dir)
-        if (opt$ENABLE_USERDIR == TRUE) {
-          USER$options$user_dir <- user_dir
-        }
-        if (opt$ENABLE_USERDIR == FALSE) {
-          USER$options$user_dir <- file.path(PGX.DIR)
-        }
+        USER$options <- read_user_options(USER$user_dir)
         return()
       }
       first_time <<- FALSE
