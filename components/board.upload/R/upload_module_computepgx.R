@@ -604,7 +604,10 @@ upload_module_computepgx_server <- function(
         } else {
           message("[compute PGX process] : Error: Result file not found")
         }
-        unlink(temp_dir, recursive = TRUE)
+        ## remove temp dir only if "log_input/pgx_" is present in temp_dir
+        if (grepl("log_input/pgx_", temp_dir){
+          unlink(temp_dir, recursive = TRUE)
+        })        
       }
 
       on_process_error <- function(nr) {
