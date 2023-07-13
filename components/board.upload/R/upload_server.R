@@ -192,12 +192,11 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
-
       # only create directory once, even if user uploads files at different times
       if (is.null(temp_dir())) {
-        auth_id <- ifelse(!auth$email %in% c("",NA), auth$email, auth$username)
-        prefix <- paste0("raw_",auth_id,"_")
-        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR,"USER_INPUT")))
+        auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
+        prefix <- paste0("raw_", auth_id, "_")
+        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT")))
         dir.create(temp_dir(), recursive = TRUE)
         dbg("[compute PGX process] : tempFile", temp_dir())
       }
