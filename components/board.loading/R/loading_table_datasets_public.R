@@ -123,7 +123,7 @@ loading_table_datasets_public_server <- function(id,
       ignoreNULL = FALSE
     )
 
-    observeEvent( input$importbutton, {
+    observeEvent(input$importbutton, {
       selected_row <- pgxtable_public$rows_selected()
       pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
