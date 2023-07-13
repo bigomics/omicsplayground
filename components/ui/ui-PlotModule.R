@@ -352,7 +352,6 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
         shiny::tags$head(shiny::tags$style(modalfooter.none)),
-        shiny::tags$head(shiny::tags$style(".dropdown-menu:not(.dropdown-menu-body) { display: none; }")),
         shiny::tags$script(src = "dropdown-helper.js")
       )
     ),
