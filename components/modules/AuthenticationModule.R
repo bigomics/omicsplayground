@@ -260,15 +260,16 @@ FirebaseAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # create user dir (if needed) and set options
-      if(USER$options$ENABLE_USERDIR == TRUE){
-        user_dir <- file.path(pgx.dir, user$email) 
-        }
-      if(USER$options$ENABLE_USERDIR == FALSE){
-        user_dir <- file.path(pgx.dir)
-      }
+      user_dir <- file.path(pgx.dir, user$email)
       create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
 
+      if(opt$ENABLE_USERDIR == TRUE){
+         USER$options$user_dir <- user_dir
+      }
+      if(opt$ENABLE_USERDIR == FALSE){
+        USER$options$user_dir <- file.path(PGX.DIR)
+      }
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
