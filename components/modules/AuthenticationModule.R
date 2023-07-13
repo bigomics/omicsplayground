@@ -890,6 +890,8 @@ LoginCodeAuthenticationModule <- function(id,
     observeEvent(input$userLogout, {
       resetUSER()
     })
+
+    first_time = TRUE
     observeEvent(USER$logged, {
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
