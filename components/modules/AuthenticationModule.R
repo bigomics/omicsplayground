@@ -160,8 +160,6 @@ FirebaseAuthenticationModule <- function(id,
       if (USER$logged && !first_time) {
         # set options
         user_dir <- file.path(PGX.DIR, USER$email)
-        
-        dbg("[USER RELOGGED PGX FOLDER:", auth$options$user_dir)
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
         if(opt$ENABLE_USERDIR == TRUE){
@@ -170,6 +168,7 @@ FirebaseAuthenticationModule <- function(id,
         if(opt$ENABLE_USERDIR == FALSE){
           USER$options$user_dir <- file.path(PGX.DIR)
         }
+       dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir) 
         return()
       }
       first_time <<- FALSE
@@ -526,7 +525,7 @@ EmailLinkAuthenticationModule <- function(id,
       if (is.null(USER$email)) USER$email <- ""
 
       # create user dir (if needed) and set options
-      user_dir <- file.path(pgx.dir, USER$email)
+      user_dir <- file.path(PGX.DIR, USER$email)
       create_user_dir_if_needed(user_dir, PGX.DIR)
       USER$options <- read_user_options(user_dir)
       
@@ -891,7 +890,28 @@ LoginCodeAuthenticationModule <- function(id,
     observeEvent(input$userLogout, {
       resetUSER()
     })
-
+    observeEvent(USER$logged, {
+      ## no need to show the modal if the user is logged this is due
+      ## to persistence. But if it is the first time of the session
+      ## we force reset/logout to delete sleeping (persistent?) logins.
+      if (USER$logged && !first_time) {
+        # set options
+        user_dir <- file.path(PGX.DIR, USER$email)
+        
+        dbg("[USER RELOGGED PGX FOLDER:", USER$options$user_dir)
+        create_user_dir_if_needed(user_dir, PGX.DIR)
+        USER$options <- read_user_options(user_dir)
+        if(opt$ENABLE_USERDIR == TRUE){
+          USER$options$user_dir <- user_dir
+        }
+        if(opt$ENABLE_USERDIR == FALSE){
+          USER$options$user_dir <- file.path(PGX.DIR)
+        }
+        return()
+      }
+      first_time <<- FALSE
+      resetUSER()
+    })
     return(USER)
   })
 }
