@@ -23,6 +23,7 @@ upload_module_computepgx_server <- function(
     countsRT,
     samplesRT,
     contrastsRT,
+    temp_dir,
     batchRT,
     metaRT,
     lib.dir,
@@ -257,7 +258,6 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       process_obj <- reactiveVal(NULL)
       computedPGX <- shiny::reactiveVal(NULL)
-      temp_dir <- reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
@@ -426,6 +426,8 @@ upload_module_computepgx_server <- function(
         temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
         dir.create(temp_dir(), recursive = TRUE)
         dbg("[compute PGX process] : tempFile", temp_dir())
+
+        
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         path_to_params <- file.path(temp_dir(), "params.RData")

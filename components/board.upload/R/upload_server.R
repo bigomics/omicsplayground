@@ -21,7 +21,10 @@ UploadBoard <- function(id,
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
 
     rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
+    
+    # this directory is used to save pgx files, logs, inputs, etc..
 
+    temp_dir <- reactiveVal(NULL)
     shiny::observe({
       rv$contr <- contrRT()
     })
@@ -669,6 +672,7 @@ UploadBoard <- function(id,
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
+      temp_dir = temp_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
