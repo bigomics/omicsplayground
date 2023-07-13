@@ -23,8 +23,11 @@ UploadBoard <- function(id,
     rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
     
     # this directory is used to save pgx files, logs, inputs, etc..
-
     temp_dir <- reactiveVal(NULL)
+    temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
+    dir.create(temp_dir(), recursive = TRUE)
+    dbg("[compute PGX process] : tempFile", temp_dir())
+
     shiny::observe({
       rv$contr <- contrRT()
     })
