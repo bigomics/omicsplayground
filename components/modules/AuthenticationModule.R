@@ -536,7 +536,7 @@ EmailLinkAuthenticationModule <- function(id,
       if(opt$ENABLE_USERDIR == FALSE){
         USER$options$user_dir <- file.path(PGX.DIR)
       }
-      
+
       session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
@@ -865,16 +865,17 @@ LoginCodeAuthenticationModule <- function(id,
           USER$logged <- TRUE
 
           ## create dir if needed and read user options
-          
-          if(USER$options$ENABLE_USERDIR == TRUE){
-           user_dir <- file.path(PGX.DIR, USER$email) 
-          }
-          if(USER$options$ENABLE_USERDIR == FALSE){
-           user_dir <- file.path(PGX.DIR) 
-          }
+          user_dir <- file.path(pgx.dir, user$email)
           create_user_dir_if_needed(user_dir, PGX.DIR)
           USER$options <- read_user_options(user_dir)
-
+          
+          if(opt$ENABLE_USERDIR == TRUE){
+              USER$options$user_dir <- user_dir
+          }
+          if(opt$ENABLE_USERDIR == FALSE){
+            USER$options$user_dir <- file.path(PGX.DIR)
+          }
+          
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
 
