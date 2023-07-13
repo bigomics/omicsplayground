@@ -642,7 +642,7 @@ PasswordAuthenticationModule <- function(id,
         # Create user dir (if needed) and set user options
         user_dir <- file.path(PGX.DIR, USER$email)
         if (opt$ENABLE_USERDIR == TRUE) {
-          
+
         }
         if (opt$ENABLE_USERDIR == FALSE) {
           user_dir <- file.path(PGX.DIR)
