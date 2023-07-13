@@ -392,16 +392,6 @@ upload_module_computepgx_server <- function(
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-        message("[ComputePgxServer:@compute] start computations...")
-        message("[ComputePgxServer::@compute] gx.methods = ", paste(gx.methods, collapse = " "))
-        message("[ComputePgxServer::@compute] gset.methods = ", paste(gset.methods, collapse = " "))
-        message("[ComputePgxServer::@compute] extra.methods = ", paste(extra.methods, collapse = " "))
-
-
-        ## Create a Progress object
-
-
-
 
         flt <- ""
         use.design <- TRUE
@@ -417,11 +407,6 @@ upload_module_computepgx_server <- function(
         use.design <- !("noLM.prune" %in% input$dev_options)
         prune.samples <- ("noLM.prune" %in% input$dev_options)
 
-        # create folder with random name to store the csv files
-
-        # Generate random name for temporary folder
-
-        # Create temporary folder
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
@@ -443,9 +428,7 @@ upload_module_computepgx_server <- function(
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
 
-
         # Define create_pgx function arguments
-
         params <- list(
           samples = samples,
           counts = counts,
