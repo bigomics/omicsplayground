@@ -23,6 +23,7 @@ upload_module_computepgx_server <- function(
     countsRT,
     samplesRT,
     contrastsRT,
+    temp_dir,
     batchRT,
     metaRT,
     lib.dir,
@@ -257,7 +258,6 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       process_obj <- reactiveVal(NULL)
       computedPGX <- shiny::reactiveVal(NULL)
-      temp_dir <- reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
@@ -422,11 +422,16 @@ upload_module_computepgx_server <- function(
         # Generate random name for temporary folder
 
         # Create temporary folder
-        temp_dir(tempfile(pattern = "pgx_"))
-        dir.create(temp_dir())
-        dbg("[compute PGX process] : tempFile", temp_dir())
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+        
+        # if no temp_dir (happens when we auto-load example data via button), create a temp dir
+        if (is.null(temp_dir())) {
+          temp_dir(tempfile(pattern = "pgx_"))
+          dir.create(temp_dir())
+          dbg("[compute PGX process] : tempFile", temp_dir())
+        }
+        
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
@@ -556,8 +561,10 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(temp_dir = temp_dir, nr = nr)
+              temp_dir(NULL)
             } else {
               on_process_error(nr = nr)
+              temp_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 
@@ -601,7 +608,11 @@ upload_module_computepgx_server <- function(
         } else {
           message("[compute PGX process] : Error: Result file not found")
         }
-        unlink(temp_dir, recursive = TRUE)
+        ## remove temp dir only if "log_input/pgx_" is present in temp_dir
+        if (grepl("pgx_", temp_dir())){
+          unlink(temp_dir, recursive = TRUE)
+        }
+
       }
 
       on_process_error <- function(nr) {
