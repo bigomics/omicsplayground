@@ -423,8 +423,6 @@ upload_module_computepgx_server <- function(
 
         # Create temporary folder
 
-                
-
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)

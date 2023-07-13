@@ -24,10 +24,7 @@ UploadBoard <- function(id,
     
     # this directory is used to save pgx files, logs, inputs, etc..
     temp_dir <- reactiveVal(NULL)
-    temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
-    dir.create(temp_dir(), recursive = TRUE)
-    dbg("[compute PGX process] : tempFile", temp_dir())
-
+    
     shiny::observe({
       rv$contr <- contrRT()
     })
@@ -147,7 +144,7 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
-      has.upload <- Vectorize(function(f) {
+     has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
       need2 <- c("counts.csv", "samples.csv")
@@ -195,7 +192,14 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
-      message("[upload_files] >>> reading uploaded files")
+      
+      # only create directory once, even if user uploads files at different times
+      if (is.null(temp_dir())) {
+        temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
+        dir.create(temp_dir(), recursive = TRUE)
+        dbg("[compute PGX process] : tempFile", temp_dir())
+      }
+           message("[upload_files] >>> reading uploaded files")
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
