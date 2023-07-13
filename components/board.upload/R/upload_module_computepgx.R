@@ -423,11 +423,7 @@ upload_module_computepgx_server <- function(
 
         # Create temporary folder
 
-        temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
-        dir.create(temp_dir(), recursive = TRUE)
-        dbg("[compute PGX process] : tempFile", temp_dir())
-
-        
+                
 
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         path_to_params <- file.path(temp_dir(), "params.RData")
