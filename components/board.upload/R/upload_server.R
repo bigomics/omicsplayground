@@ -192,9 +192,12 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
+
       # only create directory once, even if user uploads files at different times
       if (is.null(temp_dir())) {
-        temp_dir(tempfile(pattern = "log_input/pgx_", tmpdir = dirname(OPG)))
+        auth_id <- ifelse(!auth$email %in% c("",NA), auth$email, auth$username)
+        prefix <- paste0("raw_",auth_id,"_")
+        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR,"USER_INPUT")))
         dir.create(temp_dir(), recursive = TRUE)
         dbg("[compute PGX process] : tempFile", temp_dir())
       }
@@ -253,7 +256,6 @@ UploadBoard <- function(id,
               # save input as raw file in temp_dir
               write.csv(df0, file.path(temp_dir(), "raw_counts.csv"), row.names = TRUE)
 
-
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
               if (length(COUNTS_check$check) > 0) {
@@ -290,7 +292,6 @@ UploadBoard <- function(id,
               df0 <- playbase::read.as_matrix(fn2)
               # save input as raw file in temp_dir
               write.csv(df0, file.path(temp_dir(), "raw_samples.csv"), row.names = TRUE)
-
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 

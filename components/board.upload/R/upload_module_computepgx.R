@@ -406,11 +406,11 @@ upload_module_computepgx_server <- function(
         filter.genes <- ("remove.notexpressed" %in% flt)
         use.design <- !("noLM.prune" %in% input$dev_options)
         prune.samples <- ("noLM.prune" %in% input$dev_options)
-
-
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
-        # if no temp_dir (happens when we auto-load example data via button), create a temp dir
+        # if no temp_dir (happens when we auto-load example data via
+        # button), create a temp dir. In this case we don't care it
+        # will use /tmp
         if (is.null(temp_dir())) {
           temp_dir(tempfile(pattern = "pgx_"))
           dir.create(temp_dir())
@@ -423,7 +423,6 @@ upload_module_computepgx_server <- function(
         if (auth$method == "password") creator <- auth$username
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         dbg("[ComputePgxModule.R] libx.dir = ", libx.dir)
-
 
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
@@ -456,7 +455,6 @@ upload_module_computepgx_server <- function(
           datatype = input$upload_datatype,
           description = input$upload_description,
           creator = creator,
-          this.date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
           date = this.date
         )
 
@@ -591,8 +589,8 @@ upload_module_computepgx_server <- function(
         } else {
           message("[compute PGX process] : Error: Result file not found")
         }
-        ## remove temp dir only if "log_input/pgx_" is present in temp_dir
-        if (grepl("pgx_", temp_dir())) {
+        ## remove temp dir only if "user_input/raw_" is present in temp_dir
+        if (grepl("raw_", temp_dir())) {
           unlink(temp_dir, recursive = TRUE)
         }
       }
