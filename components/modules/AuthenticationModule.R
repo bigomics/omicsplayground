@@ -154,22 +154,22 @@ FirebaseAuthenticationModule <- function(id,
     ### I don't really understand this???... (IK 10jul23)
     first_time <- TRUE
     observeEvent(USER$logged, {
-      browser()
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
         # set options
         user_dir <- file.path(PGX.DIR, USER$email)
-        if(opt$ENABLE_USERDIR == TRUE){
-          auth$options$user_dir <- user_dir
-        }
-        if(opt$ENABLE_USERDIR == FALSE){
-          auth$options$user_dir <- file.path(PGX.DIR)
-        }
+        
         dbg("[USER RELOGGED PGX FOLDER:", auth$options$user_dir)
         create_user_dir_if_needed(user_dir, PGX.DIR)
         USER$options <- read_user_options(user_dir)
+        if(opt$ENABLE_USERDIR == TRUE){
+          USER$options$user_dir <- user_dir
+        }
+        if(opt$ENABLE_USERDIR == FALSE){
+          USER$options$user_dir <- file.path(PGX.DIR)
+        }
         return()
       }
       first_time <<- FALSE
@@ -636,8 +636,9 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # Create user dir (if needed) and set user options
-        if(USER$options$ENABLE_USERDIR == TRUE){
-          user_dir <- file.path(PGX.DIR, USER$email) 
+        user_dir <- file.path(PGX.DIR, USER$email)
+        if(opt$ENABLE_USERDIR == TRUE){
+           
         }
         if(USER$options$ENABLE_USERDIR == FALSE){
           user_dir <- file.path(PGX.DIR) 
