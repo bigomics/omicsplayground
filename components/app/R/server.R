@@ -447,9 +447,9 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
-  user_id=""
   
   ## upon change of user
+  user_id=""
   observeEvent(auth$logged, {
     if (auth$logged) {
       enable_upload <- auth$options$ENABLE_UPLOAD
@@ -461,7 +461,7 @@ app_server <- function(input, output, session) {
         check_personal_email(auth, PGX.DIR)
       }
       user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
-      record_access(user_id, "login", access.file=ACCESS_LOGFILE)     
+      record_access(user_id, "login", session_id=session$token)
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -471,7 +471,7 @@ app_server <- function(input, output, session) {
         }
       }
       ##user_id <- ifelse(auth$email=='', auth$username, auth$email)      
-      record_access(user_id, "logout", access.file=ACCESS_LOGFILE)           
+      record_access(user_id, "logout", session_id=session$token)
     }
   })
 

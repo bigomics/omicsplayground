@@ -13,7 +13,7 @@ record_access <- function(user, action, host='', client='', session_id='',
   client.ip <- stringr::str_extract_all( client.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
   hostname <- system("cat /etc/hostname",intern=TRUE)  
   login_data <- data.frame(user=user, action=action, time=time.now,
-    host=hostname, client=client.ip, session=session_id)
+    host=hostname, client=client.ip, session=substring(session_id,1,8))
   do.append <- file.exists(access.file)
   data.table::fwrite(login_data, file=access.file, quote=TRUE, append=do.append)
 }
@@ -87,7 +87,8 @@ write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
     ## remove any previous locks
     if(is_stale) {
       dbg("[write_lock] STALE LOCK by ",lock$user)
-      record_access(user=lock$user, action='logout.stale')      
+      user <- strsplit(lock$user,split='__')[[1]]
+      record_access(user=user[1], action='logout.stale', session_id=user[2])      
       file.remove(file.path(path,lock$file))
     }
     if(!has.lockfile) {
