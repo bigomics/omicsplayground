@@ -422,7 +422,7 @@ upload_module_computepgx_server <- function(
         creator <- auth$email
         if (auth$method == "password") creator <- auth$username
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
-        dbg("[ComputePgxModule.R] libx.dir = ", libx.dir)
+        dbg("[ComputePgxModule.R] libx.dir => ", libx.dir)
 
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
@@ -479,7 +479,7 @@ upload_module_computepgx_server <- function(
         process_counter(process_counter() + 1)
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
-
+        dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir,"/processx-error.log"))
         ## append to process list
         process_obj(
           append(

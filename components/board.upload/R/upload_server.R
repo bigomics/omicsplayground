@@ -84,8 +84,6 @@ UploadBoard <- function(id,
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
 
       new_pgx <- uploaded_pgx()
-
-      dbg("[observe::uploaded_pgx] initializing PGX object")
       new_pgx <- playbase::pgx.initialize(new_pgx)
 
       savedata_button <- NULL
