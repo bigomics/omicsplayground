@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_volcanoall_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -33,15 +33,13 @@ enrichment_plot_volcanoall_server <- function(id,
                                               calcGsetMeta,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       shiny::req(pgx)
       if (is.null(gs_features())) {
         return(NULL)
       }
 
-      meta     <- pgx$gset.meta$meta
+      meta <- pgx$gset.meta$meta
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {
@@ -84,8 +82,7 @@ enrichment_plot_volcanoall_server <- function(id,
       pd
     })
 
-    get_ggplots <- function(cex=1, base_size=12) {
-
+    get_ggplots <- function(cex = 1, base_size = 12) {
       pd <- plot_data()
       shiny::req(pd)
       F <- pd$F
@@ -102,7 +99,6 @@ enrichment_plot_volcanoall_server <- function(id,
         i <- 1
         plt <- list()
         for (i in 1:nplots) {
-
           fc <- F[[i]]
           qv <- Q[[i]]
           is.sig1 <- (qv <= fdr & abs(fc) >= lfc)
@@ -112,7 +108,7 @@ enrichment_plot_volcanoall_server <- function(id,
 
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- names(F)[i]
-          ## xmax <- max(abs(mx[,"fc"]))
+          #
 
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -121,9 +117,8 @@ enrichment_plot_volcanoall_server <- function(id,
             var = is.sig1,
             type = "factor",
             col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", ## plotlib="ggplot",
+            legend.pos = "none", #
             hilight = NULL,
-            # hilight2 = sig.genes,
             hilight2 = NULL,
             xlim = xmax * c(-1, 1),
             ylim = c(0, ymax),
@@ -133,7 +128,7 @@ enrichment_plot_volcanoall_server <- function(id,
             hilight.col = "#1e60bb",
             hilight.cex = 1.5,
             cex = cex,
-            cex.lab = 1.8*cex,
+            cex.lab = 1.8 * cex,
             base_size = base_size
           ) + ggplot2::theme_bw(base_size = base_size)
 
@@ -145,30 +140,30 @@ enrichment_plot_volcanoall_server <- function(id,
 
 
     volcano.RENDER <- function() {
-      plt <- get_ggplots(cex=0.4, base_size=12)
+      plt <- get_ggplots(cex = 0.4, base_size = 12)
       shiny::req(plt)
       ## ------------- layout ----------------
       nplots <- length(plt)
-      nc <- max(4,nplots)
+      nc <- max(4, nplots)
       nr <- 1
       if (nplots > 6) {
         nc <- ceiling(nplots / 2)
         nr <- 2
       }
-      if (nplots > 12 ) {
+      if (nplots > 12) {
         nc <- ceiling(nplots / 3)
         nr <- 3
       }
-      ## if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
     volcano.RENDER2 <- function() {
-      plt <- get_ggplots(cex=0.9, base_size=16)
+      plt <- get_ggplots(cex = 0.9, base_size = 16)
       shiny::req(plt)
       ## ------------- layout ----------------
       nplots <- length(plt)
-      nr = nc = 1
+      nr <- nc <- 1
       nc <- 3
       nr <- 1
       if (nplots > 3) {
@@ -179,11 +174,11 @@ enrichment_plot_volcanoall_server <- function(id,
         nc <- ceiling(nplots / 3)
         nr <- 3
       }
-      if (nplots > 15 ) {
+      if (nplots > 15) {
         nc <- ceiling(nplots / 4)
         nr <- 4
       }
-      ##if(nr*nc > nplots) nplots <- c(nplots, rep(gridExtra::blank, nr*nc - nplots))
+      #
       gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
     }
 
@@ -197,6 +192,5 @@ enrichment_plot_volcanoall_server <- function(id,
       res = c(72, 85),
       add.watermark = watermark
     )
-
-  })  ## end module-server
+  }) ## end module-server
 } ## server

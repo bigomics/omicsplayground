@@ -13,15 +13,14 @@
 #'
 #' @export
 functional_plot_reactome_graph_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  info.width,
-  height,
-  width
-  ) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    info.width,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -32,7 +31,7 @@ functional_plot_reactome_graph_ui <- function(
     info.text = info.text,
     info.width = info.width,
     options = NULL,
-    download.fmt = c("png","pdf"),
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )
@@ -47,22 +46,20 @@ functional_plot_reactome_graph_ui <- function(
 #' @return
 #' @export
 functional_plot_reactome_graph_server <- function(id,
-                                              pgx,
-                                              getFilteredReactomeTable,
-                                              reactome_table,
-                                              fa_contrast,
-                                              watermark = FALSE) {
+                                                  pgx,
+                                                  getFilteredReactomeTable,
+                                                  reactome_table,
+                                                  fa_contrast,
+                                                  watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       ## preload... takes few seconds...
-      ##suppressMessages(require(SBGNview))
+      #
 
       ## reactive or function? that's the question...
-      ## plot_data <- shiny::reactive({
       plot_data <- function() {
         ## folder with predownloaded SBGN files
-        sbgn.dir <- pgx.system.file("sbgn/", package="pathway")
+        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
         sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         res <- list(
           df = getFilteredReactomeTable(),
@@ -71,11 +68,9 @@ functional_plot_reactome_graph_server <- function(id,
           sbgn.dir = sbgn.dir
         )
         return(res)
-      }#)
+      }
 
-      #  getPathwayImage <- function() {
       getPathwayImage <- shiny::reactive({
-
         res <- plot_data()
         shiny::req(res, res$df)
 
@@ -88,18 +83,6 @@ functional_plot_reactome_graph_server <- function(id,
         shiny::req(df, comparison, pgx$X)
 
         NULL.IMG <- list(src = "", contentType = "image/png")
-        ## if (is.null(pgx)) {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (is.null(comparison) || length(comparison) == 0) {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (comparison == "") {
-        ##   return(NULL.IMG)
-        ## }
-        ## if (is.null(df)) {
-        ##   return(NULL.IMG)
-        ## }
 
         ## get fold-change vector
         fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
@@ -119,7 +102,7 @@ functional_plot_reactome_graph_server <- function(id,
         }
 
         sel.row <- as.integer(sel.row)
-        pathway.id   <- df[sel.row, "reactome.id"]
+        pathway.id <- df[sel.row, "reactome.id"]
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
 
@@ -129,13 +112,11 @@ functional_plot_reactome_graph_server <- function(id,
         tmpdir <- tempdir()
         setwd(tmpdir)
 
-        suppressMessages(require(SBGNview)) ## slow!! but needed!!!       
-        ##data("mapped.ids","pathways.info", "sbgn.xmls")
-        ##data("sbgn.xmls", package="SBGNview.data",verbose=1)  ### BIG 700MB!!!
-        ##object.size(sbgn.xmls)
+        suppressMessages(require(SBGNview)) ## slow!! but needed!!!
+
 
         ## this is a trick. the original object in SBGNview.data was 700MB!!
-        sbgn.xmls <- dir(sbgn.dir,".sbgn")
+        sbgn.xmls <- dir(sbgn.dir, ".sbgn")
         names(sbgn.xmls) <- sbgn.xmls
 
         if (!interactive()) {
@@ -144,18 +125,15 @@ functional_plot_reactome_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
-        obj <- try( SBGNview::SBGNview(
+        obj <- try(SBGNview::SBGNview(
           gene.data = fc,
-          ##gene.id.type = "ENTREZID",
           gene.id.type = "SYMBOL",
-          ##sbgn.gene.id.type = "SYMBOL",
           sbgn.dir = sbgn.dir,
-          # input.sbgn = pathway.id,
           input.sbgn = pathway.id,
           output.file = "reactome",
-          output.formats =  c("png")
+          output.formats = c("png")
         ))
-        if(class(obj) == "SBGNview") {
+        if (class(obj) == "SBGNview") {
           try(print(obj))
         }
         Sys.sleep(0.2) ## wait for graph
@@ -163,7 +141,7 @@ functional_plot_reactome_graph_server <- function(id,
         ## back to previous working folder
         setwd(curwd)
 
-        imgfile="/tmp/hsa00010.png"
+        imgfile <- "/tmp/hsa00010.png"
         imgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".png"))
         svgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".svg"))
         file.exists(imgfile)
@@ -174,27 +152,24 @@ functional_plot_reactome_graph_server <- function(id,
 
         ## parse image dimensions from file
         img.dim <- NULL
-        if(grepl("png|PNG",imgfile)) img.dim <- dim(png::readPNG(imgfile))[1:2]
-        if(grepl("jpg|JPG",imgfile)) img.dim <- dim(jpeg::readJPEG(imgfile))[1:2]
+        if (grepl("png|PNG", imgfile)) img.dim <- dim(png::readPNG(imgfile))[1:2]
+        if (grepl("jpg|JPG", imgfile)) img.dim <- dim(jpeg::readJPEG(imgfile))[1:2]
         img.dim
 
         list(
           src = imgfile,
           svg = svgfile,
           contentType = "image/png",
-          #width = "100%", height = "100%", ## actual size: 1040x800
           width = img.dim[2], height = img.dim[1], ## actual size
-          ##width = img.width, height = img.height, ## actual size
           alt = "reactome pathway"
         )
       })
 
       plot_RENDER <- function() {
-
         img <- getPathwayImage()
         shiny::req(img$width, img$height)
         filename <- img$svg
-        img.svg <-  readChar(filename, nchars = file.info(filename)$size)
+        img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
           img.svg,
           controlIconsEnabled = TRUE,
@@ -212,7 +187,6 @@ functional_plot_reactome_graph_server <- function(id,
         plotlib = "svgPanZoom",
         add.watermark = watermark
       )
-
     } ## end of moduleServer
   )
 }

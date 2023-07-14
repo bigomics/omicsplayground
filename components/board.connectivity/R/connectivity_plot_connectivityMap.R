@@ -13,15 +13,15 @@
 #'
 #' @export
 connectivity_plot_connectivityMap_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::radioButtons(
@@ -37,15 +37,16 @@ connectivity_plot_connectivityMap_ui <- function(
       "Threshold the points by minimum score",
       placement = "right", options = list(container = "body")
     ),
-    hr(),    
+    hr(),
     withTooltip(
       shiny::radioButtons(
-        ns("cmapcolorby"), "Color by:", c("score", "dataset"),
+        ns("cmapcolorby"), "Color by:", c("dataset", "score"),
         inline = TRUE
-      ), "Color the points by score or dataset",
+      ),
+      "Color the points by score or dataset",
       placement = "right", options = list(container = "body")
     ),
-    hr(),    
+    hr(),
     withTooltip(shiny::sliderInput(ns("scoregamma"), "Color gamma:", 0.1, 2, 0.5, step = 0.1),
       "Gamma for color adjustments",
       placement = "right", options = list(container = "body")
@@ -95,13 +96,12 @@ connectivity_plot_connectivityMap_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       #' Get the XY positions of signature points
       getConnectivityPositions <- shiny::reactive({
         sigdb <- sigdb()
         shiny::req(pgx)
         shiny::req(sigdb)
-        
+
         ## get the foldchanges of selected comparison and neighbourhood
         dims <- 2
         method <- input$layout
@@ -178,7 +178,7 @@ connectivity_plot_connectivityMap_server <- function(id,
       })
 
       plot_RENDER <- shiny::reactive({
-        ##sigdb <- sigdb()
+        #
         shiny::req(pgx)
 
         ## get positions

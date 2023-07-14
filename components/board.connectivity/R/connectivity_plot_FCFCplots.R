@@ -13,21 +13,20 @@
 #'
 #' @export
 connectivity_plot_FCFCplots_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  height,
-  width, 
-  label = ""
-  ) {
+    id,
+    title,
+    caption,
+    info.text,
+    height,
+    width,
+    label = "") {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
     shiny::radioButtons(
       ns("fcfc_plottype"),
       "Plot type:",
-      c("scatter", "gsea","umap"),
+      c("scatter", "gsea", "umap"),
       inline = TRUE
     )
   )
@@ -62,7 +61,6 @@ connectivity_plot_FCFCplots_server <- function(id,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       FCFCscatter <- function(fc, F, mfplots, ylab) {
         ## get the foldchanges of selected comparison and neighbourhood
         F0 <- F
@@ -71,7 +69,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
         fc <- fc[gg]
 
-        ##mfplots <- c(2, 5)        
+        #
         nplots <- mfplots[1] * mfplots[2]
         F <- F[gg, 1:min(nplots, ncol(F)), drop = FALSE]
         F0 <- F0[gg, colnames(F), drop = FALSE]
@@ -130,17 +128,17 @@ connectivity_plot_FCFCplots_server <- function(id,
       FCumap <- function(fc, F, mfplots, ylab) {
         ## get the foldchanges of selected comparison and neighbourhood
         names(fc) <- toupper(names(fc))
-        rownames(F) <- toupper(rownames(F))          
+        rownames(F) <- toupper(rownames(F))
         gg <- intersect(names(fc), rownames(F)) ## uppercase for MOUSE
 
         ## get gene UMAP cluster
         pos <- pgx$cluster.genes$pos$umap2d
         gg <- intersect(gg, rownames(pos))
 
-        F <- cbind( fc[gg], F[gg,])
+        F <- cbind(fc[gg], F[gg, ])
         colnames(F)[1] <- "SIGNATURE"
-        pos <- pos[gg,]  
-          
+        pos <- pos[gg, ]
+
         ## Set layout
         nplots <- mfplots[1] * mfplots[2]
         F <- F[, 1:min(nplots, ncol(F)), drop = FALSE]
@@ -149,21 +147,21 @@ connectivity_plot_FCFCplots_server <- function(id,
           mgp = c(1.6, 0.7, 0), oma = c(0, 3, 0, 0)
         )
 
-        ## determine color  
-        cpal <- playdata::BLUERED(33)  
+        ## determine color
+        cpal <- playdata::BLUERED(33)
         fcol <- function(f) {
-            f1 <- abs(f) / max(abs(F),na.rm=TRUE)
-            f1 <- tanh(2*f1)
-            cpal[1 + round(sign(f) * f1 * 16) + 16]
+          f1 <- abs(f) / max(abs(F), na.rm = TRUE)
+          f1 <- tanh(2 * f1)
+          cpal[1 + round(sign(f) * f1 * 16) + 16]
         }
 
         i <- 1
         for (i in 1:ncol(F)) {
           ct1 <- colnames(F)[i]
           ct1x <- sub("\\]", "]\n", ct1)
-          f1 <- F[,i] 
+          f1 <- F[, i]
           base::plot(
-            pos[,1], pos[,2],
+            pos[, 1], pos[, 2],
             pch = 20,
             cex = 0.85,
             cex.lab = 0.9,
@@ -179,17 +177,15 @@ connectivity_plot_FCFCplots_server <- function(id,
             mtext("UMAP.y", 2, line = 3, cex = 0.60)
           }
         }
-
       }
 
       plot_data <- shiny::reactive({
-
         res1 <- getCurrentContrast()
         F <- getTopProfiles()
         shiny::req(res1, F)
-        
+
         res <- list(
-          F = F,          
+          F = F,
           contrast = r_contrast(),
           fc = res1$fc,
           ct = res1$name
@@ -198,7 +194,6 @@ connectivity_plot_FCFCplots_server <- function(id,
       })
 
       plot_RENDER <- function() {
-
         res <- plot_data()
         contrast <- res$contrast
         fc <- res$fc
@@ -221,7 +216,6 @@ connectivity_plot_FCFCplots_server <- function(id,
           mfplots <- c(2, 5)
           FCumap(fc, F, mfplots, ylab = ct)
         }
-        
       }
 
       PlotModuleServer(
@@ -229,7 +223,7 @@ connectivity_plot_FCFCplots_server <- function(id,
         plotlib = "base",
         func = plot_RENDER,
         func2 = plot_RENDER,
-##      csvFunc = plot_data,
+        #
         res = c(90, 130),
         pdf.height = 4.5,
         pdf.width = 10,

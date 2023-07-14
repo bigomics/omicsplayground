@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_correlation_ui <- function(
-  id, 
-  label = "",
-  title,
-  height,
-  width,
-  caption,
-  info.text) {
+    id,
+    label = "",
+    title,
+    height,
+    width,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -19,8 +19,8 @@ dataview_plot_correlation_ui <- function(
     label = label,
     plotlib = "plotly",
     caption = caption,
-    ## outputFunc = plotly::plotlyOutput,
-    ## outputFunc2 = plotly::plotlyOutput,
+    #
+    #
     info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
@@ -35,16 +35,18 @@ dataview_plot_correlation_server <- function(id,
                                              r.samples = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     getTopCorrelatedGenes <- function(pgx, gene, n = 30, samples = NULL) {
-      
       samples <- r.samples()
       gene <- r.gene()
-      
+
       ## precompute
       if (is.null(samples)) samples <- colnames(pgx$X)
-      if(!all(samples %in% colnames(pgx$X))) return(NULL)
-      if(!gene %in% rownames(pgx$X)) return(NULL)
+      if (!all(samples %in% colnames(pgx$X))) {
+        return(NULL)
+      }
+      if (!gene %in% rownames(pgx$X)) {
+        return(NULL)
+      }
 
       samples <- intersect(samples, colnames(pgx$X))
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
@@ -127,7 +129,6 @@ dataview_plot_correlation_server <- function(id,
         type = "bar",
         marker = list(
           color = ~color # ,
-          # line = list(color = omics_colors("super_dark_grey"), width = .5)
         ),
         hovertemplate = ~annot
       ) %>%
@@ -146,13 +147,13 @@ dataview_plot_correlation_server <- function(id,
           showlegend = FALSE,
           bargap = .4,
           margin = list(l = 10, r = 30, b = 10, t = 10)
-        ) 
+        )
     }
 
     plotly.RENDER <- function() {
       plotly_render() %>%
         plotly::layout(
-          xaxis = list(tickfont = list(size=10))
+          xaxis = list(tickfont = list(size = 10))
         ) %>%
         plotly_default()
     }
@@ -160,7 +161,7 @@ dataview_plot_correlation_server <- function(id,
     modal_plotly.RENDER <- function() {
       plotly_render() %>%
         plotly::layout(
-          xaxis = list(tickfont = list(size=18))
+          xaxis = list(tickfont = list(size = 18))
         ) %>%
         plotly_modal_default()
     }

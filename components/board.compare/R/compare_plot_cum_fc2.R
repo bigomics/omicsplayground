@@ -58,7 +58,7 @@ compare_plot_cum_fc2_server <- function(id,
       ii <- ii[order(rowMeans(F[ii, ]))]
       F <- F[ii, , drop = FALSE]
       F1 <- F1[ii, , drop = FALSE]
-      
+
       F2 <- F2[ii, , drop = FALSE]
 
       fig <- playbase::pgx.barplot.PLOTLY(
@@ -71,7 +71,7 @@ compare_plot_cum_fc2_server <- function(id,
         yaxistitle = "Cumulative foldchange",
         xaxistitle = "Genes",
         title = "Dataset 2",
-##        type = "bar",
+        #
         grouped = FALSE
       )
       fig

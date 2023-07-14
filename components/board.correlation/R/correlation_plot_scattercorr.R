@@ -13,24 +13,27 @@
 #'
 #' @export
 correlation_plot_scattercorr_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   cor_scatter.opts <- shiny::tagList(
     withTooltip(
       shiny::selectInput(
-        ns("colorby"), "Color by:", choices = NULL, multiple = FALSE),
+        ns("colorby"), "Color by:",
+        choices = NULL, multiple = FALSE
+      ),
       "Variable to split and color by groups.",
       placement = "top"
     ),
     withTooltip(
       shiny::radioButtons(ns("layout"), "Layout:", c("3x3", "4x4", "5x5"),
-        selected="4x4", inline = TRUE),
+        selected = "4x4", inline = TRUE
+      ),
       "Choose the layout for correlation plots.",
     ),
     withTooltip(
@@ -70,7 +73,6 @@ correlation_plot_scattercorr_server <- function(id,
                                                 COL,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     shiny::observe({
       px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
@@ -78,24 +80,23 @@ correlation_plot_scattercorr_server <- function(id,
     })
 
     cor_scatter.DATA <- shiny::reactive({
-
       shiny::req(cor_gene, pgx$X, cor_table)
-      
+
       this.gene <- cor_gene()
       NTOP <- 50
       R <- getGeneCorr()
       sel <- cor_table$rownames_current()
-      sel <- head(intersect(sel, rownames(R)),NTOP)
+      sel <- head(intersect(sel, rownames(R)), NTOP)
       rho <- R[sel, "cor"]
-      
+
       if (length(rho) == 1) names(rho) <- rownames(R)[1]
       pp <- unique(c(this.gene, names(rho)))
-      X <- pgx$X[pp,]
-      
+      X <- pgx$X[pp, ]
+
       colorby <- input$colorby
-      shiny::req(colorby)      
+      shiny::req(colorby)
       pheno <- factor(pgx$samples[, colorby])
-            
+
       dt <- list(
         rho = rho,
         X = X,
@@ -104,34 +105,33 @@ correlation_plot_scattercorr_server <- function(id,
         colorby = colorby,
         COL = COL
       )
-      
+
       return(dt)
     })
 
     plot_scatter <- function(nrow, ncol) {
-
       dt <- cor_scatter.DATA()
       shiny::req(dt)
-      
+
       rho <- dt$rho
       X <- dt$X
       pheno <- dt$pheno
       colorby <- dt$colorby
       this.gene <- dt$this.gene
-      COL <- rep(dt$COL,99)
-      
+      COL <- rep(dt$COL, 99)
+
       if (length(rho) == 0) {
         return(NULL)
       }
-      
+
       klr <- COL[as.integer(pheno)]
       ndim <- length(pheno)
 
-      cex_levels <- c(1.2, 0.8, 0.5, 0.2)*1.2
+      cex_levels <- c(1.2, 0.8, 0.5, 0.2) * 1.2
       dim_cuts <- c(0, 40, 100, 200, Inf)
       cex <- cex_levels[findInterval(ndim, dim_cuts)]
 
-      nplots <- nrow*ncol
+      nplots <- nrow * ncol
       rho <- head(rho, nplots)
 
       swapaxis <- input$swapaxis
@@ -182,26 +182,26 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN <- function() {
-      if(input$layout=='3x3') {
-        nrow = ncol = 3
-      } else if(input$layout=='4x4') {
-        nrow = ncol = 4
+      if (input$layout == "3x3") {
+        nrow <- ncol <- 3
+      } else if (input$layout == "4x4") {
+        nrow <- ncol <- 4
       } else {
-        nrow = ncol = 5
+        nrow <- ncol <- 5
       }
       plot_scatter(nrow, ncol)
     }
 
     cor_scatter.PLOTFUN2 <- function() {
-      if(input$layout=='3x3') {
-        nrow = 3
-        ncol = 5
-      } else if(input$layout=='4x4') {
-        nrow = 4
-        ncol = 6
+      if (input$layout == "3x3") {
+        nrow <- 3
+        ncol <- 5
+      } else if (input$layout == "4x4") {
+        nrow <- 4
+        ncol <- 6
       } else {
-        nrow = 5
-        ncol = 7
+        nrow <- 5
+        ncol <- 7
       }
       plot_scatter(nrow, ncol)
     }
@@ -210,7 +210,7 @@ correlation_plot_scattercorr_server <- function(id,
       "plot",
       plotlib = "base",
       func = cor_scatter.PLOTFUN,
-      func2 = cor_scatter.PLOTFUN2,      
+      func2 = cor_scatter.PLOTFUN2,
       csvFunc = cor_scatter.DATA, ##  NOTE: Not sure what should be the plot data!
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,

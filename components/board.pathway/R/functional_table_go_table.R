@@ -5,12 +5,12 @@
 
 
 functional_table_go_table_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -86,11 +86,11 @@ functional_table_go_table_server <- function(id,
       DT::datatable(dt,
         rownames = FALSE,
         escape = c(-1, -2),
-        ## class = "compact cell-border stripe hover",
+        #
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
@@ -104,8 +104,9 @@ functional_table_go_table_server <- function(id,
               "function(data, type, row, meta) {",
               "return type === 'display' && data.length > 50 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
-              "}")
-          ))          
+              "}"
+            )
+          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%

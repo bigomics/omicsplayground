@@ -14,14 +14,14 @@
 #'
 #' @export
 singlecell_plot_cytoplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width,
-  parent) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width,
+    parent) {
   ns <- shiny::NS(id)
 
   cyto.opts <- shiny::tagList(
@@ -32,17 +32,21 @@ singlecell_plot_cytoplot_ui <- function(
     withTooltip(shiny::selectInput(parent("cytovar2"), label = "y-axis:", choices = NULL, multiple = FALSE),
       "Choose your prefered gene on the y-axis.",
       placement = "top", options = list(container = "body")
-    )
+    ),
+    withTooltip(shiny::sliderInput(parent("nbins"), label = "nbins:", min = 0, max = 50, value = 5, step = 5),
+      "Select the maximum number of bins for histogram distribution.",
+      placement = "top", options = list(container = "body")
+    ),
   )
 
   PlotModuleUI(
-    id = ns("plot"),
-    label = label,
+    id = ns("plotmodule"),
+    plotlib = "plotly",
     info.text = info.text,
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c("csv"),#FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )
@@ -61,6 +65,7 @@ singlecell_plot_cytoplot_server <- function(id,
                                             samplefilter, # input$samplefilter
                                             cytovar1,
                                             cytovar2,
+                                            nbins,
                                             selectSamplesFromSelectedLevels,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -75,6 +80,7 @@ singlecell_plot_cytoplot_server <- function(id,
       cytovar1 <- cytovar1()
       cytovar2 <- cytovar2()
       samplefilter <- samplefilter()
+      nbins <- nbins()
 
       if (is.null(cytovar1)) {
         return(NULL)
@@ -90,21 +96,40 @@ singlecell_plot_cytoplot_server <- function(id,
       }
 
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
+
       gene1 <- cytovar1
       gene2 <- cytovar2
+
       ## if(gene1 == gene2) return(NULL)
       par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
-      playbase::pgx.cytoPlot(pgx, gene1, gene2,
-        samples = kk, cex = 0.8,
-        col = "grey60", cex.names = 1, lab.unit = "(log2CPM)"
+      playbase::plotlyCytoplot(pgx,
+        gene1,
+        gene2,
+        nbinsx = nbins,
+        nbinsy = nbins,
+        marker.size = 7,
+        samples = kk,
+        lab.unit = "(log2CPM)",
+        contour.coloring = "none"
       )
     })
 
+    plotly.RENDER <- function() {
+      cyto.plotFUNC()
+    }
+
+    plotly_modal.RENDER <- function() {
+      cyto.plotFUNC()
+    }
+
     PlotModuleServer(
-      "plot",
-      func = cyto.plotFUNC,
-      res = c(80, 80),
-      pdf.width = 6, pdf.height = 8,
+      "plotmodule",
+      func = plotly.RENDER,
+      func2 = plotly_modal.RENDER,
+      plotlib = "plotly",
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 9,
+      pdf.height = 7,
       add.watermark = watermark
     )
   }) ## end of moduleServer

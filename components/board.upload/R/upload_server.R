@@ -12,8 +12,8 @@ UploadBoard <- function(id,
                           "genes" = 20000, "genesets" = 10000,
                           "datasets" = 10
                         ),
-                        enable_userdir = TRUE,
-                        r_global) {
+                        reload_pgxdir,
+                        load_uploaded_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -21,6 +21,9 @@ UploadBoard <- function(id,
     contrRT <- shiny::reactive(uploaded$contrasts.csv)
 
     rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
+
+    # this directory is used to save pgx files, logs, inputs, etc..
+    temp_dir <- reactiveVal(NULL)
 
     shiny::observe({
       rv$contr <- contrRT()
@@ -33,7 +36,6 @@ UploadBoard <- function(id,
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
-        ## h2(input$nav),
         shiny::div(
           id = "navheader-current-section",
           HTML("Upload data &nbsp;"),
@@ -68,7 +70,8 @@ UploadBoard <- function(id,
 </ol>
 
 <br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
+    )
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
@@ -76,29 +79,6 @@ UploadBoard <- function(id,
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
-    ## reload_pgxdir()
-
-    getPGXDIR <- shiny::reactive({
-      ## reload_pgxdir()  ## force reload
-
-      email <- "../me@company.com"
-      email <- auth$email()
-      email <- gsub(".*\\/", "", email)
-      pdir <- pgx_dir ## from module input
-
-      ## USERDIR=FALSE
-      if (enable_userdir) {
-        pdir <- paste0(pdir, "/", email)
-        if (!is.null(email) && !is.na(email) && email != "") pdir <- paste0(pdir, "/")
-        if (!dir.exists(pdir)) {
-          dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ", pdir)
-          dir.create(pdir)
-          dbg("[LoadingBoard:getPGXDIR] copy example pgx")
-          file.copy(file.path(pgx_dir, "example-data.pgx"), pdir)
-        }
-      }
-      pdir
-    })
 
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
@@ -113,8 +93,7 @@ UploadBoard <- function(id,
       pgxname <- sub("[.]pgx$", "", new_pgx$name)
       pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
       pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
-      
-      pgxdir <- getPGXDIR()
+      pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxname)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -123,36 +102,40 @@ UploadBoard <- function(id,
       pgx <- new_pgx
       save(pgx, file = fn)
       remove(pgx)
-      
+
       shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
         playbase::pgxinfo.updateDatasetFolder(
           pgxdir,
-          new.pgx = pgxname, 
+          new.pgx = pgxname,
           update.sigdb = FALSE
         )
       })
 
-      r_global$reload_pgxdir <- r_global$reload_pgxdir + 1
+      if (is.null(reload_pgxdir())) {
+        reload_pgxdir(1)
+      } else {
+        reload_pgxdir(reload_pgxdir() + 1)
+      }
 
-      ## beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
-          if (input$confirmload) {
-              r_global$load_data_from_upload <- new_pgx$name
-              bigdash.selectTab(session, selected = 'load-tab')
-          }
+        if (input$confirmload) {
+          bigdash.selectTab(session, selected = "load-tab")
+          load_uploaded_data(new_pgx$name)
+        }
       }
 
       shinyalert::shinyalert(
-          title = paste("Your dataset is ready!"),
-          text = paste("Your dataset",new_pgx$name,"is ready for visualization. Happy discoveries!"),
-          confirmButtonText = "Load my new data!",
-          showCancelButton = TRUE,
-          cancelButtonText = "Stay here.",
-          inputId = 'confirmload',
-          closeOnEsc = FALSE,
-          callbackR = load_my_dataset
+        title = paste("Your dataset is ready!"),
+        text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
+        confirmButtonText = "Load my new data!",
+        showCancelButton = TRUE,
+        cancelButtonText = "Stay here.",
+        inputId = "confirmload",
+        closeOnEsc = FALSE,
+        immediate = TRUE,
+        callbackR = load_my_dataset
       )
     })
 
@@ -167,23 +150,20 @@ UploadBoard <- function(id,
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (all(has.upload(need2))) {
         if (input$advanced_mode) {
-          #shiny::showTab("tabs", "Normalize")
           shiny::showTab("tabs", "BatchCorrect")
         }
-        shiny::showTab("tabs", "Contrasts")
+        shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "Contrasts")
+        shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       }
     })
@@ -194,10 +174,8 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(input$advanced_mode, {
       if (input$advanced_mode) {
-        #shiny::showTab("tabs", "Normalize") ## NOT YET!!!
         shiny::showTab("tabs", "BatchCorrect")
       } else {
-        #shiny::hideTab("tabs", "Normalize")
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
@@ -214,11 +192,18 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$upload_files, {
+      # only create directory once, even if user uploads files at different times
+      if (is.null(temp_dir())) {
+        auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
+        prefix <- paste0("raw_", auth_id, "_")
+        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT")))
+        dir.create(temp_dir(), recursive = TRUE)
+        dbg("[compute PGX process] : tempFile", temp_dir())
+      }
       message("[upload_files] >>> reading uploaded files")
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      ## for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
 
@@ -231,18 +216,16 @@ UploadBoard <- function(id,
 
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
-        ##
         i <- grep("[.]pgx$", input$upload_files$name)
         pgxfile <- input$upload_files$datapath[i]
-        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose=0))) ## override any name
+        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
-        ##
         message("[upload_files] getting matrices from CSV")
 
         ii <- grep("csv$", input$upload_files$name)
-        ii <- grep("sample|count|contrast|expression",
+        ii <- grep("sample|count|contrast|expression|comparison",
           input$upload_files$name,
           ignore.case = TRUE
         )
@@ -264,24 +247,27 @@ UploadBoard <- function(id,
             IS_COUNT <- grepl("count", fn1, ignore.case = TRUE)
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
             IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
-            IS_CONTRAST <- grepl("contrast", fn1, ignore.case = TRUE)
+            IS_CONTRAST <- grepl("contrast|comparison", fn1, ignore.case = TRUE)
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
-              
+
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_counts.csv"), row.names = TRUE)
+
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
-              if(length(COUNTS_check$check)>0) {
-                lapply(1:length(COUNTS_check$check), function(idx){
+              if (length(COUNTS_check$check) > 0) {
+                lapply(1:length(COUNTS_check$check), function(idx) {
                   error_id <- names(COUNTS_check$check)[idx]
                   error_log <- COUNTS_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id,]
+                  error_detail <- error_list[error_list$error == error_id, ]
                   error_length <- length(error_log)
                   ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -303,20 +289,22 @@ UploadBoard <- function(id,
 
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
-              
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_samples.csv"), row.names = TRUE)
+
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
-              if(length(SAMPLES_check$check)>0) {
-                lapply(1:length(SAMPLES_check$check), function(idx){
+              if (length(SAMPLES_check$check) > 0) {
+                lapply(1:length(SAMPLES_check$check), function(idx) {
                   error_id <- names(SAMPLES_check$check)[idx]
                   error_log <- SAMPLES_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id,]
+                  error_detail <- error_list[error_list$error == error_id, ]
                   error_length <- length(error_log)
                   ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-                  
+
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -328,23 +316,25 @@ UploadBoard <- function(id,
                 matname <- "samples.csv"
               }
             }
-            
+
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
-              
+              # save input as raw file in temp_dir
+              write.csv(df0, file.path(temp_dir(), "raw_contrasts.csv"), row.names = TRUE)
+
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
-              if(length(CONTRASTS_check$check)>0) {
-                lapply(1:length(CONTRASTS_check$check), function(idx){
+              if (length(CONTRASTS_check$check) > 0) {
+                lapply(1:length(CONTRASTS_check$check), function(idx) {
                   error_id <- names(CONTRASTS_check$check)[idx]
                   error_log <- CONTRASTS_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id,]
+                  error_detail <- error_list[error_list$error == error_id, ]
                   error_length <- length(error_log)
                   ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -355,7 +345,6 @@ UploadBoard <- function(id,
                 df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
-
             }
 
             if (!is.null(matname)) {
@@ -426,7 +415,6 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     checkTables <- shiny::reactive({
-
       ## check dimensions
       status <- rep("please upload", 3)
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
@@ -453,23 +441,22 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
-
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = uploaded[["samples.csv"]],
             COUNTS = uploaded[["counts.csv"]]
-            )
+          )
 
-          if(length(FILES_check$check)>0) {
-            lapply(1:length(FILES_check$check), function(idx){
+          if (length(FILES_check$check) > 0) {
+            lapply(1:length(FILES_check$check), function(idx) {
               error_id <- names(FILES_check$check)[idx]
               error_log <- FILES_check$check[[idx]]
-              error_detail <- error_list[error_list$error == error_id,]
+              error_detail <- error_list[error_list$error == error_id, ]
               error_length <- length(error_log)
               ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
               shinyalert::shinyalert(
                 title = error_detail$title,
-                text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                 type = error_detail$warning_type,
                 closeOnClickOutside = FALSE
               )
@@ -488,15 +475,15 @@ UploadBoard <- function(id,
             rownames(samples1) <- samples1[, 1]
             uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
           }
-          
-          if(FILES_check$PASS == FALSE) {
+
+          if (FILES_check$PASS == FALSE) {
             status["samples.csv"] <- "Error, please check your samples files."
             status["counts.csv"] <- "Error, please check your counts files."
             uploaded[["counts.csv"]] <- NULL
             uploaded[["samples.csv"]] <- NULL
           }
 
-          if(FILES_check$PASS == TRUE) {
+          if (FILES_check$PASS == TRUE) {
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
@@ -504,7 +491,6 @@ UploadBoard <- function(id,
       }
 
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
-        
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
@@ -513,37 +499,35 @@ UploadBoard <- function(id,
         uploaded[["samples.csv"]] <- FILES_check$SAMPLES
         uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
-        if(length(FILES_check$check)>0) {
-          lapply(1:length(FILES_check$check), function(idx){
+        if (length(FILES_check$check) > 0) {
+          lapply(1:length(FILES_check$check), function(idx) {
             error_id <- names(FILES_check$check)[idx]
             error_log <- FILES_check$check[[idx]]
-            error_detail <- error_list[error_list$error == error_id,]
+            error_detail <- error_list[error_list$error == error_id, ]
             error_length <- length(error_log)
             ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
 
             shinyalert::shinyalert(
               title = error_detail$title,
-              text = paste(error_detail$message,"\n",paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+              text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
               type = error_detail$warning_type,
               closeOnClickOutside = FALSE
             )
           })
         }
 
-        if(FILES_check$PASS == FALSE) {
+        if (FILES_check$PASS == FALSE) {
           status["samples.csv"] <- "Error, please check your samples files."
           status["contrasts.csv"] <- "Error, please check your contrasts files."
           uploaded[["samples.csv"]] <- NULL
           uploaded[["contrasts.csv"]] <- NULL
         }
-
-        
       }
 
       MAXSAMPLES <- 25
       MAXCONTRASTS <- 5
-      MAXSAMPLES <- as.integer(limits["samples"])
-      MAXCONTRASTS <- as.integer(limits["comparisons"])
+      MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+      MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
@@ -613,7 +597,6 @@ UploadBoard <- function(id,
       rownames(df) <- files.needed
 
       ## deselect
-      ## DT::selectRows(proxy = DT::dataTableProxy("pgxtable"), selected=NULL)
       return(df)
     })
 
@@ -631,9 +614,9 @@ UploadBoard <- function(id,
       upload_info <- sub("EXAMPLEZIP", DLlink, upload_info)
 
       limits0 <- paste(
-        limits["datasets"], "datasets (with each up to",
-        limits["samples"], "samples and",
-        limits["comparisons"], "comparisons)"
+        auth$options$MAX_DATASETS, "datasets (with each up to",
+        auth$options$MAX_SAMPLES, "samples and",
+        auth$options$MAX_COMPARISONS, "comparisons)"
       )
       upload_info <- sub("LIMITS", limits0, upload_info)
       shiny::HTML(upload_info)
@@ -644,17 +627,17 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     ## correctedX <- shiny::reactive({
-    #normalized_counts <- NormalizeCountsServerRT(
-    #  id = "normalize",
-    #  counts = shiny::reactive(uploaded$counts.csv),
-    #  height = height
-    #)
+    # normalized_counts <- NormalizeCountsServerRT(
+
+
+
+    # )
 
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
-      ## X = normalized_counts,  ## NOT YET!!!!
+      ## X = normalized_counts,  !
       is.count = TRUE,
       pheno = shiny::reactive(uploaded$samples.csv),
       height = height
@@ -677,7 +660,6 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = shiny::reactive(uploaded$samples.csv),
       contrRT = shiny::reactive(uploaded$contrasts.csv),
-      ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
       height = height
     )
@@ -685,7 +667,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
-      ##
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
       uploaded$samples.csv <- modct$pheno
@@ -703,21 +684,21 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      ## countsRT = shiny::reactive(uploaded$counts.csv),
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
+      temp_dir = temp_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
-      pgx.dirRT = shiny::reactive(getPGXDIR()),
-      max.genes = as.integer(limits["genes"]),
-      max.genesets = as.integer(limits["genesets"]),
-      max.datasets = as.integer(limits["datasets"]),
-      height = height,
-      r_global = r_global
+      pgx.dirRT = auth$user_dir,
+      auth = auth,
+      max.genes = as.integer(auth$options$MAX_GENES),
+      max.genesets = as.integer(auth$options$MAX_GENESETS),
+      max.datasets = as.integer(auth$options$MAX_DATASETS),
+      height = height
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -734,21 +715,21 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     upload_plot_countstats_server(
-        "countStats",
-        checkTables,
-        uploaded
+      "countStats",
+      checkTables,
+      uploaded
     )
 
     upload_plot_phenostats_server(
-        "phenoStats",
-        checkTables,
-        uploaded
+      "phenoStats",
+      checkTables,
+      uploaded
     )
 
     upload_plot_contraststats_server(
-        "contrastStats",
-        checkTables,
-        uploaded
+      "contrastStats",
+      checkTables,
+      uploaded
     )
 
     buttonInput <- function(FUN, len, id, ...) {
@@ -761,7 +742,6 @@ UploadBoard <- function(id,
 
     output$checkTablesOutput <- DT::renderDataTable({
       ## Render the upload status table
-      ##
       if (!input$advanced_mode) {
         return(NULL)
       }
@@ -789,9 +769,6 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
-    res <- list(
-      loaded = reactive(r_global$loadedDataset)
-    )
-    return(res)
+    # board does not return anything
   })
 }

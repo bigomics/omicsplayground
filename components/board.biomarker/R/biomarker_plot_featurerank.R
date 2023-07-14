@@ -5,13 +5,13 @@
 
 
 biomarker_plot_featurerank_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   clust_featureRank.opts <- shiny::tagList(
@@ -42,10 +42,10 @@ biomarker_plot_featurerank_ui <- function(
 }
 
 biomarker_plot_featurerank_server <- function(id,
-                                               pgx,
-                                               ft_level,
-                                               samplefilter,
-                                               watermark = FALSE) {
+                                              pgx,
+                                              ft_level,
+                                              samplefilter,
+                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -72,7 +72,7 @@ biomarker_plot_featurerank_server <- function(id,
       features <- features[sapply(features, length) >= 10]
 
       ## ------------ Just to get current samples
-      ## samples = colnames(X)
+      #
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
       X <- X[, samples]
       # the code below overwrittes user input, and should be removed
@@ -137,8 +137,7 @@ biomarker_plot_featurerank_server <- function(id,
             design <- model.matrix(~ grp[jj])
             suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj], design)))
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
-            ## s2 = mean(-log10(top$P.Value))  ## as score
-            s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE) ## as score
+            s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE)
           }
 
           f <- 1
@@ -159,7 +158,7 @@ biomarker_plot_featurerank_server <- function(id,
 
       ## top scoring
       S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
-      rownames(S) <- paste(substring(rownames(S), 1, 50),"  ")
+      rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
       playbase::pgx.stackedBarplot(
         x = t(S),
@@ -168,17 +167,13 @@ biomarker_plot_featurerank_server <- function(id,
         ylab = "",
         horiz = TRUE
       )
-      #%>%
-      #  plotly::layout(
-      #    legend = list(orientation = "h")   # show entries horizontally
-      #  )
     }
 
     clust_featureRank.RENDER <- function() {
       render_featureRank() %>%
         plotly_default() %>%
         plotly::layout(
-          legend = list(orientation = 'h')
+          legend = list(orientation = "h")
         )
     }
 
@@ -193,8 +188,6 @@ biomarker_plot_featurerank_server <- function(id,
       func = clust_featureRank.RENDER,
       func2 = clust_featureRank.RENDER2,
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
-      ## renderFunc = plotly::renderPlotly,
-      ## renderFunc2 = plotly::renderPlotly,
       res = c(72, 90), ## resolution of plots
       pdf.width = 8, pdf.height = 10,
       add.watermark = watermark

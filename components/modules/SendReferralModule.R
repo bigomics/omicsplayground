@@ -3,55 +3,35 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-if(0) {
-  ## install.packages("shinyFeedback")
-
-  shiny::shinyApp(
-    ui = shiny::fluidPage(
-      shiny::actionButton("show","show"),
-      send_referral_ui("referral")
-    ),
-    server = function(input, output) {
-      send_referral_server(
-        id = "referral",
-        r.show = reactive(input$show)
-      )
-    }
-  )
-
-
-}
-
 SendReferralModuleUI <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("modal"))
 }
 
-SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
-{
-  shiny::moduleServer(id, function(input, output, session)
-  {
+SendReferralModule <- function(id, r.user = reactive("user"), r.show = reactive(0)) {
+  shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
     rv <- reactiveValues(
-        success = 1,
-        emails  = c()
+      success = 1,
+      emails  = c()
     )
 
     ## JS logout callback
-    js.cb = "function(x){logout();}"
+    js.cb <- "function(x){logout();}"
 
     ## -------------------- modal UI --------------------------
-    email_modal <- eventReactive( r.show(), {
-
-      if(r.show()==0) return()
+    email_modal <- eventReactive(r.show(), {
+      if (r.show() == 0) {
+        return()
+      }
 
       shiny::showModal(
         shiny::modalDialog(
           title = "Sorry, time's up mate! Your FREE session has expired.",
           size = "l",
           shinyFeedback::useShinyFeedback(),
-##          p("Please enter three email addresses."),
-        HTML("Did you enjoy using BigOmics Playground? Yes? You can extend
+          #
+          HTML("Did you enjoy using BigOmics Playground? Yes? You can extend
          your FREE session by referring BigOmics to 3 of your friends!<br><br>"),
           fluidRow(
             column(
@@ -93,12 +73,12 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
             id = "referral-global-error"
           ),
           footer = fillRow(
-            flex = c(NA,1,NA),
+            flex = c(NA, 1, NA),
             actionButton(
               ns("close"),
               "Maybe later...",
               class = "btn btn-warning"
-              ##icon = icon("times")
+              #
             ),
             br(),
             actionButton(
@@ -109,10 +89,10 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
             )
           )
         )
-      )  ## end of showModal
+      ) ## end of showModal
     })
 
-    observeEvent(input$close,{
+    observeEvent(input$close, {
       removeModal()
       rv$success <- 0
       rv$emails <- c()
@@ -123,9 +103,7 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
     }) ## end of output$modal
 
     ## react if send button if pressed ----------------------------
-    shiny::observeEvent( input$sendRefs,
-    {
-
+    shiny::observeEvent(input$sendRefs, {
       ## check inputs
       input_errors <- FALSE
 
@@ -139,16 +117,16 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
 
       ## check emails
       check_email <- function(e) {
-        k <- match(e,names(emails))
+        k <- match(e, names(emails))
         shinyFeedback::hideFeedback(e)
-        if(emails[e] == "") {
-          shinyFeedback::showFeedbackWarning(inputId = e ,"Missing email")
+        if (emails[e] == "") {
+          shinyFeedback::showFeedbackWarning(inputId = e, "Missing email")
           input_errors <<- TRUE
-        } else if(!grepl("@",emails[e])) {
-          shinyFeedback::showFeedbackWarning(inputId = e ,"Invalid email")
+        } else if (!grepl("@", emails[e])) {
+          shinyFeedback::showFeedbackWarning(inputId = e, "Invalid email")
           input_errors <<- TRUE
-        } else if(duplicated(emails)[k]) {
-          shinyFeedback::showFeedbackWarning(inputId = e ,"Duplicated email")
+        } else if (duplicated(emails)[k]) {
+          shinyFeedback::showFeedbackWarning(inputId = e, "Duplicated email")
           input_errors <<- TRUE
         }
       }
@@ -160,8 +138,8 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
       # check names
       check_name <- function(e) {
         shinyFeedback::hideFeedback(e)
-        if(input[[e]] == "") {
-          shinyFeedback::showFeedbackWarning(inputId = e ,"Missing name")
+        if (input[[e]] == "") {
+          shinyFeedback::showFeedbackWarning(inputId = e, "Missing name")
           input_errors <<- TRUE
         }
       }
@@ -170,12 +148,13 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
       check_name("name2")
       check_name("name3")
 
-      if(input_errors)
+      if (input_errors) {
         return()
+      }
 
       ## send emails
       body <- list(
-        ##referrer = "The user",
+        #
         referrer = r.user(),
         referrals = list(
           list(
@@ -194,14 +173,13 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
       )
 
       ## determine is Honcho is alive
-      curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL,"/__docs__/")))
+      curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL, "/__docs__/")))
       honcho.responding <- grepl("Swagger", curl.resp)
       honcho.responding
       honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
-      has.honcho <- (honcho.token!="" && honcho.responding)
+      has.honcho <- (honcho.token != "" && honcho.responding)
 
-      if(has.honcho) {
-
+      if (has.honcho) {
         uri <- sprintf("%s/referral?token=%s", opt$HONCHO_URL, honcho.token)
         response <- httr::POST(
           uri,
@@ -214,22 +192,19 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
         all_good <- lapply(content, function(ref) {
           return(ref$success)
         }) %>%
-        unlist() %>%
+          unlist() %>%
           all()
-
       } else {
-
         ## normal email
         msg <- "Hi. I always thought omics analysis was so difficult, but now I am using BigOmics Playground to analyze my own omics data. No coding required. It's so easy and fun! You should really try it! It's open source and there is even a free version. Go and visit BigOmics at www.bigomics.ch\n\n"
-        browseURL(paste0("mailto:",emails[1],"?subject=Analyze omics data yourself! &body=",msg))
-        browseURL(paste0("mailto:",emails[2],"?subject=Analyze omics data yourself! &body=",msg))
-        browseURL(paste0("mailto:",emails[3],"?subject=Analyze omics data yourself! &body=",msg))
+        browseURL(paste0("mailto:", emails[1], "?subject=Analyze omics data yourself! &body=", msg))
+        browseURL(paste0("mailto:", emails[2], "?subject=Analyze omics data yourself! &body=", msg))
+        browseURL(paste0("mailto:", emails[3], "?subject=Analyze omics data yourself! &body=", msg))
         Sys.sleep(10)
-        all_good = TRUE
-
+        all_good <- TRUE
       }
 
-      if(!all_good) {
+      if (!all_good) {
         session$sendCustomMessage(
           "referral-global-error",
           list(
@@ -248,10 +223,8 @@ SendReferralModule <- function(id, r.user=reactive("user"), r.show=reactive(0))
 
     ## return object
     list(
-        success = reactive(rv$success),
-        emails  = reactive(rv$emails)
+      success = reactive(rv$success),
+      emails  = reactive(rv$emails)
     )
-
   }) ## moduleServer
-
 }

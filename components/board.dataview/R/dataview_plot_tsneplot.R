@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_tsne_ui <- function(
-  id,
-  label = "",
-  title,
-  height,
-  width,
-  caption,
-  info.text) {
+    id,
+    label = "",
+    title,
+    height,
+    width,
+    caption,
+    info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -47,9 +47,13 @@ dataview_plot_tsne_server <- function(id,
       shiny::req(gene, data_type)
 
       if (samples[1] == "") samples <- colnames(pgx$X)
-      if(!all(samples %in% colnames(pgx$X))) return(NULL)
-      if(!gene %in% rownames(pgx$X)) return(NULL)
-      
+      if (!all(samples %in% colnames(pgx$X))) {
+        return(NULL)
+      }
+      if (!gene %in% rownames(pgx$X)) {
+        return(NULL)
+      }
+
       ## precompute
       pp <- rownames(pgx$genes)[1]
       sel <- match(gene, pgx$genes$gene_name)
@@ -73,7 +77,7 @@ dataview_plot_tsne_server <- function(id,
 
       fc1 <- tanh(0.99 * scale(gx)[, 1])
       fc1 <- tanh(0.99 * scale(gx, center = FALSE)[, 1])
-      ## fc1 <- tanh(0.99 * gx/sd(gx))
+      #
       fc2 <- (fc1 - min(fc1))
 
       data <- data.frame(
@@ -157,7 +161,7 @@ dataview_plot_tsne_server <- function(id,
       }
 
       plot_dl$plot <- fig
-      ## fig <- plotly::ggplotly(fig)
+      #
       fig
     }
 
@@ -165,7 +169,7 @@ dataview_plot_tsne_server <- function(id,
       fig <- plot.RENDER() +
         playbase::guide_continuous(aes = "color", type = "steps", width = .7) +
         playbase::theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
-      ## plotly::ggplotly(fig)
+      #
       fig
     }
 
@@ -175,8 +179,10 @@ dataview_plot_tsne_server <- function(id,
 
       df <- data[[1]]
       gene <- data[[2]]
-      symbols <- c("circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
-        "star-diamond", "square-cross", "diamond-wide")
+      symbols <- c(
+        "circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
+        "star-diamond", "square-cross", "diamond-wide"
+      )
 
       if (!is.null(df$group)) {
         fig <-
@@ -238,13 +244,13 @@ dataview_plot_tsne_server <- function(id,
         ) %>%
         plotly::colorbar(
           title = "<b>Expression:</b>",
-          width = .001,          
+          width = .001,
           ticklen = 6,
           len = 0.4,
           thickness = 20
-        )  ## %>% toWebGL()
+        ) ## %>% toWebGL()
     }
-   
+
     plotly.RENDER <- function() {
       fig <- plotly.RENDER0() %>%
         plotly_default() %>%
@@ -264,8 +270,8 @@ dataview_plot_tsne_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      ## func = plot.RENDER,
-      ## func2 = modal_plot.RENDER,
+      #
+      #
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

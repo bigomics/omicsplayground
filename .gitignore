@@ -1,4 +1,5 @@
 libx/
+etc/
 gmail_creds
 data/datasets-sigdb.h5
 data_shared/datasets-sigdb.h5
@@ -47,27 +48,20 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-
-data/*.pgx
-data_shared/**/*.pgx
-data_shared/**/*.data
-data_shared/**/*u2.R
-data_shared/**/*u1.R
-data_shared/**/*init.R
-data_shared/**/*init2.R
-data_shared/**/*pgx.R
-data_shared/**/*test.R
-data_shared/**/*pgx.R
-data_shared/**/*checkfiles.R
-data_shared/*.csv
+data/*
 !data/example-data.pgx
-data/*.csv
+data_public/*
+!data_public/GSE157905-lenvatinib.pgx
+data_shared/*
 logs/*.rds
 /logs/
 
 # Sensitive files #
 ####################
 firebase.rds
+chirp_data.db
+chirp_data.csv
+gmail_creds
 test-firestore.R
 .httr-oauth
 bigomics-extra.js

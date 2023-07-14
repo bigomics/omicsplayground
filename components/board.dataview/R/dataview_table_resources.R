@@ -12,16 +12,19 @@ dataview_table_resources_ui <- function(id) {
     heights_equal = "row",
     style = htmltools::css(grid_template_columns = "4fr 4fr 4fr"),
     TableModuleUI(ns("timings"),
-                  info.text = "The <b>timings</b> table reports more detailed
+      info.text = "The <b>timings</b> table reports more detailed
                   information about the object dimensions, object sizes and
                   execution times of the methods.",
-                  title = "Timings"),
+      title = "Timings"
+    ),
     TableModuleUI(ns("pgxobject"),
-                  info.text = "This table provides details about the pgx object.",
-                  title = "PGX slot sizes"),
+      info.text = "This table provides details about the pgx object.",
+      title = "PGX slot sizes"
+    ),
     TableModuleUI(ns("objects"),
-                  info.text = "This table provides size details about R objects.",
-                  title = "R object sizes")
+      info.text = "This table provides size details about R objects.",
+      title = "R object sizes"
+    )
   )
 }
 
@@ -35,7 +38,7 @@ dataview_table_resources_server <- function(id, pgx) {
     timings_data <- shiny::reactive({
       shiny::req(pgx$timings)
 
-      ## if(is.null(pgx$timings)) return(NULL)
+      #
       D <- data.frame()
       if (!is.null(pgx$timings)) {
         D <- round(pgx$timings[, 1:3], digits = 3)
@@ -70,7 +73,7 @@ dataview_table_resources_server <- function(id, pgx) {
     pgx_data <- reactive({
       shiny::req(pgx$X)
       dims1 <- lapply(pgx, dim)
-      lens  <- sapply(pgx, length)
+      lens <- sapply(pgx, length)
       sel.matrix <- names(pgx)[which(!sapply(dims1, is.null))]
       dims2 <- do.call(rbind, dims1[sel.matrix])
       kk <- which(sapply(dims1, is.null))
@@ -86,7 +89,7 @@ dataview_table_resources_server <- function(id, pgx) {
 
     pgx.RENDER <- function() {
       D <- pgx_data()
-      D <- D[order(-D$size.Mb),]
+      D <- D[order(-D$size.Mb), ]
       req(D)
       DT::datatable(D,
         rownames = FALSE,
@@ -107,11 +110,11 @@ dataview_table_resources_server <- function(id, pgx) {
 
     object_data <- reactive({
       shiny::req(pgx$X)
-      obj <- ls(envir=.GlobalEnv)
-      sizes <- sapply(obj,function(s) object.size(get(s)))
-      sizes.Mb <- round(as.numeric(sizes) / 1024**2, digits=2)
+      obj <- ls(envir = .GlobalEnv)
+      sizes <- sapply(obj, function(s) object.size(get(s)))
+      sizes.Mb <- round(as.numeric(sizes) / 1024**2, digits = 2)
       names(sizes) <- names(sizes.Mb) <- obj
-      sizes.Mb <- sort(sizes.Mb, decreasing=TRUE)
+      sizes.Mb <- sort(sizes.Mb, decreasing = TRUE)
       data.frame(object = names(sizes.Mb), size.Mb = sizes.Mb)
     })
 
@@ -131,6 +134,5 @@ dataview_table_resources_server <- function(id, pgx) {
       "objects",
       func = object.RENDER
     )
-
   }) ## end of moduleServer
 } ## end of server

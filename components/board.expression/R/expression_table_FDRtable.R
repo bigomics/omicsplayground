@@ -12,12 +12,12 @@
 #'
 #' @export
 expression_table_FDRtable_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  width,
-  height) {
+    id,
+    title,
+    caption,
+    info.text,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -39,21 +39,20 @@ expression_table_FDRtable_ui <- function(
 expression_table_FDRtable_server <- function(id,
                                              pgx,
                                              methods, # input$gx_statmethod
-                                             height, # c(tabH, 700)
+                                             height,
                                              scrollY,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     FDRtable.RENDER <- shiny::reactive({
-      # methods <- GX.DEFAULTTEST
       methods <- methods() # input$gx_statmethod
 
       if (is.null(methods)) {
         return(NULL)
       }
 
-      ## comp <- input$gx_contrast
+      #
 
       kk <- rownames(pgx$gx.meta$sig.counts[[1]][[1]])
       kk <- intersect(methods, rownames(pgx$gx.meta$sig.counts[[1]][[1]]))
@@ -78,20 +77,20 @@ expression_table_FDRtable_server <- function(id,
       maxsig <- 0.99 * max(sigcount, na.rm = TRUE)
 
       contr <- sub("::.*", "", rownames(sigcount))
-      ## contr = rownames(sigcount)
+      #
       metd <- sub(".*::", "", rownames(sigcount))
       D <- data.frame(method = metd, contrast = contr, sigcount, check.names = FALSE)
 
       DT::datatable(D,
         rownames = FALSE,
-        #                      class = 'compact cell-border stripe hover',
-        ##class = "compact hover",
+
+        #
         fillContainer = TRUE,
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         options = list(
           dom = "lfrtip",
-          pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          pageLength = 999, #
           scrollX = TRUE,
           scrollY = scrollY,
           scrollResize = TRUE,

@@ -114,10 +114,10 @@ DataViewBoard <- function(id, pgx) {
           )
         }
         shiny::updateSelectizeInput(session, "search_gene",
-                                    choices = genes1, selected = selgene,
-                                    ## options = list(maxOptions = 9999999),
-                                    options = list(maxOptions = 1001),
-                                    server = TRUE
+          choices = genes1, selected = selgene,
+          #
+          options = list(maxOptions = 1001),
+          server = TRUE
         )
       }
     )
@@ -147,7 +147,7 @@ DataViewBoard <- function(id, pgx) {
       samples
     })
 
-    ## dbg("[***dataview_server] names.input = ",names(input))
+    #
     dataview_module_geneinfo_server(
       "geneinfo",
       r.gene = reactive(input$search_gene),
@@ -281,120 +281,118 @@ DataViewBoard <- function(id, pgx) {
     ## ================================================================================
 
     getCountStatistics <- reactiveVal()
-    
-    observeEvent(c(input$data_groupby, input$data_samplefilter), {
-      shiny::req(pgx$X, pgx$Y, pgx$samples)
-      shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
-      subtt <- NULL
 
-      samples <- colnames(pgx$X)
-      samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
-      nsamples <- length(samples)
-      if ("counts" %in% names(pgx)) {
-        counts <- pgx$counts[, samples, drop = FALSE]
-      } else {
-        cat("WARNING:: no counts table. estimating from X\n")
-        counts <- pmax(2**pgx$X - 1, 0)
-        k <- grep("lib.size", colnames(pgx$samples))[1]
-        if (length(k) > 0) {
-          libsize <- pgx$samples[colnames(counts), k]
-          libsize
-          counts <- t(t(counts) * libsize)
+    observeEvent(c(input$data_groupby, input$data_samplefilter),
+      {
+        shiny::req(pgx$X, pgx$Y, pgx$samples)
+        shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
+        subtt <- NULL
+
+        samples <- colnames(pgx$X)
+        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        nsamples <- length(samples)
+        if ("counts" %in% names(pgx)) {
+          counts <- pgx$counts[, samples, drop = FALSE]
+        } else {
+          cat("WARNING:: no counts table. estimating from X\n")
+          counts <- pmax(2**pgx$X - 1, 0)
+          k <- grep("lib.size", colnames(pgx$samples))[1]
+          if (length(k) > 0) {
+            libsize <- pgx$samples[colnames(counts), k]
+            libsize
+            counts <- t(t(counts) * libsize)
+          }
         }
-        ## counts <- round(counts)
-      }
-      if (sum(is.na(counts)) > 0) {
-        cat("WARNING:: plot counts: counts has missing values!\n")
-      }
-
-      ## if(input$data_sampling=="grouped") {
-      grpvar <- input$data_groupby
-      gr <- pgx$Y[samples, grpvar]
-      grps <- sort(unique(gr))
-      ## if(input$data_grouped && length(grps)>1 ) {
-      if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-        newx <- c()
-        for (g in grps) {
-          mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
-          ## mx = rowSums(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)  ## SUM or MEAN???
-          newx <- cbind(newx, mx)
+        if (sum(is.na(counts)) > 0) {
+          cat("WARNING:: plot counts: counts has missing values!\n")
         }
-        if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)
-        rownames(newx) <- rownames(counts)
-        colnames(newx) <- grps
-        counts <- newx
-      }
 
-      ## if too many samples (like scRNA-seq do subsampling...)
-      if (ncol(counts) > 500) {
-        kk <- sample(ncol(counts), 400, replace = TRUE)
-        counts <- counts[, kk, drop = FALSE]
-        subtt <- c(subtt, "random subset")
-      }
-      colnames(counts) <- substring(colnames(counts), 1, 24)
+        grpvar <- input$data_groupby
+        gr <- pgx$Y[samples, grpvar]
+        grps <- sort(unique(gr))
+        if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
+          newx <- c()
+          for (g in grps) {
+            mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
+            newx <- cbind(newx, mx)
+          }
+          if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)
+          rownames(newx) <- rownames(counts)
+          colnames(newx) <- grps
+          counts <- newx
+        }
 
-      gset <- list()
-      gg <- pgx$genes[rownames(counts), ]$gene_name
-      tt <- pgx$genes[rownames(counts), ]$gene_title
-      g1 <- gg[grep("^rpl|^rps", gg, ignore.case = TRUE)]
-      g2 <- gg[grep("^mrpl|^mrps", gg, ignore.case = TRUE)]
-      g3 <- gg[grep("^MT-", gg, ignore.case = TRUE)]
-      g4 <- gg[grep("mitochondr", tt, ignore.case = TRUE)]
-      gset[["Ribosomal (RPL/RPS)"]] <- g1
-      gset[["Mitochondrial ribosomal (MRPL/MRPS)"]] <- g2
-      gset[["Mitochondrial (MT)"]] <- g3
-      gset[["Other mitochondrial"]] <- setdiff(g4, g3)
-      jj <- grep("mitochondr|ribosom", names(playdata::FAMILIES), invert = TRUE, ignore.case = TRUE)
-      gset.other <- lapply(playdata::FAMILIES[jj], function(x) setdiff(x, c(g1, g2, g3, g4)))
-      gset <- c(gset, gset.other)
-      gset <- gset[grep("<all>", names(gset), invert = TRUE)]
-      gset <- gset[sapply(gset, length) > 10]
+        ## if too many samples (like scRNA-seq do subsampling...)
+        if (ncol(counts) > 500) {
+          kk <- sample(ncol(counts), 400, replace = TRUE)
+          counts <- counts[, kk, drop = FALSE]
+          subtt <- c(subtt, "random subset")
+        }
+        colnames(counts) <- substring(colnames(counts), 1, 24)
 
-      ## Counts per samples, by category
-      total.counts <- Matrix::colSums(counts, na.rm = TRUE)
-      summed.counts <- t(sapply(gset, function(f) {
-        Matrix::colSums(counts[which(gg %in% f), , drop = FALSE], na.rm = TRUE)
-      }))
-      prop.counts <- 100 * t(t(summed.counts) / total.counts)
+        gset <- list()
+        gg <- pgx$genes[rownames(counts), ]$gene_name
+        tt <- pgx$genes[rownames(counts), ]$gene_title
+        g1 <- gg[grep("^rpl|^rps", gg, ignore.case = TRUE)]
+        g2 <- gg[grep("^mrpl|^mrps", gg, ignore.case = TRUE)]
+        g3 <- gg[grep("^MT-", gg, ignore.case = TRUE)]
+        g4 <- gg[grep("mitochondr", tt, ignore.case = TRUE)]
+        gset[["Ribosomal (RPL/RPS)"]] <- g1
+        gset[["Mitochondrial ribosomal (MRPL/MRPS)"]] <- g2
+        gset[["Mitochondrial (MT)"]] <- g3
+        gset[["Other mitochondrial"]] <- setdiff(g4, g3)
+        jj <- grep("mitochondr|ribosom", names(playdata::FAMILIES), invert = TRUE, ignore.case = TRUE)
+        gset.other <- lapply(playdata::FAMILIES[jj], function(x) setdiff(x, c(g1, g2, g3, g4)))
+        gset <- c(gset, gset.other)
+        gset <- gset[grep("<all>", names(gset), invert = TRUE)]
+        gset <- gset[sapply(gset, length) > 10]
 
-      ## get variation per group
-      log2counts <- log2(1 + counts)
-      varx <- apply(log2counts, 1, var)
-      gset.var <- sapply(gset, function(s) mean(varx[s], na.rm = TRUE))
-      gset.var
-      tail(sort(gset.var), 10)
+        ## Counts per samples, by category
+        total.counts <- Matrix::colSums(counts, na.rm = TRUE)
+        summed.counts <- t(sapply(gset, function(f) {
+          Matrix::colSums(counts[which(gg %in% f), , drop = FALSE], na.rm = TRUE)
+        }))
+        prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
-      ## sort get top 20 gene families
-      jj <- head(order(-rowSums(prop.counts, na.rm = TRUE)), 20)
-      prop.counts <- prop.counts[jj, , drop = FALSE]
-      gset <- gset[rownames(prop.counts)]
+        ## get variation per group
+        log2counts <- log2(1 + counts)
+        varx <- apply(log2counts, 1, var)
+        gset.var <- sapply(gset, function(s) mean(varx[s], na.rm = TRUE))
+        gset.var
+        tail(sort(gset.var), 10)
 
-      gset.genes <- sapply(gset, function(gg) {
-        gg <- strwrap(paste(c(head(gg, 20), "+ ..."), collapse = " "), 40)
-        paste(gg, collapse = "<br>")
-      })
+        ## sort get top 20 gene families
+        jj <- head(order(-rowSums(prop.counts, na.rm = TRUE)), 20)
+        prop.counts <- prop.counts[jj, , drop = FALSE]
+        gset <- gset[rownames(prop.counts)]
 
-      ## align
-      ss <- names(total.counts)
-      prop.counts <- prop.counts[, ss, drop = FALSE]
-      counts <- counts[, ss, drop = FALSE]
-      log2counts <- log2(1 + counts)
+        gset.genes <- sapply(gset, function(gg) {
+          gg <- strwrap(paste(c(head(gg, 20), "+ ..."), collapse = " "), 40)
+          paste(gg, collapse = "<br>")
+        })
 
-      if (1) {
+        ## align
+        ss <- names(total.counts)
+        prop.counts <- prop.counts[, ss, drop = FALSE]
+        counts <- counts[, ss, drop = FALSE]
+        log2counts <- log2(1 + counts)
+
         names(total.counts) <- substring(names(total.counts), 1, 30)
         colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
         colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
-      }
 
-      res <- list(
-        total.counts = total.counts,
-        subtt = subtt,
-        log2counts = log2counts,
-        prop.counts = prop.counts,
-        gset.genes = gset.genes
-      )
-      getCountStatistics(res)
-    }, ignoreNULL = TRUE)
+
+        res <- list(
+          total.counts = total.counts,
+          subtt = subtt,
+          log2counts = log2counts,
+          prop.counts = prop.counts,
+          gset.genes = gset.genes
+        )
+        getCountStatistics(res)
+      },
+      ignoreNULL = TRUE
+    )
 
     ## ================================================================================
     ## ================================= END ====================================

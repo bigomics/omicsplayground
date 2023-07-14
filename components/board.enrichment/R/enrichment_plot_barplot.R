@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_barplot_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -44,7 +44,6 @@ enrichment_plot_barplot_server <- function(id,
                                            subplot.MAR,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     render_subplot_barplot <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
@@ -75,7 +74,7 @@ enrichment_plot_barplot_server <- function(id,
       grouped <- !input$gs_ungroup1
       has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
-      ## collapse.others=TRUE
+      #
 
       ngrp <- length(unique(pgx$samples$group))
       srt <- ifelse(!grouped || ngrp > 4, 30, 0)
@@ -103,7 +102,7 @@ enrichment_plot_barplot_server <- function(id,
     subplot_barplot.RENDER2 <- function() {
       render_subplot_barplot() %>% plotly_modal_default()
     }
-    
+
     PlotModuleServer(
       "plot",
       plotlib = "plotly",

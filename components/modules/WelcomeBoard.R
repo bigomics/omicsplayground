@@ -3,52 +3,70 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, enable_upload, r_global) {
+WelcomeBoard <- function(id, auth, load_example) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
     output$welcome <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
 
-      name <- auth$name()
-      dbg("[WelcomeBoard] name =",name)
-      if (name %in% c("", NA, NULL)) {
-        welcome <- "Welcome back..."
+      name <- auth$username
+      if (is.null(name) || name %in% c("", NA)) {
+        welcome <- paste0("Welcome back...")
       } else {
-        first.name <- strsplit(name, split = "[@ .]")[[1]][1]
-        first.name <- paste0(
-          toupper(substring(first.name, 1, 1)),
-          substring(first.name, 2, nchar(first.name))
-        )
+        first.name <- getFirstName(name) ## in app/R/utils.R
         welcome <- paste0("Welcome back ", first.name, "...")
       }
       welcome
     })
 
+    output$welcome2 <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+      all.hello <- c(
+        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+      )
+      hello1 <- sample(all.hello, 1)
+      paste0(hello1, "! What would you like to do today?")
+    })
+
     observeEvent(input$btn_example_data, {
-      r_global$load_example_trigger <- r_global$load_example_trigger + 1
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
     })
 
     observeEvent(input$btn_upload_data, {
-      if(enable_upload) {
+      shiny::req(auth$options)
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      if (enable_upload) {
         bigdash.openSidebar()
-        bigdash.selectTab( session, "upload-tab" )
+        bigdash.selectTab(session, "upload-tab")
       } else {
         shinyalert::shinyalert(
-          title = "Upload disabled",          
-          text ='Sorry, upload of new data is disabled for this account.',
+          title = "Upload disabled",
+          text = "Sorry, upload of new data is disabled for this account.",
           type = "warning",
-          ##btn_labels = "OK",
+          #
           closeOnClickOutside = FALSE
         )
       }
     })
 
     observeEvent(input$btn_load_data, {
-      bigdash.openSettings(lock=TRUE)
+      bigdash.openSettings(lock = TRUE)
       bigdash.openSidebar()
-      bigdash.selectTab( session, "load-tab" )
+      bigdash.selectTab(session, "load-tab")
     })
-
   })
 }
 
@@ -59,47 +77,55 @@ WelcomeBoardInputs <- function(id) {
 
 WelcomeBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  
+
   pages <- list(
     '<h1 class="d-block w-100 text-center align-middle" style="height:100vh;line-height:90vh;">HELLO...</h1>',
-    '<h1 class="d-block w-100 text-center align-middle" style="height:100vh;line-height:90vh;">WORLD!</h1>'    
+    '<h1 class="d-block w-100 text-center align-middle" style="height:100vh;line-height:90vh;">WORLD!</h1>'
   )
 
   ## Pages for the slider
-  mission.page =
-    div( class = "row welcome-slide",
-        div( class = "col-md-12 text-center",
-            shiny::tags$b("Our mission"),
-            shiny::p("We love Biology. We love Big Data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
-            )
-        )
-
-  motto.page =
-    div( class = "row welcome-slide",
-        div( class = "col-md-12 text-center",
-            shiny::tags$b("Advanced omics analysis for everyone."),br(),
-            "At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. With Omics Playground you can analyze your omics data faster, better, easier with more fun. No coding required." 
-        )
+  mission.page <-
+    div(
+      class = "row welcome-slide",
+      div(
+        class = "col-md-12 text-center",
+        shiny::tags$b("Our mission"),
+        shiny::p("We love Biology. We love Big Data. Our mission is to create smart tools and make advanced omics analysis accessible to everyone. We believe that we can better understand Biology through Big Data, to find new cures and to accelerate the transition to data-driven precision medicine. Let’s together endeavour a world without cancer and complex diseases.")
+      )
     )
 
-  credits.page =
-    div( class = "row welcome-slide",
-        div( class = "col-md-12 text-center",
-            shiny::tags$b("Proudly presented to you by"),
-            shiny::p("Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Stefan Reifenberg, Xavier Escribà Montagut")
-            )
-        )
+  motto.page <-
+    div(
+      class = "row welcome-slide",
+      div(
+        class = "col-md-12 text-center",
+        shiny::tags$b("Advanced omics analysis for everyone."), br(),
+        "At BigOmics, we are focused on one thing — empowering biologists to easily visualize and understand their omics data. With Omics Playground you can analyze your omics data faster, better, easier with more fun. No coding required."
+      )
+    )
 
-  created.page =
-    div( class = "row welcome-slide",
-        div( class = "col-md-12 text-center",
-            shiny::tags$b("Created with love"),br(),
-            "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-            br(),"Copyright © 2000-2023 BigOmics Analytics, Inc.", br(),
-            shiny::a("www.bigomics.ch", href="https://www.bigomics.ch")
-            )
-        )
-  
+  credits.page <-
+    div(
+      class = "row welcome-slide",
+      div(
+        class = "col-md-12 text-center",
+        shiny::tags$b("Proudly presented to you by"),
+        shiny::p("Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Stefan Reifenberg, Xavier Escribà Montagut")
+      )
+    )
+
+  created.page <-
+    div(
+      class = "row welcome-slide",
+      div(
+        class = "col-md-12 text-center",
+        shiny::tags$b("Created with love"), br(),
+        "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
+        br(), "© 2000-2023 BigOmics Analytics, Inc.", br(),
+        shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
+      )
+    )
+
   ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",
@@ -109,8 +135,8 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12",
         br(),
         br(),
-        div(shiny::textOutput(ns("welcome")), id="welcome-text"),
-        div("What would you like to do today?", id="welcome-subtext"),
+        div(shiny::textOutput(ns("welcome"), inline = TRUE), id = "welcome-text"),
+        div(shiny::textOutput(ns("welcome2"), inline = TRUE), id = "welcome-subtext"),
         br(),
         br()
       )
@@ -147,8 +173,9 @@ WelcomeBoardUI <- function(id) {
     br(),
     bs_carousel2(
       "welcome-carousel",
-      wrap=TRUE, autostart=TRUE, fade=TRUE,
-      interval=10000,
-      contents=list(mission.page, motto.page, created.page, credits.page ))    
+      wrap = TRUE, autostart = TRUE, fade = TRUE,
+      interval = 10000,
+      contents = list(mission.page, motto.page, created.page, credits.page)
+    )
   )
 }

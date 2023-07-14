@@ -13,13 +13,13 @@
 #'
 #' @export
 correlation_plot_barplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -39,16 +39,15 @@ correlation_plot_barplot_ui <- function(
   )
 
   PlotModuleUI(
-      id = ns("plot"),
-      title = title,
-      label = label,
-      plotlib = "plotly",
-      caption = caption,
-#     options = plot_opts,
-      info.text = info.text,
-      download.fmt = c("png", "pdf", "csv"),
-      width = width,
-      height = height
+    id = ns("plot"),
+    title = title,
+    label = label,
+    plotlib = "plotly",
+    caption = caption,
+    info.text = info.text,
+    download.fmt = c("png", "pdf", "csv"),
+    width = width,
+    height = height
   )
 }
 
@@ -66,20 +65,21 @@ correlation_plot_barplot_server <- function(id,
                                             cor_table,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     # reactive function listeninng for changes in input
     plot_data <- shiny::reactive({
       df <- getPartialCorrelation()
-      R  <- getGeneCorr()
+      R <- getGeneCorr()
 
       sel <- cor_table$rownames_current()
       shiny::req(sel)
 
       ## cor_table!=R mismatch!!!
-      if(length(sel)>nrow(R)) return(NULL) 
+      if (length(sel) > nrow(R)) {
+        return(NULL)
+      }
 
-      NTOP = 40 ## how many genes to show in barplot
-      sel <- intersect(sel,rownames(R))
+      NTOP <- 40 ## how many genes to show in barplot
+      sel <- intersect(sel, rownames(R))
       sel <- head(sel, NTOP)
       rho <- R[sel, "cor"]
       if (length(sel) == 1) names(rho) <- rownames(R)[sel]
@@ -98,9 +98,8 @@ correlation_plot_barplot_server <- function(id,
     })
 
     render_barplot <- function() {
-      
       pd <- plot_data()
-     
+
       playbase::pgx.stackedBarplot(
         x = pd,
         ylab = "Correlation",
@@ -118,7 +117,7 @@ correlation_plot_barplot_server <- function(id,
       render_barplot() %>%
         plotly_modal_default()
     }
-    
+
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
@@ -129,7 +128,5 @@ correlation_plot_barplot_server <- function(id,
       pdf.width = 6, pdf.height = 4,
       add.watermark = watermark
     )
-    
   }) ## end of moduleServer
 }
-

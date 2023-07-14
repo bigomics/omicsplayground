@@ -4,11 +4,11 @@
 ##
 
 wordcloud_plot_enrichment_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    height) {
   ns <- shiny::NS(id)
 
   gseaplots_opts <- shiny::tagList(
@@ -71,7 +71,7 @@ wordcloud_plot_enrichment_server <- function(id,
         } else {
           a <- top[i]
           playbase::gsea.enplot(S[, a], targets,
-            names = NULL, ## main=gs,
+            names = NULL, #
             main = paste0("#", toupper(keyword), "\n@", a),
             cex.main = 0.9, len.main = 80, xlab = ""
           )

@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_gclustering_ui <- function(
-  id,
-  label,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   umap.opts <- shiny::tagList(

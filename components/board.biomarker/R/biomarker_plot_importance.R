@@ -13,15 +13,15 @@
 #'
 #' @export
 biomarker_plot_importance_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(ns("plot"),
     title = title,
     caption = caption,
@@ -53,13 +53,18 @@ biomarker_plot_importance_server <- function(id,
         # placing a shiny::req ; that way we can handle
         # the case on the plotting function and display a
         # help message.
-        res <- tryCatch({
-          calcVariableImportance()
-        }, error = function(w){
-          NULL
-        })
+        res <- tryCatch(
+          {
+            calcVariableImportance()
+          },
+          error = function(w) {
+            NULL
+          }
+        )
 
-        if(is.null(res)){return(NULL)}
+        if (is.null(res)) {
+          return(NULL)
+        }
 
         res <- list(
           R = res$R
@@ -69,8 +74,8 @@ biomarker_plot_importance_server <- function(id,
 
       plot.RENDER <- function() {
         res <- plot_data()
-        
-        if(is.null(res) || length(res) == 0){
+
+        if (is.null(res) || length(res) == 0) {
           frame()
           text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
           return()

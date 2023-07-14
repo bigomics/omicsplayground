@@ -57,19 +57,19 @@ WordCloudBoard <- function(id, pgx) {
 
       contr <- input$wc_contrast
       gsea1 <- res$gsea[[contr]]
-      
+
       # sometimes we have words that NA is tsne, make sure we remove them (likely special characters) in windows or wsl
-      res$tsne <- res$tsne[!is.na(rownames(res$tsne)),]
-      res$umap <- res$umap[!is.na(rownames(res$umap)),]
-      
+      res$tsne <- res$tsne[!is.na(rownames(res$tsne)), ]
+      res$umap <- res$umap[!is.na(rownames(res$umap)), ]
+
       ordered_words <- gsea1$word
-      res$tsne <- res$tsne[ordered_words,]
-      res$umap <- res$umap[ordered_words,]
+      res$tsne <- res$tsne[ordered_words, ]
+      res$umap <- res$umap[ordered_words, ]
 
       # end sometimes we have words that NA is tsne, make sure we remove them (likely special characters) in windows or wsl
 
       topFreq <- data.frame(gsea1, tsne = res$tsne, umap = res$umap)
-      
+
       topFreq <- topFreq[order(-topFreq$NES), ]
 
       return(topFreq)

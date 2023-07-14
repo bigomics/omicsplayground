@@ -36,8 +36,9 @@ WgcnaBoard <- function(id, pgx) {
         if ("wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
           shiny::updateSelectInput(session, "selected_module",
-                                   choices = names(pgx$wgcna$me.genes),
-                                   selected = "ME1")
+            choices = names(pgx$wgcna$me.genes),
+            selected = "ME1"
+          )
           return(pgx$wgcna)
         }
 
@@ -46,23 +47,8 @@ WgcnaBoard <- function(id, pgx) {
         on.exit(progress$close())
         progress$set(message = "Calculating WGCNA...", value = 0)
         message("[wgcna.compute] >>> Calculating WGCNA...")
-        if (0) {
-          shinyalert::shinyalert(
-            title = "",
-            text = "No WGCNA data found in PGX object. Computing now.. "
-          )
-        }
 
         WGCNA::enableWGCNAThreads()
-
-        if (0) {
-          liv <- read.csv("~/Downloads/LiverFemale3600.csv")
-          X <- as.matrix(liv[, 9:ncol(liv)])
-          rownames(X) <- liv$gene_symbol
-          X <- X[order(-apply(X, 1, sd)), ]
-          X <- X[!duplicated(rownames(X)), ]
-          dim(X)
-        }
 
         out <- playbase::pgx.wgcna(
           pgx = pgx,
@@ -88,7 +74,7 @@ WgcnaBoard <- function(id, pgx) {
     ## ================================================================================
 
     infotext <-
-       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
+      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
@@ -96,7 +82,7 @@ WgcnaBoard <- function(id, pgx) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
-        size = 'xl',
+        size = "xl",
         easyClose = TRUE
       ))
     })

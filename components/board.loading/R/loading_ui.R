@@ -14,11 +14,7 @@ downloadButton2 <- function(outputId, label = "Download", class = NULL, ...) {
 
 LoadingInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    shiny::checkboxGroupInput(ns("flt_datatype"), "datatype", choices = ""),
-    shiny::checkboxGroupInput(ns("flt_organism"), "organism", choices = "")
-  )
+  bigdash::tabSettings()
 }
 
 LoadingUI <- function(id) {
@@ -39,12 +35,12 @@ LoadingUI <- function(id) {
   )
 
   user_tabpanel <- shiny::tabPanel(
-    'User',
+    "User",
     bslib::layout_column_wrap(
       width = 1,
-      heights_equal = "row",          
+      heights_equal = "row",
       height = "calc(100vh - 180px)",
-      uiOutput(ns("receive_pgx_alert")),
+      uiOutput(ns("sharing_alert")),
       bslib::layout_column_wrap(
         width = 1,
         style = htmltools::css(grid_template_columns = "7fr 5fr"),
@@ -62,39 +58,17 @@ LoadingUI <- function(id) {
           info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 340px)", "70vh"),
-          width = c("auto",  "100%")
+          width = c("auto", "100%")
         )
-      ), ## end of 7fr-5fr
-      div(
-        id = "load-action-buttons",
-        # this button is needed to trigger download but should be hidden
-        shiny::downloadLink(
-          ns("download_pgx_btn"),
-          label = "",
-          icon = NULL,
-          width = '0%'
-        ),
-        # this button is needed to trigger download but should be hidden
-        shiny::downloadLink(
-          ns("download_zip_btn"),
-          label = "",
-          icon = NULL,
-          width = '0%'
-        ),
-        shiny::actionButton(
-          ns("loadbutton"),
-              label = "Load Dataset", icon = icon("file-import"),
-          class = "btn btn-outline-primary"
-        )
-      ) ## end of buttons div
+      ) ## end of 7fr-5fr
     )
   )
 
   public_tabpanel <- shiny::tabPanel(
-    'Public',
+    "Public",
     bslib::layout_column_wrap(
       width = 1,
-      heights_equal = "row",          
+      heights_equal = "row",
       height = "calc(100vh - 180px)",
       bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
       bslib::layout_column_wrap(
@@ -114,35 +88,45 @@ LoadingUI <- function(id) {
           info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 330px)", 700),
-          width = c("auto",  "100%")
+          width = c("auto", "100%")
         )
-      ), ## end of 7fr-5fr
-      div(
-        id = "load-action-buttons",
-        shiny::actionButton(
-          ns("importbutton"),
-          label = "Import dataset", icon = icon("file-import"),
-              class = "btn btn-outline-primary"
-        )
-          ) ## end of buttons div
+      ) ## end of 7fr-5fr
     ) ## end first layout_column_wrap
   ) ## end of Public tabPanel
 
+  sharing_tabpanel <- shiny::tabPanel(
+    "Sharing",
+    bslib::layout_column_wrap(
+      width = 1,
+      heights_equal = "row",
+      height = "calc(100vh - 180px)",
+      bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+      bslib::layout_column_wrap(
+        width = 1,
+        height = "calc(100vh - 180px)",
+        uiOutput(ns("sharing_panel_ui"))
+      )
+    )
+  )
+
+  ## ------------------------------------------------------------------------
+
   ## disable/hide public tabpanel if public folder does not exists
-  public_dir <- file.path(OPG,"data_public")
-  if(!dir.exists(public_dir)) {
+  public_dir <- file.path(OPG, "data_public")
+  if (!dir.exists(public_dir)) {
     public_tabpanel <- NULL
   }
-  
-  ## return object
+
+
+  ## ============================ Board object ===========================
   div(
     class = "p-0",
     board_header,
     shiny::tabsetPanel(
-      id = ns('tabs'),
+      id = ns("tabs"),
       user_tabpanel,
-      public_tabpanel
+      public_tabpanel,
+      sharing_tabpanel
     )
   )
-  
 }

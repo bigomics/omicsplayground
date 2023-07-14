@@ -5,8 +5,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-
-    # Your application server logic
-    load('data/example-data.pgx')
-    server <- TcgaBoard('tcga', pgx)
+  # Your application server logic
+  load("data/example-data.pgx")
+  server <- TcgaBoard("tcga", pgx)
 }

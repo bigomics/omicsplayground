@@ -13,14 +13,14 @@
 #'
 #' @export
 correlation_plot_correlation_UMAP_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   cor_umap.opts <- shiny::tagList(
     shiny::radioButtons(ns("umap_param"), "color by:", choices = c("cor", "cov"), inline = TRUE)
   )
@@ -47,11 +47,11 @@ correlation_plot_correlation_UMAP_ui <- function(
 #' @return
 #' @export
 correlation_plot_correlation_UMAP_server <- function(id,
-                                                        pgx,
-                                                        cor_gene,
-                                                        getFullGeneCorr,
-                                                        getGeneCorr,
-                                                        watermark = FALSE) {
+                                                     pgx,
+                                                     cor_gene,
+                                                     getFullGeneCorr,
+                                                     getGeneCorr,
+                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
     cor_umap.DATA <- shiny::reactive({
@@ -104,7 +104,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
       p <- playbase::pgx.plotGeneUMAP(
         pgx,
-        pos = pos, ## contrast=ct,
+        pos = pos, #
         value = rho0,
         title = "",
         cex = 0.9,

@@ -49,7 +49,7 @@ ExpressionInputs <- function(id) {
             choices = NULL, inline = TRUE
           ),
           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-           we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, 
+           we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
         )
@@ -61,15 +61,15 @@ ExpressionInputs <- function(id) {
 ExpressionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 120px)"  ## full height of page (minus header)
+  fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
   halfH <- "height: calc(50vh - 120px);" ## half height of page
-  
+
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Plot",
       bslib::layout_column_wrap(
-        width = 1/4,
+        width = 1 / 4,
         style = halfH,
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
@@ -112,7 +112,7 @@ ExpressionUI <- function(id) {
       "Top genes",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,        
+        style = halfH,
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
           title = "Expression of top differentially expressed genes",
@@ -128,7 +128,7 @@ ExpressionUI <- function(id) {
       "Volcano (all)",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,        
+        style = halfH,
         expression_plot_volcanoAll_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
@@ -144,7 +144,7 @@ ExpressionUI <- function(id) {
       "Volcano (methods)",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,                
+        style = halfH,
         expression_plot_volcanoMethods_ui(
           id = ns("volcanoMethods"),
           title = "Volcano plots for all methods",
@@ -157,7 +157,7 @@ ExpressionUI <- function(id) {
       )
     ) ## end upper tabPanel
   ) ## end of tabs1
-  
+
   tabs2 <- shiny::tabsetPanel(
     id = ns("tabs2"),
     shiny::tabPanel(
@@ -187,7 +187,7 @@ ExpressionUI <- function(id) {
       "Foldchange (all)",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,                  
+        style = halfH,
         expression_table_fctable_ui(
           ns("fctable"),
           title = "Gene fold changes for all contrasts",
@@ -202,7 +202,7 @@ ExpressionUI <- function(id) {
       "FDR table",
       bslib::layout_column_wrap(
         width = 1,
-        style = halfH,          
+        style = halfH,
         expression_table_FDRtable_ui(
           ns("FDRtable"),
           title = "Number of significant genes",
@@ -212,7 +212,7 @@ ExpressionUI <- function(id) {
           height = c("100%", TABLE_HEIGHT_MODAL)
         )
       )
-    )      
+    )
   ) ## end tabs2 = bottom tabsetPanel
 
   div(
@@ -220,11 +220,9 @@ ExpressionUI <- function(id) {
     bslib::layout_column_wrap(
       width = 1,
       height = fullH,
-      gap = '0px',
+      gap = "0px",
       tabs1,
       tabs2
     )
   )
-
-
 }

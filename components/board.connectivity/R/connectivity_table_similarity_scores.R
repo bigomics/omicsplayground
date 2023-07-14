@@ -4,13 +4,13 @@
 ##
 
 connectivity_table_similarity_scores_ui <- function(
-  id,
-  title, 
-  info.text,
-  caption,
-  width,
-  height,
-  label="") {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height,
+    label = "") {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -22,7 +22,6 @@ connectivity_table_similarity_scores_ui <- function(
     title = title,
     label = label
   )
-  
 }
 
 connectivity_table_similarity_scores_server <- function(id,
@@ -30,12 +29,11 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
-    
     connectivityScoreTable.RENDER <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
 
-      ##kk <- c("pathway", "score", "rho", "NES", "padj", "leadingEdge")
+      #
       kk <- intersect(columns, colnames(df))
       df <- df[, kk]
       df <- df[abs(df$score) > 0, , drop = FALSE]
@@ -52,14 +50,14 @@ connectivity_table_similarity_scores_server <- function(id,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           pageLength = 99999,
           scrollX = TRUE,
           scrollY = height,
-          scrollResize = TRUE,          
+          scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
         ) ## end of options.list

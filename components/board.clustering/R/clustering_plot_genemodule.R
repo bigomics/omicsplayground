@@ -14,13 +14,13 @@
 #'
 #' @export
 clustering_plot_genemodule_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    caption,
+    info.text,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -61,53 +61,54 @@ clustering_plot_genemodule_server <- function(id,
                                               getTopMatrix,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       res <- getTopMatrix()
       shiny::req(res)
 
-      dbg("[clustering_plot_genemodule.R::plot_data] names(res) = ",names(res))
+      dbg("[clustering_plot_genemodule.R::plot_data] names(res) = ", names(res))
       mat <- res$mat
       idx <- res$idx
-      modx <- sapply(1:ncol(mat), function(i) tapply(mat[,i],idx,mean))
+      modx <- sapply(1:ncol(mat), function(i) tapply(mat[, i], idx, mean))
       colnames(modx) <- colnames(mat)
-      
+
       return(list(
         mat = modx
       ))
     })
 
-    
-    render_plotly <- function(title.cex=1, title.y=0.95) {
+
+    render_plotly <- function(title.cex = 1, title.y = 0.95) {
       pd <- plot_data()
       shiny::req(pd)
 
-      dbg("[clustering_plot_genemodule.R::render_plotly] names(pd) = ",names(pd))      
+      dbg("[clustering_plot_genemodule.R::render_plotly] names(pd) = ", names(pd))
       mat <- pd$mat
-      dbg("[clustering_plot_genemodule.R::render_plotly] dim(mat) = ",dim(mat))
+      dbg("[clustering_plot_genemodule.R::render_plotly] dim(mat) = ", dim(mat))
 
-      
-      plotly.colors <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf")
-      ##plotly.colors <- c('#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+
+      plotly.colors <- c(
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+      )
+      ## plotly.colors <- c('#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
       ##  '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52')
-      plotly.colors <- paste0(plotly.colors,"99")
-      
+      plotly.colors <- paste0(plotly.colors, "99")
+
       nplots <- nrow(mat)
       plts <- list()
 
-      for(i in 1:nplots) {        
-        gx <- mat[i,]
+      for (i in 1:nplots) {
+        gx <- mat[i, ]
         names(gx) <- colnames(mat)
 
         anntitle <- list(
-            x = 0.5, y = title.y,
-            xref = "paper", yref = "paper",
-            xanchor = "center", yanchor = "bottom",
-            text = rownames(mat)[i],
-            font = list(size = 18*title.cex),
-            align = "center", showarrow = FALSE
-          )
+          x = 0.5, y = title.y,
+          xref = "paper", yref = "paper",
+          xanchor = "center", yanchor = "bottom",
+          text = rownames(mat)[i],
+          font = list(size = 18 * title.cex),
+          align = "center", showarrow = FALSE
+        )
 
         p <- playbase::pgx.barplot.PLOTLY(
           data = data.frame(
@@ -117,35 +118,32 @@ clustering_plot_genemodule_server <- function(id,
           x = "xgroup",
           y = "gx",
           grouped = FALSE,
-          fillcolor = plotly.colors[(i-1)%%10+1],
-          ## title = rownames(mat)[i],
+          fillcolor = plotly.colors[(i - 1) %% 10 + 1],
           yaxistitle = "avg expr (logCPM)",
           xaxistitle = "",
           annotations = anntitle
-          ##margin = plotly.margin
         ) %>% plotly::layout(
           plot_bgcolor = "#f2f2f2",
-          margin = list(l=20,r=0,b=0,t=0),
+          margin = list(l = 20, r = 0, b = 0, t = 0),
           bargap = 0.35
-          ##xaxis = list(tickfont = list(size=xaxis.fontsize))          
-        )        
-        plts[[i]] <- p        
+        )
+        plts[[i]] <- p
       }
-      
+
       return(plts)
     }
 
     plotly.RENDER <- function() {
       ## layout in subplots
-      plts <- render_plotly(title.cex=0.92, title.y=0.85) 
-      plts <- head(plts,18)
-      ncols <- ifelse( length(plts)>4, 2, 1)
-      ncols <- ifelse( length(plts)>12, 3, ncols)
+      plts <- render_plotly(title.cex = 0.92, title.y = 0.85)
+      plts <- head(plts, 18)
+      ncols <- ifelse(length(plts) > 4, 2, 1)
+      ncols <- ifelse(length(plts) > 12, 3, ncols)
       nrows <- ceiling(length(plts) / ncols)
       plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.02,0.02,0.03,0.03),  ## lrtb
+        margin = c(0.02, 0.02, 0.03, 0.03), ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,
@@ -153,37 +151,38 @@ clustering_plot_genemodule_server <- function(id,
       ) %>%
         plotly::layout(
           font = list(size = 12),
-          xaxis = list(tickfont = list(size = 14)), 
-          yaxis = list(tickfont = list(size = 10)),          
-          margin = list(l=10,r=10,b=10,t=10),
+          xaxis = list(tickfont = list(size = 14)),
+          yaxis = list(tickfont = list(size = 10)),
+          margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         )
     }
 
     modal_plotly.RENDER <- function() {
-      plts <- render_plotly(title.cex=1.5, title.y=0.88) 
-      plts <- head(plts,18)
-      nrows <- ifelse( length(plts)>3, 2, 1)
-      nrows <- ifelse( length(plts)>8, 3, nrows)
+      plts <- render_plotly(title.cex = 1.5, title.y = 0.88)
+      plts <- head(plts, 18)
+      nrows <- ifelse(length(plts) > 3, 2, 1)
+      nrows <- ifelse(length(plts) > 8, 3, nrows)
       ncols <- ceiling(length(plts) / nrows)
       fig <- plotly::subplot(
         plts,
         nrows = nrows,
-        margin = c(0.02,0.02,0.04,0.04),  ## lrtb
+        margin = c(0.02, 0.02, 0.04, 0.04), ## lrtb
         titleX = TRUE,
         titleY = TRUE,
         shareY = TRUE,
         shareX = FALSE
       )
-      
+
       fig <- fig %>%
         plotly::layout(
           font = list(size = 18),
-          xaxis = list(tickfont = list(size = 22)), 
-          yaxis = list(tickfont = list(size = 14)),          
-          margin = list(l=10, r=10, b=10, t=10),
+          xaxis = list(tickfont = list(size = 22)),
+          yaxis = list(tickfont = list(size = 14)),
+          margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
-        ) %>% plotly::style(
+        ) %>%
+        plotly::style(
           marker.size = 20
         )
       fig
@@ -192,7 +191,7 @@ clustering_plot_genemodule_server <- function(id,
     PlotModuleServer(
       "pltmod",
       func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,      
+      func2 = modal_plotly.RENDER,
       plotlib = "plotly",
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 105), ## resolution of plots

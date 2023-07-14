@@ -5,9 +5,8 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-
   # Your application server logic
-  load('data/example-data.pgx')
+  load("data/example-data.pgx")
   getPgxDir <- reactive("data")
-  server <- ConnectivityBoard('cmap', pgx, getPgxDir)
+  server <- ConnectivityBoard("cmap", pgx, getPgxDir)
 }

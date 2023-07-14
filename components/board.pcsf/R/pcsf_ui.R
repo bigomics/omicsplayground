@@ -42,7 +42,7 @@ PcsfInputs <- function(id) {
       placement = "top"
     ),
     hr(),
-    withTooltip(    
+    withTooltip(
       shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, 0, 0.5),
       "Select contrast.",
       placement = "right"
@@ -59,7 +59,8 @@ PcsfInputs <- function(id) {
       shiny::tagList(
         withTooltip(shiny::checkboxInput(ns("check1"), "check1", TRUE),
           "Some check.",
-          placement = "top")
+          placement = "top"
+        )
       )
     )
   )
@@ -76,7 +77,7 @@ PcsfUI <- function(id) {
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
     ## "Hello",
-    ##bs_alert(pcsf_module_info),
+    #
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
@@ -84,11 +85,11 @@ PcsfUI <- function(id) {
         bslib::layout_column_wrap(
           width = 1,
           height = "calc(100vh - 190px)",
-          heights_equal = "row",            
-          div(bs_alert(pcsf_module_info), style="margin-bottom:15px;"),
+          heights_equal = "row",
+          div(bs_alert(pcsf_module_info), style = "margin-bottom:15px;"),
           bslib::layout_column_wrap(
             width = 1,
-            height = "calc(100vh - 190px)",                   
+            height = "calc(100vh - 190px)",
             style = htmltools::css(grid_template_columns = "5fr 7fr"),
             pcsf_plot_heatmap_ui(
               id = ns("pcsf_heatmap"),
@@ -101,7 +102,8 @@ PcsfUI <- function(id) {
               ns("pcsf_network"),
               caption = paste(
                 "PCSF network analysis",
-                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."),
+                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."
+              ),
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
@@ -111,5 +113,4 @@ PcsfUI <- function(id) {
       )
     )
   )
-  
 }

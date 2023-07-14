@@ -59,8 +59,6 @@ BiomarkerBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx)
       ct <- colnames(pgx$Y)
-      ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
-      ## ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
       shiny::updateSelectInput(session, "pdx_predicted", choices = ct)
     })
 
@@ -92,15 +90,29 @@ BiomarkerBoard <- function(id, pgx) {
         ft <- names(pgx$families)
       }
       ft <- sort(ft)
-      ## if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
       ft <- sort(c("<custom>", ft))
       shiny::updateSelectInput(session, "pdx_filter", choices = ft, selected = "<all>")
     })
 
+    # Enable or disable the run button in the UI
+    # if the pdx_predicted overlaps with the pdx_samplefilter variable
+    shiny::observeEvent(input$pdx_samplefilter, {
+      shiny::req(pgx$Y)
+      if (!is.null(input$pdx_samplefilter)) {
+        # Get the variable name for each pdx_samplefilter
+        col_filter <- data.table::tstrsplit(input$pdx_samplefilter, "=", keep = 1)[[1]]
+      } else {
+        col_filter <- 1
+      }
+      if (!input$pdx_predicted %in% col_filter) {
+        shinyjs::enable("pdx_runbutton")
+      } else {
+        shinyjs::disable("pdx_runbutton")
+      }
+    })
+
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
-      ##
       ## This code also features a progress indicator.
-      ##
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -134,9 +146,8 @@ BiomarkerBoard <- function(id, pgx) {
       y <- y0[!is.na(y0)]
 
       ## augment to at least 100 samples per level
-      ii <- unlist(tapply( 1:length(y), y, sample, size=100, replace=TRUE))
+      ii <- unlist(tapply(1:length(y), y, sample, size = 100, replace = TRUE))
       y <- y[ii]
-      ##if (length(y) < 100) y <- head(rep(y, 100), 100)
 
       ## -------------------------------------------
       ## select features
@@ -164,7 +175,6 @@ BiomarkerBoard <- function(id, pgx) {
       if (ft == "<custom>" && !is.null(sel) && length(sel) > 0) {
         ## ------------- filter with user selection
         if (sel[1] != "") {
-          ## pp <- intersect(rownames(X),sel)
           pp <- rownames(X)[which(toupper(rownames(X)) %in% toupper(sel))]
           X <- X[pp, , drop = FALSE]
         }
@@ -211,7 +221,6 @@ BiomarkerBoard <- function(id, pgx) {
       P[is.na(P)] <- 0
       P[is.nan(P)] <- 0
       P <- t(t(P) / (1e-3 + apply(P, 2, max, na.rm = TRUE)))
-      ## P <- pmax(P,0.1)
       P <- P[order(-rowSums(P, na.rm = TRUE)), , drop = FALSE]
 
       R <- P
@@ -270,18 +279,14 @@ BiomarkerBoard <- function(id, pgx) {
       orig.names <- sel
       names(orig.names) <- colnames(tx)
       jj <- names(y)
-      ## ny <- length(unique(y))
-      ## if(length(jj) < ny*20) jj <- c(jj,jj,jj)
 
       if (do.survival) {
         time <- abs(y)
         status <- (y > 0) ## dead if positive time
         df <- data.frame(time = time + 0.001, status = status, tx)
-        ## df <- df[jj,]
         rf <- rpart::rpart(survival::Surv(time, status) ~ ., data = df)
       } else {
         df <- data.frame(y = y, tx)
-        ## df <- df[jj,]
         rf <- rpart::rpart(y ~ ., data = df)
       }
       table(rf$where)
@@ -297,17 +302,13 @@ BiomarkerBoard <- function(id, pgx) {
       if (max(rf.nsplit) > MAXSPLIT) {
         cp.idx <- max(which(rf.nsplit <= MAXSPLIT))
         cp0 <- rf$cptable[cp.idx, "CP"]
-        ## rf <- rpart::prune(rf, cp=0.05)
         rf <- rpart::prune(rf, cp = cp0)
       }
 
       progress$inc(2 / 10, detail = "done")
 
-      ## y <- y[rownames(pgx$samples)]
-      ## tx <- tx[names(y),]
       y <- y[rownames(tx)]
       colnames(tx) <- orig.names[colnames(tx)]
-      ## res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
       res <- list(R = R, y = y, X = t(tx), rf = rf)
 
       return(res)
@@ -346,13 +347,9 @@ BiomarkerBoard <- function(id, pgx) {
     biomarker_plot_featurerank_server(
       id = "featurerank",
       pgx = pgx,
-      ##ft_level = shiny::reactive(input$ft_level),
       ft_level = shiny::reactive("gene"),
-      ##selected_phenotypes = shiny::reactive(NULL),
       samplefilter = shiny::reactive(input$pdx_samplefilter),
       watermark = WATERMARK
     )
-
-
   })
 } ## end-of-Board

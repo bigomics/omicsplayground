@@ -46,7 +46,7 @@ SingleCellBoard <- function(id, pgx) {
       ## update cluster methods if available in object
       if ("cluster" %in% names(pgx)) {
         clustmethods <- names(pgx$cluster$pos)
-        clustmethods <- grep("3d",clustmethods,value=TRUE,invert=TRUE,ignore.case=TRUE) ## no 3D
+        clustmethods <- grep("3d", clustmethods, value = TRUE, invert = TRUE, ignore.case = TRUE) ## no 3D
         clustmethods <- c("default", clustmethods)
         shiny::updateSelectInput(session, "clustmethod",
           choices = clustmethods
@@ -102,7 +102,7 @@ SingleCellBoard <- function(id, pgx) {
       pheno1 <- c("<cell type>", pheno0) # pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
-      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1,,selected = pheno1[1])
+      shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
     })
 
@@ -138,6 +138,7 @@ SingleCellBoard <- function(id, pgx) {
 
       shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
       shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
+      shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
     })
 
 
@@ -157,7 +158,6 @@ SingleCellBoard <- function(id, pgx) {
       zx <- zx[, kk, drop = FALSE]
       zx <- head(zx[order(-apply(zx, 1, sd)), ], 1000)
       zx <- t(scale(t(zx))) ## scale??
-
       pos <- NULL
       m <- "tsne"
       m <- input$clustmethod
@@ -287,6 +287,7 @@ SingleCellBoard <- function(id, pgx) {
       samplefilter = shiny::reactive(input$samplefilter),
       cytovar1 = shiny::reactive(input$cytovar1),
       cytovar2 = shiny::reactive(input$cytovar2),
+      nbins = shiny::reactive(input$nbins),
       selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
       watermark = WATERMARK
     )

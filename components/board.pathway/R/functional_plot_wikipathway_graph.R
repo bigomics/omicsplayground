@@ -13,15 +13,14 @@
 #'
 #' @export
 functional_plot_wikipathway_graph_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  info.width,
-  height,
-  width
-  ) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    info.width,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -47,13 +46,13 @@ functional_plot_wikipathway_graph_ui <- function(
 #' @return
 #' @export
 functional_plot_wikipathway_graph_server <- function(id,
-                                              pgx,
-                                              getFilteredWikiPathwayTable,
-                                              wikipathway_table,
-                                              fa_contrast,
-                                              watermark = FALSE) {
-  moduleServer( id, function(input, output, session) {
-
+                                                     pgx,
+                                                     getFilteredWikiPathwayTable,
+                                                     wikipathway_table,
+                                                     fa_contrast,
+                                                     watermark = FALSE) {
+  moduleServer(
+    id, function(input, output, session) {
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
         svg.dir <- pgx.system.file("svg/", package="pathway")
@@ -119,7 +118,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         if (!is.null(sel.row) && length(sel.row) > 0) {
-          pathway.id   <- df[sel.row, "pathway.id"]
+          pathway.id <- df[sel.row, "pathway.id"]
           pathway.name <- df[sel.row, "pathway"]
           pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         }
@@ -130,8 +129,8 @@ functional_plot_wikipathway_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
-        tmpfile <- paste0(tempfile(),".svg")
-        svg <- wikipathview(wp=pathway.id, val=fc, dir=svg.dir)
+        tmpfile <- paste0(tempfile(), ".svg")
+        svg <- wikipathview(wp = pathway.id, val = fc, dir = svg.dir)
         fluctuator::write_svg(svg, file = tmpfile)
 
         list(
@@ -163,7 +162,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         plotlib = "svgPanZoom",
         func = plot_RENDER,
       )
-
     } ## end of moduleServer
   )
 }

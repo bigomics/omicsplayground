@@ -13,12 +13,12 @@
 #'
 #' @export
 correlation_plot_cor_graph_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   GRAPH.LAYOUTS <- c(
@@ -54,10 +54,10 @@ correlation_plot_cor_graph_ui <- function(
 #' @return
 #' @export
 correlation_plot_cor_graph_server <- function(
-  id,
-  cor_gene,
-  getPartialCorrelationMatrix,
-  watermark = FALSE) {
+    id,
+    cor_gene,
+    getPartialCorrelationMatrix,
+    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -65,18 +65,18 @@ correlation_plot_cor_graph_server <- function(
       shiny::req(cor_gene())
 
       dbg("[correlation_plot_cor_graph.R] plot_data called!")
-      
+
       res <- getPartialCorrelationMatrix()
       gene <- "XIST"
       rho.min <- 0.3
       layout <- "kk"
 
       dbg("[correlation_plot_cor_graph.R] plot_data : 1")
-      
+
       gene <- cor_gene()
 
       dbg("[correlation_plot_cor_graph.R] plot_data : 2")
-      
+
       rho.min <- input$cor_graph_threshold
       layout <- input$cor_graph_layout
       numnodes <- nrow(res$cor)
@@ -84,10 +84,10 @@ correlation_plot_cor_graph_server <- function(
       vsize <- ifelse(numnodes > 100, 8, vsize)
       radius <- as.integer(input$cor_graph_radius)
 
-      dbg("[correlation_plot_cor_graph.R] gene=",gene)
-      dbg("[correlation_plot_cor_graph.R] dim.cor=",dim(res$cor))
-      dbg("[correlation_plot_cor_graph.R] rownames.cor=",head(rownames(res$cor)))
-      
+      dbg("[correlation_plot_cor_graph.R] gene=", gene)
+      dbg("[correlation_plot_cor_graph.R] dim.cor=", dim(res$cor))
+      dbg("[correlation_plot_cor_graph.R] rownames.cor=", head(rownames(res$cor)))
+
       gr <- playbase::pgx.plotPartialCorrelationGraph(
         res,
         gene, ## what="graph", ## degree=deg,
@@ -126,7 +126,6 @@ correlation_plot_cor_graph_server <- function(
       "plot",
       plotlib = "visnetwork",
       func = cor_graph.VISNETWORK,
-#      csvFunc = plot_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

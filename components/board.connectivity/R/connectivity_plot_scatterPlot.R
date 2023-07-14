@@ -13,15 +13,15 @@
 #'
 #' @export
 connectivity_plot_scatterPlot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::selectInput(
@@ -42,7 +42,7 @@ connectivity_plot_scatterPlot_ui <- function(
     caption = caption,
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("pdf","png"),
+    download.fmt = c("pdf", "png"),
     height = height,
     width = width,
   )
@@ -57,27 +57,25 @@ connectivity_plot_scatterPlot_ui <- function(
 #' @return
 #' @export
 connectivity_plot_scatterPlot_server <- function(id,
-                                               pgx,
-                                               r_sigdb,
-                                               getConnectivityContrasts,
-                                               getCurrentContrast,
-                                               connectivityScoreTable,
-                                               getConnectivityScores,
-                                               getConnectivityMatrix,
-                                               watermark = FALSE) {
+                                                 pgx,
+                                                 r_sigdb,
+                                                 getConnectivityContrasts,
+                                                 getCurrentContrast,
+                                                 connectivityScoreTable,
+                                                 getConnectivityScores,
+                                                 getConnectivityMatrix,
+                                                 watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       ## this returns data to plot. all reactivity should be resolved
       ## and isolated here before doing the plotting
       plot_data <- shiny::reactive({
-        
         sigdb <- r_sigdb()
         logfc <- as.numeric(input$logFC)
 
         shiny::req(pgx)
         shiny::req(sigdb)
-        shiny::req(logfc)       
+        shiny::req(logfc)
 
         all.ct <- getConnectivityContrasts(sigdb)
         fc1 <- getCurrentContrast()$fc
@@ -85,8 +83,7 @@ connectivity_plot_scatterPlot_server <- function(id,
         sel.row <- connectivityScoreTable$rows_selected()
 
         df <- sel.genes <- NULL
-        if(!is.null(sel.row)) {
-        
+        if (!is.null(sel.row)) {
           df <- getConnectivityScores()
           df <- df[abs(df$score) > 0, , drop = FALSE]
           ct2 <- rownames(df)[sel.row]
@@ -103,23 +100,23 @@ connectivity_plot_scatterPlot_server <- function(id,
           colnames(df) <- c(ct2, ct1)
           df[is.na(df)] <- 0 ## missing as zero???
           df <- df[order(-rowMeans(abs(df**2), na.rm = TRUE)), ]
-          
+
           ## Number of selected genes
           sel.genes <- rownames(df)[rowSums(abs(df) > logfc) >= 1] ## minimum FC
-        
+
           not.sel <- setdiff(rownames(df), sel.genes)
           if (length(not.sel) > 0) {
             nr <- 1000
             ii <- c(sel.genes, sample(not.sel, nr, replace = TRUE))
             df <- df[unique(ii), , drop = FALSE]
           }
-          
+
           ## remove NA genes from selection
           na.fc <- rownames(df)[rowSums(is.na(df)) > 0] ## probably was missing
           na.zero <- rownames(df)[rowSums(df == 0) > 0] ## probably was missing
           sel.genes <- setdiff(sel.genes, c(na.fc, na.zero))
         }
-        
+
         ## Result object. Remember the first element of the list must
         ## be a dataframe for CSV download from the plotmodule UI.
         res <- list(
@@ -134,15 +131,14 @@ connectivity_plot_scatterPlot_server <- function(id,
 
       ## Plots get data from plot_data. This should be a simple
       ## function, not reactive. Any slow pre-plotting should be in
-      ## plot_data()
+      #
       plot_RENDER <- function() {
-
         res <- plot_data()
         pgx <- res$pgx
         sel.row <- res$sel.row
         sel.genes <- res$sel.genes
         df <- res$df
-        
+
         if (is.null(sel.row)) {
           return(
             plotly::plotly_empty(type = "scatter", mode = "markers") %>%
@@ -150,7 +146,7 @@ connectivity_plot_scatterPlot_server <- function(id,
                 displayModeBar = FALSE
               ) %>%
               plotly::layout(
-                title = list( 
+                title = list(
                   text = "Select dataset/contrast",
                   yref = "paper",
                   y = 0.5
@@ -158,7 +154,7 @@ connectivity_plot_scatterPlot_server <- function(id,
               )
           )
         }
-        
+
         ## resort selection so that selected genes are drawn last to avoid
         ## covering them up.
         is.sel <- (rownames(df) %in% sel.genes)

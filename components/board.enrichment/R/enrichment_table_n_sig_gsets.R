@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_n_sig_gsets_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -73,11 +73,11 @@ enrichment_table_n_sig_gsets_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          pageLength = 999, #
           scrollX = TRUE,
           scrollY = "20vh",
           scrollResize = TRUE,

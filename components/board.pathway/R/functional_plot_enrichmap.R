@@ -13,15 +13,14 @@
 #'
 #' @export
 functional_plot_enrichmap_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  info.width,
-  height,
-  width
-  ) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    info.width,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -33,8 +32,7 @@ functional_plot_enrichmap_ui <- function(
     caption = caption,
     info.width = info.width,
     options = NULL,
-    download.fmt = c("png","pdf"),    
-    # download.fmt = c("png","csv"),    
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )
@@ -54,8 +52,7 @@ functional_plot_enrichmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
-      ##source("fun_enrichmap.R")
+      #
 
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
@@ -64,16 +61,16 @@ functional_plot_enrichmap_server <- function(id,
           qsig = 0.99,
           ntop = 120,
           wt = 1,
-          plot=FALSE
-        ) 
+          plot = FALSE
+        )
         res$contrast <- fa_contrast()
         names(res)
         return(res)
       })
 
       get_plots <- function(cex, lwd) {
-        res <- plot_data()        
-        ct <- head(colnames(res$F),6)
+        res <- plot_data()
+        ct <- head(colnames(res$F), 6)
         ct
 
         if (!interactive()) {
@@ -83,54 +80,52 @@ functional_plot_enrichmap_server <- function(id,
         }
 
         plist <- list()
-        for(i in 1:length(ct)) {
+        for (i in 1:length(ct)) {
           plist[[i]] <- plot_enrichmentmap(
             res,
             contrast = i,
             qsig = 0.05,
             cex = cex,
-            lwd = lwd, 
+            lwd = lwd,
             title = ct[i],
             title.y = 0.08,
             title.x = 0.02,
-            # paper_bgcolor="#cdceebff",
-            plot_bgcolor="#cdceeb66",            
-            # plot_bgcolor="#ffffff88",
-            label = FALSE)          
-          if (!interactive()) shiny::incProgress(1/length(ct))
+            plot_bgcolor = "#cdceeb66",
+            label = FALSE
+          )
+          if (!interactive()) shiny::incProgress(1 / length(ct))
         }
         plist
       }
-      
+
       plot_RENDER <- function() {
         plist <- get_plots(cex = 0.45, lwd = 0.7)
-        nr <- min(2, ceiling(length(plist)/2))
-        plotly::subplot( head(plist,6), nrows=nr, margin=0.025) %>%
+        nr <- min(2, ceiling(length(plist) / 2))
+        plotly::subplot(head(plist, 6), nrows = nr, margin = 0.025) %>%
           plotly::layout(
-            ##title = list(text="<b>Enrichment Map</b>", font=list(size=36)),
-            margin = list(l=0,r=0,b=0,t=0,pad=10)  
+            #
+            margin = list(l = 0, r = 0, b = 0, t = 0, pad = 10)
           )
       }
 
       plot_RENDER2 <- function() {
         plist <- get_plots(cex = 0.6, lwd = 0.9)
-        nr <- min(2, ceiling(length(plist)/2))
-        plotly::subplot( head(plist,6), nrows=nr, margin=0.025) %>%
+        nr <- min(2, ceiling(length(plist) / 2))
+        plotly::subplot(head(plist, 6), nrows = nr, margin = 0.025) %>%
           plotly::layout(
-            ##title = list(text="<b>Enrichment Map</b>", font=list(size=36)),
-            margin = list(l=0,r=0,b=0,t=0,pad=10)  
+            #
+            margin = list(l = 0, r = 0, b = 0, t = 0, pad = 10)
           )
       }
-      
+
       PlotModuleServer(
         "plotmodule",
         plotlib = "plotly",
         func = plot_RENDER,
-        func2 = plot_RENDER2,        
-        ## csvFunc = plot_data,
+        func2 = plot_RENDER2,
+        #
         add.watermark = watermark
       )
-
     } ## end of moduleServer
   )
 }

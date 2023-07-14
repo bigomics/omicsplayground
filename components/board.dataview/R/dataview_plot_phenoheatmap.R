@@ -4,13 +4,13 @@
 ##
 
 dataview_plot_phenoheatmap_ui <- function(
-  id,
-  label = "",
-  height,
-  width,
-  title,
-  info.text,
-  caption) {
+    id,
+    label = "",
+    height,
+    width,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -37,7 +37,6 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      
       shiny::req(pgx$samples, r.samples())
 
       samples <- r.samples()
@@ -60,18 +59,18 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
       annot.ht <- ifelse(ncol(res$annot) > 20, 4, annot.ht)
       annot.ht <- ifelse(ncol(res$annot) > 30, 3, annot.ht)
 
-      check_diversity_in_colums <- function(df){
+      check_diversity_in_colums <- function(df) {
         sum(
           unlist(
             apply(
-              df, 2, function(x){
-                length(unique(x))>1
-                }
-                )
-              )
-            ) >1
+              df, 2, function(x) {
+                length(unique(x)) > 1
+              }
+            )
+          )
+        ) > 1
       }
-      
+
       if (check_diversity_in_colums(res$annot) && is.data.frame(res$annot)) {
         ## TODO: Color palettes should be unique, not the same for condition and time
         ## NOTE: the package doesnt allow to change the typeface, the position of the legend, the label placement, ...
@@ -81,13 +80,12 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
           annot.ht = annot.ht,
           cluster.samples = res$do.clust
         )
-        ## plt <- plt %>% plotly::config(displayModeBar = FALSE)
+        #
         plt
       } else {
         shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))
         return(NULL)
       }
-
     }
 
     modal_plot.RENDER <- function() {

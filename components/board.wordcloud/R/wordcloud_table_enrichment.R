@@ -4,12 +4,12 @@
 ##
 
 wordcloud_table_enrichment_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,9 +38,9 @@ wordcloud_table_enrichment_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
-        fillContainer = TRUE,        
+        fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
