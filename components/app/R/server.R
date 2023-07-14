@@ -447,6 +447,18 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
+
+  access_id <- reactive({
+    user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
+    session_id <- substring(session$token,1,8)
+    client.ip <- system("hostname -I",intern=TRUE)
+    client.ip <- strsplit(client.ip,split=' ')[[1]][1]
+    public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
+    public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
+    access_id <- paste0(user_id,"__",session_id,":",client.ip,":",public.ip)
+    ##access_id <- paste0(user_id,"__",session_id)
+    access_id
+  })
   
   ## upon change of user
   user_id=""
@@ -472,8 +484,8 @@ app_server <- function(input, output, session) {
       }
       if(user_id!="") {
         pgx.record_access(user_id, "logout", session_id=session$token)
-        access_id <- paste0(user_id,"__",substring(session$token,1,8))
-        pgx.remove_lock(access_id, auth$user_dir)
+        ##access_id <- paste0(user_id,"__",substring(session$token,1,8))
+        pgx.remove_lock(access_id(), auth$user_dir)
       }
     }
   })
@@ -804,41 +816,59 @@ Upgrade today and experience advanced analysis features without the time limit.<
     timer_heartbeat(), {
   if(1) {
       shiny::req(auth$logged)
-      user_id <- ifelse(auth$email=='', auth$username, auth$email)
       dbg("[server.R] >> Heartbeat triggered : auth$logged =", auth$logged)
-      dbg("[server.R] >> Heartbeat triggered : user_id =", user_id)      
       if(auth$logged) {
 
-        access_id <- paste0(user_id,"__",substring(session$token,1,8))
-        dbg("[server.R] >> Heartbeat triggered : access_id =", access_id)      
-        lock <- pgx.write_lock(access_id, path = auth$user_dir, max_idle=60)
+        ##access_id <- paste0(user_id,"__",substring(session$token,1,8))
+        dbg("[server.R] >> Heartbeat triggered : access_id =", access_id())      
+        lock <- pgx.write_lock(access_id(), path = auth$user_dir, max_idle=60)
+        dbg("[server.R] is.null.lock_file =", is.null(lock$file))
+        dbg("[server.R] lock_file =", lock$file)
+        dbg("[server.R] lock_user =", lock$user)
+        dbg("[server.R] access_id =", access_id())
 
-        if(lock$status) {
-          dbg("[server.R] LOCKED! by user = ", lock$user)
-          dbg("[server.R] LOCKED! delta = ", lock$delta)          
-          shinyalert::shinyalert(
-            title = "SUCCESS!",
-            text = paste("successfully locked by you",lock$user,
-              "<br>delta=",lock$delta),
-            html = TRUE, immediate=TRUE
-          )
-        }
-        if(!lock$status) {
-          dbg("[server.R] LOCKED! by user = ", lock$user)
-          dbg("[server.R] LOCKED! delta = ", lock$delta)          
-          shinyalert::shinyalert(
-            title = "LOCKED!",
-            text = paste("this account is locked by someone else",
-              lock$user, "<br>delta=",lock$delta),
-            closeOnEsc = FALSE, showConfirmButton = FALSE,
-            animation = FALSE,
-            html = TRUE, immediate=TRUE            
-          )
-        }
+        my_id <- strsplit(access_id(),split="__")[[1]]
         
-        
+        if(!is.null(lock$file) && lock$file!="") {
+          if(lock$status) {
+            dbg("[server.R] LOCKED! by user = ", lock$user)
+            dbg("[server.R] LOCKED! delta = ", lock$delta)          
+            id <- strsplit(lock$user,split="__")[[1]]
+            shinyalert::shinyalert(
+                          title = "SUCCESS!",
+                          text = paste(
+                            "successfully locked by you",
+                            "<br><br>name =",id[1],                            
+                            "<br>session =",id[2],
+                            "<br><br>your name =",my_id[1],                            
+                            "<br>your session =",my_id[2],
+                            "<br><br>delta =",lock$delta
+                          ),
+                          closeOnEsc = FALSE, showConfirmButton = FALSE, animation = FALSE,
+                          html = TRUE, immediate=TRUE
+                        )
+          }
+          if(!lock$status) {
+            dbg("[server.R] LOCKED! by user = ", lock$user)
+            dbg("[server.R] LOCKED! delta = ", lock$delta)
+            id <- strsplit(lock$user,split="__")[[1]]
+            shinyalert::shinyalert(
+                          title = "LOCKED!",
+                          text = paste(
+                            "this account is locked by someone else",
+                            "<br><br>name =",id[1],                            
+                            "<br>session =",id[2],
+                            "<br><br>your name =",my_id[1],                            
+                            "<br>your session =",my_id[2],                            
+                            "<br><br>delta =",lock$delta
+                          ),
+                          closeOnEsc = FALSE, showConfirmButton = FALSE, animation = FALSE,
+                          html = TRUE, immediate=TRUE            
+                        )
+          }
+        }
       }
-}      
+  }      
     }
   )
 
