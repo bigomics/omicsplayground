@@ -55,7 +55,7 @@ functional_plot_wikipathway_graph_server <- function(id,
     id, function(input, output, session) {
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
-        svg.dir <- pgx.system.file("svg/", package="pathway")
+        svg.dir <- pgx.system.file("svg/", package = "pathway")
         svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(
           df = getFilteredWikiPathwayTable(),
@@ -142,19 +142,19 @@ functional_plot_wikipathway_graph_server <- function(id,
       })
 
       plot_RENDER <- function() {
-          img <- getPathwayImage()
-          shiny::req(img$width, img$height)
-          filename <- img$src
-          img.svg <-  readChar(filename, nchars = file.info(filename)$size)
-          pz <- svgPanZoom::svgPanZoom(
-              img.svg,
-              controlIconsEnabled = TRUE,
-              zoomScaleSensitivity = 0.4,
-              minZoom = 1,
-              maxZoom = 5,
-              viewBox = FALSE
-          )
-          return(pz)
+        img <- getPathwayImage()
+        shiny::req(img$width, img$height)
+        filename <- img$src
+        img.svg <- readChar(filename, nchars = file.info(filename)$size)
+        pz <- svgPanZoom::svgPanZoom(
+          img.svg,
+          controlIconsEnabled = TRUE,
+          zoomScaleSensitivity = 0.4,
+          minZoom = 1,
+          maxZoom = 5,
+          viewBox = FALSE
+        )
+        return(pz)
       }
 
       PlotModuleServer(
