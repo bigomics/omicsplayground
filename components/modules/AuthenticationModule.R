@@ -620,9 +620,10 @@ PasswordAuthenticationModule <- function(id,
       valid.user <- isTRUE(length(sel) > 0)
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
-
-
+           
       # Check session trace is not too recent (repeated user login)
+      valid.trace = TRUE
+  if(0) {
       file_path <- paste0(TRACE.DIR, "/trace_log.txt")
       if(file.exists(file_path)) {
         df <- read.table(
@@ -656,7 +657,8 @@ PasswordAuthenticationModule <- function(id,
       } else {
         valid.trace <- TRUE
       }
-
+  }
+      
       login.OK <- (valid.user && valid.pw && valid.date && valid.trace)
 
       if (1) {

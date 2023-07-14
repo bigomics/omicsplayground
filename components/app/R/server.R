@@ -447,7 +447,8 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
-
+  user_id=""
+  
   ## upon change of user
   observeEvent(auth$logged, {
     if (auth$logged) {
@@ -459,6 +460,8 @@ app_server <- function(input, output, session) {
       if (auth$method %in% c("email-link", "firebase", "login-code")) {
         check_personal_email(auth, PGX.DIR)
       }
+      user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
+      record_access(user_id, "login", access.file=ACCESS_LOGFILE)     
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -467,6 +470,8 @@ app_server <- function(input, output, session) {
           PGX[[names(PGX)[i]]] <<- NULL
         }
       }
+      ##user_id <- ifelse(auth$email=='', auth$username, auth$email)      
+      record_access(user_id, "logout", access.file=ACCESS_LOGFILE)           
     }
   })
 
@@ -606,18 +611,15 @@ Upgrade today and experience advanced analysis features without the time limit.<
       }
     })
 
-    shiny::observeEvent(auth$logged, {
+    shiny::observeEvent( auth$logged, {
       ## trigger on change of USER
       logged <- auth$logged
-      info("[server.R & TIMEOUT>0] change in user log status : logged = ", logged)
-
       ## --------- start timer --------------
       if (TIMEOUT > 0 && logged) {
-        info("[server.R] starting session timer!!!")
+        info("[server.R] starting session timer")
         reset_timer()
         run_timer(TRUE)
       } else {
-        info("[server.R] no timer!!!")
         run_timer(FALSE)
       }
     })
@@ -628,7 +630,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## About
   ## -------------------------------------------------------------
 
-  observeEvent(input$navbar_about, {
+  observeEvent( input$navbar_about, {
     authors <- c(
       "Ivo Kwee", "Murat Akhmedov", "John Coene",
       "Stefan Reifenberg", "Marco Sciaini", "Cédric Scherer",
@@ -667,13 +669,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
   shiny::observe({
     ## trigger on change of USER
-    logged <- auth$logged()
+    logged <- auth$logged
     info("[server.R] change in user log status : logged = ", logged)
-
     if (logged) {
-      session$user <- auth$email()
+      session$user <- auth$email
     } else {
-      session$user <- "nobody"
+      session$user <- "(not logged in)"
     }
 
     ## This checks for personal email adress and asks to change to
@@ -691,7 +692,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
     }
 
     # Trigger timer_heartbeat to register user login
-    timer_heartbeat <- reactiveTimer(120000, session)
+##    timer_heartbeat <- reactiveTimer(120000, session)
   })
 
   ## logout helper function
@@ -760,45 +761,83 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## User heartbeat + login/logout traceability
   ## -------------------------------------------------------------
   # Initialize the reactiveTimer to update every 2 minutes
-  timer_heartbeat <- reactiveTimer(120000, session)
+  timer_heartbeat <- reactiveTimer(10*1000, session)
 
-  user_email <- function(auth){
-    auth$email()
-  }
+#  user_email <- function(auth){
+#    auth$email()
+#  }
 
-  observe({timer_heartbeat()
-    # Generate the heartbeat message
-    current_time <- Sys.time()
-    email <- user_email(auth)
-    if(is.na(email)) return()
+  ## observe({timer_heartbeat()
+  ##   # Generate the heartbeat message
+  ##   current_time <- Sys.time()
+  ##   email <- auth$email
+  ##   if(is.na(email)) return()
+  ##   dbg("Heartbeat triggered")
+  ##   heartbeat_msg <- paste0(email, "\theartbeat\t", current_time)
+  ##   # File path
+  ##   file_path <- paste0(TRACE.DIR, "/trace_log.txt")
+  ##   # Check if the file exists
+  ##   if(file.exists(file_path)) {
+  ##     # Read the lines from the file
+  ##     lines <- readLines(file_path)
+  ##     # Find the index of the line with the user's email and "heartbeat"
+  ##     index <- grep(paste0(auth$email, "\theartbeat\t"), lines)
+  ##     # If a line was found, replace it with the new heartbeat line
+  ##     # Otherwise, append the new heartbeat line to the end
+  ##     if(length(index) > 0) {
+  ##       lines[index] <- heartbeat_msg
+  ##     } else {
+  ##       lines <- c(lines, heartbeat_msg)
+  ##     }
+  ##     # Write the lines back to the file
+  ##     writeLines(lines, file_path)
+  ##   } else {
+  ##     # If the file doesn't exist, create it with the heartbeat line
+  ##     writeLines(heartbeat_msg, file_path)
+  ##   }
+  ## })
 
-    dbg("Heartbeat triggered")
+  observeEvent(
+    timer_heartbeat(), {
+  if(1) {
+      shiny::req(auth$logged)
+      user_id <- ifelse(auth$email=='', auth$username, auth$email)
+      dbg("[server.R] >> Heartbeat triggered : auth$logged =", auth$logged)
+      dbg("[server.R] >> Heartbeat triggered : user_id =", user_id)      
+      if(auth$logged) {
 
-    heartbeat_msg <- paste0(email, "\theartbeat\t", current_time)
-    # File path
-    file_path <- paste0(TRACE.DIR, "/trace_log.txt")
-    # Check if the file exists
+        access_id <- paste0(user_id,"__",substring(session$token,1,8))
+        dbg("[server.R] >> Heartbeat triggered : access_id =", access_id)      
+        lock <- write_lock(access_id, path = auth$user_dir, max_idle=60)
 
-    if(file.exists(file_path)) {
-      # Read the lines from the file
-      lines <- readLines(file_path)
-      # Find the index of the line with the user's email and "heartbeat"
-      index <- grep(paste0(user_email(auth), "\theartbeat\t"), lines)
-      # If a line was found, replace it with the new heartbeat line
-      # Otherwise, append the new heartbeat line to the end
-      if(length(index) > 0) {
-        lines[index] <- heartbeat_msg
-      } else {
-        lines <- c(lines, heartbeat_msg)
+        if(lock$status) {
+          dbg("[server.R] LOCKED! by user = ", lock$user)
+          dbg("[server.R] LOCKED! delta = ", lock$delta)          
+          shinyalert::shinyalert(
+            title = "SUCCESS!",
+            text = paste("successfully locked by you",lock$user,
+              "<br>delta=",lock$delta),
+            html = TRUE, immediate=TRUE
+          )
+        }
+        if(!lock$status) {
+          dbg("[server.R] LOCKED! by user = ", lock$user)
+          dbg("[server.R] LOCKED! delta = ", lock$delta)          
+          shinyalert::shinyalert(
+            title = "LOCKED!",
+            text = paste("this account is locked by someone else",
+              lock$user, "<br>delta=",lock$delta),
+            closeOnEsc = FALSE, showConfirmButton = FALSE,
+            animation = FALSE,
+            html = TRUE, immediate=TRUE            
+          )
+        }
+        
+        
       }
-      # Write the lines back to the file
-      writeLines(lines, file_path)
-    } else {
-      # If the file doesn't exist, create it with the heartbeat line
-      writeLines(heartbeat_msg, file_path)
+}      
     }
-  })
-
+  )
 
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = ".current-dataset > #spinner-container")
