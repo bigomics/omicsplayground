@@ -267,7 +267,7 @@ UploadBoard <- function(id,
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -304,7 +304,7 @@ UploadBoard <- function(id,
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -334,7 +334,7 @@ UploadBoard <- function(id,
 
                   shinyalert::shinyalert(
                     title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                     type = error_detail$warning_type,
                     closeOnClickOutside = FALSE
                   )
@@ -456,7 +456,7 @@ UploadBoard <- function(id,
 
               shinyalert::shinyalert(
                 title = error_detail$title,
-                text = paste(error_detail$message, "\n", paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+                text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
                 type = error_detail$warning_type,
                 closeOnClickOutside = FALSE
               )
@@ -509,7 +509,7 @@ UploadBoard <- function(id,
 
             shinyalert::shinyalert(
               title = error_detail$title,
-              text = paste(error_detail$message, "\n", paste(error_length, "cases identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+              text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
               type = error_detail$warning_type,
               closeOnClickOutside = FALSE
             )
