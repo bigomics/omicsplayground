@@ -547,7 +547,7 @@ EmailLinkAuthenticationModule <- function(id,
 PasswordAuthenticationModule <- function(id,
                                          credentials_file) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using password authentication <<<<")
+    message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
     ns <- session$ns
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
@@ -658,6 +658,13 @@ PasswordAuthenticationModule <- function(id,
         valid.trace <- TRUE
       }
   }
+
+
+      access_id <- paste0(input$login_username,"__",substring(session$token,1,8))
+      user_dir <- ifelse(opt$ENABLE_USERDIR, file.path(PGX.DIR, input$login_username), PGX.DIR)
+      lock <- pgx.write_lock(access_id, path = user_dir, max_idle=60)
+      lock$status
+      dbg("[PasswordAuthenticationModule] lock$status = ", lock$status)
       
       login.OK <- (valid.user && valid.pw && valid.date && valid.trace)
 

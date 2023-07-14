@@ -43,10 +43,8 @@ pgx.read_lock <- function(path) {
   }
 
   ## ok LOCK file exists
-  lock_user <- strsplit(lock_file, split='LOCK__')[[1]][2]
+  lock_user  <- strsplit(lock_file, split='LOCK__')[[1]][2]
   lock_time <- file.mtime(file.path(path,lock_file))
-  
-  ## if the lock is older than say 5minutes, release it
   delta <- (Sys.time() - as.POSIXct(lock_time))
   delta <- round(as.numeric(delta, units='secs'),digits=2)
 
@@ -84,8 +82,8 @@ pgx.write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
   mylock_file
   
   if(!has.lockfile || is_stale || force) {
-    ## remove any previous locks
     if(is_stale) {
+      ## if the lock is older than max_idle, record logout and remove it
       dbg("[pgx.write_lock] STALE LOCK by ",lock$user)
       user <- strsplit(lock$user,split='__')[[1]]
       pgx.record_access(user=user[1], action='logout.stale', session_id=user[2])      
