@@ -461,7 +461,7 @@ app_server <- function(input, output, session) {
         check_personal_email(auth, PGX.DIR)
       }
       user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
-      record_access(user_id, "login", session_id=session$token)
+      pgx.record_access(user_id, "login", session_id=session$token)
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -470,8 +470,11 @@ app_server <- function(input, output, session) {
           PGX[[names(PGX)[i]]] <<- NULL
         }
       }
-      ##user_id <- ifelse(auth$email=='', auth$username, auth$email)      
-      record_access(user_id, "logout", session_id=session$token)
+      if(user_id!="") {
+        pgx.record_access(user_id, "logout", session_id=session$token)
+        access_id <- paste0(user_id,"__",substring(session$token,1,8))
+        pgx.remove_lock(access_id, auth$user_dir)
+      }
     }
   })
 
@@ -808,7 +811,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
         access_id <- paste0(user_id,"__",substring(session$token,1,8))
         dbg("[server.R] >> Heartbeat triggered : access_id =", access_id)      
-        lock <- write_lock(access_id, path = auth$user_dir, max_idle=60)
+        lock <- pgx.write_lock(access_id, path = auth$user_dir, max_idle=60)
 
         if(lock$status) {
           dbg("[server.R] LOCKED! by user = ", lock$user)

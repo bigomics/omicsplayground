@@ -6,7 +6,7 @@
 ACCESS_LOGFILE = file.path(ETC,"access.log")
 ## unlink(ACCESS_LOGFILE)
 
-record_access <- function(user, action, host='', client='', session_id='',
+pgx.record_access <- function(user, action, host='', client='', session_id='',
                           access.file=ACCESS_LOGFILE) {
   time.now <- as.POSIXct(Sys.time())
   client.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
@@ -20,13 +20,11 @@ record_access <- function(user, action, host='', client='', session_id='',
   data.table::fwrite(login_data, file=access.file, quote=TRUE, append=do.append)
 }
 
-path="~/Playground/omicsplayground/data/ivo.kwee@bigomics.ch"
-
-read_lock <- function(path) {  
+pgx.read_lock <- function(path) {  
   
   lock_file <- dir(path,"^LOCK__.*",full.name=FALSE)
   lock_file
-  dbg("[read_lock] lock_file = ", lock_file)
+  dbg("[pgx.read_lock] lock_file = ", lock_file)
   
   if(length(lock_file)==0) {
     message("UNLOCKED: no lock file")
@@ -63,12 +61,12 @@ read_lock <- function(path) {
   return(info)
 }
 
-write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
+pgx.write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
 
-  dbg("[write_lock] user = ", user)
-  dbg("[write_lock] path = ", path)
+  dbg("[pgx.write_lock] user = ", user)
+  dbg("[pgx.write_lock] path = ", path)
   
-  lock <- read_lock(path=path)
+  lock <- pgx.read_lock(path=path)
   lock
   
   has.lockfile <- !is.null(lock)
@@ -88,13 +86,13 @@ write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
   if(!has.lockfile || is_stale || force) {
     ## remove any previous locks
     if(is_stale) {
-      dbg("[write_lock] STALE LOCK by ",lock$user)
+      dbg("[pgx.write_lock] STALE LOCK by ",lock$user)
       user <- strsplit(lock$user,split='__')[[1]]
-      record_access(user=user[1], action='logout.stale', session_id=user[2])      
+      pgx.record_access(user=user[1], action='logout.stale', session_id=user[2])      
       file.remove(file.path(path,lock$file))
     }
     if(!has.lockfile) {
-      dbg("[write_lock] no lock file")
+      dbg("[pgx.write_lock] no lock file")
     }
     write(NULL, file.path(path, mylock_file))
     lock$status <- TRUE  ## successful own lock
@@ -106,7 +104,7 @@ write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
   is_mylock <- (has.lockfile && lock$file == mylock_file)
   is_mylock
   if(has.lockfile && is_mylock) {
-    dbg("[write_lock] UNLOCKED: because you are lock owner: ", lock$user)
+    dbg("[pgx.write_lock] UNLOCKED: because you are lock owner: ", lock$user)
     if(update) {
       write(NULL, file.path(path, mylock_file))
       ## system(paste("touch", mylock_file))
@@ -117,13 +115,13 @@ write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
   
   ## if session id and user are different then return as locked
   if(has.lockfile && !is_mylock) {
-    dbg("[write_lock] LOCKED by ",lock$user)
+    dbg("[pgx.write_lock] LOCKED by ",lock$user)
     lock$status <- FALSE  ## failed to get lock
     return(lock)
   } 
 
   ## should not come here
-  dbg("[write_lock] WARNING: locked for unknown reason!!")
+  dbg("[pgx.write_lock] WARNING: locked for unknown reason!!")
   lock$status <- FALSE  ## failed to get lock
   return(lock)
 }
@@ -131,13 +129,13 @@ write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
 ## write_lock <- function(user, path) {
 ##   mylock_file <- file.path(path,paste0("LOCK__",user))
 ##   if(!file.exists(mylock_file)) {
-##     write_lock(user=user, path=path, force=TRUE) 
+##     pgx.write_lock(user=user, path=path, force=TRUE) 
 ##   } else {
 ##     system(paste("touch", mylock_file))
 ##   }
 ## }
 
-remove_lock <- function(user, path) {
+pgx.remove_lock <- function(user, path) {
   mylock_file <- file.path(path,paste0("LOCK__",user))
   file.remove(mylock_file)
 }
