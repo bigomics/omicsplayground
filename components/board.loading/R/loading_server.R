@@ -254,9 +254,7 @@ LoadingBoard <- function(id,
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
-        shiny::withProgress(message = "Loading PGX data...", value = 0.33, {
-          pgx <- playbase::pgx.load(pgxfile1)
-        })
+        pgx <- playbase::pgx.load(pgxfile1)
       } else {
         warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
         return(NULL)
@@ -280,9 +278,7 @@ LoadingBoard <- function(id,
       pgxdir <- auth$user_dir
       if (dir.exists(pgxdir)) {
         file1 <- file.path(pgxdir, file)
-        shiny::withProgress(message = "Saving PGX data...", value = 0.33, {
-          playbase::pgx.save(pgx, file = file1)
-        })
+        playbase::pgx.save(pgx, file = file1)
       } else {
         warning("[LoadingBoard::savePGX] ***ERROR*** pgxdir not found : ", pgxdir)
       }
@@ -304,39 +300,42 @@ LoadingBoard <- function(id,
       ## ----------------- update PGX object ---------------------------------
       slots0 <- names(loaded_pgx)
       shiny::withProgress(message = "Initializing PGX...", value = 0.33, {      
+
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
-      })
       
-      if (is.null(loaded_pgx)) {
-        warning("[loading_server.R@load_react] ERROR in object initialization\n")
-        beepr::beep(10)
-        shiny::showNotification("ERROR in object initialization!\n")
-        shiny::removeModal()
-        return(NULL)
-      }
-      loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
-
-      ## if PGX object has been updated with pgx.initialize, we save
-      ## the updated object.
-      slots1 <- names(loaded_pgx)
-      if (length(slots1) != length(slots0)) {
-        info("[loading_server.R] saving updated PGX")
-        new_slots <- setdiff(slots1, slots0)
-        savePGX(loaded_pgx, file = pgxfile)
-      }
-
-      ## Copying to pgx list to reactiveValues in
-      ## session environment.
-      info("[loading_server.R] copying pgx object to global environment")
-      empty.slots <- setdiff(names(pgx), names(loaded_pgx))
-      isolate({
-        for (e in empty.slots) {
-          pgx[[e]] <- NULL
+        if (is.null(loaded_pgx)) {
+          warning("[loading_server.R@load_react] ERROR in object initialization\n")
+          beepr::beep(10)
+          shiny::showNotification("ERROR in object initialization!\n")
+          shiny::removeModal()
+          return(NULL)
         }
-        for (i in 1:length(loaded_pgx)) {
-          pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
+        loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
+
+        ## if PGX object has been updated with pgx.initialize, we save
+        ## the updated object.
+        slots1 <- names(loaded_pgx)
+        if (length(slots1) != length(slots0)) {
+          info("[loading_server.R] saving updated PGX")
+          new_slots <- setdiff(slots1, slots0)
+          savePGX(loaded_pgx, file = pgxfile)
         }
-      })
+
+        ## Copying to pgx list to reactiveValues in
+        ## session environment.
+        info("[loading_server.R] copying pgx object to global environment")
+        empty.slots <- setdiff(names(pgx), names(loaded_pgx))
+        isolate({
+          for (e in empty.slots) {
+            pgx[[e]] <- NULL
+          }
+          for (i in 1:length(loaded_pgx)) {
+            pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
+          }
+        })
+
+      })  ## end of withProgress
+
       info("[loading_server.R] copying pgx done!")
       gc()
       remove(loaded_pgx)
