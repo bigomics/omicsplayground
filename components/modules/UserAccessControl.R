@@ -12,8 +12,10 @@ record_access <- function(user, action, host='', client='', session_id='',
   client.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
   client.ip <- stringr::str_extract_all( client.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
   hostname <- system("cat /etc/hostname",intern=TRUE)  
-  login_data <- data.frame(user=user, action=action, time=time.now,
-    host=hostname, client=client.ip, session=substring(session_id,1,8))
+  login_data <- data.frame(
+    user=user, session=substring(session_id,1,8),
+    action=action, time=time.now,
+    host=hostname, client=client.ip)
   do.append <- file.exists(access.file)
   data.table::fwrite(login_data, file=access.file, quote=TRUE, append=do.append)
 }
