@@ -299,10 +299,9 @@ LoadingBoard <- function(id,
 
       ## ----------------- update PGX object ---------------------------------
       slots0 <- names(loaded_pgx)
-      shiny::withProgress(message = "Initializing PGX...", value = 0.33, {      
-
+      shiny::withProgress(message = "Initializing PGX...", value = 0.33, {
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
-      
+
         if (is.null(loaded_pgx)) {
           warning("[loading_server.R@load_react] ERROR in object initialization\n")
           beepr::beep(10)
@@ -333,8 +332,7 @@ LoadingBoard <- function(id,
             pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
           }
         })
-
-      })  ## end of withProgress
+      }) ## end of withProgress
 
       info("[loading_server.R] copying pgx done!")
       gc()
