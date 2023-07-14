@@ -27,13 +27,9 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
-    pgx.dirRT,
     auth,
     enable_button = TRUE,
     alertready = TRUE,
-    max.genes = 20000,
-    max.genesets = 10000,
-    max.datasets = 100,
     height = 720) {
   shiny::moduleServer(
     id,
@@ -320,12 +316,13 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        pgxdir <- pgx.dirRT
+        max.datasets <- auth$options$MAX_DATASETS
+        dbg("[upload_module_computepgx_server] max.datasets = ", max.datasets)
+        
+        pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
         if (numpgx >= max.datasets) {
-          ### should use sprintf here...
-
           msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
           shinyalert::shinyalert(
             title = "Your storage is full",
@@ -361,9 +358,12 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
-        max.genes <- as.integer(max.genes)
-        max.genesets <- as.integer(max.genesets)
+        max.genes    <- as.integer(auth$options$MAX_GENES)
+        max.genesets <- as.integer(auth$options$MAX_GENESETS)
 
+        dbg("[upload_module_computepgx_server] max.genes = ", max.genes)
+        dbg("[upload_module_computepgx_server] max.genesets = ", max.genesets)
+        
         ## get selected methods from input
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods
@@ -422,6 +422,7 @@ upload_module_computepgx_server <- function(
         creator <- auth$email
         if (auth$method == "password") creator <- auth$username
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
+
         dbg("[ComputePgxModule.R] libx.dir => ", libx.dir)
 
         # get rid of reactive container

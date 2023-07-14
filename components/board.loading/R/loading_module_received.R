@@ -11,7 +11,6 @@ upload_module_received_ui <- function(id, height = 720) {
 upload_module_received_server <- function(id,
                                           auth,
                                           pgx_shared_dir,
-                                          max_datasets,
                                           reload_pgxdir,
                                           current_page) {
   shiny::moduleServer(
@@ -130,7 +129,7 @@ upload_module_received_server <- function(id,
           ## check number of datasets
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
           if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
-          maxpgx <- as.integer(max_datasets)
+          maxpgx <- as.integer(auth$options$MAX_DATASETS)
           if (numpgx >= maxpgx) {
             ## should use sprintf or glue here...
 

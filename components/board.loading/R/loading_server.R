@@ -36,7 +36,7 @@ LoadingBoard <- function(id,
       id = "received",
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
-      max_datasets = auth$options$MAX_DATASETS,
+##      max_datasets = auth$options$MAX_DATASETS,  ## wrong and not needed...
       reload_pgxdir = reload_pgxdir,
       current_page = current_page
     )

@@ -7,31 +7,16 @@ UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
-                        limits = c(
-                          "samples" = 1000, "comparisons" = 20,
-                          "genes" = 20000, "genesets" = 10000,
-                          "datasets" = 10
-                        ),
                         reload_pgxdir,
                         load_uploaded_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    phenoRT <- shiny::reactive(uploaded$samples.csv)
-    contrRT <- shiny::reactive(uploaded$contrasts.csv)
-
-    rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
+    # Some 'global' reactive variables used in this file
+    uploaded <- shiny::reactiveValues()
 
     # this directory is used to save pgx files, logs, inputs, etc..
     temp_dir <- reactiveVal(NULL)
-
-    shiny::observe({
-      rv$contr <- contrRT()
-    })
-
-    shiny::observe({
-      rv$pheno <- phenoRT()
-    })
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -137,8 +122,6 @@ UploadBoard <- function(id,
       )
     })
 
-    # Some 'global' reactive variables used in this file
-    uploaded <- shiny::reactiveValues()
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
@@ -611,25 +594,18 @@ UploadBoard <- function(id,
       DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
       upload_info <- sub("EXAMPLEZIP", DLlink, upload_info)
 
-      limits0 <- paste(
+      limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",
         auth$options$MAX_COMPARISONS, "comparisons)"
       )
-      upload_info <- sub("LIMITS", limits0, upload_info)
+      upload_info <- sub("LIMITS", limits.text, upload_info)
       shiny::HTML(upload_info)
     })
 
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
-
-    ## correctedX <- shiny::reactive({
-    # normalized_counts <- NormalizeCountsServerRT(
-
-
-
-    # )
 
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
@@ -691,11 +667,7 @@ UploadBoard <- function(id,
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
-      pgx.dirRT = auth$user_dir,
       auth = auth,
-      max.genes = as.integer(auth$options$MAX_GENES),
-      max.genesets = as.integer(auth$options$MAX_GENESETS),
-      max.datasets = as.integer(auth$options$MAX_DATASETS),
       height = height
     )
 
@@ -758,7 +730,7 @@ UploadBoard <- function(id,
 
     upload_plot_pcaplot_server(
       "pcaplot",
-      phenoRT = phenoRT,
+      phenoRT = shiny::reactive(uploaded$samples.csv),
       countsRT = corrected_counts,
       sel.conditions = sel.conditions,
       watermark = WATERMARK
