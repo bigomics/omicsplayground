@@ -72,7 +72,7 @@ drugconnectivity_table_dsea_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("NES",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             res[, "NES"],
             "lightblue",
             "#f5aeae"

@@ -95,7 +95,7 @@ functional_table_reactome_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("logFC",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "logFC"],
             "lightblue",
             "#f5aeae"

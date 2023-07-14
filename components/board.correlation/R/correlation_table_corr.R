@@ -90,7 +90,7 @@ correlation_table_corr_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("cor",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             df[, "cor"], "lightblue", "#f5aeae"
           ),
           backgroundSize = "98% 88%",

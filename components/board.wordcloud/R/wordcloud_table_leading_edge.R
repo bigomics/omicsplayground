@@ -67,7 +67,7 @@ wordcloud_table_leading_edge_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("fx",
-          background = playbase::color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
+          background = color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

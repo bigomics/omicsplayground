@@ -76,7 +76,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fx <- rpt[, "fc"]
         tbl <- tbl %>%
           DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-          DT::formatStyle("fc", background = playbase::color_from_middle(fx, "lightblue", "#f5aeae"))
+          DT::formatStyle("fc", background = color_from_middle(fx, "lightblue", "#f5aeae"))
       }
       tbl
     })

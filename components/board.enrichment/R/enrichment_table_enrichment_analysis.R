@@ -103,7 +103,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         DT::formatSignif(numcols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(fx.col,
-          background = playbase::color_from_middle(fx, "lightblue", "#f5aeae")
+          background = color_from_middle(fx, "lightblue", "#f5aeae")
         )
     }
 
