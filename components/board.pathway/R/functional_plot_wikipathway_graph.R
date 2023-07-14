@@ -55,10 +55,7 @@ functional_plot_wikipathway_graph_server <- function(id,
     id, function(input, output, session) {
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
-        ## plot_data <- function() {
-        ## folder with predownloaded SVG files
-        #
-        svg.dir <- pgx.system.file("svg/", package = "pathway")
+        svg.dir <- pgx.system.file("svg/", package="pathway")
         svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(
           df = getFilteredWikiPathwayTable(),
@@ -69,9 +66,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         return(res)
       })
 
-      getPathwayImage <- function() {
-        ## getPathwayImage <- shiny::reactive({
-
+      getPathwayImage <- shiny::reactive({
         res <- plot_data()
         shiny::req(res, res$df)
 
@@ -144,29 +139,28 @@ functional_plot_wikipathway_graph_server <- function(id,
           width = "100%", height = "100%", ## actual size: 1040x800
           alt = "wikipathway SVG"
         )
-      } # )
+      })
 
       plot_RENDER <- function() {
-        img <- getPathwayImage()
-        shiny::req(img$width, img$height)
-        filename <- img$src
-        img.svg <- readChar(filename, nchars = file.info(filename)$size)
-        pz <- svgPanZoom::svgPanZoom(
-          img.svg,
-          controlIconsEnabled = TRUE,
-          zoomScaleSensitivity = 0.4,
-          minZoom = 1,
-          maxZoom = 5,
-          viewBox = FALSE
-        )
-        return(pz)
+          img <- getPathwayImage()
+          shiny::req(img$width, img$height)
+          filename <- img$src
+          img.svg <-  readChar(filename, nchars = file.info(filename)$size)
+          pz <- svgPanZoom::svgPanZoom(
+              img.svg,
+              controlIconsEnabled = TRUE,
+              zoomScaleSensitivity = 0.4,
+              minZoom = 1,
+              maxZoom = 5,
+              viewBox = FALSE
+          )
+          return(pz)
       }
 
       PlotModuleServer(
         "plotmodule",
         plotlib = "svgPanZoom",
         func = plot_RENDER,
-        add.watermark = watermark
       )
     } ## end of moduleServer
   )

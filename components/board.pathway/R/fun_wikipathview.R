@@ -1,81 +1,73 @@
 #
 
 wikipathview <- function(wp, val, dir) {
-  require(fluctuator)
-  get_pathway_svg <- function(wp) {
-    fn <- grep(paste0("_", wp, "_"), dir(dir,
-      pattern = "svg$",
-      full.names = TRUE
-    ), ignore.case = TRUE, value = TRUE)
-    if (length(fn)) {
-      svg <- fluctuator::read_svg(fn)
-    } else {
-      svg <- NULL
-    }
-    svg
-  }
-  get_labels <- function(svg) {
-    nodes <- fluctuator::get_attributes(svg, node = "text", node_attr = "node_set", attr = NULL)
-    text <- sapply(nodes$id, function(id) {
-      fluctuator::get_values(svg, node = id, node_attr = "id")
-    }) ## SLOW!
-    names(text) <- nodes$id
-    text
-  }
-  color_all_nodes <- function(svg, node_ids, colors) {
-    aa <- fluctuator::get_attributes(svg, node = node_ids, node_attr = "id")
-    path_url <- unlist(aa["clip-path"])
-    path_ids <- rep(NA, length(path_url))
-    i <- 1
-    for (i in 1:length(path_url)) {
-      pp <- fluctuator::get_attributes(svg, node = path_url[i], node_attr = "clip-path")
-      j <- which(pp$node_set == "path" & grepl("stroke:black", pp$style))
-      if (length(j) == 0) next()
-      path_ids[i] <- pp$id[j]
+    require(xml2)
+    require(fluctuator)
+
+    url <- paste0("https://www.wikipathways.org/wikipathways-assets/pathways/", wp, "/", wp, ".svg")
+    destfile <- tempfile(fileext = ".svg")
+    down <- tryCatch({
+        download.file(url, destfile)
+    }, error = function(w){
+        return(NULL)
+    }) |> is.null()
+    if(down){return(NULL)}
+
+    # Read the file line by line
+    lines <- readLines(destfile)
+
+    # Use gsub to replace the line
+    lines <- gsub('xmlns="http://www.w3.org/2000/svg"',
+                  'xmlns:svg="http://www.w3.org/2000/svg"',
+                  lines)
+
+    # Write the lines back to the file
+    writeLines(lines, destfile)
+
+    # Load the SVG
+    doc  <- read_xml(destfile)
+
+    # Find all 'text' elements
+    label_nodes <- xml_find_all(doc, ".//text")
+    labels <- xml2::xml_text(label_nodes)
+
+    # Find the 'a' parent nodes of the label nodes
+    a_nodes <- xml_parent(label_nodes)
+
+    # Find the 'rect' children of the 'a' nodes
+    rect_nodes <- xml_find_first(a_nodes, ".//rect")
+    if(all(is.na(rect_nodes))){
+        val <- NULL
     }
 
-    #    svg <- fluctuator::set_attributes(
-    #        svg, node=path_ids, node_attr='id', attr = "style",
-    #        pattern = "fill:none", replacement = paste0("fill:",colors))
-    ## skip summary: not needed.. faster
-    df <- data.frame(
-      node = path_ids, attr = "style",
-      pattern = "fill:none", replacement = paste0("fill:", colors)
-    )
-    res <- apply(df, 1, function(p) {
-      fluctuator:::set_single_attribute(svg, p["node"],
-        node_attr = "id", p["attr"],
-        p["pattern"], p["replacement"]
-      )
-    })
-    svg@summary <- fluctuator:::svg_summary_table(svg@svg)
-    remove(res)
-    svg
-  }
-
-  svg <- get_pathway_svg(wp)
-  if (is.null(svg)) {
-    return(NULL)
-  }
-
-  labels <- get_labels(svg) ## slow...
-  if (is.null(val)) {
-    node_ids <- names(labels)
-    colors <- "#00ff0033"
-    svg2 <- color_all_nodes(svg, node_ids, colors)
-  } else {
-    sum(names(val) %in% labels)
-    if (sum(names(val) %in% labels) == 0) {
-      return(NULL)
+    if (!is.null(val)) {
+        if (sum(names(val) %in% labels) == 0) {
+            return(NULL)
+        }
+        found_indexes <- which(labels %in% names(val))
+        labels <- labels[found_indexes]
+        rect_nodes <- rect_nodes[found_indexes]
+        val <- val[labels]
+        rr <- as.character(round(66 * pmin(1, abs(val / 2.0))**0.5))
+        rr <- stringr::str_pad(rr, width = 2, pad = "0")
+        colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
+        xml_attr(rect_nodes, "fill") <- colors
     }
-    labels <- labels[labels %in% names(val)]
-    labels
-    val <- val[labels]
-    val
-    node_ids <- names(labels)
-    rr <- round(66 * pmin(1, abs(val / 2.0))**0.5)
-    colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
-    svg2 <- color_all_nodes(svg, node_ids, colors)
-  }
-  svg2
+
+    write_xml(doc, destfile)
+
+    # Read the file line by line
+    lines <- readLines(destfile)
+
+    # Use gsub to replace the line
+    lines <- gsub('xmlns:svg="http://www.w3.org/2000/svg"',
+                  'xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"',
+                  lines)
+
+    # Write the lines back to the file
+    writeLines(lines, destfile)
+
+    svg <- fluctuator::read_svg(destfile)
+
+    return(svg)
 }
