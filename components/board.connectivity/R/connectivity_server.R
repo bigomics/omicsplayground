@@ -198,7 +198,8 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
         user.scores <- NULL
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb = TRUE)
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb = TRUE,
+          verbose = FALSE)
 
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
