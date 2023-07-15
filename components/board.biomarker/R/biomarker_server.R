@@ -140,14 +140,10 @@ BiomarkerBoard <- function(id, pgx) {
       if (!(ct %in% colnames(pgx$Y))) {
         return(NULL)
       }
-      print("# Selected samples")
-      print(selected_samples())
       y0 <- as.character(pgx$Y[, ct])
       names(y0) <- rownames(pgx$Y)
       y0 <- y0[names(y0) %in% selected_samples()]
       y <- y0[!is.na(y0)]
-      print("# y")
-      print(y)
 
       ## augment to at least 100 samples per level
       ii <- unlist(tapply(1:length(y), y, sample, size = 100, replace = TRUE))
