@@ -587,18 +587,21 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] on_process_completed() called!")
         process_counter(process_counter() - 1) # stop the timer
         
-        # read pgx_folder path
-        pgx_save_folder <- readLines(file.path(temp_dir, "pgx_folder.txt"))
+        # read pgx_folder path from processx and current user
+        pgx_save_folder_px <- readLines(file.path(temp_dir, "pgx_folder.txt"))
 
-        # check if user folder matches pgx folder, it not stop here
-        if (pgx_save_folder != auth$options$user_dir) {
+        pgx_save_folder_usr <- ifelse(is.null(auth$options$user_dir), auth$user_dir, auth$options$user_dir)
+
+        # check if user folder matches pgx processx folder, it not stop here
+
+        if (pgx_save_folder_px != pgx_save_folder_usr) {
           message("[compute PGX process] : Error: pgx_save_folder != user_folder()")
           return()
         }
 
         dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
 
-        result_pgx <- file.path(pgx_save_folder, dataset_name)
+        result_pgx <- file.path(pgx_save_folder_px, dataset_name)
         message("[compute PGX process] process", nr, "completed successfully!")
         if (file.exists(result_pgx)) {
           load(result_pgx) ## always pgx
