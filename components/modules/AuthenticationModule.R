@@ -13,7 +13,7 @@ NoAuthenticationModule <- function(id,
                                    email = "") {
   shiny::moduleServer(
     id, function(input, output, session) {
-      message("[NoAuthenticationModule] >>>> using no authentication <<<<")
+      message("[NoAuthenticationModule] >>>> no authentication <<<<")
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
@@ -22,7 +22,7 @@ NoAuthenticationModule <- function(id,
         email = "",
         level = "",
         limit = "",
-        options = opt,
+        options = opt,     ## init from global
         user_dir = PGX.DIR ## global
       )
 
@@ -70,6 +70,10 @@ NoAuthenticationModule <- function(id,
         resetUSER()
       })
 
+      
+      ## export 'public' function
+      USER$resetUSER <- resetUSER
+      
       return(USER)
     } ## end-of-server
   )
@@ -350,6 +354,8 @@ FirebaseAuthenticationModule <- function(id,
       )
     })
 
+    ## export 'public' functions
+    USER$resetUSER <- resetUSER
 
     return(USER)
   })
@@ -535,7 +541,10 @@ EmailLinkAuthenticationModule <- function(id,
       session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
-
+    
+    ## export 'public' functions
+    USER$resetUSER <- resetUSER
+    
     return(USER)
   })
 }
@@ -576,6 +585,7 @@ PasswordAuthenticationModule <- function(id,
     shiny::showModal(login_modal) ## need first time
 
     resetUSER <- function() {
+      dbg("[PasswordAuthenticationModule] resetting USER")
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -660,11 +670,16 @@ PasswordAuthenticationModule <- function(id,
   }
 
 
+  if(0) {
+      ## can we request a lock already here? 
       access_id <- paste0(input$login_username,"__",substring(session$token,1,8))
       user_dir <- ifelse(opt$ENABLE_USERDIR, file.path(PGX.DIR, input$login_username), PGX.DIR)
-      lock <- pgx.write_lock(access_id, path = user_dir, max_idle=60)
+      lock <- pgx.read_lock(access_id, path = user_dir, max_idle=60)
       lock$status
+      dbg("[PasswordAuthenticationModule] lock$user = ", lock$user)
       dbg("[PasswordAuthenticationModule] lock$status = ", lock$status)
+    
+  }
       
       login.OK <- (valid.user && valid.pw && valid.date && valid.trace)
 
@@ -750,6 +765,9 @@ PasswordAuthenticationModule <- function(id,
       }
       resetUSER()
     })
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
 
     return(USER)
   })
@@ -989,6 +1007,10 @@ LoginCodeAuthenticationModule <- function(id,
       first_time <<- FALSE
       resetUSER()
     })
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
+
     return(USER)
   })
 }
