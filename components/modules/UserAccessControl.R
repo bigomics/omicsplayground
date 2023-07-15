@@ -9,8 +9,7 @@ ACCESS_LOGFILE = file.path(ETC,"access.log")
 pgx.record_access <- function(user, action, host='', client='', session_id='',
                           access.file=ACCESS_LOGFILE) {
   time.now <- as.POSIXct(Sys.time())
-  client.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
-  client.ip <- stringr::str_extract_all( client.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
+  client.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
   hostname <- system("cat /etc/hostname",intern=TRUE)  
   login_data <- data.frame(
     user=user, session=substring(session_id,1,8),
@@ -20,7 +19,7 @@ pgx.record_access <- function(user, action, host='', client='', session_id='',
   data.table::fwrite(login_data, file=access.file, quote=TRUE, append=do.append)
 }
 
-pgx.read_lock <- function(path) {  
+pgx.read_lock <- function(path, max_idle=60) {  
   
   lock_file <- dir(path,"^LOCK__.*",full.name=FALSE)
   lock_file
@@ -48,9 +47,13 @@ pgx.read_lock <- function(path) {
   delta <- (Sys.time() - as.POSIXct(lock_time))
   delta <- round(as.numeric(delta, units='secs'),digits=2)
 
+  ## compute status here?
+  stale <- delta > max_idle  
+  
   info <- list(
     user = lock_user,
     time = lock_time,
+    stale = stale,
     delta = delta,
     file = lock_file,
     path = path
@@ -59,23 +62,20 @@ pgx.read_lock <- function(path) {
   return(info)
 }
 
-pgx.write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=30) {
+pgx.write_lock <- function(user, path, force=FALSE, update=TRUE, max_idle=60) {
 
   dbg("[pgx.write_lock] user = ", user)
   dbg("[pgx.write_lock] path = ", path)
   
-  lock <- pgx.read_lock(path=path)
+  lock <- pgx.read_lock(path=path, max_idle=max_idle)
   lock
   
-  has.lockfile <- !is.null(lock)
+  has.lockfile <- !is.null(lock) ## && file.exists(lock$file)
   mylock_file <- paste0("LOCK__",user)
   mylock_file
 
   ## determine is the lock is stale
-  is_stale <- FALSE
-  if(!is.null(lock)) {
-    is_stale <- lock$delta > max_idle
-  }
+  is_stale <- ifelse(has.lockfile, lock$stale, FALSE)
   
   has.lockfile  
   lock$file
