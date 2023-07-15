@@ -591,7 +591,7 @@ upload_module_computepgx_server <- function(
         pgx_save_folder <- readLines(file.path(temp_dir, "pgx_folder.txt"))
 
         # check if user folder matches pgx folder, it not stop here
-        if (pgx_save_folder != pgx_save_folder) {
+        if (pgx_save_folder != auth$options$user_dir) {
           message("[compute PGX process] : Error: pgx_save_folder != user_folder()")
           return()
         }
