@@ -56,6 +56,7 @@ PlotModuleUI <- function(id,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
       svgPanZoom = svgPanZoom::svgPanZoomOutput,
+      renderUI = shiny::htmlOutput,
       shiny::plotOutput
     )
     FUN
@@ -882,6 +883,7 @@ PlotModuleServer <- function(id,
           image = shiny::renderImage,
           base = shiny::renderPlot,
           svgPanZoom = svgPanZoom::renderSvgPanZoom,
+          renderUI = shiny::renderUI,
           shiny::renderPlot
         )
       }
