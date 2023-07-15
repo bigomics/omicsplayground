@@ -429,7 +429,6 @@ upload_module_computepgx_server <- function(
 
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
-        browser()
         # Define create_pgx function arguments
         params <- list(
           samples = samples,
@@ -463,6 +462,8 @@ upload_module_computepgx_server <- function(
         )
 
         saveRDS(params, file = path_to_params)
+        # save pgx_folder to a file
+        write(pgx_save_folder, file = file.path(temp_dir(), "pgx_folder.txt"))
 
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
@@ -585,7 +586,13 @@ upload_module_computepgx_server <- function(
       on_process_completed <- function(temp_dir, nr) {
         dbg("[compute PGX process] on_process_completed() called!")
         process_counter(process_counter() - 1) # stop the timer
-        result_pgx <- file.path(temp_dir, "my.pgx")
+        
+        # read pgx_folder path
+        pgx_save_folder <- readLines(file.path(temp_dir, "pgx_folder.txt"))
+
+        dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
+
+        result_pgx <- file.path(pgx_save_folder, dataset_name)
         message("[compute PGX process] process", nr, "completed successfully!")
         if (file.exists(result_pgx)) {
           load(result_pgx) ## always pgx
