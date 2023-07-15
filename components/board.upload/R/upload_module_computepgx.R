@@ -425,9 +425,11 @@ upload_module_computepgx_server <- function(
 
         dbg("[ComputePgxModule.R] libx.dir => ", libx.dir)
 
+        pgx_save_folder <- ifelse(is.null(auth$options$user_dir), pgxdir, auth$options$user_dir)
+
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
-
+        browser()
         # Define create_pgx function arguments
         params <- list(
           samples = samples,
@@ -456,7 +458,8 @@ upload_module_computepgx_server <- function(
           datatype = input$upload_datatype,
           description = input$upload_description,
           creator = creator,
-          date = this.date
+          date = this.date,
+          pgx.save.folder = pgx_save_folder
         )
 
         saveRDS(params, file = path_to_params)
