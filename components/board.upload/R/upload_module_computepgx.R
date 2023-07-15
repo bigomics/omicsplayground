@@ -590,6 +590,12 @@ upload_module_computepgx_server <- function(
         # read pgx_folder path
         pgx_save_folder <- readLines(file.path(temp_dir, "pgx_folder.txt"))
 
+        # check if user folder matches pgx folder, it not stop here
+        if (pgx_save_folder != pgx_save_folder) {
+          message("[compute PGX process] : Error: pgx_save_folder != user_folder()")
+          return()
+        }
+
         dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
 
         result_pgx <- file.path(pgx_save_folder, dataset_name)
