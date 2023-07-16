@@ -168,7 +168,7 @@ SocialMediaModule <- function(id, r.show = reactive(0)) {
     })
 
     start_shiny_observer <- function(reset_timer) {
-      observeEvent( rv$success, {
+      observeEvent(rv$success, {
         success <- rv$success
         dbg("[server.R] success = ", success)
         if (success == 0) {
@@ -191,13 +191,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
       })
     }
 
-    
+
     ## return object --------------------------------
     list(
       start_shiny_observer = start_shiny_observer,
       success = reactive(rv$success)
     )
-      
   }) ## moduleServer
 }
 
