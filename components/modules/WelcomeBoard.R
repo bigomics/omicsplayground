@@ -14,6 +14,7 @@ WelcomeBoard <- function(id, auth, load_example) {
       }
 
       name <- auth$username
+      if (is.null(name) || name %in% c("", NA)) name <- auth$email
       if (is.null(name) || name %in% c("", NA)) {
         welcome <- paste0("Welcome back...")
       } else {
