@@ -65,7 +65,7 @@ PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 
 ## Set files
-ACCESS_LOGFILE = file.path(ETC,"access.log")
+ACCESS_LOGFILE <- file.path(ETC, "access.log")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -171,9 +171,9 @@ PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
 
-##------------------------------------------------
+## ------------------------------------------------
 ## ENABLE/DISABLE BOARDS
-##------------------------------------------------
+## ------------------------------------------------
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
@@ -245,16 +245,16 @@ logHandler <- function(http.req) {
   http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-##------------------------------------------------
+## ------------------------------------------------
 ## SESSION CONTROL
-##------------------------------------------------
+## ------------------------------------------------
 SERVER_NAME <- opt$HOST_NAME
-if(is.null(SERVER_NAME) || SERVER_NAME=="") {
-  SERVER_NAME <- toupper(system("hostname",intern=TRUE))
+if (is.null(SERVER_NAME) || SERVER_NAME == "") {
+  SERVER_NAME <- toupper(system("hostname", intern = TRUE))
 }
-ACTIVE_SESSIONS = c()
-MAX_SESSIONS = 3  ## NEED RETHINK! E-mail firebase login problems!
-message("SERVER_NAME = ",SERVER_NAME)
+ACTIVE_SESSIONS <- c()
+MAX_SESSIONS <- 3 ## NEED RETHINK! E-mail firebase login problems!
+message("SERVER_NAME = ", SERVER_NAME)
 
 
 
