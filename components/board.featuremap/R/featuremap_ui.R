@@ -64,19 +64,21 @@ FeatureMapInputs <- function(id) {
 FeatureMapUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  height1 <- c("calc(60vh - 100px)", "70vh")
-  height2 <- c("calc(40vh - 100px)", "70vh")
+  height1 <- c("60%", "70vh")
+  height2 <- c("40%", "70vh")
+  fullH <- "calc(100vh - 180px)"
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),
-    bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene",
         bslib::layout_column_wrap(
           width = 1,
+          height = fullH,
           heights_equal = "row",
+          bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
           bslib::layout_column_wrap(
             width = 1 / 2,
             featuremap_plot_gene_map_ui(
@@ -110,7 +112,9 @@ FeatureMapUI <- function(id) {
         "Geneset",
         bslib::layout_column_wrap(
           width = 1,
+          height = fullH,
           heights_equal = "row",
+          bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
           bslib::layout_column_wrap(
             width = 1 / 2,
             featuremap_plot_geneset_map_ui(

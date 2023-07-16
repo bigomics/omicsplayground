@@ -3,33 +3,40 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-##ACCESS_LOGFILE = file.path(ETC,"access.log")
+## ACCESS_LOGFILE = file.path(ETC,"access.log")
 ## unlink(ACCESS_LOGFILE)
 
 pgx.record_access <- function(user,
                               action,
-                              comment='',
-                              session=session,
+                              comment = "",
+                              session = session,
                               time = Sys.time(),
-                              access.file=ACCESS_LOGFILE) {
+                              access.file = ACCESS_LOGFILE) {
+  if (is.null(user) || is.null(action)) {
+    return(NULL)
+  }
+  if (length(user) == 0 || length(action) == 0) {
+    return(NULL)
+  }
+  if (is.na(user) || is.na(action)) {
+    return(NULL)
+  }
+  if (user == "" || action == "") {
+    return(NULL)
+  }
 
-  if(is.null(user) || is.null(action)) return(NULL)
-  if(length(user)==0 || length(action)==0) return(NULL)
-  if(is.na(user) || is.na(action)) return(NULL)
-  if(user=='' || action=='') return(NULL)    
-
-  user <- sub("__.*","",user)  ## strip postfix  
+  user <- sub("__.*", "", user) ## strip postfix
   time <- as.POSIXct(time)
-  session_id <- substring(session$token,1,16)
-  hostname   <- system("hostname",intern=TRUE)
-  public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
-#  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
-#  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
-  
-  dbg("[pgx.record_access] session_id = ",session_id)
-  dbg("[pgx.record_access] hostname = ",hostname)
-  dbg("[pgx.record_access] public.ip = ",public.ip)
-  dbg("[pgx.record_access] time = ",time)        
+  session_id <- substring(session$token, 1, 16)
+  hostname <- system("hostname", intern = TRUE)
+  public.ip <- system("curl -s http://api.ipify.org", intern = TRUE)
+  #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
+  #  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
+
+  dbg("[pgx.record_access] session_id = ", session_id)
+  dbg("[pgx.record_access] hostname = ", hostname)
+  dbg("[pgx.record_access] public.ip = ", public.ip)
+  dbg("[pgx.record_access] time = ", time)
 
   login_data <- data.frame(
     user = user,
@@ -38,13 +45,13 @@ pgx.record_access <- function(user,
     session = session_id,
     hostname = hostname,
     public.ip = public.ip,
-    comment = comment    
+    comment = comment
   )
   do.append <- file.exists(access.file)
-  data.table::fwrite(login_data, file=access.file, quote=TRUE, append=do.append)
+  data.table::fwrite(login_data, file = access.file, quote = TRUE, append = do.append)
 }
 
-## pgx.record_access(user=user[1], action='logout.stale', session_id=user[2])      
+## pgx.record_access(user=user[1], action='logout.stale', session_id=user[2])
 
 FolderLock <- R6::R6Class("FolderLock",
   private = list(
@@ -53,8 +60,7 @@ FolderLock <- R6::R6Class("FolderLock",
     show_success = FALSE,
     show_details = FALSE
   ),
-  active = list(
-  ),
+  active = list(),
   public = list(
     path = NULL,
     user = NULL,
@@ -62,11 +68,10 @@ FolderLock <- R6::R6Class("FolderLock",
     #'
     #' @param rds_path The path to the rds file.
     #'
-    initialize = function(poll_secs=15,
-                          max_idle=60,
-                          show_success=FALSE,
-                          show_details=FALSE)
-    {
+    initialize = function(poll_secs = 15,
+                          max_idle = 60,
+                          show_success = FALSE,
+                          show_details = FALSE) {
       private$max_idle <- max_idle
       private$poll_secs <- poll_secs
       private$show_success <- show_success
@@ -75,51 +80,55 @@ FolderLock <- R6::R6Class("FolderLock",
     },
     set_user = function(user, session, path) {
       self$path <- path
-      self$user <- paste0(user,"__",substring(session$token,1,16))
+      self$user <- paste0(user, "__", substring(session$token, 1, 16))
     },
     remove_all_locks = function() {
-      other_lock_files <- dir(self$path,"^LOCK__.*",full.names=TRUE)
-      if(length(other_lock_files)>0) {
-        lapply( other_lock_files, file.remove)
+      other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
+      if (length(other_lock_files) > 0) {
+        lapply(other_lock_files, file.remove)
       }
     },
-    reset = function() {      
+    reset = function() {
       self$path <- NULL
       self$user <- NULL
     },
-    lockfile = function(full.path=FALSE) {
-      if(is.null(self$path)) return(NULL)
-      f <- paste0("LOCK__",self$user)
-      if(full.path) f <- file.path( self$path, f)
+    lockfile = function(full.path = FALSE) {
+      if (is.null(self$path)) {
+        return(NULL)
+      }
+      f <- paste0("LOCK__", self$user)
+      if (full.path) f <- file.path(self$path, f)
       return(f)
     },
     read_lock = function() {
-      if(is.null(self$path)) return(NULL)      
-      lock_file <- dir(self$path,"^LOCK__.*",full.name=FALSE)      
-      if(length(lock_file)==0) {
+      if (is.null(self$path)) {
+        return(NULL)
+      }
+      lock_file <- dir(self$path, "^LOCK__.*", full.name = FALSE)
+      if (length(lock_file) == 0) {
         message("UNLOCKED: no lock file")
         return(NULL)
       }
-      if(length(lock_file)>1) {
+      if (length(lock_file) > 1) {
         message("WARNING: multiple lock files in folder!")
-        mtimes <- sapply(lock_file, function(f) file.mtime(file.path(self$path,f)))
+        mtimes <- sapply(lock_file, function(f) file.mtime(file.path(self$path, f)))
         most_recent <- which.max(mtimes)
         ## remove older lock files
-        for(i in setdiff(1:length(lock_file),most_recent)) {
-          file.remove(file.path(self$path,lock_file[i]))
+        for (i in setdiff(1:length(lock_file), most_recent)) {
+          file.remove(file.path(self$path, lock_file[i]))
         }
         lock_file <- lock_file[most_recent]
       }
 
       ## ok LOCK file exists
-      lock_user <- strsplit(lock_file, split='LOCK__')[[1]][2]
-      lock_time <- file.mtime(file.path(self$path,lock_file))
+      lock_user <- strsplit(lock_file, split = "LOCK__")[[1]][2]
+      lock_time <- file.mtime(file.path(self$path, lock_file))
       delta_secs <- (Sys.time() - as.POSIXct(lock_time))
-      delta_secs <- round(as.numeric(delta_secs, units='secs'),digits=2)
-      
+      delta_secs <- round(as.numeric(delta_secs, units = "secs"), digits = 2)
+
       ## compute status here?
-      is_locked <- delta_secs < private$max_idle  
-      
+      is_locked <- delta_secs < private$max_idle
+
       info <- list(
         is_locked = is_locked,
         user = lock_user,
@@ -131,63 +140,66 @@ FolderLock <- R6::R6Class("FolderLock",
       return(info)
     },
     remove_lock = function() {
-      if(is.null(self$path)) return(NULL)
-      f <- self$lockfile(full.path=TRUE)
-      if(file.exists(f)) {
-        dbg("[FileLock] removing lockfile",self$lockfile())
+      if (is.null(self$path)) {
+        return(NULL)
+      }
+      f <- self$lockfile(full.path = TRUE)
+      if (file.exists(f)) {
+        dbg("[FileLock] removing lockfile", self$lockfile())
         file.remove(f)
       }
     },
-    write_lock = function(force=FALSE) {
-      if(is.null(self$path)) return(NULL)
-      other_lock_files <- dir(self$path,"^LOCK__.*",full.names=TRUE)
-      if(length(other_lock_files)>0) {
-        lapply( other_lock_files, file.remove)
+    write_lock = function(force = FALSE) {
+      if (is.null(self$path)) {
+        return(NULL)
       }
-      mylock_file <- self$lockfile(full.path=TRUE)
+      other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
+      if (length(other_lock_files) > 0) {
+        lapply(other_lock_files, file.remove)
+      }
+      mylock_file <- self$lockfile(full.path = TRUE)
       write(NULL, mylock_file)
     },
     #' Show shinyalert popup message that the lock has been succesful
-    #' 
+    #'
     shinyalert_success = function(lock) {
-      id <- strsplit(self$user,split="__")[[1]]
+      id <- strsplit(self$user, split = "__")[[1]]
 
       msg.text <- paste(
         "successfully locked by you",
-        "<br><br>name =",id[1],                            
-        "<br>session =",id[2],
-        "<br>lock_time =",lock$time,
-        "<br>delta =",paste0(lock$delta_secs,"sec")        
+        "<br><br>name =", id[1],
+        "<br>session =", id[2],
+        "<br>lock_time =", lock$time,
+        "<br>delta =", paste0(lock$delta_secs, "sec")
       )
 
       shinyalert::shinyalert(
         title = "SUCCESS!",
         text = msg.text,
-        ##closeOnEsc = FALSE, showConfirmButton = FALSE,
+        ## closeOnEsc = FALSE, showConfirmButton = FALSE,
         animation = FALSE,
-        html = TRUE, immediate=TRUE
+        html = TRUE, immediate = TRUE
       )
     },
     #' Show shinyalert popup message that the folder is locked by
     #' someone else
     shinyalert_locked = function(lock, session) {
-      
-      id <- strsplit(lock$user,split="__")[[1]]
-      my_id <- strsplit(self$user,split="__")[[1]]
+      id <- strsplit(lock$user, split = "__")[[1]]
+      my_id <- strsplit(self$user, split = "__")[[1]]
 
       msg.text <- paste(
         "This account is locked by someone else. <br>Please try again later.",
-        "<br><br>name =",id[1],
-        "<br>session =",id[2]
+        "<br><br>name =", id[1],
+        "<br>session =", id[2]
       )
 
-      if(private$show_details) {
+      if (private$show_details) {
         msg.text <- paste(
           msg.text,
-          "<br>lock_time =",lock$time,
-          "<br>delta =",paste0(lock$delta_secs,"sec"),
-          "<br><br>your name =",my_id[1],                            
-          "<br>your session =",my_id[2]
+          "<br>lock_time =", lock$time,
+          "<br>delta =", paste0(lock$delta_secs, "sec"),
+          "<br><br>your name =", my_id[1],
+          "<br>your session =", my_id[2]
         )
       }
 
@@ -195,62 +207,62 @@ FolderLock <- R6::R6Class("FolderLock",
         title = "LOCKED!",
         text = msg.text,
         confirmButtonText = "Close window",
-        callbackR = function(x) { if(x) session$close() },
-        ##callbackJS = "function(x) { if(x) {setTimeout(function(){window.close();},500);} }",
-        #callbackJS = "function(x) { if(x) { window.close() }}",              
-        ##closeOnEsc = FALSE, 
+        callbackR = function(x) {
+          if (x) session$close()
+        },
+        ## callbackJS = "function(x) { if(x) {setTimeout(function(){window.close();},500);} }",
+        # callbackJS = "function(x) { if(x) { window.close() }}",
+        ## closeOnEsc = FALSE,
         animation = FALSE,
         html = TRUE,
-        immediate=TRUE            
+        immediate = TRUE
       )
     },
     start_shiny_observer = function(auth, session) {
-      
       observe({
-        if(auth$logged) {
+        if (auth$logged) {
           shiny::req(auth$user_dir)
 
-          no_email <- is.null(auth$email) || is.na(auth$email) || auth$email==''
-          user_id <- ifelse( no_email, auth$username, auth$email )
-          self$set_user(user=user_id, session, path=auth$user_dir)          
+          no_email <- is.null(auth$email) || is.na(auth$email) || auth$email == ""
+          user_id <- ifelse(no_email, auth$username, auth$email)
+          self$set_user(user = user_id, session, path = auth$user_dir)
           cur <- self$read_lock()
 
-          if(is.null(cur) || !cur$is_locked) {
+          if (is.null(cur) || !cur$is_locked) {
             ## this is probably a clean login, either with no lockfile
             ## present or the lockfile is stale.
-            pgx.record_access(self$user, action="login", session=session)
-            if(!is.null(cur) && !cur$is_locked) {
+            pgx.record_access(self$user, action = "login", session = session)
+            if (!is.null(cur) && !cur$is_locked) {
               ## lockfile is stale. NEED RETHINK!! should record the
               ## correct host/client IP and time.
-              pgx.record_access(cur$user, action="stale.logout", time=cur$time, session=session)
+              pgx.record_access(cur$user, action = "stale.logout", time = cur$time, session = session)
             }
-            cur <- list( user= self$user, is_locked = TRUE)
+            cur <- list(user = self$user, is_locked = TRUE)
           }
 
-          is_mylock <- cur$user == self$user           
-          if( is_mylock )  {
+          is_mylock <- cur$user == self$user
+          if (is_mylock) {
             self$write_lock()
-            if(private$show_success) {
-              if(is.null(cur$time)) cur <- self$read_lock()
-              self$shinyalert_success(lock=cur)
+            if (private$show_success) {
+              if (is.null(cur$time)) cur <- self$read_lock()
+              self$shinyalert_success(lock = cur)
             }
-            invalidateLater(private$poll_secs*1000)
+            invalidateLater(private$poll_secs * 1000)
           } else {
-            self$shinyalert_locked( lock = cur, session )
+            self$shinyalert_locked(lock = cur, session)
             invalidateLater(Inf)
           }
         } else {
-          if(is.null(self$user)) return(NULL)
+          if (is.null(self$user)) {
+            return(NULL)
+          }
           ## at logout we record the logout action and remove the
           ## lockfile, then reset the user/path
-          pgx.record_access(self$user, "logout", session=session)
+          pgx.record_access(self$user, "logout", session = session)
           self$remove_lock()
           self$reset()
         }
       })
-    } 
-  )  
+    }
+  )
 ) ## end of R6 class
-    
-
-

@@ -82,8 +82,10 @@ loading_table_datasets_server <- function(id,
       pgxdir <- auth$user_dir
 
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
-        need_update <- playbase::pgxinfo.needUpdate(pgxdir, check.sigdb = FALSE,
-          verbose=FALSE )
+        need_update <- playbase::pgxinfo.needUpdate(pgxdir,
+          check.sigdb = FALSE,
+          verbose = FALSE
+        )
       })
 
       ## before reading the info file, we need to update for new files

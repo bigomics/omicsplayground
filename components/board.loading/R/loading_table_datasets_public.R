@@ -52,7 +52,8 @@ loading_table_datasets_public_server <- function(id,
       info <- NULL
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
         need_update <- playbase::pgxinfo.needUpdate(pgx_public_dir,
-          check.sigdb = FALSE, verbose = FALSE)
+          check.sigdb = FALSE, verbose = FALSE
+        )
       })
 
       if (need_update) {

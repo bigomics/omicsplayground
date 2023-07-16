@@ -22,7 +22,7 @@ NoAuthenticationModule <- function(id,
         email = "",
         level = "",
         limit = "",
-        options = opt,     ## init from global
+        options = opt, ## init from global
         user_dir = PGX.DIR ## global
       )
 
@@ -70,10 +70,10 @@ NoAuthenticationModule <- function(id,
         resetUSER()
       })
 
-      
+
       ## export 'public' function
       USER$resetUSER <- resetUSER
-      
+
       return(USER)
     } ## end-of-server
   )
@@ -541,10 +541,10 @@ EmailLinkAuthenticationModule <- function(id,
       session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
-    
+
     ## export 'public' functions
     USER$resetUSER <- resetUSER
-    
+
     return(USER)
   })
 }
@@ -630,7 +630,7 @@ PasswordAuthenticationModule <- function(id,
       valid.user <- isTRUE(length(sel) > 0)
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
-           
+
       login.OK <- (valid.user && valid.pw && valid.date)
 
       if (login.OK) {
@@ -667,7 +667,7 @@ PasswordAuthenticationModule <- function(id,
           output$login_warning <- shiny::renderText("Invalid user")
         }
 
-        if (!valid.trace){
+        if (!valid.trace) {
           output$login_warning <- shiny::renderText("User already in use. Wait 2 minutes and try again")
         }
         shinyjs::delay(4000, {

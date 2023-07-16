@@ -65,7 +65,7 @@ PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 
 ## Set files
-ACCESS_LOGFILE = file.path(ETC,"access.log")
+ACCESS_LOGFILE <- file.path(ETC, "access.log")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -171,9 +171,9 @@ PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
 
-##------------------------------------------------
+## ------------------------------------------------
 ## ENABLE/DISABLE BOARDS
-##------------------------------------------------
+## ------------------------------------------------
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
@@ -185,7 +185,7 @@ ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 
-##------------------------------------------------
+## ------------------------------------------------
 ## SESSION CONTROL
 ##------------------------------------------------
 if(is.null(opt$HOSTNAME) || opt$HOSTNAME=="") {

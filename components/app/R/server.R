@@ -110,7 +110,7 @@ app_server <- function(input, output, session) {
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(NULL)
-  
+
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
@@ -468,9 +468,7 @@ app_server <- function(input, output, session) {
       if (auth$method %in% c("email-link", "firebase", "login-code")) {
         check_personal_email(auth, PGX.DIR)
       }
-
     } else {
-
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
       if (length.pgx > 0) {
@@ -607,7 +605,7 @@ app_server <- function(input, output, session) {
   ## About
   ## -------------------------------------------------------------
 
-  observeEvent( input$navbar_about, {
+  observeEvent(input$navbar_about, {
     authors <- c(
       "Ivo Kwee", "Murat Akhmedov", "John Coene",
       "Stefan Reifenberg", "Marco Sciaini", "Cédric Scherer",
@@ -656,19 +654,19 @@ app_server <- function(input, output, session) {
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    auth$resetUSER()  ## should already
+    auth$resetUSER() ## should already
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     dbg("[SERVER:userLogout] >>> reloading session")
-    session$reload()    
+    session$reload()
   })
 
   ## This code listens to the JS quit signal
   observeEvent(input$quit, {
     dbg("[SERVER:quit] closing session... ")
-    ##session$close()
-    session$reload()    
+    ## session$close()
+    session$reload()
   })
 
   # This code will run when there is a shiny error. Then this
@@ -695,19 +693,20 @@ app_server <- function(input, output, session) {
       lock$remove_lock()
 
       dbg("[SERVER] any user logged in?", isolate(auth$logged))
-      dbg("[SERVER] logged in user:", isolate(auth$email))      
-      if(isolate(auth$logged)) {
+      dbg("[SERVER] logged in user:", isolate(auth$email))
+      if (isolate(auth$logged)) {
         pgx.record_access(
           user = isolate(auth$email),
           action = "logout",
           comment = "forced logout at session end",
-          session = session)
+          session = session
+        )
       }
-      
-      s=session$token
-      dbg("[SERVER] removing from active sessions :",s)      
+
+      s <- session$token
+      dbg("[SERVER] removing from active sessions :", s)
       ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
-      
+
       if (opt$AUTHENTICATION == "shinyproxy") {
         session$sendCustomMessage("shinyproxy-logout", list())
       }
@@ -737,18 +736,19 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## User locking + login/logout access logging
   ## -------------------------------------------------------------
-  info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)    
-  if(isTRUE(opt$ENABLE_USER_LOCK)) {
+  info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)
+  if (isTRUE(opt$ENABLE_USER_LOCK)) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
     lock <- FolderLock$new(
       poll_secs = 15,
       max_idle = 60,
       show_success = FALSE,
-      show_details = FALSE)
-    lock$start_shiny_observer(auth, session=session)  
+      show_details = FALSE
+    )
+    lock$start_shiny_observer(auth, session = session)
   }
-    
+
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
