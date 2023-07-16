@@ -89,8 +89,7 @@ FirebaseAuthenticationModule <- function(id,
                                          credentials_file = NULL,
                                          firebase.rds = "firebase.rds",
                                          allow_personal = TRUE,
-                                         allow_new_users = TRUE
-                                         ) {
+                                         allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
 
@@ -206,8 +205,8 @@ FirebaseAuthenticationModule <- function(id,
         email = email,
         domain = domain,
         credentials_file = credentials_file,
-        check.personal = !allow_personal,        
-        check.existing = !allow_new_users        
+        check.personal = !allow_personal,
+        check.existing = !allow_new_users
       )
 
       if (!check$valid) {
@@ -249,10 +248,10 @@ FirebaseAuthenticationModule <- function(id,
         email = user_email,
         domain = domain,
         credentials_file = credentials_file,
-        check.personal = !allow_personal,        
-        check.existing = !allow_new_users        
+        check.personal = !allow_personal,
+        check.existing = !allow_new_users
       )
-      
+
       if (!check2$valid) {
         shinyalert::shinyalert(
           title = "",
@@ -384,7 +383,7 @@ EmailLinkAuthenticationModule <- function(id,
                                           pgx_dir,
                                           domain = NULL,
                                           credentials_file = NULL,
-                                          allow_new_users = TRUE, 
+                                          allow_new_users = TRUE,
                                           allow_personal = TRUE,
                                           firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
@@ -502,7 +501,7 @@ EmailLinkAuthenticationModule <- function(id,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
-      
+
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -575,8 +574,7 @@ EmailLinkAuthenticationModule <- function(id,
 PasswordAuthenticationModule <- function(id,
                                          credentials_file,
                                          allow_personal = TRUE,
-                                         domain = NULL                                         
-                                         ) {
+                                         domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
@@ -629,7 +627,7 @@ PasswordAuthenticationModule <- function(id,
       valid.date <- FALSE
       valid.user <- FALSE
 
-##      login_username <- input$login_username
+      ##      login_username <- input$login_username
       login_email <- input$login_email
       login_password <- input$login_password
 
@@ -643,7 +641,7 @@ PasswordAuthenticationModule <- function(id,
         check.personal = !allow_personal,
         check.existing = FALSE
       )
-      
+
       if (!check$valid) {
         output$login_warning <- shiny::renderText(check$msg)
         shinyjs::delay(4000, {
@@ -727,8 +725,7 @@ LoginCodeAuthenticationModule <- function(id,
                                           domain = NULL,
                                           credentials_file = NULL,
                                           allow_personal = TRUE,
-                                          allow_new_users = TRUE
-                                          ) {
+                                          allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
@@ -797,7 +794,7 @@ LoginCodeAuthenticationModule <- function(id,
               "<p>If you did not request this code, you can safely ignore this email.",
               "<p>Thanks,",
               "<p>BigOmics Team",
-              .sep = ' '
+              .sep = " "
             )
           ),
           footer = blastula::md(
@@ -834,7 +831,7 @@ LoginCodeAuthenticationModule <- function(id,
           email = login_email,
           domain = domain,
           credentials_file = credentials_file,
-          check.personal = !allow_personal,          
+          check.personal = !allow_personal,
           check.existing = !allow_new_users
         )
 

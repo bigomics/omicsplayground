@@ -49,9 +49,9 @@ app_server <- function(input, output, session) {
 
   auth <- NULL ## shared in module
   credentials_file <- file.path(ETC, "CREDENTIALS")
-  has.credentials  <- file.exists(credentials_file)
+  has.credentials <- file.exists(credentials_file)
   no.credentials <- (!isTRUE(opt$USE_CREDENTIALS) || !has.credentials)
-  if ( no.credentials && authentication != "password") {
+  if (no.credentials && authentication != "password") {
     credentials_file <- NULL
   }
 
@@ -68,7 +68,7 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN,
       firebase.rds = "firebase.rds",
       credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
   } else if (authentication == "email-link") {
@@ -78,7 +78,7 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN,
       firebase.rds = "firebase.rds",
       credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
   } else if (authentication == "login-code") {
@@ -87,8 +87,8 @@ app_server <- function(input, output, session) {
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
       credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
-      allow_new_users = opt$ALLOW_NEW_USERS      
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      allow_new_users = opt$ALLOW_NEW_USERS
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -470,7 +470,6 @@ app_server <- function(input, output, session) {
 
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
-
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -667,10 +666,10 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
-  
+
   ## This code listens to the JS quit signal
   observeEvent(input$quit, {
-    ## Choose between reloading or closing the session. 
+    ## Choose between reloading or closing the session.
     dbg("[SERVER:quit] closing session... ")
     session$close()
     ## session$reload()

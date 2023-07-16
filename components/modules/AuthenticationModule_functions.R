@@ -200,12 +200,12 @@ checkPersonalEmail <- function(email) {
 }
 
 checkMissingEmail <- function(email) {
-  (is.null(email) || is.na(email) || email %in% c('',' ',NA))
+  (is.null(email) || is.na(email) || email %in% c("", " ", NA))
 }
 
-##PGX.DIR="~/Playground/omicsplayground/data/"
+## PGX.DIR="~/Playground/omicsplayground/data/"
 checkExistUserFolder <- function(email) {
-  user_dirs <- list.dirs(PGX.DIR, full.names=FALSE, recursive=FALSE)
+  user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
   tolower(email) %in% tolower(user_dirs)
 }
 
