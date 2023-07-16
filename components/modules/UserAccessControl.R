@@ -147,14 +147,15 @@ FolderLock <- R6::R6Class("FolderLock",
     },
     #' Show shinyalert popup message that the lock has been succesful
     #' 
-    shinyalert_unlocked = function() {
+    shinyalert_unlocked = function(lock) {
       id <- strsplit(self$user,split="__")[[1]]
       shinyalert::shinyalert(
         title = "SUCCESS!",
         text = paste(
           "successfully locked by you",
           "<br><br>name =",id[1],                            
-          "<br>session =",id[2]
+          "<br>session =",id[2],
+          "<br>lock_time =",lock$time
         ),
         ##closeOnEsc = FALSE, showConfirmButton = FALSE,
         animation = FALSE,
@@ -164,11 +165,6 @@ FolderLock <- R6::R6Class("FolderLock",
     #' Show shinyalert popup message that the folder is locked by
     #' someone else
     shinyalert_locked = function(lock, session) {
-      dbg("[shinyalert_locked] names.lock = ", names(lock))
-      dbg("[shinyalert_locked] lock$user = ", lock$user)
-      dbg("[shinyalert_locked] lock$time = ", lock$time)
-      dbg("[shinyalert_locked] lock$delta_secs = ", lock$delta_secs)      
-      dbg("[shinyalert_locked] self$user = ", self$user)
       
       id <- strsplit(lock$user,split="__")[[1]]
       my_id <- strsplit(self$user,split="__")[[1]]
@@ -177,7 +173,7 @@ FolderLock <- R6::R6Class("FolderLock",
         "This account is locked by someone else. Please try again later.",
         "<br><br>name =",id[1],                            
         "<br>session =",id[2],
-        "<br>time =",lock$time,
+        "<br>lock_time =",lock$time,
 #        "<br>delta =",paste0(lock$delta_secs,"sec"),
 #        "<br><br>your name =",my_id[1],                            
 #        "<br>your session =",my_id[2],
@@ -200,16 +196,21 @@ FolderLock <- R6::R6Class("FolderLock",
       
       observe({
         if(auth$logged) {
+          shiny::req(auth$user_dir)
+
+          self$set_user(user=access_id(), path=auth$user_dir)          
           cur <- self$read_lock()
+
           if(is.null(cur) || !cur$is_locked) {
-            self$set_user( user=access_id(), path=auth$user_dir)          
             pgx.record_access(self$user, "login", session=session)
-            cur <- list(user = access_id(), is_locked=TRUE)
+            cur <- list( user= self$user, is_locked = TRUE)
           }
-          is_mylock <- cur$user == access_id()
-          if( is_mylock || !cur$is_locked )  {
+
+          is_mylock <- cur$user == access_id()           
+          if( is_mylock )  {
             self$write_lock()
-            self$shinyalert_unlocked()
+            if(is.null(cur$time)) cur <- self$read_lock()
+            self$shinyalert_unlocked(lock=cur)
             invalidateLater(poll_secs*1000)
           } else {
             self$shinyalert_locked( lock = cur, session )
