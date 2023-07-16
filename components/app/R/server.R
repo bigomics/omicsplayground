@@ -581,31 +581,10 @@ app_server <- function(input, output, session) {
     })
 
     ## Choose type of referral modal upon timeout:
-    mod.timeout <- SocialMediaModule("socialmodal", r.show = r.timeout)
+    social <- SocialMediaModule("socialmodal", r.show = r.timeout)
+    social$start_shiny_observer(reset_timer)
 
-    observeEvent(mod.timeout$success(), {
-      success <- mod.timeout$success()
-      dbg("[server.R] success = ", success)
-      if (success == 0) {
-        info("[server.R] logout after no referral!!!")
-        shinyjs::runjs("logoutInApp()")
-      }
-      if (success > 1) {
-        info("[server.R] resetting timer after referral!!!")
-        timeout.min <- round(TIMEOUT / 60)
-        msg <- HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>")
-        msg <- HTML(paste0("<center><h4>Ditch the ", timeout.min, "-minute limit</h4>
-Upgrade today and experience advanced analysis features without the time limit.</center>"))
-
-        showModal(modalDialog(
-          msg,
-          size = "m",
-          easyClose = TRUE
-        ))
-        reset_timer()
-      }
-    })
-
+    
     shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
       logged <- auth$logged

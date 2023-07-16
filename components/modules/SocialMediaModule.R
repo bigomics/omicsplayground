@@ -167,12 +167,37 @@ SocialMediaModule <- function(id, r.show = reactive(0)) {
       removeModal()
     })
 
+    start_shiny_observer <- function(reset_timer) {
+      observeEvent( rv$success, {
+        success <- rv$success
+        dbg("[server.R] success = ", success)
+        if (success == 0) {
+          info("[server.R] logout after no referral!!!")
+          shinyjs::runjs("logoutInApp()")
+        }
+        if (success > 1) {
+          info("[server.R] resetting timer after referral!!!")
+          timeout.min <- round(TIMEOUT / 60)
+          msg <- HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>")
+          msg <- HTML(paste0("<center><h4>Ditch the ", timeout.min, "-minute limit</h4>
+Upgrade today and experience advanced analysis features without the time limit.</center>"))
+          showModal(modalDialog(
+            msg,
+            size = "m",
+            easyClose = TRUE
+          ))
+          reset_timer()
+        }
+      })
+    }
+
+    
     ## return object --------------------------------
     list(
-      success = reactive({
-        rv$success
-      })
+      start_shiny_observer = start_shiny_observer,
+      success = reactive(rv$success)
     )
+      
   }) ## moduleServer
 }
 
