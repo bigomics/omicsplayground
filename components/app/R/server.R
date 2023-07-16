@@ -695,7 +695,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
   })
 
   ## -------------------------------------------------------------
-  ## Session logout functions
+  ## Session login/logout functions
   ## -------------------------------------------------------------
 
   ## This will be called upon user logout *after* the logout() JS call
@@ -784,27 +784,26 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## report server times
   ## -------------------------------------------------------------
   server.init_time <- round(Sys.time() - server.start_time, digits = 4)
-  message("[SERVER] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
+  info("[SERVER] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
   total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
-  message("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
+  info("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
 
   ## -------------------------------------------------------------
-  ## User heartbeat + login/logout traceability
+  ## User locking + login/logout access logging
   ## -------------------------------------------------------------
-  # Initialize the reactiveTimer to update every 2 minutes
-  timer_heartbeat <- reactiveTimer(5*1000, session)
-  trigger_access_control <- reactiveVal(NULL)
-  heartbeat_interval <- reactiveVal(5*1000)
+  info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)    
+  if(opt$ENABLE_USER_LOCK) {
+    # Initialize the reactiveTimer to update every 30 seconds. Set max
+    # idle time to 2 minutes.
+    lock <- FolderLock$new(
+      poll_secs = 15,
+      max_idle = 60,
+      show_success = FALSE,
+      show_details = FALSE)
+    lock$start_shiny_observer(auth, session=session)  
+  }
 
-  ## source("~/Playground/omicsplayground/components/modules/UserAccessControl.R")
-  lock <- FolderLock$new(
-    poll_secs = 20,
-    max_idle = 60,
-    show_success = FALSE,
-    show_details = FALSE)
-  lock$start_shiny_observer(auth, session=session)
-  
-  
+    
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 

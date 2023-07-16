@@ -1,6 +1,6 @@
 TITLE               = 'Omics Playground'
-AUTHENTICATION      = none
-#AUTHENTICATION      = password
+#AUTHENTICATION      = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = email-link
 #AUTHENTICATION      = firebase
 #AUTHENTICATION      = login-code
@@ -13,6 +13,7 @@ ENABLE_PUBLIC_SHARE = TRUE
 ENABLE_UPLOAD       = TRUE
 ENABLE_USERDIR      = TRUE
 ENABLE_USER_SHARE   = TRUE
+ENABLE_USER_LOCK    = TRUE
 #HONCHO_URL         = http://localhost:8000
 MAX_DATASETS        = 5
 MAX_SAMPLES         = 100
