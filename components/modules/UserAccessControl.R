@@ -7,6 +7,7 @@ ACCESS_LOGFILE = file.path(ETC,"access.log")
 ## unlink(ACCESS_LOGFILE)
 
 pgx.record_access <- function(user, action, session=session,
+                              time = Sys.time(),
                               access.file=ACCESS_LOGFILE) {
 
   if(is.null(user) || is.null(action)) return(NULL)
@@ -15,7 +16,7 @@ pgx.record_access <- function(user, action, session=session,
   if(user=='' || action=='') return(NULL)    
 
   user <- sub("__.*","",user)  ## strip postfix  
-  time.now <- as.POSIXct(Sys.time())
+  time <- as.POSIXct(time)
   public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
 #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
 #  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
@@ -27,13 +28,13 @@ pgx.record_access <- function(user, action, session=session,
   dbg("[pgx.record_access] hostname = ",hostname)
   dbg("[pgx.record_access] public.ip = ",public.ip)
   dbg("[pgx.record_access] remote.addr = ",remote.addr)    
-  dbg("[pgx.record_access] time = ",time.now)        
+  dbg("[pgx.record_access] time = ",time)        
 
   login_data <- data.frame(
     user = user,
     session = session_id,
     action = action,
-    time = time.now,
+    time = time,
     host = hostname,
     public = public.ip,
     client = remote.addr
@@ -203,6 +204,11 @@ FolderLock <- R6::R6Class("FolderLock",
             ## this is probably a clean login, either with no lockfile
             ## present or the lockfile is stale.
             pgx.record_access(self$user, "login", session=session)
+            if(!is.null(cur) && !cur$is_locked) {
+              ## lockfile is stale. NEED RETHINK!! should record the
+              ## correct host/client IP and time.
+              pgx.record_access(cur$user, "stale.logout", time=cur$time, session=session)
+            }
             cur <- list( user= self$user, is_locked = TRUE)
           }
 
