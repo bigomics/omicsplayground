@@ -1,9 +1,10 @@
 TITLE               = 'Omics Playground'
 #AUTHENTICATION      = none
-AUTHENTICATION      = password
-#AUTHENTICATION      = email-link
+#AUTHENTICATION      = password
+AUTHENTICATION      = email-link
 #AUTHENTICATION      = firebase
 #AUTHENTICATION      = login-code
+ALLOW_NEW_USERS     = FALSE
 USE_CREDENTIALS     = FALSE
 #DOMAIN             = bigomics.ch|demo.com
 ENABLE_CHIRP        = FALSE

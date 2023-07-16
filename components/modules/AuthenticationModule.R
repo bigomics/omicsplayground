@@ -369,6 +369,7 @@ EmailLinkAuthenticationModule <- function(id,
                                           pgx_dir,
                                           domain = NULL,
                                           credentials_file = NULL,
+                                          allow_new_users = TRUE,
                                           firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
     message("[EmailLinkAuthenticationModule] >>>> using email link (Firebase) authentication <<<<")
@@ -482,7 +483,13 @@ EmailLinkAuthenticationModule <- function(id,
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       email <- tolower(input$emailInput)
-      check <- checkEmail(email, domain, credentials_file)
+      check <- checkEmail(
+        email = email,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.existing = !allow_new_users
+        )
+
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -554,7 +561,8 @@ EmailLinkAuthenticationModule <- function(id,
 ## ================================================================================
 
 PasswordAuthenticationModule <- function(id,
-                                         credentials_file) {
+                                         credentials_file
+                                         ) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
@@ -575,8 +583,8 @@ PasswordAuthenticationModule <- function(id,
 
     login_modal <- splashLoginModal(
       ns = ns,
-      with.email = FALSE,
-      with.username = TRUE,
+      with.email = TRUE,
+      with.username = FALSE,
       with.password = TRUE,
       title = "Log in",
       subtitle = "Ready to explore your data?",
@@ -608,16 +616,29 @@ PasswordAuthenticationModule <- function(id,
       valid.date <- FALSE
       valid.user <- FALSE
 
-      login_username <- input$login_username
+##      login_username <- input$login_username
+      login_email <- input$login_email
       login_password <- input$login_password
 
-      if (is.null(login_username) || login_username == "") {
-        output$login_warning <- shiny::renderText("missing username")
+
+      ## >>> We check here for email validaty and intercept the
+      ## login process for not authorized people with wrong domain
+      check <- checkEmail(
+        login_email,
+        domain=NULL,
+        credentials_file,
+        check.personal = TRUE,
+        check.existing = FALSE
+      )
+      
+      if (!check$valid) {
+        output$login_warning <- shiny::renderText(check$msg)
         shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
         return(NULL)
       }
+
       if (is.null(login_password) || login_password == "") {
         output$login_warning <- shiny::renderText("missing password")
         shinyjs::delay(4000, {
@@ -626,7 +647,7 @@ PasswordAuthenticationModule <- function(id,
         return(NULL)
       }
 
-      sel <- which(CREDENTIALS$username == login_username)[1]
+      sel <- which(CREDENTIALS$email == login_email)[1]
       valid.user <- isTRUE(length(sel) > 0)
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
@@ -637,7 +658,7 @@ PasswordAuthenticationModule <- function(id,
         message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
         output$login_warning <- shiny::renderText("")
         shiny::removeModal()
-        sel <- which(CREDENTIALS$username == login_username)[1]
+        sel <- which(CREDENTIALS$email == login_email)[1]
         cred <- CREDENTIALS[sel, ]
         USER$username <- cred$username
         USER$email <- cred$email
@@ -657,6 +678,7 @@ PasswordAuthenticationModule <- function(id,
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
       } else {
+        message("[PasswordAuthenticationModule::login] WARNING : login failed ")
         if (!valid.date) {
           output$login_warning <- shiny::renderText("Registration expired")
         }
@@ -665,10 +687,6 @@ PasswordAuthenticationModule <- function(id,
         }
         if (!valid.user) {
           output$login_warning <- shiny::renderText("Invalid user")
-        }
-
-        if (!valid.trace) {
-          output$login_warning <- shiny::renderText("User already in use. Wait 2 minutes and try again")
         }
         shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
@@ -755,16 +773,15 @@ LoginCodeAuthenticationModule <- function(id,
         blastula::compose_email(
           body = blastula::md(
             glue::glue(
-              "Hello,
-<p>We received a request to sign in to Omics Playground using this email address. If you want to sign in with your {user_email} account, please use this login code:
-
-<p>{login_code}
-
-<p>If you did not request this code, you can safely ignore this email.
-
-<p>Thanks,
-
-<p>BigOmics Team"
+              "Hello,",
+              "<p>We received a request to sign in to Omics Playground using",
+              "this email address. If you want to sign in with your",
+              "{user_email} account, please use this login code:",
+              "<p>{login_code}",
+              "<p>If you did not request this code, you can safely ignore this email.",
+              "<p>Thanks,",
+              "<p>BigOmics Team",
+              .sep = ' '
             )
           ),
           footer = blastula::md(
@@ -798,6 +815,7 @@ LoginCodeAuthenticationModule <- function(id,
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         check <- checkEmail(login_email, domain, credentials_file)
+
         if (!check$valid) {
           output$login_warning <- shiny::renderText(check$msg)
           shinyjs::delay(4000, {
