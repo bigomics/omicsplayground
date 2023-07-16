@@ -25,32 +25,34 @@ bs_alert <- function(..., conditional = TRUE, style = "primary") {
     class = paste0("alert alert-", style, " alert-dismissible fade show"),
     role = "alert",
     ...,
-    shiny::tags$button(
-      # Use display: none; instead of official boostrap close button.
-      # If not, the element interfers with the bslib::layout_column_wrap
-      # and we get extra gap on top. The second part of the `onclick` is
-      # to also close the box (hide it) when it is not placed inside a 
-      # bslib::layout_column_wrap
-      onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
-      type = "button",
-      class = "btn-close",
-      `aria-label` = "Close",
-      shiny::tags$span(
-        `aria-hidden` = "true"
+    if(conditional){
+      shiny::tags$button(
+        # Use display: none; instead of official boostrap close button.
+        # If not, the element interfers with the bslib::layout_column_wrap
+        # and we get extra gap on top. The second part of the `onclick` is
+        # to also close the box (hide it) when it is not placed inside a 
+        # bslib::layout_column_wrap
+        onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
+        type = "button",
+        class = "btn-close btn-close-bs-conditional",
+        `aria-label` = "Close",
+        shiny::tags$span(
+          `aria-hidden` = "true"
+        )
       )
-    )
+    } else {
+      shiny::tags$button(
+        onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
+        type = "button",
+        class = "btn-close",
+        `aria-label` = "Close",
+        shiny::tags$span(
+          `aria-hidden` = "true"
+        )
+      )
+    }
   )
-
-  if (conditional) {
-    return(
-      shiny::conditionalPanel(
-        condition = "input.enable_info",
-        alert_tag
-      )
-    )
-  } else {
-    return(alert_tag)
-  }
+  return(alert_tag)
 }
 
 
