@@ -177,10 +177,9 @@ PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
 
-message("\n************************************************")
-message("*********** READ MODULES/BOARDS ****************")
-message("************************************************")
-
+##------------------------------------------------
+## ENABLE/DISABLE BOARDS
+##------------------------------------------------
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
@@ -252,7 +251,18 @@ logHandler <- function(http.req) {
   http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-## Are we ever going to use this??
+##------------------------------------------------
+## SESSION CONTROL
+##------------------------------------------------
+SERVER_NAME <- opt$HOST_NAME
+if(is.null(SERVER_NAME) || SERVER_NAME=="") {
+  SERVER_NAME <- toupper(system("hostname",intern=TRUE))
+}
+ACTIVE_SESSIONS = c()
+MAX_SESSIONS = 3  ## NEED RETHINK! E-mail firebase login problems!
+message("SERVER_NAME = ",SERVER_NAME)
+
+
 
 message("\n\n")
 message("=================================================================")

@@ -110,7 +110,6 @@ app_server <- function(input, output, session) {
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(NULL)
-  trigger_access_control <- reactiveVal(NULL)
   
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -449,14 +448,26 @@ app_server <- function(input, output, session) {
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
 
+  ## Create a unique access id based on username and session/IP
   access_id <- reactive({
     user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
     session_id <- substring(session$token,1,8)
-    client.ip <- system("hostname -I",intern=TRUE)
-    client.ip <- strsplit(client.ip,split=' ')[[1]][1]
-    public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
-    public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
-    access_id <- paste0(user_id,"__",session_id,":",client.ip,":",public.ip)
+    host.ip <- system("hostname -I",intern=TRUE)
+    host.ip <- strsplit(host.ip,split=' ')[[1]][1]
+    public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)      
+
+    dbg("[access_id] user_id = ",user_id)
+    dbg("[access_id] host.ip = ",host.ip)    
+    dbg("[access_id] public.ip = ",public.ip)
+    dbg("[access_id] session_id = ",session_id)        
+    dbg("[access_id] REMOTE_ADDR = ",session$request$REMOTE_ADDR)    
+    dbg("[access_id] HTTP_X_FORWARDED_FOR = ",session$request$HTTP_X_FORWARDED_FOR)
+    dbg("[access_id] names.request = ",names(session$request))    
+
+    remote.addr <- session$request$REMOTE_ADDR
+    
+    ##access_id <- paste0(user_id,"__",session_id,":",host.ip,":",client.ip)
+    access_id <- paste0(user_id,"__",remote.addr,":",public.ip)    
     ##access_id <- paste0(user_id,"__",session_id)
     access_id
   })
@@ -465,6 +476,7 @@ app_server <- function(input, output, session) {
   user_id=""
   observeEvent(auth$logged, {
     if (auth$logged) {
+
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
 
@@ -473,20 +485,15 @@ app_server <- function(input, output, session) {
       if (auth$method %in% c("email-link", "firebase", "login-code")) {
         check_personal_email(auth, PGX.DIR)
       }
-      user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
-      pgx.record_access(user_id, "login", session_id=session$token)
+
     } else {
+
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
       if (length.pgx > 0) {
         for (i in 1:length.pgx) {
           PGX[[names(PGX)[i]]] <<- NULL
         }
-      }
-      if(user_id!="") {
-        pgx.record_access(user_id, "logout", session_id=session$token)
-        ##access_id <- paste0(user_id,"__",substring(session$token,1,8))
-        pgx.remove_lock(access_id(), auth$user_dir)
       }
     }
   })
@@ -683,50 +690,31 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## Session logout functions
   ## -------------------------------------------------------------
 
-  shiny::observe({
-    ## trigger on change of USER
-    logged <- auth$logged
-    info("[server.R] change in user log status : logged = ", logged)
-    if (logged) {
-      session$user <- auth$email
-    } else {
-      session$user <- "(not logged in)"
-    }
-
-    ## This checks for personal email adress and asks to change to
-    ## a business email adress. This will affect also old users.
-    if (opt$AUTHENTICATION == "email" && logged) {
-      check_personal_email(auth, PGX.DIR)
-    }
-
-    ## --------- force logout callback??? --------------
-    if (!opt$AUTHENTICATION %in% c("firebase", "email") && !logged) {
-      ## Forcing logout ensures "clean" sessions. For firebase
-      ## we allow sticky sessions.
-      message("[server.R] user not logged in? forcing logout() JS callback...")
-      shinyjs::runjs("logout()")
-    }
-
-    # Trigger timer_heartbeat to register user login
-##    timer_heartbeat <- reactiveTimer(120000, session)
-  })
-
-  ## logout helper function
-  logout.JScallback <- "logout()"
-  if (opt$AUTHENTICATION == "shinyproxy") {
-    logout.JScallback <- "function(x){logout();quit();window.location.assign('/logout');}"
-  }
-
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
+    dbg("[server.R:userLogout] user logout sequence:")
+
+    ## stop all timers
+    dbg("[server.R:userLogout] >>> stopping timers")
     reset_timer()
     run_timer(FALSE)
+
+    ## reset (logout) user. This should already have been done with
+    ## the JS call but this is a cleaner (preferred) shiny method.
+    dbg("[server.R:userLogout] >>> resetting USER")
+    auth$resetUSER()  ## should already
+
+    ## this triggers a fresh session. good for resetting all
+    ## parameters.
+    dbg("[server.R:userLogout] >>> reloading session")
+    session$reload()    
   })
 
   ## This code listens to the JS quit signal
   observeEvent(input$quit, {
     dbg("[server.R:quit] closing session... ")
-    session$close()
+    ##session$close()
+    session$reload()    
   })
 
   # This code will run when there is a shiny error. Then this
@@ -745,9 +733,12 @@ Upgrade today and experience advanced analysis features without the time limit.<
 
   ## This code will be run after the client has disconnected
   ## Note!!!: Strange behaviour, sudden session ending.
-  session$onSessionEnded(function() {
+  session$onSessionEnded(function(s=session$token) {
     message("******** doing session cleanup ********")
-    ## fill me...
+
+    cat("removing from active sessions :",s,"\n")
+    ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
+
     if (opt$AUTHENTICATION == "shinyproxy") {
       session$sendCustomMessage("shinyproxy-logout", list())
     }
@@ -777,107 +768,17 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## User heartbeat + login/logout traceability
   ## -------------------------------------------------------------
   # Initialize the reactiveTimer to update every 2 minutes
-  timer_heartbeat <- reactiveTimer(10*1000, session)
+  timer_heartbeat <- reactiveTimer(5*1000, session)
+  trigger_access_control <- reactiveVal(NULL)
+  heartbeat_interval <- reactiveVal(5*1000)
 
-#  user_email <- function(auth){
-#    auth$email()
-#  }
-
-  ## observe({timer_heartbeat()
-  ##   # Generate the heartbeat message
-  ##   current_time <- Sys.time()
-  ##   email <- auth$email
-  ##   if(is.na(email)) return()
-  ##   dbg("Heartbeat triggered")
-  ##   heartbeat_msg <- paste0(email, "\theartbeat\t", current_time)
-  ##   # File path
-  ##   file_path <- paste0(TRACE.DIR, "/trace_log.txt")
-  ##   # Check if the file exists
-  ##   if(file.exists(file_path)) {
-  ##     # Read the lines from the file
-  ##     lines <- readLines(file_path)
-  ##     # Find the index of the line with the user's email and "heartbeat"
-  ##     index <- grep(paste0(auth$email, "\theartbeat\t"), lines)
-  ##     # If a line was found, replace it with the new heartbeat line
-  ##     # Otherwise, append the new heartbeat line to the end
-  ##     if(length(index) > 0) {
-  ##       lines[index] <- heartbeat_msg
-  ##     } else {
-  ##       lines <- c(lines, heartbeat_msg)
-  ##     }
-  ##     # Write the lines back to the file
-  ##     writeLines(lines, file_path)
-  ##   } else {
-  ##     # If the file doesn't exist, create it with the heartbeat line
-  ##     writeLines(heartbeat_msg, file_path)
-  ##   }
-  ## })
-
-  observeEvent(
-  {
-    trigger_access_control()
-    timer_heartbeat()
-  }, {
-  if(1) {
-      shiny::req(auth$logged)
-      dbg("[server.R] >> Heartbeat triggered : auth$logged =", auth$logged)
-      if(auth$logged) {
-
-        ##access_id <- paste0(user_id,"__",substring(session$token,1,8))
-        dbg("[server.R] >> Heartbeat triggered : access_id =", access_id())      
-        lock <- pgx.write_lock(access_id(), path = auth$user_dir, max_idle=60)
-        dbg("[server.R] is.null.lock_file =", is.null(lock$file))
-        dbg("[server.R] lock_file =", lock$file)
-        dbg("[server.R] lock_user =", lock$user)
-        dbg("[server.R] access_id =", access_id())
-
-        my_id <- strsplit(access_id(),split="__")[[1]]
-        
-        if(!is.null(lock$file) && lock$file!="") {
-          if(lock$status) {
-            dbg("[server.R] LOCKED! by user = ", lock$user)
-            dbg("[server.R] LOCKED! delta = ", lock$delta)          
-            id <- strsplit(lock$user,split="__")[[1]]
-            shinyalert::shinyalert(
-                          title = "SUCCESS!",
-                          text = paste(
-                            "successfully locked by you",
-                            "<br><br>name =",id[1],                            
-                            "<br>session =",id[2],
-                            "<br><br>your name =",my_id[1],                            
-                            "<br>your session =",my_id[2],
-                            "<br><br>delta =",lock$delta
-                          ),
-                          closeOnEsc = FALSE, showConfirmButton = FALSE, animation = FALSE,
-                          html = TRUE, immediate=TRUE
-                        )
-          }
-          if(!lock$status) {
-            dbg("[server.R] LOCKED! by user = ", lock$user)
-            dbg("[server.R] LOCKED! delta = ", lock$delta)
-            id <- strsplit(lock$user,split="__")[[1]]
-            shinyalert::shinyalert(
-                          title = "LOCKED!",
-                          text = paste(
-                            "this account is locked by someone else",
-                            "<br><br>name =",id[1],                            
-                            "<br>session =",id[2],
-                            "<br><br>your name =",my_id[1],                            
-                            "<br>your session =",my_id[2],                            
-                            "<br><br>delta =",lock$delta
-                          ),
-                          closeOnEsc = FALSE, showConfirmButton = FALSE, animation = FALSE,
-                          html = TRUE, immediate=TRUE            
-                        )
-          }
-        }
-      }
-  }      
-    }
-  )
-
+  ## source("~/Playground/omicsplayground/components/modules/UserAccessControl.R")
+  user_lock <- FolderLock$new( max_idle = 60 )
+  user_lock$start_shiny_observer(auth, access_id, session=session, poll_secs=15)
+  
+  
   ## clean up any remanining UI from previous aborted processx
-  shiny::removeUI(selector = ".current-dataset > #spinner-container")
+  shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
   if (!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE != "") {
