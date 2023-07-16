@@ -792,7 +792,7 @@ Upgrade today and experience advanced analysis features without the time limit.<
   ## User locking + login/logout access logging
   ## -------------------------------------------------------------
   info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)    
-  if(opt$ENABLE_USER_LOCK) {
+  if(isTRUE(opt$ENABLE_USER_LOCK)) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
     lock <- FolderLock$new(
@@ -802,7 +802,6 @@ Upgrade today and experience advanced analysis features without the time limit.<
       show_details = FALSE)
     lock$start_shiny_observer(auth, session=session)  
   }
-
     
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
