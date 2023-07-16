@@ -701,7 +701,7 @@ app_server <- function(input, output, session) {
 
     if (length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
       dbg("ERROR: Too many sessions. stopping session!!!\n")
-      srv <- paste0(opt$HOSTNAME,':',isolate(session$clientData$url_hostname))
+      srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
       sever_screen_503 <- shiny::tagList(
         shiny::tags$h1("Sorry, the Playground is full!", style = "color:white;font-family:lato;"),
         shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),

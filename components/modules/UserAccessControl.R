@@ -29,7 +29,7 @@ pgx.record_access <- function(user,
   time <- as.POSIXct(time)
   session_id <- substring(session$token, 1, 16)
   hostname <- opt$HOSTNAME
-  if(is.null(hostname) || hostname=='') {
+  if (is.null(hostname) || hostname == "") {
     hostname <- system("hostname", intern = TRUE)
   }
   public.ip <- system("curl -s http://api.ipify.org", intern = TRUE)
