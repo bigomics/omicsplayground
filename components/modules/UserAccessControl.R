@@ -14,6 +14,7 @@ pgx.record_access <- function(user, action, session=session,
   if(is.na(user) || is.na(action)) return(NULL)
   if(user=='' || action=='') return(NULL)    
 
+  user <- sub("__.*","",user)  ## strip postfix  
   time.now <- as.POSIXct(Sys.time())
   public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
 #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
@@ -74,7 +75,7 @@ FolderLock <- R6::R6Class("FolderLock",
       self$user <- user
     },
     remove_all_locks = function() {
-      other_lock_files <- dir(self$path,"^LOCK__.*",full.name=TRUE)
+      other_lock_files <- dir(self$path,"^LOCK__.*",full.names=TRUE)
       if(length(other_lock_files)>0) {
         lapply( other_lock_files, file.remove)
       }
@@ -84,18 +85,15 @@ FolderLock <- R6::R6Class("FolderLock",
       self$user <- NULL
       is_locked = FALSE
     },
-    lockfile = function(full.name=FALSE) {
+    lockfile = function(full.path=FALSE) {
       if(is.null(self$path)) return(NULL)
       f <- paste0("LOCK__",self$user)
-      if(full.name) f <- file.path( self$path, f)
+      if(full.path) f <- file.path( self$path, f)
       return(f)
     },
     read_lock = function() {
       if(is.null(self$path)) return(NULL)      
-      lock_file <- dir(self$path,"^LOCK__.*",full.name=FALSE)
-      lock_file
-      message("[pgx.read_lock] lock_file = ", lock_file)
-      
+      lock_file <- dir(self$path,"^LOCK__.*",full.name=FALSE)      
       if(length(lock_file)==0) {
         message("UNLOCKED: no lock file")
         return(NULL)
@@ -132,16 +130,16 @@ FolderLock <- R6::R6Class("FolderLock",
     },
     remove_lock = function() {
       if(is.null(self$path)) return(NULL)
-      file.remove(self$lockfile())
+      file.remove(self$lockfile(full.path=TRUE))
       self$is_locked = FALSE
     },
     write_lock = function(force=FALSE) {
       if(is.null(self$path)) return(NULL)
-      other_lock_files <- dir(self$path,"^LOCK__.*",full.name=TRUE)
+      other_lock_files <- dir(self$path,"^LOCK__.*",full.names=TRUE)
       if(length(other_lock_files)>0) {
         lapply( other_lock_files, file.remove)
       }
-      mylock_file <- self$lockfile(full.name=TRUE)
+      mylock_file <- self$lockfile(full.path=TRUE)
       write(NULL, mylock_file)
       self$is_locked = TRUE
     },
@@ -202,6 +200,8 @@ FolderLock <- R6::R6Class("FolderLock",
           cur <- self$read_lock()
 
           if(is.null(cur) || !cur$is_locked) {
+            ## this is probably a clean login, either with no lockfile
+            ## present or the lockfile is stale.
             pgx.record_access(self$user, "login", session=session)
             cur <- list( user= self$user, is_locked = TRUE)
           }
@@ -218,8 +218,9 @@ FolderLock <- R6::R6Class("FolderLock",
           }
         } else {
           if(is.null(self$user)) return(NULL)
-          user <- sub("__.*","",self$user)  ## strip postfix
-          pgx.record_access(user, "logout", session=session)
+          ## at logout we record the logout action and remove the
+          ## lockfile, then reset the user/path
+          pgx.record_access(self$user, "logout", session=session)
           self$remove_lock()
           self$reset()
         }
