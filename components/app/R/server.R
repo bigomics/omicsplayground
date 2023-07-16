@@ -462,7 +462,6 @@ app_server <- function(input, output, session) {
     dbg("[access_id] session_id = ",session_id)        
     dbg("[access_id] REMOTE_ADDR = ",session$request$REMOTE_ADDR)    
     dbg("[access_id] HTTP_X_FORWARDED_FOR = ",session$request$HTTP_X_FORWARDED_FOR)
-    dbg("[access_id] names.request = ",names(session$request))    
 
     remote.addr <- session$request$REMOTE_ADDR
     

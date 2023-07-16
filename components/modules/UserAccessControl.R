@@ -9,24 +9,11 @@ ACCESS_LOGFILE = file.path(ETC,"access.log")
 pgx.record_access <- function(user, action, session=session,
                               access.file=ACCESS_LOGFILE) {
 
-  dbg("[pgx.record_access] user = ",user)
-  dbg("[pgx.record_access] action = ",action)
-  dbg("[pgx.record_access] str.user = ",str(user))
-  dbg("[pgx.record_access] is.null.user = ",is.null(user))
-  dbg("[pgx.record_access] missing.user = ",missing(user))
-  dbg("[pgx.record_access] missing.action = ",missing(action))    
-  dbg("[pgx.record_access] length.user = ",length(user))
-  dbg("[pgx.record_access] length.action = ",length(action))    
-
   if(is.null(user) || is.null(action)) return(NULL)
-  dbg("[pgx.record_access] 2 :  ")
   if(length(user)==0 || length(action)==0) return(NULL)
-  dbg("[pgx.record_access] 3 :  ")  
   if(is.na(user) || is.na(action)) return(NULL)
-  dbg("[pgx.record_access] 4 :  ")  
   if(user=='' || action=='') return(NULL)    
 
-  dbg("[pgx.record_access] 5 :  ")  
   time.now <- as.POSIXct(Sys.time())
   public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
 #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
@@ -216,9 +203,9 @@ FolderLock <- R6::R6Class("FolderLock",
           cur <- self$read_lock()
           if(is.null(cur) || !cur$is_locked) {
             self$set_user( user=access_id(), path=auth$user_dir)          
-            pgx.record_access(self$user, "login", session=session)            
+            pgx.record_access(self$user, "login", session=session)
+            cur <- list(user = access_id(), is_locked=TRUE)
           }
-          cur <- self$read_lock()
           is_mylock <- cur$user == access_id()
           if( is_mylock || !cur$is_locked )  {
             self$write_lock()
