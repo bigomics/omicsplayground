@@ -543,6 +543,7 @@ app_server <- function(input, output, session) {
   ## Session Timers
   ## -------------------------------------------------------------
 
+  session_timer <- NULL
   if (TIMEOUT > 0) {
     #' Session timer. Closes session after TIMEOUT (seconds) This
     #' is acitve for free users. Set TIMEOUT=0 to disable session
@@ -651,7 +652,7 @@ app_server <- function(input, output, session) {
 
     ## stop all timers
     dbg("[SERVER:userLogout] >>> stopping timers")
-    session_timer$run(FALSE)
+    if(!is.null(session_timer)) session_timer$run(FALSE)
 
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
