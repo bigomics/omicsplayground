@@ -476,6 +476,15 @@ app_server <- function(input, output, session) {
   observeEvent(auth$logged, {
     if (auth$logged) {
 
+      if (1) {
+        message("--------- user login ---------")
+        message("username       = ", auth$username)
+        message("email          = ", auth$email)
+        message("level          = ", auth$level)
+        message("limit          = ", auth$limit)                
+        message("----------------------------------")
+      }
+
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
 
@@ -788,7 +797,11 @@ Upgrade today and experience advanced analysis features without the time limit.<
   heartbeat_interval <- reactiveVal(5*1000)
 
   ## source("~/Playground/omicsplayground/components/modules/UserAccessControl.R")
-  lock <- FolderLock$new( poll_secs = 15, max_idle = 60, show_success=TRUE )
+  lock <- FolderLock$new(
+    poll_secs = 20,
+    max_idle = 60,
+    show_success = FALSE,
+    show_details = FALSE)
   lock$start_shiny_observer(auth, session=session)
   
   

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ACCESS_LOGFILE = file.path(ETC,"access.log")
+##ACCESS_LOGFILE = file.path(ETC,"access.log")
 ## unlink(ACCESS_LOGFILE)
 
 pgx.record_access <- function(user,
@@ -50,7 +50,8 @@ FolderLock <- R6::R6Class("FolderLock",
   private = list(
     poll_secs = 15,
     max_idle = 60,
-    show_success = FALSE
+    show_success = FALSE,
+    show_details = FALSE
   ),
   active = list(
   ),
@@ -61,10 +62,15 @@ FolderLock <- R6::R6Class("FolderLock",
     #'
     #' @param rds_path The path to the rds file.
     #'
-    initialize = function(poll_secs=15, max_idle=60, show_success=FALSE ) {
+    initialize = function(poll_secs=15,
+                          max_idle=60,
+                          show_success=FALSE,
+                          show_details=FALSE)
+    {
       private$max_idle <- max_idle
       private$poll_secs <- poll_secs
       private$show_success <- show_success
+      private$show_details <- show_details
       invisible(self)
     },
     set_user = function(user, session, path) {
@@ -145,14 +151,18 @@ FolderLock <- R6::R6Class("FolderLock",
     #' 
     shinyalert_success = function(lock) {
       id <- strsplit(self$user,split="__")[[1]]
+
+      msg.text <- paste(
+        "successfully locked by you",
+        "<br><br>name =",id[1],                            
+        "<br>session =",id[2],
+        "<br>lock_time =",lock$time,
+        "<br>delta =",paste0(lock$delta_secs,"sec")        
+      )
+
       shinyalert::shinyalert(
         title = "SUCCESS!",
-        text = paste(
-          "successfully locked by you",
-          "<br><br>name =",id[1],                            
-          "<br>session =",id[2],
-          "<br>lock_time =",lock$time
-        ),
+        text = msg.text,
         ##closeOnEsc = FALSE, showConfirmButton = FALSE,
         animation = FALSE,
         html = TRUE, immediate=TRUE
@@ -167,14 +177,19 @@ FolderLock <- R6::R6Class("FolderLock",
 
       msg.text <- paste(
         "This account is locked by someone else. <br>Please try again later.",
-        "<br><br>name =",id[1],                            
-        "<br>session =",id[2],
-        "<br>lock_time =",lock$time,
-#        "<br>delta =",paste0(lock$delta_secs,"sec"),
-#        "<br><br>your name =",my_id[1],                            
-#        "<br>your session =",my_id[2],
-        NULL
+        "<br><br>name =",id[1],
+        "<br>session =",id[2]
       )
+
+      if(private$show_details) {
+        msg.text <- paste(
+          msg.text,
+          "<br>lock_time =",lock$time,
+          "<br>delta =",paste0(lock$delta_secs,"sec"),
+          "<br><br>your name =",my_id[1],                            
+          "<br>your session =",my_id[2]
+        )
+      }
 
       shinyalert::shinyalert(
         title = "LOCKED!",

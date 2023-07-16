@@ -54,7 +54,6 @@ get_opg_root <- function() {
 }
 
 ## Set folders
-
 OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc")
 RDIR <- file.path(OPG, "components/base/R")
@@ -64,12 +63,9 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
-TRACE.DIR <- file.path(OPG, "trace")
 
-# Create TRACE.DIR if non existent
-if(!dir.exists(TRACE.DIR)){
-  dir.create(TRACE.DIR)
-}
+## Set files
+ACCESS_LOGFILE = file.path(ETC,"access.log")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -113,7 +109,6 @@ library(shinyBS)
 library(grid)
 library(magrittr)
 
-
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 
 message("***********************************************")
@@ -139,7 +134,6 @@ message("RDIR =", RDIR)
 message("FILES =", FILES)
 message("FILESX =", FILESX)
 message("PGX.DIR =", PGX.DIR)
-message("TRACE.DIR =", TRACE.DIR)
 message("APPDIR =", APPDIR)
 message("SHINYPROXY = ", SHINYPROXY)
 

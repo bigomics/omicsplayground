@@ -631,73 +631,7 @@ PasswordAuthenticationModule <- function(id,
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
            
-      # Check session trace is not too recent (repeated user login)
-      valid.trace = TRUE
-  if(0) {
-      file_path <- paste0(TRACE.DIR, "/trace_log.txt")
-      if(file.exists(file_path)) {
-        df <- read.table(
-          file_path,
-          sep = "\t",
-          header = FALSE,
-          col.names = c("email", "event", "timestamp")
-        )
-        df$timestamp <- as.POSIXct(df$timestamp)
-        current_email <- CREDENTIALS[sel, "email"]
-        user_rows <- df[df$email == current_email, ]
-        if(nrow(user_rows) > 0) {
-          user_rows <- user_rows[order(user_rows$timestamp), ]
-          last_event <- tail(user_rows, n = 1)
-          if(last_event$event == "logout") {
-            # Last event was a logout. Allow login.
-            valid.trace <- TRUE
-          } else if(any(last_event$event %in% c("heartbeat", "login"))) {
-            if (difftime(Sys.time(), last_event$timestamp, units = "mins") < 2) {
-              # The last heartbeat is from less than two minutes ago. Do not allow login
-              valid.trace <- FALSE
-            } else {
-              # The last heartbeat is from more than two minutes ago. Allow login
-              valid.trace <- TRUE
-            }
-          }
-        } else{
-          # If user is not yet traced, allow login
-          valid.trace <- TRUE
-        }
-      } else {
-        valid.trace <- TRUE
-      }
-  }
-
-
-  if(0) {
-      ## can we request a lock already here? 
-      access_id <- paste0(input$login_username,"__",substring(session$token,1,8))
-      user_dir <- ifelse(opt$ENABLE_USERDIR, file.path(PGX.DIR, input$login_username), PGX.DIR)
-      lock <- pgx.read_lock(access_id, path = user_dir, max_idle=60)
-      lock$status
-      dbg("[PasswordAuthenticationModule] lock$user = ", lock$user)
-      dbg("[PasswordAuthenticationModule] lock$status = ", lock$status)
-    
-  }
-      
-      login.OK <- (valid.user && valid.pw && valid.date && valid.trace)
-
-      if (1) {
-        message("--------- password login ---------")
-        message("input.username = ", input$login_username)
-        ## message("input.email    = ",input$login_email)
-        message("input.password = ", input$login_password)
-        message("user.password  = ", CREDENTIALS[sel, "password"])
-        message("user.expiry    = ", CREDENTIALS[sel, "expiry"])
-        message("user.username  = ", CREDENTIALS[sel, "username"])
-        message("user.email     = ", CREDENTIALS[sel, "email"])
-        message("user.limit     = ", CREDENTIALS[sel, "limit"])
-        message("valid.user     = ", valid.user)
-        message("valid.date     = ", valid.date)
-        message("valid.pw       = ", valid.pw)
-        message("----------------------------------")
-      }
+      login.OK <- (valid.user && valid.pw && valid.date)
 
       if (login.OK) {
         message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
@@ -711,23 +645,13 @@ PasswordAuthenticationModule <- function(id,
         USER$limit <- cred$limit
         USER$logged <- TRUE
 
-        file_path <- paste0(TRACE.DIR, "/trace_log.txt")
-        if(file.exists(file_path)) {
-          lines <- readLines(file_path)
-          login_msg <- paste0(USER$email, "\tlogin\t", Sys.time())
-          lines <- c(lines, login_msg)
-          writeLines(lines, file_path)
-        }
-
         # Create user dir (if needed) and set user options
-        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ", opt$ENABLE_USERDIR)
         if (opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR, USER$username)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         } else {
           USER$user_dir <- file.path(PGX.DIR)
         }
-        dbg("[PasswordAuthenticationModule] user_dir = ", USER$user_dir)
         USER$options <- read_user_options(USER$user_dir)
 
         ## need for JS hsq tracking
@@ -754,21 +678,11 @@ PasswordAuthenticationModule <- function(id,
     })
 
     observeEvent(input$userLogout, {
-      if(!is.na(USER$email)){
-        file_path <- paste0(TRACE.DIR, "/trace_log.txt")
-        if(file.exists(file_path)) {
-          lines <- readLines(file_path)
-          logout_msg <- paste0(USER$email, "\tlogout\t", Sys.time())
-          lines <- c(lines, logout_msg)
-          writeLines(lines, file_path)
-        }
-      }
       resetUSER()
     })
 
-    ## export as 'public' functions
+    ## export as 'public functions' :)
     USER$resetUSER <- resetUSER
-
     return(USER)
   })
 }
