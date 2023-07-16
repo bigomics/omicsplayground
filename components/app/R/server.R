@@ -538,17 +538,12 @@ app_server <- function(input, output, session) {
   if (TIMEOUT > 0) {
     rv.timer <- reactiveValues(reset = 0, run = FALSE)
     reset_timer <- function() {
-      dbg("[server.R] resetting timer")
       rv.timer$reset <- rv.timer$reset + 1
     }
     run_timer <- function(run = TRUE) {
-      dbg("[server.R] run timer =", run)
       rv.timer$run <- run
     }
     WARN_BEFORE <- round(TIMEOUT / 6)
-
-    info("[server.R] Creating TimerModule: TIMEOUT = ", TIMEOUT, "(s)")
-    info("[server.R] WARN_BEFORE = ", WARN_BEFORE)
 
     timer <- TimerModule(
       "timer",
@@ -576,15 +571,6 @@ app_server <- function(input, output, session) {
       ))
     })
 
-    r.timeout <- reactive({
-      timer$timeout() && auth$logged
-    })
-
-    ## Choose type of referral modal upon timeout:
-    social <- SocialMediaModule("socialmodal", r.show = r.timeout)
-    social$start_shiny_observer(reset_timer)
-
-    
     shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
       logged <- auth$logged
@@ -600,6 +586,13 @@ app_server <- function(input, output, session) {
         run_timer(FALSE)
       }
     })
+
+    ## At the end of the timeout the user can choose type of referral
+    ## modal and gain additional analysis time. We reset the timer.
+    r.timeout <- reactive(timer$timeout() && auth$logged)
+    social <- SocialMediaModule("socialmodal", r.show = r.timeout)
+    social$start_shiny_observer(reset_timer)
+    
   } ## end of if TIMEOUT>0
 
 
