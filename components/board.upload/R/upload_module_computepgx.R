@@ -318,7 +318,7 @@ upload_module_computepgx_server <- function(
 
         max.datasets <- auth$options$MAX_DATASETS
         dbg("[upload_module_computepgx_server] max.datasets = ", max.datasets)
-        
+
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
@@ -358,12 +358,12 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
-        max.genes    <- as.integer(auth$options$MAX_GENES)
+        max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
 
         dbg("[upload_module_computepgx_server] max.genes = ", max.genes)
         dbg("[upload_module_computepgx_server] max.genesets = ", max.genesets)
-        
+
         ## get selected methods from input
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods

@@ -70,7 +70,7 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     ## get selected samples after sample filtering
-    selected_samples <- reactive({
+    selected_samples <- shiny::reactive({
       shiny::req(pgx)
       samples <- colnames(pgx$X)
       if (!is.null(input$pdx_samplefilter)) {
