@@ -661,7 +661,7 @@ app_server <- function(input, output, session) {
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     dbg("[SERVER:userLogout] >>> reloading session")
-    session$reload()
+    ## session$reload()
   })
 
   ## This code listens to the JS quit signal
