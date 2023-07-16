@@ -9,7 +9,7 @@
 ##                                                                     ##
 #########################################################################
 
-is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA=TRUE))
+is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
 
 getAppVersion <- function(add.auth = FALSE) {
   version <- scan(file.path(OPG, "VERSION"), character())[1]

@@ -447,17 +447,16 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
-  
+
   ## upon change of user
   observeEvent(auth$logged, {
     if (auth$logged) {
-
       message("--------- user login ---------")
       message("username       = ", auth$username)
       message("email          = ", auth$email)
       message("level          = ", auth$level)
       message("limit          = ", auth$limit)
-      message("user_dir       = ", auth$user_dir)                        
+      message("user_dir       = ", auth$user_dir)
       message("----------------------------------")
 
       enable_upload <- auth$options$ENABLE_UPLOAD

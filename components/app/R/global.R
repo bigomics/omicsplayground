@@ -187,12 +187,12 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 ## ------------------------------------------------
 ## SESSION CONTROL
-##------------------------------------------------
-if(is.null(opt$HOSTNAME) || opt$HOSTNAME=="") {
-  opt$HOSTNAME <- toupper(system("hostname",intern=TRUE))
+## ------------------------------------------------
+if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
+  opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
-ACTIVE_SESSIONS = c()
-MAX_SESSIONS = 10  
+ACTIVE_SESSIONS <- c()
+MAX_SESSIONS <- 10
 
 
 message("\n\n")
