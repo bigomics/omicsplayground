@@ -22,7 +22,6 @@ pgx.record_access <- function(user,
   time <- as.POSIXct(time)
   session_id <- substring(session$token,1,16)
   hostname   <- system("hostname",intern=TRUE)
-  if(!is.null(opt$HOSTNAME)) hostname <- opt$HOSTNAME
   public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)  
 #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)    
 #  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
