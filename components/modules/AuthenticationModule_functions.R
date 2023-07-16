@@ -231,7 +231,7 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL,
   }
   if (check.existing) {
     if (!checkExistUserFolder(email)) {
-      return(list(valid = FALSE, msg = "not existing user"))
+      return(list(valid = FALSE, msg = "username does not exist"))
     }
   }
   list(valid = TRUE, "email ok")

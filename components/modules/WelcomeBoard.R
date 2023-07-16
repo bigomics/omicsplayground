@@ -110,7 +110,9 @@ WelcomeBoardUI <- function(id) {
       div(
         class = "col-md-12 text-center",
         shiny::tags$b("Proudly presented to you by"),
-        shiny::p("Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Stefan Reifenberg, Xavier Escribà Montagut")
+        shiny::p(
+          "Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
+        )
       )
     )
 

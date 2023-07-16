@@ -87,7 +87,10 @@ NoAuthenticationModule <- function(id,
 FirebaseAuthenticationModule <- function(id,
                                          domain = NULL,
                                          credentials_file = NULL,
-                                         firebase.rds = "firebase.rds") {
+                                         firebase.rds = "firebase.rds",
+                                         allow_personal = TRUE,
+                                         allow_new_users = TRUE
+                                         ) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
 
@@ -128,7 +131,6 @@ FirebaseAuthenticationModule <- function(id,
     })
 
     resetUSER <- function() {
-      dbg("[FirebaseAuthenticationModule] resetUSER ")
       USER$logged <- FALSE
       USER$username <- ""
       USER$password <- ""
@@ -139,7 +141,7 @@ FirebaseAuthenticationModule <- function(id,
 
       ## sign out (THIS LOOSES PERSISTENCE!)
       firebase$sign_out()
-      dbg("[FirebaseAuthenticationModule] *** signing out of firebase **** ")
+      dbg("[FirebaseAuthenticationModule:resetUSER] *** signing out of firebase **** ")
 
       m <- splashLoginModal(
         ns = ns,
@@ -200,7 +202,14 @@ FirebaseAuthenticationModule <- function(id,
       ## login process for not authorized people with wrong domain
       ## or against a subscription list.
       email <- tolower(input$emailInput)
-      check <- checkEmail(email, domain, credentials_file)
+      check <- checkEmail(
+        email = email,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal,        
+        check.existing = !allow_new_users        
+      )
+
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -236,7 +245,14 @@ FirebaseAuthenticationModule <- function(id,
       ## the allowed domain or CREDENTIALS list again, especially if
       ## the user used the social buttons to login
       user_email <- tolower(response$response$email)
-      check2 <- checkEmail(user_email, domain, credentials_file)
+      check2 <- checkEmail(
+        email = user_email,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal,        
+        check.existing = !allow_new_users        
+      )
+      
       if (!check2$valid) {
         shinyalert::shinyalert(
           title = "",
@@ -248,7 +264,6 @@ FirebaseAuthenticationModule <- function(id,
       }
 
       on.exit({
-        dbg("[FirebaseAuthenticationModule:Obsev(get_signed_in())] on.exit")
         if (USER$logged) removeModal()
       })
 
@@ -369,7 +384,8 @@ EmailLinkAuthenticationModule <- function(id,
                                           pgx_dir,
                                           domain = NULL,
                                           credentials_file = NULL,
-                                          allow_new_users = TRUE,
+                                          allow_new_users = TRUE, 
+                                          allow_personal = TRUE,
                                           firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
     message("[EmailLinkAuthenticationModule] >>>> using email link (Firebase) authentication <<<<")
@@ -424,7 +440,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       ## sign out (THIS LOOSES PERSISTENCE!)
       firebase$sign_out()
-      dbg("[EmailLinkAuthenticationModule] *** signing out of firebase **** ")
+      dbg("[EmailLinkAuthenticationModule:resetUSER] *** signing out of firebase **** ")
 
       title <- HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
       if (!is.null(credentials_file) && file.exists(credentials_file)) {
@@ -453,17 +469,13 @@ EmailLinkAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping logins.
       if (USER$logged && !first_time) {
-        dbg("[EmailLinkAuthenticationModule] USER is already logged in! no modal")
         return()
       }
-
       first_time <<- FALSE
-      message("[EmailLinkAuthenticationModule] USER not logged in!")
       resetUSER()
     })
 
     observeEvent(input$userLogout, {
-      message("[EmailLinkAuthenticationModule] userLogout triggered!")
       resetUSER()
     })
 
@@ -487,9 +499,10 @@ EmailLinkAuthenticationModule <- function(id,
         email = email,
         domain = domain,
         credentials_file = credentials_file,
+        check.personal = !allow_personal,
         check.existing = !allow_new_users
-        )
-
+      )
+      
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
@@ -522,7 +535,6 @@ EmailLinkAuthenticationModule <- function(id,
       }
 
       on.exit({
-        dbg("[EmailLinkAuthenticationModule:observeEvent(firebase$get_signed_in)] on.exit")
         if (USER$logged) removeModal()
       })
 
@@ -561,7 +573,9 @@ EmailLinkAuthenticationModule <- function(id,
 ## ================================================================================
 
 PasswordAuthenticationModule <- function(id,
-                                         credentials_file
+                                         credentials_file,
+                                         allow_personal = TRUE,
+                                         domain = NULL                                         
                                          ) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
@@ -593,7 +607,6 @@ PasswordAuthenticationModule <- function(id,
     shiny::showModal(login_modal) ## need first time
 
     resetUSER <- function() {
-      dbg("[PasswordAuthenticationModule] resetting USER")
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -624,10 +637,10 @@ PasswordAuthenticationModule <- function(id,
       ## >>> We check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       check <- checkEmail(
-        login_email,
-        domain=NULL,
-        credentials_file,
-        check.personal = TRUE,
+        email = login_email,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal,
         check.existing = FALSE
       )
       
@@ -712,7 +725,10 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
-                                          credentials_file = NULL) {
+                                          credentials_file = NULL,
+                                          allow_personal = TRUE,
+                                          allow_new_users = TRUE
+                                          ) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
@@ -814,7 +830,13 @@ LoginCodeAuthenticationModule <- function(id,
 
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
-        check <- checkEmail(login_email, domain, credentials_file)
+        check <- checkEmail(
+          email = login_email,
+          domain = domain,
+          credentials_file = credentials_file,
+          check.personal = !allow_personal,          
+          check.existing = !allow_new_users
+        )
 
         if (!check$valid) {
           output$login_warning <- shiny::renderText(check$msg)
@@ -931,7 +953,6 @@ LoginCodeAuthenticationModule <- function(id,
         } else {
           USER$user_dir <- file.path(PGX.DIR)
         }
-        dbg("[USER RELOGGED PGX FOLDER:", USER$user_dir)
         # set options
         USER$options <- read_user_options(USER$user_dir)
         return()
