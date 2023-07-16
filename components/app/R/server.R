@@ -447,43 +447,18 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
-
-  ## Create a unique access id based on username and session/IP
-  user_id=""
-  access_id.SAVE <- reactive({
-    user_id <<- ifelse(auth$email=='', auth$username, auth$email)      
-    session_id <- substring(session$token,1,8)
-    host.ip <- system("hostname -I",intern=TRUE)
-    host.ip <- strsplit(host.ip,split=' ')[[1]][1]
-    public.ip <- system("curl -s http://api.ipify.org",intern=TRUE)      
-
-    dbg("[access_id] user_id = ",user_id)
-    dbg("[access_id] host.ip = ",host.ip)    
-    dbg("[access_id] public.ip = ",public.ip)
-    dbg("[access_id] session_id = ",session_id)        
-    dbg("[access_id] REMOTE_ADDR = ",session$request$REMOTE_ADDR)    
-    dbg("[access_id] HTTP_X_FORWARDED_FOR = ",session$request$HTTP_X_FORWARDED_FOR)
-
-    remote.addr <- session$request$REMOTE_ADDR
-    
-    ##access_id <- paste0(user_id,"__",session_id,":",host.ip,":",client.ip)
-    access_id <- paste0(user_id,"__",remote.addr,":",public.ip)    
-    ##access_id <- paste0(user_id,"__",session_id)
-    access_id
-  })
   
   ## upon change of user
   observeEvent(auth$logged, {
     if (auth$logged) {
 
-      if (1) {
-        message("--------- user login ---------")
-        message("username       = ", auth$username)
-        message("email          = ", auth$email)
-        message("level          = ", auth$level)
-        message("limit          = ", auth$limit)                
-        message("----------------------------------")
-      }
+      message("--------- user login ---------")
+      message("username       = ", auth$username)
+      message("email          = ", auth$email)
+      message("level          = ", auth$level)
+      message("limit          = ", auth$limit)
+      message("user_dir       = ", auth$user_dir)                        
+      message("----------------------------------")
 
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
