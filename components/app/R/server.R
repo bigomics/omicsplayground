@@ -541,7 +541,6 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   if (TIMEOUT > 0) {
-
     #' Session timer. Closes session after TIMEOUT (seconds) This
     #' is acitve for free users. Set TIMEOUT=0 to disable session
     #' timer.
@@ -549,7 +548,7 @@ app_server <- function(input, output, session) {
       "session_timer",
       condition = reactive(auth$logged),
       timeout = TIMEOUT,
-      warn_before = round(0.15*TIMEOUT),
+      warn_before = round(0.15 * TIMEOUT),
       max_warn = 1
     )
 
@@ -570,25 +569,25 @@ app_server <- function(input, output, session) {
     ## modal and gain additional analysis time. We reset the timer.
     r.timeout <- reactive(session_timer$timeout_event() && auth$logged)
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
-    social$start_shiny_observer( session_timer$reset )
+    social$start_shiny_observer(session_timer$reset)
   } ## end of if TIMEOUT>0
 
-  
+
   #' Idle timer. Closes session if no one is logged in after a certain
   #' period. This frees up the R process from users that are uselessly
   #' waiting at the login prompt
   idle_timer <- TimerModule(
     "idle_timer",
     condition = reactive(!auth$logged),
-    timeout = 300,  ## max idle time in seconds
-    timeout_callback = idle_timeout_callback    
+    timeout = 300, ## max idle time in seconds
+    timeout_callback = idle_timeout_callback
   )
-  
+
   idle_timeout_callback <- function() {
-    info("[SERVER] ********** closing idle session **************")        
+    info("[SERVER] ********** closing idle session **************")
     session$close()
   }
-  
+
   ## -------------------------------------------------------------
   ## User locking + login/logout access logging
   ## -------------------------------------------------------------
@@ -686,34 +685,34 @@ app_server <- function(input, output, session) {
     ), bg_color = "#004c7d")
   })
 
-  
-  onSessionStart = isolate({
-    message("*********************************************************")
-    message(paste("***** new session ",session$token,"*****"))
-    message("*********************************************************")
-    ##users$count = users$count + 1
-    ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
-    dbg("[SERVER] number of active sessions = ",length(ACTIVE_SESSIONS))
 
-    if(length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
+  onSessionStart <- isolate({
+    message("*********************************************************")
+    message(paste("***** new session ", session$token, "*****"))
+    message("*********************************************************")
+    ## users$count = users$count + 1
+    ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
+    dbg("[SERVER] number of active sessions = ", length(ACTIVE_SESSIONS))
+
+    if (length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
       dbg("ERROR: Too many sessions. stopping session!!!\n")
-      srv <- paste0(isolate(session$clientData$url_hostname),":",opt$HOSTNAME)
+      srv <- paste0(isolate(session$clientData$url_hostname), ":", opt$HOSTNAME)
       sever_screen_503 <- shiny::tagList(
-        shiny::tags$h1("Sorry, the Playground is full!", style="color:white;font-family:lato;"),
-        shiny::p("Our servers are at capacity. Please try again later.", style="font-size:15px;"),
+        shiny::tags$h1("Sorry, the Playground is full!", style = "color:white;font-family:lato;"),
+        shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),
         shiny::br(),
         # shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
         #    width=350,height=200)),
-        shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
-        shiny::br(),shiny::br(),
+        shiny::div(paste("server =", srv), style = "font-size:11px;text-align:center;"),
+        shiny::br(), shiny::br(),
         sever::reload_button("Relaunch", class = "info")
       )
-      sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3        
-      #Sys.sleep(10)
+      sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3
+      # Sys.sleep(10)
       session$close()
-    }    
+    }
   })
-  
+
   ## This code will be run after the client has disconnected
   ## Note!!!: Strange behaviour, sudden session ending.
   session$onSessionEnded(

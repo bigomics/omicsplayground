@@ -190,8 +190,8 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
   opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
-ACTIVE_SESSIONS = c()
-MAX_SESSIONS = 3
+ACTIVE_SESSIONS <- c()
+MAX_SESSIONS <- 3
 
 message("\n\n")
 message("=================================================================")
