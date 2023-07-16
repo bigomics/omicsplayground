@@ -584,7 +584,7 @@ app_server <- function(input, output, session) {
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
     social$start_shiny_observer(reset_timer)
 
-    
+
     shiny::observeEvent(auth$logged, {
       ## trigger on change of USER
       logged <- auth$logged
