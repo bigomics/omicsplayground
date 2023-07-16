@@ -592,7 +592,6 @@ app_server <- function(input, output, session) {
     r.timeout <- reactive(timer$timeout() && auth$logged)
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
     social$start_shiny_observer(reset_timer)
-    
   } ## end of if TIMEOUT>0
 
 
