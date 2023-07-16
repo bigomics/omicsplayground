@@ -132,7 +132,7 @@ FolderLock <- R6::R6Class("FolderLock",
     },
     remove_lock = function() {
       if(is.null(self$path)) return(NULL)
-      file.remove(self$lock_file())
+      file.remove(self$lockfile())
       self$is_locked = FALSE
     },
     write_lock = function(force=FALSE) {
@@ -227,19 +227,5 @@ FolderLock <- R6::R6Class("FolderLock",
   )  
 ) ## end of R6 class
     
-
-
-
-
-
-
-## write_lock <- function(user, path) {
-##   mylock_file <- file.path(path,paste0("LOCK__",user))
-##   if(!file.exists(mylock_file)) {
-##     pgx.write_lock(user=user, path=path, force=TRUE) 
-##   } else {
-##     system(paste("touch", mylock_file))
-##   }
-## }
 
 
