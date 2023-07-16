@@ -656,10 +656,13 @@ app_server <- function(input, output, session) {
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    auth$resetUSER() ## should already
+    auth$resetUSER() ## should already have been done by JS
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
+    ##
+    ## (IK 16-07-2023: some bug for firebase-based login, reload
+    ## loop. To be fixed.
     dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
