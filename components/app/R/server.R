@@ -11,9 +11,9 @@
 #' @export
 app_server <- function(input, output, session) {
   info("[ui.R] >>> creating SERVER")
-  message("\n=======================================================================")
-  message("================================ SERVER ===============================")
-  message("=======================================================================\n")
+  message("\n===========================================================")
+  message("======================== SERVER ===========================")
+  message("===========================================================\n")
 
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
@@ -538,68 +538,73 @@ app_server <- function(input, output, session) {
   )
 
   ## -------------------------------------------------------------
-  ## Session TimerModule
+  ## Session Timers
   ## -------------------------------------------------------------
 
-  reset_timer <- function() {}
-  run_timer <- function(run = TRUE) {}
-
   if (TIMEOUT > 0) {
-    rv.timer <- reactiveValues(reset = 0, run = FALSE)
-    reset_timer <- function() {
-      rv.timer$reset <- rv.timer$reset + 1
-    }
-    run_timer <- function(run = TRUE) {
-      rv.timer$run <- run
-    }
-    WARN_BEFORE <- round(TIMEOUT / 6)
 
-    timer <- TimerModule(
-      "timer",
+    #' Session timer. Closes session after TIMEOUT (seconds) This
+    #' is acitve for free users. Set TIMEOUT=0 to disable session
+    #' timer.
+    session_timer <- TimerModule(
+      "session_timer",
+      condition = reactive(auth$logged),
       timeout = TIMEOUT,
-      warn_before = WARN_BEFORE,
-      max_warn = 1,
-      poll = Inf, ## not needed, just for timer output
-      reset = reactive(rv.timer$reset),
-      run = reactive(rv.timer$run)
+      warn_before = round(0.15*TIMEOUT),
+      max_warn = 1
     )
 
-    observeEvent(timer$warn(), {
-      if (timer$warn() == 0) {
+    observeEvent(session_timer$warn_event(), {
+      if (session_timer$warn_event() == 0) {
         return()
       } ## skip first atInit call
-      if (WARN_BEFORE < 60) {
-        dt <- paste(round(WARN_BEFORE), "seconds!")
-      } else {
-        dt <- paste(round(WARN_BEFORE / 60), "minutes!")
-      }
-      showModal(modalDialog(
-        HTML("<center><h4>Warning!</h4>Your FREE session is expiring in", dt, ".</center>"),
-        size = "s",
-        easyClose = TRUE
-      ))
-    })
-
-    shiny::observeEvent(auth$logged, {
-      ## trigger on change of USER
-      logged <- auth$logged
-      ## --------- start timer --------------
-      if (TIMEOUT > 0 && logged) {
-        info("[SERVER] starting session timer")
-        reset_timer()
-        run_timer(TRUE)
-      } else {
-        run_timer(FALSE)
-      }
+      shinyalert::shinyalert(
+        title = "Warning!",
+        text = "Your FREE session is expiring soon",
+        html = TRUE,
+        immediate = TRUE,
+        timer = 3000
+      )
     })
 
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
-    r.timeout <- reactive(timer$timeout() && auth$logged)
+    r.timeout <- reactive(session_timer$timeout_event() && auth$logged)
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
-    social$start_shiny_observer(reset_timer)
+    social$start_shiny_observer( session_timer$reset )
   } ## end of if TIMEOUT>0
 
+  
+  #' Idle timer. Closes session if no one is logged in after a certain
+  #' period. This frees up the R process from users that are uselessly
+  #' waiting at the login prompt
+  idle_timer <- TimerModule(
+    "idle_timer",
+    condition = reactive(!auth$logged),
+    timeout = 300,  ## max idle time in seconds
+    timeout_callback = idle_timeout_callback    
+  )
+  
+  idle_timeout_callback <- function() {
+    info("[SERVER] ********** closing idle session **************")        
+    session$close()
+  }
+  
+  ## -------------------------------------------------------------
+  ## User locking + login/logout access logging
+  ## -------------------------------------------------------------
+  info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)
+  if (isTRUE(opt$ENABLE_USER_LOCK)) {
+    # Initialize the reactiveTimer to update every 30 seconds. Set max
+    # idle time to 2 minutes.
+    lock <- FolderLock$new(
+      poll_secs = 15,
+      max_idle = 60,
+      show_success = FALSE,
+      show_details = FALSE
+    )
+    lock$start_shiny_observer(auth, session = session)
+  }
 
   ## -------------------------------------------------------------
   ## About
@@ -648,8 +653,7 @@ app_server <- function(input, output, session) {
 
     ## stop all timers
     dbg("[SERVER:userLogout] >>> stopping timers")
-    reset_timer()
-    run_timer(FALSE)
+    session_timer$run(FALSE)
 
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
@@ -683,6 +687,34 @@ app_server <- function(input, output, session) {
     ), bg_color = "#004c7d")
   })
 
+  
+  onSessionStart = isolate({
+    message("*********************************************************")
+    message(paste("***** new session ",session$token,"*****"))
+    message("*********************************************************")
+    ##users$count = users$count + 1
+    ACTIVE_SESSIONS <<- c(ACTIVE_SESSIONS, session$token)
+    dbg("[SERVER] number of active sessions = ",length(ACTIVE_SESSIONS))
+
+    if(length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
+      dbg("ERROR: Too many sessions. stopping session!!!\n")
+      srv <- paste0(isolate(session$clientData$url_hostname),":",opt$HOSTNAME)
+      sever_screen_503 <- shiny::tagList(
+        shiny::tags$h1("Sorry, the Playground is full!", style="color:white;font-family:lato;"),
+        shiny::p("Our servers are at capacity. Please try again later.", style="font-size:15px;"),
+        shiny::br(),
+        # shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
+        #    width=350,height=200)),
+        shiny::div(paste("server =",srv), style='font-size:11px;text-align:center;'),      
+        shiny::br(),shiny::br(),
+        sever::reload_button("Relaunch", class = "info")
+      )
+      sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3        
+      #Sys.sleep(10)
+      session$close()
+    }    
+  })
+  
   ## This code will be run after the client has disconnected
   ## Note!!!: Strange behaviour, sudden session ending.
   session$onSessionEnded(
@@ -703,10 +735,12 @@ app_server <- function(input, output, session) {
         )
       }
 
+      ## Remove from active sessions
       s <- session$token
       dbg("[SERVER] removing from active sessions :", s)
       ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
 
+      ## we do extra logout actions for shinyproxy
       if (opt$AUTHENTICATION == "shinyproxy") {
         session$sendCustomMessage("shinyproxy-logout", list())
       }
@@ -733,21 +767,6 @@ app_server <- function(input, output, session) {
   total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
   info("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
 
-  ## -------------------------------------------------------------
-  ## User locking + login/logout access logging
-  ## -------------------------------------------------------------
-  info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)
-  if (isTRUE(opt$ENABLE_USER_LOCK)) {
-    # Initialize the reactiveTimer to update every 30 seconds. Set max
-    # idle time to 2 minutes.
-    lock <- FolderLock$new(
-      poll_secs = 15,
-      max_idle = 60,
-      show_success = FALSE,
-      show_details = FALSE
-    )
-    lock$start_shiny_observer(auth, session = session)
-  }
 
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")

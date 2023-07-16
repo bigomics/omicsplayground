@@ -170,17 +170,14 @@ SocialMediaModule <- function(id, r.show = reactive(0)) {
     start_shiny_observer <- function(reset_timer) {
       observeEvent(rv$success, {
         success <- rv$success
-        dbg("[server.R] success = ", success)
         if (success == 0) {
-          info("[server.R] logout after no referral!!!")
           shinyjs::runjs("logoutInApp()")
         }
         if (success > 1) {
-          info("[server.R] resetting timer after referral!!!")
-          timeout.min <- round(TIMEOUT / 60)
+          info("[server.R] resetting timer after successful referral!")
           msg <- HTML("<center><h4>Thanks!</h4>Your FREE session has been extended.</center>")
-          msg <- HTML(paste0("<center><h4>Ditch the ", timeout.min, "-minute limit</h4>
-Upgrade today and experience advanced analysis features without the time limit.</center>"))
+          msg <- HTML(paste0("<center><h4>Ditch the time limit</h4>
+Upgrade today and experience advanced omics analysis features without the time limit. For subscriptions contact us at <a href='https://bigomics.ch' target='_blank'>BigOmics Analytics</a>.</center>"))
           showModal(modalDialog(
             msg,
             size = "m",
