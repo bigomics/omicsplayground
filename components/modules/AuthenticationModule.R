@@ -13,7 +13,7 @@ NoAuthenticationModule <- function(id,
                                    email = "") {
   shiny::moduleServer(
     id, function(input, output, session) {
-      message("[NoAuthenticationModule] >>>> using no authentication <<<<")
+      message("[NoAuthenticationModule] >>>> no authentication <<<<")
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
@@ -22,7 +22,7 @@ NoAuthenticationModule <- function(id,
         email = "",
         level = "",
         limit = "",
-        options = opt,
+        options = opt,     ## init from global
         user_dir = PGX.DIR ## global
       )
 
@@ -70,6 +70,10 @@ NoAuthenticationModule <- function(id,
         resetUSER()
       })
 
+      
+      ## export 'public' function
+      USER$resetUSER <- resetUSER
+      
       return(USER)
     } ## end-of-server
   )
@@ -350,6 +354,8 @@ FirebaseAuthenticationModule <- function(id,
       )
     })
 
+    ## export 'public' functions
+    USER$resetUSER <- resetUSER
 
     return(USER)
   })
@@ -535,7 +541,10 @@ EmailLinkAuthenticationModule <- function(id,
       session$sendCustomMessage("set-user", list(user = USER$email))
       session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
-
+    
+    ## export 'public' functions
+    USER$resetUSER <- resetUSER
+    
     return(USER)
   })
 }
@@ -547,7 +556,7 @@ EmailLinkAuthenticationModule <- function(id,
 PasswordAuthenticationModule <- function(id,
                                          credentials_file) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using password authentication <<<<")
+    message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
     ns <- session$ns
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
@@ -576,6 +585,7 @@ PasswordAuthenticationModule <- function(id,
     shiny::showModal(login_modal) ## need first time
 
     resetUSER <- function() {
+      dbg("[PasswordAuthenticationModule] resetting USER")
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -620,6 +630,7 @@ PasswordAuthenticationModule <- function(id,
       valid.user <- isTRUE(length(sel) > 0)
       valid.pw <- isTRUE(CREDENTIALS[sel, "password"] == input$login_password)
       valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel, "expiry"]))
+           
       login.OK <- (valid.user && valid.pw && valid.date)
 
       if (login.OK) {
@@ -635,14 +646,12 @@ PasswordAuthenticationModule <- function(id,
         USER$logged <- TRUE
 
         # Create user dir (if needed) and set user options
-        dbg("[PasswordAuthenticationModule] opt$ENABLE_USERDIR = ", opt$ENABLE_USERDIR)
         if (opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR, USER$username)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         } else {
           USER$user_dir <- file.path(PGX.DIR)
         }
-        dbg("[PasswordAuthenticationModule] user_dir = ", USER$user_dir)
         USER$options <- read_user_options(USER$user_dir)
 
         ## need for JS hsq tracking
@@ -657,6 +666,10 @@ PasswordAuthenticationModule <- function(id,
         if (!valid.user) {
           output$login_warning <- shiny::renderText("Invalid user")
         }
+
+        if (!valid.trace){
+          output$login_warning <- shiny::renderText("User already in use. Wait 2 minutes and try again")
+        }
         shinyjs::delay(4000, {
           output$login_warning <- shiny::renderText("")
         })
@@ -668,6 +681,8 @@ PasswordAuthenticationModule <- function(id,
       resetUSER()
     })
 
+    ## export as 'public functions' :)
+    USER$resetUSER <- resetUSER
     return(USER)
   })
 }
@@ -906,6 +921,10 @@ LoginCodeAuthenticationModule <- function(id,
       first_time <<- FALSE
       resetUSER()
     })
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
+
     return(USER)
   })
 }

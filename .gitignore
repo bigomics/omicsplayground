@@ -49,6 +49,7 @@ data/*
 data_public/*
 !data_public/GSE157905-lenvatinib.pgx
 data_shared/*
+trace/*
 logs/*.rds
 /logs/
 

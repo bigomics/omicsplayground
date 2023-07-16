@@ -54,7 +54,6 @@ get_opg_root <- function() {
 }
 
 ## Set folders
-
 OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc")
 RDIR <- file.path(OPG, "components/base/R")
@@ -64,6 +63,9 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
+
+## Set files
+ACCESS_LOGFILE = file.path(ETC,"access.log")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -106,7 +108,6 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(magrittr)
-
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 
@@ -170,10 +171,9 @@ PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
 
-message("\n************************************************")
-message("*********** READ MODULES/BOARDS ****************")
-message("************************************************")
-
+##------------------------------------------------
+## ENABLE/DISABLE BOARDS
+##------------------------------------------------
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
@@ -245,7 +245,18 @@ logHandler <- function(http.req) {
   http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-## Are we ever going to use this??
+##------------------------------------------------
+## SESSION CONTROL
+##------------------------------------------------
+SERVER_NAME <- opt$HOST_NAME
+if(is.null(SERVER_NAME) || SERVER_NAME=="") {
+  SERVER_NAME <- toupper(system("hostname",intern=TRUE))
+}
+ACTIVE_SESSIONS = c()
+MAX_SESSIONS = 3  ## NEED RETHINK! E-mail firebase login problems!
+message("SERVER_NAME = ",SERVER_NAME)
+
+
 
 message("\n\n")
 message("=================================================================")
