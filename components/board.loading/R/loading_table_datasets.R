@@ -205,7 +205,6 @@ loading_table_datasets_server <- function(id,
             file.copy(from = pgx_file, to = new_pgx_file)
           } else {
             pgx0$creator <- auth$email
-            if (auth$method == "password") pgx0$creator <- auth$username
             if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
             playbase::pgx.save(pgx0, file = new_pgx_file)
           }
@@ -742,7 +741,7 @@ loading_table_datasets_server <- function(id,
         return()
       }
 
-      if (!is_valid_email(share_user) && auth$method != "password") {
+      if (!is_valid_email(share_user)) {
         output$error_alert <- renderText({
           "Email is not valid. Please use only work or business emails."
         })
@@ -789,7 +788,6 @@ loading_table_datasets_server <- function(id,
         ## file name.
         share_user <- input_share_user()
         current_user <- auth$email
-        if (auth$method == "password") current_user <- auth$username
         new_pgx_file <- file.path(
           pgx_shared_dir,
           paste0(
@@ -817,7 +815,6 @@ loading_table_datasets_server <- function(id,
             file.copy(from = pgx_file, to = new_pgx_file)
           } else {
             pgx0$creator <- auth$email
-            if (auth$method == "password") pgx0$creator <- auth$username
             if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
             playbase::pgx.save(pgx0, file = new_pgx_file)
           }

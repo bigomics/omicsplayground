@@ -49,37 +49,46 @@ app_server <- function(input, output, session) {
 
   auth <- NULL ## shared in module
   credentials_file <- file.path(ETC, "CREDENTIALS")
-  has.credentials <- file.exists(credentials_file)
-  if ((is.null(opt$USE_CREDENTIALS) || !opt$USE_CREDENTIALS ||
-    !has.credentials) && authentication != "password") {
+  has.credentials  <- file.exists(credentials_file)
+  no.credentials <- (!isTRUE(opt$USE_CREDENTIALS) || !has.credentials)
+  if ( no.credentials && authentication != "password") {
     credentials_file <- NULL
   }
 
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
-      credentials_file = credentials_file
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      domain = opt$DOMAIN
     )
   } else if (authentication == "firebase") {
     auth <- FirebaseAuthenticationModule(
       id = "auth",
       domain = opt$DOMAIN,
-      firebase.rds = "firebase.rds"
+      firebase.rds = "firebase.rds",
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
+      allow_new_users = opt$ALLOW_NEW_USERS
     )
   } else if (authentication == "email-link") {
     auth <- EmailLinkAuthenticationModule(
       id = "auth",
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
+      firebase.rds = "firebase.rds",
       credentials_file = credentials_file,
-      firebase.rds = "firebase.rds"
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
+      allow_new_users = opt$ALLOW_NEW_USERS
     )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
-      credentials_file = credentials_file
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,      
+      allow_new_users = opt$ALLOW_NEW_USERS      
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -462,11 +471,6 @@ app_server <- function(input, output, session) {
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
 
-      # check personal email for old users and ask them to change
-      # their email
-      if (auth$method %in% c("email-link", "firebase", "login-code")) {
-        check_personal_email(auth, PGX.DIR)
-      }
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -610,10 +614,7 @@ app_server <- function(input, output, session) {
 
   observeEvent(input$navbar_about, {
     authors <- c(
-      "Ivo Kwee", "Murat Akhmedov", "John Coene",
-      "Stefan Reifenberg", "Marco Sciaini", "Cédric Scherer",
-      "Mauro Miguel Masiero", "Nick Cullen", "Layal Abo Khayal",
-      "Xavier Escribà Montagut", "Carson Sievert", "Matt Leech"
+      "Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
     )
     authors <- paste(sort(authors), collapse = ", ")
 
@@ -666,12 +667,13 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
-
+  
   ## This code listens to the JS quit signal
   observeEvent(input$quit, {
+    ## Choose between reloading or closing the session. 
     dbg("[SERVER:quit] closing session... ")
-    ## session$close()
-    session$reload()
+    session$close()
+    ## session$reload()
   })
 
   # This code will run when there is a shiny error. Then this
