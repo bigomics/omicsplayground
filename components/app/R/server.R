@@ -652,7 +652,7 @@ app_server <- function(input, output, session) {
 
     ## stop all timers
     dbg("[SERVER:userLogout] >>> stopping timers")
-    if(!is.null(session_timer)) session_timer$run(FALSE)
+    if (!is.null(session_timer)) session_timer$run(FALSE)
 
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
