@@ -35,10 +35,16 @@ pgx.record_access <- function(user,
   public.ip <- system("curl -s http://api.ipify.org", intern = TRUE)
   #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
   #  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
+  remote_addr <- session$request$REMOTE_ADDR
+  http_xff  <- session$request$HTTP_X_FORWARDED_FOR
 
+  dbg("[pgx.record_access] action = ", action)
+  dbg("[pgx.record_access] user = ", user)
   dbg("[pgx.record_access] session_id = ", session_id)
   dbg("[pgx.record_access] hostname = ", hostname)
   dbg("[pgx.record_access] public.ip = ", public.ip)
+  dbg("[pgx.record_access] remote_addr = ", remote_addr)
+  dbg("[pgx.record_access] http_xff = ", http_xff)
   dbg("[pgx.record_access] time = ", time)
 
   login_data <- data.frame(
