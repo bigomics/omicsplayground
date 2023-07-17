@@ -36,7 +36,7 @@ pgx.record_access <- function(user,
   #  public.ip <- system("curl -s http://ipinfo.io",intern=TRUE)
   #  public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
   remote_addr <- session$request$REMOTE_ADDR
-  http_xff  <- session$request$HTTP_X_FORWARDED_FOR
+  http_xff <- session$request$HTTP_X_FORWARDED_FOR
 
   dbg("[pgx.record_access] action = ", action)
   dbg("[pgx.record_access] user = ", user)
