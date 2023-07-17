@@ -127,7 +127,9 @@ functional_plot_wikipathway_graph_server <- function(id,
 
         tmpfile <- paste0(tempfile(), ".svg")
         svg <- wikipathview(wp = pathway.id, val = fc)
-        if(is.null(svg)) return(NULL)
+        if (is.null(svg)) {
+          return(NULL)
+        }
         fluctuator::write_svg(svg, file = tmpfile)
         list(
           src = normalizePath(tmpfile),
@@ -140,7 +142,7 @@ functional_plot_wikipathway_graph_server <- function(id,
       plot_RENDER <- function() {
         img <- getPathwayImage()
         validate(
-          need(!is.null(img), 'Could not retrieve pathway image')
+          need(!is.null(img), "Could not retrieve pathway image")
         )
         shiny::req(img$width, img$height)
         filename <- img$src

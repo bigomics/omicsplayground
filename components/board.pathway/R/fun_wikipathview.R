@@ -14,11 +14,11 @@ wikipathview <- function(wp, val) {
       return(NULL)
     }
   ) |> is.null()
-  
+
   if (down) {
     return(NULL)
   }
-  
+
   # Read the file line by line
   lines <- readLines(destfile)
 
