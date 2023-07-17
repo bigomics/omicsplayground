@@ -104,8 +104,7 @@ UploadBoard <- function(id,
 
       load_my_dataset <- function() {
         if (input$confirmload) {
-          bigdash.selectTab(session, selected = "load-tab")
-          load_uploaded_data(new_pgx$name)
+          load_uploaded_data(new_pgx$name) 
         }
       }
 
