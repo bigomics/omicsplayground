@@ -316,12 +316,12 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        max.datasets <- auth$options$MAX_DATASETS
-        dbg("[upload_module_computepgx_server] max.datasets = ", max.datasets)
-
+        max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-        if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
+        if (!auth$options$ENABLE_DELETE) {
+          numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))  ## count deleted...
+        }
         if (numpgx >= max.datasets) {
           msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
           shinyalert::shinyalert(
