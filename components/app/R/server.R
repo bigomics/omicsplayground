@@ -750,8 +750,8 @@ app_server <- function(input, output, session) {
     }
   )
 
-  # this function sets 'input.enable_info' based on the user settings
-  # and is used by all the bs_alert functions in a conditionalPanel
+  # this function sets 'enable_info' based on the user settings
+  # and is used by all the bs_alert functions with conditional=T
   observeEvent(env$user_settings$enable_info(), {
     session$sendCustomMessage(
       "enableInfo",
@@ -760,6 +760,19 @@ app_server <- function(input, output, session) {
         value = env$user_settings$enable_info()
       )
     )
+  })
+
+  # this function triggers JS upon 'enable_info' state
+  observeEvent(env$user_settings$enable_info(), {
+    if(env$user_settings$enable_info() == TRUE){
+      shinyjs::runjs(
+        '$(".btn-close-bs-conditional").closest(".bslib-gap-spacing.html-fill-container").css("display", "");$(".btn-close-bs-conditional").parent().css("display", "");'
+      )
+    } else {
+      shinyjs::runjs(
+        '$(".btn-close-bs-conditional").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$(".btn-close-bs-conditional").parent().css("display", "none");'
+      )
+    }
   })
 
   ## -------------------------------------------------------------
