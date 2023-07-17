@@ -38,7 +38,7 @@ pgx.record_access <- function(user,
   remote_addr <- session$request$REMOTE_ADDR
   http_xff <- session$request$HTTP_X_FORWARDED_FOR
 
-  if(0) {
+  if (0) {
     dbg("[pgx.record_access] action = ", action)
     dbg("[pgx.record_access] user = ", user)
     dbg("[pgx.record_access] session_id = ", session_id)
@@ -48,7 +48,7 @@ pgx.record_access <- function(user,
     dbg("[pgx.record_access] http_xff = ", http_xff)
     dbg("[pgx.record_access] time = ", time)
   }
-  
+
   login_data <- data.frame(
     user = user,
     action = action,
@@ -279,11 +279,10 @@ FolderLock <- R6::R6Class("FolderLock",
 ) ## end of R6 class
 
 
-##ETC = "~/Playground/omicsplayground/etc"
-##online.dir = ONLINE_DIR = file.path(ETC,"online")
+## ETC = "~/Playground/omicsplayground/etc"
+## online.dir = ONLINE_DIR = file.path(ETC,"online")
 
-pgx.start_heartbeat <- function(auth, session, online_dir, delta=60 ) {
-  
+pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
   reactive({
     ## shiny::req(auth$email)
     user <- auth$email
@@ -293,27 +292,27 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta=60 ) {
       hostname <- system("hostname", intern = TRUE)
     }
     ip <- system("curl -s http://api.ipify.org", intern = TRUE)
-    online_id <- paste0("ONLINE__",user,"__",session_id,"__",hostname,":",ip)
+    online_id <- paste0("ONLINE__", user, "__", session_id, "__", hostname, ":", ip)
     online_file <- file.path(online_dir, online_id)
-    
-    if(auth$logged) {
-      if(!dir.exists(online_dir)) dir.create(online_dir)
+
+    if (auth$logged) {
+      if (!dir.exists(online_dir)) dir.create(online_dir)
       write(NULL, file = online_file)
     } else {
-      if(file.exists(online_file)) {
+      if (file.exists(online_file)) {
         file.remove(online_file)
       }
     }
 
     ## remove old files
-    online_tags <- dir(online_dir, pattern="^ONLINE", full.name=FALSE)
+    online_tags <- dir(online_dir, pattern = "^ONLINE", full.name = FALSE)
     files <- file.path(online_dir, online_tags)
-    if(length(files)>0) {
+    if (length(files) > 0) {
       mtimes <- sapply(files, function(f) as.POSIXct(file.mtime(f)))
       lapsed <- (Sys.time() - mtimes)
       lapsed <- round(as.numeric(lapsed, units = "secs"), digits = 2)
-      is_stale <- which( lapsed > 3*delta )
-      if(length(is_stale)>0) {
+      is_stale <- which(lapsed > 3 * delta)
+      if (length(is_stale) > 0) {
         file.remove(files[is_stale])
       }
     }
@@ -324,5 +323,4 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta=60 ) {
     ## return filename
     invisible(online_file)
   })
-
 }

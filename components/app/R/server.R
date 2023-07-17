@@ -576,7 +576,9 @@ app_server <- function(input, output, session) {
 
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
-    r.timeout <- reactive({ session_timer$timeout_event() && auth$logged })
+    r.timeout <- reactive({
+      session_timer$timeout_event() && auth$logged
+    })
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
     social$start_shiny_observer(session_timer$reset)
   } ## end of if TIMEOUT>0
@@ -614,11 +616,13 @@ app_server <- function(input, output, session) {
   }
 
   #' Track which users are online by repeatedly writing small ID file
-  #' in the ONLINE_DIR folder. 
-  ONLINE_DIR = file.path(ETC,"online")  
-  heartbeat <- pgx.start_heartbeat(auth, session, delta=300, online_dir=ONLINE_DIR)
-  observe({ heartbeat() })  ## run indefinitely
-  
+  #' in the ONLINE_DIR folder.
+  ONLINE_DIR <- file.path(ETC, "online")
+  heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
+  observe({
+    heartbeat()
+  }) ## run indefinitely
+
   ## -------------------------------------------------------------
   ## About
   ## -------------------------------------------------------------
@@ -653,7 +657,7 @@ app_server <- function(input, output, session) {
     )
   })
 
- 
+
   ## -------------------------------------------------------------
   ## Session login/logout functions
   ## -------------------------------------------------------------
@@ -670,9 +674,9 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] >>> removing lock files")
     hbfile <- heartbeat()
     dbg("[SERVER:userLogout] heartbeat file = ", hbfile)
-    if(file.exists(hbfile)) remove.file(hbfile)
+    if (file.exists(hbfile)) remove.file(hbfile)
     lock$remove_lock()
-    
+
     pgx.record_access(
       user = auth$email,
       action = "logout",
@@ -690,7 +694,7 @@ app_server <- function(input, output, session) {
     ## (IK 16-07-2023: some bug for firebase-based login, reload
     ## loop. To be fixed.
     dbg("[SERVER:userLogout] >>> reloading session")
-    ##session$reload()
+    ## session$reload()
   })
 
   ## This code listens to the JS quit signal
@@ -700,7 +704,7 @@ app_server <- function(input, output, session) {
     ## after exit.
     dbg("[SERVER:quit] exit session... ")
     session$close()
-    ##session$reload()
+    ## session$reload()
   })
 
   # This code will run when there is a shiny error. Then this
