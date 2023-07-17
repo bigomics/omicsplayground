@@ -17,7 +17,7 @@ app_ui <- function() {
       onClick = "show_plans()"
     )
   }
- 
+
   gtag2 <- NULL
   if (Sys.getenv("OMICS_GOOGLE_TAG") != "") {
     ## Add Google Tag manager body code
