@@ -841,7 +841,8 @@ loading_table_datasets_server <- function(id,
 
         # send email to user
         sender <- auth$email
-        sendShareMessage(pgx_name, sender, share_user, path_to_creds = "gmail_creds")
+        gmail_creds <- file.path(ETC, "gmail_creds")
+        sendShareMessage(pgx_name, sender, share_user, path_to_creds = gmail_creds)
 
         refresh_shared(refresh_shared() + 1)
       }

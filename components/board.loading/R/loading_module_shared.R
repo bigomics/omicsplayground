@@ -114,7 +114,8 @@ upload_module_shared_server <- function(id,
           pgx_name <- stringr::str_split(input$resend_pgx, "resend_pgx__")[[1]][2]
           sender <- gsub(".*__from__|__$", "", pgx_name)
           share_user <- gsub(".*__to__|__from__.*", "", pgx_name)
-          sendShareMessage(pgx_name, sender, share_user, path_to_creds = "gmail_creds")
+          gmail_creds <- file.path(ETC, "gmail_creds")
+          sendShareMessage(pgx_name, sender, share_user, path_to_creds = gmail_creds)
         },
         ignoreInit = TRUE
       )

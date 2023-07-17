@@ -4,6 +4,7 @@
 
 sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
+    info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =",path_to_creds)
     return(NULL)
   }
 
