@@ -171,7 +171,7 @@ app_server <- function(input, output, session) {
     })
     shinyChatR::chat_server(
       "chatbox",
-      csv_path = file.path(ETC, "chirp_data.csv"),
+      csv_path = file.path(SHARE.DIR, "chirp_data.csv"),
       chat_user = r_chirp_name,
       nlast = 100
     )
