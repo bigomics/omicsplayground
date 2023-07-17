@@ -764,7 +764,7 @@ app_server <- function(input, output, session) {
 
   # this function triggers JS upon 'enable_info' state
   observeEvent(env$user_settings$enable_info(), {
-    if(env$user_settings$enable_info() == TRUE){
+    if (env$user_settings$enable_info() == TRUE) {
       shinyjs::runjs(
         '$(".btn-close-bs-conditional").closest(".bslib-gap-spacing.html-fill-container").css("display", "");$(".btn-close-bs-conditional").parent().css("display", "");'
       )
