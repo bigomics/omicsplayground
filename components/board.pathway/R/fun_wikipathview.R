@@ -14,14 +14,10 @@ wikipathview <- function(wp, val) {
       return(NULL)
     }
   ) |> is.null()
-
-  dbg("[wikipathview] down = ",down)
   
   if (down) {
     return(NULL)
   }
-
-  dbg("[wikipathview] destfile = ",destfile)
   
   # Read the file line by line
   lines <- readLines(destfile)
