@@ -13,16 +13,16 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
       body = blastula::md(
         glue::glue(
           "Hello, {sender} shared a dataset with you on OmicsPlayground! ",
-          "Login to accept the new dataset."
+          "Log in to your account to accept the new dataset."
         )
       ),
       footer = blastula::md(
         glue::glue("Email sent on {blastula::add_readable_time()}.")
       )
     ),
-    from = "app@bigomics.ch",
+    from = "bigomics.app@gmail.com",
     to = share_user,
-    subject = paste("Your friend", sender, "shared data on OmicsPlayground"),
+    subject = paste(sender, "shared a dataset with you on OmicsPlayground"),
     credentials = blastula::creds_file(path_to_creds)
   )
 }
