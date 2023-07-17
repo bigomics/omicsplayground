@@ -55,13 +55,13 @@ get_opg_root <- function() {
 
 ## Set folders
 OPG <- get_opg_root()
-ETC <- file.path(OPG, "etc")
-RDIR <- file.path(OPG, "components/base/R")
-APPDIR <- file.path(OPG, "components/app/R")
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
+APPDIR <- file.path(OPG, "components/app/R")
 PGX.DIR <- file.path(OPG, "data")
+SHARE.DIR <- file.path(OPG, "data_shared")
+PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 
 ## Set files
@@ -130,7 +130,6 @@ message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
 message("OPG =", OPG)
-message("RDIR =", RDIR)
 message("FILES =", FILES)
 message("FILESX =", FILESX)
 message("PGX.DIR =", PGX.DIR)

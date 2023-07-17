@@ -275,3 +275,52 @@ FolderLock <- R6::R6Class("FolderLock",
     }
   )
 ) ## end of R6 class
+
+
+##ETC = "~/Playground/omicsplayground/etc"
+##online.dir = ONLINE_DIR = file.path(ETC,"online")
+
+pgx.start_heartbeat <- function(auth, session, online_dir, delta=60 ) {
+  
+  reactive({
+    ## shiny::req(auth$email)
+    user <- auth$email
+    session_id <- substring(session$token, 1, 16)
+    hostname <- opt$HOSTNAME
+    if (is.null(hostname) || hostname == "") {
+      hostname <- system("hostname", intern = TRUE)
+    }
+    ip <- system("curl -s http://api.ipify.org", intern = TRUE)
+    online_id <- paste0("ONLINE__",user,"__",session_id,"__",hostname,":",ip)
+    online_file <- file.path(online_dir, online_id)
+    
+    if(auth$logged) {
+      if(!dir.exists(online_dir)) dir.create(online_dir)
+      write(NULL, file = online_file)
+    } else {
+      if(file.exists(online_file)) {
+        file.remove(online_file)
+      }
+    }
+
+    ## remove old files
+    online_tags <- dir(online_dir, pattern="^ONLINE", full.name=FALSE)
+    files <- file.path(online_dir, online_tags)
+    if(length(files)>0) {
+      mtimes <- sapply(files, function(f) as.POSIXct(file.mtime(f)))
+      lapsed <- (Sys.time() - mtimes)
+      lapsed <- round(as.numeric(lapsed, units = "secs"), digits = 2)
+      is_stale <- which( lapsed > 3*delta )
+      if(length(is_stale)>0) {
+        file.remove(files[is_stale])
+      }
+    }
+
+    ## invalidate-rinse-repeat
+    invalidateLater(delta * 1000)
+
+    ## return filename
+    invisible(online_file)
+  })
+
+}

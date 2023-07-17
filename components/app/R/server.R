@@ -171,7 +171,6 @@ app_server <- function(input, output, session) {
     })
     shinyChatR::chat_server(
       "chatbox",
-      ## db_file = file.path(ETC, "chirp_data.db"),
       csv_path = file.path(ETC, "chirp_data.csv"),
       chat_user = r_chirp_name,
       nlast = 100
@@ -550,7 +549,7 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   session_timer <- NULL
-  if (TIMEOUT > 0) {
+  if (isTRUE(TIMEOUT > 0)) {
     #' Session timer. Closes session after TIMEOUT (seconds) This
     #' is acitve for free users. Set TIMEOUT=0 to disable session
     #' timer.
@@ -577,7 +576,7 @@ app_server <- function(input, output, session) {
 
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
-    r.timeout <- reactive(session_timer$timeout_event() && auth$logged)
+    r.timeout <- reactive({ session_timer$timeout_event() && auth$logged })
     social <- SocialMediaModule("socialmodal", r.show = r.timeout)
     social$start_shiny_observer(session_timer$reset)
   } ## end of if TIMEOUT>0
@@ -614,6 +613,12 @@ app_server <- function(input, output, session) {
     lock$start_shiny_observer(auth, session = session)
   }
 
+  #' Track which users are online by repeatedly writing small ID file
+  #' in the ONLINE_DIR folder. 
+  ONLINE_DIR = file.path(ETC,"online")  
+  heartbeat <- pgx.start_heartbeat(auth, session, delta=300, online_dir=ONLINE_DIR)
+  observe({ heartbeat() })  ## run indefinitely
+  
   ## -------------------------------------------------------------
   ## About
   ## -------------------------------------------------------------
@@ -648,6 +653,7 @@ app_server <- function(input, output, session) {
     )
   })
 
+ 
   ## -------------------------------------------------------------
   ## Session login/logout functions
   ## -------------------------------------------------------------
@@ -660,6 +666,20 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] >>> stopping timers")
     if (!is.null(session_timer)) session_timer$run(FALSE)
 
+    ## This removes user heartbeat and lock files
+    dbg("[SERVER:userLogout] >>> removing lock files")
+    hbfile <- heartbeat()
+    dbg("[SERVER:userLogout] heartbeat file = ", hbfile)
+    if(file.exists(hbfile)) remove.file(hbfile)
+    lock$remove_lock()
+    
+    pgx.record_access(
+      user = auth$email,
+      action = "logout",
+      comment = "userLogout",
+      session = session
+    )
+
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
@@ -667,19 +687,20 @@ app_server <- function(input, output, session) {
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
-    ##
     ## (IK 16-07-2023: some bug for firebase-based login, reload
     ## loop. To be fixed.
     dbg("[SERVER:userLogout] >>> reloading session")
-    ## session$reload()
+    ##session$reload()
   })
 
   ## This code listens to the JS quit signal
   observeEvent(input$quit, {
-    ## Choose between reloading or closing the session.
-    dbg("[SERVER:quit] closing session... ")
+    ## Choose between reloading or closing the session. Close is
+    ## better because then the user does not allocate an idle session
+    ## after exit.
+    dbg("[SERVER:quit] exit session... ")
     session$close()
-    ## session$reload()
+    ##session$reload()
   })
 
   # This code will run when there is a shiny error. Then this
