@@ -22,7 +22,6 @@ read_user_options <- function(user_dir) {
     ## file.copy(from = opt.file, to = user_opt_file)
   } else {
     user_opt <- playbase::pgx.readOptions(file = user_opt_file)
-
     ## restrict user options only to these options.
     ALLOWED_USER_OPTS <- c(
       "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
@@ -31,14 +30,15 @@ read_user_options <- function(user_dir) {
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
       "TIMEOUT", "WATERMARK"
     )
+    dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
-
+    dbg("[read_user_options] 2 : names(user_opt) = ", names(user_opt))
     for (opt_name in names(user_opt)) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
   }
-  # add user dir to opt file
-  new_opt$user_dir <- user_dir
+  # add user dir to opt file (IK: this is not an option!)
+  ##  new_opt$user_dir <- user_dir
   new_opt
 }
 
@@ -199,8 +199,22 @@ checkPersonalEmail <- function(email) {
   grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", tolower(email))
 }
 
-checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {
+checkMissingEmail <- function(email) {
+  (is.null(email) || is.na(email) || email %in% c("", " ", NA))
+}
+
+## PGX.DIR="~/Playground/omicsplayground/data/"
+checkExistUserFolder <- function(email) {
+  user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
+  tolower(email) %in% tolower(user_dirs)
+}
+
+checkEmail <- function(email, domain = NULL, credentials_file = NULL,
+                       check.personal = TRUE, check.existing = FALSE) {
   chk <- list()
+  if (checkMissingEmail(email)) {
+    return(list(valid = FALSE, msg = "missing email"))
+  }
   if (!checkValidEmailFormat(email)) {
     return(list(valid = FALSE, msg = "not a valid email"))
   }
@@ -208,11 +222,16 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
     return(list(valid = FALSE, msg = "domain not authorized"))
   }
   if (!checkAuthorizedUser(email, credentials_file)) {
-    return(list(valid = FALSE, msg = "not authorized user"))
+    return(list(valid = FALSE, msg = "user not authorized"))
   }
   if (check.personal) {
     if (checkPersonalEmail(email)) {
       return(list(valid = FALSE, msg = "No personal email allowed. Please use your business, academic or institutional email."))
+    }
+  }
+  if (check.existing) {
+    if (!checkExistUserFolder(email)) {
+      return(list(valid = FALSE, msg = "username does not exist"))
     }
   }
   list(valid = TRUE, "email ok")

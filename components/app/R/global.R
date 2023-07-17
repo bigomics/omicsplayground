@@ -54,7 +54,6 @@ get_opg_root <- function() {
 }
 
 ## Set folders
-
 OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc")
 RDIR <- file.path(OPG, "components/base/R")
@@ -64,6 +63,9 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 PGX.DIR <- file.path(OPG, "data")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
+
+## Set files
+ACCESS_LOGFILE <- file.path(ETC, "access.log")
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -106,7 +108,6 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(magrittr)
-
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 
@@ -170,10 +171,9 @@ PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
 
-message("\n************************************************")
-message("*********** READ MODULES/BOARDS ****************")
-message("************************************************")
-
+## ------------------------------------------------
+## ENABLE/DISABLE BOARDS
+## ------------------------------------------------
 
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
@@ -184,68 +184,14 @@ if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
-## --------------------------------------------------------------------
-## --------------------- HANDLER MANAGER ------------------------------
-## --------------------------------------------------------------------
-## add handlerManager for log/crash reports
-
-http.resp <- getFromNamespace("httpResponse", "shiny")
-
-logHandler <- function(http.req) {
-  if (!http.req$PATH_INFO == "/log") {
-    return()
-  }
-
-  query <- shiny::parseQueryString(http.req$QUERY_STRING)
-
-  if (is.null(query$msg)) {
-    return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
-  }
-
-  if (query$msg == "") {
-    return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
-  }
-
-  token <- Sys.getenv("HONCHO_TOKEN", "")
-  if (token == "") {
-    return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
-  }
-
-  uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
-
-  ## get the correct log file
-  log.file <- NULL
-  the.log <- "Could not find log file!"
-  id <- query$msg ## use session id as message
-
-  log.dirs <- "~/ShinyApps/log/*log /var/log/shiny-server/*log"
-  suppressWarnings(log.file <- system(paste("grep -l -s", id, log.dirs), intern = TRUE))
-  log.file <- tail(log.file, 1) ## take newest???
-
-  if (length(log.file) == 0) {
-    dbg("[GLOBAL.logHandler] could not resolve log file for session ID = ", id)
-    return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
-  }
-
-  if (!is.null(log.file)) {
-    ## truncate the log file
-    the.log <- paste(system(paste("grep -B100 -A99999", id, log.file), intern = TRUE), collapse = "\n")
-  }
-
-  httr::POST(
-    uri,
-    body = list(
-      msg = query$msg,
-      log = "The log!",
-      filename = "the_log.log"
-    ),
-    encode = "json"
-  )
-
-  http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
+## ------------------------------------------------
+## SESSION CONTROL
+## ------------------------------------------------
+if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
+  opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
-
-## Are we ever going to use this??
+ACTIVE_SESSIONS <- c()
+MAX_SESSIONS <- 3
 
 message("\n\n")
 message("=================================================================")

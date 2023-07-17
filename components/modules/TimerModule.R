@@ -9,149 +9,123 @@
 
 TimerModuleUI <- function(id) {
   ns <- shiny::NS(id)
+  ## empty
 }
 
 TimerModule <- function(id,
+                        condition,
                         timeout,
                         warn_before = 0,
                         max_warn = 3,
-                        reset = reactive(0),
-                        run = reactive(TRUE),
-                        poll = Inf) {
+                        warn_callback = NULL,
+                        timeout_callback = NULL) {
   moduleServer(id, function(input, output, session) {
-    start_time <- shiny::reactiveVal(Sys.time())
-    #
-
+    rv <- reactiveValues(reset = 0, run = TRUE)
     nwarn <- 0
+    start_time <- shiny::reactiveVal(Sys.time())
     warn_start <- timeout - max_warn * warn_before
 
     if (warn_start < 0) {
       stop("invalid and max_warn and warn_before")
     }
 
-    observeEvent(reset(), {
-      if (reset() == 0) {
-        return()
+    observeEvent(condition(), {
+      if (timeout > 0 && condition()) {
+        reset_timer()
+        rv$run <- TRUE
+      } else {
+        rv$run <- FALSE
       }
-      message("[TimerModule] reset at", Sys.time())
+    })
+
+    reset_timer <- function() {
       start_time(Sys.time())
       nwarn <<- 0
+    }
+
+    observeEvent(rv$reset, {
+      if (rv$reset == 0) {
+        return(NULL)
+      }
+      reset_timer()
     })
 
     lapse_time <- function() {
-      difftime(Sys.time(), start_time(), units = "secs")
+      now <- Sys.time()
+      difftime(now, start_time(), units = "secs")
     }
 
-    timer <- reactive({
-      if (!run()) {
-        message("[TimerModule:timer] stopped by control")
-        shiny::invalidateLater(Inf)
-      } else if (lapse_time() <= timeout) {
-        shiny::invalidateLater(poll * 1000)
-      } else {
-        message("[TimerModule] timer stopped at", Sys.time())
-        shiny::invalidateLater(Inf)
-      }
-      lapse_time()
-    })
-
-    timeout.trigger <- reactive({
+    timeout_event <- reactive({
       is_lapsed <- (lapse_time() > timeout)
       if (timeout < 0) {
-        return()
+        return(NULL)
       }
-      if (!run()) {
-        message("[TimerModule:timeout.trigger] stopped by control")
-        shiny::invalidateLater(Inf)
+      delta <- NULL
+      if (!rv$run) {
+        delta <- Inf
       } else if (is_lapsed) {
-        message("[TimerModule:timeout.trigger] time out at = ", lapse_time())
-        shiny::invalidateLater(Inf)
+        delta <- Inf
       } else {
-        shiny::invalidateLater(timeout * 1000)
+        delta <- 0.2 * timeout * 1000 ## trigger exactly at timout
       }
+      shiny::invalidateLater(delta)
       is_lapsed
     })
 
-    warn.trigger <- reactive({
+    warn_event <- reactive({
       is_warned <- (lapse_time() > warn_start)
       is_lapsed <- (lapse_time() > timeout)
-      if (warn_before == 0) {
-        return()
-      }
-      if (!run()) {
-        message("[TimerModule:warn.trigger] stopped by control")
+      if (warn_before == 0 || !rv$run) {
         shiny::invalidateLater(Inf)
-      } else if (is_warned && nwarn < max_warn) {
-        message("[TimerModule:warn.trigger] giving warning at lapse_time = ", lapse_time())
-        message("**** nwarn = ", nwarn)
+        return(0)
+      }
+      if (is_warned && nwarn < max_warn) {
         shiny::invalidateLater(warn_before * 1000)
         nwarn <<- nwarn + 1
       } else if (is_warned && nwarn == max_warn) {
         shiny::invalidateLater(Inf)
       } else {
+        ## warn_start is exactly at first warn event
         shiny::invalidateLater(warn_start * 1000)
       }
       (nwarn * !is_lapsed)
     })
 
+    ## ---------- built-in observers ------------------
+    observeEvent(warn_event(), {
+      if (warn_event() == 0) {
+        return(NULL)
+      }
+      if (is.null(warn_callback)) {
+        return(NULL)
+      }
+      warn_callback()
+    })
+
+    observeEvent(timeout_event(), {
+      if (timeout_event() == 0) {
+        return(NULL)
+      }
+      if (is.null(timeout_callback)) {
+        return(NULL)
+      }
+      timeout_callback()
+    })
+
+    ## ---------- exported 'public functions' ---------------
+    reset <- function() {
+      rv$reset <- rv$reset + 1
+    }
+    run <- function(state = TRUE) {
+      rv$run <- state
+    }
+
     list(
-      timer = timer,
       lapse_time = lapse_time,
-      warn = warn.trigger,
-      timeout = timeout.trigger
+      warn_event = warn_event,
+      timeout_event = timeout_event,
+      reset = reset, ## function!
+      run = run ## function!
     )
   })
-}
-
-
-if (FALSE) {
-  require(shiny)
-  shinyApp(
-    ui = fluidPage(
-      actionButton("reset", "reset"),
-      checkboxInput("run", "run", value = TRUE),
-      textOutput("timer"),
-      textOutput("status1"),
-      textOutput("status2"),
-      uiOutput("warning"),
-      uiOutput("timeout")
-    ),
-    server = function(input, output, session) {
-      TimerModule(
-        "timer",
-        timeout = 15,
-        warn_before = 5,
-        max_warn = 2,
-        poll = Inf,
-        reset = reactive(input$reset),
-        run = reactive(input$run)
-      ) -> tm
-
-      output$timeout <- renderUI({
-        if (!tm$timeout()) {
-          return(NULL)
-        }
-        showModal(modalDialog("Sorry, time's up friend!"))
-      })
-
-      output$warning <- renderUI({
-        if (!tm$warn()) {
-          return(NULL)
-        }
-        showModal(modalDialog("Warning time out soon..."))
-      })
-
-      output$timer <- renderText({
-        tm$timer()
-      })
-
-      output$status1 <- renderText({
-        paste("timeout = ", tm$timeout())
-      })
-
-      output$status2 <- renderText({
-        paste("warn = ", tm$warn())
-      })
-    }
-  )
 }
