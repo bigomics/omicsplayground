@@ -55,13 +55,10 @@ functional_plot_wikipathway_graph_server <- function(id,
     id, function(input, output, session) {
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
-        svg.dir <- pgx.system.file("svg/", package = "pathway")
-        svg.dir <- normalizePath(svg.dir) ## absolute path
         res <- list(
           df = getFilteredWikiPathwayTable(),
           wikipathway_table = wikipathway_table,
-          fa_contrast = fa_contrast(),
-          svg.dir = svg.dir
+          fa_contrast = fa_contrast()
         )
         return(res)
       })
@@ -73,7 +70,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         df <- res$df
         comparison <- res$fa_contrast
         wikipathway_table <- res$wikipathway_table
-        svg.dir <- res$svg.dir
 
         ###############
 
@@ -130,9 +126,9 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         tmpfile <- paste0(tempfile(), ".svg")
-        svg <- wikipathview(wp = pathway.id, val = fc, dir = svg.dir)
+        svg <- wikipathview(wp = pathway.id, val = fc)
+        if(is.null(svg)) return(NULL)
         fluctuator::write_svg(svg, file = tmpfile)
-
         list(
           src = normalizePath(tmpfile),
           contentType = "image/svg+xml",
@@ -143,6 +139,9 @@ functional_plot_wikipathway_graph_server <- function(id,
 
       plot_RENDER <- function() {
         img <- getPathwayImage()
+        validate(
+          need(!is.null(img), 'Could not retrieve pathway image')
+        )
         shiny::req(img$width, img$height)
         filename <- img$src
         img.svg <- readChar(filename, nchars = file.info(filename)$size)

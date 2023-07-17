@@ -1,6 +1,6 @@
 #
 
-wikipathview <- function(wp, val, dir) {
+wikipathview <- function(wp, val) {
   require(xml2)
   require(fluctuator)
 
@@ -14,10 +14,15 @@ wikipathview <- function(wp, val, dir) {
       return(NULL)
     }
   ) |> is.null()
+
+  dbg("[wikipathview] down = ",down)
+  
   if (down) {
     return(NULL)
   }
 
+  dbg("[wikipathview] destfile = ",destfile)
+  
   # Read the file line by line
   lines <- readLines(destfile)
 

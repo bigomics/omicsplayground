@@ -261,8 +261,6 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       }
 
       ## ----- get WIKIPATHWAY id
-      svg.dir <- pgx.system.file("svg/", package = "board.pathway")
-      wp.available <- sub("_[0-9]+.svg", "", gsub("^.*_WP", "WP", dir(svg.dir, pattern = "*.svg")))
       wp.gsets <- grep("_WP", rownames(pgx$gsetX), value = TRUE)
       # extract wp.ids from string
       wp.ids <- gsub(".*_WP", "WP", wp.gsets)
@@ -270,17 +268,16 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
       ## sometimes no WIKIPATHWAY in genesets...
       if (length(wp.ids) == 0) {
         shinyalert::shinyalert(
-          title = "No WIKIPATHWAY terms in enrichment results",
-          text = "",
+          title = "Alas...",
+          text = "You have no WikiPathway terms in your enrichment results",
           type = "warning"
         )
         df <- data.frame()
         return(df)
       }
 
-      ## select those of which we have SGBN files
-      jj <- which(!is.na(wp.ids) & !duplicated(wp.ids) &
-        wp.ids %in% wp.available)
+      ## select those with ID
+      jj <- which(!is.na(wp.ids) & !duplicated(wp.ids))
       wp.gsets <- wp.gsets[jj]
       wp.ids <- wp.ids[jj]
 
