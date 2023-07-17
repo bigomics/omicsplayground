@@ -199,8 +199,22 @@ checkPersonalEmail <- function(email) {
   grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", tolower(email))
 }
 
-checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.personal = TRUE) {
+checkMissingEmail <- function(email) {
+  (is.null(email) || is.na(email) || email %in% c("", " ", NA))
+}
+
+## PGX.DIR="~/Playground/omicsplayground/data/"
+checkExistUserFolder <- function(email) {
+  user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
+  tolower(email) %in% tolower(user_dirs)
+}
+
+checkEmail <- function(email, domain = NULL, credentials_file = NULL,
+                       check.personal = TRUE, check.existing = FALSE) {
   chk <- list()
+  if (checkMissingEmail(email)) {
+    return(list(valid = FALSE, msg = "missing email"))
+  }
   if (!checkValidEmailFormat(email)) {
     return(list(valid = FALSE, msg = "not a valid email"))
   }
@@ -208,11 +222,16 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, check.pers
     return(list(valid = FALSE, msg = "domain not authorized"))
   }
   if (!checkAuthorizedUser(email, credentials_file)) {
-    return(list(valid = FALSE, msg = "not authorized user"))
+    return(list(valid = FALSE, msg = "user not authorized"))
   }
   if (check.personal) {
     if (checkPersonalEmail(email)) {
       return(list(valid = FALSE, msg = "No personal email allowed. Please use your business, academic or institutional email."))
+    }
+  }
+  if (check.existing) {
+    if (!checkExistUserFolder(email)) {
+      return(list(valid = FALSE, msg = "username does not exist"))
     }
   }
   list(valid = TRUE, "email ok")

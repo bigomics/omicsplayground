@@ -70,13 +70,15 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     ## update choices upon change of level
-    shiny::observe({
+    shiny::observeEvent(input$hm_splitvar, {
       shiny::req(pgx$families, pgx$gsetX)
       shiny::req(input$hm_level)
       choices <- names(pgx$families)
-      if (input$hm_level == "geneset") {
+      if (input$hm_level == "gene") {
         nk <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
         choices <- names(playdata::COLLECTIONS)[nk >= 5]
+        subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
+        choices <- names(subset_choices)
       }
       choices <- c("<custom>", "<contrast>", choices)
       choices <- sort(unique(choices))

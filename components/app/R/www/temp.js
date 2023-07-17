@@ -272,15 +272,16 @@ const logoutInApp = () => {
         $(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
 	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+        Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+        Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 const quit = () => {
-  Shiny.setInputValue('quit', 1, {priority: 'event'});
+        Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 Shiny.addCustomMessageHandler('shinyproxy-logout', (msg) => {
-  window.location.assign("/logout");
+        window.location.assign("/logout");
 });
 
 /* ********************* STRIPE HANDLERS **************************** */

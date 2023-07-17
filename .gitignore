@@ -35,6 +35,7 @@ logs/*.rds
 # Output files
 ######################
 shiny/*.pdf
+Rplots.pdf
 
 # OS generated files #
 ######################
@@ -49,6 +50,7 @@ data/*
 data_public/*
 !data_public/GSE157905-lenvatinib.pgx
 data_shared/*
+trace/*
 logs/*.rds
 /logs/
 

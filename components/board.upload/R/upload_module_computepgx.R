@@ -419,7 +419,6 @@ upload_module_computepgx_server <- function(
 
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
-        if (auth$method == "password") creator <- auth$username
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
         pgx_save_folder <- auth$user_dir

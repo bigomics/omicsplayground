@@ -32,7 +32,6 @@ upload_module_received_server <- function(id,
         refresh_table()
 
         current_user <- auth$email
-        if (auth$method == "password") current_user <- auth$username
         pgxfiles <- dir(
           path = pgx_shared_dir,
           pattern = paste0("__to__", current_user, "__from__.*__$"),

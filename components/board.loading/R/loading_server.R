@@ -299,7 +299,7 @@ LoadingBoard <- function(id,
 
       ## ----------------- update PGX object ---------------------------------
       slots0 <- names(loaded_pgx)
-      shiny::withProgress(message = "Initializing PGX...", value = 0.33, {
+      shiny::withProgress(message = "Initializing. Please wait...", value = 0.33, {
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
         if (is.null(loaded_pgx)) {
