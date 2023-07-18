@@ -316,7 +316,7 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        max.datasets <- auth$options$MAX_DATASETS
+        max.datasets <- as.integer(auth$options$MAX_DATASETS)
         dbg("[upload_module_computepgx_server] max.datasets = ", max.datasets)
 
         pgxdir <- auth$user_dir
