@@ -173,7 +173,6 @@ install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
 install.github('bigomics/PCSF', force=TRUE)
 install.github('bigomics/shinyChatR')
-install.github('m-jahn/fluctuator')
 install.github('ropensci/iheatmapr')
 
 ##---------------------------------------------------------------------
