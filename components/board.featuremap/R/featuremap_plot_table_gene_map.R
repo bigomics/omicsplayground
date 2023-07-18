@@ -186,7 +186,7 @@ featuremap_plot_gene_map_server <- function(id,
       } else {
         sel.genes <- rownames(pos)
       }
-      
+
       if (!r_fulltable()) {
         if (!is.null(sel.genes)) {
           filt.genes <- filteredGenes()
@@ -197,7 +197,7 @@ featuremap_plot_gene_map_server <- function(id,
           sel.genes <- filteredGenes()
         }
       }
-      
+
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
@@ -217,18 +217,18 @@ featuremap_plot_gene_map_server <- function(id,
         is.fc <- TRUE
       }
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      
+
       tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"
       F <- round(F, digits = 3)
-      
+
       df <- data.frame(
         gene = rownames(F), title = tt, F,
         check.names = FALSE
       )
-      
+
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
