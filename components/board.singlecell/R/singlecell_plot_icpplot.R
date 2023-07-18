@@ -231,8 +231,6 @@ singlecell_plot_icpplot_server <- function(id,
       for (i in 1:length(sel)) {
         j <- sel[i]
         gx <- pmax(pd[["score"]][, j], 0)
-        # gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
-        # klr0 <- klrpal[gx]
         pos <- pd[["pos"]]
         tt <- colnames(pd[["score"]])[j] 
 
