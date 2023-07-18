@@ -223,14 +223,10 @@ upload_module_computepgx_server <- function(
       })
       shiny::outputOptions(output, "UI", suspendWhenHidden = FALSE) ## important!!!
 
-
       shiny::observeEvent(enable_button(), {
-        ## NEED CHECK. not working...
         if (!enable_button()) {
-          message("[ComputePgxServer:@enable] disabling compute button")
           shinyjs::disable(ns("compute"))
         } else {
-          message("[ComputePgxServer:@enable] enabling compute button")
           shinyjs::enable(ns("compute"))
         }
       })
