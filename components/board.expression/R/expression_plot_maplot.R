@@ -78,7 +78,7 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       dbg("[expression_plot_maplot.R] sel1 = ", sel1())
       #

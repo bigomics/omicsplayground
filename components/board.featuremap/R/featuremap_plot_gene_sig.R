@@ -34,7 +34,7 @@ featuremap_plot_gene_sig_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneSigPlots.plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       pos <- getGeneUMAP()
 

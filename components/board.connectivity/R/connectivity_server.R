@@ -48,7 +48,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     })
 
     shiny::observe({
-      shiny::req(pgx, pgx$connectivity)
+      shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
       sigdb1 <- "datasets-sigdb.h5"
       sigdbx <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$") ## extra sigdb
@@ -187,7 +187,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
 
     compute_connectivity <- shiny::reactive({
-      shiny::req(pgx, pgx$X, pgx$connectivity)
+      shiny::req(pgx$X, pgx$X, pgx$connectivity)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
 
       pgx.connectivity <- list()

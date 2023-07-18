@@ -34,7 +34,7 @@ enrichment_plot_volcanoall_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       if (is.null(gs_features())) {
         return(NULL)
       }

@@ -73,7 +73,7 @@ connectivity_plot_scatterPlot_server <- function(id,
         sigdb <- r_sigdb()
         logfc <- as.numeric(input$logFC)
 
-        shiny::req(pgx)
+        shiny::req(pgx$X)
         shiny::req(sigdb)
         shiny::req(logfc)
 

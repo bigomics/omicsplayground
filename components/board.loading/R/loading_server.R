@@ -363,7 +363,7 @@ LoadingBoard <- function(id,
 
     pgx_stats <- reactive({
       pgx <- pgxtable$data()
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ndatasets <- nrow(pgx)
       nsamples <- sum(as.integer(pgx$nsamples), na.rm = TRUE)
       paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")

@@ -55,7 +55,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
     cor_umap.DATA <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(cor_gene())
 
       if (!"cluster.genes" %in% names(pgx)) {

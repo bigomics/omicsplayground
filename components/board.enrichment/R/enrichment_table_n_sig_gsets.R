@@ -29,7 +29,7 @@ enrichment_table_n_sig_gsets_server <- function(id,
     tabH <- 340 ## row height of panels
 
     FDRtable.RENDER <- shiny::reactive({
-      shiny::req(pgx, gs_statmethod())
+      shiny::req(pgx$X, gs_statmethod())
 
       meta <- pgx$gset.meta
       test <- gs_statmethod()

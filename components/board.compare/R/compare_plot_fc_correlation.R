@@ -48,7 +48,7 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(input.contrast1)
       shiny::req(input.contrast2)

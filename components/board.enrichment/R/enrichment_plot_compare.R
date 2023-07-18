@@ -31,7 +31,7 @@ enrichment_plot_compare_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     render_compare <- function() {
-      shiny::req(pgx, gs_contrast())
+      shiny::req(pgx$X, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()

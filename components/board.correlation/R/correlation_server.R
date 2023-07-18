@@ -60,7 +60,7 @@ CorrelationBoard <- function(id, pgx) {
 
 
     getFilteredExpression <- shiny::reactive({
-      shiny::req(pgx, input$cor_gene)
+      shiny::req(pgx$X, input$cor_gene)
       X <- pgx$X
       gene <- rownames(X)[1]
       gene <- input$cor_gene
@@ -96,7 +96,7 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getPartialCorrelationMatrix <- shiny::reactive({
-      shiny::req(pgx, input$cor_gene)
+      shiny::req(pgx$X, input$cor_gene)
 
       gene <- rownames(pgx$X)[1]
       gene <- input$cor_gene
@@ -134,7 +134,7 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getGeneCorr <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       gene <- input$cor_gene
       if (is.null(gene)) {
         return(NULL)
@@ -178,7 +178,7 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getFullGeneCorr <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       gene <- input$cor_gene
       if (is.null(gene)) {

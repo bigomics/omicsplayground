@@ -75,7 +75,7 @@ singlecell_plot_cytoplot_server <- function(id,
       ## if(!input$tsne.all) return(NULL)
 
       ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       cytovar1 <- cytovar1()
       cytovar2 <- cytovar2()

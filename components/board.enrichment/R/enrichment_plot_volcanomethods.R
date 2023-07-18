@@ -42,7 +42,7 @@ enrichment_plot_volcanomethods_server <- function(id,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx, gs_features(), gs_contrast())
+      shiny::req(pgx$X, gs_features(), gs_contrast())
 
       cmp <- gs_contrast()
       mx <- pgx$gset.meta$meta[[cmp]]

@@ -36,7 +36,7 @@ featuremap_plot_gset_sig_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     gsetSigPlots.plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       pos <- getGsetUMAP()
       hilight <- NULL

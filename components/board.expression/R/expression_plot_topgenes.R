@@ -76,7 +76,7 @@ expression_plot_topgenes_server <- function(id,
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       res <- res()
       dbg("[expression_plot_topgenes.R] nrow.res = ", nrow(res))

@@ -41,12 +41,12 @@ enrichment_plot_volcano_server <- function(id,
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
@@ -102,12 +102,12 @@ enrichment_plot_volcano_server <- function(id,
     })
 
     subplot_volcano.PLOTLY <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)

@@ -356,7 +356,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     getEnrichmentGeneTable <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       gsea <- sigCalculateGSEA()
       if (is.null(gsea)) {

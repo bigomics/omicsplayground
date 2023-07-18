@@ -33,7 +33,7 @@ functional_table_wikipathway_server <- function(id,
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       res <- list(
         pgx = pgx,
         df = getFilteredWikipathwayTable(),

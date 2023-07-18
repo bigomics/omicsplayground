@@ -313,8 +313,6 @@ upload_module_computepgx_server <- function(
         }
 
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
-        dbg("[upload_module_computepgx_server] max.datasets = ", max.datasets)
-
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))

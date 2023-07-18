@@ -62,7 +62,7 @@ biomarker_plot_heatmap_server <- function(id,
     id, function(input, output, session) {
       ## return data structure for plots
       plot_data <- shiny::reactive({
-        shiny::req(pgx)
+        shiny::req(pgx$X)
 
         res <- calcVariableImportance()
 

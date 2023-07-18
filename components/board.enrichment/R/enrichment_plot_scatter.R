@@ -67,7 +67,7 @@ enrichment_plot_scatter_server <- function(id,
     subplot_scatter.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
 
       gene <- rownames(pgx$X)[1]

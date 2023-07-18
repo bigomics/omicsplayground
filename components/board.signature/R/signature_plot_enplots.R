@@ -49,7 +49,7 @@ signature_plot_enplots_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       # get_plots <- function() {
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       alertDataLoaded(session, pgx)
       if (is.null(pgx)) {
         return(NULL)

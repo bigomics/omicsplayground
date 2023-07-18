@@ -60,7 +60,7 @@ correlation_table_corr_server <- function(id,
 
     ### TABLE
     cor_table.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       df <- plot_data()
 

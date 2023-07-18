@@ -78,7 +78,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
       fc0 <- NULL
       qv0 <- NULL
       alertDataLoaded(session, pgx)
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       sel <- names(pgx$gset.meta$meta)
 
@@ -174,7 +174,7 @@ IntersectionBoard <- function(id, pgx, selected_gxmethods, selected_gsetmethods)
 
     getCurrentSig <- shiny::reactive({
       ## Switch between FC profile or NMF vectors
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       progress <- shiny::Progress$new()
       on.exit(progress$close())
 

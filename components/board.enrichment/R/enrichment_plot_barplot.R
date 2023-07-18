@@ -48,7 +48,7 @@ enrichment_plot_barplot_server <- function(id,
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       gset <- rownames(pgx$gsetX)[1]
       gset <- gset_selected()

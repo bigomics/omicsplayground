@@ -68,7 +68,7 @@ expression_plot_volcanoMethods_server <- function(id,
       if (is.null(comp)) {
         return(NULL)
       }
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       if (is.null(features)) {
         return(NULL)
       }

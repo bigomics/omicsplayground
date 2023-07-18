@@ -99,7 +99,7 @@ connectivity_plot_connectivityMap_server <- function(id,
       #' Get the XY positions of signature points
       getConnectivityPositions <- shiny::reactive({
         sigdb <- sigdb()
-        shiny::req(pgx)
+        shiny::req(pgx$X)
         shiny::req(sigdb)
 
         ## get the foldchanges of selected comparison and neighbourhood
@@ -179,7 +179,7 @@ connectivity_plot_connectivityMap_server <- function(id,
 
       plot_RENDER <- shiny::reactive({
         #
-        shiny::req(pgx)
+        shiny::req(pgx$X)
 
         ## get positions
         res0 <- getThresholdedConnectivityScores()

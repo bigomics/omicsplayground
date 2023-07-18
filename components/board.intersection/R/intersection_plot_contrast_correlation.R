@@ -51,7 +51,7 @@ contrast_correlation_server <- function(id,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       res <- getFoldChangeMatrix()
       if (is.null(res)) {

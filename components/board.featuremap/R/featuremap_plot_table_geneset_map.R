@@ -82,7 +82,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ns <- session$ns
 
     filteredGsets <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
       if (db != "<all>") {
@@ -183,7 +183,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     # Table
     gsetTable.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       if (is.null(pgx$drugs)) {
         return(NULL)
       }

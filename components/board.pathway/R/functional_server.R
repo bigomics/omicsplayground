@@ -47,7 +47,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- sort(ct)
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
@@ -133,7 +133,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     ## =========================================================================
 
     getReactomeTable <- shiny::reactive({
-      shiny::req(pgx, input$fa_contrast)
+      shiny::req(pgx$X, input$fa_contrast)
 
       ## ----- get comparison
       comparison <- input$fa_contrast
@@ -252,7 +252,7 @@ FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
     ## ================================================================================
 
     getWikiPathwayTable <- shiny::reactive({
-      shiny::req(pgx, input$fa_contrast)
+      shiny::req(pgx$X, input$fa_contrast)
 
       ## ----- get comparison
       comparison <- input$fa_contrast

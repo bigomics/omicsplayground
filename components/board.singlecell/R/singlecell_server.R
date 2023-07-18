@@ -38,7 +38,7 @@ SingleCellBoard <- function(id, pgx) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      shiny::req(pgx, pgx$Y)
+      shiny::req(pgx$X, pgx$Y)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "samplefilter", choices = levels)
@@ -107,7 +107,7 @@ SingleCellBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx, input$mrk_level)
+      shiny::req(pgx$X, input$mrk_level)
 
       choices <- names(pgx$families)
       selected <- grep("^CD", choices, ignore.case = TRUE, value = TRUE)[1]
@@ -146,7 +146,7 @@ SingleCellBoard <- function(id, pgx) {
     # REACTIVE FUNCTIONS #########
 
     pfGetClusterPositions <- shiny::reactive({ # used by many plots
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       ## zx <- filtered_matrix1()
       zx <- pgx$X
@@ -203,7 +203,7 @@ SingleCellBoard <- function(id, pgx) {
     # Type mapping (heatmap) reactivity ##########
 
     getDeconvResults2 <- shiny::reactive({ # used by many functions
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       method <- "meta"
       method <- input$dcmethod2

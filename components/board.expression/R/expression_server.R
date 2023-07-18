@@ -48,7 +48,7 @@ ExpressionBoard <- function(id, pgx) {
     ## update choices upon change of data set
     shiny::observe({
       pgx <- pgx
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
@@ -88,7 +88,7 @@ ExpressionBoard <- function(id, pgx) {
 
 
     selected_gxmethods <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       gx.methods0 <- colnames(pgx$gx.meta$meta[[1]]$fc)
       test <- input$gx_statmethod
       test <- intersect(test, gx.methods0)
@@ -102,7 +102,7 @@ ExpressionBoard <- function(id, pgx) {
     add.pq <- 0
     getDEGtable <- function(pgx, testmethods, comparison, add.pq,
                             lfc, fdr) {
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       if (is.null(testmethods)) {
         return(NULL)
@@ -217,7 +217,7 @@ ExpressionBoard <- function(id, pgx) {
     filteredDiffExprTable <- shiny::reactive({
       ## DE table filtered by FDR and gene family
 
-      shiny::req(pgx, input$gx_features, input$gx_fdr, input$gx_lfc)
+      shiny::req(pgx$X, input$gx_features, input$gx_fdr, input$gx_lfc)
 
       comp <- 1
       test <- "trend.limma"
@@ -471,7 +471,7 @@ ExpressionBoard <- function(id, pgx) {
 
     # reactive values to return to parent environment  #########
     metaQ <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       methods <- selected_gxmethods()
       metaQ <- sapply(pgx$gx.meta$meta, function(m) {
         apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE)
@@ -481,7 +481,7 @@ ExpressionBoard <- function(id, pgx) {
     })
 
     metaFC <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       methods <- selected_gxmethods()
       metaFC <- sapply(pgx$gx.meta$meta, function(m) m$meta.fx)
       rownames(metaFC) <- rownames(pgx$gx.meta$meta[[1]])

@@ -70,7 +70,7 @@ tcga_plot_survival_server <- function(id,
         return(NULL)
       }
 
-      req(pgx)
+      req(pgx$X)
 
       if (sigtype() == "contrast") {
         req(contrast())

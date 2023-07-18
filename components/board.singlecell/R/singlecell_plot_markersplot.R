@@ -84,7 +84,7 @@ singlecell_plot_markersplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       mrk_level <- mrk_level()
       mrk_features <- mrk_features()

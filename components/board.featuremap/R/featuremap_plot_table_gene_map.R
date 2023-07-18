@@ -76,7 +76,7 @@ featuremap_plot_gene_map_server <- function(id,
     ns <- session$ns
 
     filteredGenes <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       sel <- filter_genes()
       filtgenes <- playdata::FAMILIES[[sel]]
       filtgenes
@@ -173,16 +173,11 @@ featuremap_plot_gene_map_server <- function(id,
     )
 
     # Table
-
     geneTable.RENDER <- shiny::reactive({
-      shiny::req(pgx)
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-
-      pos <- getGeneUMAP()
+      shiny::req(pgx$X)
 
       ## detect brush
+      pos <- getGeneUMAP()
       sel.genes <- NULL
       b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
       if (!is.null(b) & length(b) > 0) {
@@ -191,7 +186,7 @@ featuremap_plot_gene_map_server <- function(id,
       } else {
         sel.genes <- rownames(pos)
       }
-
+      
       if (!r_fulltable()) {
         if (!is.null(sel.genes)) {
           filt.genes <- filteredGenes()
@@ -202,7 +197,7 @@ featuremap_plot_gene_map_server <- function(id,
           sel.genes <- filteredGenes()
         }
       }
-
+      
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
@@ -222,17 +217,18 @@ featuremap_plot_gene_map_server <- function(id,
         is.fc <- TRUE
       }
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-
+      
       tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
       tt <- as.character(tt)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"
       F <- round(F, digits = 3)
+      
       df <- data.frame(
         gene = rownames(F), title = tt, F,
         check.names = FALSE
       )
-
+      
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",

@@ -230,7 +230,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         res <- plot_data()
         pgx <- res$pgx
         cmap_table <- res$cmap_table
-        shiny::req(pgx)
+        shiny::req(pgx$X)
         db <- "L1000/gene"
         contr <- "treatment:Gefitinib_vs_CT"
 

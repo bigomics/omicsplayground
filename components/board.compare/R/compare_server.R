@@ -55,7 +55,7 @@ CompareBoard <- function(id, pgx) {
     ## ================================================================================
 
     cum_fc <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
@@ -106,7 +106,7 @@ CompareBoard <- function(id, pgx) {
     })
 
     getOmicsScoreTable <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(dataset2())
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)

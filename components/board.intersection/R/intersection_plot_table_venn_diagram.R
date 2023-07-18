@@ -337,7 +337,7 @@ intersection_plot_venn_diagram_server <- function(id,
     })
 
     venntable.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       ## get foldchanges
       fc0 <- getSignificantFoldChangeMatrix() ## isolate??

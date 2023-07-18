@@ -57,7 +57,7 @@ BiomarkerBoard <- function(id, pgx) {
     }) %>% shiny::debounce(1000)
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ct <- colnames(pgx$Y)
       shiny::updateSelectInput(session, "pdx_predicted", choices = ct)
     })
@@ -71,7 +71,7 @@ BiomarkerBoard <- function(id, pgx) {
 
     ## get selected samples after sample filtering
     selected_samples <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       samples <- colnames(pgx$X)
       if (!is.null(input$pdx_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$pdx_samplefilter)
@@ -80,7 +80,7 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
         ft <- names(playdata::COLLECTIONS)
         nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
@@ -116,7 +116,7 @@ BiomarkerBoard <- function(id, pgx) {
       if (is.null(pgx)) {
         return(NULL)
       }
-      shiny::req(pgx, input$pdx_predicted)
+      shiny::req(pgx$X, input$pdx_predicted)
 
       ct <- 2
       ct <- 12

@@ -49,7 +49,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       meta <- pgx$gset.meta$meta
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(intersect(comparisons, names(meta)))
@@ -67,7 +67,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
       gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
@@ -82,7 +82,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     selected_gsetmethods <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
       test <- input$gs_statmethod
       test <- intersect(test, gset.methods0)
@@ -132,7 +132,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     }
 
     getFullGeneSetTable <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       comp <- 1
       comp <- input$gs_contrast
       if (is.null(comp)) {
@@ -336,7 +336,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
 
     metaQ <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       methods <- selected_gsetmethods()
       metaQ <- sapply(pgx$gset.meta$meta, function(m) {
         apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE)
@@ -346,7 +346,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     metaFC <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       #
       metaFC <- sapply(pgx$gset.meta$meta, function(m) m$meta.fx)
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
@@ -371,7 +371,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       ## return details of the genes in the selected gene set
       ##
 
-      shiny::req(pgx, input$gs_contrast)
+      shiny::req(pgx$X, input$gs_contrast)
       gs <- 1
       comp <- 1
 
@@ -425,7 +425,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gene_selected <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       i <- as.integer(genetable$rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()

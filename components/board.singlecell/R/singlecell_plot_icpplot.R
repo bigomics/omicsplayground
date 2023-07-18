@@ -84,7 +84,7 @@ singlecell_plot_icpplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
       method <- "meta"
       refset <- "Immune cell (LM22)"

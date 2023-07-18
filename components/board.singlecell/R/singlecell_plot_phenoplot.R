@@ -60,7 +60,7 @@ singlecell_plot_phenoplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       #
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)

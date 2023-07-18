@@ -46,7 +46,7 @@ compare_plot_cum_fc2_server <- function(id,
     ns <- session$ns
 
     cumfcplot.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(cum_fc)
       F <- cum_fc()
