@@ -223,15 +223,22 @@ singlecell_plot_icpplot_server <- function(id,
         sel <- sel[order(colnames(pd[["score"]])[sel])]
       }
 
+      cmin <- min(pd[["score"]])
+      cmax <- max(pd[["score"]])
+
+
       plt <- list()
       for (i in 1:length(sel)) {
         j <- sel[i]
         gx <- pmax(pd[["score"]][, j], 0)
-        gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
-        klr0 <- klrpal[gx]
-        ii <- order(gx)
-        pos <- pd[["pos"]][ii, ]
-        tt <- colnames(pd[["score"]])[j]
+        pos <- pd[["pos"]]
+        tt <- colnames(pd[["score"]])[j] 
+
+        if (i == 1) {
+          legend <- TRUE 
+          } else {
+            legend <- FALSE
+          }
         ## ------- start plot ----------
         p <- playbase::pgx.scatterPlotXY.GGPLOT(
           pos,
@@ -241,16 +248,19 @@ singlecell_plot_icpplot_server <- function(id,
           cex = 0.6 * cex1,
           xlab = "",
           ylab = "",
+          cmin = cmin ,
+          cmax = cmax , 
           xlim = 1.2 * range(pd[["pos"]][, 1]),
           ylim = 1.2 * range(pd[["pos"]][, 2]),
           axis = FALSE,
           title = tt,
           cex.title = 0.55,
           label.clusters = FALSE,
-          legend = FALSE,
+          legend = legend,
           gridcolor = "#ffffff",
           bgcolor = "#f8f8f8",
-          box = TRUE
+          box = TRUE,
+          guide = 'legend'
         )
         plt[[i]] <- p
       }
@@ -316,6 +326,7 @@ singlecell_plot_icpplot_server <- function(id,
       }
       return(plt)
     }
+    
 
     plotly.RENDER <- function() {
       pd <- plot_data()
