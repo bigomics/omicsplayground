@@ -83,7 +83,7 @@ UploadBoard <- function(id,
       ## switch 'pgx' as standard name. Actually saving as RDS
       ## would have been better...
       pgx <- new_pgx
-      dbg("[observe::uploaded_pgx] saving pgx as fn = ",fn)
+      dbg("[observe::uploaded_pgx] saving pgx as fn = ", fn)
       save(pgx, file = fn)
       remove(pgx)
 

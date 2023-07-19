@@ -316,7 +316,7 @@ upload_module_computepgx_server <- function(
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) {
-          numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))  ## count deleted...
+          numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
         }
         if (numpgx >= max.datasets) {
           msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
@@ -453,7 +453,7 @@ upload_module_computepgx_server <- function(
           pgx.save.folder = pgx_save_folder
         )
 
-        path_to_params <- file.path(temp_dir(), "params.RData")        
+        path_to_params <- file.path(temp_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
         # Normalize paths
@@ -575,26 +575,25 @@ upload_module_computepgx_server <- function(
 
       # Function to execute when the process is completed successfully
       on_process_completed <- function(temp_dir, nr) {
-
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
         process_counter(process_counter() - 1) # stop the timer
 
         path_to_params <- file.path(temp_dir, "params.RData")
         params <- readRDS(path_to_params)
         pgx_save_folder_px <- params$pgx.save.folder
-        
+
         # check if user folder matches pgx processx folder, it not stop here
         if (pgx_save_folder_px != auth$user_dir) {
           info("[computePGX:on_process_completed] : ERROR: pgx_save_folder != auth$user_dir)")
-          dbg("[computePGX:on_process_completed] : pgx_save_folder = ",pgx_save_folder_px)
-          dbg("[computePGX:on_process_completed] : auth$user_dir = ", auth$user_dir)          
+          dbg("[computePGX:on_process_completed] : pgx_save_folder = ", pgx_save_folder_px)
+          dbg("[computePGX:on_process_completed] : auth$user_dir = ", auth$user_dir)
           return()
         }
 
-        ##dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
-        dataset_name <- paste0(params$name,".pgx")        
+        ## dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
+        dataset_name <- paste0(params$name, ".pgx")
         result_pgx <- file.path(pgx_save_folder_px, dataset_name)
-        dbg("[computePGX:on_process_completed] : result_pgx = ",result_pgx)
+        dbg("[computePGX:on_process_completed] : result_pgx = ", result_pgx)
 
         if (file.exists(result_pgx)) {
           pgx <- playbase::pgx.load(result_pgx) ## always pgx
