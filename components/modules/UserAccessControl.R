@@ -262,7 +262,7 @@ FolderLock <- R6::R6Class("FolderLock",
               action = "locked.login",
               comment = "login attempt while locked by other user",
               session = session
-            )            
+            )
             self$shinyalert_locked(lock = cur, session)
             invalidateLater(Inf)
           }
