@@ -118,7 +118,7 @@ FirebaseAuthenticationModule <- function(id,
     firebase2 <- firebase::FirebaseEmailLink$
       new(persistence = "local")
 
-    shinyjs::runjs("logout()")   ## comment out for login persistence
+    shinyjs::runjs("logout()") ## comment out for login persistence
 
     observeEvent(input$launchGoogle, {
       firebase$launch_google(flow = "popup")
@@ -414,7 +414,7 @@ EmailLinkAuthenticationModule <- function(id,
       firebase$launch_google(flow = "popup")
     })
 
-    shinyjs::runjs("logout()")  ## comment out for login persistence
+    shinyjs::runjs("logout()") ## comment out for login persistence
 
     resetUSER <- function() {
       message("[EmailLinkAuthenticationModule] resetting USER... ")
