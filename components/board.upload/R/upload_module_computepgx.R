@@ -315,7 +315,9 @@ upload_module_computepgx_server <- function(
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-        if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
+        if (!auth$options$ENABLE_DELETE) {
+          numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))  ## count deleted...
+        }
         if (numpgx >= max.datasets) {
           msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
           shinyalert::shinyalert(
@@ -411,16 +413,14 @@ upload_module_computepgx_server <- function(
           dbg("[compute PGX process] : tempFile", temp_dir())
         }
 
-        path_to_params <- file.path(temp_dir(), "params.RData")
         dataset_name <- gsub("[ ]", "_", input$upload_name)
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
-        dbg("[ComputePgxModule.R] libx.dir => ", libx.dir)
+        pgx_save_folder <- auth$user_dir
 
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
-
         # Define create_pgx function arguments
         params <- list(
           samples = samples,
@@ -449,9 +449,11 @@ upload_module_computepgx_server <- function(
           datatype = input$upload_datatype,
           description = input$upload_description,
           creator = creator,
-          date = this.date
+          date = this.date,
+          pgx.save.folder = pgx_save_folder
         )
 
+        path_to_params <- file.path(temp_dir(), "params.RData")        
         saveRDS(params, file = path_to_params)
 
         # Normalize paths
@@ -573,26 +575,42 @@ upload_module_computepgx_server <- function(
 
       # Function to execute when the process is completed successfully
       on_process_completed <- function(temp_dir, nr) {
-        dbg("[compute PGX process] on_process_completed() called!")
+
+        dbg("[computePGX:on_process_completed] process", nr, "completed!")
         process_counter(process_counter() - 1) # stop the timer
-        result_pgx <- file.path(temp_dir, "my.pgx")
-        message("[compute PGX process] process", nr, "completed successfully!")
+
+        path_to_params <- file.path(temp_dir, "params.RData")
+        params <- readRDS(path_to_params)
+        pgx_save_folder_px <- params$pgx.save.folder
+        
+        # check if user folder matches pgx processx folder, it not stop here
+        if (pgx_save_folder_px != auth$user_dir) {
+          info("[computePGX:on_process_completed] : ERROR: pgx_save_folder != auth$user_dir)")
+          dbg("[computePGX:on_process_completed] : pgx_save_folder = ",pgx_save_folder_px)
+          dbg("[computePGX:on_process_completed] : auth$user_dir = ", auth$user_dir)          
+          return()
+        }
+
+        ##dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
+        dataset_name <- paste0(params$name,".pgx")        
+        result_pgx <- file.path(pgx_save_folder_px, dataset_name)
+        dbg("[computePGX:on_process_completed] : result_pgx = ",result_pgx)
+
         if (file.exists(result_pgx)) {
-          load(result_pgx) ## always pgx
+          pgx <- playbase::pgx.load(result_pgx) ## always pgx
           computedPGX(pgx)
         } else {
-          message("[compute PGX process] : Error: Result file not found")
+          info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }
         ## remove temp dir only if "user_input/raw_" is present in temp_dir
-        if (grepl("raw_", temp_dir())) {
+        if (grepl("raw_", temp_dir)) {
           unlink(temp_dir, recursive = TRUE)
         }
       }
 
       on_process_error <- function(nr) {
-        dbg("[compute PGX process] on_process_error() called!")
+        info("[computePGX:on_process_error] ERROR: process", nr, "completed with an error!")
         process_counter(process_counter() - 1) # stop the timer
-        message("[compute PGX process] Error: process", nr, "completed with an error!")
       }
 
       ## what does this do???
