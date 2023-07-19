@@ -135,7 +135,7 @@ functional_plot_wikipathway_graph_server <- function(id,
           width = "100%", height = "100%", ## actual size: 1040x800
           alt = "wikipathway SVG"
         )
-      }) 
+      })
 
       plot_RENDER <- function() {
         img <- getPathwayImage()
