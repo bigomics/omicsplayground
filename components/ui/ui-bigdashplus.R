@@ -29,6 +29,10 @@ bigdash.closeSidebar <- function() {
   shinyjs::runjs("sidebarClose()") ## in app/R/www/temp.js
 }
 
+bigdash.unloadSidebar <- function() {
+  shinyjs::runjs("unloadSidebar()") ## in app/R/www/temp.js
+}
+
 bigdash.toggleSidebar <- function(state) {
   if (state) bigdash.openSidebar()
   if (!state) bigdash.closeSidebar()

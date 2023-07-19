@@ -262,16 +262,13 @@ Shiny.addCustomMessageHandler('get-subs', (msg) => {
 const logout = () => {
 	unloadSidebar();
 	sidebarClose();
-	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+ 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
 };
 
 const logoutInApp = () => {
 	unloadSidebar();
-    //	$(".tab-sidebar:eq(1)").trigger('click');  // show welcome page
         $(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
-	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
         Shiny.setInputValue('userLogout', 1, {priority: 'event'});
         Shiny.setInputValue('quit', 1, {priority: 'event'});
 };

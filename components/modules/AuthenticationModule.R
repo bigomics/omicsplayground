@@ -66,11 +66,6 @@ NoAuthenticationModule <- function(id,
         USER$options <- read_user_options(PGX.DIR)
       })
 
-      observeEvent(input$userLogout, {
-        resetUSER()
-      })
-
-
       ## export 'public' function
       USER$resetUSER <- resetUSER
 
@@ -123,7 +118,7 @@ FirebaseAuthenticationModule <- function(id,
     firebase2 <- firebase::FirebaseEmailLink$
       new(persistence = "local")
 
-    shinyjs::runjs("logout()")
+    shinyjs::runjs("logout()")   ## comment out for login persistence
 
     observeEvent(input$launchGoogle, {
       firebase$launch_google(flow = "popup")
@@ -176,10 +171,6 @@ FirebaseAuthenticationModule <- function(id,
         return()
       }
       first_time <<- FALSE
-      resetUSER()
-    })
-
-    observeEvent(input$userLogout, {
       resetUSER()
     })
 
@@ -423,7 +414,7 @@ EmailLinkAuthenticationModule <- function(id,
       firebase$launch_google(flow = "popup")
     })
 
-    shinyjs::runjs("logout()")
+    shinyjs::runjs("logout()")  ## comment out for login persistence
 
     resetUSER <- function() {
       message("[EmailLinkAuthenticationModule] resetting USER... ")
@@ -470,10 +461,6 @@ EmailLinkAuthenticationModule <- function(id,
         return()
       }
       first_time <<- FALSE
-      resetUSER()
-    })
-
-    observeEvent(input$userLogout, {
       resetUSER()
     })
 
@@ -703,10 +690,6 @@ PasswordAuthenticationModule <- function(id,
       }
     })
 
-    observeEvent(input$userLogout, {
-      resetUSER()
-    })
-
     ## export as 'public functions' :)
     USER$resetUSER <- resetUSER
     return(USER)
@@ -926,10 +909,6 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(input$cancel_btn, {
-      resetUSER()
-    })
-
-    observeEvent(input$userLogout, {
       resetUSER()
     })
 
