@@ -77,14 +77,23 @@ $('#", id, "').on('shown.bs.dropdown', function () {
   var menu = $(this).parent().find('.dropdown-menu');
   menu.addClass('dropdown-menu-body');
   menu.attr('data-toggle-id', this.id);
-  $('body').append(menu.detach());
+  menu.detach();
+  setTimeout(function() { $('body').append(menu); }, 0);
 });
 $('#", id, "').on('hidden.bs.dropdown', function () {
   restoreDropdownMenu();
 });
 ") ## end of paste0
+  
 }
 
+dropdown.assets <- function(id) {
+  tagList(
+    shiny::singleton(tags$style(HTML(paste0("#", id, " .dropdown-menu { display: none; }")))),
+    tags$script(HTML(dropdown.jsCode(id)))
+  )
+}
+    
 DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, width = "auto", margin = "10px") {
   id <- bigdash:::make_id()
   tags$div(
@@ -119,7 +128,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
         error = function(w) {}
       )
     ),
-    tags$script(HTML(dropdown.jsCode(id)))
+    dropdown.assets(id)    
   )
 }
 
@@ -160,6 +169,6 @@ actionMenu <- function(..., size = "default", status = "default", icon = NULL, m
         error = function(w) {}
       )
     ),
-    tags$script(HTML(dropdown.jsCode(id)))
+    dropdown.assets(id)        
   )
 }
