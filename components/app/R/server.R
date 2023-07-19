@@ -603,6 +603,7 @@ app_server <- function(input, output, session) {
   ## User locking + login/logout access logging
   ## -------------------------------------------------------------
   info("[SERVER] ENABLE_USER_LOCK = ", opt$ENABLE_USER_LOCK)
+  lock <- NULL
   if (isTRUE(opt$ENABLE_USER_LOCK)) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
@@ -675,7 +676,7 @@ app_server <- function(input, output, session) {
     hbfile <- heartbeat()
     dbg("[SERVER:userLogout] heartbeat file = ", hbfile)
     if (file.exists(hbfile)) remove.file(hbfile)
-    lock$remove_lock()
+    if(!is.null(lock)) lock$remove_lock()
 
     pgx.record_access(
       user = auth$email,
@@ -756,7 +757,7 @@ app_server <- function(input, output, session) {
       message("******** doing session cleanup ********")
 
       dbg("[SERVER] removing active lock files")
-      lock$remove_lock()
+      if(!is.null(lock)) lock$remove_lock()
 
       dbg("[SERVER] any user logged in?", isolate(auth$logged))
       dbg("[SERVER] logged in user:", isolate(auth$email))
