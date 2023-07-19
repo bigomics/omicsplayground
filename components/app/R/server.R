@@ -454,12 +454,37 @@ app_server <- function(input, output, session) {
     name
   })
 
+  ## count the number of times a navtab is clicked during the session
+  nav_count <- list()
+  nav_time <- list()
+  last_nav <- "start"
+  last_navtime <- Sys.time()
   observeEvent(input$nav, {
     message("[SERVER] input$nav = ", input$nav)
+    if(is.null(nav_count[[input$nav]])) {
+      nav_count[[input$nav]] <<- 0
+    }
+    if(is.null(nav_time[[last_nav]])) {
+      nav_time[[last_nav]] <<- 0
+    }
+    nav_count[[input$nav]] <<- nav_count[[input$nav]] + 1      
+    dtime <- as.integer( difftime( Sys.time(), last_navtime, units="secs"))
+    nav_time[[last_nav]] <<- nav_time[[last_nav]] + dtime
+    last_nav <<- input$nav
+    last_navtime <<- Sys.time()
+
+    nav_count.str <- paste(paste0(names(nav_count),"=",nav_count),collapse=';')
+    ##nav_count.str <- gsub("-tab","",nav_count.str)
+    dbg("[SERVER] nav_count.str = ", nav_count.str)
+    nav_time.str <- paste(paste0(names(nav_time),"=",nav_time),collapse=';')
+    ##nav_count.str <- gsub("-tab","",nav_count.str)
+    dbg("[SERVER] nav_time.str = ", nav_time.str)
+
   })
 
   ## --------------------------------------------------------------------------
-  ## Dynamically hide/show certain sections depending on USERMODE/object
+  ## Actions upon change of user login/logout but not necessarily end
+  ## of session.
   ## --------------------------------------------------------------------------
 
   ## upon change of user
@@ -475,6 +500,7 @@ app_server <- function(input, output, session) {
 
       enable_upload <- auth$options$ENABLE_UPLOAD
       bigdash.toggleTab(session, "upload-tab", enable_upload)
+      nav_count <<- list()
     } else {
       # clear PGX data as soon as the user logs out
       length.pgx <- length(names(PGX))
@@ -483,9 +509,14 @@ app_server <- function(input, output, session) {
           PGX[[names(PGX)[i]]] <<- NULL
         }
       }
+      
     }
   })
 
+  ## --------------------------------------------------------------------------
+  ## Dynamically hide/show certain sections depending on USERMODE/object
+  ## --------------------------------------------------------------------------
+  
   ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
@@ -680,11 +711,29 @@ app_server <- function(input, output, session) {
 
     pgx.record_access(
       user = auth$email,
-      action = "logout",
-      comment = "user initiated Logout",
-      session = session
+      action = "user.logout",
+      session = session,
+      comment = "user initiated logout",      
     )
 
+    ## record tab navigation count and time
+    nav_count.str <- paste(paste0(names(nav_count),"=",nav_count),collapse=';')
+    nav_count.str <- gsub("-tab","",nav_count.str)
+    nav_time.str <- paste(paste0(names(nav_time),"=",nav_time),collapse=';')
+    nav_time.str <- gsub("-tab","",nav_time.str)
+    pgx.record_access(
+      user = auth$email,
+      action = "nav.count",
+      session = session,
+      comment = nav_count.str
+    )
+    pgx.record_access(
+      user = auth$email,
+      action = "nav.time",
+      session = session,
+      comment = nav_time.str
+    )
+    
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
