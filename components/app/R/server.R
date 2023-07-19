@@ -705,7 +705,7 @@ app_server <- function(input, output, session) {
     ## after exit.
     dbg("[SERVER:quit] exit session... ")
     srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
-    dbg("[SERVER:quit] srv = ",srv)
+    dbg("[SERVER:quit] srv = ", srv)
     session$close()
     ## session$reload()
   })
