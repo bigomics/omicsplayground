@@ -125,19 +125,17 @@ functional_plot_wikipathway_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
-        tmpfile <- paste0(tempfile(), ".svg")
         svg <- wikipathview(wp = pathway.id, val = fc)
         if (is.null(svg)) {
           return(NULL)
         }
-        fluctuator::write_svg(svg, file = tmpfile)
         list(
-          src = normalizePath(tmpfile),
+          src = normalizePath(svg),
           contentType = "image/svg+xml",
           width = "100%", height = "100%", ## actual size: 1040x800
           alt = "wikipathway SVG"
         )
-      })
+      }) 
 
       plot_RENDER <- function() {
         img <- getPathwayImage()

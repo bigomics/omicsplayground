@@ -2,7 +2,6 @@
 
 wikipathview <- function(wp, val) {
   require(xml2)
-  require(fluctuator)
 
   url <- paste0("https://www.wikipathways.org/wikipathways-assets/pathways/", wp, "/", wp, ".svg")
   destfile <- tempfile(fileext = ".svg")
@@ -77,7 +76,5 @@ wikipathview <- function(wp, val) {
   # Write the lines back to the file
   writeLines(lines, destfile)
 
-  svg <- fluctuator::read_svg(destfile)
-
-  return(svg)
+  return(destfile)
 }
