@@ -704,6 +704,8 @@ app_server <- function(input, output, session) {
     ## better because then the user does not allocate an idle session
     ## after exit.
     dbg("[SERVER:quit] exit session... ")
+    srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
+    dbg("[SERVER:quit] srv = ",srv)
     session$close()
     ## session$reload()
   })
@@ -738,8 +740,6 @@ app_server <- function(input, output, session) {
         shiny::tags$h1("Sorry, the Playground is full!", style = "color:white;font-family:lato;"),
         shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),
         shiny::br(),
-        # shiny::div(shiny::img(src=base64enc::dataURI(file="www/sorry-we-are-full.png"),
-        #    width=350,height=200)),
         shiny::div(paste("server =", srv), style = "font-size:11px;text-align:center;"),
         shiny::br(), shiny::br(),
         sever::reload_button("Relaunch", class = "info")
