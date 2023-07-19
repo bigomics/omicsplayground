@@ -17,10 +17,7 @@ create_user_dir_if_needed <- function(user_dir, pgxdir) {
 read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
-  if (!file.exists(user_opt_file)) {
-    ## IK: no need
-    ## file.copy(from = opt.file, to = user_opt_file)
-  } else {
+  if (file.exists(user_opt_file) && !dir.exists(user_opt_file)) {
     user_opt <- playbase::pgx.readOptions(file = user_opt_file)
     ## restrict user options only to these options.
     ALLOWED_USER_OPTS <- c(
