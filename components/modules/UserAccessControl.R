@@ -221,9 +221,6 @@ FolderLock <- R6::R6Class("FolderLock",
         callbackR = function(x) {
           if (x) session$close()
         },
-        ## callbackJS = "function(x) { if(x) {setTimeout(function(){window.close();},500);} }",
-        # callbackJS = "function(x) { if(x) { window.close() }}",
-        ## closeOnEsc = FALSE,
         animation = FALSE,
         html = TRUE,
         immediate = TRUE
@@ -260,6 +257,12 @@ FolderLock <- R6::R6Class("FolderLock",
             }
             invalidateLater(private$poll_secs * 1000)
           } else {
+            pgx.record_access(
+              user = self$user,
+              action = "locked.login",
+              comment = "login attempt while locked by other user",
+              session = session
+            )            
             self$shinyalert_locked(lock = cur, session)
             invalidateLater(Inf)
           }
@@ -269,7 +272,12 @@ FolderLock <- R6::R6Class("FolderLock",
           }
           ## at logout we record the logout action and remove the
           ## lockfile, then reset the user/path
-          pgx.record_access(self$user, "logout", session = session)
+          pgx.record_access(
+            user = self$user,
+            action = "logout",
+            session = session,
+            comment = "clean logout"
+          )
           self$remove_lock()
           self$reset()
         }

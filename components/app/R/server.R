@@ -681,7 +681,7 @@ app_server <- function(input, output, session) {
     pgx.record_access(
       user = auth$email,
       action = "logout",
-      comment = "userLogout",
+      comment = "user initiated Logout",
       session = session
     )
 
