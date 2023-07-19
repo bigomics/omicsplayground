@@ -165,10 +165,9 @@ FirebaseAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
-
         ## create user_dir and set correct user_dir path
         USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         if (!opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR)
         }
@@ -279,7 +278,7 @@ FirebaseAuthenticationModule <- function(id,
 
       # create user_dir (always), set path, and set options
       USER$user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+      create_user_dir_if_needed(USER$user_dir, PGX.DIR)
       if (!opt$ENABLE_USERDIR) {
         USER$user_dir <- file.path(PGX.DIR)
       }
@@ -549,7 +548,7 @@ EmailLinkAuthenticationModule <- function(id,
 
       # create user_dir (always), set path, and set options
       USER$user_dir <- file.path(PGX.DIR, USER$email)
-      create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+      create_user_dir_if_needed(USER$user_dir, PGX.DIR)
       if (!opt$ENABLE_USERDIR) {
         USER$user_dir <- file.path(PGX.DIR)
       }
@@ -678,7 +677,7 @@ PasswordAuthenticationModule <- function(id,
 
         # create user_dir (always), set path, and set options
         USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         if (!opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR)
         }
@@ -911,7 +910,7 @@ LoginCodeAuthenticationModule <- function(id,
 
           # create user_dir (always), set path, and set options
           USER$user_dir <- file.path(PGX.DIR, USER$email)
-          create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)
           }
@@ -940,10 +939,9 @@ LoginCodeAuthenticationModule <- function(id,
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping (persistent?) logins.
       if (USER$logged && !first_time) {
-
         # create user_dir (always), set path, and set options
         USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)       
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         if (!opt$ENABLE_USERDIR) {
           USER$user_dir <- file.path(PGX.DIR)
         }

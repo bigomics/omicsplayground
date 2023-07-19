@@ -84,7 +84,6 @@ $('#", id, "').on('hidden.bs.dropdown', function () {
   restoreDropdownMenu();
 });
 ") ## end of paste0
-  
 }
 
 dropdown.assets <- function(id) {
@@ -93,7 +92,7 @@ dropdown.assets <- function(id) {
     tags$script(HTML(dropdown.jsCode(id)))
   )
 }
-    
+
 DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, width = "auto", margin = "10px") {
   id <- bigdash:::make_id()
   tags$div(
@@ -128,7 +127,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
         error = function(w) {}
       )
     ),
-    dropdown.assets(id)    
+    dropdown.assets(id)
   )
 }
 
@@ -169,6 +168,6 @@ actionMenu <- function(..., size = "default", status = "default", icon = NULL, m
         error = function(w) {}
       )
     ),
-    dropdown.assets(id)        
+    dropdown.assets(id)
   )
 }
