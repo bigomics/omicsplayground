@@ -757,7 +757,7 @@ app_server <- function(input, output, session) {
       message("******** doing session cleanup ********")
 
       dbg("[SERVER] removing active lock files")
-      if(!is.null(lock)) lock$remove_lock()
+      if (!is.null(lock)) lock$remove_lock()
 
       dbg("[SERVER] any user logged in?", isolate(auth$logged))
       dbg("[SERVER] logged in user:", isolate(auth$email))
