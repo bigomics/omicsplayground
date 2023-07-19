@@ -666,17 +666,17 @@ app_server <- function(input, output, session) {
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
     dbg("[SERVER:userLogout] user logout sequence:")
-    
+
     ## stop all timers
     dbg("[SERVER:userLogout] >>> stopping timers")
     if (!is.null(session_timer)) session_timer$run(FALSE)
 
     ## This removes user heartbeat and lock files
     dbg("[SERVER:userLogout] >>> removing lock files")
-    hbfile <- heartbeat()  ## does not work because auth has been reset
-    dbg("[SERVER:userLogout] hbfile = ",basename(hbfile))
+    hbfile <- heartbeat() ## does not work because auth has been reset
+    dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
     if (file.exists(hbfile)) file.remove(hbfile)
-    if(!is.null(lock)) lock$remove_lock()
+    if (!is.null(lock)) lock$remove_lock()
 
     pgx.record_access(
       user = auth$email,
