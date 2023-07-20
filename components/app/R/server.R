@@ -637,9 +637,9 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Session login/logout functions
   ## -------------------------------------------------------------
-  
+
   clearPGX <- function() {
-    ## clear PGX data 
+    ## clear PGX data
     length.pgx <- length(names(PGX))
     if (length.pgx > 0) {
       for (i in 1:length.pgx) {
@@ -647,7 +647,7 @@ app_server <- function(input, output, session) {
       }
     }
   }
-  
+
   ## upon change of user
   observeEvent(auth$logged, {
     if (auth$logged) {
@@ -668,7 +668,7 @@ app_server <- function(input, output, session) {
     }
   })
 
-  
+
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
     dbg("[SERVER:userLogout] user logout sequence:")
@@ -700,11 +700,11 @@ app_server <- function(input, output, session) {
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    auth$resetUSER() 
+    auth$resetUSER()
 
     ## clear PGX data as soon as the user logs out (if not done)
     clearPGX()
-    
+
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     ## (IK 16-07-2023: some bug for firebase-based login, reload
