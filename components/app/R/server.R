@@ -744,8 +744,13 @@ app_server <- function(input, output, session) {
         shiny::br(), shiny::br(),
         sever::reload_button("Relaunch", class = "info")
       )
+      pgx.record_access(
+        user = isolate(auth$email),
+        action = "server.full",
+        comment = "too many sessions. server at capacity",
+        session = session
+      )
       sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3
-      # Sys.sleep(10)
       session$close()
     }
   })
@@ -756,6 +761,11 @@ app_server <- function(input, output, session) {
     function() {
       message("******** doing session cleanup ********")
 
+      ## Remove from active sessions
+      s <- session$token
+      dbg("[SERVER] removing from active sessions :", s)
+      ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
+
       dbg("[SERVER] removing active lock files")
       if (!is.null(lock)) lock$remove_lock()
 
@@ -764,16 +774,11 @@ app_server <- function(input, output, session) {
       if (isolate(auth$logged)) {
         pgx.record_access(
           user = isolate(auth$email),
-          action = "logout",
+          action = "session.logout",
           comment = "forced logout at session end",
           session = session
         )
       }
-
-      ## Remove from active sessions
-      s <- session$token
-      dbg("[SERVER] removing from active sessions :", s)
-      ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
 
       ## we do extra logout actions for shinyproxy
       if (opt$AUTHENTICATION == "shinyproxy") {
