@@ -753,15 +753,16 @@ app_server <- function(input, output, session) {
   
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
-    dbg("[SERVER:userLogout] user logout sequence:")
+    dbg("[SERVER:userLogout] triggered!")
 
+    ## run logout sequence
     userLogoutSequence(auth, action="user.logout")
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     ## (IK 16-07-2023: some bug for firebase-based login, reload
     ## loop. To be fixed!!!
-    dbg("[SERVER:userLogout] >>> reloading session")
+    ##dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
 
