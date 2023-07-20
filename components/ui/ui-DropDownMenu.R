@@ -86,6 +86,7 @@ $('#", id, "').on('hidden.bs.dropdown', function () {
 ") ## end of paste0
 }
 
+
 dropdown.assets <- function(id) {
   tagList(
     shiny::singleton(tags$style(HTML(paste0("#", id, " .dropdown-menu { display: none; }")))),
