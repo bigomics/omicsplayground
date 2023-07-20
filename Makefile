@@ -36,7 +36,7 @@ docker.run2:
 	docker run --rm -it -p 4000:3838 \
 		-v ~/Playground/pgx:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
-		-v ~/Playground/config/firebase:/omicsplayground/components/app/R/firebase \
+		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE tag.version
