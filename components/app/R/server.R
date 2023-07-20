@@ -689,10 +689,40 @@ app_server <- function(input, output, session) {
     )
   })
 
-
   ## -------------------------------------------------------------
   ## Session login/logout functions
   ## -------------------------------------------------------------
+
+  clearPGX <- function() {
+    ## clear PGX data
+    length.pgx <- length(names(PGX))
+    if (length.pgx > 0) {
+      for (i in 1:length.pgx) {
+        PGX[[names(PGX)[i]]] <<- NULL
+      }
+    }
+  }
+
+  ## upon change of user
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      message("--------- user login ----------")
+      message("username       = ", auth$username)
+      message("email          = ", auth$email)
+      message("level          = ", auth$level)
+      message("limit          = ", auth$limit)
+      message("user_dir       = ", auth$user_dir)
+      message("-------------------------------")
+
+      pgx.record_access(auth$email, action = "login", session = session)
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      bigdash.toggleTab(session, "upload-tab", enable_upload)
+    } else {
+      ## clear PGX data as soon as the user logs out
+      clearPGX()
+    }
+  })
+
 
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
@@ -708,6 +738,12 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
     if (file.exists(hbfile)) file.remove(hbfile)
     if (!is.null(lock)) lock$remove_lock()
+
+    message("--------- user logout ---------")
+    message("username       = ", auth$username)
+    message("email          = ", auth$email)
+    message("user_dir       = ", auth$user_dir)
+    message("------------------------------")
 
     pgx.record_access(
       user = auth$email,
@@ -737,12 +773,15 @@ app_server <- function(input, output, session) {
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    auth$resetUSER() ## should already have been done by JS
+    auth$resetUSER()
+
+    ## clear PGX data as soon as the user logs out (if not done)
+    clearPGX()
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     ## (IK 16-07-2023: some bug for firebase-based login, reload
-    ## loop. To be fixed.
+    ## loop. To be fixed!!!
     dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
@@ -755,8 +794,8 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:quit] exit session... ")
     srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
     dbg("[SERVER:quit] srv = ", srv)
-    session$close()
-    ## session$reload()
+    ## session$close()
+    session$reload()
   })
 
   # This code will run when there is a shiny error. Then this
@@ -793,8 +832,13 @@ app_server <- function(input, output, session) {
         shiny::br(), shiny::br(),
         sever::reload_button("Relaunch", class = "info")
       )
+      pgx.record_access(
+        user = isolate(auth$email),
+        action = "server.full",
+        comment = "too many sessions. server at capacity",
+        session = session
+      )
       sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3
-      # Sys.sleep(10)
       session$close()
     }
   })
@@ -805,6 +849,11 @@ app_server <- function(input, output, session) {
     function() {
       message("******** doing session cleanup ********")
 
+      ## Remove from active sessions
+      s <- session$token
+      dbg("[SERVER] removing from active sessions :", s)
+      ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
+
       dbg("[SERVER] removing active lock files")
       if (!is.null(lock)) lock$remove_lock()
 
@@ -813,16 +862,11 @@ app_server <- function(input, output, session) {
       if (isolate(auth$logged)) {
         pgx.record_access(
           user = isolate(auth$email),
-          action = "logout",
+          action = "session.logout",
           comment = "forced logout at session end",
           session = session
         )
       }
-
-      ## Remove from active sessions
-      s <- session$token
-      dbg("[SERVER] removing from active sessions :", s)
-      ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
 
       ## we do extra logout actions for shinyproxy
       if (opt$AUTHENTICATION == "shinyproxy") {

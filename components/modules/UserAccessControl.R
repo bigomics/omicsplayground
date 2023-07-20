@@ -238,8 +238,8 @@ FolderLock <- R6::R6Class("FolderLock",
 
           if (is.null(cur) || !cur$is_locked) {
             ## this is probably a clean login, either with no lockfile
-            ## present or the lockfile is stale.
-            pgx.record_access(self$user, action = "login", session = session)
+            ## present or the lockfile is stale. Note: normal login is
+            ## recorded in server.R
             if (!is.null(cur) && !cur$is_locked) {
               ## lockfile is stale. NEED RETHINK!! should record the
               ## correct host/client IP and time.
@@ -272,12 +272,6 @@ FolderLock <- R6::R6Class("FolderLock",
           }
           ## at logout we record the logout action and remove the
           ## lockfile, then reset the user/path
-          pgx.record_access(
-            user = self$user,
-            action = "logout",
-            session = session,
-            comment = "clean logout"
-          )
           self$remove_lock()
           self$reset()
         }
