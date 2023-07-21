@@ -594,14 +594,14 @@ app_server <- function(input, output, session) {
 
   #' Track which users are online by repeatedly writing small ID file
   #' in the ONLINE_DIR folder.
-if(isTRUE(opt$ENABLE_HEARTBEAT)) {
-  ONLINE_DIR <- file.path(ETC, "online")
-  heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
-  observe({
-    heartbeat()
-  }) ## run indefinitely
-}
-  
+  if (isTRUE(opt$ENABLE_HEARTBEAT)) {
+    ONLINE_DIR <- file.path(ETC, "online")
+    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
+    observe({
+      heartbeat()
+    }) ## run indefinitely
+  }
+
   ## -------------------------------------------------------------
   ## About
   ## -------------------------------------------------------------
@@ -848,6 +848,4 @@ if(isTRUE(opt$ENABLE_HEARTBEAT)) {
   info("[SERVER] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
   total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
   info("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
-
-  
 }
