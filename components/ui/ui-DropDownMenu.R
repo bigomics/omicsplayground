@@ -10,7 +10,7 @@
 # the active one gets desactivated.
 
 ## second version of Carson (see email 9jul23)
-dropdown.jsCode.SAVE <- function(id) {
+dropdown.jsCode.SAVE2 <- function(id) {
   paste0("
 $('#", id, "').on('click', function(){
   if($('#", id, "').hasClass('active')){
@@ -48,8 +48,8 @@ $('#", id, "').on('hidden.bs.dropdown', function () {
 ") ## end of paste0
 }
 
-## first version of Carson
-dropdown.jsCode <- function(id) {
+## first version of Carson, but corrected later (3rd version)
+dropdown.jsCode.SAVE1 <- function(id) {
   paste0("
 $('#", id, "').on('click', function(){
   if($('#", id, "').hasClass('active')){
@@ -83,6 +83,22 @@ $('#", id, "').on('shown.bs.dropdown', function () {
 $('#", id, "').on('hidden.bs.dropdown', function () {
   restoreDropdownMenu();
 });
+") ## end of paste0
+}
+
+## original version of John (but has clipping issue)
+dropdown.jsCode <- function(id) {
+  paste0("
+$('#", id, "').on('click', function(){
+  if($('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
+    return 0;
+  }
+  $('.dropdown-button.active').toggleClass('active');
+  if(!$('#", id, "').hasClass('active')){
+    $('#", id, "').toggleClass('active');
+  }
+})
 ") ## end of paste0
 }
 

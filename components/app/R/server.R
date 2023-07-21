@@ -434,8 +434,8 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
-    shiny::req(auth$logged)
-    if (!auth$logged) {
+    ## shiny::req(auth$logged)
+    if (is.null(auth$logged) || !auth$logged) {
       return("(not logged in)")
     }
     user <- auth$email
@@ -600,11 +600,13 @@ app_server <- function(input, output, session) {
 
   #' Track which users are online by repeatedly writing small ID file
   #' in the ONLINE_DIR folder.
-  ONLINE_DIR <- file.path(ETC, "online")
-  heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
-  observe({
-    heartbeat()
-  }) ## run indefinitely
+  if (isTRUE(opt$ENABLE_HEARTBEAT)) {
+    ONLINE_DIR <- file.path(ETC, "online")
+    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
+    observe({
+      heartbeat()
+    }) ## run indefinitely
+  }
 
   ## -------------------------------------------------------------
   ## About
@@ -724,9 +726,11 @@ app_server <- function(input, output, session) {
 
     ## This removes user heartbeat and lock files
     dbg("[SERVER:userLogout] >>> removing lock files")
-    hbfile <- isolate(heartbeat()) ## does not work because auth has been reset
-    dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
-    if (file.exists(hbfile)) file.remove(hbfile)
+    if (isTRUE(opt$ENABLE_HEARTBEAT)) {
+      hbfile <- heartbeat() ## does not work because auth has been reset
+      dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
+      if (file.exists(hbfile)) file.remove(hbfile)
+    }
     if (!is.null(lock)) lock$remove_lock()
 
     ## record tab navigation count and time
@@ -842,15 +846,6 @@ app_server <- function(input, output, session) {
     }
   })
 
-  ## -------------------------------------------------------------
-  ## report server times
-  ## -------------------------------------------------------------
-  server.init_time <- round(Sys.time() - server.start_time, digits = 4)
-  info("[SERVER] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
-  total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
-  info("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
-
-
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
@@ -862,4 +857,12 @@ app_server <- function(input, output, session) {
       html = TRUE
     )
   }
+
+  ## -------------------------------------------------------------
+  ## report server times
+  ## -------------------------------------------------------------
+  server.init_time <- round(Sys.time() - server.start_time, digits = 4)
+  info("[SERVER] server.init_time = ", server.init_time, " ", attr(server.init_time, "units"))
+  total.lapse_time <- round(Sys.time() - main.start_time, digits = 4)
+  info("[SERVER] total lapse time = ", total.lapse_time, " ", attr(total.lapse_time, "units"))
 }
