@@ -681,9 +681,11 @@ app_server <- function(input, output, session) {
 
     ## This removes user heartbeat and lock files
     dbg("[SERVER:userLogout] >>> removing lock files")
-    hbfile <- heartbeat() ## does not work because auth has been reset
-    dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
-    if (file.exists(hbfile)) file.remove(hbfile)
+    if (isTRUE(opt$ENABLE_HEARTBEAT)) {
+      hbfile <- heartbeat() ## does not work because auth has been reset
+      dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
+      if (file.exists(hbfile)) file.remove(hbfile)
+    }
     if (!is.null(lock)) lock$remove_lock()
 
     message("--------- user logout ---------")
