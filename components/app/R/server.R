@@ -458,16 +458,16 @@ app_server <- function(input, output, session) {
   nav_count <- list()
   observeEvent(input$nav, {
     message("[SERVER] input$nav = ", input$nav)
-    if(is.null(nav_count[[input$nav]])) {
+    if (is.null(nav_count[[input$nav]])) {
       nav_count[[input$nav]] <<- 0
     }
-    nav_count[[input$nav]] <<- nav_count[[input$nav]] + 1      
+    nav_count[[input$nav]] <<- nav_count[[input$nav]] + 1
   })
 
   ## --------------------------------------------------------------------------
   ## Dynamically hide/show certain sections depending on USERMODE/object
   ## --------------------------------------------------------------------------
-  
+
   ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
@@ -675,7 +675,7 @@ app_server <- function(input, output, session) {
       session$close()
     }
   })
- 
+
   ## upon change of user
   observeEvent(auth$logged, {
     if (auth$logged) {
@@ -700,10 +700,10 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Session logout sequences
   ## -------------------------------------------------------------
- 
+
   clearPGX <- function() {
     ## clear PGX data
-    pgx.names <- isolate(names(PGX)) 
+    pgx.names <- isolate(names(PGX))
     length.pgx <- length(pgx.names)
     if (length.pgx > 0) {
       for (i in 1:length.pgx) {
@@ -713,7 +713,6 @@ app_server <- function(input, output, session) {
   }
 
   userLogoutSequence <- function(auth, action) {
-
     message("--------- user logout ---------")
     message("username       = ", isolate(auth$username))
     message("email          = ", isolate(auth$email))
@@ -734,39 +733,38 @@ app_server <- function(input, output, session) {
     if (!is.null(lock)) lock$remove_lock()
 
     ## record tab navigation count and time
-    nav_count.str <- paste(paste0(names(nav_count),"=",nav_count),collapse=';')
-    nav_count.str <- gsub("-tab","",nav_count.str)
-    
+    nav_count.str <- paste(paste0(names(nav_count), "=", nav_count), collapse = ";")
+    nav_count.str <- gsub("-tab", "", nav_count.str)
+
     pgx.record_access(
       user = isolate(auth$email),
       action = action,
       session = session,
       comment = nav_count.str
     )
-    
+
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    isolate( auth$resetUSER() )
+    isolate(auth$resetUSER())
 
     ## clear PGX data as soon as the user logs out (if not done)
     clearPGX()
-
   }
 
-  
+
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
     dbg("[SERVER:userLogout] triggered!")
 
     ## run logout sequence
-    userLogoutSequence(auth, action="user.logout")
+    userLogoutSequence(auth, action = "user.logout")
 
     ## this triggers a fresh session. good for resetting all
     ## parameters.
     ## (IK 16-07-2023: some bug for firebase-based login, reload
     ## loop. To be fixed!!!
-    ##dbg("[SERVER:userLogout] >>> reloading session")
+    ## dbg("[SERVER:userLogout] >>> reloading session")
     ## session$reload()
   })
 
@@ -794,15 +792,15 @@ app_server <- function(input, output, session) {
       ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
 
       ## run log sequence
-      userLogoutSequence(isolate(auth), action="session.logout")
-      
+      userLogoutSequence(isolate(auth), action = "session.logout")
+
       ## we do extra logout actions for shinyproxy
       if (opt$AUTHENTICATION == "shinyproxy") {
         session$sendCustomMessage("shinyproxy-logout", list())
       }
     }
   )
-  
+
   ## -------------------------------------------------------------
   ## UI observers
   ## -------------------------------------------------------------
@@ -820,7 +818,7 @@ app_server <- function(input, output, session) {
       error
     ), bg_color = "#004c7d")
   })
-  
+
   # this function sets 'enable_info' based on the user settings
   # and is used by all the bs_alert functions with conditional=T
   observeEvent(env$user_settings$enable_info(), {

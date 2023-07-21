@@ -112,7 +112,7 @@ UploadBoard <- function(id,
         }
       }
 
-      if(uploaded_method == 'computed' ) {
+      if (uploaded_method == "computed") {
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
           text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
@@ -136,7 +136,6 @@ UploadBoard <- function(id,
           callbackR = load_my_dataset
         )
       }
-
     })
 
 
@@ -694,7 +693,7 @@ UploadBoard <- function(id,
         uploaded_method <<- "uploaded"
       } else {
         pgx <- computed_pgx()
-        uploaded_method <<- "computed"        
+        uploaded_method <<- "computed"
       }
       return(pgx)
     })
