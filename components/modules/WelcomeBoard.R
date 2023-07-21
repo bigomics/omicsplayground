@@ -15,12 +15,14 @@ WelcomeBoard <- function(id, auth, load_example) {
 
       name <- auth$username
       if (is.null(name) || name %in% c("", NA)) name <- auth$email
+      dbg("[WelcomeBoard] name = ", name)
       if (is.null(name) || name %in% c("", NA)) {
         welcome <- paste0("Welcome back...")
       } else {
         first.name <- getFirstName(name) ## in app/R/utils.R
         welcome <- paste0("Welcome back ", first.name, "...")
       }
+      dbg("[WelcomeBoard] welcome = ", welcome)      
       welcome
     })
 

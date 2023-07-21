@@ -53,7 +53,7 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-      shiny::req(pgx$X, input$dsea_contrast, input$dsea_method)
+      shiny::req(pgx$drugs, input$dsea_contrast, input$dsea_method)
 
       contr <- input$dsea_contrast
       if (is.null(contr)) {
