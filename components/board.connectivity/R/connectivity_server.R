@@ -4,7 +4,7 @@
 ##
 
 
-ConnectivityBoard <- function(id, pgx, getPgxDir) {
+ConnectivityBoard <- function(id, auth, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel

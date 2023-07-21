@@ -362,7 +362,7 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["cmap"]) {
         info("[SERVER] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = reactive(auth$user_dir))
+        ConnectivityBoard("cmap", pgx = PGX, auth = auth)
       }
 
       if (ENABLED["cell"]) {
