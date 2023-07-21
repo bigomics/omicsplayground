@@ -434,7 +434,7 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
-    ##shiny::req(auth$logged)
+    ## shiny::req(auth$logged)
     if (is.null(auth$logged) || !auth$logged) {
       return("(not logged in)")
     }
