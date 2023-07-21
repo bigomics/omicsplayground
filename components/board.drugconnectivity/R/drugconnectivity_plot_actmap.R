@@ -124,7 +124,7 @@ drugconnectivity_plot_actmap_server <- function(id,
       plot_data <- shiny::reactive({
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
-        shiny::req(pgx$X, dsea_contrast, dsea_method)
+        shiny::req(dsea_contrast, dsea_method)
         shiny::validate(shiny::need(
           "drugs" %in% names(pgx),
           "no 'drugs' in object."

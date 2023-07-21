@@ -187,7 +187,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
 
     compute_connectivity <- shiny::reactive({
-      shiny::req(pgx$X, pgx$X, pgx$connectivity)
+      shiny::req(pgx$X, pgx$connectivity)
       shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
 
       pgx.connectivity <- list()
