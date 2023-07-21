@@ -22,7 +22,7 @@ WelcomeBoard <- function(id, auth, load_example) {
         first.name <- getFirstName(name) ## in app/R/utils.R
         welcome <- paste0("Welcome back ", first.name, "...")
       }
-      dbg("[WelcomeBoard] welcome = ", welcome)      
+      dbg("[WelcomeBoard] welcome = ", welcome)
       welcome
     })
 
