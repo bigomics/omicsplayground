@@ -1,7 +1,7 @@
 BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass version
+run: sass version 
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
 
 run.headless:
@@ -39,7 +39,7 @@ docker.run2:
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE version
+docker: FORCE version changelog
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
@@ -88,7 +88,7 @@ version:
 ##	sed -i "1s/.*/$(VERSION)/" VERSION
 	echo $(VERSION) > VERSION
 
-LAST=awk -v RS='(\r?\n){3,}' 'NR<=6'
+LAST=awk -v RS='(\r?\n){3,}' 'NR<=4'
 changelog:
 	sh ./dev/create-changelog.sh | $(LAST) >  CHANGELOG.md
 	sh ./dev/create-changelog.sh 'feat' | $(LAST) > FEATURES.md

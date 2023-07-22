@@ -89,7 +89,7 @@ UserProfileBoard <- function(id, auth, nav_count) {
       striped = TRUE
     )
 
-    render.usage <- function() {
+    render.baseplot <- function() {
       x <- unlist(nav_count())
       x <- x[grep("welcome|userprofile|setting",names(x),invert=TRUE)]
       x <- x[order(names(x))]
@@ -150,6 +150,5 @@ UserProfileBoard <- function(id, auth, nav_count) {
       add.watermark = FALSE
     )
 
-    
   })
 }

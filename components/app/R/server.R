@@ -125,9 +125,18 @@ app_server <- function(input, output, session) {
     auth = auth,
     load_example = load_example
   )
-  env$user_profile <- UserProfileBoard("user_profile",
-    auth = auth, nav_count = reactive(nav$count) )
-  env$user_settings <- UserSettingsBoard("user_settings", auth = auth, pgx=PGX)
+
+  env$user_profile <- UserProfileBoard(
+    "user_profile",
+    auth = auth,
+    nav_count = reactive(nav$count)
+  )
+
+  env$user_settings <- UserSettingsBoard(
+    "user_settings",
+    auth = auth,
+    pgx=PGX
+  )
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
@@ -456,7 +465,7 @@ app_server <- function(input, output, session) {
   })
 
   ## count the number of times a navtab is clicked during the session
-  nav <- reactiveValues( count = c())
+  nav <- reactiveValues(count = c())
   observeEvent(input$nav, {
     i <- input$nav
     if (is.null(nav$count[i]) || is.na(nav$count[i])) {
