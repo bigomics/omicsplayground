@@ -29,16 +29,7 @@ pgx.record_access <- function(user,
   time <- as.POSIXct(time)
   session_id <- substring(session$token, 1, 16)
   hostname <- opt$HOSTNAME
-  hostname2 <- isolate(session$clientData$url_hostname)
-
-  ## Warning: These internet-based IP services are bit slow and can
-  ## block the app. Better not use....
-  public.ip <- NA
-  # public.ip <- RCurl::getURL("http://api.ipify.org")
-  # public.ip <- RCurl::getURL("http://ipinfo.io")
-  # public.ip <- stringr::str_extract_all( public.ip[2], '[0-9][0-9.]*[0-9]')[[1]]
   remote_addr <- session$request$REMOTE_ADDR
-  http_xff <- session$request$HTTP_X_FORWARDED_FOR
 
   RCurl::getURL
 
@@ -47,10 +38,7 @@ pgx.record_access <- function(user,
     dbg("[pgx.record_access] user = ", user)
     dbg("[pgx.record_access] session_id = ", session_id)
     dbg("[pgx.record_access] hostname = ", hostname)
-    dbg("[pgx.record_access] hostname2 = ", hostname2)
-    dbg("[pgx.record_access] public.ip = ", public.ip)
     dbg("[pgx.record_access] remote_addr = ", remote_addr)
-    dbg("[pgx.record_access] http_xff = ", http_xff)
     dbg("[pgx.record_access] time = ", time)
   }
 
@@ -60,8 +48,7 @@ pgx.record_access <- function(user,
     time = time,
     session = session_id,
     hostname = hostname,
-    ## public.ip = public.ip,
-    public.ip = remote_addr,
+    client.ip = remote_addr,
     comment = comment
   )
   do.append <- file.exists(access.file)

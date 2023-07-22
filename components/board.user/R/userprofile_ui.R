@@ -37,11 +37,11 @@ UserProfileUI <- function(id) {
       shiny::tabsetPanel(
         id = ns("tabs2"),
         shiny::tabPanel(
-          "News",
+          "New features",
           bslib::layout_column_wrap(
             height = "calc(100vh - 183px)",
             width = 1,
-            shiny::htmlOutput(ns("news"))
+            shiny::plotOutput(ns("usage"))
           )
         )
       )

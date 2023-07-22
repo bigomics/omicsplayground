@@ -19,6 +19,11 @@ UserSettingsBoard <- function(id, auth) {
       ))
     })
 
+    output$newfeatures <- renderUI({
+      newfeat <- markdown::markdownToHTML(file = file.path(OPG, "FEATURES.md"), fragment.only = TRUE)
+      HTML(newfeat)
+    })
+    
     res <- list(
       enable_beta = reactive({
         as.logical(input$enable_beta)

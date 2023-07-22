@@ -24,7 +24,7 @@ LoadingUI <- function(id) {
     flex = c(NA, NA, 1),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Load dataset &nbsp;"),
+      HTML("Load Dataset &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
@@ -35,7 +35,7 @@ LoadingUI <- function(id) {
   )
 
   user_tabpanel <- shiny::tabPanel(
-    "User",
+    "My Library",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",
@@ -65,7 +65,7 @@ LoadingUI <- function(id) {
   )
 
   public_tabpanel <- shiny::tabPanel(
-    "Public",
+    "Public Library",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",

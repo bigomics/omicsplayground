@@ -30,6 +30,20 @@ UserSettingsUI <- function(id) {
           )
         )
       )
+    ),
+    div(
+      class = "col-md-5",
+      shiny::tabsetPanel(
+        id = ns("tabs2"),
+        shiny::tabPanel(
+          "New features",
+          bslib::layout_column_wrap(
+            height = "calc(100vh - 183px)",
+            width = 1,
+            shiny::htmlOutput(ns("newfeatures"))
+          )
+        )
+      )
     )
   )
 }

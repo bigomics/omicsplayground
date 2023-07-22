@@ -136,7 +136,7 @@ UploadUI <- function(id) {
   )
 
   page_ui <- div(
-    boardHeader(title = "Upload data", info_link = ns("module_info")),
+    boardHeader(title = "Upload New Data", info_link = ns("module_info")),
     tabs
   )
   return(page_ui)

@@ -125,7 +125,8 @@ app_server <- function(input, output, session) {
     auth = auth,
     load_example = load_example
   )
-  env$user_profile <- UserProfileBoard("user_profile", auth = auth)
+  env$user_profile <- UserProfileBoard("user_profile",
+    auth = auth, nav_count = reactive(nav$count) )
   env$user_settings <- UserSettingsBoard("user_settings", auth = auth)
 
   ## Do not display "Welcome" tab on the menu
@@ -455,17 +456,18 @@ app_server <- function(input, output, session) {
   })
 
   ## count the number of times a navtab is clicked during the session
-  nav_count <- list()
+  nav <- reactiveValues( count = c())
   observeEvent(input$nav, {
-    message("[SERVER] input$nav = ", input$nav)
-    if (is.null(nav_count[[input$nav]])) {
-      nav_count[[input$nav]] <<- 0
+    i <- input$nav
+    if (is.null(nav$count[i]) || is.na(nav$count[i])) {
+      nav$count[i] <<- 1
+    } else {
+      nav$count[i] <<- nav$count[i] + 1
     }
-    nav_count[[input$nav]] <<- nav_count[[input$nav]] + 1
   })
 
   ## --------------------------------------------------------------------------
-  ## Dynamically hide/show certain sections depending on USERMODE/object
+
   ## --------------------------------------------------------------------------
 
   ## upon change of user OR beta toggle OR new pgx
@@ -733,7 +735,7 @@ app_server <- function(input, output, session) {
     if (!is.null(lock)) lock$remove_lock()
 
     ## record tab navigation count and time
-    nav_count.str <- paste(paste0(names(nav_count), "=", nav_count), collapse = ";")
+    nav_count.str <- paste(paste0(names(nav$count), "=", nav$count), collapse = ";")
     nav_count.str <- gsub("-tab", "", nav_count.str)
 
     pgx.record_access(

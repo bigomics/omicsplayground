@@ -75,7 +75,7 @@ app_ui <- function() {
       "Load" = c(
         welcome = "Welcome",
         load    = "Load dataset",
-        upload  = "Upload data"
+        upload  = "Upload new"
       ),
       "DataView" = c(
         dataview = "DataView"
@@ -157,127 +157,6 @@ app_ui <- function() {
     mm <- HTML(unlist(mm))
     sidebar <- bigdash::sidebar("Menu", mm)
 
-    sidebar.save <- bigdash::sidebar(
-      "Menu",
-      bigdash::sidebarMenu(
-        "Load",
-        bigdash::sidebarMenuItem(
-          "Welcome",
-          "welcome-tab"
-        ),
-        withTooltip(
-          div(
-            bigdash::sidebarMenuItem(
-              "Load dataset",
-              "load-tab"
-            )
-          ),
-          "This panel shows the available datasets within the platform. These data sets
-              have been pre-computed and are ready to be used. Select a dataset in the table
-              and load the data set by clicking the 'load' button.",
-          placement = "top"
-        ),
-        bigdash::sidebarMenuItem(
-          "Upload data",
-          "upload-tab"
-        )
-      ),
-      withTooltip(
-        div(
-          class = "sidebar-item",
-          bigdash::sidebarItem(
-            "DataView",
-            "dataview-tab"
-          )
-        ),
-        "Information and descriptive statistics to quickly lookup a gene,
-              check your experiment QC, view the raw data, sample or contrast tables.",
-        placement = "top"
-      ),
-      bigdash::sidebarMenu(
-        "Clustering",
-        bigdash::sidebarMenuItem(
-          "Samples",
-          "clustersamples-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Features",
-          "clusterfeatures-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "WGCNA",
-          "wgcna-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "PCSF (beta)",
-          "pcsf-tab"
-        )
-      ),
-      bigdash::sidebarMenu(
-        "Expression",
-        bigdash::sidebarMenuItem(
-          "Differential expression",
-          "diffexpr-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Correlation analysis",
-          "corr-tab"
-        )
-      ),
-      bigdash::sidebarMenu(
-        "Enrichment",
-        bigdash::sidebarMenuItem(
-          "Geneset enrichment",
-          "enrich-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Pathway analysis",
-          "pathway-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Word cloud",
-          "wordcloud-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Drug connectivity",
-          "drug-tab"
-        )
-      ),
-      bigdash::sidebarMenu(
-        "Signature",
-        bigdash::sidebarMenuItem(
-          "Compare signatures",
-          "isect-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Test signatures",
-          "sig-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Find biomarkers",
-          "bio-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Similar experiments",
-          "cmap-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "Compare datasets (beta)",
-          "comp-tab"
-        ),
-        bigdash::sidebarMenuItem(
-          "TCGA survival (beta)",
-          "tcga-tab"
-        )
-      ),
-      div(
-        class = "sidebar-item",
-        bigdash::sidebarItem(
-          "Cell profiling",
-          "cell-tab"
-        )
-      )
-    )
 
     big_theme2 <- bigdash::big_theme()
     big_theme2 <- bslib::bs_add_variables(big_theme2,
@@ -326,28 +205,7 @@ app_ui <- function() {
         ),
         div.chirpbutton,
         bigdash::navbarDropdown(
-          "Support",
-          bigdash::navbarDropdownItem(
-            "Community Forum",
-            link = "https://groups.google.com/d/forum/omicsplayground",
-            target = "_blank"
-          ),
-          bigdash::navbarDropdownItem(
-            "Github issues",
-            link = "https://github.com/bigomics/omicsplayground/issues",
-            target = "_blank"
-          ),
-          bigdash::navbarDropdownItem(
-            "www.bigomics.ch",
-            link = "http://bigomics.ch",
-            target = "_blank"
-          ),
-          tags$li(
-            actionLink("navbar_about", "About")
-          )
-        ),
-        bigdash::navbarDropdown(
-          "Tutorials",
+          "Help",
           bigdash::navbarDropdownItem(
             "Documentation",
             link = "https://omicsplayground.readthedocs.io",
@@ -356,6 +214,16 @@ app_ui <- function() {
           bigdash::navbarDropdownItem(
             "Video tutorials",
             link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Community Forum",
+            link = "https://groups.google.com/d/forum/omicsplayground",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Github issues",
+            link = "https://github.com/bigomics/omicsplayground/issues",
             target = "_blank"
           ),
           bigdash::navbarDropdownItem(
@@ -376,6 +244,9 @@ app_ui <- function() {
             "usersettings-tab"
           ),
           upgrade.tab,
+          tags$li(
+            actionLink("navbar_about", "About")
+          ),
           logout.tab
         )
       ),
@@ -400,7 +271,7 @@ app_ui <- function() {
         ),
         bigdash::sidebarTabHelp(
           "upload-tab",
-          "Upload data",
+          "Upload new",
           "Here you can upload your own transcriptomics and proteomics data into
                      the platform and perform computations for the Playground."
         ),

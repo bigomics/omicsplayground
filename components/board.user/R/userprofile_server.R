@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserProfileBoard <- function(id, auth) {
+UserProfileBoard <- function(id, auth, nav_count) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     dbg("[UserProfileBoard] >>> initializing UserBoard...")
@@ -89,9 +89,11 @@ UserProfileBoard <- function(id, auth) {
       striped = TRUE
     )
 
-    output$news <- renderUI({
-      news <- markdown::markdownToHTML(file = file.path(OPG, "VERSION"), fragment.only = TRUE)
-      HTML(news)
+    output$usage <- renderPlot({
+      x <- unlist(nav_count())
+      dbg("[UserProfileBoard:output$usage] x = ",x)
+      barplot(x)
     })
+
   })
 }
