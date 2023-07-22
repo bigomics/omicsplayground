@@ -40,8 +40,8 @@ loading_table_datasets_public_server <- function(id,
                                                  reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
     getPGXINFO_PUBLIC <- shiny::reactive({
-      req(auth$logged)
-      if (!auth$logged) {
+      shiny::req(auth$logged)
+      if (is.null(auth$logged) || !auth$logged) {
         warning("[LoadingBoard:getPGXINFO_PUBLIC] user not logged in!")
         return(NULL)
       }
@@ -57,6 +57,7 @@ loading_table_datasets_public_server <- function(id,
       })
 
       if (need_update) {
+        dbg("[loading_server:getPGXINFO_PUBLIC] updating public pgxdir =",pgx_public_dir)
         pgx.showSmallModal("Updating datasets library<br>Please wait...")
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
           ## before reading the info file, we need to update for new files

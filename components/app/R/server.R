@@ -444,21 +444,25 @@ app_server <- function(input, output, session) {
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
-    ## shiny::req(auth$logged)
+    shiny::req(auth$logged)
     if (is.null(auth$logged) || !auth$logged) {
       return("(not logged in)")
     }
     user <- auth$email
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
     if (is.null(user) || user %in% c("", NA)) user <- "User"
-    dbg("[server:output$current_user] user = ", user)
     user
   })
 
   output$current_dataset <- shiny::renderText({
-    ## trigger on change of dataset
-    name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    if (input$nav == "welcome-tab" || length(name) == 0) {
+    shiny::req(auth$logged)
+    has.pgx <- !is.null(PGX$name) && length(PGX$name)>0
+    nav.welcome <- input$nav == "welcome-tab"
+    
+    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
+      ## trigger on change of dataset
+      name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
+    } else {
       name <- paste("Omics Playground", VERSION)
     }
     name
@@ -730,14 +734,11 @@ app_server <- function(input, output, session) {
     message("------------------------------")
 
     ## stop all timers
-    dbg("[SERVER:userLogout] >>> stopping timers")
     if (!is.null(session_timer)) session_timer$run(FALSE)
 
     ## This removes user heartbeat and lock files
-    dbg("[SERVER:userLogout] >>> removing lock files")
     if (isTRUE(opt$ENABLE_HEARTBEAT)) {
       hbfile <- isolate(heartbeat()) ## does not work because auth has been reset
-      dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
       if (file.exists(hbfile)) file.remove(hbfile)
     }
     if (!is.null(lock)) lock$remove_lock()
@@ -766,7 +767,7 @@ app_server <- function(input, output, session) {
 
   ## This will be called upon user logout *after* the logout() JS call
   observeEvent(input$userLogout, {
-    dbg("[SERVER:userLogout] triggered!")
+    dbg("[SERVER:userLogout] user logout triggered!")
 
     ## run logout sequence
     userLogoutSequence(auth, action = "user.logout")
