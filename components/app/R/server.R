@@ -454,8 +454,14 @@ app_server <- function(input, output, session) {
     name
   })
 
+  ## count the number of times a navtab is clicked during the session
+  nav_count <- list()
   observeEvent(input$nav, {
     message("[SERVER] input$nav = ", input$nav)
+    if (is.null(nav_count[[input$nav]])) {
+      nav_count[[input$nav]] <<- 0
+    }
+    nav_count[[input$nav]] <<- nav_count[[input$nav]] + 1
   })
 
   ## --------------------------------------------------------------------------
@@ -637,112 +643,8 @@ app_server <- function(input, output, session) {
   })
 
   ## -------------------------------------------------------------
-  ## Session login/logout functions
+  ## Session login sequence
   ## -------------------------------------------------------------
-
-  clearPGX <- function() {
-    ## clear PGX data
-    length.pgx <- length(names(PGX))
-    if (length.pgx > 0) {
-      for (i in 1:length.pgx) {
-        PGX[[names(PGX)[i]]] <<- NULL
-      }
-    }
-  }
-
-  ## upon change of user
-  observeEvent(auth$logged, {
-    if (auth$logged) {
-      message("--------- user login ----------")
-      message("username       = ", auth$username)
-      message("email          = ", auth$email)
-      message("level          = ", auth$level)
-      message("limit          = ", auth$limit)
-      message("user_dir       = ", auth$user_dir)
-      message("-------------------------------")
-
-      pgx.record_access(auth$email, action = "login", session = session)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      bigdash.toggleTab(session, "upload-tab", enable_upload)
-    } else {
-      ## clear PGX data as soon as the user logs out
-      clearPGX()
-    }
-  })
-
-
-  ## This will be called upon user logout *after* the logout() JS call
-  observeEvent(input$userLogout, {
-    dbg("[SERVER:userLogout] user logout sequence:")
-
-    ## stop all timers
-    dbg("[SERVER:userLogout] >>> stopping timers")
-    if (!is.null(session_timer)) session_timer$run(FALSE)
-
-    ## This removes user heartbeat and lock files
-    dbg("[SERVER:userLogout] >>> removing lock files")
-    if (isTRUE(opt$ENABLE_HEARTBEAT)) {
-      hbfile <- heartbeat() ## does not work because auth has been reset
-      dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
-      if (file.exists(hbfile)) file.remove(hbfile)
-    }
-    if (!is.null(lock)) lock$remove_lock()
-
-    message("--------- user logout ---------")
-    message("username       = ", auth$username)
-    message("email          = ", auth$email)
-    message("user_dir       = ", auth$user_dir)
-    message("------------------------------")
-
-    pgx.record_access(
-      user = auth$email,
-      action = "logout",
-      comment = "user initiated Logout",
-      session = session
-    )
-
-    ## reset (logout) user. This should already have been done with
-    ## the JS call but this is a cleaner (preferred) shiny method.
-    dbg("[SERVER:userLogout] >>> resetting USER")
-    auth$resetUSER()
-
-    ## clear PGX data as soon as the user logs out (if not done)
-    clearPGX()
-
-    ## this triggers a fresh session. good for resetting all
-    ## parameters.
-    ## (IK 16-07-2023: some bug for firebase-based login, reload
-    ## loop. To be fixed!!!
-    dbg("[SERVER:userLogout] >>> reloading session")
-    ## session$reload()
-  })
-
-  ## This code listens to the JS quit signal
-  observeEvent(input$quit, {
-    ## Choose between reloading or closing the session. Close is
-    ## better because then the user does not allocate an idle session
-    ## after exit.
-    dbg("[SERVER:quit] exit session... ")
-    srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
-    dbg("[SERVER:quit] srv = ", srv)
-    ## session$close()
-    session$reload()
-  })
-
-  # This code will run when there is a shiny error. Then this
-  # error will be shown on the app. Note that errors that are
-  # not related to Shiny are not caught (e.g. an error on the
-  # global.R file is not caught by this)
-  options(shiny.error = function() {
-    # The error message is on the parent environment, it is
-    # not passed to the function called on error
-    parent_env <- parent.frame()
-    error <- parent_env$e
-    sever::sever(sever_screen0(
-      error
-    ), bg_color = "#004c7d")
-  })
-
 
   onSessionStart <- isolate({
     message("*********************************************************")
@@ -774,6 +676,110 @@ app_server <- function(input, output, session) {
     }
   })
 
+  ## upon change of user
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      message("--------- user login ----------")
+      message("username       = ", auth$username)
+      message("email          = ", auth$email)
+      message("level          = ", auth$level)
+      message("limit          = ", auth$limit)
+      message("user_dir       = ", auth$user_dir)
+      message("-------------------------------")
+
+      pgx.record_access(auth$email, action = "login", session = session)
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      bigdash.toggleTab(session, "upload-tab", enable_upload)
+    } else {
+      ## clear PGX data as soon as the user logs out
+      clearPGX()
+    }
+  })
+
+
+  ## -------------------------------------------------------------
+  ## Session logout sequences
+  ## -------------------------------------------------------------
+
+  clearPGX <- function() {
+    ## clear PGX data
+    pgx.names <- isolate(names(PGX))
+    length.pgx <- length(pgx.names)
+    if (length.pgx > 0) {
+      for (i in 1:length.pgx) {
+        PGX[[pgx.names[i]]] <<- NULL
+      }
+    }
+  }
+
+  userLogoutSequence <- function(auth, action) {
+    message("--------- user logout ---------")
+    message("username       = ", isolate(auth$username))
+    message("email          = ", isolate(auth$email))
+    message("user_dir       = ", isolate(auth$user_dir))
+    message("------------------------------")
+
+    ## stop all timers
+    dbg("[SERVER:userLogout] >>> stopping timers")
+    if (!is.null(session_timer)) session_timer$run(FALSE)
+
+    ## This removes user heartbeat and lock files
+    dbg("[SERVER:userLogout] >>> removing lock files")
+    if (isTRUE(opt$ENABLE_HEARTBEAT)) {
+      hbfile <- heartbeat() ## does not work because auth has been reset
+      dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
+      if (file.exists(hbfile)) file.remove(hbfile)
+    }
+    if (!is.null(lock)) lock$remove_lock()
+
+    ## record tab navigation count and time
+    nav_count.str <- paste(paste0(names(nav_count), "=", nav_count), collapse = ";")
+    nav_count.str <- gsub("-tab", "", nav_count.str)
+
+    pgx.record_access(
+      user = isolate(auth$email),
+      action = action,
+      session = session,
+      comment = nav_count.str
+    )
+
+    ## reset (logout) user. This should already have been done with
+    ## the JS call but this is a cleaner (preferred) shiny method.
+    dbg("[SERVER:userLogout] >>> resetting USER")
+    isolate(auth$resetUSER())
+
+    ## clear PGX data as soon as the user logs out (if not done)
+    clearPGX()
+  }
+
+
+  ## This will be called upon user logout *after* the logout() JS call
+  observeEvent(input$userLogout, {
+    dbg("[SERVER:userLogout] triggered!")
+
+    ## run logout sequence
+    userLogoutSequence(auth, action = "user.logout")
+
+    ## this triggers a fresh session. good for resetting all
+    ## parameters.
+    ## (IK 16-07-2023: some bug for firebase-based login, reload
+    ## loop. To be fixed!!!
+    ## dbg("[SERVER:userLogout] >>> reloading session")
+    ## session$reload()
+  })
+
+  ## This code listens to the JS quit signal
+  observeEvent(input$quit, {
+    ## Choose between reloading or closing the session. Close is
+    ## better because then the user does not allocate an idle session
+    ## after exit.
+    dbg("[SERVER:quit] exit session... ")
+    srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
+    dbg("[SERVER:quit] srv = ", srv)
+    ## session$close()
+    session$reload()
+  })
+
   ## This code will be run after the client has disconnected
   ## Note!!!: Strange behaviour, sudden session ending.
   session$onSessionEnded(
@@ -785,19 +791,8 @@ app_server <- function(input, output, session) {
       dbg("[SERVER] removing from active sessions :", s)
       ACTIVE_SESSIONS <<- setdiff(ACTIVE_SESSIONS, s)
 
-      dbg("[SERVER] removing active lock files")
-      if (!is.null(lock)) lock$remove_lock()
-
-      dbg("[SERVER] any user logged in?", isolate(auth$logged))
-      dbg("[SERVER] logged in user:", isolate(auth$email))
-      if (isolate(auth$logged)) {
-        pgx.record_access(
-          user = isolate(auth$email),
-          action = "session.logout",
-          comment = "forced logout at session end",
-          session = session
-        )
-      }
+      ## run log sequence
+      userLogoutSequence(isolate(auth), action = "session.logout")
 
       ## we do extra logout actions for shinyproxy
       if (opt$AUTHENTICATION == "shinyproxy") {
@@ -805,6 +800,24 @@ app_server <- function(input, output, session) {
       }
     }
   )
+
+  ## -------------------------------------------------------------
+  ## UI observers
+  ## -------------------------------------------------------------
+
+  # This code will run when there is a shiny error. Then this
+  # error will be shown on the app. Note that errors that are
+  # not related to Shiny are not caught (e.g. an error on the
+  # global.R file is not caught by this)
+  options(shiny.error = function() {
+    # The error message is on the parent environment, it is
+    # not passed to the function called on error
+    parent_env <- parent.frame()
+    error <- parent_env$e
+    sever::sever(sever_screen0(
+      error
+    ), bg_color = "#004c7d")
+  })
 
   # this function sets 'enable_info' based on the user settings
   # and is used by all the bs_alert functions with conditional=T

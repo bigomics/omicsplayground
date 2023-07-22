@@ -65,6 +65,9 @@ UploadBoard <- function(id,
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
 
+    ## keeps track of how pgx was obtained: uploaded or computed
+    uploaded_method <- NA
+
     shiny::observeEvent(uploaded_pgx(), {
       dbg("[observe::uploaded_pgx] uploaded PGX detected!")
 
@@ -109,17 +112,30 @@ UploadBoard <- function(id,
         }
       }
 
-      shinyalert::shinyalert(
-        title = paste("Your dataset is ready!"),
-        text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
-        confirmButtonText = "Load my new data!",
-        showCancelButton = TRUE,
-        cancelButtonText = "Stay here.",
-        inputId = "confirmload",
-        closeOnEsc = FALSE,
-        immediate = TRUE,
-        callbackR = load_my_dataset
-      )
+      if (uploaded_method == "computed") {
+        shinyalert::shinyalert(
+          title = paste("Your dataset is ready!"),
+          text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
+          confirmButtonText = "Load my new data!",
+          showCancelButton = TRUE,
+          cancelButtonText = "Stay here.",
+          inputId = "confirmload",
+          closeOnEsc = FALSE,
+          immediate = TRUE,
+          callbackR = load_my_dataset
+        )
+      } else {
+        shinyalert::shinyalert(
+          title = paste("Dataset is loaded!"),
+          text = paste("Your uploaded dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
+          confirmButtonText = "Show dataset!",
+          showCancelButton = FALSE,
+          inputId = "confirmload",
+          closeOnEsc = FALSE,
+          immediate = TRUE,
+          callbackR = load_my_dataset
+        )
+      }
     })
 
 
@@ -674,8 +690,10 @@ UploadBoard <- function(id,
     uploaded_pgx <- shiny::reactive({
       if (!is.null(uploaded$pgx)) {
         pgx <- uploaded$pgx
+        uploaded_method <<- "uploaded"
       } else {
         pgx <- computed_pgx()
+        uploaded_method <<- "computed"
       }
       return(pgx)
     })
