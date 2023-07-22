@@ -91,9 +91,8 @@ UserProfileBoard <- function(id, auth, nav_count) {
 
     output$usage <- renderPlot({
       x <- unlist(nav_count())
-      dbg("[UserProfileBoard:output$usage] x = ",x)
+      dbg("[UserProfileBoard:output$usage] x = ", x)
       barplot(x)
     })
-
   })
 }
