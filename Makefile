@@ -34,12 +34,12 @@ docker.run:
 docker.run2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -it -p 4000:3838 \
-		-v ~/Playground/pgx:/omicsplayground/data \
+		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE version changelog
+docker: FORCE 
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
