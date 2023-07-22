@@ -57,7 +57,7 @@ loading_table_datasets_public_server <- function(id,
       })
 
       if (need_update) {
-        dbg("[loading_server:getPGXINFO_PUBLIC] updating public pgxdir =",pgx_public_dir)
+        dbg("[loading_server:getPGXINFO_PUBLIC] updating public pgxdir =", pgx_public_dir)
         pgx.showSmallModal("Updating datasets library<br>Please wait...")
         shiny::withProgress(message = "Updating datasets library...", value = 0.33, {
           ## before reading the info file, we need to update for new files
