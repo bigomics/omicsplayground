@@ -456,9 +456,9 @@ app_server <- function(input, output, session) {
 
   output$current_dataset <- shiny::renderText({
     shiny::req(auth$logged)
-    has.pgx <- !is.null(PGX$name) && length(PGX$name)>0
+    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
     nav.welcome <- input$nav == "welcome-tab"
-    
+
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
