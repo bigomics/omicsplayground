@@ -209,7 +209,6 @@ FirebaseAuthenticationModule <- function(id,
       email_waiter$show()
       firebase2$send_email(email)
       email_waiter$hide()
-
     })
 
     observeEvent(firebase$get_signed_in(), {
@@ -461,9 +460,8 @@ EmailLinkAuthenticationModule <- function(id,
       ),
       color = waiter::transparent(.8)
     )
-    
-    observeEvent(input$emailSubmit, {
 
+    observeEvent(input$emailSubmit, {
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       email <- tolower(input$emailInput)
@@ -818,7 +816,7 @@ LoginCodeAuthenticationModule <- function(id,
         email_waiter$show()
         sendLoginCode(login_email, login_code, mail_creds = mail_creds)
         email_waiter$hide()
-        
+
         USER$email <- login_email
         USER$username <- login_email
         USER$logged <- FALSE
