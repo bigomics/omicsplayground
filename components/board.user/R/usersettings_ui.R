@@ -18,9 +18,9 @@ UserSettingsUI <- function(id) {
       shiny::tabPanel(
         "App Settings & News",
         bslib::layout_column_wrap(
-          height = "calc(100vh - 183px)",        
+          height = "calc(100vh - 183px)",
           width = 1,
-          style = htmltools::css(grid_template_columns = "6fr 6fr"),          
+          style = htmltools::css(grid_template_columns = "6fr 6fr"),
           bslib::card(
             ## bslib::card_header(),
             bslib::card_body(
@@ -50,7 +50,7 @@ UserSettingsUI <- function(id) {
         "Resource info",
         bslib::layout_column_wrap(
           width = 1,
-          height = "calc(100vh - 183px)",        
+          height = "calc(100vh - 183px)",
           user_table_resources_ui(ns("resources"))
         )
       )

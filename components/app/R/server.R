@@ -135,7 +135,7 @@ app_server <- function(input, output, session) {
   env$user_settings <- UserSettingsBoard(
     "user_settings",
     auth = auth,
-    pgx=PGX
+    pgx = PGX
   )
 
   ## Do not display "Welcome" tab on the menu

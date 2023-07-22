@@ -29,10 +29,10 @@ UserProfileUI <- function(id) {
           ),
           bslib::layout_column_wrap(
             width = 1,
-            ##shiny::plotOutput(ns("usage")),
+            ## shiny::plotOutput(ns("usage")),
             PlotModuleUI(
               ns("usage"),
-              plotlib = "plotly",              
+              plotlib = "plotly",
               download.fmt = c("png", "pdf", "csv"),
               title = "Platform usage",
               height = c("100%", TABLE_HEIGHT_MODAL)
