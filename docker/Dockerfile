@@ -64,8 +64,8 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 
 ## tag docker version
 WORKDIR /omicsplayground
-##RUN make version
-COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
+#RUN make version
+#COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
 
 
 #------------------------------------------------------------
