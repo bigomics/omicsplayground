@@ -174,6 +174,7 @@ FirebaseAuthenticationModule <- function(id,
       resetUSER()
     })
 
+
     email_waiter <- waiter::Waiter$new(
       id = ns("emailSubmit"),
       html = div(waiter::spin_3(),
@@ -182,11 +183,8 @@ FirebaseAuthenticationModule <- function(id,
       color = waiter::transparent(.8)
     )
 
-    sendEmailLink <- reactiveVal(NULL)
-
     observeEvent(input$emailSubmit, {
       shiny::req(input$emailInput)
-      email_waiter$show()
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
@@ -203,24 +201,16 @@ FirebaseAuthenticationModule <- function(id,
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
-        sendEmailLink(NULL)
-        email_waiter$hide()
         return(NULL)
       }
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(email)
-    })
+      email_waiter$show()
+      firebase2$send_email(email)
+      email_waiter$hide()
 
-    observeEvent(sendEmailLink(),
-      {
-        firebase2$send_email(sendEmailLink())
-        sendEmailLink(NULL)
-        email_waiter$hide()
-      },
-      ignoreNULL = TRUE
-    )
+    })
 
     observeEvent(firebase$get_signed_in(), {
       response <- firebase$get_signed_in()
@@ -471,11 +461,8 @@ EmailLinkAuthenticationModule <- function(id,
       ),
       color = waiter::transparent(.8)
     )
-
-    sendEmailLink <- reactiveVal(NULL)
-
+    
     observeEvent(input$emailSubmit, {
-      email_waiter$show()
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
@@ -491,24 +478,15 @@ EmailLinkAuthenticationModule <- function(id,
       if (!check$valid) {
         js.emailFeedbackMessage(session, check$msg, "error")
         shiny::updateTextInput(session, "emailInput", value = "")
-        sendEmailLink(NULL)
-        email_waiter$hide()
         return(NULL)
       }
 
       ## >>> OK let's send auth request
       js.emailFeedbackMessage(session, "Email sent, check your inbox.", "success")
-      sendEmailLink(email) ## can take a while...
+      email_waiter$show()
+      firebase2$send_email(email)
+      email_waiter$hide()
     })
-
-    observeEvent(sendEmailLink(),
-      {
-        firebase2$send_email(sendEmailLink())
-        sendEmailLink(NULL)
-        email_waiter$hide()
-      },
-      ignoreNULL = TRUE
-    )
 
     observeEvent(firebase$get_signed_in(), {
       response <- firebase$get_signed_in()
@@ -796,6 +774,14 @@ LoginCodeAuthenticationModule <- function(id,
 
     output$login_warning <- shiny::renderText("")
 
+    email_waiter <- waiter::Waiter$new(
+      id = ns("login_btn"),
+      html = div(waiter::spin_3(),
+        style = "transform: scale(0.6);"
+      ),
+      color = waiter::transparent(.8)
+    )
+
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
@@ -829,7 +815,10 @@ LoginCodeAuthenticationModule <- function(id,
         login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
 
         info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
+        email_waiter$show()
         sendLoginCode(login_email, login_code, mail_creds = mail_creds)
+        email_waiter$hide()
+        
         USER$email <- login_email
         USER$username <- login_email
         USER$logged <- FALSE
