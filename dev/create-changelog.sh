@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-previous_tag=0
+previous_tag=HEAD
 FILTER="${1:-.*}"
 for current_tag in $(git tag --sort=-creatordate)
 do
-
 if [ "$previous_tag" != 0 ];then
     tag_date=$(git log -1 --pretty=format:'%ad' --date=short ${previous_tag})
     printf "## ${previous_tag} (${tag_date})\n\n"

@@ -88,11 +88,10 @@ version:
 ##	sed -i "1s/.*/$(VERSION)/" VERSION
 	echo $(VERSION) > VERSION
 
+LAST=awk -v RS='(\r?\n){3,}' 'NR<=6'
 changelog:
-	sh ./dev/create-changelog.sh >  CHANGELOG.md
-	sh ./dev/create-changelog.sh 'feat' > CHANGELOG-FEATURES.md
-	sh ./dev/create-changelog.sh 'fix' > CHANGELOG-FIXES.md
-#	sh ./dev/create-changelog.sh 'feat' | awk -v RS='(\r?\n){3,}' 'NR==1' > CHANGELOG-FEATURES.md
+	sh ./dev/create-changelog.sh | $(LAST) >  CHANGELOG.md
+	sh ./dev/create-changelog.sh 'feat' | $(LAST) > FEATURES.md
 
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
