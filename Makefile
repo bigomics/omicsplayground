@@ -1,7 +1,7 @@
 BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass tag.version
+run: sass version
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
 
 run.headless:
@@ -39,7 +39,7 @@ docker.run2:
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE tag.version
+docker: FORCE version
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
@@ -80,12 +80,19 @@ renv: FORCE
 FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
-DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION := "v3.2.11-"$(BRANCH)""$(DATE)
+DATE = `date +%y%m%d|sed 's/\ //g'`
+VERSION = "v3.2.11-"$(BRANCH)""$(DATE)
 
-tag.version:
+version:
 	@echo "new version ->" $(VERSION)
-	sed -i "1s/.*/$(VERSION)/" VERSION
+##	sed -i "1s/.*/$(VERSION)/" VERSION
+	echo $(VERSION) > VERSION
+
+changelog:
+	sh ./dev/create-changelog.sh >  CHANGELOG.md
+	sh ./dev/create-changelog.sh 'feat' > CHANGELOG-FEATURES.md
+	sh ./dev/create-changelog.sh 'fix' > CHANGELOG-FIXES.md
+#	sh ./dev/create-changelog.sh 'feat' | awk -v RS='(\r?\n){3,}' 'NR==1' > CHANGELOG-FEATURES.md
 
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
