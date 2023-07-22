@@ -736,14 +736,15 @@ app_server <- function(input, output, session) {
     ## This removes user heartbeat and lock files
     dbg("[SERVER:userLogout] >>> removing lock files")
     if (isTRUE(opt$ENABLE_HEARTBEAT)) {
-      hbfile <- heartbeat() ## does not work because auth has been reset
+      hbfile <- isolate(heartbeat()) ## does not work because auth has been reset
       dbg("[SERVER:userLogout] hbfile = ", basename(hbfile))
       if (file.exists(hbfile)) file.remove(hbfile)
     }
     if (!is.null(lock)) lock$remove_lock()
 
     ## record tab navigation count and time
-    nav_count.str <- paste(paste0(names(nav$count), "=", nav$count), collapse = ";")
+    nav.count <- isolate(nav$count)
+    nav_count.str <- paste(paste0(names(nav.count), "=", nav.count), collapse = ";")
     nav_count.str <- gsub("-tab", "", nav_count.str)
 
     pgx.record_access(
