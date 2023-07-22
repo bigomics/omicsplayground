@@ -287,15 +287,6 @@ DataViewUI <- function(id) {
           width = c("auto", "100%")
         )
       )
-    ),
-    # Resource info #####
-    shiny::tabPanel(
-      "Resource info",
-      bslib::layout_column_wrap(
-        width = 1,
-        height = fullH,
-        dataview_table_resources_ui(ns("resources"))
-      )
     )
   )
 

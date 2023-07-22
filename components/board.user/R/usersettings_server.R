@@ -3,11 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserSettingsBoard <- function(id, auth) {
+UserSettingsBoard <- function(id, auth, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     dbg("[UserSettingsBoard] >>> initializing User Settings...")
 
+    ## module for system resources
+    user_table_resources_server("resources", pgx=pgx)
+    
     shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>User Profile</strong>"),

@@ -266,9 +266,6 @@ DataViewBoard <- function(id, pgx) {
       scrollY = "calc(35vh - 140px)"
     )
 
-    dataview_table_resources_server(
-      "resources", pgx
-    )
 
     dataview_table_contrasts_server(
       "contrastTable", pgx,

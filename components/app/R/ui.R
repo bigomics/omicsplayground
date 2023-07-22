@@ -236,11 +236,11 @@ app_ui <- function() {
           ## "User",
           shiny::textOutput("current_user", inline = TRUE),
           bigdash::navbarDropdownTab(
-            "Profile",
+            "User profile",
             "userprofile-tab"
           ),
           bigdash::navbarDropdownTab(
-            "Settings",
+            "App settings",
             "usersettings-tab"
           ),
           upgrade.tab,

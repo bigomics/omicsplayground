@@ -4,7 +4,7 @@
 ##
 
 
-dataview_table_resources_ui <- function(id) {
+user_table_resources_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::layout_column_wrap(
     width = 1,
@@ -29,13 +29,15 @@ dataview_table_resources_ui <- function(id) {
 }
 
 
-dataview_table_resources_server <- function(id, pgx) {
+user_table_resources_server <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ## ================================================================================
     ## Timings
     ## ================================================================================
 
     timings_data <- shiny::reactive({
+
+      shiny::validate(shiny::need(!is.null(pgx$timings), "need 'timings' in pgx object."))
       shiny::req(pgx$timings)
 
       #

@@ -127,7 +127,7 @@ app_server <- function(input, output, session) {
   )
   env$user_profile <- UserProfileBoard("user_profile",
     auth = auth, nav_count = reactive(nav$count) )
-  env$user_settings <- UserSettingsBoard("user_settings", auth = auth)
+  env$user_settings <- UserSettingsBoard("user_settings", auth = auth, pgx=PGX)
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
@@ -508,7 +508,6 @@ app_server <- function(input, output, session) {
       bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
       toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
       toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-      toggleTab("dataview-tabs", "Resource info", show.beta)
 
       ## Dynamically show upon availability in pgx object
       info("[SERVER] disabling extra features")

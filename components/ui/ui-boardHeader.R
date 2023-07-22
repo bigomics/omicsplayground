@@ -24,14 +24,6 @@ boardHeader <- function(title, info_link) {
           ),
           "Video tutorial about this board"
         )
-      ),
-      div(
-        class = "card-footer-switch",
-        selector_switch(
-          class = "card-footer-checked",
-          label = "show captions",
-          is.checked = FALSE
-        )
       )
     )
     #

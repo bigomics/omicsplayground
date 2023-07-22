@@ -21,15 +21,9 @@ html {
         display: none;
     }
     
-    .card-footer-switch{
-        margin-top: 10px;
-        margin-left: 10px;
-    }
-
     .form-check.form-switch {
-        font-size: 14px;
-        /* align-items: center; */
-        float: right;
+        font-size: 1em;
+        float: left;
     }
 
     .form-check-input:checked {

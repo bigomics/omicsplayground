@@ -258,7 +258,7 @@ splashLoginModal <- function(ns = NULL,
   )
 
   ## display the number of active sessions
-  num_sessions <- paste0(length(ACTIVE_SESSIONS) + 1, "/", MAX_SESSIONS)
+  num_sessions <- paste0(length(ACTIVE_SESSIONS), "/", MAX_SESSIONS)
 
   footer <- div(
     id = "splash-footer",
