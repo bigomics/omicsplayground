@@ -83,7 +83,7 @@ FORCE: ;
 DATE = `date +%y%m%d|sed 's/\ //g'`
 VERSION = "v3.2.11-"$(BRANCH)""$(DATE)
 
-version:
+version: 
 	@echo "new version ->" $(VERSION)
 ##	sed -i "1s/.*/$(VERSION)/" VERSION
 	echo $(VERSION) > VERSION

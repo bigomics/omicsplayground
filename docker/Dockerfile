@@ -64,7 +64,7 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 
 ## tag docker version
 WORKDIR /omicsplayground
-RUN make tag.version
+RUN make version && make changelog
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
