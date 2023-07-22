@@ -36,7 +36,6 @@ user_table_resources_server <- function(id, pgx) {
     ## ================================================================================
 
     timings_data <- shiny::reactive({
-
       shiny::validate(shiny::need(!is.null(pgx$timings), "need 'timings' in pgx object."))
       shiny::req(pgx$timings)
 

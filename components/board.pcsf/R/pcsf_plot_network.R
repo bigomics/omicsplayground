@@ -82,7 +82,7 @@ pcsf_plot_network_server <- function(id,
       terminals <- res$terminals
       idx <- res$idx
 
-      beta <- as.numeric(pcsf_beta()) 
+      beta <- as.numeric(pcsf_beta())
       net <- PCSF::PCSF(ppi, terminals, w = 2, b = exp(beta))
       igraph::V(net)$group <- idx[igraph::V(net)$name]
 

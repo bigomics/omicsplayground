@@ -9,8 +9,8 @@ UserSettingsBoard <- function(id, auth, pgx) {
     dbg("[UserSettingsBoard] >>> initializing User Settings...")
 
     ## module for system resources
-    user_table_resources_server("resources", pgx=pgx)
-    
+    user_table_resources_server("resources", pgx = pgx)
+
     shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>User Profile</strong>"),
