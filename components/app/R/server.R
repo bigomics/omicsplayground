@@ -280,7 +280,8 @@ app_server <- function(input, output, session) {
           "cell-tab",
           SingleCellInputs("cell"),
           SingleCellUI("cell")
-        )
+        ),
+        shiny::tags$script(src = "dropdown-extra.js")
       )
 
       shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
