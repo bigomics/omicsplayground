@@ -168,7 +168,7 @@ app_server <- function(input, output, session) {
 
   ## Chatbox
   if (opt$ENABLE_CHIRP) {
-    observeEvent(input$chirp_button, {
+    shiny::observeEvent(input$chirp_button, {
       shinyjs::click(id = "actual-chirp-button")
     })
     r_chirp_name <- reactive({
@@ -372,7 +372,7 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["cmap"]) {
         info("[SERVER] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap", pgx = PGX, getPgxDir = reactive(auth$user_dir))
+        ConnectivityBoard("cmap", pgx = PGX, auth = auth)
       }
 
       if (ENABLED["cell"]) {

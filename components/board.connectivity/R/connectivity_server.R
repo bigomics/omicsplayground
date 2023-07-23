@@ -4,7 +4,7 @@
 ##
 
 
-ConnectivityBoard <- function(id, pgx, getPgxDir) {
+ConnectivityBoard <- function(id, auth, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -92,7 +92,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
     getConnectivityFilename <- function(sigdb) {
       db1 <- file.path(SIGDB.DIR, sigdb)
-      db2 <- file.path(getPgxDir(), sigdb)
+      db2 <- file.path(auth$user_dir, sigdb)
       if (file.exists(db1)) {
         return(db1)
       }
@@ -107,12 +107,12 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
     #' @param sigdb signature h5 file
     getConnectivityPath <- function(sigdb) {
       db1 <- file.path(SIGDB.DIR, sigdb)
-      db2 <- file.path(getPgxDir(), sigdb)
+      db2 <- file.path(auth$user_dir, sigdb)
       if (file.exists(db1)) {
         return(SIGDB.DIR)
       }
       if (file.exists(db2)) {
-        return(getPgxDir())
+        return(auth$user_dir)
       }
       return(NULL)
     }
@@ -192,7 +192,7 @@ ConnectivityBoard <- function(id, pgx, getPgxDir) {
 
       pgx.connectivity <- list()
       if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
-      pgxdir <- getPgxDir()
+      pgxdir <- auth$user_dir
 
       if (!"datasets-sigdb" %in% names(pgx.connectivity)) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
