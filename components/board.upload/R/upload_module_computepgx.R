@@ -319,7 +319,7 @@ upload_module_computepgx_server <- function(
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
         }
         if (numpgx >= max.datasets) {
-          shinyalert_storage_full()   ## from ui-alerts.R
+          shinyalert_storage_full() ## from ui-alerts.R
           return(NULL)
         }
 

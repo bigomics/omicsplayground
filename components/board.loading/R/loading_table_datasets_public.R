@@ -138,7 +138,7 @@ loading_table_datasets_public_server <- function(id,
       if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
       maxpgx <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= maxpgx) {
-        shinyalert_storage_full()  ## ui-alerts.R
+        shinyalert_storage_full() ## ui-alerts.R
         return(NULL)
       }
 
