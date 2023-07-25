@@ -197,8 +197,10 @@ app_ui <- function() {
       navbar = bigdash::navbar(
         title = tags$img(
           id = "logo-bigomics",
-          src = "assets/img/bigomics.png",
-          width = "110",
+          ## src = "assets/img/bigomics.png",
+          src = "static/bigomics-logo.png",          
+          height = "30"
+          #width = "110",
         ),
         center = tags$div(
           shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
