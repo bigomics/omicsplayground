@@ -164,7 +164,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
       output$inputsUI <- shiny::renderUI({
         ns <- session$ns
         bc.options <- c("none", "PCA", "HC", "SVA", "NNM")
-        bc.options <- c("none"="none", "PCA"="PCA", "SVA"="SVA", "NN matching"="NNM")
+        bc.options <- c("none" = "none", "PCA" = "PCA", "SVA" = "SVA", "NN matching" = "NNM")
         bc.selected <- "none"
         bc_info <- NULL
         bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
