@@ -164,7 +164,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
       output$inputsUI <- shiny::renderUI({
         ns <- session$ns
         bc.options <- c("none", "PCA", "HC", "SVA", "NNM")
-        bc.options <- c("none", "PCA", "SVA", "NNM")
+        bc.options <- c("none"="none", "PCA"="PCA", "SVA"="SVA", "NN matching"="NNM")
         bc.selected <- "none"
         bc_info <- NULL
         bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
@@ -204,7 +204,9 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
           withTooltip(
             shiny::radioButtons(
               ns("bc_methods"), "Unsupervised correction:",
-              choices = bc.options, selected = bc.selected, inline = FALSE
+              choices = bc.options,
+              selected = bc.selected,
+              inline = FALSE
             ),
             "Unsupervised correction methods. Correction will be performed additional to the (supervised) corrections above. <b>PCA</b> iteratively corrects low rank PC components not correlated to any model parameters; <b>SVA</b> applies surrogate variable analysis (Leek et al.); <b>NNM</b> applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data (unpublished).",
             placement = "left", options = list(container = "body")
