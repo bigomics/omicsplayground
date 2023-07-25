@@ -130,16 +130,7 @@ upload_module_received_server <- function(id,
           if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(auth$options$MAX_DATASETS)
           if (numpgx >= maxpgx) {
-            ## should use sprintf or glue here...
-
-            msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
-
-            shinyalert::shinyalert(
-              title = "Your storage is full",
-              text = HTML(msg),
-              html = TRUE,
-              type = "warning"
-            )
+            shinyalert_storage_full() ## from ui-alerts.R
             return(NULL)
           }
 

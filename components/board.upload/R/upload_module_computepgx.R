@@ -319,13 +319,7 @@ upload_module_computepgx_server <- function(
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
         }
         if (numpgx >= max.datasets) {
-          msg <- "You have reached your datasets limit. Please delete some datasets, or <a href='https://events.bigomics.ch/upgrade' target='_blank'><b><u>UPGRADE</u></b></a> your account."
-          shinyalert::shinyalert(
-            title = "Your storage is full",
-            text = HTML(msg),
-            html = TRUE,
-            type = "warning"
-          )
+          shinyalert_storage_full()   ## from ui-alerts.R
           return(NULL)
         }
 
