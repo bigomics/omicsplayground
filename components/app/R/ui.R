@@ -198,9 +198,9 @@ app_ui <- function() {
         title = tags$img(
           id = "logo-bigomics",
           ## src = "assets/img/bigomics.png",
-          src = "static/bigomics-logo.png",          
+          src = "static/bigomics-logo.png",
           height = "30"
-          #width = "110",
+          # width = "110",
         ),
         center = tags$div(
           shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
