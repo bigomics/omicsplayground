@@ -4,7 +4,7 @@
 ##
 
 
-ConnectivityBoard <- function(id, auth, pgx) {
+ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -190,7 +190,9 @@ ConnectivityBoard <- function(id, auth, pgx) {
     compute_connectivity <- shiny::eventReactive(
       {
         auth$user_dir
+        input$recalc
         pgx$X
+        reload_pgxdir()
       },
       {
         shiny::req(pgx$X)
@@ -234,7 +236,8 @@ ConnectivityBoard <- function(id, auth, pgx) {
           ## playbase::pgx.save(pgx, file = pgx$name )
         }
         pgx$connectivity
-      }
+      },
+      ignoreNULL=TRUE
     )
 
     getConnectivityScores <- shiny::reactive({
