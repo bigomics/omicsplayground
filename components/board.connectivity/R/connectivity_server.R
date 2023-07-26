@@ -53,7 +53,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
       dbg("[ConnectivityBoard:observeEvent] updating signature DB list")
       my_sigdb <- "datasets-sigdb.h5"
       computed_sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
-      dbg("[ConnectivityBoard:observeEvent] computed_sigdb = ",computed_sigdb)
+      dbg("[ConnectivityBoard:observeEvent] computed_sigdb = ", computed_sigdb)
       available_sigdb <- c(my_sigdb, computed_sigdb)
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
@@ -236,12 +236,11 @@ ConnectivityBoard <- function(id, auth, pgx) {
     )
 
     getConnectivityScores <- shiny::reactive({
-
       pgx.connectivity <- compute_connectivity()
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
-      
+
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
         warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
@@ -256,7 +255,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
       scores <- scores[order(-abs(scores$score)), ]
       scores <- scores[!duplicated(scores$pathway), ]
       rownames(scores) <- scores$pathway
-      
+
       if (nrow(scores) == 0 || ncol(scores) == 0) {
         warning("[getConnectivityScores] ERROR : scores has zero dimensions")
         return(NULL)
@@ -266,19 +265,19 @@ ConnectivityBoard <- function(id, auth, pgx) {
         sel <- grep("cluster[:]", scores$pathway, invert = TRUE)
         scores <- scores[sel, , drop = FALSE]
       }
-      
+
       ## only those in existing database
       sigpath <- getConnectivityPath(sigdb)
       cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path = sigpath)
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
 
       ## filter on significance
-      if(input$filter_significant) {
+      if (input$filter_significant) {
         qsig <- 0.20
         scores <- scores[which(scores$padj <= qsig), , drop = FALSE]
       }
       scores <- scores[order(-scores$score), , drop = FALSE]
-      
+
       no.le <- !("leadingEdge" %in% colnames(scores))
       abs_score <- input$abs_score
       ntop <- 100
@@ -297,7 +296,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
         ee <- ee[match(scores$pathway, names(ee))]
         scores$leadingEdge <- ee
       }
-      
+
       if (no.le && abs_score == FALSE) {
         ## recreate "leadingEdge" list
         sig <- getSignatureMatrix(sigdb)
@@ -322,7 +321,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
         ee[neg.rho] <- nn[match(scores$pathway[neg.rho], names(nn))]
         scores$leadingEdge <- ee
       }
-      
+
       ## bail out
       if (nrow(scores) == 0) {
         return(NULL)
@@ -389,7 +388,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
     connectivityScoreTable <- NULL
     connectivityFoldchangeTable <- NULL
     getLeadingEdgeGraph <- NULL
-    
+
     connectivity_plot_FCFCplots_server(
       "FCFCplots",
       pgx = pgx,
