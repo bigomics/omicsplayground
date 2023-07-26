@@ -335,37 +335,6 @@ const priceChange = (name) => {
 	}
 }
 
-const hideSub = () => {
-    $('#logSub').hide();
-    $('#logSubbed').show();
-    $('#sever-reload-btn').show();
-}
-
-const sendLog = () => {
-    let msg  = $('#logMsg').val();
-
-    fetch(`log?msg=${encodeURIComponent(msg)}`)
-	.then(res => {
-		console.info(res);
-		hideSub();
-	})
-	.catch(error => {
-		console.error(error);
-		hideSub();
-	})
-}
-
-const sendLog2 = (msg) => {
-    	fetch(`log?msg=${encodeURIComponent(msg)}`)
-	        .then(res => {
-		        console.info(res);
-			hideSub();
-		})
-	  .catch(error => {
-			console.error(error);
-			hideSub();
-		})
-};
 
 Shiny.addCustomMessageHandler('referral-input-error', (msg) => {
 	$(`#${msg.target}`).addClass('error');

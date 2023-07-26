@@ -18,25 +18,10 @@ app_server <- function(input, output, session) {
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
   info("[SERVER] getwd = ", normalizePath(getwd()))
-  info("[SERVER] HONCHO_URL = ", opt$HONCHO_URL)
   info("[SERVER] SESSION = ", session$token)
 
-  has.honcho <- FALSE
-  if (has.honcho && !is.null(opt$HONCHO_URL) && opt$HONCHO_URL != "") {
-    ## Determine is Honcho is alive
-    curl.resp <- try(RCurl::getURL(paste0(opt$HONCHO_URL, "/__docs__/")))
-    honcho.responding <- grepl("Swagger", curl.resp)
-    honcho.token <- Sys.getenv("HONCHO_TOKEN", "")
-    has.honcho <- (honcho.token != "" && honcho.responding)
-  }
-  if (1 && has.honcho) {
-    info("[SERVER] Honcho is alive! ")
-    sever::sever(sever_screen2(session$token), bg_color = "#004c7d")
-  } else {
-    ## No honcho, no email....
-    info("[SERVER] No Honcho? No party..")
-    sever::sever(sever_screen0(), bg_color = "#004c7d")
-  }
+  ## default disconnected screen
+  sever::sever(sever_disconnected(), bg_color = "#004c7d")
 
   setwd(WORKDIR) ## for some reason it can change!! (defined in global.R)
   server.start_time <- Sys.time()
@@ -592,6 +577,7 @@ app_server <- function(input, output, session) {
 
   idle_timeout_callback <- function() {
     info("[SERVER] ********** closing idle session **************")
+    sever::sever(sever_disconnected(), bg_color = "#004c7d")
     session$close()
   }
 
@@ -670,22 +656,13 @@ app_server <- function(input, output, session) {
 
     if (length(ACTIVE_SESSIONS) > MAX_SESSIONS) {
       dbg("ERROR: Too many sessions. stopping session!!!\n")
-      srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
-      sever_screen_503 <- shiny::tagList(
-        shiny::tags$h1("Sorry, the Playground is full!", style = "color:white;font-family:lato;"),
-        shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),
-        shiny::br(),
-        shiny::div(paste("server =", srv), style = "font-size:11px;text-align:center;"),
-        shiny::br(), shiny::br(),
-        sever::reload_button("Relaunch", class = "info")
-      )
       pgx.record_access(
         user = isolate(auth$email),
         action = "server.full",
         comment = "too many sessions. server at capacity",
         session = session
       )
-      sever::sever(sever_screen_503, bg_color = "#004c7d") ## lightblue=2780e3
+      sever::sever(sever_serverfull(opt$HOSTNAME), bg_color = "#004c7d") ## lightblue=2780e3
       session$close()
     }
   })
@@ -786,10 +763,8 @@ app_server <- function(input, output, session) {
     ## better because then the user does not allocate an idle session
     ## after exit.
     dbg("[SERVER:quit] exit session... ")
-    srv <- paste0(opt$HOSTNAME, ":", isolate(session$clientData$url_hostname))
-    dbg("[SERVER:quit] srv = ", srv)
-    ## session$close()
-    session$reload()
+    sever::sever(sever_ciao(), bg_color = "#004c7d")
+    session$close()
   })
 
   ## This code will be run after the client has disconnected
@@ -826,9 +801,7 @@ app_server <- function(input, output, session) {
     # not passed to the function called on error
     parent_env <- parent.frame()
     error <- parent_env$e
-    sever::sever(sever_screen0(
-      error
-    ), bg_color = "#004c7d")
+    sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 
   # this function sets 'enable_info' based on the user settings
