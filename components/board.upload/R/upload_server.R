@@ -100,11 +100,8 @@ UploadBoard <- function(id,
         )
       })
 
-      if (is.null(reload_pgxdir())) {
-        reload_pgxdir(1)
-      } else {
-        reload_pgxdir(reload_pgxdir() + 1)
-      }
+      ## trigger reload of pgx table
+      reload_pgxdir(reload_pgxdir() + 1)
 
       beepr::beep(10) ## short beep
 

@@ -159,11 +159,7 @@ upload_module_received_server <- function(id,
           }
 
           ## reload pgx dir so the newly accepted pgx files are registered in user table
-          if (is.null(reload_pgxdir())) {
-            reload_pgxdir(1)
-          } else {
-            reload_pgxdir(reload_pgxdir() + 1)
-          }
+          reload_pgxdir(reload_pgxdir() + 1)
 
           ## remove the accepted pgx from the table
           refresh_table(refresh_table() + 1)

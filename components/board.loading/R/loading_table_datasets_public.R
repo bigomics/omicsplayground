@@ -167,11 +167,7 @@ loading_table_datasets_public_server <- function(id,
         )
       )
 
-      if (is.null(reload_pgxdir())) {
-        reload_pgxdir(1)
-      } else {
-        reload_pgxdir(reload_pgxdir() + 1)
-      }
+      reload_pgxdir(reload_pgxdir() + 1)
     })
 
     pgxTable_DT <- reactive({
