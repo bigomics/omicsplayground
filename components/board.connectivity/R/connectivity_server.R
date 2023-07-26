@@ -50,12 +50,11 @@ ConnectivityBoard <- function(id, auth, pgx) {
     shiny::observe({
       shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
-      sigdb1 <- "datasets-sigdb.h5"
-      sigdbx <- dir(SIGDB.DIR, pattern = "sigdb-.*h5$") ## extra sigdb
-      sigdb <- c(sigdb1, sigdbx)
-      computed.sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
-      sel <- sigdb1
-      shiny::updateSelectInput(session, "sigdb", choices = sigdb, selected = sel)
+      dbg("[ConnectivityBoard:observeEvent] updating signature DB list")
+      my_sigdb <- "datasets-sigdb.h5"
+      computed_sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
+      available_sigdb <- c(my_sigdb, computed_sigdb)
+      shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
 
 
@@ -185,17 +184,19 @@ ConnectivityBoard <- function(id, auth, pgx) {
       return(F)
     })
 
+    compute_connectivity <- shiny::eventReactive({
+      auth$user_dir
+      pgx$X
+    }, {
+      
+      shiny::req(pgx$X)
+      ## shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
+##      pgx.connectivity <- list()
+##      if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
 
-    compute_connectivity <- shiny::reactive({
-      shiny::req(pgx$X, pgx$connectivity)
-      shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
-
-      pgx.connectivity <- list()
-      if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
-      pgxdir <- auth$user_dir
-
-      if (!"datasets-sigdb" %in% names(pgx.connectivity)) {
+      if (!"datasets-sigdb" %in% names(pgx$connectivity)) {
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        pgxdir <- auth$user_dir
         sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
         user.scores <- NULL
         need_update <- playbase::pgxinfo.needUpdate(pgxdir,
@@ -223,9 +224,13 @@ ConnectivityBoard <- function(id, auth, pgx) {
           })
           shiny::removeModal(session)
         }
-        pgx.connectivity[["datasets-sigdb.h5"]] <- user.scores
+        pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
+
+        ## save results?? but what is the real filename?????
+        ## playbase::pgx.save(pgx, file = pgx$name )
+        
       }
-      pgx.connectivity
+      pgx$connectivity
     })
 
     getConnectivityScores <- shiny::reactive({
