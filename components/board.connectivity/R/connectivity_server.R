@@ -237,8 +237,8 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
         }
         pgx$connectivity
       },
-      ignoreNULL=TRUE,
-      ignoreInit=FALSE
+      ignoreNULL = TRUE,
+      ignoreInit = FALSE
     )
 
     getConnectivityScores <- shiny::reactive({
