@@ -65,35 +65,37 @@ UploadBoard <- function(id,
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
 
-    ## keeps track of how pgx was obtained: uploaded or computed
+    ## keeps track of how pgx was obtained: uploaded or computed. NEED
+    ## RETHINK: is this robust to multiple users on same R process?
     uploaded_method <- NA
 
     shiny::observeEvent(uploaded_pgx(), {
-      dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+      dbg("[UploadBoard:observe:uploaded_pgx] uploaded PGX detected!")
 
       new_pgx <- uploaded_pgx()
-      new_pgx <- playbase::pgx.initialize(new_pgx)
 
-      savedata_button <- NULL
+      ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
+      ## object again.  We should skip saving and pass the filename to
+      ## pgxfile to be sure the filename is correct.
+
+      ##new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
-      pgxname <- sub("[.]pgx$", "", new_pgx$name)
-      pgxname <- gsub("^[./-]*", "", pgxname) ## prevent going to parent folder
-      pgxname <- paste0(gsub("[ \\/]", "_", pgxname), ".pgx")
+      pgxfile <- sub("[.]pgx$", "", new_pgx$name)
+      pgxfile <- gsub("^[./-]*", "", pgxfile) ## prevent going to parent folder
+      pgxfile <- paste0(gsub("[ \\/]", "_", pgxfile), ".pgx")
       pgxdir <- auth$user_dir
-      fn <- file.path(pgxdir, pgxname)
+      fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ## switch 'pgx' as standard name. Actually saving as RDS
       ## would have been better...
-      pgx <- new_pgx
-      dbg("[observe::uploaded_pgx] saving pgx as fn = ", fn)
-      save(pgx, file = fn)
-      remove(pgx)
+      dbg("[UploadBoard:observe::uploaded_pgx] saving pgx as = ", fn)
+      playbase::pgx.save(new_pgx, file = fn)
 
       shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
         playbase::pgxinfo.updateDatasetFolder(
           pgxdir,
-          new.pgx = pgxname,
+          new.pgx = pgxfile,
           update.sigdb = FALSE
         )
       })
@@ -105,10 +107,10 @@ UploadBoard <- function(id,
       }
 
       beepr::beep(10) ## short beep
-
+      
       load_my_dataset <- function() {
         if (input$confirmload) {
-          load_uploaded_data(new_pgx$name)
+          load_uploaded_data(pgxfile)
         }
       }
 
