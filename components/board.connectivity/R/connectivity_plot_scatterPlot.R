@@ -81,10 +81,13 @@ connectivity_plot_scatterPlot_server <- function(id,
         fc1 <- getCurrentContrast()$fc
         ct1 <- getCurrentContrast()$name
         sel.row <- connectivityScoreTable$rows_selected()
-
+        
         df <- sel.genes <- NULL
         if (!is.null(sel.row)) {
           df <- getConnectivityScores()
+          shiny::req(df)          
+          if(is.null(df)) return(NULL)
+
           df <- df[abs(df$score) > 0, , drop = FALSE]
           ct2 <- rownames(df)[sel.row]
           fc2 <- getConnectivityMatrix(sigdb, select = ct2)[, 1]

@@ -38,7 +38,6 @@ ConnectivityBoard <- function(id, auth, pgx) {
     shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
-      dbg("[ConnectivityBoard:observeEvent] updating contrasts")
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "contrast",
@@ -50,10 +49,13 @@ ConnectivityBoard <- function(id, auth, pgx) {
     shiny::observe({
       shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
-      dbg("[ConnectivityBoard:observeEvent] updating signature DB list")
       my_sigdb <- "datasets-sigdb.h5"
-      computed_sigdb <- names(pgx$connectivity) ## only precomputed inside PGX object??
-      dbg("[ConnectivityBoard:observeEvent] computed_sigdb = ", computed_sigdb)
+      computed_sigdb <- NULL ## only precomputed inside PGX object??
+      if(dir.exists(SIGDB.DIR) && length(pgx$connectivity)>0) {
+        ## only show if we have the libx h5 files available
+        libx_sigdb <- dir(SIGDB.DIR,pattern="^sigdb-.*h5")
+        computed_sigdb <- intersect( names(pgx$connectivity), libx_sigdb )
+      }
       available_sigdb <- c(my_sigdb, computed_sigdb)
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
@@ -246,7 +248,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
         warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
         return(NULL)
       }
-
+      
       scores <- as.data.frame(all.scores[[ct]])
       if (input$abs_score == FALSE) {
         ## put sign back!!!
@@ -255,7 +257,7 @@ ConnectivityBoard <- function(id, auth, pgx) {
       scores <- scores[order(-abs(scores$score)), ]
       scores <- scores[!duplicated(scores$pathway), ]
       rownames(scores) <- scores$pathway
-
+      
       if (nrow(scores) == 0 || ncol(scores) == 0) {
         warning("[getConnectivityScores] ERROR : scores has zero dimensions")
         return(NULL)
@@ -265,19 +267,14 @@ ConnectivityBoard <- function(id, auth, pgx) {
         sel <- grep("cluster[:]", scores$pathway, invert = TRUE)
         scores <- scores[sel, , drop = FALSE]
       }
-
+      
       ## only those in existing database
       sigpath <- getConnectivityPath(sigdb)
       cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path = sigpath)
       scores <- scores[which(rownames(scores) %in% cts), , drop = FALSE]
-
-      ## filter on significance
-      if (input$filter_significant) {
-        qsig <- 0.20
-        scores <- scores[which(scores$padj <= qsig), , drop = FALSE]
-      }
       scores <- scores[order(-scores$score), , drop = FALSE]
-
+      
+      ## compute leading edge
       no.le <- !("leadingEdge" %in% colnames(scores))
       abs_score <- input$abs_score
       ntop <- 100
@@ -321,12 +318,12 @@ ConnectivityBoard <- function(id, auth, pgx) {
         ee[neg.rho] <- nn[match(scores$pathway[neg.rho], names(nn))]
         scores$leadingEdge <- ee
       }
-
+      
       ## bail out
       if (nrow(scores) == 0) {
         return(NULL)
       }
-
+      
       return(scores)
     })
 

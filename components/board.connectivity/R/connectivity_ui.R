@@ -50,11 +50,6 @@ ConnectivityInputs <- function(id) {
         "Use absolute score value",
         placement = "right", options = list(container = "body")
       ),
-      withTooltip(
-        shiny::checkboxInput(ns("filter_significant"), "filter significant (q<0.2)", TRUE),
-        "Filter on significance q<0.20.",
-        placement = "right", options = list(container = "body")
-      ),
       shiny::hr(),
       shiny::tags$head(shiny::tags$style("#cmap-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
       withTooltip(
