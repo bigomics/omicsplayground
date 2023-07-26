@@ -78,7 +78,7 @@ UploadBoard <- function(id,
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
 
-      ##new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
+      ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
       pgxfile <- sub("[.]pgx$", "", new_pgx$name)
       pgxfile <- gsub("^[./-]*", "", pgxfile) ## prevent going to parent folder
@@ -107,7 +107,7 @@ UploadBoard <- function(id,
       }
 
       beepr::beep(10) ## short beep
-      
+
       load_my_dataset <- function() {
         if (input$confirmload) {
           load_uploaded_data(pgxfile)
