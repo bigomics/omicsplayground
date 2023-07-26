@@ -163,42 +163,11 @@ toggleTab <- function(inputId, target, do.show, req.file = NULL, session = sessi
 ## ======================== SEVER =======================================
 ## ======================================================================
 
-sever_screen <- function() {
-  shiny::tagList(
-    shiny::tags$h1(
-      "Woops!",
-      style = "color:white;font-family:lato;"
-    ),
-    shiny::p("You have been disconnected", style = "font-size:15px;"),
-    shiny::br(),
-    shiny::div(shiny::img(
-      src = base64enc::dataURI(file = "www/disconnected.png"),
-      width = 450, height = 250
-    )),
-    shiny::div(
-      id = "logSub",
-      shiny::br(),
-      shiny::tags$a(
-        onClick = "sendLog()",
-        class = "btn btn-sm btn-warning",
-        "Send error to developers"
-      )
-    ),
-    shiny::div(
-      id = "logSubbed",
-      style = "display:none;",
-      shiny::p("Mission Control has been notified. Thank you!", style = "font-size:15px;")
-    ),
-    shiny::br(),
-    shiny::div(
-      id = "sever-reload-btn",
-      sever::reload_button("Relaunch", class = "info"),
-      style = "display:none;"
-    )
-  )
+sever_disconnected <- function() {
+  sever_crash(error=NULL)   
 }
 
-sever_screen0 <- function(error = NULL) {
+sever_crash <- function(error = NULL) {
   err_message <- NULL
   err_traceback <- NULL
   if (!is.null(error)) {
@@ -293,39 +262,47 @@ sever_screen0 <- function(error = NULL) {
   )
 }
 
+sever_ciao <- function() {
 
-sever_screen2 <- function(session_id) {
   shiny::tagList(
-    shiny::tags$h1(
-      "Woops!",
-      style = "color:white;font-family:lato;"
-    ),
-    shiny::p("You have been disconnected", style = "font-size:15px;"),
-    shiny::br(),
-    shiny::div(shiny::img(
-      src = base64enc::dataURI(file = "www/disconnected.png"),
-      width = 450, height = 250
-    )),
     shiny::div(
-      id = "logSub",
-      shiny::br(),
-      shiny::tags$a(
-        onClick = HTML(paste0("sendLog2('", session_id, "')")),
-        class = "btn btn-sm btn-warning",
-        "Send error to developers"
+      style = "
+          width: 100vw;
+          height: 100vh;
+        ",
+      shiny::div(
+        style = "
+            transform: translateY(30%);
+            background-color: #004c7d;
+          ",
+        shiny::tags$h1(
+          "",
+          style = "color:white;font-family:lato;"
+        ),
+        shiny::p("We hope you enjoyed your stay!", style = "font-size:18px;"),
+        shiny::br(),
+        shiny::div(shiny::img(
+          src = base64enc::dataURI(file = "www/monster-ciao.png"),
+          ## width = 362,
+          height = 350          
+        ),
+        style = "transform: translateX(50px);"
+        ),
+        shiny::br(),
+        sever::reload_button("Relaunch", class = "info"),
       )
-    ),
-    shiny::div(
-      id = "logSubbed",
-      style = "display:none;",
-      shiny::p("Mission Control has been notified. Thank you!", style = "font-size:15px;")
-    ),
-    shiny::br(),
-    shiny::div(
-      id = "sever-reload-btn",
-      sever::reload_button("Relaunch", class = "info"),
-      style = "display:none;"
     )
+  )
+}
+
+sever_serverfull <- function(srv) {
+  shiny::tagList(
+    shiny::tags$h1("Sorry, the Playground is full!", style = "color:white;font-family:lato;"),
+    shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),
+    shiny::br(),
+    shiny::div(paste("server =", srv), style = "font-size:11px;text-align:center;"),
+    shiny::br(), shiny::br(),
+    sever::reload_button("Relaunch", class = "info")
   )
 }
 
