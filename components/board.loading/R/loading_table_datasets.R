@@ -586,11 +586,7 @@ loading_table_datasets_server <- function(id,
               info <- info[-idx, ]
               write.csv(info, file.path(auth$user_dir, "datasets-info.csv"))
             }
-            if (is.null(reload_pgxdir())) {
-              reload_pgxdir(1)
-            } else {
-              reload_pgxdir(reload_pgxdir() + 1)
-            }
+            reload_pgxdir(reload_pgxdir() + 1)
           }
         }
 

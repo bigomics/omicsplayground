@@ -103,7 +103,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
-  reload_pgxdir <- reactiveVal(NULL)
+  reload_pgxdir <- reactiveVal(0)  
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -357,7 +357,10 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["cmap"]) {
         info("[SERVER] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap", pgx = PGX, auth = auth)
+        ConnectivityBoard("cmap",
+          pgx = PGX, auth = auth,
+          reload_pgxdir = reload_pgxdir
+        )
       }
 
       if (ENABLED["cell"]) {

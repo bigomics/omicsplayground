@@ -57,6 +57,12 @@ ConnectivityInputs <- function(id) {
           rows = 15, placeholder = "Paste your gene list"
         ),
         "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
+      ),
+      br(),
+      withTooltip(
+        shiny::actionButton(ns("recalc"), "recalculate"),
+        "Recalculate connectivity scores. You might want to do this after adding new datasets in your library.",
+        placement = "right", options = list(container = "body")
       )
     )
   )
