@@ -801,7 +801,7 @@ app_server <- function(input, output, session) {
     # not passed to the function called on error
     parent_env <- parent.frame()
     error <- parent_env$e
-    sever::sever( sever_crash(error), bg_color = "#004c7d")
+    sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 
   # this function sets 'enable_info' based on the user settings

@@ -164,7 +164,7 @@ toggleTab <- function(inputId, target, do.show, req.file = NULL, session = sessi
 ## ======================================================================
 
 sever_disconnected <- function() {
-  sever_crash(error=NULL)   
+  sever_crash(error = NULL)
 }
 
 sever_crash <- function(error = NULL) {
@@ -263,7 +263,6 @@ sever_crash <- function(error = NULL) {
 }
 
 sever_ciao <- function() {
-
   shiny::tagList(
     shiny::div(
       style = "
@@ -281,12 +280,13 @@ sever_ciao <- function() {
         ),
         shiny::p("We hope you enjoyed your stay!", style = "font-size:18px;"),
         shiny::br(),
-        shiny::div(shiny::img(
-          src = base64enc::dataURI(file = "www/monster-ciao.png"),
-          ## width = 362,
-          height = 350          
-        ),
-        style = "transform: translateX(50px);"
+        shiny::div(
+          shiny::img(
+            src = base64enc::dataURI(file = "www/monster-ciao.png"),
+            ## width = 362,
+            height = 350
+          ),
+          style = "transform: translateX(50px);"
         ),
         shiny::br(),
         sever::reload_button("Relaunch", class = "info"),
