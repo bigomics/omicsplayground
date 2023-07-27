@@ -30,43 +30,37 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
+
+      sm <- uploaded$samples.csv
+      has.samples <- !is.null(sm) && NCOL(sm) > 0      
       check <- checkTables()
+
       status.ok <- check["samples.csv", "status"]
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["samples.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'samples.csv'",
-          tolower(status.ds)
+      status.ds <- tolower(check["samples.csv", "description"])
+      error.msg <- paste(
+        toupper(status.ok), "\nPlease upload 'samples.csv' (Required):",
+        status.ds
+      )
+
+      shiny::validate(
+        shiny::need(
+          status.ok == "OK" && has.samples,
+          error.msg
         )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      } else {
-        pheno <- uploaded[["samples.csv"]]
-        return(pheno)
-      }
+      )
+      
+      pheno <- uploaded[["samples.csv"]]
+      return(pheno)
     })
 
     plot.RENDER <- function() {
       pheno <- plot_data()
-
-      shiny::validate(
-        shiny::need(
-          !is.null(pheno),
-          "Please upload a samples.csv file (REQUIRED)."
-        )
-      )
-
       px <- head(colnames(pheno), 20) ## show maximum??
-
       df <- type.convert(pheno[, px, drop = FALSE])
       vt <- df %>% inspectdf::inspect_types()
-      vt
 
       ## discretized continuous variable into 10 bins
       ii <- unlist(vt$col_name[c("numeric", "integer")])
-      ii
       if (!is.null(ii) && length(ii)) {
         cat("[UploadModule::phenoStats] discretizing variables:", ii, "\n")
         df[, ii] <- apply(df[, ii, drop = FALSE], 2, function(x) {

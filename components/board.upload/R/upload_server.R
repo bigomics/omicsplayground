@@ -208,7 +208,6 @@ UploadBoard <- function(id,
       matlist <- list()
 
       if (pgx.uploaded) {
-        message("[upload_files] PGX upload detected")
 
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
@@ -218,7 +217,6 @@ UploadBoard <- function(id,
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
-        message("[upload_files] getting matrices from CSV")
 
         ii <- grep("csv$", input$upload_files$name)
         ii <- grep("sample|count|contrast|expression|comparison",
@@ -231,6 +229,7 @@ UploadBoard <- function(id,
 
         inputnames <- input$upload_files$name[ii]
         uploadnames <- input$upload_files$datapath[ii]
+        message("[upload_files] uploaded files: ", inputnames)
 
         error_list <- playbase::PGX_CHECKS
 
@@ -244,6 +243,7 @@ UploadBoard <- function(id,
             IS_EXPRESSION <- grepl("expression", fn1, ignore.case = TRUE)
             IS_SAMPLE <- grepl("sample", fn1, ignore.case = TRUE)
             IS_CONTRAST <- grepl("contrast|comparison", fn1, ignore.case = TRUE)
+
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
@@ -344,6 +344,8 @@ UploadBoard <- function(id,
             }
 
             if (!is.null(matname)) {
+              dbg("[UploadBoard:observeEvent(input$upload_files)] matname = ", matname)
+              dbg("[UploadBoard:observeEvent(input$upload_files)] dim.df = ", dim(df))
               matlist[[matname]] <- df
             }
           }
@@ -435,6 +437,7 @@ UploadBoard <- function(id,
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
+        
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
           FILES_check <- playbase::pgx.crosscheckINPUT(
@@ -460,7 +463,7 @@ UploadBoard <- function(id,
           }
 
           uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-          uploaded[["counts.csv"]] <- FILES_check$COUNTS
+          uploaded[["counts.csv"]]  <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -533,10 +536,12 @@ UploadBoard <- function(id,
       }
 
       ## check files: maximum samples allowed
-      if (status["counts.csv"] == "OK" && status["samples.csv"] == "OK") {
+      if (status["counts.csv"] == "OK") {
         if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
         }
+      }
+      if (status["samples.csv"] == "OK") {
         if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
           status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
         }
@@ -634,9 +639,7 @@ UploadBoard <- function(id,
 
     corrected_counts <- shiny::reactive({
       counts <- NULL
-      advanced_mode <- (length(input$advanced_mode) > 0 &&
-        input$advanced_mode[1] == 1)
-      if (advanced_mode) {
+      if (input$advanced_mode) {
         out <- correctedX()
         counts <- pmax(2**out$X - 1, 0)
       } else {

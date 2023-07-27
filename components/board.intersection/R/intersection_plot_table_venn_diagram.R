@@ -22,7 +22,7 @@ intersection_plot_venn_diagram_ui <- function(id,
         placement = "right", options = list(container = "body")
       ),
       withTooltip(
-        shiny::selectInput(ns("lfc"), "logFC threshold",
+        shiny::selectInput(ns("lfc"), "logFC",
           choices = c(0, 0.1, 0.2, 0.5, 1, 2, 5),
           selected = 0.2
         ),

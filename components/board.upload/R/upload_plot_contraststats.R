@@ -30,47 +30,34 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
+
       ct <- uploaded$contrasts.csv
       has.contrasts <- !is.null(ct) && NCOL(ct) > 0
       check <- checkTables()
+
       status.ok <- check["contrasts.csv", "status"]
-
-      if (status.ok != "OK" || !has.contrasts) {
-        frame()
-        status.ds <- check["contrasts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Optional) Upload 'comparisons.csv'",
-          tolower(status.ds)
-        )
-        #
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      } else {
-        contrasts <- uploaded$contrasts.csv
-        return(contrasts)
-      }
-    })
-
-    plot.RENDER <- function() {
-      contrasts <- plot_data()
+      status.ds <- tolower(check["contrasts.csv", "description"])
+      error.msg <- paste(
+        toupper(status.ok), "\nPlease upload 'contrasts.csv' (Optional):",
+        status.ds
+      )
 
       shiny::validate(
         shiny::need(
-          !is.null(contrasts),
-          "Please upload a comparison.csv file (OPTIONAL)."
+          status.ok == "OK" && has.contrasts,
+          error.msg
         )
       )
+      
+      contrasts <- uploaded$contrasts.csv
+      return(contrasts)
+    })
 
-
-      #
-      #
-      df <- contrasts
+    plot.RENDER <- function() {
+      df <- plot_data()
       px <- head(colnames(df), 20) ## maximum to show??
       df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
-      tt2 <- paste(nrow(contrasts), "samples x", ncol(contrasts), "comparisons")
-
-      ## tt2 <- paste(ncol(contrasts),"contrasts")
+      tt2 <- paste(nrow(df), "samples x", ncol(df), "comparisons")
 
       p1 <- df %>%
         inspectdf::inspect_cat() %>%
