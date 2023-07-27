@@ -186,7 +186,7 @@ UploadBoard <- function(id,
     ## ------------------------------------------------------------------
 
     # this directory is used to save pgx files, logs, inputs, etc..
-    raw_dir <- reactiveVal(NULL)    
+    raw_dir <- reactiveVal(NULL)
 
     create_raw_dir <- function() {
       auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
@@ -198,12 +198,11 @@ UploadBoard <- function(id,
     }
 
     shiny::observeEvent(input$upload_files, {
-
-      ##shiny::req(raw_dir())
-      if(is.null(raw_dir())) {
+      ## shiny::req(raw_dir())
+      if (is.null(raw_dir())) {
         raw_dir(create_raw_dir())
       }
-      
+
       message("[upload_files] >>> reading uploaded files")
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
@@ -240,8 +239,8 @@ UploadBoard <- function(id,
 
         ## remove any old gui_contrasts.csv
         user_ctfile <- file.path(raw_dir(), "user_contrasts.csv")
-        if(file.exists(user_ctfile)) unlink(user_ctfile)
-        
+        if (file.exists(user_ctfile)) unlink(user_ctfile)
+
         error_list <- playbase::PGX_CHECKS
 
         if (length(uploadnames) > 0) {
@@ -669,7 +668,7 @@ UploadBoard <- function(id,
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
-      if(!is.null(raw_dir()) && dir.exists(raw_dir())) {
+      if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
     })
