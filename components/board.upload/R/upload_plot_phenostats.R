@@ -30,9 +30,8 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-
       sm <- uploaded$samples.csv
-      has.samples <- !is.null(sm) && NCOL(sm) > 0      
+      has.samples <- !is.null(sm) && NCOL(sm) > 0
       check <- checkTables()
 
       status.ok <- check["samples.csv", "status"]
@@ -48,7 +47,7 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
           error.msg
         )
       )
-      
+
       pheno <- uploaded[["samples.csv"]]
       return(pheno)
     })

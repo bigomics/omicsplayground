@@ -28,15 +28,13 @@ upload_plot_countstats_ui <- function(id,
 
 upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-
       check <- checkTables()
       req(check)
       ct <- uploaded$counts.csv
       has.counts <- !is.null(ct) && NCOL(ct) > 0
-      
+
       status.ok <- check["counts.csv", "status"]
       status.ds <- tolower(check["counts.csv", "description"])
       error.msg <- paste(
@@ -50,7 +48,7 @@ upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark =
           error.msg
         )
       )
-      
+
       counts <- uploaded[["counts.csv"]]
       return(counts)
     })
