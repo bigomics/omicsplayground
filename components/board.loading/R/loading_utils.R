@@ -10,7 +10,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
 
   share_user <- trimws(share_user)
   sender <- trimws(sender)
-  
+
   blastula::smtp_send(
     blastula::compose_email(
       body = blastula::md(
