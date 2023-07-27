@@ -407,7 +407,7 @@ upload_module_computepgx_server <- function(
           dbg("[compute PGX process] : tempFile", temp_dir())
         }
 
-        dataset_name <- gsub("[ ]", "_", input$upload_name)
+        dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 

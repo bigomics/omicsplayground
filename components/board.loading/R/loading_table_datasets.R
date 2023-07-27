@@ -620,7 +620,7 @@ loading_table_datasets_server <- function(id,
       if (!is.null(input$share_user2) && input$share_user2 != "") {
         share_user <- input$share_user2
       }
-      share_user <- tolower(share_user) ## force lower case email
+      share_user <- trimws(tolower(share_user)) ## force lower case email
       share_user
     })
 
@@ -836,7 +836,7 @@ loading_table_datasets_server <- function(id,
         )
 
         # send email to user
-        sender <- auth$email
+        sender <- trimws(auth$email)
         gmail_creds <- file.path(ETC, "gmail_creds")
         sendShareMessage(pgx_name, sender, share_user, path_to_creds = gmail_creds)
 
