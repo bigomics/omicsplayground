@@ -23,7 +23,7 @@ upload_module_computepgx_server <- function(
     countsRT,
     samplesRT,
     contrastsRT,
-    temp_dir,
+    raw_dir,
     batchRT,
     metaRT,
     lib.dir,
@@ -398,13 +398,13 @@ upload_module_computepgx_server <- function(
         prune.samples <- ("noLM.prune" %in% input$dev_options)
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
-        # if no temp_dir (happens when we auto-load example data via
+        # if no raw_dir (happens when we auto-load example data via
         # button), create a temp dir. In this case we don't care it
         # will use /tmp
-        if (is.null(temp_dir())) {
-          temp_dir(tempfile(pattern = "pgx_"))
-          dir.create(temp_dir())
-          dbg("[compute PGX process] : tempFile", temp_dir())
+        if (is.null(raw_dir())) {
+          raw_dir(tempfile(pattern = "pgx_"))
+          dir.create(raw_dir())
+          dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
         dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
@@ -447,12 +447,12 @@ upload_module_computepgx_server <- function(
           pgx.save.folder = pgx_save_folder
         )
 
-        path_to_params <- file.path(temp_dir(), "params.RData")
+        path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
-        tmpdir <- normalizePath(temp_dir())
+        tmpdir <- normalizePath(raw_dir())
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
@@ -486,7 +486,7 @@ upload_module_computepgx_server <- function(
                 ),
                 number = process_counter(),
                 dataset_name = gsub("[ ]", "_", input$upload_name),
-                temp_dir = temp_dir(),
+                raw_dir = raw_dir(),
                 stderr = c(),
                 stdout = c()
               )
@@ -507,7 +507,7 @@ upload_module_computepgx_server <- function(
         for (i in seq_along(active_processes)) {
           active_obj <- active_processes[[i]]
           current_process <- active_processes[[i]]$process
-          temp_dir <- active_processes[[i]]$temp_dir
+          raw_dir <- active_processes[[i]]$raw_dir
 
           process_status <- current_process$get_exit_status()
           process_alive <- current_process$is_alive()
@@ -522,8 +522,8 @@ upload_module_computepgx_server <- function(
           stdout_output <- current_process$read_output_lines()
           active_obj$stdout <- c(active_obj$stdout, stdout_output)
 
-          errlog <- file.path(temp_dir, "processx-error.log")
-          outlog <- file.path(temp_dir, "processx-output.log")
+          errlog <- file.path(raw_dir, "processx-error.log")
+          outlog <- file.path(raw_dir, "processx-output.log")
           cat(paste(stderr_output, collapse = "\n"), file = errlog, append = TRUE)
           cat(paste(stdout_output, collapse = "\n"), file = outlog, append = TRUE)
 
@@ -531,11 +531,11 @@ upload_module_computepgx_server <- function(
             if (process_status == 0) {
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
-              on_process_completed(temp_dir = temp_dir, nr = nr)
-              temp_dir(NULL)
+              on_process_completed(raw_dir = raw_dir, nr = nr)
+              raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
-              temp_dir(NULL)
+              raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 
@@ -568,11 +568,11 @@ upload_module_computepgx_server <- function(
       })
 
       # Function to execute when the process is completed successfully
-      on_process_completed <- function(temp_dir, nr) {
+      on_process_completed <- function(raw_dir, nr) {
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
         process_counter(process_counter() - 1) # stop the timer
 
-        path_to_params <- file.path(temp_dir, "params.RData")
+        path_to_params <- file.path(raw_dir, "params.RData")
         params <- readRDS(path_to_params)
         pgx_save_folder_px <- params$pgx.save.folder
 
@@ -595,9 +595,9 @@ upload_module_computepgx_server <- function(
         } else {
           info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }
-        ## remove temp dir only if "user_input/raw_" is present in temp_dir
-        if (grepl("raw_", temp_dir)) {
-          unlink(temp_dir, recursive = TRUE)
+        ## remove temp dir only if "user_input/raw_" is present in raw_dir
+        if (grepl("raw_", raw_dir)) {
+          unlink(raw_dir, recursive = TRUE)
         }
       }
 

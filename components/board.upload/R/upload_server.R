@@ -15,9 +15,6 @@ UploadBoard <- function(id,
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
 
-    # this directory is used to save pgx files, logs, inputs, etc..
-    temp_dir <- reactiveVal(NULL)
-
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
@@ -187,15 +184,26 @@ UploadBoard <- function(id,
     ## puts in the reactive values object 'uploaded'. Then
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
+
+    # this directory is used to save pgx files, logs, inputs, etc..
+    raw_dir <- reactiveVal(NULL)    
+
+    create_raw_dir <- function() {
+      auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
+      prefix <- paste0("raw_", auth_id, "_")
+      raw_dir <- tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT"))
+      dir.create(raw_dir, recursive = TRUE)
+      dbg("[UploadBoard:raw_dir<-eventReactive] creating raw_dir", raw_dir)
+      raw_dir
+    }
+
     shiny::observeEvent(input$upload_files, {
-      # only create directory once, even if user uploads files at different times
-      if (is.null(temp_dir())) {
-        auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
-        prefix <- paste0("raw_", auth_id, "_")
-        temp_dir(tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT")))
-        dir.create(temp_dir(), recursive = TRUE)
-        dbg("[compute PGX process] : tempFile", temp_dir())
+
+      ##shiny::req(raw_dir())
+      if(is.null(raw_dir())) {
+        raw_dir(create_raw_dir())
       }
+      
       message("[upload_files] >>> reading uploaded files")
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
@@ -230,6 +238,10 @@ UploadBoard <- function(id,
         uploadnames <- input$upload_files$datapath[ii]
         message("[upload_files] uploaded files: ", inputnames)
 
+        ## remove any old gui_contrasts.csv
+        user_ctfile <- file.path(raw_dir(), "user_contrasts.csv")
+        if(file.exists(user_ctfile)) unlink(user_ctfile)
+        
         error_list <- playbase::PGX_CHECKS
 
         if (length(uploadnames) > 0) {
@@ -247,8 +259,8 @@ UploadBoard <- function(id,
               ## allows duplicated rownames
               df0 <- playbase::read.as_matrix(fn2)
 
-              # save input as raw file in temp_dir
-              write.csv(df0, file.path(temp_dir(), "raw_counts.csv"), row.names = TRUE)
+              # save input as raw file in raw_dir
+              write.csv(df0, file.path(raw_dir(), "raw_counts.csv"), row.names = TRUE)
 
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
 
@@ -284,8 +296,8 @@ UploadBoard <- function(id,
 
             if (IS_SAMPLE) {
               df0 <- playbase::read.as_matrix(fn2)
-              # save input as raw file in temp_dir
-              write.csv(df0, file.path(temp_dir(), "raw_samples.csv"), row.names = TRUE)
+              # save input as raw file in raw_dir
+              write.csv(df0, file.path(raw_dir(), "raw_samples.csv"), row.names = TRUE)
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -314,8 +326,8 @@ UploadBoard <- function(id,
 
             if (IS_CONTRAST) {
               df0 <- playbase::read.as_matrix(fn2)
-              # save input as raw file in temp_dir
-              write.csv(df0, file.path(temp_dir(), "raw_contrasts.csv"), row.names = TRUE)
+              # save input as raw file in raw_dir
+              write.csv(df0, file.path(raw_dir(), "raw_contrasts.csv"), row.names = TRUE)
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
 
@@ -343,8 +355,6 @@ UploadBoard <- function(id,
             }
 
             if (!is.null(matname)) {
-              dbg("[UploadBoard:observeEvent(input$upload_files)] matname = ", matname)
-              dbg("[UploadBoard:observeEvent(input$upload_files)] dim.df = ", dim(df))
               matlist[[matname]] <- df
             }
           }
@@ -659,7 +669,9 @@ UploadBoard <- function(id,
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
-      uploaded$samples.csv <- modct$pheno
+      if(!is.null(raw_dir()) && dir.exists(raw_dir())) {
+        write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
+      }
     })
 
     upload_ok <- shiny::reactive({
@@ -677,7 +689,7 @@ UploadBoard <- function(id,
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(uploaded$samples.csv),
       contrastsRT = shiny::reactive(uploaded$contrasts.csv),
-      temp_dir = temp_dir,
+      raw_dir = raw_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
