@@ -37,7 +37,6 @@ docker.run2:
 		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
-		-v ~/Playground/DNAnexus/bigomics-x-dnanexus.png:/omicsplayground/components/app/R/www/bigomics-logo.png \
 		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE 
