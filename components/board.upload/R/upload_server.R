@@ -208,7 +208,6 @@ UploadBoard <- function(id,
       matlist <- list()
 
       if (pgx.uploaded) {
-
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
         i <- grep("[.]pgx$", input$upload_files$name)
@@ -437,7 +436,6 @@ UploadBoard <- function(id,
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
-        
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
           FILES_check <- playbase::pgx.crosscheckINPUT(
@@ -463,7 +461,7 @@ UploadBoard <- function(id,
           }
 
           uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-          uploaded[["counts.csv"]]  <- FILES_check$COUNTS
+          uploaded[["counts.csv"]] <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))

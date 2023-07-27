@@ -132,27 +132,29 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
       })
 
-      observeEvent({
-        ##countsRT()
-        phenoRT()
-      },{
-##        genes <- sort(rownames(countsRT()))
-##        updateSelectizeInput(inputId = "gene", choices = genes, server=TRUE)
+      observeEvent(
+        {
+          ## countsRT()
+          phenoRT()
+        },
+        {
+          ##        genes <- sort(rownames(countsRT()))
+          ##        updateSelectizeInput(inputId = "gene", choices = genes, server=TRUE)
 
-        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-        psel <- c(grep("sample|patient|name|id|^[.]",
-          phenotypes,
-          value = TRUE, invert = TRUE
-        ), phenotypes)[1]
-        updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
-      })
+          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+          psel <- c(grep("sample|patient|name|id|^[.]",
+            phenotypes,
+            value = TRUE, invert = TRUE
+          ), phenotypes)[1]
+          updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
+        }
+      )
 
       sel.conditions <- shiny::reactive({
-        
         shiny::req(phenoRT(), countsRT())
         df <- phenoRT()
-        
+
         if ("<samples>" %in% input$param) {
           df$"<samples>" <- rownames(df)
         }
@@ -174,10 +176,9 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       })
 
       output$createcomparison <- shiny::renderUI({
-
         shiny::req(input$param)
         cond <- sel.conditions()
-        
+
         if (length(cond) == 0 || is.null(cond)) {
           return(NULL)
         }
