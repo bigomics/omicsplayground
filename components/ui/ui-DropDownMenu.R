@@ -44,7 +44,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
 # same thing as DropdownMenu but without circle icon;
 # currently used in the board.loading table
 actionMenu <- function(..., size = "default", status = "default", icon = NULL, margin = "10px") {
-  id <- bigdash:::make_id() 
+  id <- bigdash:::make_id()
   tags$div(
     tags$a(
       class = paste0(
