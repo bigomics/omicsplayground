@@ -265,7 +265,7 @@ app_server <- function(input, output, session) {
           "cell-tab",
           SingleCellInputs("cell"),
           SingleCellUI("cell")
-        )
+        ),
       )
 
       shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
