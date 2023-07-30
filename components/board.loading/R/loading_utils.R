@@ -47,3 +47,17 @@ is_valid_email <- function(email) {
   valid_email <- valid_email && !grepl("[*/\\}{]", email) ## no special chars
   return(!is_personal && valid_email)
 }
+
+makebuttonInputs2 <- function(FUN, len, id, tooltip = NULL, ...) {
+        inputs <- character(length(len))
+        for (i in seq_along(len)) {
+          if(is.null(tooltip)){
+            inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
+          } else {
+            inputs[i] <- as.character(
+              withTooltip(FUN(paste0(id, len[i]), ...), tooltip)
+            )
+          }
+        }
+        inputs
+      }
