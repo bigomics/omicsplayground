@@ -37,7 +37,6 @@ docker.run2:
 		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
-		-v ~/Playground/DNAnexus/bigomics-x-dnanexus.png:/omicsplayground/components/app/R/www/bigomics-logo.png \
 		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE 
@@ -82,7 +81,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.15-"$(BRANCH)""$(DATE)
+VERSION = "v3.2.16-"$(BRANCH)""$(DATE)
 
 version: 
 	@echo "new version ->" $(VERSION)

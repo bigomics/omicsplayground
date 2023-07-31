@@ -32,35 +32,29 @@ upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark =
     plot_data <- shiny::reactive({
       check <- checkTables()
       req(check)
-      status.ok <- check["counts.csv", "status"]
-      dbg("[countStats] status.ok = ", status.ok)
+      ct <- uploaded$counts.csv
+      has.counts <- !is.null(ct) && NCOL(ct) > 0
 
-      if (status.ok != "OK") {
-        frame()
-        status.ds <- check["counts.csv", "description"]
-        msg <- paste(
-          toupper(status.ok), "\n", "(Required) Upload 'counts.csv'",
-          tolower(status.ds)
+      status.ok <- check["counts.csv", "status"]
+      status.ds <- tolower(check["counts.csv", "description"])
+      error.msg <- paste(
+        toupper(status.ok), "\nPlease upload 'counts.csv' (Required):",
+        status.ds
+      )
+
+      shiny::validate(
+        shiny::need(
+          status.ok == "OK" && has.counts,
+          error.msg
         )
-        graphics::text(0.5, 0.5, paste(strwrap(msg, 30), collapse = "\n"), col = "grey25")
-        graphics::box(lty = 1, col = "grey60")
-        return(NULL)
-      } else {
-        counts <- uploaded[["counts.csv"]]
-        return(counts)
-      }
+      )
+
+      counts <- uploaded[["counts.csv"]]
+      return(counts)
     })
 
     plot.RENDER <- function() {
       counts <- plot_data()
-
-      shiny::validate(
-        shiny::need(
-          !is.null(counts),
-          "Please upload a counts.csv file (REQUIRED)."
-        )
-      )
-
       xx <- log2(1 + counts)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- data.table::melt(xx))

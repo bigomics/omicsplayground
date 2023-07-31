@@ -40,14 +40,6 @@ upload_module_received_server <- function(id,
         return(pgxfiles)
       })
 
-      makebuttonInputs2 <- function(FUN, len, id, ...) {
-        inputs <- character(length(len))
-        for (i in seq_along(len)) {
-          inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
-        }
-        inputs
-      }
-
       receivedPGXtable <- shiny::eventReactive(
         c(current_page(), getReceivedFiles()),
         {
@@ -71,7 +63,7 @@ upload_module_received_server <- function(id,
             icon = shiny::icon("check"),
             class = "btn-inline btn-success",
             style = "padding:0px; margin:0px; font-size:85%;",
-
+            tooltip = "Accept dataset",
             ## onclick = paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
             onclick = paste0('Shiny.onInputChange("', ns("accept_pgx"), '", this.id, {priority: "event"})')
           )
@@ -86,6 +78,7 @@ upload_module_received_server <- function(id,
             icon = shiny::icon("x"),
             class = "btn-inline btn-danger",
             style = "padding:0px; margin:0px; font-size:85%;",
+            tooltip = "Declinie dataset",
             onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\", this.id, {priority: "event"})')
           )
 

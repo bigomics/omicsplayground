@@ -8,6 +8,9 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
     return(NULL)
   }
 
+  share_user <- trimws(share_user)
+  sender <- trimws(sender)
+
   blastula::smtp_send(
     blastula::compose_email(
       body = blastula::md(
@@ -43,4 +46,18 @@ is_valid_email <- function(email) {
   valid_email <- grepl(".*@.*[.].*", email)
   valid_email <- valid_email && !grepl("[*/\\}{]", email) ## no special chars
   return(!is_personal && valid_email)
+}
+
+makebuttonInputs2 <- function(FUN, len, id, tooltip = NULL, ...) {
+  inputs <- character(length(len))
+  for (i in seq_along(len)) {
+    if (is.null(tooltip)) {
+      inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
+    } else {
+      inputs[i] <- as.character(
+        withTooltip(FUN(paste0(id, len[i]), ...), tooltip)
+      )
+    }
+  }
+  inputs
 }

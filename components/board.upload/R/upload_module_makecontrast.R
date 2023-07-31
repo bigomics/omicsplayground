@@ -116,14 +116,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
     id,
     function(input, output, session) {
       ns <- session$ns
-      rv <- shiny::reactiveValues(contr = NULL, pheno = NULL)
+      rv <- shiny::reactiveValues(contr = NULL)
 
       shiny::observe({
         rv$contr <- contrRT()
-      })
-
-      shiny::observe({
-        rv$pheno <- phenoRT()
       })
 
       shiny::observe({
@@ -132,18 +128,20 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
       })
 
-      observeEvent(countsRT(), {
-        genes <- sort(rownames(countsRT()))
-        updateSelectizeInput(inputId = "gene", choices = genes)
-
-        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-        psel <- c(grep("sample|patient|name|id|^[.]",
-          phenotypes,
-          value = TRUE, invert = TRUE
-        ), phenotypes)[1]
-        updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
-      })
+      observeEvent(
+        {
+          phenoRT()
+        },
+        {
+          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+          psel <- c(grep("sample|patient|name|id|^[.]",
+            phenotypes,
+            value = TRUE, invert = TRUE
+          ), phenotypes)[1]
+          updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
+        }
+      )
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
@@ -172,6 +170,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       output$createcomparison <- shiny::renderUI({
         shiny::req(input$param)
         cond <- sel.conditions()
+
         if (length(cond) == 0 || is.null(cond)) {
           return(NULL)
         }
