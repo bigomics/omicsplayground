@@ -535,6 +535,24 @@ upload_module_computepgx_server <- function(
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
+              
+              log_pgx_compute <- character()
+
+              if (length(active_obj$stderr) > 0) {
+                ## Copy the error to the stderr of main app
+                message("Standard error from processx:")
+                err <- paste0("[processx.", nr, ":stderr] ", active_obj$stderr)
+                writeLines(err, con = log_pgx_compute)
+              }
+              if (length(active_obj$stdout) > 0) {
+                ## Copy the error to the stderr of main app
+                cat("Standard output from processx:")
+                out <- paste0("[processx.", nr, ":stdout] ", active_obj$stdout)
+                writeLines(out, con = log_pgx_compute())
+              }
+
+              sever_crash(log_pgx_compute)
+              
               raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
