@@ -39,14 +39,6 @@ upload_module_shared_server <- function(id,
         return(pgxfiles)
       })
 
-      makebuttonInputs2 <- function(FUN, len, id, ...) {
-        inputs <- character(length(len))
-        for (i in seq_along(len)) {
-          inputs[i] <- as.character(FUN(paste0(id, len[i]), ...))
-        }
-        inputs
-      }
-
       sharedPGXtable <- shiny::eventReactive(
         c(current_page(), getSharedFiles()),
         {
@@ -66,11 +58,12 @@ upload_module_shared_server <- function(id,
             len = shared_files,
             id = ns("resend_pgx__"),
             label = "",
-            width = "50px",
+            width = "50px", 
             inline = TRUE,
             icon = shiny::icon("repeat"),
             class = "btn-inline btn-success",
             style = "padding:0px; margin:0px; font-size:85%;",
+            tooltip = "Resend this dataset",
             onclick = paste0('Shiny.onInputChange("', ns("resend_pgx"), '", this.id, {priority: "event"})')
           )
 
@@ -84,8 +77,10 @@ upload_module_shared_server <- function(id,
             icon = shiny::icon("x"),
             class = "btn-inline btn-danger",
             style = "padding:0px; margin:0px; font-size:85%;",
+            tooltip = "Cancel this dataset sharing",
             onclick = paste0('Shiny.onInputChange(\"', ns("cancel_pgx"), '\", this.id, {priority: "event"})')
           )
+
 
           df <- data.frame(
             Dataset = shared_pgx,
