@@ -674,7 +674,7 @@ PasswordAuthenticationModule <- function(id,
 
 ## ================================================================================
 ## PasswordAuthenticationModule (ask login.name + password)
-## ================================================================================
+## ================================================================================ 
 
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
@@ -783,12 +783,17 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      shiny::req(input$login_email)
+    trigger <- shiny::reactive(shiny::getQueryString()$email)
+    shiny::observeEvent(c(input$login_btn, trigger), {
+      if(is.null(trigger())){
+        shiny::req(input$login_email)
+        login_email <- input$login_email
+      } else {
+        login_email <- trigger()
+      }
 
       if (!email_sent) {
-        login_email <- tolower(input$login_email)
-
+        login_email <- tolower(login_email)
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         check <- checkEmail(
