@@ -674,7 +674,7 @@ PasswordAuthenticationModule <- function(id,
 
 ## ================================================================================
 ## PasswordAuthenticationModule (ask login.name + password)
-## ================================================================================
+## ================================================================================ 
 
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
@@ -783,12 +783,18 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      shiny::req(input$login_email)
+    query_email <- shiny::reactive(shiny::getQueryString()$email)
+
+    shiny::observeEvent(c(input$login_btn, query_email()), {
+      if(is.null(query_email())){
+        shiny::req(input$login_email)
+        login_email <- input$login_email
+      } else {
+        login_email <- query_email()
+      }
 
       if (!email_sent) {
-        login_email <- tolower(input$login_email)
-
+        login_email <- tolower(login_email)
         ## >>> We check here for email validaty and intercept the
         ## login process for not authorized people with wrong domain
         check <- checkEmail(
@@ -844,12 +850,13 @@ LoginCodeAuthenticationModule <- function(id,
           text = "We have emailed you a login code. Please check your mailbox.",
           size = "xs"
         )
+        
       }
-    })
+    }, ignoreNULL=TRUE, ignoreInit=TRUE )
 
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
-    entered_code <- reactiveVal("")
+    entered_code <- shiny::reactiveVal("")
     observeEvent(input$login_password, {
       entered_code(input$login_password)
     })
