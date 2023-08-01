@@ -783,73 +783,83 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      shiny::req(input$login_email)
+    query_email <- shiny::reactive(shiny::getQueryString()$email)
 
-      if (!email_sent) {
-        login_email <- tolower(input$login_email)
-
-        ## >>> We check here for email validaty and intercept the
-        ## login process for not authorized people with wrong domain
-        check <- checkEmail(
-          email = login_email,
-          domain = domain,
-          credentials_file = credentials_file,
-          check.personal = !allow_personal,
-          check.existing = !allow_new_users
-        )
-
-        if (!check$valid) {
-          output$login_warning <- shiny::renderText(check$msg)
-          shinyjs::delay(4000, {
-            output$login_warning <- shiny::renderText("")
-          })
-          return(NULL)
+    shiny::observeEvent(c(input$login_btn, query_email()),
+      {
+        if (is.null(query_email())) {
+          shiny::req(input$login_email)
+          login_email <- input$login_email
+        } else {
+          login_email <- query_email()
         }
 
-        ## MAIL CODE TO USER
-        ## login_code <- "hello123"
-        ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-        login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
+        if (!email_sent) {
+          login_email <- tolower(login_email)
+          ## >>> We check here for email validaty and intercept the
+          ## login process for not authorized people with wrong domain
+          check <- checkEmail(
+            email = login_email,
+            domain = domain,
+            credentials_file = credentials_file,
+            check.personal = !allow_personal,
+            check.existing = !allow_new_users
+          )
 
-        info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
-        email_waiter$show()
-        sendLoginCode(login_email, login_code, mail_creds = mail_creds)
-        email_waiter$hide()
+          if (!check$valid) {
+            output$login_warning <- shiny::renderText(check$msg)
+            shinyjs::delay(4000, {
+              output$login_warning <- shiny::renderText("")
+            })
+            return(NULL)
+          }
 
-        USER$email <- login_email
-        USER$username <- login_email
-        USER$logged <- FALSE
-        email_sent <<- TRUE
+          ## MAIL CODE TO USER
+          ## login_code <- "hello123"
+          ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
+          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
 
-        ## change buttons and field
-        login_modal2 <- splashLoginModal(
-          ns = ns,
-          with.email = FALSE,
-          with.username = FALSE,
-          with.password = TRUE,
-          hide.password = FALSE,
-          title = "Enter Code",
-          subtitle = "Enter the login code that we have just sent to you.",
-          button.text = "Submit",
-          add.cancel = TRUE,
-          cancel.text = "Cancel"
-        )
-        shiny::showModal(login_modal2)
-        updateTextInput(session, "login_email", value = "")
-        updateTextInput(session, "login_password", value = "", placeholder = "enter code")
+          info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
+          email_waiter$show()
+          sendLoginCode(login_email, login_code, mail_creds = mail_creds)
+          email_waiter$hide()
 
-        shinyalert::shinyalert(
-          title = "",
-          text = "We have emailed you a login code. Please check your mailbox.",
-          size = "xs"
-        )
-      }
-    })
+          USER$email <- login_email
+          USER$username <- login_email
+          USER$logged <- FALSE
+          email_sent <<- TRUE
+
+          ## change buttons and field
+          login_modal2 <- splashLoginModal(
+            ns = ns,
+            with.email = FALSE,
+            with.username = FALSE,
+            with.password = TRUE,
+            hide.password = FALSE,
+            title = "Enter Code",
+            subtitle = "Enter the login code that we have just sent to you.",
+            button.text = "Submit",
+            add.cancel = TRUE,
+            cancel.text = "Cancel"
+          )
+          shiny::showModal(login_modal2)
+          updateTextInput(session, "login_email", value = "")
+          updateTextInput(session, "login_password", value = "", placeholder = "enter code")
+
+          shinyalert::shinyalert(
+            title = "",
+            text = "We have emailed you a login code. Please check your mailbox.",
+            size = "xs"
+          )
+        }
+      },
+      ignoreNULL = TRUE,
+      ignoreInit = TRUE
+    )
 
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
-    entered_code <- reactiveVal("")
+    entered_code <- shiny::reactiveVal("")
     observeEvent(input$login_password, {
       entered_code(input$login_password)
     })
