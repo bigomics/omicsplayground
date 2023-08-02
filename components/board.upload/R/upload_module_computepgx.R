@@ -536,23 +536,37 @@ upload_module_computepgx_server <- function(
             } else {
               on_process_error(nr = nr)
               
-              log_pgx_compute <- character()
+              log_pgx_compute <- ""
 
               if (length(active_obj$stderr) > 0) {
                 ## Copy the error to the stderr of main app
                 message("Standard error from processx:")
                 err <- paste0("[processx.", nr, ":stderr] ", active_obj$stderr)
-                writeLines(err, con = log_pgx_compute)
+                # save err to log_pgx_compute, separated by new lines
+                log_pgx_compute <- paste0(log_pgx_compute, "Error:", "\n")
+                # append err to log_pgx_compute
+                err <- paste0(err, cat= "\n")
+                log_pgx_compute <- c(log_pgx_compute, err, "\n")
               }
               if (length(active_obj$stdout) > 0) {
                 ## Copy the error to the stderr of main app
                 cat("Standard output from processx:")
                 out <- paste0("[processx.", nr, ":stdout] ", active_obj$stdout)
-                writeLines(out, con = log_pgx_compute())
+                out <- paste0(out, "\n")
+                log_pgx_compute <- c(log_pgx_compute, "Output:", "\n")
+                log_pgx_compute <- c(log_pgx_compute, out, "\n")
+
               }
 
-              sever_crash(log_pgx_compute)
+
+              # print log_pgx_compute to the user
+              shinyalert::shinyalert(
+                title = "Error!",
+                text = shiny::HTML(log_pgx_compute),
+                type = "error"
+              )
               
+            
               raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
