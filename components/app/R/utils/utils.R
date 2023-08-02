@@ -306,7 +306,7 @@ sever_serverfull <- function(srv) {
   )
 }
 
-error_popup <- function(title, header, message, error, btn_id) {
+error_popup <- function(title, header, message, error, btn_id, onclick) {
   showModal(
     shiny::tagList(
       tags$div(
@@ -360,7 +360,8 @@ error_popup <- function(title, header, message, error, btn_id) {
         div(
           tags$button(
             id = btn_id,
-            class = "btn btn-danger", HTML("Send data to customer support")          
+            class = "btn btn-danger", HTML("Send data to customer support"),
+            onclick = onclick,
             )
         )
         )

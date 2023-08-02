@@ -565,17 +565,11 @@ upload_module_computepgx_server <- function(
                 header = title,
                 message = "Would youlike to get support from our customer service?", 
                 error = shiny::HTML(log_pgx_compute),
-                btn_id = "send_data_to_support"
-                )
-                
-                gmail_creds <- file.path(ETC, "gmail_creds")
+                btn_id = "send_data_to_support__",
+                onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
 
-                # send email to customer support when button is clicked
-                observeEvent(input$send_data_to_support, {
-                  sendErrorMessageToCustomerSuport(user = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
-                })
-              
-              raw_dir(NULL)
+              )
+               raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 
@@ -666,6 +660,16 @@ upload_module_computepgx_server <- function(
         } else {
           shinyjs::disable("compute")
         }
+      })
+
+      # observer to listed to click on send_data_to_support button
+      observeEvent(input$send_data_to_support, {
+        # write a message to console with shinyjs
+        shinyjs::runjs("console.log('send_data_to_support button clicked')")
+        message("send_data_to_support button clicked")
+
+        gmail_creds <- file.path(ETC, "gmail_creds")
+        sendErrorMessageToCustomerSuport(user = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
       })
 
       return(computedPGX)
