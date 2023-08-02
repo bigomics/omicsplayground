@@ -307,7 +307,6 @@ sever_serverfull <- function(srv) {
 }
 
 error_popup <- function(title, message, error) {
-  
   shiny::tagList(
     tags$div(
       id = "crashModal",
@@ -318,8 +317,8 @@ error_popup <- function(title, message, error) {
                     z-index: 1;
                     left: 0;
                     top: 0;
-                    width: 50%;
-                    height: 50%;
+                    width: 100%;
+                    height: 100%;
                     overflow: auto;
                     background-color: rgba(0,0,0,0.4);
                     ",
@@ -333,7 +332,7 @@ error_popup <- function(title, message, error) {
             width: 45%;
             color: black;
             text-align: left;
-            height: 70vh;
+            height: auto;
             overflow-y: auto;
           ",
         tags$button(
@@ -345,9 +344,16 @@ error_popup <- function(title, message, error) {
                                 right: 5px;
                                 "
         ),
+        shiny::tags$h1(
+        title,
+        style = "color:grey;font-family:lato;"
+        ),
+      shiny::p(message, style = "font-size:15px;"),
+      shiny::br(),
         tags$h3("Log:"),
         tags$p(error)
       )
+      
     )
   )
 }
