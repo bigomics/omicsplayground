@@ -307,63 +307,65 @@ sever_serverfull <- function(srv) {
 }
 
 error_popup <- function(title, header, message, error) {
-  shiny::tagList(
-    tags$div(
-      id = "crashModal",
-      class = "modal",
-      style = "
-                    display: block;
-                    position: fixed;
-                    z-index: 1;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    overflow: auto;
-                    background-color: rgba(0,0,0,0.4);
-                    ",
+  showModal(
+    shiny::tagList(
       tags$div(
-        class = "modal-content",
+        id = "sendLoghModal",
+        class = "modal",
         style = "
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 45%;
-            color: black;
-            text-align: left;
-            height: auto;
-            overflow-y: auto;
-          ",
-        tags$button(
-          class = "btn btn-danger", HTML("&times;"),
-          onClick = "document.getElementById('crashModal').style.display = 'none';",
+                      display: block;
+                      position: fixed;
+                      z-index: 1;
+                      left: 0;
+                      top: 0;
+                      width: 100%;
+                      height: 100%;
+                      overflow: auto;
+                      background-color: rgba(0,0,0,0.4);
+                      ",
+        tags$div(
+          class = "modal-content",
           style = "
-                                position: absolute;
-                                top: 5px;
-                                right: 5px;
-                                "
-        ),
-      shiny::tags$h1(
-        title,
-        style = "color:#BF616A;font-family:lato;"
-        ),
-      shiny::tags$h2(
-        header,
-        style = "color:#BF616A;font-family:lato;"
-        ),
-      shiny::br(),
-      # add grey style to tag p, and corner edges
-      tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
-      shiny::p(message, style = "font-size:15px;"),
-      div(
-        tags$button(
-                    class = "btn btn-danger", HTML("Send data to customer support"),
-                    onClick = "send_data_to_support();"
-          )
+              background-color: #fefefe;
+              margin: 15% auto;
+              padding: 20px;
+              border: 1px solid #888;
+              width: 45%;
+              color: black;
+              text-align: left;
+              height: auto;
+              overflow-y: auto;
+            ",
+          tags$button(
+            class = "btn btn-danger", HTML("&times;"),
+            onClick = "document.getElementById('sendLogModal').style.display = 'none';",
+            style = "
+                                  position: absolute;
+                                  top: 5px;
+                                  right: 5px;
+                                  "
+          ),
+        shiny::tags$h1(
+          title,
+          style = "color:#BF616A;font-family:lato;"
+          ),
+        shiny::tags$h2(
+          header,
+          style = "color:#BF616A;font-family:lato;"
+          ),
+        shiny::br(),
+        # add grey style to tag p, and corner edges
+        tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
+        shiny::p(message, style = "font-size:15px;"),
+        div(
+          tags$button(
+                      class = "btn btn-danger", HTML("Send data to customer support"),
+                      onClick = "send_data_to_support();"
+            )
 
-      )
-      
+        )
+        
+        )
       )
     )
   )
