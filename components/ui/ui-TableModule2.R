@@ -135,8 +135,7 @@ TableModuleUI <- function(id,
         )
       ),
       shiny::tagList(
-        shiny::tags$head(shiny::tags$style(modalfooter.none)),
-        shiny::tags$script(src = "dropdown-helper.js")
+        shiny::tags$head(shiny::tags$style(modalfooter.none))
       )
     ),
     bslib::card_body(
