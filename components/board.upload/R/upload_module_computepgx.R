@@ -560,8 +560,8 @@ upload_module_computepgx_server <- function(
               ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
               title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
               error_popup(title = "Error:", header = title,message = "Would youlike to get support from our customer service?", error = shiny::HTML(log_pgx_compute))
-  
-            raw_dir(NULL)
+              
+              raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 

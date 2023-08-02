@@ -362,9 +362,7 @@ error_popup <- function(title, header, message, error) {
                       class = "btn btn-danger", HTML("Send data to customer support"),
                       onClick = "send_data_to_support();"
             )
-
         )
-        
         )
       )
     )
