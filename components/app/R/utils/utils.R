@@ -306,6 +306,54 @@ sever_serverfull <- function(srv) {
   )
 }
 
+error_popup <- function(title, message, error) {
+  
+  shiny::tagList(
+    tags$div(
+      id = "crashModal",
+      class = "modal",
+      style = "
+                    display: block;
+                    position: fixed;
+                    z-index: 1;
+                    left: 0;
+                    top: 0;
+                    width: 50%;
+                    height: 50%;
+                    overflow: auto;
+                    background-color: rgba(0,0,0,0.4);
+                    ",
+      tags$div(
+        class = "modal-content",
+        style = "
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 45%;
+            color: black;
+            text-align: left;
+            height: 70vh;
+            overflow-y: auto;
+          ",
+        tags$button(
+          class = "btn btn-info", HTML("&times;"),
+          onClick = "document.getElementById('crashModal').style.display = 'none';",
+          style = "
+                                position: absolute;
+                                top: 5px;
+                                right: 5px;
+                                "
+        ),
+        tags$h3("Log:"),
+        tags$p(error)
+      )
+    )
+  )
+}
+
+
+
 
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons <- c(
