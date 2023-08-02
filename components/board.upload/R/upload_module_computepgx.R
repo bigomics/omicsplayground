@@ -559,8 +559,12 @@ upload_module_computepgx_server <- function(
               }
 
               browser()
+              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
 
-              showModal(error_popup(title = "Title test",message = "Message Test", error = shiny::HTML(log_pgx_compute)))
+              title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
+              
+              showModal(error_popup(title = title,message = "Do you wish to continue or get support from our customer service?", error = shiny::HTML(log_pgx_compute)))
+              
 
   
             raw_dir(NULL)
