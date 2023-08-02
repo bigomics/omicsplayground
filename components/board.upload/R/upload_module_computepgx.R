@@ -28,6 +28,7 @@ upload_module_computepgx_server <- function(
     metaRT,
     lib.dir,
     auth,
+    create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
     height = 720) {
@@ -399,11 +400,15 @@ upload_module_computepgx_server <- function(
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
         # if no raw_dir (happens when we auto-load example data via
-        # button), create a temp dir. In this case we don't care it
-        # will use /tmp
+        # button), or user click compute a second time
         if (is.null(raw_dir())) {
-          raw_dir(tempfile(pattern = "pgx_"))
-          dir.create(raw_dir())
+          raw_dir(create_raw_dir(auth))
+          ## raw_dir(tempfile(pattern = "pgx_"))
+          ## dir.create(raw_dir())
+          ##
+          ## NOTE: should we save any counts/samples/contrast matrices
+          ## here?? They might be altered here but at least we have
+          ## them saved.
           dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
