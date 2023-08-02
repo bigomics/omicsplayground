@@ -558,16 +558,12 @@ upload_module_computepgx_server <- function(
 
               }
 
+              browser()
 
-              # print log_pgx_compute to the user
-              shinyalert::shinyalert(
-                title = "Error!",
-                text = shiny::HTML(log_pgx_compute),
-                type = "error"
-              )
-              
-            
-              raw_dir(NULL)
+              showModal(error_popup(title = "Title test",message = "Message Test", error = shiny::HTML(log_pgx_compute)))
+
+  
+            raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 

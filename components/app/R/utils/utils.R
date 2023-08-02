@@ -351,9 +351,9 @@ error_popup <- function(title, message, error) {
       shiny::p(message, style = "font-size:15px;"),
       shiny::br(),
         tags$h3("Log:"),
-        tags$p(error)
+        # add grey style to tag p, and corner edges
+        tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px;")
       )
-      
     )
   )
 }
