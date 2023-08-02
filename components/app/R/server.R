@@ -722,7 +722,7 @@ app_server <- function(input, output, session) {
       if (file.exists(hbfile)) file.remove(hbfile)
     }
     if (!is.null(lock)) {
-        lock$remove_lock()
+      lock$remove_lock()
     }
 
     ## record tab navigation count and time

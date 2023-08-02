@@ -262,14 +262,14 @@ FolderLock <- R6::R6Class("FolderLock",
         } else {
           ## !auth$logged
           if (is.null(self$user)) {
-            invalidateLater(Inf) ## really needed?            
+            invalidateLater(Inf) ## really needed?
             return(NULL)
           }
           ## at logout we record the logout action and remove the
           ## lockfile, then reset the user/path
           self$remove_lock()
           self$reset()
-          invalidateLater(Inf) ## really needed?            
+          invalidateLater(Inf) ## really needed?
         }
       })
     }
