@@ -559,7 +559,21 @@ upload_module_computepgx_server <- function(
 
               ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
               title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
-              error_popup(title = "Error:", header = title,message = "Would youlike to get support from our customer service?", error = shiny::HTML(log_pgx_compute))
+              
+              error_popup(
+                title = "Error:",
+                header = title,
+                message = "Would youlike to get support from our customer service?", 
+                error = shiny::HTML(log_pgx_compute),
+                btn_id = "send_data_to_support"
+                )
+                
+                gmail_creds <- file.path(ETC, "gmail_creds")
+
+                # send email to customer support when button is clicked
+                observeEvent(input$send_data_to_support, {
+                  sendErrorMessageToCustomerSuport(user = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
+                })
               
               raw_dir(NULL)
             }

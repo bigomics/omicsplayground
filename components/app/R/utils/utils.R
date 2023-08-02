@@ -306,11 +306,11 @@ sever_serverfull <- function(srv) {
   )
 }
 
-error_popup <- function(title, header, message, error) {
+error_popup <- function(title, header, message, error, btn_id) {
   showModal(
     shiny::tagList(
       tags$div(
-        id = "sendLoghModal",
+        id = "sendLogModal",
         class = "modal",
         style = "
                       display: block;
@@ -359,8 +359,8 @@ error_popup <- function(title, header, message, error) {
         shiny::p(message, style = "font-size:15px;"),
         div(
           tags$button(
-                      class = "btn btn-danger", HTML("Send data to customer support"),
-                      onClick = "send_data_to_support();"
+            id = btn_id,
+            class = "btn btn-danger", HTML("Send data to customer support")          
             )
         )
         )

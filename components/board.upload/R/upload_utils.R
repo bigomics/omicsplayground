@@ -4,7 +4,7 @@
 ##
 
 
-sendCustomMessage <- function(message, user, email_user, path_to_creds = "gmail_creds") {
+sendErrorMessageToCustomerSuport <- function(user, pgx_name, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
@@ -17,7 +17,9 @@ sendCustomMessage <- function(message, user, email_user, path_to_creds = "gmail_
       body = blastula::md(
         glue::glue(
           "Hello, The user {user} had a dataset that failed to compute. ",
-          "Please find here the log and data path."
+          "Please find here the log and data path.",
+          "The error is : {error}",
+          "The ds name is : {pgx_name}"
         )
       ),
       footer = blastula::md(
@@ -25,7 +27,7 @@ sendCustomMessage <- function(message, user, email_user, path_to_creds = "gmail_
       )
     ),
     from = "bigomics.app@gmail.com",
-    to = email_user,
+    to = "mauro.masiero@bigomics.ch",
     subject = paste("Problem with dataset from", user),
     credentials = blastula::creds_file(path_to_creds)
   )
