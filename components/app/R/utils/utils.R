@@ -306,7 +306,7 @@ sever_serverfull <- function(srv) {
   )
 }
 
-error_popup <- function(title, message, error) {
+error_popup <- function(title, header, message, error) {
   shiny::tagList(
     tags$div(
       id = "crashModal",
@@ -344,19 +344,19 @@ error_popup <- function(title, message, error) {
                                 right: 5px;
                                 "
         ),
-        shiny::tags$h1(
-          "Error",
-          style = "color:#BF616A;font-family:lato;"
-          ),
-        shiny::tags$h2(
-          title,
-          style = "color:#BF616A;font-family:lato;"
-          ),
-      shiny::p(message, style = "font-size:15px;"),
+      shiny::tags$h1(
+        title,
+        style = "color:#BF616A;font-family:lato;"
+        ),
+      shiny::tags$h2(
+        header,
+        style = "color:#BF616A;font-family:lato;"
+        ),
       shiny::br(),
-        tags$h3("Log:"),
-        # add grey style to tag p, and corner edges
-        tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
+      tags$h3("Log:"),
+      # add grey style to tag p, and corner edges
+      tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
+      shiny::p(message, style = "font-size:15px;")
       )
     )
   )

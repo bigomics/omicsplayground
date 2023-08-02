@@ -543,19 +543,18 @@ upload_module_computepgx_server <- function(
                 message("Standard error from processx:")
                 err <- paste0("[processx.", nr, ":stderr] ", active_obj$stderr)
                 # save err to log_pgx_compute, separated by new lines
-                log_pgx_compute <- paste0(log_pgx_compute, "Error:", "\n")
+                log_pgx_compute <- paste0(log_pgx_compute, "Error:", "<br>")
                 # append err to log_pgx_compute
-                err <- paste0(err, cat= "\n")
-                log_pgx_compute <- c(log_pgx_compute, err, "\n")
+                err <- paste0(err, cat= "<br>")
+                log_pgx_compute <- c(log_pgx_compute, err, "<br>")
               }
               if (length(active_obj$stdout) > 0) {
                 ## Copy the error to the stderr of main app
                 cat("Standard output from processx:")
                 out <- paste0("[processx.", nr, ":stdout] ", active_obj$stdout)
-                out <- paste0(out, "\n")
-                log_pgx_compute <- c(log_pgx_compute, "Output:", "\n")
-                log_pgx_compute <- c(log_pgx_compute, out, "\n")
-
+                out <- paste0(out, "<br>")
+                log_pgx_compute <- c(log_pgx_compute, "Output:", "<br>")
+                log_pgx_compute <- c(log_pgx_compute, out, "<br>")
               }
 
               browser()
@@ -563,7 +562,7 @@ upload_module_computepgx_server <- function(
 
               title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
               
-              showModal(error_popup(title = title,message = "Do you wish to continue or get support from our customer service?", error = shiny::HTML(log_pgx_compute)))
+              showModal(error_popup(title = "Error", header = title,message = "Would youlike to get support from our customer service?", error = shiny::HTML(log_pgx_compute)))
               
 
   
