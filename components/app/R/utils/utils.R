@@ -336,7 +336,7 @@ error_popup <- function(title, header, message, error) {
             overflow-y: auto;
           ",
         tags$button(
-          class = "btn btn-info", HTML("&times;"),
+          class = "btn btn-danger", HTML("&times;"),
           onClick = "document.getElementById('crashModal').style.display = 'none';",
           style = "
                                 position: absolute;
@@ -353,10 +353,17 @@ error_popup <- function(title, header, message, error) {
         style = "color:#BF616A;font-family:lato;"
         ),
       shiny::br(),
-      tags$h3("Log:"),
       # add grey style to tag p, and corner edges
       tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
-      shiny::p(message, style = "font-size:15px;")
+      shiny::p(message, style = "font-size:15px;"),
+      div(
+        tags$button(
+                    class = "btn btn-danger", HTML("Send data to customer support"),
+                    onClick = "send_data_to_support();"
+          )
+
+      )
+      
       )
     )
   )

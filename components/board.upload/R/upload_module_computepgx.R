@@ -562,7 +562,8 @@ upload_module_computepgx_server <- function(
 
               title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
               
-              showModal(error_popup(title = "Error", header = title,message = "Would youlike to get support from our customer service?", error = shiny::HTML(log_pgx_compute)))
+              
+              showModal(error_popup(title = "Error:", header = title,message = "Would youlike to get support from our customer service?", error = shiny::HTML(log_pgx_compute)))
               
 
   
