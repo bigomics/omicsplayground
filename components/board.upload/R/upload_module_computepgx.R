@@ -671,6 +671,18 @@ upload_module_computepgx_server <- function(
 
         gmail_creds <- file.path(ETC, "gmail_creds")
         sendErrorMessageToCustomerSuport(user_email = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
+
+        # close modal
+
+        shinyjs::runjs("document.getElementById('sendLogModal').style.display = 'none';")
+
+        # alert user that a message was sent to CS
+
+        shinyalert::shinyalert(
+          title = "Message sent",
+          text = "We are sorry you had a problem. We will get back to you as soon as possible.",
+          type = "success"
+        )
       })
 
       return(computedPGX)

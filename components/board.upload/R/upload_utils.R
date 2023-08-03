@@ -22,11 +22,14 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, error, path_t
           
           Please find below the log and data path.
           
-          The error is : {error}
-          
-          The ds name is : {pgx_name}
+          The ds name is: {pgx_name}
 
+          The error is: 
+          
+          {error} 
+          
           Yours,
+
           Team Developers"
         )
       ),
