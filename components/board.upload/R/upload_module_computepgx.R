@@ -587,7 +587,7 @@ upload_module_computepgx_server <- function(
                     onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
                     )
                   # send error message to user
-                  gmail_creds <- file.path(ETC, "gmail_creds")  
+                  gmail_creds <- file.path(ETC, "gmail_creds")
   
                   sendErrorMessageToUser(
                     user_email =  store_error_from_process$user_email,
@@ -693,7 +693,7 @@ upload_module_computepgx_server <- function(
         shinyjs::runjs("console.log('send_data_to_support button clicked')")
         message("send_data_to_support button clicked")
 
-        gmail_creds <- file.path(etc, "gmail_creds")
+        gmail_creds <- file.path(ETC, "gmail_creds")
         
         sendErrorMessageToCustomerSuport(
           user_email = store_error_from_process$user_email,
