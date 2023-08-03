@@ -253,7 +253,7 @@ upload_module_computepgx_server <- function(
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
-      store_error_from_process <- reactiveValues(user_email = NULL, pgx_name = NULL, error = NULL)
+      store_error_from_process <- reactiveValues(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       shiny::observeEvent(input$upload_custom_genesets, {
         filePath <- input$upload_custom_genesets$datapath
@@ -565,6 +565,7 @@ upload_module_computepgx_server <- function(
               store_error_from_process$error <- log_pgx_compute
               store_error_from_process$pgx_name <- ds_name_bold
               store_error_from_process$user_email <- auth$email
+              store_error_from_process$pgx_path <- raw_dir
 
               # if auth$email is empty, then the user is not logged in
               if(auth$email == ""){
@@ -690,6 +691,7 @@ upload_module_computepgx_server <- function(
         sendErrorMessageToCustomerSuport(
           user_email = store_error_from_process$user_email,
           pgx_name = store_error_from_process$pgx_name,
+          pgx_path = store_error_from_process$pgx_path,
           error = paste0(store_error_from_process$error, collapse = ""),
           path_to_creds = gmail_creds
         )

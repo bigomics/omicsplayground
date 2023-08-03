@@ -4,7 +4,7 @@
 ##
 
 
-sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
+sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
@@ -19,10 +19,12 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, error, path_t
           "Hello, 
           
           The user <strong>{user_email}</strong> had a dataset that failed to compute and requested help. 
-          
+         
           Please find below the log and data path.
           
           The ds name is: {pgx_name}
+
+          The ds path is: {pgx_path}
 
           The error is: 
           
