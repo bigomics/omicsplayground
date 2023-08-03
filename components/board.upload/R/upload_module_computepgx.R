@@ -563,7 +563,7 @@ upload_module_computepgx_server <- function(
 
               # pass error data to reactive
               store_error_from_process$error <- log_pgx_compute
-              store_error_from_process$pgx_name <- log_pgx_compute
+              store_error_from_process$pgx_name <- ds_name_bold
               store_error_from_process$user_email <- auth$email
 
               # if auth$email is empty, then the user is not logged in
@@ -579,7 +579,7 @@ upload_module_computepgx_server <- function(
                   error_popup(
                     title = "Error:",
                     header = title,
-                    message = "Would youlike to get support from our customer service?", 
+                    message = "Would you like to get support from our customer service?", 
                     error = shiny::HTML(log_pgx_compute),
                     btn_id = "send_data_to_support__",
                     onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
@@ -686,7 +686,13 @@ upload_module_computepgx_server <- function(
         browser()
 
         gmail_creds <- file.path(ETC, "gmail_creds")
-        sendErrorMessageToCustomerSuport(user_email = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
+        
+        sendErrorMessageToCustomerSuport(
+          user_email = store_error_from_process$user_email,
+          pgx_name = store_error_from_process$pgx_name,
+          error = paste0(store_error_from_process$error, collapse = ""),
+          path_to_creds = gmail_creds
+        )
 
         # close modal
 
