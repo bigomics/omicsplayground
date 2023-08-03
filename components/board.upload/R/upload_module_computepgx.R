@@ -253,6 +253,7 @@ upload_module_computepgx_server <- function(
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
+      store_error_from_process <- reactiveValues(user_email = NULL, pgx_name = NULL, error = NULL)
 
       shiny::observeEvent(input$upload_custom_genesets, {
         filePath <- input$upload_custom_genesets$datapath
@@ -559,16 +560,31 @@ upload_module_computepgx_server <- function(
 
               ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
               title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
-              
-              error_popup(
-                title = "Error:",
-                header = title,
-                message = "Would youlike to get support from our customer service?", 
-                error = shiny::HTML(log_pgx_compute),
-                btn_id = "send_data_to_support__",
-                onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
 
-              )
+              # pass error data to reactive
+              store_error_from_process$error <- log_pgx_compute
+              store_error_from_process$pgx_name <- log_pgx_compute
+              store_error_from_process$user_email <- auth$email
+
+              # if auth$email is empty, then the user is not logged in
+              if(auth$email == ""){
+                error_popup(
+                  title = "Error:",
+                  header = title,
+                  message = "No email detected! Contact CS not possible!", 
+                  error = shiny::HTML(log_pgx_compute),
+                  btn_id = "send_data_to_support__",
+                  onclick = NULL)
+                } else {
+                  error_popup(
+                    title = "Error:",
+                    header = title,
+                    message = "Would youlike to get support from our customer service?", 
+                    error = shiny::HTML(log_pgx_compute),
+                    btn_id = "send_data_to_support__",
+                    onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
+                  )
+                }
                raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
