@@ -132,7 +132,7 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
           
           {error}
 
-          We are an open source company that value transparency, please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/.
+          We are an open source company that value transparency. Please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/ and get access to advanced funcionalities!
           
           Yours,
 
