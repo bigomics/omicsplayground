@@ -40,9 +40,8 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
       )
     ),
     from = "bigomics.app@gmail.com",
-    to = "mauro.masiero@bigomics.ch",
+    to = "support@bigomics.ch",
     subject = paste("Problem with dataset from", user_email),
     credentials = blastula::creds_file(path_to_creds)
   )
 }
-
