@@ -533,6 +533,16 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(raw_dir = raw_dir, nr = nr)
+              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
+
+              if(!auth$email == "") {
+                gmail_creds <- file.path(ETC, "gmail_creds")
+                sendSuccessMessageToUser(
+                  user_email = auth$email,
+                  pgx_name = ds_name_bold,
+                  path_to_creds = gmail_creds
+                )
+              }
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
