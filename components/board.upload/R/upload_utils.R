@@ -108,3 +108,44 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
     credentials = blastula::creds_file(path_to_creds)
   )
 }
+sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
+  if (!file.exists(path_to_creds)) {
+    info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    return(NULL)
+  }
+  
+  user_email <- trimws(user_email)
+  
+  blastula::smtp_send(
+    blastula::compose_email(
+      body = blastula::md(
+        glue::glue(
+          "Hello, 
+          
+          We detected a problem in your dataset computation. We are sorry that this happened. For support, please contact us at support@bigomics.ch.
+         
+          Please find below the related logs.
+          
+          The dataset name is: {pgx_name}
+
+          The error log is: 
+          
+          {error}
+
+          We are an open source company that value transparency, please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/.
+          
+          Yours,
+
+          BigOmics Developers Team"
+        )
+      ),
+      footer = blastula::md(
+        glue::glue("Email sent on {blastula::add_readable_time()}.")
+      )
+    ),
+    from = "bigomics.app@gmail.com",
+    to = user_email,
+    subject = paste("OmicsPlayground: Error when computing a dataset"),
+    credentials = blastula::creds_file(path_to_creds)
+  )
+}

@@ -577,6 +577,7 @@ upload_module_computepgx_server <- function(
                   btn_id = "send_data_to_support__",
                   onclick = NULL)
                 } else {
+
                   error_popup(
                     title = "Error:",
                     header = title,
@@ -584,7 +585,15 @@ upload_module_computepgx_server <- function(
                     error = shiny::HTML(log_pgx_compute),
                     btn_id = "send_data_to_support__",
                     onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
-                  )
+                    )
+                  # send error message to user
+                  gmail_creds <- file.path(ETC, "gmail_creds")  
+  
+                  sendErrorMessageToUser(
+                    user_email =  store_error_from_process$user_email,
+                    pgx_name =  store_error_from_process$pgx_name,
+                    error =  paste0(store_error_from_process$error, collapse = ""),
+                    path_to_creds = gmail_creds)
                 }
                raw_dir(NULL)
             }
@@ -614,7 +623,6 @@ upload_module_computepgx_server <- function(
           active_processes <- active_processes[-completed_indices]
           process_obj(active_processes)
         }
-
         return(NULL)
       })
 
@@ -684,9 +692,8 @@ upload_module_computepgx_server <- function(
         # write a message to console with shinyjs
         shinyjs::runjs("console.log('send_data_to_support button clicked')")
         message("send_data_to_support button clicked")
-        browser()
 
-        gmail_creds <- file.path(ETC, "gmail_creds")
+        gmail_creds <- file.path(etc, "gmail_creds")
         
         sendErrorMessageToCustomerSuport(
           user_email = store_error_from_process$user_email,
