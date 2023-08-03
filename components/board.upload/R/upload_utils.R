@@ -3,6 +3,69 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+error_popup <- function(title, header, message, error, btn_id, onclick) {
+  showModal(
+    shiny::tagList(
+      tags$div(
+        id = "sendLogModal",
+        class = "modal",
+        style = "
+                      display: block;
+                      position: fixed;
+                      z-index: 1;
+                      left: 0;
+                      top: 0;
+                      width: 100%;
+                      height: 100%;
+                      overflow: auto;
+                      background-color: rgba(0,0,0,0.4);
+                      ",
+        tags$div(
+          class = "modal-content",
+          style = "
+              background-color: #fefefe;
+              margin: 15% auto;
+              padding: 20px;
+              border: 1px solid #888;
+              width: 45%;
+              color: black;
+              text-align: left;
+              height: auto;
+              overflow-y: auto;
+            ",
+          tags$button(
+            class = "btn btn-danger", HTML("&times;"),
+            onClick = "document.getElementById('sendLogModal').style.display = 'none';",
+            style = "
+                                  position: absolute;
+                                  top: 5px;
+                                  right: 5px;
+                                  "
+          ),
+        shiny::tags$h1(
+          title,
+          style = "color:#BF616A;font-family:lato;"
+          ),
+        shiny::tags$h2(
+          header,
+          style = "color:#BF616A;font-family:lato;"
+          ),
+        shiny::br(),
+        # add grey style to tag p, and corner edges
+        tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
+        shiny::p(message, style = "font-size:15px;"),
+        div(
+          tags$button(
+            id = btn_id,
+            class = "btn btn-danger", HTML("Send data to customer support"),
+            onclick = onclick,
+            )
+        )
+        )
+      )
+    )
+  )
+}
 
 sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
