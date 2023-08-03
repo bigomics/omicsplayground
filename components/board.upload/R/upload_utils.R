@@ -4,22 +4,30 @@
 ##
 
 
-sendErrorMessageToCustomerSuport <- function(user, pgx_name, error, path_to_creds = "gmail_creds") {
+sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
-
-  user <- trimws(user)
-
+  
+  user_email <- trimws(user_email)
+  
   blastula::smtp_send(
     blastula::compose_email(
       body = blastula::md(
         glue::glue(
-          "Hello, The user {user} had a dataset that failed to compute. ",
-          "Please find here the log and data path.",
-          "The error is : {error}",
-          "The ds name is : {pgx_name}"
+          "Hello, 
+          
+          The user <strong>{user_email}</strong> had a dataset that failed to compute and requested help. 
+          
+          Please find below the log and data path.
+          
+          The error is : {error}
+          
+          The ds name is : {pgx_name}
+
+          Yours,
+          Team Developers"
         )
       ),
       footer = blastula::md(
@@ -28,7 +36,7 @@ sendErrorMessageToCustomerSuport <- function(user, pgx_name, error, path_to_cred
     ),
     from = "bigomics.app@gmail.com",
     to = "mauro.masiero@bigomics.ch",
-    subject = paste("Problem with dataset from", user),
+    subject = paste("Problem with dataset from", user_email),
     credentials = blastula::creds_file(path_to_creds)
   )
 }

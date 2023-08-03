@@ -667,9 +667,10 @@ upload_module_computepgx_server <- function(
         # write a message to console with shinyjs
         shinyjs::runjs("console.log('send_data_to_support button clicked')")
         message("send_data_to_support button clicked")
+        browser()
 
         gmail_creds <- file.path(ETC, "gmail_creds")
-        sendErrorMessageToCustomerSuport(user = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
+        sendErrorMessageToCustomerSuport(user_email = "Mauro", pgx_name = "testPGX", error = "hello", path_to_creds = gmail_creds)
       })
 
       return(computedPGX)
