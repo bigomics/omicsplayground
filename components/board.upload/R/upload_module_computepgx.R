@@ -27,7 +27,6 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
-    contrasts.updated,
     auth,
     enable_button = TRUE,
     alertready = TRUE,
