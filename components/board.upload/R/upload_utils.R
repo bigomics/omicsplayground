@@ -42,25 +42,25 @@ error_popup <- function(title, header, message, error, btn_id, onclick) {
                                   right: 5px;
                                   "
           ),
-        shiny::tags$h1(
-          title,
-          style = "color:#BF616A;font-family:lato;"
+          shiny::tags$h1(
+            title,
+            style = "color:#BF616A;font-family:lato;"
           ),
-        shiny::tags$h2(
-          header,
-          style = "color:#BF616A;font-family:lato;"
+          shiny::tags$h2(
+            header,
+            style = "color:#BF616A;font-family:lato;"
           ),
-        shiny::br(),
-        # add grey style to tag p, and corner edges
-        tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
-        shiny::p(message, style = "font-size:15px;"),
-        div(
-          tags$button(
-            id = btn_id,
-            class = "btn btn-danger", HTML("Send data to customer support"),
-            onclick = onclick,
+          shiny::br(),
+          # add grey style to tag p, and corner edges
+          tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
+          shiny::p(message, style = "font-size:15px;"),
+          div(
+            tags$button(
+              id = btn_id,
+              class = "btn btn-danger", HTML("Send data to customer support"),
+              onclick = onclick,
             )
-        )
+          )
         )
       )
     )
@@ -72,27 +72,27 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
-  
+
   user_email <- trimws(user_email)
-  
+
   blastula::smtp_send(
     blastula::compose_email(
       body = blastula::md(
         glue::glue(
-          "Hello, 
-          
-          The user <strong>{user_email}</strong> had a dataset that failed to compute and requested help. 
-         
+          "Hello,
+
+          The user <strong>{user_email}</strong> had a dataset that failed to compute and requested help.
+
           Please find below the log and data path.
-          
+
           The ds name is: {pgx_name}
 
           The ds path is: {pgx_path}
 
-          The error is: 
-          
-          {error} 
-          
+          The error is:
+
+          {error}
+
           Yours,
 
           Team Developers"
@@ -113,27 +113,27 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
-  
+
   user_email <- trimws(user_email)
-  
+
   blastula::smtp_send(
     blastula::compose_email(
       body = blastula::md(
         glue::glue(
-          "Hello, 
-          
+          "Hello,
+
           We detected a problem in your dataset computation. We are sorry that this happened. For support, please contact us at support@bigomics.ch.
-         
+
           Please find below the related logs.
-          
+
           The dataset name is: {pgx_name}
 
-          The error log is: 
-          
+          The error log is:
+
           {error}
 
           We are an open source company that value transparency. Please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/ and get access to advanced funcionalities!
-          
+
           Yours,
 
           BigOmics Developers Team"

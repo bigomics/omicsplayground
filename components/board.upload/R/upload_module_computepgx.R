@@ -541,7 +541,7 @@ upload_module_computepgx_server <- function(
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
-              
+
               log_pgx_compute <- ""
 
               if (length(active_obj$stderr) > 0) {
@@ -551,7 +551,7 @@ upload_module_computepgx_server <- function(
                 # save err to log_pgx_compute, separated by new lines
                 log_pgx_compute <- paste0(log_pgx_compute, "Error:", "<br>")
                 # append err to log_pgx_compute
-                err <- paste0(err, cat= "<br>")
+                err <- paste0(err, cat = "<br>")
                 log_pgx_compute <- c(log_pgx_compute, err, "<br>")
               }
               if (length(active_obj$stdout) > 0) {
@@ -564,7 +564,7 @@ upload_module_computepgx_server <- function(
               }
 
               ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
-              title = shiny::HTML(paste("The dataset" ,ds_name_bold, "could not be computed."))
+              title <- shiny::HTML(paste("The dataset", ds_name_bold, "could not be computed."))
 
               # pass error data to reactive
               store_error_from_process$error <- log_pgx_compute
@@ -573,34 +573,35 @@ upload_module_computepgx_server <- function(
               store_error_from_process$pgx_path <- raw_dir
 
               # if auth$email is empty, then the user is not logged in
-              if(auth$email == ""){
+              if (auth$email == "") {
                 error_popup(
                   title = "Error:",
                   header = title,
-                  message = "No email detected! Contact CS not possible!", 
+                  message = "No email detected! Contact CS not possible!",
                   error = shiny::HTML(log_pgx_compute),
                   btn_id = "send_data_to_support__",
-                  onclick = NULL)
-                } else {
+                  onclick = NULL
+                )
+              } else {
+                error_popup(
+                  title = "Error:",
+                  header = title,
+                  message = "Would you like to get support from our customer service?",
+                  error = shiny::HTML(log_pgx_compute),
+                  btn_id = "send_data_to_support__",
+                  onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
+                )
+                # send error message to user
+                gmail_creds <- file.path(ETC, "gmail_creds")
 
-                  error_popup(
-                    title = "Error:",
-                    header = title,
-                    message = "Would you like to get support from our customer service?", 
-                    error = shiny::HTML(log_pgx_compute),
-                    btn_id = "send_data_to_support__",
-                    onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
-                    )
-                  # send error message to user
-                  gmail_creds <- file.path(ETC, "gmail_creds")
-  
-                  sendErrorMessageToUser(
-                    user_email =  store_error_from_process$user_email,
-                    pgx_name =  store_error_from_process$pgx_name,
-                    error =  paste0(store_error_from_process$error, collapse = ""),
-                    path_to_creds = gmail_creds)
-                }
-               raw_dir(NULL)
+                sendErrorMessageToUser(
+                  user_email = store_error_from_process$user_email,
+                  pgx_name = store_error_from_process$pgx_name,
+                  error = paste0(store_error_from_process$error, collapse = ""),
+                  path_to_creds = gmail_creds
+                )
+              }
+              raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
 
@@ -699,7 +700,7 @@ upload_module_computepgx_server <- function(
         message("send_data_to_support button clicked")
 
         gmail_creds <- file.path(ETC, "gmail_creds")
-        
+
         sendErrorMessageToCustomerSuport(
           user_email = store_error_from_process$user_email,
           pgx_name = store_error_from_process$pgx_name,
