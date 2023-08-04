@@ -306,7 +306,6 @@ sever_serverfull <- function(srv) {
   )
 }
 
-
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons <- c(
   "toImage",
