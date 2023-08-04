@@ -721,7 +721,9 @@ app_server <- function(input, output, session) {
       hbfile <- isolate(heartbeat()) ## does not work because auth has been reset
       if (file.exists(hbfile)) file.remove(hbfile)
     }
-    if (!is.null(lock)) lock$remove_lock()
+    if (!is.null(lock)) {
+      lock$remove_lock()
+    }
 
     ## record tab navigation count and time
     nav.count <- isolate(nav$count)

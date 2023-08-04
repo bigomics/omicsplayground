@@ -6,7 +6,7 @@
 ## (c) 2023 BigOmics Analytics
 ##
 
-message("[compute PGX process] : starting process")
+message("[compute PGX process] : starting process\n")
 args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
@@ -58,11 +58,11 @@ pgx$description <- params$description
 pgx$creator <- params$creator
 pgx$date <- params$date
 
-message("[ComputePgxServer:@compute] initialize object")
+message("[ComputePgxServer:@compute] initialize object\n")
 
 # Save output to a PGX file
 
 pgx_name <- paste0(params$name,".pgx")
 save(pgx, file = file.path(params$pgx.save.folder,pgx_name))
 
-message("[compute PGX process] : process finished, pgx is saved as", pgx_name)
+message("[compute PGX process] : process finished, pgx is saved as", pgx_name,"\n")

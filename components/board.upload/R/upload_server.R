@@ -188,7 +188,7 @@ UploadBoard <- function(id,
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <- reactiveVal(NULL)
 
-    create_raw_dir <- function() {
+    create_raw_dir <- function(auth) {
       auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
       prefix <- paste0("raw_", auth_id, "_")
       raw_dir <- tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT"))
@@ -200,7 +200,7 @@ UploadBoard <- function(id,
     shiny::observeEvent(input$upload_files, {
       ## shiny::req(raw_dir())
       if (is.null(raw_dir())) {
-        raw_dir(create_raw_dir())
+        raw_dir(create_raw_dir(auth))
       }
 
       message("[upload_files] >>> reading uploaded files")
@@ -695,6 +695,7 @@ UploadBoard <- function(id,
       alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
+      create_raw_dir = create_raw_dir,
       height = height
     )
 
