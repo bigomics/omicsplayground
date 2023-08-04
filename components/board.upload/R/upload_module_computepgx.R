@@ -491,8 +491,8 @@ upload_module_computepgx_server <- function(
         shinyalert::shinyalert(
           title = "Crunching your data!",
           text = "Your dataset will be computed in the background. 
-                  You can continue to play with a different dataset in the meantime. 
-                  When it is ready, it will appear in your dataset library.",
+          You can continue to play with a different dataset in the meantime. 
+          When it is ready, it will appear in your dataset library.",
           type = "info",
           timer = 60000
         )
