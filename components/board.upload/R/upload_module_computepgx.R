@@ -27,6 +27,7 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
+    contrasts.updated,
     auth,
     enable_button = TRUE,
     alertready = TRUE,
@@ -36,6 +37,19 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
+      
+
+      # samples <- samplesRT()
+      # sample.count <- any(dplyr::count(samples, group)['n'] < 2)
+        
+      # if (sample.count) {
+      #     shinyalert::shinyalert(
+      #     title = "WARNING",
+      #     text = "There are one or more cases where there are less than two samples in a Group",
+      #     type = "error"
+      #   )
+      # }
+      
       ## statistical method for GENE level testing
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
@@ -59,6 +73,9 @@ upload_module_computepgx_server <- function(
       )
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
+      DISABLED.GENE_METHODS <- c('ttest','ttest.welch')
+      DISABLED.GENESET_METHODS <- c('spearman','gsva','fgsea','ssgsea','fisher')
+ 
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
@@ -242,9 +259,59 @@ upload_module_computepgx_server <- function(
         }
       })
 
+      # shiny::observeEvent(input$options, {
+
+      #   contrasts.update <- as.data.frame(contrasts.updated())
+      #   contrasts <- as.matrix(contrastsRT())
+      #   samples <- samplesRT()
+
+      #   group.count <- list()
+      #   sample_1 <- list()
+      #   sample_2 <- list()
+
+      #   for (i in 1:dim(contrasts.update)[2]){
+      #     sample_1[[i]] <- sum(contrasts.update[i] == 1)
+      #     sample_2[[i]] <- sum(contrasts.update[i] == -1)
+      #   }
+
+      #   if (sum(sample_1 == 1) >= 1 || sum(sample_2 == 1) >= 1) {
+      #   shinyalert::shinyalert(
+      #     title = "WARNING",
+      #     text = "There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled.",
+      #     type = "warning"
+      #   )
+      #   shiny::updateCheckboxGroupInput(session, "gene_methods", choices = DISABLED.GENE_METHODS)
+      #   shiny::updateCheckboxGroupInput(session, "gset_methods", choices = DISABLED.GENESET_METHODS)
+      #   }
+      # })
+
+        shiny::observeEvent(input$options | input$compute, {
+
+        contrasts.update <- as.data.frame(contrasts.updated())
+        # print(contrasts.update)
+        # write.csv(contrasts.update, file.path(raw_dir(), "contrasts_contrasts.csv"), row.names = TRUE)
+        count <- list()
+
+        for (i in colnames(contrasts.update)){
+            group.count <- contrasts.update %>% dplyr::count(contrasts.update[i])
+            count[i] <- any(group.count[1:nrow(group.count)-1,]['n'] == 1 )
+        }
+
+        if (any(count == TRUE)){
+        shinyalert::shinyalert(
+          title = "WARNING",
+          text = "There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled.",
+          type = "warning"
+        )
+        shiny::updateCheckboxGroupInput(session, "gene_methods", choices = DISABLED.GENE_METHODS)
+        shiny::updateCheckboxGroupInput(session, "gset_methods", choices = DISABLED.GENESET_METHODS)
+        }
+      })
+
+
       ## ------------------------------------------------------------------
       ## After confirmation is received, start computing the PGX
-      ## object from the uploaded files
+      ## object from the uploaded samplesRT()files
       ## ------------------------------------------------------------------
 
       # Define a reactive value to store the process object
@@ -279,7 +346,7 @@ upload_module_computepgx_server <- function(
           custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
 
           # tell user that custom genesets are "ok"
-          # we could perform an addicional check to verify that items in lists are genes
+          # we could perform an additional check to verify that items in lists are genes
           if (gmt.length > 0 && gmt.is.list) {
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
@@ -342,6 +409,7 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
+
         ## !!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
         ## batch  <- batchRT()
 
@@ -563,7 +631,6 @@ upload_module_computepgx_server <- function(
           active_processes <- active_processes[-completed_indices]
           process_obj(active_processes)
         }
-
         return(NULL)
       })
 
