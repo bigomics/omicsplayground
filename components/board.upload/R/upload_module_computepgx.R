@@ -73,8 +73,8 @@ upload_module_computepgx_server <- function(
       )
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
-      DISABLED.GENE_METHODS <- c('ttest','ttest.welch')
-      DISABLED.GENESET_METHODS <- c('spearman','gsva','fgsea','ssgsea','fisher')
+      ONESAMPLE.GENE_METHODS <- c('ttest','ttest.welch')
+      ONESAMPLE.GENESET_METHODS <- sort(c('spearman','gsva','fgsea','ssgsea','fisher'))
  
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
@@ -285,26 +285,31 @@ upload_module_computepgx_server <- function(
       #   }
       # })
 
-        shiny::observeEvent(input$options | input$compute, {
-
-        contrasts.update <- as.data.frame(contrasts.updated())
+      ##      shiny::observeEvent(input$options | input$compute, {
+      shiny::observeEvent( contrastsRT(), {
+##        if(is.null(input$compute) || input$compute==0) return(NULL)
+            
+##        contrasts.update <- as.data.frame(contrasts.updated())
+        contrasts <- as.data.frame(contrastsRT())            
         # print(contrasts.update)
         # write.csv(contrasts.update, file.path(raw_dir(), "contrasts_contrasts.csv"), row.names = TRUE)
-        count <- list()
-
-        for (i in colnames(contrasts.update)){
-            group.count <- contrasts.update %>% dplyr::count(contrasts.update[i])
-            count[i] <- any(group.count[1:nrow(group.count)-1,]['n'] == 1 )
-        }
-
-        if (any(count == TRUE)){
-        shinyalert::shinyalert(
-          title = "WARNING",
-          text = "There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled.",
-          type = "warning"
-        )
-        shiny::updateCheckboxGroupInput(session, "gene_methods", choices = DISABLED.GENE_METHODS)
-        shiny::updateCheckboxGroupInput(session, "gset_methods", choices = DISABLED.GENESET_METHODS)
+#        has_one <- c()
+#        for (i in colnames(contrasts)){
+##            group.count <- contrasts.update %>% dplyr::count(contrasts.update[i])
+##            has_one[i] <- any(group.count[1:nrow(group.count)-1,]['n'] == 1 )
+#            has_one[i] <- any(table(contrast[,i])==1)
+#        }
+        has_one <- apply(contrasts, 2, function(x) any(table(x)==1))
+        
+        if (any(has_one)){
+          shinyalert::shinyalert(
+            title = "WARNING",
+            text = "There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled.",
+            type = "warning"
+          )
+          shiny::updateCheckboxGroupInput(session, "gene_methods", choices = ONESAMPLE.GENE_METHODS, sel="ttest")
+          shiny::updateCheckboxGroupInput(session, "gset_methods", choices = ONESAMPLE.GENESET_METHODS,
+                                          sel=c("fisher","fgsea","gsva"))
         }
       })
 

@@ -668,7 +668,7 @@ UploadBoard <- function(id,
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
       uploaded$contrasts.csv <- modct$contr
-      uploaded$CONTRASTS_check <- modct$contr
+##      uploaded$CONTRASTS_check <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
@@ -693,7 +693,7 @@ UploadBoard <- function(id,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       enable_button = upload_ok,
-      contrasts.updated = shiny::reactive(uploaded$CONTRASTS_check),
+ ##     contrasts.updated = shiny::reactive(uploaded$CONTRASTS_check),
       alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
