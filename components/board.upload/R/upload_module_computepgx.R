@@ -36,19 +36,6 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      
-
-      # samples <- samplesRT()
-      # sample.count <- any(dplyr::count(samples, group)['n'] < 2)
-        
-      # if (sample.count) {
-      #     shinyalert::shinyalert(
-      #     title = "WARNING",
-      #     text = "There are one or more cases where there are less than two samples in a Group",
-      #     type = "error"
-      #   )
-      # }
-      
       ## statistical method for GENE level testing
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
@@ -289,7 +276,7 @@ upload_module_computepgx_server <- function(
 
       ## ------------------------------------------------------------------
       ## After confirmation is received, start computing the PGX
-      ## object from the uploaded samplesRT()files
+      ## object from the uploaded files
       ## ------------------------------------------------------------------
 
       # Define a reactive value to store the process object
