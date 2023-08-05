@@ -168,7 +168,7 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
 
           The omics revolution is one click away, go to https://bigomics.ch/ and find your dataset in Omics Playground: Loading Module.
 
-          We are an open source company that value transparency. Please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/ and get access to advanced funcionalities!
+          We are an open source company that value transparency. Please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/ and get access to advanced functionalities!
 
           Yours,
 
