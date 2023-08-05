@@ -540,7 +540,7 @@ upload_module_computepgx_server <- function(
               on_process_completed(raw_dir = raw_dir, nr = nr)
               ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
 
-              if(!auth$email == "") {
+              if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
                 sendSuccessMessageToUser(
                   user_email = auth$email,
