@@ -21,6 +21,13 @@ expression_plot_volcanoAll_ui <- function(id,
                                           width) {
   ns <- shiny::NS(id)
 
+  plot_options <- shiny::tagList(
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
+      "Scale the volcano plots individually per method..",
+      placement = "right", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(
     id = ns("pltmod"),
     title = title,
@@ -28,7 +35,7 @@ expression_plot_volcanoAll_ui <- function(id,
     plotlib = "grid",
     info.text = info.text,
     caption = caption,
-    options = NULL,
+    options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
@@ -102,14 +109,12 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    get_plots <- function(cex = 0.45, base_size = 11) {
+    get_plots <- function(cex = 0.45, base_size = 11, axis = "free") {
       pd <- plot_data()
       shiny::req(pd)
 
       ymax <- 15
       nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
-      ymax <- max(1.3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
-      xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
 
       ## maximum 24!!!
       nplots <- min(24, length(pd$Q))
@@ -127,6 +132,11 @@ expression_plot_volcanoAll_server <- function(id,
           genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
+          ymax1 <- ymax
+          if (input$scale_per_method) {
+            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
+          }
+
 
           plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
             xy,
@@ -139,7 +149,7 @@ expression_plot_volcanoAll_server <- function(id,
             hilight = NULL,
             hilight2 = genes2,
             xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax),
+            ylim = c(0, ymax1),
             xlab = "difference  (log2FC)",
             ylab = "significance  (-log10q)",
             hilight.lwd = 0,
@@ -159,7 +169,7 @@ expression_plot_volcanoAll_server <- function(id,
 
 
     plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.5, base_size = 11)
+      plt <- get_plots(cex = 0.5, base_size = 11, axis = "free")
       nplots <- length(plt)
       nr <- 1
       nc <- max(4, nplots)
