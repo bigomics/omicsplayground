@@ -133,6 +133,8 @@ expression_plot_volcanoAll_server <- function(id,
           xy <- data.frame(x = fx, y = -log10(qval))
           is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
           ymax1 <- ymax
+          xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
+
           if (input$scale_per_method) {
             ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
           }
