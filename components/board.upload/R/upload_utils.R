@@ -149,3 +149,39 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
     credentials = blastula::creds_file(path_to_creds)
   )
 }
+
+sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmail_creds") {
+  if (!file.exists(path_to_creds)) {
+    info("[compute PGX process] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    return(NULL)
+  }
+  
+  user_email <- trimws(user_email)
+  
+  blastula::smtp_send(
+    blastula::compose_email(
+      body = blastula::md(
+        glue::glue(
+          "Hello,
+          
+          Congratulation, the dataset {pgx_name} completed successfully!
+          
+          The omics revolution is one click away, go to https://bigomics.ch/ and find your dataset in Omics Playground Loading Module.
+
+          We are an open source company that value transparency. Please consider supporting us by purchasing a subscription at https://bigomics.ch/pricing/ and get access to advanced funcionalities!
+          
+          Yours,
+
+          BigOmics Developers Team"
+        )
+      ),
+      footer = blastula::md(
+        glue::glue("Email sent on {blastula::add_readable_time()}.")
+      )
+    ),
+    from = "bigomics.app@gmail.com",
+    to = user_email,
+    subject = paste("OmicsPlayground: Dataset computed successfully!"),
+    credentials = blastula::creds_file(path_to_creds)
+  )
+}
