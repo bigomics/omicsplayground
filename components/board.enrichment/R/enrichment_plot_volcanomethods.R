@@ -14,7 +14,7 @@ enrichment_plot_volcanomethods_ui <- function(
 
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     )
@@ -98,8 +98,6 @@ enrichment_plot_volcanomethods_server <- function(id,
 
           xy <- cbind(x = fc, y = -log10(qv))
           tt <- colnames(Q)[i]
-          #
-
           ymax1 <- ymax
           if (input$scale_per_method) {
             ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
