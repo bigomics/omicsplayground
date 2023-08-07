@@ -9,7 +9,7 @@ AppDriver <- tryCatch(
   {
      shinytest2::AppDriver$new(
       normalizePath("components/board.single"),
-      options = list(board = "dataview")
+      options = list(board = "tcga")
       )
   },
   error = function(e) {

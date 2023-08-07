@@ -7,8 +7,7 @@
 app_ui <- function(request) {
 
     board = options()$board
-    board = "tcga"
-
+    
     source('../app/R/global.R')
 
     root_opg <- get_opg_root()
@@ -21,7 +20,6 @@ app_ui <- function(request) {
 
     directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
     file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
-    
 
     for (file_path in file_paths) {
         source(file_path)
@@ -43,8 +41,6 @@ app_ui <- function(request) {
     ui_fn_name <- glue::glue("{board}ui")
     board_ui <- grep(ui_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
     board_ui_fn <- get(board_ui)
-
-    
     
     # header
     
