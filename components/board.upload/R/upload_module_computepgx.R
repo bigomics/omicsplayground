@@ -60,9 +60,9 @@ upload_module_computepgx_server <- function(
       )
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
-      ONESAMPLE.GENE_METHODS <- c('ttest','ttest.welch')
-      ONESAMPLE.GENESET_METHODS <- sort(c('spearman','gsva','fgsea','ssgsea','fisher'))
- 
+      ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
+      ONESAMPLE.GENESET_METHODS <- sort(c("spearman", "gsva", "fgsea", "ssgsea", "fisher"))
+
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
@@ -226,8 +226,9 @@ upload_module_computepgx_server <- function(
         ) ## end of fill Col
       })
       shiny::outputOptions(output,
-                           "UI",
-                           suspendWhenHidden = FALSE) ## important!!!
+        "UI",
+        suspendWhenHidden = FALSE
+      ) ## important!!!
 
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
@@ -242,16 +243,18 @@ upload_module_computepgx_server <- function(
 
         if (!is.null(meta[["name"]])) {
           shiny::updateTextInput(session,
-                                 "upload_name",
-                                 value = meta[["name"]])
+            "upload_name",
+            value = meta[["name"]]
+          )
         }
         if (!is.null(meta[["description"]])) {
           shiny::updateTextAreaInput(session,
-                                     "upload_description",
-                                     value = meta[["description"]])
+            "upload_description",
+            value = meta[["description"]]
+          )
         }
       })
-        
+
       shiny::observeEvent(contrastsRT(), {
         contrasts <- as.data.frame(contrastsRT())
         has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
@@ -259,21 +262,23 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = "There are cases where there is only one samples in a group. 
-                    Some of the gene tests and enrichment 
+            text = "There are cases where there is only one samples in a group.
+                    Some of the gene tests and enrichment
                     methods are disabled.",
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(
-                                          session,
-                                          "gene_methods",
-                                          choices = ONESAMPLE.GENE_METHODS,
-                                          sel = "ttest")
+            session,
+            "gene_methods",
+            choices = ONESAMPLE.GENE_METHODS,
+            sel = "ttest"
+          )
           shiny::updateCheckboxGroupInput(session,
-                                          "gset_methods",
-                                          choices = ONESAMPLE.GENESET_METHODS,
-                                          sel = c("fisher", "fgsea", "gsva"))
-          }
+            "gset_methods",
+            choices = ONESAMPLE.GENESET_METHODS,
+            sel = c("fisher", "fgsea", "gsva")
+          )
+        }
       })
 
       ## ------------------------------------------------------------------
@@ -497,8 +502,8 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background. 
-          You can continue to play with a different dataset in the meantime. 
+          text = "Your dataset will be computed in the background.
+          You can continue to play with a different dataset in the meantime.
           When it is ready, it will appear in your dataset library.",
           type = "info",
           timer = 60000
