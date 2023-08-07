@@ -250,10 +250,11 @@ upload_module_computepgx_server <- function(
                                      value = meta[["description"]])
         }
       })
-
+        
       shiny::observeEvent(contrastsRT(), {
         contrasts <- as.data.frame(contrastsRT())
         has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
+
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
@@ -271,7 +272,7 @@ upload_module_computepgx_server <- function(
                                           "gset_methods",
                                           choices = ONESAMPLE.GENESET_METHODS,
                                           sel = c("fisher", "fgsea", "gsva"))
-        }
+          }
       })
 
       ## ------------------------------------------------------------------
