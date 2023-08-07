@@ -7,11 +7,7 @@
 app_ui <- function(request) {
 
     board = options()$board
-    
-    print(board)
-    print(board)
-    print(board)
-    board = "Tcga"
+
     source('../app/R/global.R')
 
     root_opg <- get_opg_root()
