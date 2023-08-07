@@ -40,7 +40,6 @@ AppDriver$set_inputs("pgx_path" = pgx_file)
 
 # check that the path is updated
 AppDriver$get_value(input = "pgx_path")
-
 # get error log
 
 # get stderror for the app
@@ -49,3 +48,5 @@ AppDriver$get_logs()
 # exit the app
 AppDriver$stop()
 AppDriver$get_screenshot()
+
+shiny::runApp("components/board.single/")
