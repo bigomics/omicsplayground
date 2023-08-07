@@ -5,6 +5,7 @@
 error_logs <- list()
 
 # get error from AppDriver and save it as error_log
+options = list(board = "tcga")
 
 AppDriver <- tryCatch(
   {
@@ -15,8 +16,7 @@ AppDriver <- tryCatch(
   },
   error = function(e) {
     # append error log to error_logs list
-    error_logs <- append(error_logs, e)
-    
+    print(e)
   }
 )
 
@@ -50,5 +50,5 @@ AppDriver$get_logs()
 AppDriver$finalize()
 AppDriver$snapshot()
 
-shiny::runApp("components/board.tcga/dev_MMM/")
+shiny::runApp("components/board.single/")
 
