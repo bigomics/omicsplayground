@@ -20,7 +20,11 @@ app_ui <- function(request) {
 
     directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
     file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
-    lapply(file_paths, source)  # Source all the files in the directory
+    
+
+    for (file_path in file_paths) {
+        source(file_path)
+    }
 
     ui_files <- list_files_safe(path = file.path(root_opg,'components/ui/'))
 
@@ -29,9 +33,12 @@ app_ui <- function(request) {
     }
 
     # attempt to evaluate board functions
-    
-    # board_inputs <- grep("inputs", ls(), value = TRUE, ignore.case = TRUE)
 
+    board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
+    board_input_fn <- get(board_input)
+
+    
+    
     # header
     
     header <- shiny::tagList(
@@ -86,10 +93,9 @@ app_ui <- function(request) {
         bigdash::bigTabs(
             bigdash::bigTabItem(
                 paste0(board,"-tab"),
-                TcgaInputs("tcga"), # eval(parse(text = paste0(board_inputs, glue::glue('("{board}")'))))
-                TcgaUI("tcga")
+                board_input_fn(board),
+                TcgaUI(board)
             )
         )
     )
-
 }
