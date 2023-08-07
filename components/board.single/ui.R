@@ -7,6 +7,7 @@
 app_ui <- function(request) {
 
     board = options()$board
+    board = "tcga"
 
     source('../app/R/global.R')
 
@@ -36,6 +37,12 @@ app_ui <- function(request) {
 
     board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
     board_input_fn <- get(board_input)
+
+    # to the same for ui
+    
+    ui_fn_name <- glue::glue("{board}ui")
+    board_ui <- grep(ui_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
+    board_ui_fn <- get(board_ui)
 
     
     
@@ -94,7 +101,7 @@ app_ui <- function(request) {
             bigdash::bigTabItem(
                 paste0(board,"-tab"),
                 board_input_fn(board),
-                TcgaUI(board)
+                board_ui_fn(board)
             )
         )
     )

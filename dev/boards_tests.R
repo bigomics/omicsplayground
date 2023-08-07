@@ -5,13 +5,11 @@
 error_logs <- list()
 
 # get error from AppDriver and save it as error_log
-options = list(board = "tcga")
-
 AppDriver <- tryCatch(
   {
      shinytest2::AppDriver$new(
       normalizePath("components/board.single"),
-      options = list(board = "tcga")
+      options = list(board = "dataview")
       )
   },
   error = function(e) {
