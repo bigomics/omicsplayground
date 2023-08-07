@@ -13,13 +13,12 @@
 #'
 #' @export
 drugconnectivity_plot_cmap_dsea_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height
-  ) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -39,12 +38,13 @@ drugconnectivity_plot_cmap_dsea_ui <- function(
       "Number of labels to show.",
       placement = "left", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxGroupInput(
-      ns("cmap_labeloptions"), "label options:",
-      choices = c("show", "fixed"),
-      selected = c("show"), inline = TRUE
-    ), "Other labels options.",
-    placement = "left", options = list(container = "body")
+    withTooltip(
+      shiny::checkboxGroupInput(
+        ns("cmap_labeloptions"), "label options:",
+        choices = c("show", "fixed"),
+        selected = c("show"), inline = TRUE
+      ), "Other labels options.",
+      placement = "left", options = list(container = "body")
     )
   )
 
@@ -80,7 +80,6 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotCMAP <- function(pgx, db, contr, moa.target, moa.class,
                            labtype = "drugs", showlabel = TRUE,
                            npoints = 100, nlabel = 10,
@@ -127,7 +126,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         ntarget <- sapply(xtarget, length)
         ii <- unlist(mapply(rep, 1:nrow(pos), ntarget))
         pos3 <- apply(pos[ii, ], 2, function(x) tapply(x, unlist(xtarget), median))
-        ## var3 <- tapply(var[ii], unlist(xtarget), median, na.rm=TRUE)
+        #
         moa3 <- moa.target
         nes3 <- array(moa3$NES, dimnames = list(moa3$pathway))
         var3 <- nes3[rownames(pos3)]
@@ -231,7 +230,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         res <- plot_data()
         pgx <- res$pgx
         cmap_table <- res$cmap_table
-        shiny::req(pgx)
+        shiny::req(pgx$X)
         db <- "L1000/gene"
         contr <- "treatment:Gefitinib_vs_CT"
 
@@ -270,7 +269,7 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         par(mfrow = c(nr, nr))
         for (contr in all.contr) {
           tt <- paste0(contr, " (", toupper(labtype), ")")
-          ## tt <- toupper(labtype)
+          #
           plotCMAP(pgx, db, contr,
             moa.target, moa.class,
             labtype = labtype, showlabel = showlab,

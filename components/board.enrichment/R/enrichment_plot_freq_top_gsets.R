@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_freq_top_gsets_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   topEnrichedFreq.opts <- shiny::tagList(
@@ -59,7 +59,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       rpt <- getFilteredGeneSetTable()
-      shiny::req(pgx, rpt, gs_contrast())
+      shiny::req(pgx$X, rpt, gs_contrast())
 
       comp <- gs_contrast()
       if (is.null(comp)) {

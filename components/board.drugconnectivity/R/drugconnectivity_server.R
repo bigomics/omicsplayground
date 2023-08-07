@@ -24,7 +24,7 @@ DrugConnectivityBoard <- function(id, pgx) {
         allowfullscreen></iframe></center>")
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "dsea_method", choices = ct)
     })
@@ -42,7 +42,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       ct <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "dsea_contrast", choices = sort(ct))
     })
@@ -53,7 +53,7 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-      shiny::req(pgx, input$dsea_contrast, input$dsea_method)
+      shiny::req(pgx$drugs, input$dsea_contrast, input$dsea_method)
 
       contr <- input$dsea_contrast
       if (is.null(contr)) {
@@ -148,8 +148,8 @@ DrugConnectivityBoard <- function(id, pgx) {
       rnk <- dt$NES
       names(rnk) <- rownames(dt)
       suppressWarnings(
-        ## moa.class <- fgsea::fgsea(gmt, rnk, nperm = 20000)
-        moa.class <- fgsea::fgsea(gmt, rnk)        
+        #
+        moa.class <- fgsea::fgsea(gmt, rnk)
       )
       moa.class <- moa.class[order(-abs(moa.class$NES)), ]
       return(moa.class)

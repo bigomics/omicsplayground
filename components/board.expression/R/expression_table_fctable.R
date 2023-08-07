@@ -12,12 +12,12 @@
 #'
 #' @export
 expression_table_fctable_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   table_opts <- shiny::tagList(
@@ -61,10 +61,10 @@ expression_table_fctable_server <- function(id,
         return(NULL)
       }
 
-      ## F <- sapply(pgx$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-      ## Q <- sapply(pgx$gx.meta$meta, function(x) x$meta.q)
-      ## F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      ## rownames(F)=rownames(Q)=rownames(pgx$gx.meta$meta[[1]])
+      #
+      #
+      #
+      #
       F <- metaFC()
       Q <- metaQ()
 
@@ -81,7 +81,7 @@ expression_table_fctable_server <- function(id,
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
         colnames(F1) <- as.vector(rbind(paste0("FC.", colnames(F)), paste0("q.", colnames(Q))))
-        ## colnames(F1) <- sub("q.*","q",colnames(F1))
+        #
         df <- data.frame(gene = rownames(F), rms.FC = fc.rms, F1, check.names = FALSE)
       } else {
         F1 <- F
@@ -95,12 +95,10 @@ expression_table_fctable_server <- function(id,
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
-      ## if(length(qv.cols)==0) qv = 0
+      #
 
       dt <- DT::datatable(df,
         rownames = FALSE,
-        # class = 'compact cell-border stripe hover',
-        # class = "compact hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = c(1)),
@@ -119,13 +117,13 @@ expression_table_fctable_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.FC",
-          background = playbase::color_from_middle(fc.rms, "lightblue", "#f5aeae"),
+          background = color_from_middle(fc.rms, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = playbase::color_from_middle(F, "lightblue", "#f5aeae"),
+          background = color_from_middle(F, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

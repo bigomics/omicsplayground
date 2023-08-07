@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_TOMheatmap_ui <- function(
-  id,
-  label,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -43,7 +43,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
       ## more efficiently by saving the TOM calculated during
       ## module detection, but let us do it again here.
 
-      # power  <- as.numeric(shiny::isolate(input$power))
+
       power <- as.numeric(power())
       dissTOM <- 1 - TOMsimilarityFromExpr(datExpr, power = power)
       rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)
@@ -56,7 +56,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
       selectTOM <- dissTOM[select, select]
       ## There’s no simple way of restricting a clustering tree
       ## to a subset of genes, so we must re-cluster.
-      ## selectTree = hclust(as.dist(selectTOM), method = "ward.D2")
+      #
       selectTree <- hclust(as.dist(selectTOM), method = "average")
       selectColors <- moduleColors[select]
       ## Taking the dissimilarity to a power, say 10, makes the plot
@@ -85,40 +85,6 @@ wgcna_plot_TOMheatmap_server <- function(id,
         setLayout = FALSE,
         main = NULL
       )
-
-      if (0) {
-        source("~/Playground/omicsplayground/R/gx-heatmap.r")
-        D <- selectTOM
-        diag(D) <- 0
-        ann <- data.frame(col = selectColors)
-        rownames(ann) <- colnames(D)
-
-        par(mfrow = c(1, 1))
-        ii <- selectTree$order
-        image(D[ii, ii])
-
-        Heatmap(D[ii, ii],
-          top_annotation = HeatmapAnnotation(module = ann[ii, ]),
-          cluster_rows = FALSE,
-          cluster_columns = FALSE
-        )
-
-        gx <- D
-        col.annot <- ann
-        symm <- TRUE
-        scale <- "none"
-        playbase::gx.heatmap(D,
-          symm = TRUE, scale = "none",
-          dist.method = "euclidean",
-          col.dist.method = "euclidean",
-          clust.method = "average",
-          nmax = 99999,
-          col.annot = ann, verbose = 3, annot.ht = 2
-        )
-
-
-        playbase::gx.heatmap(plotDiss[ii, ii], clust.method = NULL)
-      }
 
       ## add color legend
       frame()

@@ -4,11 +4,11 @@
 ##
 
 wordcloud_plot_wordtsne_ui <- function(
-  id,
-  height,
-  title,
-  info.text,
-  caption) {
+    id,
+    height,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   wordtsne_options <- shiny::tagList(
@@ -49,7 +49,7 @@ wordcloud_plot_wordtsne_server <- function(id,
       jj <- head(order(-abs(df$NES)), 20)
       df$label[jj] <- as.character(df$word[jj])
       cex <- 1
-      ## cex=2.5
+      #
       df$abs.NES <- abs(df$NES)**2
 
       if (input$wordtsne_algo == "tsne") {
@@ -61,7 +61,7 @@ wordcloud_plot_wordtsne_server <- function(id,
       plt <- plotly::plot_ly(
         df,
         text = df$word, hoverinfo = "text"
-        ## hovertemplate = paste0("%{text}<br>NES: %{NES}<extra> </extra>")
+        #
       ) %>%
         plotly::add_markers(
           type = "scatter",

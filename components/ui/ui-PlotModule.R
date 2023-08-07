@@ -39,7 +39,7 @@ PlotModuleUI <- function(id,
     )
   }
   width.1 <- ifnotchar.int(width[1])
-  width.2 <- "100%" # ifnotchar.int(width[2]) ## OVERRIDE WIDTH: for fullscreen modal always 100%
+  width.2 <- "100%"
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
@@ -56,6 +56,7 @@ PlotModuleUI <- function(id,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
       svgPanZoom = svgPanZoom::svgPanZoomOutput,
+      renderUI = shiny::htmlOutput,
       shiny::plotOutput
     )
     FUN
@@ -131,19 +132,21 @@ PlotModuleUI <- function(id,
   }
 
   pdf_size_ui <- shiny::tagList(
-      shiny::fillRow(
-          shiny::numericInput(ns("pdf_width"),
-                              "Width",
-                              pdf.width,
-                              1, 20, 1,
-                              width = "95%"),
-          shiny::numericInput(ns("pdf_height"),
-                              "Height",
-                              pdf.height,
-                              1, 20, 1,
-                              width = "100%")
+    shiny::fillRow(
+      shiny::numericInput(ns("pdf_width"),
+        "Width",
+        pdf.width,
+        1, 20, 1,
+        width = "95%"
       ),
-      shiny::br(), shiny::br(), shiny::br()
+      shiny::numericInput(ns("pdf_height"),
+        "Height",
+        pdf.height,
+        1, 20, 1,
+        width = "100%"
+      )
+    ),
+    shiny::br(), shiny::br(), shiny::br()
   )
 
   dload.button <- DropdownMenu(
@@ -157,8 +160,8 @@ PlotModuleUI <- function(id,
       div(
         id = ns("pdf_size_panel"),
         shiny::div(
-            pdf_size_ui,
-            shiny::br()
+          pdf_size_ui,
+          shiny::br()
         )
       ),
       download_buttons,
@@ -207,11 +210,13 @@ PlotModuleUI <- function(id,
   header <- shiny::fillRow(
     flex = c(1, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
-    shiny::div(class = "plotmodule-title",
-               style = 'white-space: nowrap; overflow: hidden; text-overflow: clip;',
-               title = title, title),
+    shiny::div(
+      class = "plotmodule-title",
+      style = "white-space: nowrap; overflow: hidden; text-overflow: clip;",
+      title = title, title
+    ),
     if (cards) {
-        plot_cards$navList
+      plot_cards$navList
     } else {
       div()
     },
@@ -363,7 +368,6 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
-  ## e <- htmltools::bindFillRole(e, container = FALSE, item = FALSE, overwrite = TRUE)
   return(e)
 }
 
@@ -513,29 +517,32 @@ PlotModuleServer <- function(id,
             resx <- 4 ## upresolution
             shiny::withProgress(
               {
-                ## unlink(PNGFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- png.width
                   p$height <- png.height
-                  plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale=resx)
+                  plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale = resx)
                 } else if (plotlib == "iheatmapr") {
                   p <- func()
                   iheatmapr::save_iheatmap(p, vwidth = png.width, vheight = png.height, PNGFILE)
                 } else if (plotlib == "visnetwork") {
                   p <- func()
-                  visPrint(p, file=PNGFILE,
-                    width = png.width*resx*2,
-                    height = png.height*resx*2,
+                  visPrint(p,
+                    file = PNGFILE,
+                    width = png.width * resx * 2,
+                    height = png.height * resx * 2,
                     delay = vis.delay,
-                    zoom = 1)
+                    zoom = 1
+                  )
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                  webshot2::webshot(url = HTMLFILE, file = PNGFILE,
-                    vwidth = png.width*resx, vheight = png.height*resx)
+                  webshot2::webshot(
+                    url = HTMLFILE, file = PNGFILE,
+                    vwidth = png.width * resx, vheight = png.height * resx
+                  )
                 } else if (plotlib %in% c("ggplot", "ggplot2")) {
-                  ggplot2::ggsave(PNGFILE, plot = func(), dpi = 72*resx)
+                  ggplot2::ggsave(PNGFILE, plot = func(), dpi = 72 * resx)
                 } else if (plotlib == "grid") {
                   p <- func()
                   png(PNGFILE,
@@ -552,7 +559,6 @@ PlotModuleServer <- function(id,
                   file.copy(p$src, PNGFILE, overwrite = TRUE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PNG inside plot func()
-                  ##
                 } else if (plotlib == "base") {
                   # Save original plot parameters
                   if (remove_margins == TRUE) {
@@ -569,8 +575,10 @@ PlotModuleServer <- function(id,
                 } else if (plotlib == "svgPanZoom") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                  webshot2::webshot(url = HTMLFILE, file = PNGFILE,
-                    vwidth = png.width, vheight = png.height, zoom=4)
+                  webshot2::webshot(
+                    url = HTMLFILE, file = PNGFILE,
+                    vwidth = png.width, vheight = png.height, zoom = 4
+                  )
                 } else { ## end base
 
                   png(PNGFILE, pointsize = pdf.pointsize)
@@ -583,10 +591,10 @@ PlotModuleServer <- function(id,
                 dbg("[downloadHandler.PNG] copy PNGFILE", PNGFILE, "to download file", file)
                 file.copy(PNGFILE, file, overwrite = TRUE)
                 ## ImageMagick or pdftk
-                if (TRUE && !add.watermark %in% c("none",FALSE) ) {
+                if (TRUE && !add.watermark %in% c("none", FALSE)) {
                   message("[plotModule] adding watermark to PNG...")
-                  markfile = file.path(FILES, "watermark-logo.png")
-                  addWatermark.PNG2(file, mark=markfile, position=add.watermark)
+                  markfile <- file.path(FILES, "watermark-logo.png")
+                  addWatermark.PNG2(file, mark = markfile, position = add.watermark)
                 }
               },
               message = "Exporting to PNG",
@@ -604,7 +612,6 @@ PlotModuleServer <- function(id,
             pdf.height <- input$pdf_height
             shiny::withProgress(
               {
-                ## unlink(PDFFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   p$width <- pdf.width * 80
@@ -615,7 +622,7 @@ PlotModuleServer <- function(id,
                   iheatmapr::save_iheatmap(p, vwidth = pdf.width * 80, vheight = pdf.height * 80, PDFFILE)
                 } else if (plotlib == "visnetwork") {
                   p <- func()
-                  visPrint(p, file=PDFFILE, width=pdf.width, height=pdf.height, delay=vis.delay, zoom=1)
+                  visPrint(p, file = PDFFILE, width = pdf.width, height = pdf.height, delay = vis.delay, zoom = 1)
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -633,10 +640,8 @@ PlotModuleServer <- function(id,
                 } else if (plotlib == "image") {
                   p <- func()
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "base") {
                   pdf(
                     file = PDFFILE, width = pdf.width, height = pdf.height,
@@ -647,8 +652,10 @@ PlotModuleServer <- function(id,
                 } else if (plotlib == "svgPanZoom") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                  webshot2::webshot(url = HTMLFILE, file = PDFFILE,
-                    vwidth = pdf.width * 100, vheight = pdf.height * 100)
+                  webshot2::webshot(
+                    url = HTMLFILE, file = PDFFILE,
+                    vwidth = pdf.width * 100, vheight = pdf.height * 100
+                  )
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
                   plot.new()
@@ -661,10 +668,10 @@ PlotModuleServer <- function(id,
                 file.copy(PDFFILE, file, overwrite = TRUE)
 
                 ## ImageMagick or pdftk
-                if (TRUE && !add.watermark %in% c(FALSE,"none")) {
+                if (TRUE && !add.watermark %in% c(FALSE, "none")) {
                   message("[plotModule] adding watermark to PDF...")
-                  markfile = file.path(FILES, "watermark-logo.pdf")
-                  addWatermark.PDF2(file, w=pdf.width, h=pdf.height, mark=markfile)
+                  markfile <- file.path(FILES, "watermark-logo.pdf")
+                  addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
               },
               message = "Exporting to PDF",
@@ -675,7 +682,6 @@ PlotModuleServer <- function(id,
       } ## end if do.pdf
 
       saveHTML <- function() {
-        ## unlink(HTMLFILE) ## do not remove!
         if (plotlib == "plotly") {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
@@ -695,7 +701,6 @@ PlotModuleServer <- function(id,
           write("<body>image cannot export to HTML</body>", HTMLFILE)
         } else if (plotlib == "generic") {
           ## generic function should produce PDF inside plot func()
-          ##
         } else if (plotlib == "base") {
           write("<body>R base plots cannot export to HTML</body>", HTMLFILE)
         } else if (plotlib == "svgPanZoom") {
@@ -713,7 +718,6 @@ PlotModuleServer <- function(id,
           content = function(file) {
             shiny::withProgress(
               {
-                ## unlink(HTMLFILE) ## do not remove!
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
@@ -731,7 +735,6 @@ PlotModuleServer <- function(id,
                   htmlwidgets::saveWidget(plotly::ggplotly(p), file = HTMLFILE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
-                  ##
                 } else if (plotlib == "image") {
                   write("<body>image cannot be exported to HTML</body>", HTMLFILE)
                 } else if (plotlib == "base") {
@@ -880,6 +883,7 @@ PlotModuleServer <- function(id,
           image = shiny::renderImage,
           base = shiny::renderPlot,
           svgPanZoom = svgPanZoom::renderSvgPanZoom,
+          renderUI = shiny::renderUI,
           shiny::renderPlot
         )
       }
@@ -894,66 +898,63 @@ PlotModuleServer <- function(id,
 
       render <- render2 <- NULL
 
-      if (1) {
-        if (!is.null(func) && plotlib == "base") {
-          render <- shiny::renderPlot(
-            {
-              func()
-            },
-            res = res.1
-          )
-        }
-        if (!is.null(func2) && plotlib2 == "base") {
-          render2 <- shiny::renderPlot(
-            {
-              func2()
-            },
-            res = res.2
-          )
-        }
-          if (!is.null(func) && plotlib == "grid") {
-              render <- shiny::renderPlot(
-                  {
-                      grid::grid.draw(func(), recording = FALSE)
-                  },
-                  res = res.1
-              )
-          }
-          if (!is.null(func2) && plotlib2 == "grid") {
-              render2 <- shiny::renderPlot(
-                  {
-                      grid::grid.draw(func2(), recording = FALSE)
-                  },
-                  res = res.2
-              )
-          }
-        if (plotlib == "image") {
-          render <- shiny::renderImage(func(), deleteFile = FALSE)
-        }
-        if (!is.null(func2) && plotlib2 == "image") {
-          render2 <- shiny::renderImage(func2(), deleteFile = FALSE)
-        }
-
-        if (grepl("cacheKeyExpr", head(renderFunc, 1))) {
-          render <- shiny::renderCachedPlot(
-            func(),
-            cacheKeyExpr = {
-              list(csvFunc())
-            },
-            res = res.1
-          )
-        }
-        if (grepl("cacheKeyExpr", head(renderFunc2, 1))) {
-          render2 <- shiny::renderCachedPlot(
-            func2(),
-            cacheKeyExpr = {
-              list(csvFunc())
-            },
-            res = res.2
-          )
-        }
+      if (!is.null(func) && plotlib == "base") {
+        render <- shiny::renderPlot(
+          {
+            func()
+          },
+          res = res.1
+        )
+      }
+      if (!is.null(func2) && plotlib2 == "base") {
+        render2 <- shiny::renderPlot(
+          {
+            func2()
+          },
+          res = res.2
+        )
+      }
+      if (!is.null(func) && plotlib == "grid") {
+        render <- shiny::renderPlot(
+          {
+            grid::grid.draw(func(), recording = FALSE)
+          },
+          res = res.1
+        )
+      }
+      if (!is.null(func2) && plotlib2 == "grid") {
+        render2 <- shiny::renderPlot(
+          {
+            grid::grid.draw(func2(), recording = FALSE)
+          },
+          res = res.2
+        )
+      }
+      if (plotlib == "image") {
+        render <- shiny::renderImage(func(), deleteFile = FALSE)
+      }
+      if (!is.null(func2) && plotlib2 == "image") {
+        render2 <- shiny::renderImage(func2(), deleteFile = FALSE)
       }
 
+      if (grepl("cacheKeyExpr", head(renderFunc, 1))) {
+        render <- shiny::renderCachedPlot(
+          func(),
+          cacheKeyExpr = {
+            list(csvFunc())
+          },
+          res = res.1
+        )
+      }
+      if (grepl("cacheKeyExpr", head(renderFunc2, 1))) {
+        render2 <- shiny::renderCachedPlot(
+          func2(),
+          cacheKeyExpr = {
+            list(csvFunc())
+          },
+          res = res.2
+        )
+      }
 
       if (is.null(render)) {
         if (plotlib == "plotly") {
@@ -1073,57 +1074,57 @@ PlotModuleServer <- function(id,
 }
 
 
-colBL="#00448855"
-colRD="#88004455"
+colBL <- "#00448855"
+colRD <- "#88004455"
 
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
-                         width = NULL, height = NULL, scale = 1, server=NULL)
-{
-    is.docker <- file.exists("/.dockerenv")
-    is.docker
-    export.ok <- FALSE
+                         width = NULL, height = NULL, scale = 1, server = NULL) {
+  is.docker <- file.exists("/.dockerenv")
+  is.docker
+  export.ok <- FALSE
 
-    if(class(p)[1] != "plotly") {
-        message("[plotlyExport] ERROR : not a plotly object")
-        return(NULL)
-    }
-    ## remove old
-    unlink(file,force=TRUE)
+  if (class(p)[1] != "plotly") {
+    message("[plotlyExport] ERROR : not a plotly object")
+    return(NULL)
+  }
+  ## remove old
+  unlink(file, force = TRUE)
 
-    ## See if Kaleido is available
-    if(1 && !export.ok) {
-        ## https://github.com/plotly/plotly.R/issues/2179
-        reticulate::py_run_string("import sys")
-        err <- try(suppressMessages(plotly::save_image(p, file=file, width=width, height=height, scale=scale)))
-        export.ok <- class(err)!="try-error"
-        if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
-        export.ok <- TRUE
-    }
-    if(1 && !export.ok) {
-        ## works only for non-GL plots
-        err <- try(plotly::export(p, file, width=width, height=height))
-        export.ok <- class(err)!="try-error"
-        if(export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")
-    }
-    if(0 && !export.ok) {
-        tmp = paste0(tempfile(),".html")
-        htmlwidgets::saveWidget(p, tmp)
-        err <- try(webshot2::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
-        export.ok <- class(err)!="try-error"
-        if(export.ok) message("[plotlyExport] --> exported with webshot2::webshot()")
-    }
-    if(!export.ok) {
-        message("[plotlyExport] WARNING: export failed!")
-        if(format=="png") png(file)
-        if(format=="pdf") pdf(file)
-        par(mfrow=c(1,1));frame()
-        text(0.5,0.5,"Plotly export error",cex=2)
-        dev.off()
-    }
+  ## See if Kaleido is available
+  if (1 && !export.ok) {
+    ## https://github.com/plotly/plotly.R/issues/2179
+    reticulate::py_run_string("import sys")
+    err <- try(suppressMessages(plotly::save_image(p, file = file, width = width, height = height, scale = scale)))
+    export.ok <- class(err) != "try-error"
+    if (export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
+    export.ok <- TRUE
+  }
+  if (1 && !export.ok) {
+    ## works only for non-GL plots
+    err <- try(plotly::export(p, file, width = width, height = height))
+    export.ok <- class(err) != "try-error"
+    if (export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")
+  }
+  if (0 && !export.ok) {
+    tmp <- paste0(tempfile(), ".html")
+    htmlwidgets::saveWidget(p, tmp)
+    err <- try(webshot2::webshot(url = tmp, file = file, vwidth = width * 100, vheight = height * 100))
+    export.ok <- class(err) != "try-error"
+    if (export.ok) message("[plotlyExport] --> exported with webshot2::webshot()")
+  }
+  if (!export.ok) {
+    message("[plotlyExport] WARNING: export failed!")
+    if (format == "png") png(file)
+    if (format == "pdf") pdf(file)
+    par(mfrow = c(1, 1))
+    frame()
+    text(0.5, 0.5, "Plotly export error", cex = 2)
+    dev.off()
+  }
 
-    message("[plotlyExport] file.exists(file)=",file.exists(file))
-    export.ok <- export.ok && file.exists(file)
-    return(export.ok)
+  message("[plotlyExport] file.exists(file)=", file.exists(file))
+  export.ok <- export.ok && file.exists(file)
+  return(export.ok)
 }
 
 

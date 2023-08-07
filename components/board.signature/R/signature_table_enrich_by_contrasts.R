@@ -4,12 +4,12 @@
 ##
 
 signature_table_enrich_by_contrasts_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -24,8 +24,7 @@ signature_table_enrich_by_contrasts_ui <- function(
 }
 
 signature_table_enrich_by_contrasts_server <- function(id,
-                                                       sigCalculateGSEA
-                                                       ) {
+                                                       sigCalculateGSEA) {
   moduleServer(id, function(input, output, session) {
     enrichmentContrastTable.RENDER <- shiny::reactive({
       gsea <- sigCalculateGSEA()
@@ -64,7 +63,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("NES",
-          background = playbase::color_from_middle(color_fx, "lightblue", "#f5aeae"),
+          background = color_from_middle(color_fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

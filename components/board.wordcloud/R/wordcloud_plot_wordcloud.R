@@ -4,11 +4,11 @@
 ##
 
 wordcloud_plot_wordcloud_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    height) {
   ns <- shiny::NS(id)
 
   info_text <- "<strong>Word cloud.</strong> Word cloud of the most enriched keywords for the data set. Select a keyword in the 'Enrichment table'. In the plot settings, users can exclude certain words from the figure, or choose the color palette. The sizes of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description."
@@ -28,7 +28,7 @@ wordcloud_plot_wordcloud_ui <- function(
     )
   )
 
-  PlotModuleUI( 
+  PlotModuleUI(
     ns("plot"),
     title = title,
     label = "b",

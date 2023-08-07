@@ -31,18 +31,15 @@ $(document).on('shiny:connected', function() {
     })
 
     Shiny.addCustomMessageHandler('set-user', (msg) => {
-        $('#authentication-user').text(msg.user);
+//        $('#authentication-user').text(msg.user);
         user = msg.user;
 	pricing = msg.pricing;
 	if(msg.level == "premium"){
 	    // $('#authentication-upgrade').hide();  // really?
 	}
-    });
-
+    });    
 
 });  // end of on.shiny.connected
-
-
 
 
 const unloadSidebar = () => {
@@ -123,10 +120,10 @@ $(function(){
 	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 })
 
+
 Shiny.addCustomMessageHandler('manage-sub', (msg) => {
 	window.location.assign(msg);
 });
-
 
 Shiny.addCustomMessageHandler('enableInfo', (data) => {
   Shiny.setInputValue(data.id, data.value);
@@ -265,28 +262,26 @@ Shiny.addCustomMessageHandler('get-subs', (msg) => {
 const logout = () => {
 	unloadSidebar();
 	sidebarClose();
-	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+ 	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
 };
 
 const logoutInApp = () => {
 	unloadSidebar();
-    //	$(".tab-sidebar:eq(1)").trigger('click');  // show welcome page
         $(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
-	Shiny.setInputValue('auth-userLogout', 1, {priority: 'event'});
-	Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+        Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+        Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 const quit = () => {
-  Shiny.setInputValue('quit', 1, {priority: 'event'});
+        Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 Shiny.addCustomMessageHandler('shinyproxy-logout', (msg) => {
-  window.location.assign("/logout");
+        window.location.assign("/logout");
 });
 
-
+/* ********************* STRIPE HANDLERS **************************** */
 const show_plans = () => {
   Shiny.setInputValue('auth-firebaseUpgrade', 1, {priority: 'event'});
 };
@@ -340,37 +335,6 @@ const priceChange = (name) => {
 	}
 }
 
-const hideSub = () => {
-    $('#logSub').hide();
-    $('#logSubbed').show();
-    $('#sever-reload-btn').show();
-}
-
-const sendLog = () => {
-  let msg  = $('#logMsg').val();
-
-fetch(`log?msg=${encodeURIComponent(msg)}`)
-	.then(res => {
-		console.info(res);
-		hideSub();
-	})
-	.catch(error => {
-		console.error(error);
-		hideSub();
-	})
-}
-
-const sendLog2 = (msg) => {
-    	fetch(`log?msg=${encodeURIComponent(msg)}`)
-	        .then(res => {
-		        console.info(res);
-			hideSub();
-		})
-	  .catch(error => {
-			console.error(error);
-			hideSub();
-		})
-};
 
 Shiny.addCustomMessageHandler('referral-input-error', (msg) => {
 	$(`#${msg.target}`).addClass('error');
@@ -390,6 +354,7 @@ Shiny.addCustomMessageHandler('referral-global-error', (msg) => {
 	}, 5000);
 });
 
+/* ********************* UI/BIGDASH HANDLERS **************************** */
 Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	setTimeout(() => {
 		$('.sidebar-content')
@@ -438,20 +403,19 @@ Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
 });
 
 
+/* ********************* HUBSPOT HANDLER **************************** */
 $(document).ready(function() {
-    console.log('*** setting up HSQ ***');
-    /* Default installation */
     /* From https://stackoverflow.com/questions/74643167 */
-    /*    $("a[data-toggle='tab']").on("shown.bs.tab", function(e) {*/
     $(".tab-trigger").on("click", function(e) {
 	var tabId = $(e.target).data("target");
 	let hasHsq = (typeof window._hsq !== 'undefined' && window._hsq !== null)
  	/* https://developers.hubspot.com/docs/api/events/tracking-code#tracking-in-single-page-applications */
-	console.log('[tab-trigger:click] tabId =' + tabId);
+	console.log('[tab-trigger:click] user = ' + user);	
 	if(hasHsq && user !== '' && user !== 'undefined') {
 	    var _hsq = window._hsq = window._hsq || [];
 	    var orginalTitle = document.title;
 	    document.title = orginalTitle + ' > ' + tabId ;
+	    console.log('[_hsq.push] ' + document.title);	    
 	    _hsq.push(["identify", { email: user }]);  // set to current user
 	    _hsq.push(['setPath', '#' + tabId]);
 	    _hsq.push(['trackPageView']);

@@ -39,7 +39,7 @@ FeatureMapBoard <- function(id, pgx) {
       )
 
       gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
-      gsetcats <- c("<all>",gsetcats)
+      gsetcats <- c("<all>", gsetcats)
       shiny::updateSelectInput(session, "filter_gsets",
         choices = gsetcats,
         selected = "H"
@@ -53,11 +53,11 @@ FeatureMapBoard <- function(id, pgx) {
       )
     })
 
-    observeEvent( input$sigvar, {
+    observeEvent(input$sigvar, {
       shiny::req(pgx$samples, input$sigvar)
-      if(input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[,input$sigvar],c(NA))
-        y <- c("<average>",sort(unique(y)))
+      if (input$sigvar %in% colnames(pgx$samples)) {
+        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+        y <- c("<average>", sort(unique(y)))
         shiny::updateSelectInput(session, "ref_group", choices = y)
       }
     })
@@ -66,21 +66,21 @@ FeatureMapBoard <- function(id, pgx) {
     ## ============================= FUNCTIONS ========================================
     ## ================================================================================
 
-    ## hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
+    #
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
       if (!is.null(hilight)) {
-          hilight <- match(hilight |> stringr::str_to_upper(), names(var) |> stringr::str_to_upper())
-          hilight <- hilight[!is.na(hilight)]
-          hilight <- names(var)[hilight]
-          hilight <- hilight[order(-var[hilight])]
+        hilight <- match(hilight |> stringr::str_to_upper(), names(var) |> stringr::str_to_upper())
+        hilight <- hilight[!is.na(hilight)]
+        hilight <- names(var)[hilight]
+        hilight <- hilight[order(-var[hilight])]
 
-          if (min(var, na.rm = TRUE) < 0) {
-              hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
-              hilight2 <- unique(hilight2)
-          } else {
-                hilight2 <- head(hilight, nlabel)
-          }
+        if (min(var, na.rm = TRUE) < 0) {
+          hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
+          hilight2 <- unique(hilight2)
+        } else {
+          hilight2 <- head(hilight, nlabel)
+        }
       }
 
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
@@ -88,8 +88,6 @@ FeatureMapBoard <- function(id, pgx) {
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
-      ## cex = 0.9
-      ## opacity = ifelse(length(hilight)>0, 0.15, 1)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
 
       p <- playbase::pgx.scatterPlotXY(
@@ -103,13 +101,11 @@ FeatureMapBoard <- function(id, pgx) {
         zsym = (min(var, na.rm = TRUE) < 0),
         zlim = zlim,
         hilight.cex = cex,
-        ## hilight.col = 'red',
         hilight.col = NULL,
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
         title = title,
-        ## legend.pos = 'bottomright',
         source = source,
         key = rownames(pos)
       )
@@ -121,7 +117,6 @@ FeatureMapBoard <- function(id, pgx) {
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)
-      ## ntop <- 10
       cex <- ifelse(nc > 3, 0.5, 0.7)
       jj <- 1:nrow(F)
       if (ncol(F) > 4 && nrow(F) > 8000) jj <- sample(1:nrow(F), 8000) ## subsample for speed
@@ -135,7 +130,6 @@ FeatureMapBoard <- function(id, pgx) {
       c(min(qq, na.rm = TRUE), max(qq, na.rm = TRUE))
       qq
       zlim <- qq
-      ## zlim = NULL
 
       i <- 1
       for (i in 1:ncol(F)) {
@@ -250,25 +244,25 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_gene_map_server(
       "geneUMAP",
-      pgx    = pgx,
-      getGeneUMAP  = getGeneUMAP,
-      plotUMAP     = plotUMAP,
-      sigvar       = shiny::reactive(input$sigvar),
+      pgx = pgx,
+      getGeneUMAP = getGeneUMAP,
+      plotUMAP = plotUMAP,
+      sigvar = shiny::reactive(input$sigvar),
       filter_genes = shiny::reactive(input$filter_genes),
-      r_fulltable  = shiny::reactive(input$show_fulltable),
-      watermark    = WATERMARK
+      r_fulltable = shiny::reactive(input$show_fulltable),
+      watermark = WATERMARK
     )
 
     # Gene Signatures
 
     featuremap_plot_gene_sig_server(
       "geneSigPlots",
-      pgx         = pgx,
-      getGeneUMAP       = getGeneUMAP,
-      sigvar            = shiny::reactive(input$sigvar),
-      ref_group         = shiny::reactive(input$ref_group),
+      pgx = pgx,
+      getGeneUMAP = getGeneUMAP,
+      sigvar = shiny::reactive(input$sigvar),
+      ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
-      watermark         = WATERMARK
+      watermark = WATERMARK
     )
 
     # Geneset map
@@ -280,7 +274,7 @@ FeatureMapBoard <- function(id, pgx) {
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
       sigvar = shiny::reactive(input$sigvar),
-      r_fulltable  = shiny::reactive(input$show_fulltable),
+      r_fulltable = shiny::reactive(input$show_fulltable),
       watermark = WATERMARK
     )
 
@@ -288,12 +282,12 @@ FeatureMapBoard <- function(id, pgx) {
 
     featuremap_plot_gset_sig_server(
       "gsetSigPlots",
-      pgx         = pgx,
-      getGsetUMAP       = getGsetUMAP,
-      sigvar            = shiny::reactive(input$sigvar),
-      ref_group         = shiny::reactive(input$ref_group),
+      pgx = pgx,
+      getGsetUMAP = getGsetUMAP,
+      sigvar = shiny::reactive(input$sigvar),
+      ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
-      watermark         = WATERMARK
+      watermark = WATERMARK
     )
   }) ## end of serverModule
 } ## end of Board

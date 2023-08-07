@@ -4,12 +4,12 @@
 ##
 
 enrichment_plot_compare_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -30,9 +30,8 @@ enrichment_plot_compare_server <- function(id,
                                            selected_gsetmethods,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     render_compare <- function() {
-      shiny::req(pgx, gs_contrast())
+      shiny::req(pgx$X, gs_contrast())
 
       comp <- 1
       comp <- gs_contrast()
@@ -76,7 +75,7 @@ enrichment_plot_compare_server <- function(id,
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
           playbase::gsea.enplot(rnk0, genes,
-            names = NULL, ## main=gs,
+            names = NULL, #
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
           )
@@ -99,7 +98,7 @@ enrichment_plot_compare_server <- function(id,
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
           playbase::gsea.enplot(rnk0, genes,
-            names = NULL, ## main=gs,
+            names = NULL, #
             main = cmp, xlab = "",
             cex.main = 0.80, len.main = 72
           )
@@ -107,23 +106,23 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-#      p <- grDevices::recordPlot()
-#      p
+
+      #      p
     }
 
     compare.RENDER <- function() {
       render_compare()
     }
-    
+
     compare.RENDER2 <- function() {
       render_compare()
     }
 
-    
+
     PlotModuleServer(
       "plot",
       func = compare.RENDER,
-      func2 = compare.RENDER,      
+      func2 = compare.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
       add.watermark = watermark

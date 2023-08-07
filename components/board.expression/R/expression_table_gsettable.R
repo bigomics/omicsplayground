@@ -12,13 +12,12 @@
 #'
 #' @export
 expression_table_gsettable_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  width,
-  height
-  ) {
+    id,
+    title,
+    caption,
+    info.text,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -50,17 +49,19 @@ expression_table_gsettable_server <- function(id,
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()
 
-      ##req(df)
-      shiny::validate(shiny::need(!is.null(df),
-        "Please select a gene in the table."))
+      #
+      shiny::validate(shiny::need(
+        !is.null(df),
+        "Please select a gene in the table."
+      ))
 
       df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
 
       DT::datatable(df,
-#        class = "compact",  ## not good!
+        #        class = "compact",  ## not good!
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
@@ -77,7 +78,7 @@ expression_table_gsettable_server <- function(id,
         selection = list(mode = "single", target = "row", selected = NULL)
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle("fx", background = playbase::color_from_middle(df$fx, "lightblue", "#f5aeae"))
+        DT::formatStyle("fx", background = color_from_middle(df$fx, "lightblue", "#f5aeae"))
     })
 
     gsettable.RENDER_modal <- shiny::reactive({

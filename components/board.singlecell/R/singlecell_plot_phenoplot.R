@@ -14,13 +14,13 @@
 #'
 #' @export
 singlecell_plot_phenoplot_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(
@@ -59,8 +59,8 @@ singlecell_plot_phenoplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      ## if(is.null(pgx)) return(NULL)
-      shiny::req(pgx)
+      #
+      shiny::req(pgx$X)
       clust.pos <- pfGetClusterPositions()
       if (is.null(clust.pos)) {
         return(NULL)
@@ -78,8 +78,8 @@ singlecell_plot_phenoplot_server <- function(id,
       ))
     })
 
-    get_plots <- function(cex=1) {
-      ## if(!input$tsne.all) return(NULL)
+    get_plots <- function(cex = 1) {
+      #
       pd <- plot_data()
       shiny::req(pd)
 
@@ -105,7 +105,7 @@ singlecell_plot_phenoplot_server <- function(id,
       for (i in 1:min(20, length(pheno))) {
         px <- 4
         px <- pheno[i]
-        y  <- Y[sel, px]
+        y <- Y[sel, px]
         y[which(y %in% c(NA, "", " ", "NA", "na"))] <- NA
         if (sum(!is.na(y)) == 0) next
 
@@ -121,37 +121,29 @@ singlecell_plot_phenoplot_server <- function(id,
           klr0 <- klrpal[y]
         }
 
-        ## jj <- which(is.na(klr0))
-        ## if (length(jj)) klr0[jj] <- "#AAAAAA22"
-        ## base::plot(pd[["pos"]],
-        ##   pch = 19, cex = cex1, col = klr0, fg = gray(0.5), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
-        ## title(, cex.main = 1.3, line = 0.5, col = "grey40")
-
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos,
           var = y,
           type = "factor", ## always factor?
           col = klrpal,
-          cex = 0.5*cex1*cex,
+          cex = 0.5 * cex1 * cex,
           xlab = NA,
           ylab = NA,
-          xlim = 1.2*range(pos[,1]),
-          ylim = 1.2*range(pos[,2]),
+          xlim = 1.2 * range(pos[, 1]),
+          ylim = 1.2 * range(pos[, 2]),
           axis = FALSE,
           title = tolower(pheno[i]),
-          cex.title = 1.2*cex,
+          cex.title = 1.2 * cex,
           title.y = 1,
-          cex.clust = 1.2*cex,
+          cex.clust = 1.2 * cex,
           label.clusters = TRUE,
           legend = FALSE,
-          gridcolor = 'fff'
+          gridcolor = "fff"
         ) %>%
           plotly::layout(
-            ## showlegend = TRUE,
+            #
             plot_bgcolor = "#f8f8f8",
-            margin = list(0,0,0,0)
+            margin = list(0, 0, 0, 0)
           )
 
         plt[[i]] <- p
@@ -160,44 +152,44 @@ singlecell_plot_phenoplot_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-      pd  <- plot_data()
-      plt <- get_plots(cex=0.9)
+      pd <- plot_data()
+      plt <- get_plots(cex = 0.9)
       shiny::req(plt)
       ## layout
-      nr = 2
-      if (length(plt) > 4) nr = 3
-      if (length(plt) > 6) nr = 4
-      if (length(plt) > 12) nr = 5
+      nr <- 2
+      if (length(plt) > 4) nr <- 3
+      if (length(plt) > 6) nr <- 4
+      if (length(plt) > 12) nr <- 5
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        ##   margin = 0.02
-        margin = c(0.01,0.01,0.01,0.045)
+        #
+        margin = c(0.01, 0.01, 0.01, 0.045)
       ) %>%
         plotly_default() %>%
         plotly::layout(
-          margin = list(l=10,r=10,b=10,t=20) # lrbt
+          margin = list(l = 10, r = 10, b = 10, t = 20) # lrbt
         )
       return(fig)
     }
 
     plotly_modal.RENDER <- function() {
-      pd  <- plot_data()
-      plt <- get_plots(cex=1.3)
+      pd <- plot_data()
+      plt <- get_plots(cex = 1.3)
       ## layout
-      nc = 2
-      if (length(plt) > 4) nc = 3
-      if (length(plt) > 6) nc = 4
-      if (length(plt) > 12) nc = 5
-      nr <- ceiling(length(plt)/nc)
+      nc <- 2
+      if (length(plt) > 4) nc <- 3
+      if (length(plt) > 6) nc <- 4
+      if (length(plt) > 12) nc <- 5
+      nr <- ceiling(length(plt) / nc)
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = c(0.01,0.01,0.01,0.045)
+        margin = c(0.01, 0.01, 0.01, 0.045)
       ) %>%
         plotly_modal_default() %>%
         plotly::layout(
-          margin = list(l=20,r=20,b=20,t=40) # lrbt
+          margin = list(l = 20, r = 20, b = 20, t = 40) # lrbt
         )
 
       return(fig)

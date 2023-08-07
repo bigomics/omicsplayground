@@ -4,12 +4,12 @@
 ##
 
 signature_table_overlap_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,7 +38,7 @@ signature_table_overlap_server <- function(id,
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       DT::datatable(df,
-##      class = "compact cell-border stripe",
+        #
         rownames = FALSE, escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
@@ -55,7 +55,7 @@ signature_table_overlap_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
-          background = playbase::color_from_middle(df$score, "lightblue", "#f5aeae"),
+          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

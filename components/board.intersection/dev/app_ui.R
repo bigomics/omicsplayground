@@ -5,10 +5,9 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-
   # header
   header <- shiny::tagList(
-    golem_add_external_resources('board.intersection')
+    golem_add_external_resources("board.intersection")
   )
 
   # sidebar
@@ -70,7 +69,4 @@ app_ui <- function(request) {
       )
     )
   )
-
 }
-
-

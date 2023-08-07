@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_membership_v_trait_ui <- function(
-  id,
-  label,
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label,
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

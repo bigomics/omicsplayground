@@ -4,13 +4,13 @@
 ##
 
 wgcna_plot_correlation_network_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label,
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -43,13 +43,6 @@ wgcna_plot_correlation_network_server <- function(id,
       ntop <- min(nrow(xx) - 1, 20)
       topgg <- names(sort(rho1, decreasing = TRUE))
 
-      if (0) {
-        gs0 <- out$gse[out$gse$module == k, ]
-        gs0 <- head(gs0[order(gs0$p.value), ], 10)
-        gs.genes <- unique(unlist(strsplit(gs0$genes, split = "\\|")))
-        gs.genes
-        topgg <- intersect(topgg, gs.genes) ## only GSET genes???
-      }
       topgg <- head(topgg, ntop)
 
       rho <- Matrix::nearPD(cor(xx[, topgg]))$mat

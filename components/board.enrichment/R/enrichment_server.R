@@ -49,7 +49,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       meta <- pgx$gset.meta$meta
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(intersect(comparisons, names(meta)))
@@ -67,7 +67,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     shiny::observe({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
       gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
@@ -82,11 +82,10 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     ## ================================================================================
 
     selected_gsetmethods <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       gset.methods0 <- colnames(pgx$gset.meta$meta[[1]]$fc)
-      ## test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
       test <- input$gs_statmethod
-      test <- intersect(test, gset.methods0) ## maximum three
+      test <- intersect(test, gset.methods0)
       test
     })
 
@@ -120,14 +119,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       dim(pv)
       if (NCOL(pv) > 1) {
         ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)
-        ## fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  ## REALLY???
         fc <- rowMeans(fc, na.rm = TRUE) ## NEED RETHINK!!!
-        ## pv = apply(pv,1,function(x) metap::allmetap(x,method="sumz")$p[[1]])
-        ## pv = apply(pv,1,vec.combinePvalues,method="stouffer")
-        ## qv = p.adjust(pv, method="fdr")
         pv <- apply(pv, 1, max, na.rm = TRUE)
         qv <- apply(qv, 1, max, na.rm = TRUE)
-        ## score = rowMeans(scale(score,center=FALSE),na.rm=TRUE)
         score <- rowMeans(apply(score, 2, ss.rank), na.rm = TRUE)
       }
 
@@ -138,7 +132,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     }
 
     getFullGeneSetTable <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       comp <- 1
       comp <- input$gs_contrast
       if (is.null(comp)) {
@@ -196,15 +190,14 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         meta <- calcGsetMeta(comp, gsmethod, pgx = pgx)
         meta <- meta[rownames(mx), , drop = FALSE]
         dim(meta)
-        
-        if(!is.data.frame(pgx$gset.meta$info)){
+
+        if (!is.data.frame(pgx$gset.meta$info)) {
           # below is legacy code, before branch dev-gmt 2023-05
           # in new pgx code, this will be automatically calculated, with more details
           gset.size <- Matrix::colSums(pgx$GMT[, rownames(mx), drop = FALSE] != 0)
           names(gset.size) <- rownames(mx)
-
         }
-        
+
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
         ##
@@ -258,8 +251,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         gs <- intersect(names(meta.fc), rownames(meta))
         length(gs)
 
-        if(!is.data.frame(pgx$gset.meta$info)){
-
+        if (!is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
@@ -270,13 +262,13 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
           )
         }
 
-        if(is.data.frame(pgx$gset.meta$info)){
+        if (is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
-            matched.genes = pgx$gset.meta$info[gs,"gset.size"],
-            total.genes = pgx$gset.meta$info[gs,"gset.size.raw"],
-            fraction.genes.covered = pgx$gset.meta$info[gs,"gset.fraction"],
+            matched.genes = pgx$gset.meta$info[gs, "gset.size"],
+            total.genes = pgx$gset.meta$info[gs, "gset.size.raw"],
+            fraction.genes.covered = pgx$gset.meta$info[gs, "gset.fraction"],
             stars = stars[gs],
             AveExpr0 = AveExpr0[gs],
             AveExpr1 = AveExpr1[gs]
@@ -287,7 +279,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
         jj <- match(gs, rownames(mx))
         rpt <- cbind(rpt, q = qv[jj, ])
 
-        ## rownames(rpt) = gs
+        #
       } else {
         ## show original table (single method)
         rpt <- outputs[[gsmethod]]
@@ -344,17 +336,18 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
 
 
     metaQ <- shiny::reactive({
-      req(pgx)
+      req(pgx$X)
       methods <- selected_gsetmethods()
-      metaQ <- sapply(pgx$gset.meta$meta, function(m)
-        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE))
+      metaQ <- sapply(pgx$gset.meta$meta, function(m) {
+        apply(m$q[, methods, drop = FALSE], 1, max, na.rm = TRUE)
+      })
       rownames(metaQ) <- rownames(pgx$gset.meta$meta[[1]])
       metaQ
     })
 
     metaFC <- shiny::reactive({
-      req(pgx)
-      ##methods <- selected_gsetmethods()
+      req(pgx$X)
+      #
       metaFC <- sapply(pgx$gset.meta$meta, function(m) m$meta.fx)
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
       metaFC
@@ -378,7 +371,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       ## return details of the genes in the selected gene set
       ##
 
-      shiny::req(pgx, input$gs_contrast)
+      shiny::req(pgx$X, input$gs_contrast)
       gs <- 1
       comp <- 1
 
@@ -394,10 +387,10 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       if (is.multiomics) {
         ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
         mx <- mx[ii, ]
-        ## rownames(mx) <- sub(".*:|.*\\]","",rownames(mx))
+        #
       }
 
-      ## gxmethods <- c("trend.limma","ttest.welch")
+      #
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx
@@ -432,7 +425,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
     })
 
     gene_selected <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       i <- as.integer(genetable$rows_selected())
       if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()

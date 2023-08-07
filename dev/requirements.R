@@ -168,10 +168,11 @@ install.github("Coolgenome/iTALK")
 install.github('wt2015-github/FastGGM', force=TRUE)
 install.github("JohnCoene/waiter")
 install.github('JohnCoene/firebase@omics', force=TRUE)
+install.github('JohnCoene/bsutils')
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
 install.github('bigomics/PCSF', force=TRUE)
-install.github('m-jahn/fluctuator')
+install.github('bigomics/shinyChatR')
 install.github('ropensci/iheatmapr')
 
 ##---------------------------------------------------------------------

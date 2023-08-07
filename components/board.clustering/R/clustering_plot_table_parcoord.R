@@ -8,64 +8,64 @@
 ## Annotate clusters ############
 
 clustering_plot_parcoord_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("hm_pcaverage"), "Average by gene module", FALSE),
-      "Average gene by gene module"),
-    withTooltip(shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
+    withTooltip(
+      shiny::checkboxInput(ns("hm_pcaverage"), "Average by gene module", FALSE),
+      "Average gene by gene module"
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("hm_pcscale"), "Scale values", TRUE),
       "Scale expression values to mean=0 and SD=1."
     )
   )
 
   PlotModuleUI(
-      ns("pltmod"),
-      title = title,
-      label = label,
-      plotlib = "plotly",
-      info.text = info.text,
-      caption = caption,
-      options = parcoord_opts,
-      download.fmt = c("png", "pdf", "csv"),
-      width = width,
-      height = height
+    ns("pltmod"),
+    title = title,
+    label = label,
+    plotlib = "plotly",
+    info.text = info.text,
+    caption = caption,
+    options = parcoord_opts,
+    download.fmt = c("png", "pdf", "csv"),
+    width = width,
+    height = height
   )
-  
 }
 
 clustering_table_parcoord_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width) {
-    ns <- shiny::NS(id)
-  
-    TableModuleUI(
-        ns("datasets"),
-        info.text = info.text,
-        height = height,
-        caption = caption,
-        width = width,
-        title = title,
-        label = "b"
-    )
-  
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
+  ns <- shiny::NS(id)
+
+  TableModuleUI(
+    ns("datasets"),
+    info.text = info.text,
+    height = height,
+    caption = caption,
+    width = width,
+    title = title,
+    label = "b"
+  )
 }
 
 clustering_plot_table_parcoord_server <- function(id,
                                                   getTopMatrix,
-                                                  watermark = FALSE
-                                                  ) {
+                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -73,7 +73,6 @@ clustering_plot_table_parcoord_server <- function(id,
 
     shiny::observeEvent(plotly::event_data("plotly_restyle", source = "pcoords"), {
       ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
-      ##
       d <- plotly::event_data("plotly_restyle", source = "pcoords")
       ## what is the relevant dimension (i.e. variable)?
       dimension <- as.numeric(stringr::str_extract(names(d[[1]]), "[0-9]+"))
@@ -107,10 +106,10 @@ clustering_plot_table_parcoord_server <- function(id,
       if (input$hm_pcscale) {
         zx <- t(scale(t(zx)))
       }
-      if(input$hm_pcaverage) {
+      if (input$hm_pcaverage) {
         idx <- filt$idx
-        zx.mean  <- tapply(1:nrow(zx),idx,function(ii) colMeans(zx[c(ii,ii),]))
-        zx  <- do.call(rbind,zx.mean)
+        zx.mean <- tapply(1:nrow(zx), idx, function(ii) colMeans(zx[c(ii, ii), ]))
+        zx <- do.call(rbind, zx.mean)
         rownames(zx) <- names(zx.mean)
         filt$idx <- names(zx.mean)
       }
@@ -165,7 +164,6 @@ clustering_plot_table_parcoord_server <- function(id,
       df <- data.frame(clust.id = clust.id, zx)
       klrpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
       klrpal <- klrpal[1:max(clust.id)]
-      ## klrpal <- setNames(klrpal, sort(unique(clust.id)))
       klrpal2 <- lapply(1:length(klrpal), function(i) c((i - 1) / (length(klrpal) - 1), klrpal[i]))
 
       plt <- plotly::plot_ly(df, source = "pcoords") %>%
@@ -178,14 +176,15 @@ clustering_plot_table_parcoord_server <- function(id,
             cmax = max(clust.id),
             showscale = FALSE,
             width = 10
-            ## reversescale = TRUE
           ),
           dimensions = dimensions
         )
       plt <- plt %>%
         plotly::layout(margin = list(l = 60, r = 60, t = 0, b = 30)) %>%
-        plotly::config(toImageButtonOptions = list(format = "svg",
-                                                   width = 900, height = 350, scale = 1.2)) %>%
+        plotly::config(toImageButtonOptions = list(
+          format = "svg",
+          width = 900, height = 350, scale = 1.2
+        )) %>%
         plotly::config(displaylogo = FALSE) %>%
         plotly::event_register("plotly_restyle")
 
@@ -219,17 +218,15 @@ clustering_plot_table_parcoord_server <- function(id,
       numeric.cols <- 2:ncol(df)
       DT::datatable(
         df,
-        rownames = TRUE, ## escape = c(-1,-2),
+        rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
-        plugins = 'scrollResize',        
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact hover",
         fillContainer = TRUE,
         options = list(
-          dom = "lfrtip", ## buttons = c('copy','csv','pdf'),
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, ## scrollY = TRUE,
-          ## scrollY = 170,
+          dom = "lfrtip",
+          scrollX = TRUE,
           scrollY = "23vh",
           scrollResize = TRUE,
           scroller = TRUE,

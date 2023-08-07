@@ -11,8 +11,14 @@ html {
     //---------------- navbar ---------------------
     .navbar {
 	padding-top: 0.3rem;
+	border-bottom: 2px solid $primary;
     }
 
+    // bit darker (see Matt)
+    .nav-tabs .nav-link {
+	color: #b8b8b8;
+	border-bottom: solid 1px;
+    }
 
     //hover on bigomics logo 
     #logo-bigomics:hover  {
@@ -32,13 +38,6 @@ html {
 	border-top: none;
 	vertical-align: 0;
     }    
-
-    // bit darker (see Matt)
-    .nav-tabs .nav-link {
-	color: #b8b8b8;
-	border-bottom: solid 1px;
-    }
-
     
     //---------------- sidebar ---------------------
     .sidebar-container {

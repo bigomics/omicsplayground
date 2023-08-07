@@ -4,18 +4,17 @@
 ##
 
 withTooltip <- function(
-  el,
-  title,
-  placement = "bottom",
-  trigger = NULL,
-  options = NULL
-) {
-  if(!is.null(trigger)) {
-#    warning("`trigger` is ignored, used to be in shinyBS::tippify")
+    el,
+    title,
+    placement = "bottom",
+    trigger = NULL,
+    options = NULL) {
+  if (!is.null(trigger)) {
+
   }
 
-  if(!is.null(options)) {
-#    warning("`options` is ignored, used to be in shinyBS::tippify")
+  if (!is.null(options)) {
+
   }
 
   htmltools::tagAppendAttributes(

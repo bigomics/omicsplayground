@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_genes_in_geneset_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -29,8 +29,10 @@ enrichment_table_genes_in_geneset_server <- function(id,
     genetable.RENDER <- shiny::reactive({
       rpt <- geneDetails()
       if (is.null(rpt) || nrow(rpt) == 0) {
-        shiny::validate(shiny::need(nrow(rpt) > 0,
-        "Please select a geneset from the table on the left to view genes."))
+        shiny::validate(shiny::need(
+          nrow(rpt) > 0,
+          "Please select a geneset from the table on the left to view genes."
+        ))
         return(NULL)
       }
 
@@ -52,12 +54,12 @@ enrichment_table_genes_in_geneset_server <- function(id,
       tbl <- DT::datatable(rpt,
         class = "compact cell-border stripe", rownames = FALSE,
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          # paging = TRUE,
+
           # pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollY = "calc(45vh - 260px)",
@@ -76,7 +78,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         fx <- rpt[, "fc"]
         tbl <- tbl %>%
           DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-          DT::formatStyle("fc", background = playbase::color_from_middle(fx, "lightblue", "#f5aeae"))
+          DT::formatStyle("fc", background = color_from_middle(fx, "lightblue", "#f5aeae"))
       }
       tbl
     })

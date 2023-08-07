@@ -4,14 +4,13 @@
 ##
 
 clustering_plot_clusterannot_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width)
-{
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   clustannot_plots.opts <- shiny::tagList(
@@ -59,7 +58,6 @@ clustering_plot_clusterannot_server <- function(id,
     ns <- session$ns
 
     shiny::observe({
-
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
 
       if (is.null(input$xann_level)) {
@@ -96,12 +94,13 @@ clustering_plot_clusterannot_server <- function(id,
     }
 
     ##    clustannot_plots.PLOTLY <- shiny::reactive({
-    createAnnotBarPlots <- function(fontsize=10) {
-
+    createAnnotBarPlots <- function(fontsize = 10) {
       rho <- plot_data()
-      if(is.null(rho)) return(NULL)
+      if (is.null(rho)) {
+        return(NULL)
+      }
 
-      ## par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+      #
       NTERMS <- 6
       NTERMS <- 12
       slen <- 40
@@ -116,7 +115,7 @@ clustering_plot_clusterannot_server <- function(id,
       }
 
       klrpal <- omics_pal_d("muted_light")(ncol(rho))
-      # klrpal <- paste0(klrpal, "B3")
+
 
       plot_list <- list()
       i <- 1
@@ -131,7 +130,7 @@ clustering_plot_clusterannot_server <- function(id,
             x = 0.5, y = 1.0,
             xref = "paper", yref = "paper",
             xanchor = "center", yanchor = "bottom",
-            text = tt, font = list(size = fontsize*1.33),
+            text = tt, font = list(size = fontsize * 1.33),
             align = "center", showarrow = FALSE
           )
         }
@@ -179,7 +178,7 @@ clustering_plot_clusterannot_server <- function(id,
             ##       the axis range is the same but the tooltip and axis are out of sync)
             xaxis = list(
               range = c(0, .9),
-              titlefont = list(size = fontsize*1.2),
+              titlefont = list(size = fontsize * 1.2),
               tickfont = list(size = fontsize),
               showgrid = FALSE,
               title = "\ncorrelation (R)"
@@ -197,7 +196,7 @@ clustering_plot_clusterannot_server <- function(id,
             bargap = .2,
             margin = list(l = 5, r = 0, b = 15, t = 42)
           ) %>%
-          plotly_default() 
+          plotly_default()
       }
 
       if (length(plot_list) <= 4) {
@@ -222,11 +221,11 @@ clustering_plot_clusterannot_server <- function(id,
     }
 
     clustannot_plots.PLOTLY <- function() {
-      createAnnotBarPlots(fontsize=10)
+      createAnnotBarPlots(fontsize = 10)
     }
 
     clustannot_plots.PLOTLY_modal <- function() {
-      createAnnotBarPlots(fontsize=15)
+      createAnnotBarPlots(fontsize = 15)
     }
 
     PlotModuleServer(
@@ -234,7 +233,7 @@ clustering_plot_clusterannot_server <- function(id,
       plotlib = "plotly",
       func = clustannot_plots.PLOTLY,
       func2 = clustannot_plots.PLOTLY_modal,
-      csvFunc = plot_data,   ##  *** downloadable data as CSV
+      csvFunc = plot_data, ##  *** downloadable data as CSV
       res = 80, ## resolution of plots
       remove_margins = FALSE,
       pdf.width = 8, pdf.height = 5,

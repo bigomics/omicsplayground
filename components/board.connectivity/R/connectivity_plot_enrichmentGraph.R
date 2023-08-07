@@ -13,13 +13,13 @@
 #'
 #' @export
 connectivity_plot_enrichmentGraph_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -34,12 +34,12 @@ connectivity_plot_enrichmentGraph_ui <- function(
       ),
       "Number of simlar experiments to consider."
     ),
-    hr(),    
+    hr(),
     withTooltip(
       shiny::checkboxInput(ns("enrichGraph_oddweighting"), "Odd ratio weighting", FALSE),
       "Odds ratio weighting."
     ),
-    hr(),    
+    hr(),
     withTooltip(
       shiny::radioButtons(ns("enrichGraph_sizevar"), "Size:", c("FC", "cumFC", "centrality"),
         selected = "cumFC", inline = TRUE
@@ -76,7 +76,6 @@ connectivity_plot_enrichmentGraph_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      
       getEnrichmentGraph <- shiny::reactive({
         ## get enrichment scores
         F <- cumEnrichmentTable()
@@ -115,8 +114,8 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         )
 
         ## set graph threshold to some sensible value [0,1]
-        ##wt0 <- tail(sort(abs(igraph::E(gr)$weight)), 50)[1] 
-        ##shiny::updateSliderInput(session, "enrichGraph_threshold", value = 0)
+        #
+        #
 
         return(gr)
       })
@@ -175,7 +174,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         pw.genes.selector <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)] %>%
           names() %>%
           duplicated() %>%
-          `!`
+          `!`()
         pw.genes <- pw.genes[which(names(pw.genes) %in% igraph::V(gr)$name)][pw.genes.selector]
 
         igraph::V(gr)$label <- vname

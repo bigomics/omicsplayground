@@ -5,12 +5,12 @@
 
 
 dataview_table_samples_ui <- function(
-  id,
-  width,
-  height,
-  title,
-  info.text,
-  caption) {
+    id,
+    width,
+    height,
+    title,
+    info.text,
+    caption) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -27,7 +27,7 @@ dataview_table_samples_ui <- function(
 dataview_table_samples_server <- function(id,
                                           pgx,
                                           r.samples = reactive(""),
-                                          scrollY ) {
+                                          scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       shiny::req(pgx$Y, pgx$samples, r.samples())
@@ -43,7 +43,7 @@ dataview_table_samples_server <- function(id,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "lfrtip",

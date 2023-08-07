@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_n_sig_gsets_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -29,7 +29,7 @@ enrichment_table_n_sig_gsets_server <- function(id,
     tabH <- 340 ## row height of panels
 
     FDRtable.RENDER <- shiny::reactive({
-      shiny::req(pgx, gs_statmethod())
+      shiny::req(pgx$X, gs_statmethod())
 
       meta <- pgx$gset.meta
       test <- gs_statmethod()
@@ -73,11 +73,11 @@ enrichment_table_n_sig_gsets_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         options = list(
           dom = "frtip",
-          pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          pageLength = 999, #
           scrollX = TRUE,
           scrollY = "20vh",
           scrollResize = TRUE,

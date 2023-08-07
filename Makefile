@@ -1,7 +1,7 @@
 BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass tag.version
+run: sass version 
 	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
 
 run.headless:
@@ -34,12 +34,12 @@ docker.run:
 docker.run2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -it -p 4000:3838 \
-		-v ~/Playground/pgx:/omicsplayground/data \
+		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
-		-v ~/Playground/config/firebase:/omicsplayground/components/app/R/firebase \
+		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE tag.version
+docker: FORCE 
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
@@ -80,12 +80,18 @@ renv: FORCE
 FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
-DATE = `date +%y%m%d|sed 's/ //g'`
-VERSION := "v3.0-RC18."$(BRANCH)""$(DATE)
+DATE = `date +%y%m%d|sed 's/\ //g'`
+VERSION = "v3.2.19-"$(BRANCH)""$(DATE)
 
-tag.version:
+version: 
 	@echo "new version ->" $(VERSION)
-	sed -i "1s/.*/$(VERSION)/" VERSION
+##	sed -i "1s/.*/$(VERSION)/" VERSION
+	echo $(VERSION) > VERSION
+
+LAST=awk -v RS='(\r?\n){3,}' 'NR<=4'
+changelog:
+	sh ./dev/create-changelog.sh | $(LAST) >  CHANGELOG.md
+	sh ./dev/create-changelog.sh 'feat' | $(LAST) > FEATURES.md
 
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'

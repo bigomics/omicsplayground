@@ -13,15 +13,14 @@
 #'
 #' @export
 functional_plot_reactome_actmap_ui <- function(
-  id,
-  title,
-  caption,
-  info.text,
-  label = "",
-  height
-  ) {
+    id,
+    title,
+    caption,
+    info.text,
+    label = "",
+    height) {
   ns <- shiny::NS(id)
-  
+
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
@@ -54,18 +53,17 @@ functional_plot_reactome_actmap_ui <- function(
 #' @return
 #' @export
 functional_plot_reactome_actmap_server <- function(id,
-                                               r_meta,
-                                               getReactomeTable,
-                                               plotActivationMatrix,
-                                               watermark = FALSE) {
+                                                   r_meta,
+                                                   getReactomeTable,
+                                                   plotActivationMatrix,
+                                                   watermark = FALSE) {
   moduleServer(
-      id, function(input, output, session) {
-          
+    id, function(input, output, session) {
       plot_data <- shiny::reactive({
         df <- getReactomeTable()
         meta <- r_meta()
         shiny::req(df, meta)
-        
+
         res <- list(
           df = df,
           meta = meta
@@ -76,14 +74,14 @@ functional_plot_reactome_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-        
+
         plotActivationMatrix(
-            meta, df,
-            normalize = input$normalize,
-            nterms = 50,
-            nfc = 20,
-            tl.cex = 0.82,
-            row.nchar = 50            
+          meta, df,
+          normalize = input$normalize,
+          nterms = 50,
+          nfc = 20,
+          tl.cex = 0.82,
+          row.nchar = 50
         )
       }
 
@@ -91,17 +89,17 @@ functional_plot_reactome_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-        
+
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
         plotActivationMatrix(
-            meta, df,
-            normalize = input$normalize,
-            nterms = 50,
-            nfc = 100,
-            tl.cex = 0.95,
-            row.nchar = 200                        
+          meta, df,
+          normalize = input$normalize,
+          nterms = 50,
+          nfc = 100,
+          tl.cex = 0.95,
+          row.nchar = 200
         )
       }
 
@@ -111,7 +109,7 @@ functional_plot_reactome_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(100,100),
+        res = c(100, 100),
         pdf.height = 10,
         pdf.width = 10,
         add.watermark = watermark

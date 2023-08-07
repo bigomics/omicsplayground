@@ -81,14 +81,15 @@ TcgaUI <- function(id) {
         "TCGA survival",
         bslib::layout_column_wrap(
           width = 1,
-          height = "calc(100vh - 180px)",        
+          height = "calc(100vh - 180px)",
           tcga_plot_survival_ui(
             ns("tcga_tcgasurv"),
             caption = paste(
               "TCGA survival analysis",
               "Survival probability of cancer patients in 32 TCGA cancer types.",
               "Each cohort is dichotomized into positively and negatively correlated with your signature.",
-              "The survival probabilities are computed and tested using the Kaplan-Meier method."),
+              "The survival probabilities are computed and tested using the Kaplan-Meier method."
+            ),
             info.text = tcga_info,
             height = c("100%", "70vh"),
             width = c("auto", "100%")
@@ -97,5 +98,4 @@ TcgaUI <- function(id) {
       )
     )
   )
-
 }

@@ -8,10 +8,10 @@ UploadInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
     withTooltip(
-      shiny::selectInput(ns("fa_contrast"), "Contrast:",
+      shiny::selectInput(ns("fa_contrast"), "Comparison:",
         choices = NULL
       ),
-      "Select the contrast corresponding to the comparison of interest.",
+      "Select the comparison of interest.",
       placement = "top"
     ),
     withTooltip(
@@ -46,7 +46,7 @@ UploadUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Upload",
-      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). NB Users can now create contrasts from the platform itself, so the contrasts.csv file is optional."),
+      bs_alert("In this panel, you can upload your data to the platform. The platform requires 3 data files as explained below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons (comparisons.csv). NB Users can now create comparisons from the platform itself, so the comparisons.csv file is optional."),
       br(),
       div(
         class = "row",
@@ -73,34 +73,34 @@ UploadUI <- function(id) {
         div(
           class = "col-md-4",
           upload_plot_countstats_ui(
-              id = ns("countStats"),
-              title = "Count Stats",
-              info.text = "Information about the uploaded counts.",
-              caption = "Information about the uploaded counts.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("countStats"),
+            title = "Count Stats",
+            info.text = "Information about the uploaded counts.",
+            caption = "Information about the uploaded counts.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         div(
           class = "col-md-4",
           upload_plot_phenostats_ui(
-              id = ns("phenoStats"),
-              title = "Pheno Stats",
-              info.text = "Information about the uploaded samples",
-              caption = "Information about the uploaded samples.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("phenoStats"),
+            title = "Pheno Stats",
+            info.text = "Information about the uploaded samples",
+            caption = "Information about the uploaded samples.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         ),
         div(
           class = "col-md-4",
           upload_plot_contraststats_ui(
-              id = ns("contrastStats"),
-              title = "Contrast Stats",
-              info.text = "Information about the uploaded contrasts",
-              caption = "Information about the uploaded contrasts.",
-              height = c("75%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            id = ns("contrastStats"),
+            title = "Comparison Stats",
+            info.text = "Information about the uploaded comparisons",
+            caption = "Information about the uploaded comparisons.",
+            height = c("75%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
           )
         )
       )
@@ -115,12 +115,12 @@ UploadUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Contrasts",
+      "Comparisons",
       bslib::layout_column_wrap(
         width = 1,
         height = "calc(100vh - 200px)",
         heights_equal = "row",
-        bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (or so-called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-contrasts'.")),
+        bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts', 'groups'...). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
         upload_module_makecontrast_ui(ns("makecontrast"))
       )
     ),
@@ -129,14 +129,14 @@ UploadUI <- function(id) {
       bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
       br(),
       shiny::fillCol(
-        height = height, ## width = 1200,
+        height = height, #
         upload_module_computepgx_ui(ns("compute"))
       )
     )
   )
 
   page_ui <- div(
-    boardHeader(title = "Upload data", info_link = ns("module_info")),
+    boardHeader(title = "Upload New Data", info_link = ns("module_info")),
     tabs
   )
   return(page_ui)

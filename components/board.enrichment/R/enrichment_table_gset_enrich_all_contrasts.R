@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_gset_enrich_all_contrasts_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   fctable_opts <- shiny::tagList(
@@ -18,7 +18,7 @@ enrichment_table_gset_enrich_all_contrasts_ui <- function(
       placement = "right", options = list(container = "body")
     )
   )
-  
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
@@ -39,25 +39,24 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
     tabH <- 340 ## row height of panels
 
     table_data <- shiny::reactive({
-
       ## get enrichment for all contrasts
-      ##F <- sapply(pgx$gset.meta$meta, function(x) x[, "meta.fx"])
+      #
       F <- metaFC()
       colnames(F) <- gsub("_", " ", colnames(F))
-      ##rownames(F) <- rownames(pgx$gset.meta$meta[[1]])
+      #
 
       ## get enrichment q-value for all contrasts
-      ##Q <- sapply(pgx$gset.meta$meta, function(x) x[,"meta.q"])
+      #
       Q <- metaQ()
       colnames(Q) <- gsub("_", " ", colnames(Q))
-      ##rownames(Q) <- rownames(pgx$gset.meta$meta[[1]])
+      #
 
       ## RMS (non-centered variance)
       fc.rms <- sqrt(F[, 1]**2)
       if (NCOL(F) > 1) {
         fc.rms <- round(sqrt(rowMeans(F**2, na.rm = TRUE)), digits = 3)
       }
-      
+
       ## show Q values?
       show.q <- TRUE
       show.q <- input$showq
@@ -66,7 +65,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
         colnames(F1) <- as.vector(rbind(paste0("ES.", colnames(F)), paste0("q.", colnames(Q))))
-        ## colnames(F1) <- sub("q.*","q",colnames(F1))
+        #
         df <- data.frame(geneset = gs, rms.ES = fc.rms, F1, check.names = FALSE)
       } else {
         F1 <- F
@@ -82,7 +81,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
-      ## if(length(qv.cols)==0) qv = 0
+      #
 
       list(
         df = df,
@@ -91,25 +90,24 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         F = F
       )
     })
-    
-    fctable.RENDER <- function() {
 
+    fctable.RENDER <- function() {
       td <- table_data()
       df <- td$df
       qv.cols <- td$qv.cols
       fc.cols <- td$fc.cols
       F <- td$F
-      
+
       ## wrap with hyperlink
       df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
-      
+
       dt <- DT::datatable(
         df,
         rownames = FALSE,
         escape = -1,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
@@ -125,13 +123,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
           "rms.ES",
-          background = playbase::color_from_middle( df$rms.ES, "lightblue", "#f5aeae"),
+          background = color_from_middle(df$rms.ES, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           fc.cols,
-          background = playbase::color_from_middle( F[, ], "lightblue", "#f5aeae"),
+          background = color_from_middle(F[, ], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

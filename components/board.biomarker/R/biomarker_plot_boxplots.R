@@ -13,19 +13,20 @@
 #'
 #' @export
 biomarker_plot_boxplots_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_options <- tagList(
     withTooltip(
       shiny::checkboxInput(
-        ns("show_all"), "show all samples", value = FALSE
+        ns("show_all"), "show all samples",
+        value = FALSE
       ), "Show all samples or only selected.",
       placement = "right", options = list(container = "body")
     )
@@ -36,7 +37,6 @@ biomarker_plot_boxplots_ui <- function(
     label = label,
     plotlib = "base",
     info.text = info.text,
-    ##    options = plot_options,
     options = NULL,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
@@ -58,8 +58,6 @@ biomarker_plot_boxplots_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
-
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
@@ -90,9 +88,9 @@ biomarker_plot_boxplots_server <- function(id,
 
         ## vars, X, y
         pdata <- list(
-            X = res$X,
-            vars = vars,
-            y = y
+          X = res$X,
+          vars = vars,
+          y = y
         )
         return(pdata)
       })
@@ -111,7 +109,7 @@ biomarker_plot_boxplots_server <- function(id,
           mfrow = c(2, 4), mar = c(3.0, 3.0, 1.5, 0.5),
           mgp = c(1.6, 0.6, 0), oma = c(0.5, 0.5, 0.5, 0.5) * 0
         )
-        if (length(vars) > 8) par(mfrow = c(3, 4), mar = c(2.8, 3, 2, 0.3)*0.7)
+        if (length(vars) > 8) par(mfrow = c(3, 4), mar = c(2.8, 3, 2, 0.3) * 0.7)
         i <- 1
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]
@@ -152,7 +150,6 @@ biomarker_plot_boxplots_server <- function(id,
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        ## csvFunc = plot_data,
         res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
         add.watermark = watermark

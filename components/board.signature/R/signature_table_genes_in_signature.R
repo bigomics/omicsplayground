@@ -4,12 +4,12 @@
 ##
 
 signature_table_genes_in_signature_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -24,10 +24,8 @@ signature_table_genes_in_signature_ui <- function(
 }
 
 signature_table_genes_in_signature_server <- function(id,
-                                                      getEnrichmentGeneTable
-                                                      ) {
+                                                      getEnrichmentGeneTable) {
   moduleServer(id, function(input, output, session) {
-
     enrichmentGeneTable.RENDER <- shiny::reactive({
       df <- getEnrichmentGeneTable()
       if (is.null(df)) {
@@ -60,7 +58,7 @@ signature_table_genes_in_signature_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(
           numeric.cols,
-          background = playbase::color_from_middle(color_fx, "lightblue", "#f5aeae"),
+          background = color_from_middle(color_fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

@@ -9,30 +9,23 @@ header_infotext <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
 boardHeader <- function(title, info_link) {
   div(
     fillRow(
-        flex=c(NA,1,NA),
-        ##h2(input$nav),
-        shiny::div(
-            id = "navheader-current-section",
-            HTML(paste0(title," &nbsp;")),
-            withTooltip(
-                shiny::actionLink(
-                    inputId = info_link,
-                    label="",
-                    ## icon = shiny::icon("info-circle"),
-                    icon = shiny::icon("youtube"),                    
-                    style = "color: #ccc;"
-                ),
-                "Video tutorial about this board"
-            )
-        ),
-        div(class = "card-footer-switch", 
-            selector_switch(
-                class = 'card-footer-checked', 
-                label = "show captions",
-                is.checked = FALSE
-                )
-            )
+      flex = c(NA, 1, NA),
+      #
+      shiny::div(
+        id = "navheader-current-section",
+        HTML(paste0(title, " &nbsp;")),
+        withTooltip(
+          shiny::actionLink(
+            inputId = info_link,
+            label = "",
+            #
+            icon = shiny::icon("youtube"),
+            style = "color: #ccc;"
+          ),
+          "Video tutorial about this board"
+        )
+      )
     )
-##    bs_alert(shiny::HTML(header_infotext))
+    #
   )
 }

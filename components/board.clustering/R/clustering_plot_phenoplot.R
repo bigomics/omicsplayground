@@ -5,13 +5,13 @@
 
 
 clustering_plot_phenoplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(
@@ -22,7 +22,6 @@ clustering_plot_phenoplot_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    #    plotlib = "base",
     plotlib = "plotly",
     info.text = info.text,
     caption = caption,
@@ -49,10 +48,10 @@ clustering_plot_phenoplot_server <- function(id,
       clust <- hm_getClusterPositions()
       pos <- clust$pos
 
-      if(ncol(pos) == 3){
-        colnames(pos) <- c("x","y","z")
+      if (ncol(pos) == 3) {
+        colnames(pos) <- c("x", "y", "z")
       } else if (ncol(pos) == 2) {
-        colnames(pos) <- c("x","y")
+        colnames(pos) <- c("x", "y")
       }
 
       Y <- pgx$Y[rownames(pos), , drop = FALSE]
@@ -64,10 +63,10 @@ clustering_plot_phenoplot_server <- function(id,
       # pheno <- grep("batch|sample|donor|repl|surv", pheno,
       #   invert = TRUE, ignore.case = TRUE, value = TRUE
       # )
-      Y <- Y[,pheno, drop =FALSE]
+      Y <- Y[, pheno, drop = FALSE]
 
       ## complete dataframe for downloading
-      df <- data.frame( pos, Y)
+      df <- data.frame(pos, Y)
 
       return(
         list(
@@ -78,12 +77,11 @@ clustering_plot_phenoplot_server <- function(id,
       )
     })
 
-    render_plotly <- function(pd, pheno, cex=1) {
-
+    render_plotly <- function(pd, pheno, cex = 1) {
       pheno <- pd[["pheno"]]
-      Y <- pd[["df"]][,pheno, drop =FALSE]
+      Y <- pd[["df"]][, pheno, drop = FALSE]
       showlabels <- pd[["showlabels"]]
-      pos <- pd[["df"]][,c("x","y")]
+      pos <- pd[["df"]][, c("x", "y")]
 
       ## points size depending on how many points we have
       ncex <- cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))
@@ -114,11 +112,10 @@ clustering_plot_phenoplot_server <- function(id,
           xlab = "",
           ylab = "",
           title = tt,
-          cex.title = cex*1.2,
-          cex.clust = cex*1.1,
+          cex.title = cex * 1.2,
+          cex.clust = cex * 1.1,
           label.clusters = showlabels
         ) %>% plotly::layout(
-          ## showlegend = TRUE,
           plot_bgcolor = "#f8f8f8"
         )
 
@@ -128,53 +125,51 @@ clustering_plot_phenoplot_server <- function(id,
     }
 
     plotly.RENDER <- function() {
-
       pd <- plot_data()
       pheno <- pd[["pheno"]]
-      plt <- render_plotly(pd, pheno, cex=0.85)
+      plt <- render_plotly(pd, pheno, cex = 0.85)
 
-      nr = min(3,length(plt))
-      if (length(plt) >= 6)  nr = 4
-      if (length(plt) >= 12)  nr = 5
+      nr <- min(3, length(plt))
+      if (length(plt) >= 6) nr <- 4
+      if (length(plt) >= 12) nr <- 5
 
       fig <- plotly::subplot(
         plt,
         nrows = nr,
         margin = 0.04
-        ) %>%
-          plotly_default() %>%
-          plotly::layout(
-            margin = list(l=0,r=0,b=0,t=30) # lrbt
-          )
+      ) %>%
+        plotly_default() %>%
+        plotly::layout(
+          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
+        )
 
       return(fig)
     }
 
     plotly_modal.RENDER <- function() {
-
       pd <- plot_data()
       pheno <- pd[["pheno"]]
-      plt <- render_plotly(pd, pheno, cex=1.3)
+      plt <- render_plotly(pd, pheno, cex = 1.3)
 
-      nc = min(3,length(plt))
-      if (length(plt) >= 6)  nc = 4
-      if (length(plt) >= 12)  nc = 5
-      nr <- ceiling(length(plt)/nc)
+      nc <- min(3, length(plt))
+      if (length(plt) >= 6) nc <- 4
+      if (length(plt) >= 12) nc <- 5
+      nr <- ceiling(length(plt) / nc)
 
       fig <- plotly::subplot(
         plt,
         nrows = nr,
-        margin = c(0.03,0.03,0.05,0.05)
-      ) %>% plotly_modal_default() %>%
-          plotly::layout(
-            margin = list(l=0,r=0,b=0,t=30) # lrbt
-          )
+        margin = c(0.03, 0.03, 0.05, 0.05)
+      ) %>%
+        plotly_modal_default() %>%
+        plotly::layout(
+          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
+        )
       return(fig)
     }
 
     PlotModuleServer(
       "pltmod",
-      ##plotlib = "base",
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,

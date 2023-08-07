@@ -13,14 +13,13 @@
 #'
 #' @export
 drugconnectivity_plot_actmap_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width
-                                            ) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -125,7 +124,7 @@ drugconnectivity_plot_actmap_server <- function(id,
       plot_data <- shiny::reactive({
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
-        shiny::req(pgx, dsea_contrast, dsea_method)
+        shiny::req(dsea_contrast, dsea_method)
         shiny::validate(shiny::need(
           "drugs" %in% names(pgx),
           "no 'drugs' in object."

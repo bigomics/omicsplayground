@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_topfoldchange_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("pltmod"),
@@ -63,9 +63,9 @@ expression_plot_topfoldchange_server <- function(id,
       sel <- sel()
       res <- res()
 
-      ##shiny::req(sel())
+      #
       shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
-      
+
       psel <- rownames(res)[sel]
       gene <- pgx$genes[psel, "gene_name"]
 
@@ -121,7 +121,7 @@ expression_plot_topfoldchange_server <- function(id,
         xaxistitle = "",
         yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
         fillcolor = pd[["klr"]],
-        margin = list(l = 10, r = 10, b = 0, t = 25),        
+        margin = list(l = 10, r = 10, b = 0, t = 25),
         grouped = FALSE
       )
     }
@@ -131,7 +131,6 @@ expression_plot_topfoldchange_server <- function(id,
       plotlib = "plotly",
       func = plotly.RENDER,
       remove_margins = FALSE,
-      # func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

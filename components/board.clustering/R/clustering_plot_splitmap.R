@@ -14,36 +14,18 @@
 #'
 #' @export
 clustering_plot_splitmap_ui <- function(
-  id,
-  label = "",
-  title,
-  caption,
-  info.text,
-  height,
-  width) {
+    id,
+    label = "",
+    title,
+    caption,
+    info.text,
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   topmodes <- c("sd", "pca", "marker")
 
   splitmap_opts <- shiny::tagList(
-    ## withTooltip(
-    ##   shiny::radioButtons(
-    ##     ns("hm_splitby"), "Split samples by:",
-    ##     inline = TRUE,
-    ##     ## selected="phenotype",
-    ##     choices = c("none", "phenotype", "gene")
-    ##   ),
-    ##   "Split the samples by phenotype or expression level of a gene.",
-    ##   placement = "right", options = list(container = "body")
-    ## ),
-    ## shiny::conditionalPanel(
-    ##   "input.hm_splitby != 'none'",
-    ##   ns = ns,
-    ##   withTooltip(shiny::selectInput(ns("hm_splitvar"), NULL, choices = ""),
-    ##     "Specify phenotype or gene for splitting the columns of the heatmap.",
-    ##     placement = "right", options = list(container = "body")
-    ##   ),
-    ## ),
     shiny::fillRow(
       height = 50,
       withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
@@ -65,7 +47,6 @@ clustering_plot_splitmap_ui <- function(
         ns("hm_scale"), "Scale:",
         choices = c("relative", "absolute", "BMC"), inline = TRUE
       ),
-      ## ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
       "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
       placement = "right", options = list(container = "body")
     ),
@@ -78,7 +59,6 @@ clustering_plot_splitmap_ui <- function(
     ),
     shiny::fillRow(
       height = 50,
-      ## shiny::checkboxInput(ns("hm_labRow"),NULL),
       withTooltip(shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width = "100%"),
         "Specify the row label size. Set to 0 to suppress row labels.",
         placement = "right", options = list(container = "body")
@@ -133,9 +113,6 @@ clustering_plot_splitmap_server <- function(id,
 
       filt <- getTopMatrix()
       shiny::req(filt)
-      ## if(is.null(filt)) return(NULL)
-
-      ## if(input$hm_group) {
       zx <- filt$mat
       annot <- filt$annot
       zx.idx <- filt$idx
@@ -149,7 +126,6 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     base_splitmap.RENDER <- function() {
-
       ## extract from plot data
       pd <- plot_data()
       zx <- pd[["zx"]]
@@ -186,9 +162,7 @@ clustering_plot_splitmap_server <- function(id,
       show_legend <- input$hm_legend
       if (hm_level() == "geneset" || !is.null(splitx)) show_legend <- FALSE
 
-      ##annot$group <- NULL ## no group in annotation??
       show_colnames <- (input$hm_cexCol != 0)
-      ## if(ncol(zx) > 200) show_colnames <- FALSE ## never...
 
       if (hm_level() == "gene") {
         ## strip any prefix
@@ -203,7 +177,7 @@ clustering_plot_splitmap_server <- function(id,
       cex1 <- as.numeric(input$hm_cexCol) * 0.85
       cex2 <- as.numeric(input$hm_cexRow) * 0.75
       cex0 <- ifelse(!is.null(splitx) && length(splitx) <= 10, 1.05, 0.85) ## title
-      
+
       crot <- 0
       totnchar <- nchar(paste0(unique(splitx), collapse = ""))
       totnchar
@@ -215,7 +189,6 @@ clustering_plot_splitmap_server <- function(id,
       if (input$hm_cexRow == 0) nrownames <- 0
 
       shiny::showNotification("Rendering heatmap...")
-      # plt <- grid::grid.grabExpr(
       playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
@@ -224,7 +197,6 @@ clustering_plot_splitmap_server <- function(id,
         column_names_rot = 45,
         show_rownames = nrownames, rownames_width = 40,
         softmax = 0,
-        ## side.height.fraction=0.03+0.055*NCOL(annot),
         title_cex = cex0, cexCol = cex1, cexRow = cex2,
         col.annot = annot, row.annot = NULL, annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
@@ -232,8 +204,7 @@ clustering_plot_splitmap_server <- function(id,
       )
       p <- grDevices::recordPlot()
       p
-      # )
-      # browser()
+
       # plt
     }
 
@@ -264,14 +235,14 @@ clustering_plot_splitmap_server <- function(id,
 
       rownames(annotF) <- rownames(annot)
       if (length(selected_phenotypes()) == 0) {
-        annotF = NULL
+        annotF <- NULL
       } else {
-        annotF <- annotF[,selected_phenotypes(), drop=FALSE]
+        annotF <- annotF[, selected_phenotypes(), drop = FALSE]
       }
-      
+
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
-      
+
       tooltips <- NULL
       if (hm_level() == "gene") {
         getInfo <- function(g) {
@@ -286,7 +257,6 @@ clustering_plot_splitmap_server <- function(id,
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- playbase::breakstring2(aa, 50, brk = "<br>")
       }
-      ## genetips = rownames(X)
       shiny::showNotification("Rendering iHeatmap...")
 
       plt <- playbase::pgx.splitHeatmapFromMatrix(
@@ -295,13 +265,13 @@ clustering_plot_splitmap_server <- function(id,
         row_annot_width = 0.025, rowcex = rowcex,
         colcex = colcex, show_legend = input$hm_legend
       )
-      
+
       obj2 <- plt %>% iheatmapr::to_plotly_list()
       plt <- plotly::as_widget(obj2) %>%
         plotly::layout(
-          margin = list(l=0,r=0,t=0,b=0)
+          margin = list(l = 0, r = 0, t = 0, b = 0)
         )
-      
+
       return(plt)
     }
 
@@ -325,8 +295,6 @@ clustering_plot_splitmap_server <- function(id,
 
     return(list(
       hm_ntop = shiny::reactive(input$hm_ntop),
-#      hm_splitvar = shiny::reactive(input$hm_splitvar),
-#      hm_splitby = shiny::reactive(input$hm_splitby),
       hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk)

@@ -12,40 +12,35 @@ UserProfileUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   div(
-      class = "row",
-      boardHeader(title = "Profile", info_link = ns("board_info")),
-      div(
-          class = "col-md-7",
-          shiny::tabsetPanel(
-              id = ns("tabs1"),
-              shiny::tabPanel(
-                  "Subscription",
-                  bslib::layout_column_wrap(
-                      height = "calc(100vh - 183px)",
-                      width = 1,
-                      tagList(
-                          shiny::h4("Personal"),
-                          uiOutput(ns("plan")),
-                          shiny::tableOutput(ns("userdata"))
-                      )
-                  )
-              )
+    class = "row",
+    boardHeader(title = "User Profile", info_link = ns("board_info")),
+    shiny::tabsetPanel(
+      id = ns("tabs1"),
+      shiny::tabPanel(
+        "User profile",
+        bslib::layout_column_wrap(
+          height = "calc(100vh - 183px)",
+          width = 1,
+          style = htmltools::css(grid_template_columns = "4fr 8fr"),
+          wellPanel(
+            shiny::h4("Subscription"),
+            uiOutput(ns("plan")),
+            shiny::tableOutput(ns("userdata"))
+          ),
+          bslib::layout_column_wrap(
+            width = 1,
+            ## shiny::plotOutput(ns("usage")),
+            PlotModuleUI(
+              ns("usage"),
+              plotlib = "plotly",
+              download.fmt = c("png", "pdf", "csv"),
+              title = "Platform usage",
+              height = c("100%", TABLE_HEIGHT_MODAL)
+            ),
+            br()
           )
-      ),
-      div(
-          class = "col-md-5",
-          shiny::tabsetPanel(
-              id = ns("tabs2"),
-              shiny::tabPanel(
-                  "News",
-                  bslib::layout_column_wrap(
-                      height = "calc(100vh - 183px)",
-                      width = 1,
-                      shiny::htmlOutput(ns("news"))
-                  )
-              )
-          )
+        )
       )
+    )
   )
-
 }

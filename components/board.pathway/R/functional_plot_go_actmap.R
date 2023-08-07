@@ -13,14 +13,13 @@
 #'
 #' @export
 functional_plot_go_actmap_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width
-  ) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -59,10 +58,8 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
-                                 tl.cex=0.85)
-        {
+                               tl.cex = 0.85) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
         ## avoid errors!!!
@@ -119,11 +116,11 @@ functional_plot_go_actmap_server <- function(id,
 
       plot_data <- shiny::reactive({
         shiny::req(pgx$meta.go)
-        pathscore = pgx$meta.go$pathscore
-        graph = pgx$meta.go$graph
+        pathscore <- pgx$meta.go$pathscore
+        graph <- pgx$meta.go$graph
         res <- list(
-            pathscore = pathscore,
-            graph = graph
+          pathscore = pathscore,
+          graph = graph
         )
       })
 

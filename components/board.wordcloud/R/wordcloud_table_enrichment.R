@@ -4,12 +4,12 @@
 ##
 
 wordcloud_table_enrichment_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,9 +38,9 @@ wordcloud_table_enrichment_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
-        fillContainer = TRUE,        
+        fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
@@ -53,7 +53,7 @@ wordcloud_table_enrichment_server <- function(id,
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("NES",
-          background = playbase::color_from_middle(df[, "NES"], "lightblue", "#f5aeae"),
+          background = color_from_middle(df[, "NES"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

@@ -13,16 +13,15 @@
 #'
 #' @export
 drugconnectivity_plot_enplots_ui <- function(
-  id,
-  label = "",
-  title,
-  info.text,
-  caption,
-  height,
-  width
-                                             ) {
+    id,
+    label = "",
+    title,
+    info.text,
+    caption,
+    height,
+    width) {
   ns <- shiny::NS(id)
-  
+
   plot_opts <- shiny::tagList()
 
   PlotModuleUI(ns("plot"),
@@ -55,11 +54,10 @@ drugconnectivity_plot_enplots_server <- function(id,
                                                  watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
-        shiny::req(pgx, dsea_contrast, dsea_method)
+        shiny::req(pgx$X, dsea_contrast, dsea_method)
         dsea <- getActiveDSEA()
 
         dt <- dsea_table$data()
@@ -92,7 +90,7 @@ drugconnectivity_plot_enplots_server <- function(id,
         return(res)
       })
 
-      ##plot.RENDER <- shiny::reactive({
+      ## plot.RENDER <- shiny::reactive({
       plot.RENDER <- function() {
         res <- plot_data()
         pgx <- res$pgx
@@ -162,7 +160,7 @@ drugconnectivity_plot_enplots_server <- function(id,
         }
 
         ## This is needed for base plots as reactive to return something
-        ##grDevices::recordPlot()
+        #
       }
 
       PlotModuleServer(

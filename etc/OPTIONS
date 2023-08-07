@@ -1,0 +1,34 @@
+TITLE                = 'Omics Playground'
+AUTHENTICATION       = none
+#AUTHENTICATION      = password
+#AUTHENTICATION      = email-link
+#AUTHENTICATION      = firebase
+#AUTHENTICATION      = login-code
+ALLOW_NEW_USERS      = TRUE
+ALLOW_PERSONAL_EMAIL = FALSE
+USE_CREDENTIALS      = FALSE
+#DOMAIN              = bigomics.ch|demo.com
+ENABLE_CHIRP         = TRUE
+ENABLE_DELETE        = TRUE
+ENABLE_PGX_DOWNLOAD  = TRUE
+ENABLE_PUBLIC_SHARE  = TRUE
+ENABLE_UPLOAD        = TRUE
+ENABLE_USERDIR       = TRUE
+ENABLE_USER_SHARE    = TRUE
+ENABLE_USER_LOCK     = FALSE
+ENABLE_HEARTBEAT     = TRUE
+#HONCHO_URL          = http://localhost:8000
+MAX_DATASETS         = 25
+MAX_SAMPLES          = 1000
+MAX_COMPARISONS      = 20
+MAX_GENES            = 20000
+MAX_GENESETS         = 5000
+MAX_SHARED_QUEUE     = 3
+STARTUP_TITLE        = "Welcome to Version 3!"
+STARTUP_MESSAGE      = "This is our new version of <a href="https://bigomics.ch/omics-playground" target="_blank">Omics Playground</a>. We have completely redesigned the looks and added some new nifty features. We hope you like it! <br><br></small>&copy; 2023 <a href="https://bigomics.ch" target="_blank">BigOmics Analytics</a></small>"
+#TIMEOUT              = 3600
+TIMEOUT              = 0
+WATERMARK            = TRUE
+
+#BOARDS_ENABLED = welcome;load;upload;view;clustersamples;clusterfeatures;wgcna;diffexpr;corr;enrich;pathway;wordcloud;drug;isect;sig;bio;cmap;comp;tcga;cell
+#BOARDS_ENABLED = load;dataview

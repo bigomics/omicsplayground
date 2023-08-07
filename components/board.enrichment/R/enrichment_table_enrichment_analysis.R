@@ -4,12 +4,12 @@
 ##
 
 enrichment_table_enrichment_analysis_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   gseatable_opts <- shiny::tagList(
@@ -43,7 +43,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
     gseatable.RENDER <- function() {
       rpt <- table_data()
-      
+
       if (is.null(rpt)) {
         return(NULL)
       }
@@ -82,13 +82,13 @@ enrichment_table_enrichment_analysis_server <- function(id,
         rownames = FALSE,
         escape = c(-1, -5),
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         fillContainer = TRUE,
         selection = list(mode = selectmode, target = "row", selected = 1),
         options = list(
           dom = "frtip",
           paging = TRUE,
-          pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          pageLength = 15, #
           scrollX = TRUE,
           scrollY = "calc(45vh - 260px)",
           scrollResize = TRUE,
@@ -103,7 +103,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         DT::formatSignif(numcols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(fx.col,
-          background = playbase::color_from_middle(fx, "lightblue", "#f5aeae")
+          background = color_from_middle(fx, "lightblue", "#f5aeae")
         )
     }
 

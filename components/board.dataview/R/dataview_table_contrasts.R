@@ -5,12 +5,12 @@
 
 
 dataview_table_contrasts_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -45,7 +45,6 @@ dataview_table_contrasts_server <- function(id,
     ns <- session$ns
 
     contrasts_data <- shiny::reactive({
-
       shiny::req(pgx$Y, pgx$model.parameters)
       shiny::req(r.samples(), !is.null(input$ctbygroup))
 
@@ -78,7 +77,7 @@ dataview_table_contrasts_server <- function(id,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(
           mode = "single",
           target = "row",
@@ -102,7 +101,7 @@ dataview_table_contrasts_server <- function(id,
         ) %>%
         DT::formatStyle(
           columns = colnames(dt),
-          background = playbase::color_from_middle(c(-1, 1), omics_colors("orange"), omics_colors("brand_blue")),
+          background = color_from_middle(c(-1, 1), omics_colors("orange"), omics_colors("brand_blue")),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"

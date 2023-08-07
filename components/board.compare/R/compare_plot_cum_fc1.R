@@ -46,7 +46,7 @@ compare_plot_cum_fc1_server <- function(id,
     ns <- session$ns
 
     cumfcplot.RENDER <- shiny::reactive({
-      shiny::req(pgx)
+      shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(cum_fc)
       F <- cum_fc()
@@ -70,7 +70,6 @@ compare_plot_cum_fc1_server <- function(id,
         yaxistitle = "Cumulative foldchange",
         xaxistitle = "Genes",
         title = "Dataset 1",
-#        type = "bar",
         grouped = FALSE
       )
 

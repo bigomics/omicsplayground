@@ -14,13 +14,13 @@
 #'
 #' @export
 expression_plot_maplot_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  label = "",
-  height,
-  width) {
+    id,
+    title,
+    info.text,
+    caption,
+    label = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
   options <- tagList(
     actionButton(ns("button1"), "some action")
@@ -78,10 +78,10 @@ expression_plot_maplot_server <- function(id,
       if (length(comp1) == 0) {
         return(NULL)
       }
-      shiny::req(pgx)
+      shiny::req(pgx$X)
 
-      dbg("[expression_plot_maplot.R] sel1 = ",sel1())
-      ##shiny::validate(shiny::need(!is.null(sel1()), "Please select gene in the table."))
+      dbg("[expression_plot_maplot.R] sel1 = ", sel1())
+      #
 
       fdr <- as.numeric(gx_fdr())
       lfc <- as.numeric(gx_lfc())
@@ -134,7 +134,7 @@ expression_plot_maplot_server <- function(id,
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
-        ## gset <- GSETS[[gs]]
+        #
         gset <- unlist(playdata::getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(
@@ -201,7 +201,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      )  ## %>% plotly::layout(margin = list(b = 65))
+      ) ## %>% plotly::layout(margin = list(b = 65))
       plt
     }
 

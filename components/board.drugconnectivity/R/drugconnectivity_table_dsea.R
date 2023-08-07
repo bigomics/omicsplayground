@@ -5,12 +5,12 @@
 
 
 drugconnectivity_table_dsea_ui <- function(
-  id,
-  title,
-  info.text,
-  caption,
-  width,
-  height) {
+    id,
+    title,
+    info.text,
+    caption,
+    width,
+    height) {
   ns <- shiny::NS(id)
 
   info_text <- strwrap("<b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.")
@@ -32,7 +32,6 @@ drugconnectivity_table_dsea_server <- function(id,
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      
       dsea <- getActiveDSEA()
       shiny::req(dsea)
 
@@ -51,7 +50,7 @@ drugconnectivity_table_dsea_server <- function(id,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
-        plugins = 'scrollResize',
+        plugins = "scrollResize",
         selection = list(
           mode = "single",
           target = "row",
@@ -62,7 +61,7 @@ drugconnectivity_table_dsea_server <- function(id,
           dom = "lfrtip",
           scroller = TRUE,
           scrollX = TRUE,
-          scrollY = 160,  ## card is 300
+          scrollY = 160, ## card is 300
           scrollResize = TRUE,
           deferRender = TRUE
         )
@@ -72,7 +71,7 @@ drugconnectivity_table_dsea_server <- function(id,
           lineHeight = "70%"
         ) %>%
         DT::formatStyle("NES",
-          background = playbase::color_from_middle(
+          background = color_from_middle(
             res[, "NES"],
             "lightblue",
             "#f5aeae"
