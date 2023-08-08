@@ -11,7 +11,7 @@ boards <- sapply(strsplit(boards, split = "\\."), function(x) x[2])
 boards <- boards[!is.na(boards)]
 
 # remove upload, loading and user from boards
-boards <- boards[!boards %in% c("upload", "loading", "user", "single")]
+boards <- boards[!boards %in% c("upload", "loading", "user")]
 
 # remove problematic boards\w
 boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
@@ -21,7 +21,7 @@ AppDriverLog <- lapply(boards, function(board){
   # get error from AppDriver and save it as error_log
   message(board)
   #board = "dataview"
-  #board = boards[4]
+  #board = boards[7]
   try(AppDriver$stop(), silent = TRUE)
   AppDriver = NULL
   AppDriver <- tryCatch(
@@ -97,4 +97,7 @@ AppDriverLog <- lapply(boards, function(board){
 
 # check if any board has error, via error log
 
-boards[sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))]
+boards_with_error <- boards[sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))]
+
+# pass if length of boards_with_error is 0
+testthat::expect_equal(length(boards_with_error), 0)
