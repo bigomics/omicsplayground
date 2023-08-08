@@ -14,7 +14,7 @@ boards <- boards[!is.na(boards)]
 boards <- boards[!boards %in% c("upload", "loading", "user", "single")]
 
 # remove problematic boards\w
-boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "singature","wgcna")]
+boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
 
 
 AppDriverLog <- lapply(boards, function(board){
@@ -28,7 +28,7 @@ AppDriverLog <- lapply(boards, function(board){
     {
       
       shinytest2::AppDriver$new(
-        normalizePath("components/board.single"),
+        normalizePath("components/dev"),
         timeout = 10000,
         options = list(
           board = board,
@@ -95,6 +95,6 @@ AppDriverLog <- lapply(boards, function(board){
 
 })
 
-# check if any plots have error, via error log
+# check if any board has error, via error log
 
 boards[sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))]
