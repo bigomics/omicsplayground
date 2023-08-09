@@ -9,7 +9,6 @@ wordcloud_plot_enrichment_ui <- function(
     info.text,
     caption,
     height) {
-      
   ns <- shiny::NS(id)
 
   PlotModuleUI(
