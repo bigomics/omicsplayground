@@ -105,17 +105,12 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
-
-
-BOARD = dataview
 board:
 	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
 board2:
 	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
 
-# boards available: "biomarker" "clustering" "compare" "correlation" "dataview" "drugconnectivity" "expression" "singlecell" "tcga" "wordcloud"
-
-BOARD = dataview
+# boards available in board3: "biomarker" "clustering" "compare" "correlation" "dataview" "drugconnectivity" "expression" "singlecell" "tcga" "wordcloud"
 
 board3:
 	R -e "options(board = '$(BOARD)'); shiny::runApp('components/dev')"
