@@ -12,6 +12,8 @@ app_ui <- function(request) {
 
     root_opg <- get_opg_root()
 
+    pgx_file <- normalizePath("../../data/example-data.pgx")
+
     print(root_opg)
     
     source(file.path(root_opg,'components/golem_utils/app_config.R'))
@@ -89,7 +91,7 @@ app_ui <- function(request) {
             )
             
         ),
-        textInput("pgx_path", NULL),
+        textInput("pgx_path", NULL, placeholder = pgx_file, width = "100%"),
         settings = bigdash::settings(
             "Settings"
         ),
