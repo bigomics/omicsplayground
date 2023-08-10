@@ -1,9 +1,22 @@
 
 library(optparse)
 
+# Define the options
+option_list <- list(
+  make_option(c("-d", "--data"), type="character", help="Path to pgx data files"),
+)
 
+# Parse the command line arguments
+opt_parser <- OptionParser(option_list=option_list)
+opt <- parse_args(opt_parser)
+
+if (is.null(opt$data)) {
+  stop("Please provide a path to data files using the -d or --data option.")
+}
 
 # test single board minimal components
+
+# opt$data = "data/"
 
 # get all board names
 boards <- list.dirs(path = "components", full.names = FALSE, recursive = FALSE)
@@ -16,10 +29,6 @@ boards <- boards[!boards %in% c("upload", "loading", "user")]
 
 # remove problematic boards
 boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
-
-# get pgx files
-
-
 
 AppDriverLog <- lapply(boards, function(board){
   # get error from AppDriver and save it as error_log
