@@ -3,10 +3,8 @@ library(optparse)
 
 # Define the options
 option_list <- list(
-  make_option(c("-d", "--data"), type="character", help="Path to pgx data files"),
+  make_option(c("-d", "--data"), type="character", help="Path to pgx data files")
 )
-
-fake_args <- c("--data", "path/to/data/files")
 
 # Parse the command line arguments
 opt_parser <- OptionParser(option_list=option_list)
@@ -16,11 +14,15 @@ if (is.null(opt$data)) {
   stop("Please provide a path to data files using the -d or --data option.")
 }
 
-
+#opt <- list()
+#opt$data <- "../playbase/dev/pgx"
 pgx_files <- list.files(path = opt$data,  full.names = TRUE, recursive = TRUE)
 
 # get all files that end in pgx
-pgx_files <- unique(pgx_files[grepl("pgx$", pgx_files)])[1:2]
+pgx_files <- unique(pgx_files[grepl("pgx$", pgx_files)])
+
+# get pgx file name
+pgx_file_name <- basename(pgx_files)
 
 # test single board minimal components
 
@@ -36,87 +38,106 @@ boards <- boards[!boards %in% c("upload", "loading", "user")]
 # remove problematic boards
 boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
 
-AppDriverLog <- lapply(boards, function(board){
-  # get error from AppDriver and save it as error_log
-  message(board)
-  #board = "dataview"
-  #board = boards[7]
-  try(AppDriver$stop(), silent = TRUE)
-  AppDriver = NULL
-  AppDriver <- tryCatch(
-    {
-      shinytest2::AppDriver$new(
-        normalizePath("components/dev"),
-        timeout = 10000,
-        options = list(
-          board = board,
-          shiny.error = function(e) {
-              return("Error in shiny.error")
 
+# df with name as pgx_name and each column will result of be a board
+
+results <- list()
+
+# test single board minimal components
+for (pgx_file in pgx_files) {
+  #pgx_file <- pgx_files[1]
+  message(pgx_file)
+
+  AppDriverLog <- lapply(boards, function(board){
+    # get error from AppDriver and save it as error_log
+    message(board)
+    #board = "dataview"
+    #board = boards[7]
+    try(AppDriver$stop(), silent = TRUE)
+    AppDriver = NULL
+    AppDriver <- tryCatch(
+      {
+        shinytest2::AppDriver$new(
+          normalizePath("components/dev"),
+          timeout = 10000,
+          options = list(
+            board = board,
+            shiny.error = function(e) {
+                return("Error in shiny.error")
+
+              }
+          ),
+          shiny_args = list(
+            port = 8080
+            )
+        )},
+        error = function(e) {
+              # append error log to error_logs list 
+              return(e)
             }
-        ),
-        shiny_args = list(port = 8080)
-      )},
-      error = function(e) {
-            # append error log to error_logs list 
-            return(e)
-          }
-    )
+      )
 
-  if(class(AppDriver)[[1]] == "rlang_error"){
-    AppDriver$message
-    return(AppDriver$message)
-  }
-
-  loadPGX <- tryCatch({
-    AppDriver  # Display the AppDriver object
-    # basic info for the app
-    AppDriver$get_url()
-    AppDriver$get_logs()
-
-    # get pgx file path
-    pgx_file <- normalizePath("data/example-data.pgx")
-
-    pgx_file
-
-    # get input/output values
-    AppDriver$get_value(input = "pgx_path")
-    AppDriver$get_values()
-
-    # update pgx_path to an actual path
-    AppDriver$set_inputs("pgx_path" = pgx_file)
-
-    # check that the path is updated
-    AppDriver$get_value(input = "pgx_path")
-    # get error log
-
-    # use the get_logs to check if we have any error
-    df <- data.frame(AppDriver$get_logs())
-    AppDriver$stop()
-    return(df)
-  },
-  error = function(e) {
-    error = NULL
-    try(error <- data.frame(AppDriver$get_logs()), silent = TRUE)
-    
-    if(is.null(error)){
-      error <- conditionMessage(e)
+    if(class(AppDriver)[[1]] == "rlang_error"){
+      AppDriver$message
+      return(AppDriver$message)
     }
-    # return message from error
-    return(error)
-  })
-  AppDriver$get_screenshot()
-  AppDriver$stop()
 
-  return(loadPGX)
+    loadPGX <- tryCatch({
+      AppDriver  # Display the AppDriver object
+      # basic info for the app
+      AppDriver$get_url()
+      AppDriver$get_logs()
+
+      # get pgx file path
+      pgx_file <- normalizePath(pgx_file)
+
+      pgx_file
+
+      # get input/output values
+      AppDriver$get_value(input = "pgx_path")
+      AppDriver$get_values()
+
+      # update pgx_path to an actual path
+      AppDriver$set_inputs("pgx_path" = pgx_file)
+
+      # check that the path is updated
+      AppDriver$get_value(input = "pgx_path")
+      # get error log
+
+      # use the get_logs to check if we have any error
+      df <- data.frame(AppDriver$get_logs())
+      AppDriver$stop()
+      return(df)
+    },
+    error = function(e) {
+      error = NULL
+      try(error <- data.frame(AppDriver$get_logs()), silent = TRUE)
+      
+      if(is.null(error)){
+        error <- conditionMessage(e)
+      }
+      # return message from error
+      return(error)
+    })
+    AppDriver$get_screenshot()
+    AppDriver$stop()
+
+    return(loadPGX)
 
 })
 
 # check if any board has error, via error log
 
-boards_with_error <- boards[sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))]
+boards_with_error <- sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))
 
-# pass if length of boards_with_error is 0
-testthat::expect_equal(length(boards_with_error), 0)
+results[[pgx_file]] <- boards_with_error
+}
 
 
+pgx_check_results <- data.frame(do.call(rbind, results))
+
+colnames(pgx_check_results) <- boards
+
+
+# save results to opt$data folder
+write.csv(pgx_check_results, file = paste0(opt$data, "pgx_check_results.csv"))
