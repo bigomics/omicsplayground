@@ -7,13 +7,18 @@
 app_ui <- function(request) {
 
     board = options()$board
+    use_example_data = options()$use_example_data
     
     source('../app/R/global.R')
 
     root_opg <- get_opg_root()
 
-    pgx_file <- normalizePath("../../data/example-data.pgx")
+    pgx_file <- ""
 
+    if(!is.null(use_example_data) && use_example_data == TRUE){
+        pgx_file <- normalizePath("../../data/example-data.pgx")
+    }
+    
     print(root_opg)
     
     source(file.path(root_opg,'components/golem_utils/app_config.R'))
@@ -91,7 +96,7 @@ app_ui <- function(request) {
             )
             
         ),
-        textInput("pgx_path", NULL, placeholder = pgx_file, width = "100%"),
+        textInput("pgx_path", label = NULL, value = pgx_file, placeholder = "Absolute path to pgx object", width = "100%"),
         settings = bigdash::settings(
             "Settings"
         ),
