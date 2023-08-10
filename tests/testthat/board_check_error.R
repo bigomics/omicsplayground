@@ -1,9 +1,5 @@
 # test single board minimal components
 
-### board specific files ###
-
-error_logs <- list()
-
 # get all board names
 boards <- list.dirs(path = "components", full.names = FALSE, recursive = FALSE)
 # split "." and get second name
@@ -13,7 +9,7 @@ boards <- boards[!is.na(boards)]
 # remove upload, loading and user from boards
 boards <- boards[!boards %in% c("upload", "loading", "user")]
 
-# remove problematic boards\w
+# remove problematic boards
 boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
 
 
@@ -26,7 +22,6 @@ AppDriverLog <- lapply(boards, function(board){
   AppDriver = NULL
   AppDriver <- tryCatch(
     {
-      
       shinytest2::AppDriver$new(
         normalizePath("components/dev"),
         timeout = 10000,
@@ -65,7 +60,6 @@ AppDriverLog <- lapply(boards, function(board){
     AppDriver$get_value(input = "pgx_path")
     AppDriver$get_values()
 
-
     # update pgx_path to an actual path
     AppDriver$set_inputs("pgx_path" = pgx_file)
 
@@ -101,3 +95,5 @@ boards_with_error <- boards[sapply(AppDriverLog, function(x) any(grepl("Error in
 
 # pass if length of boards_with_error is 0
 testthat::expect_equal(length(boards_with_error), 0)
+
+
