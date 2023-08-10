@@ -27,6 +27,7 @@ AppDriverLog <- lapply(boards, function(board){
         timeout = 10000,
         options = list(
           board = board,
+          use_example_data = FALSE,
           shiny.error = function(e) {
               return("Error in shiny.error")
 
