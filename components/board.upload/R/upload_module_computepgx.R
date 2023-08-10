@@ -60,6 +60,9 @@ upload_module_computepgx_server <- function(
       )
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
+      ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
+      ONESAMPLE.GENESET_METHODS <- sort(c("spearman", "gsva", "fgsea", "ssgsea", "fisher"))
+
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
@@ -222,7 +225,10 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
-      shiny::outputOptions(output, "UI", suspendWhenHidden = FALSE) ## important!!!
+      shiny::outputOptions(output,
+        "UI",
+        suspendWhenHidden = FALSE
+      ) ## important!!!
 
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
@@ -236,10 +242,42 @@ upload_module_computepgx_server <- function(
         meta <- metaRT()
 
         if (!is.null(meta[["name"]])) {
-          shiny::updateTextInput(session, "upload_name", value = meta[["name"]])
+          shiny::updateTextInput(session,
+            "upload_name",
+            value = meta[["name"]]
+          )
         }
         if (!is.null(meta[["description"]])) {
-          shiny::updateTextAreaInput(session, "upload_description", value = meta[["description"]])
+          shiny::updateTextAreaInput(session,
+            "upload_description",
+            value = meta[["description"]]
+          )
+        }
+      })
+
+      shiny::observeEvent(contrastsRT(), {
+        contrasts <- as.data.frame(contrastsRT())
+        has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
+
+        if (any(has_one)) {
+          shinyalert::shinyalert(
+            title = "WARNING",
+            text = "There are cases where there is only one samples in a group.
+                    Some of the gene tests and enrichment
+                    methods are disabled.",
+            type = "warning"
+          )
+          shiny::updateCheckboxGroupInput(
+            session,
+            "gene_methods",
+            choices = ONESAMPLE.GENE_METHODS,
+            sel = "ttest"
+          )
+          shiny::updateCheckboxGroupInput(session,
+            "gset_methods",
+            choices = ONESAMPLE.GENESET_METHODS,
+            sel = c("fisher", "fgsea", "gsva")
+          )
         }
       })
 
@@ -281,7 +319,7 @@ upload_module_computepgx_server <- function(
           custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
 
           # tell user that custom genesets are "ok"
-          # we could perform an addicional check to verify that items in lists are genes
+          # we could perform an additional check to verify that items in lists are genes
           if (gmt.length > 0 && gmt.is.list) {
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
@@ -344,6 +382,7 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
+
         ## !!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
         ## batch  <- batchRT()
 
@@ -463,7 +502,9 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.",
+          text = "Your dataset will be computed in the background.
+          You can continue to play with a different dataset in the meantime.
+          When it is ready, it will appear in your dataset library.",
           type = "info",
           timer = 60000
         )
@@ -538,6 +579,16 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(raw_dir = raw_dir, nr = nr)
+              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
+
+              if (!auth$email == "") {
+                gmail_creds <- file.path(ETC, "gmail_creds")
+                sendSuccessMessageToUser(
+                  user_email = auth$email,
+                  pgx_name = ds_name_bold,
+                  path_to_creds = gmail_creds
+                )
+              }
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)

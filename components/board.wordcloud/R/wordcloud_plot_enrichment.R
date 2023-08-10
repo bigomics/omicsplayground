@@ -11,20 +11,12 @@ wordcloud_plot_enrichment_ui <- function(
     height) {
   ns <- shiny::NS(id)
 
-  gseaplots_opts <- shiny::tagList(
-    withTooltip(shiny::textInput(ns("gseaplots_keywords"), "Keyword:", "cell cycle"),
-      "Paste a keyword such as 'apoptosis', 'replication' or 'cell cycle'.",
-      placement = "top", options = list(container = "body")
-    )
-  )
-
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = "a",
     info.text = info.text,
     caption = caption,
-    options = gseaplots_opts,
     height = height,
     download.fmt = c("png", "pdf")
   )
@@ -43,10 +35,6 @@ wordcloud_plot_enrichment_server <- function(id,
       shiny::req(res, topFreq)
 
       S <- res$S ## geneset expressions
-      keyword <- "ribosomal"
-      keyword <- "lipid"
-      keyword <- "apoptosis"
-      keyword <- "cell.cycle"
 
       sel.row <- wordcloud_enrichmentTable$rows_selected()
       shiny::req(sel.row)
