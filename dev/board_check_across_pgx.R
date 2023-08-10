@@ -6,6 +6,8 @@ option_list <- list(
   make_option(c("-d", "--data"), type="character", help="Path to pgx data files"),
 )
 
+fake_args <- c("--data", "path/to/data/files")
+
 # Parse the command line arguments
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
@@ -14,9 +16,13 @@ if (is.null(opt$data)) {
   stop("Please provide a path to data files using the -d or --data option.")
 }
 
-# test single board minimal components
 
-# opt$data = "data/"
+pgx_files <- list.files(path = opt$data,  full.names = TRUE, recursive = TRUE)
+
+# get all files that end in pgx
+pgx_files <- unique(pgx_files[grepl("pgx$", pgx_files)])[1:2]
+
+# test single board minimal components
 
 # get all board names
 boards <- list.dirs(path = "components", full.names = FALSE, recursive = FALSE)
