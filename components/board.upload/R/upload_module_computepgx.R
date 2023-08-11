@@ -253,7 +253,7 @@ upload_module_computepgx_server <- function(
         
       shiny::observeEvent(contrastsRT(), {
         contrasts <- as.data.frame(contrastsRT())
-        has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
+        has_one <- apply(contrasts, 2, function(x) all(table(x) == 1))
 
         if (any(has_one)) {
           shinyalert::shinyalert(
