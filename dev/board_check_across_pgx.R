@@ -21,6 +21,9 @@ pgx_files <- list.files(path = opt$data,  full.names = TRUE, recursive = TRUE)
 # get all files that end in pgx
 pgx_files <- unique(pgx_files[grepl("pgx$", pgx_files)])
 
+# add absolute path
+pgx_files <- normalizePath(pgx_files)
+
 # get pgx file name
 pgx_file_name <- basename(pgx_files)
 
@@ -87,11 +90,6 @@ for (pgx_file in pgx_files) {
       # basic info for the app
       AppDriver$get_url()
       AppDriver$get_logs()
-
-      # get pgx file path
-      pgx_file <- normalizePath(pgx_file)
-
-      pgx_file
 
       # get input/output values
       AppDriver$get_value(input = "pgx_path")
