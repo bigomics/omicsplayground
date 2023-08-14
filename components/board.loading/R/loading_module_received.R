@@ -20,25 +20,32 @@ upload_module_received_server <- function(id,
       refresh_table <- reactiveVal(0)
 
       ## ------------ get received files
-      getReceivedFiles <- shiny::reactive({
-        req(auth$logged)
-        if (!auth$logged) {
-          return(c())
+      getReceivedFiles <- shiny::reactivePoll(
+        intervalMillis = 10000,
+        session = session,
+        checkFunc = function() {
+          req(auth$logged)
+          if (!auth$logged || auth$email == "") {
+            return(FALSE)
+          }
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+          )
+        },
+        valueFunc = function() {
+          refresh_table()
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+          )
+          return(pgxfiles)
         }
-        if (auth$email == "") {
-          return(c())
-        }
-        ## allow trigger for when a shared pgx is accepted / decline
-        refresh_table()
-
-        current_user <- auth$email
-        pgxfiles <- dir(
-          path = pgx_shared_dir,
-          pattern = paste0("__to__", current_user, "__from__.*__$"),
-          ignore.case = TRUE
-        )
-        return(pgxfiles)
-      })
+      )
 
       receivedPGXtable <- shiny::eventReactive(
         c(current_page(), getReceivedFiles()),
@@ -182,5 +189,12 @@ upload_module_received_server <- function(id,
 
       return(rlist)
     }
+
+    # automatically detect and warn user of changes in received pgx folder
+    shiny::react
+
+
+
+
   ) ## end of moduleServer
 }
