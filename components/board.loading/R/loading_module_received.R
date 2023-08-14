@@ -17,17 +17,15 @@ upload_module_received_server <- function(id,
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
 
-      refresh_table <- reactiveVal(0)
       nr_ds_received <- reactiveVal(0)
 
       ## ------------ get received files
       getReceivedFiles <- shiny::reactivePoll(
         intervalMillis = 10000,
-        session = session,
+        session = NULL,
         checkFunc = function() {
-          req(auth$logged)
           if (!auth$logged || auth$email == "") {
-            return(FALSE)
+            return(nr_ds_received())
           }
           current_user <- auth$email
           pgxfiles <- dir(
@@ -36,21 +34,35 @@ upload_module_received_server <- function(id,
             ignore.case = TRUE
           )
           current_ds_received <- length(pgxfiles)
-          if (current_ds_received > nr_ds_received()) {
+          if (length(pgxfiles) > nr_ds_received()) {
             nr_ds_received(current_ds_received)
-            nr_ds_received()
-          } else {
-            return(FALSE)
+            # modal that tells that user received a new dataset
+            shinyalert::shinyalert(
+              "New dataset received!",
+              paste(
+                "You have received a dataset from another user. Please accept or decline it in the Loading tab."
+              ),
+              confirmButtonText = "OK",
+              showCancelButton = FALSE
+            )
           }
+          return(nr_ds_received(current_ds_received))
         },
         valueFunc = function() {
-          refresh_table()
+          req(auth$logged)
+          if (!auth$logged || auth$email == "") {
+            return(FALSE)
+          }          
+          # write dbg message
+          dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
           current_user <- auth$email
           pgxfiles <- dir(
             path = pgx_shared_dir,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
-          )
+         )
+
+         # if length pgx files is less than received files, then do nothing
           return(pgxfiles)
         }
       )
@@ -60,18 +72,13 @@ upload_module_received_server <- function(id,
         {
           shared_files <- getReceivedFiles()
           if (length(shared_files) == 0) {
+            # write dbg message
+            dbg("[loading_module_usershare:eventReactive] No datasets received")
             return(NULL)
           }
 
-          # modal that tells that user received a new dataset
-          shinyalert::shinyalert(
-            "New dataset received!",
-            paste(
-              "You have received a new dataset from another user. Please accept or decline it below."
-            ),
-            confirmButtonText = "OK",
-            showCancelButton = FALSE
-          )
+          # dbg message
+          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(shared_files))
 
           # split the file name into user who shared and file name
           shared_pgx <- sub("__to__.*", "", shared_files)
@@ -178,12 +185,6 @@ upload_module_received_server <- function(id,
           ## reload pgx dir so the newly accepted pgx files are registered in user table
           reload_pgxdir(reload_pgxdir() + 1)
 
-          ## remove the accepted pgx from the table
-          refresh_table(refresh_table() + 1)
-
-          ## update ds counter
-          nr_ds_received(nr_ds_received() - 1)
-
         },
         ignoreInit = TRUE
       )
@@ -194,13 +195,6 @@ upload_module_received_server <- function(id,
           pgx_name <- stringr::str_split(input$decline_pgx, "decline_pgx__")[[1]][2]
           shared_file <- file.path(pgx_shared_dir, pgx_name)
           file.remove(shared_file)
-
-          # remove the declined pgx from the table
-          refresh_table(refresh_table() + 1)
-
-
-          # update counter
-          nr_ds_received(nr_ds_received() - 1)
         },
         ignoreInit = TRUE
       )
