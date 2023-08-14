@@ -42,8 +42,10 @@ upload_module_received_server <- function(id,
               paste(
                 "You have received a dataset from another user. Please accept or decline it in the Loading tab."
               ),
-              confirmButtonText = "OK",
-              showCancelButton = FALSE
+              confirmButtonText = "Go to load datasets",
+              showCancelButton = TRUE,
+              cancelButtonText = "Stay here",
+              callbackR = function() {bigdash.selectTab(session, "load-tab")}
             )
           }
           return(nr_ds_received(current_ds_received))
