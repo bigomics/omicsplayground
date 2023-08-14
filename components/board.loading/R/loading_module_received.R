@@ -20,7 +20,7 @@ upload_module_received_server <- function(id,
       nr_ds_received <- reactiveVal(0)
 
       # function that listed to input new_dataset_received
-      show_shared_tab <- function(){
+      show_shared_tab <- function() {
         if (input$new_dataset_received) {
           bigdash.selectTab(session, "load-tab")
           shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
@@ -56,15 +56,15 @@ upload_module_received_server <- function(id,
               callbackR = show_shared_tab
             )
           }
-          nr_ds_received(current_ds_received) 
+          nr_ds_received(current_ds_received)
           return(nr_ds_received())
         },
         valueFunc = function() {
           req(auth$logged)
           if (!auth$logged || auth$email == "") {
             return(FALSE)
-          }          
-          
+          }
+
           # write dbg message
           dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
 
@@ -74,7 +74,7 @@ upload_module_received_server <- function(id,
             path = pgx_shared_dir,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
-         )
+          )
           return(pgxfiles)
         }
       )
@@ -196,7 +196,6 @@ upload_module_received_server <- function(id,
 
           ## reload pgx dir so the newly accepted pgx files are registered in user table
           reload_pgxdir(reload_pgxdir() + 1)
-
         },
         ignoreInit = TRUE
       )
