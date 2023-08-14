@@ -53,16 +53,17 @@ upload_module_received_server <- function(id,
           if (!auth$logged || auth$email == "") {
             return(FALSE)
           }          
+          
           # write dbg message
           dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
+
+          # get received pgx files
           current_user <- auth$email
           pgxfiles <- dir(
             path = pgx_shared_dir,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
          )
-
-         # if length pgx files is less than received files, then do nothing
           return(pgxfiles)
         }
       )
