@@ -63,6 +63,16 @@ upload_module_received_server <- function(id,
             return(NULL)
           }
 
+          # modal that tells that user received a new dataset
+          shinyalert::shinyalert(
+            "New dataset received!",
+            paste(
+              "You have received a new dataset from another user. Please accept or decline it below."
+            ),
+            confirmButtonText = "OK",
+            showCancelButton = FALSE
+          )
+
           # split the file name into user who shared and file name
           shared_pgx <- sub("__to__.*", "", shared_files)
           shared_from <- gsub(".*__from__|__$", "", shared_files)
