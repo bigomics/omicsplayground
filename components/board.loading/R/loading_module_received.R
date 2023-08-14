@@ -23,6 +23,7 @@ upload_module_received_server <- function(id,
       show_shared_tab <- function(){
         if (input$new_dataset_received) {
           bigdash.selectTab(session, "load-tab")
+          shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
         }
       }
       
