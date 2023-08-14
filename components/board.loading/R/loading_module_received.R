@@ -19,6 +19,13 @@ upload_module_received_server <- function(id,
 
       nr_ds_received <- reactiveVal(0)
 
+      # function that listed to input new_dataset_received
+      show_shared_tab <- function(){
+        if (input$new_dataset_received) {
+          bigdash.selectTab(session, "load-tab")
+        }
+      }
+      
       ## ------------ get received files
       getReceivedFiles <- shiny::reactivePoll(
         intervalMillis = 10000,
@@ -42,10 +49,11 @@ upload_module_received_server <- function(id,
               paste(
                 "You have received a dataset from another user. Please accept or decline it in the Loading tab."
               ),
-              confirmButtonText = "Go to load datasets",
+              confirmButtonText = "Go to shared datasets",
               showCancelButton = TRUE,
               cancelButtonText = "Stay here",
-              callbackR = function() {bigdash.selectTab(session, "load-tab")}
+              inputId = "new_dataset_received",
+              callbackR = show_shared_tab
             )
           }
           return(nr_ds_received(current_ds_received))
