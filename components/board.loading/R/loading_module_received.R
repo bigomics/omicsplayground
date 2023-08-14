@@ -25,7 +25,7 @@ upload_module_received_server <- function(id,
           bigdash.selectTab(session, "load-tab")
         }
       }
-      
+
       ## ------------ get received files
       getReceivedFiles <- shiny::reactivePoll(
         intervalMillis = 10000,
@@ -42,7 +42,6 @@ upload_module_received_server <- function(id,
           )
           current_ds_received <- length(pgxfiles)
           if (length(pgxfiles) > nr_ds_received()) {
-            nr_ds_received(current_ds_received)
             # modal that tells that user received a new dataset
             shinyalert::shinyalert(
               "New dataset received!",
@@ -56,7 +55,8 @@ upload_module_received_server <- function(id,
               callbackR = show_shared_tab
             )
           }
-          return(nr_ds_received(current_ds_received))
+          nr_ds_received(current_ds_received) 
+          return(nr_ds_received())
         },
         valueFunc = function() {
           req(auth$logged)
