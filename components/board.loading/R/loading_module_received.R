@@ -17,37 +17,80 @@ upload_module_received_server <- function(id,
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
 
-      refresh_table <- reactiveVal(0)
+      nr_ds_received <- reactiveVal(0)
+
+      # function that listed to input new_dataset_received
+      show_shared_tab <- function(){
+        if (input$new_dataset_received) {
+          bigdash.selectTab(session, "load-tab")
+          shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
+        }
+      }
 
       ## ------------ get received files
-      getReceivedFiles <- shiny::reactive({
-        req(auth$logged)
-        if (!auth$logged) {
-          return(c())
-        }
-        if (auth$email == "") {
-          return(c())
-        }
-        ## allow trigger for when a shared pgx is accepted / decline
-        refresh_table()
+      getReceivedFiles <- shiny::reactivePoll(
+        intervalMillis = 10000,
+        session = NULL,
+        checkFunc = function() {
+          if (!auth$logged || auth$email == "") {
+            return(nr_ds_received())
+          }
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+          )
+          current_ds_received <- length(pgxfiles)
+          if (length(pgxfiles) > nr_ds_received()) {
+            # modal that tells that user received a new dataset
+            shinyalert::shinyalert(
+              "New dataset received!",
+              paste(
+                "You have received a dataset from another user. Please accept or decline it in the Loading tab."
+              ),
+              confirmButtonText = "Go to shared datasets",
+              showCancelButton = TRUE,
+              cancelButtonText = "Stay here",
+              inputId = "new_dataset_received",
+              callbackR = show_shared_tab
+            )
+          }
+          nr_ds_received(current_ds_received) 
+          return(nr_ds_received())
+        },
+        valueFunc = function() {
+          req(auth$logged)
+          if (!auth$logged || auth$email == "") {
+            return(FALSE)
+          }          
+          
+          # write dbg message
+          dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
 
-        current_user <- auth$email
-        pgxfiles <- dir(
-          path = pgx_shared_dir,
-          pattern = paste0("__to__", current_user, "__from__.*__$"),
-          ignore.case = TRUE
-        )
-        return(pgxfiles)
-      })
+          # get received pgx files
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+         )
+          return(pgxfiles)
+        }
+      )
 
       receivedPGXtable <- shiny::eventReactive(
-        c(current_page(), getReceivedFiles()),
+        c(getReceivedFiles()),
         {
-          req(current_page() == "load-tab")
           shared_files <- getReceivedFiles()
           if (length(shared_files) == 0) {
+            # write dbg message
+            dbg("[loading_module_usershare:eventReactive] No datasets received")
             return(NULL)
           }
+
+          # dbg message
+          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(shared_files))
 
           # split the file name into user who shared and file name
           shared_pgx <- sub("__to__.*", "", shared_files)
@@ -154,8 +197,6 @@ upload_module_received_server <- function(id,
           ## reload pgx dir so the newly accepted pgx files are registered in user table
           reload_pgxdir(reload_pgxdir() + 1)
 
-          ## remove the accepted pgx from the table
-          refresh_table(refresh_table() + 1)
         },
         ignoreInit = TRUE
       )
@@ -166,9 +207,6 @@ upload_module_received_server <- function(id,
           pgx_name <- stringr::str_split(input$decline_pgx, "decline_pgx__")[[1]][2]
           shared_file <- file.path(pgx_shared_dir, pgx_name)
           file.remove(shared_file)
-
-          # remove the declined pgx from the table
-          refresh_table(refresh_table() + 1)
         },
         ignoreInit = TRUE
       )
