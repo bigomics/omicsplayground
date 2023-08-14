@@ -18,6 +18,7 @@ upload_module_received_server <- function(id,
       ns <- session$ns ## NAMESPACE
 
       refresh_table <- reactiveVal(0)
+      nr_ds_received <- reactiveVal(0)
 
       ## ------------ get received files
       getReceivedFiles <- shiny::reactivePoll(
@@ -34,6 +35,13 @@ upload_module_received_server <- function(id,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
           )
+          current_ds_received <- length(pgxfiles)
+          if (current_ds_received > nr_ds_received()) {
+            nr_ds_received(current_ds_received)
+            nr_ds_received()
+          } else {
+            return(FALSE)
+          }
         },
         valueFunc = function() {
           refresh_table()
@@ -48,9 +56,8 @@ upload_module_received_server <- function(id,
       )
 
       receivedPGXtable <- shiny::eventReactive(
-        c(current_page(), getReceivedFiles()),
+        c(getReceivedFiles()),
         {
-          req(current_page() == "load-tab")
           shared_files <- getReceivedFiles()
           if (length(shared_files) == 0) {
             return(NULL)
