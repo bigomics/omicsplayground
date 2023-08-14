@@ -180,6 +180,10 @@ upload_module_received_server <- function(id,
 
           ## remove the accepted pgx from the table
           refresh_table(refresh_table() + 1)
+
+          ## update ds counter
+          nr_ds_received(nr_ds_received() - 1)
+
         },
         ignoreInit = TRUE
       )
@@ -193,6 +197,10 @@ upload_module_received_server <- function(id,
 
           # remove the declined pgx from the table
           refresh_table(refresh_table() + 1)
+
+
+          # update counter
+          nr_ds_received(nr_ds_received() - 1)
         },
         ignoreInit = TRUE
       )
@@ -206,12 +214,5 @@ upload_module_received_server <- function(id,
 
       return(rlist)
     }
-
-    # automatically detect and warn user of changes in received pgx folder
-    shiny::react
-
-
-
-
   ) ## end of moduleServer
 }
