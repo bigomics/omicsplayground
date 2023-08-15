@@ -20,15 +20,12 @@ test_that("example data loads with no error",{
     dir.create("snap")
   }
 
-
-  AppDriverLog <- lapply(boards, function(board){
-    # get error from AppDriver and save it as error_log
+  AppLog <- lapply(boards, function(board){
+    # get error from App and save it as error_log
     message(board)
     #board = "dataview"
     #board = boards[1]
-    try(AppDriver$stop(), silent = TRUE)
-    AppDriver = NULL
-    AppDriver <- tryCatch(
+    App <- tryCatch(
       {
         shinytest2::AppDriver$new(
           normalizePath("../../components/dev"),
@@ -49,16 +46,16 @@ test_that("example data loads with no error",{
             }
       )
 
-    if(class(AppDriver)[[1]] == "rlang_error"){
-      AppDriver$message
-      return(AppDriver$message)
+    if(class(App)[[1]] == "rlang_error"){
+      App$message
+      return(App$message)
     }
 
     loadPGX <- tryCatch({
-      AppDriver  # Display the AppDriver object
+      App  # Display the App object
       # basic info for the app
-      AppDriver$get_url()
-      AppDriver$get_logs()
+      App$get_url()
+      App$get_logs()
 
       # get pgx file path
       pgx_file <- normalizePath("../../data/example-data.pgx")
@@ -66,26 +63,26 @@ test_that("example data loads with no error",{
       pgx_file
 
       # get input/output values
-      AppDriver$get_value(input = "pgx_path")
-      AppDriver$get_values()
+      App$get_value(input = "pgx_path")
+      App$get_values()
 
       # update pgx_path to an actual path
-      AppDriver$set_inputs("pgx_path" = pgx_file)
+      App$set_inputs("pgx_path" = pgx_file)
 
       # check that the path is updated
-      AppDriver$get_value(input = "pgx_path")
+      App$get_value(input = "pgx_path")
       # get screenshot to the folder snap
             
-      AppDriver$get_screenshot(file.path("snap", paste0(board, ".png")))
+      App$get_screenshot(file.path("snap", paste0(board, ".png")))
       
       # use the get_logs to check if we have any error
-      df <- data.frame(AppDriver$get_logs())
-      AppDriver$stop()
+      df <- data.frame(App$get_logs())
+      
       return(df)
     },
     error = function(e) {
       error = NULL
-      try(error <- data.frame(AppDriver$get_logs()), silent = TRUE)
+      try(error <- data.frame(App$get_logs()), silent = TRUE)
       
       if(is.null(error)){
         error <- conditionMessage(e)
@@ -93,7 +90,7 @@ test_that("example data loads with no error",{
       # return message from error
       return(error)
     })
-    AppDriver$stop()
+    App$stop()
 
     return(loadPGX)
 
@@ -101,7 +98,7 @@ test_that("example data loads with no error",{
 
   # check if any board has error, via error log
 
-  boards_with_error <- boards[sapply(AppDriverLog, function(x) any(grepl("Error in", x$message)))]
+  boards_with_error <- boards[sapply(AppLog, function(x) any(grepl("Error in", x$message)))]
 
   # pass if length of boards_with_error is 0
   expect_equal(length(boards_with_error), 0)
