@@ -15,12 +15,17 @@ test_that("example data loads with no error",{
 
   message(boards)
 
+  # create folder snap is not available
+  if(!dir.exists("snap")){
+    dir.create("snap")
+  }
+
 
   AppDriverLog <- lapply(boards, function(board){
     # get error from AppDriver and save it as error_log
     message(board)
     #board = "dataview"
-    #board = boards[7]
+    #board = boards[1]
     try(AppDriver$stop(), silent = TRUE)
     AppDriver = NULL
     AppDriver <- tryCatch(
@@ -69,8 +74,10 @@ test_that("example data loads with no error",{
 
       # check that the path is updated
       AppDriver$get_value(input = "pgx_path")
-      # get error log
-
+      # get screenshot to the folder snap
+            
+      AppDriver$get_screenshot(file.path("snap", paste0(board, ".png")))
+      
       # use the get_logs to check if we have any error
       df <- data.frame(AppDriver$get_logs())
       AppDriver$stop()
@@ -86,7 +93,6 @@ test_that("example data loads with no error",{
       # return message from error
       return(error)
     })
-    AppDriver$get_screenshot()
     AppDriver$stop()
 
     return(loadPGX)
@@ -100,5 +106,3 @@ test_that("example data loads with no error",{
   # pass if length of boards_with_error is 0
   expect_equal(length(boards_with_error), 0)
 })
-
-
