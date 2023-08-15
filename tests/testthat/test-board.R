@@ -46,6 +46,8 @@ test_that("example data loads with no error",{
             }
       )
 
+    withr::defer(App$stop())
+
     if(class(App)[[1]] == "rlang_error"){
       App$message
       return(App$message)
@@ -90,8 +92,6 @@ test_that("example data loads with no error",{
       # return message from error
       return(error)
     })
-    App$stop()
-
     return(loadPGX)
 
   })
