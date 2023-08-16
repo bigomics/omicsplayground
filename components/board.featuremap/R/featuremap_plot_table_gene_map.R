@@ -80,9 +80,8 @@ featuremap_plot_gene_map_server <- function(id,
       shiny::validate(need(filter_genes(), 'Please input at least one value in Annotate genes!'))
       sel <- filter_genes()
       filtgenes <- c()
-      for (genes in sel){
-        filtgenes <- c(filtgenes, playdata::FAMILIES[[genes]])
-      }
+      filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+      
       filtgenes
     })
 
