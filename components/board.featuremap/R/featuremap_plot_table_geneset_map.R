@@ -87,17 +87,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
                                   "Please input at least one value in Annotate genesets!"))
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
-      filt_genesets <- c()
-      if (!shiny::isTruthy(db)){               # !! In the future, set default input when the input is NULL (not useful now)                         
-        gsets <- rownames(pgx$gsetX)
-      } else if (!"<all>" %in% db) {
-        for (geneset in db) {
-          filt_genesets <- c(filt_genesets, grep(paste0("^", geneset, ":"),
-                                                 gsets, value = TRUE))
-        }
+      if (!"<all>" %in% db) {
+       filt_genesets <- unlist(lapply(db, function(geneset) {
+        grep(paste0("^", geneset, ":"), gsets, value = TRUE)
+        }))
         gsets <- filt_genesets
-      } else {
-        gsets <- rownames(pgx$gsetX)
       }
       gsets
     })
