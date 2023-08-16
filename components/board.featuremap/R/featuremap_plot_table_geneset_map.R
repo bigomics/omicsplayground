@@ -83,13 +83,19 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     filteredGsets <- shiny::reactive({
       shiny::req(pgx$X)
+      shiny::validate(shiny::need(filter_gsets(),
+                                  "Please input at least one value in Annotate genesets!"))
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
-      if (db != "<all>") {
-        gsets <- grep(paste0("^", db, ":"), gsets, value = TRUE)
+      if (!"<all>" %in% db) {
+       filt_genesets <- unlist(lapply(db, function(geneset) {
+        grep(paste0("^", geneset, ":"), gsets, value = TRUE)
+        }))
+        gsets <- filt_genesets
       }
       gsets
     })
+
 
     plot_data <- shiny::reactive({
       pos <- getGsetUMAP()
