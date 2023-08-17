@@ -8,19 +8,19 @@ app_ui <- function(request) {
 
     board = options()$board
     use_example_data = options()$use_example_data
-    
-    #source('../components/app/R/global.R')
 
     root_opg <- get_opg_root()
+
+    # handle pgx file input
 
     pgx_file <- ""
 
     if(!is.null(use_example_data) && use_example_data == TRUE){
         pgx_file <- normalizePath("../../data/example-data.pgx")
     }
-    
-    print(root_opg)
-    
+
+    # handle board inputs and dependencies
+
     directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
     file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
 
@@ -66,8 +66,7 @@ app_ui <- function(request) {
         loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
       )
     )
-    
-   
+
     # sidebar
     sidebar <- bigdash::sidebar(
         "Menu",
@@ -84,7 +83,7 @@ app_ui <- function(request) {
     big_theme2 <- bslib::bs_add_variables(big_theme2,
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
-    ) 
+    )
 
     bigdash::bigPage(
         header,

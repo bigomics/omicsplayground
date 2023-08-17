@@ -28,7 +28,7 @@ test_that("example data loads with no error",{
     App <- tryCatch (
       {
         shinytest2::AppDriver$new(
-          normalizePath("../../components/dev"),
+          normalizePath("../../dev/board.launch"),
           timeout = 10000,
           height = 1080,
           width = 1920,
