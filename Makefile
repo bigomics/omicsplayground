@@ -116,4 +116,4 @@ board3:
 	R -e "options(board = '$(BOARD)'); shiny::runApp('components/dev')"
 
 board4:
-	R -e "options(board = '$(BOARD)', use_example_data = TRUE); shiny::runApp('components/dev')"
+	R -e "options(board = '$(BOARD)', use_example_data = TRUE); shiny::runApp('dev/board.launch')"

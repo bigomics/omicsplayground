@@ -9,7 +9,7 @@ app_ui <- function(request) {
     board = options()$board
     use_example_data = options()$use_example_data
     
-    source('../app/R/global.R')
+    #source('../components/app/R/global.R')
 
     root_opg <- get_opg_root()
 
@@ -21,10 +21,6 @@ app_ui <- function(request) {
     
     print(root_opg)
     
-    source(file.path(root_opg,'components/golem_utils/app_config.R'))
-    source(file.path(root_opg,'components/golem_utils/run_app.R'))
-    source(file.path(root_opg,'components/golem_utils/run_dev.R'))
-
     directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
     file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
 
@@ -38,9 +34,10 @@ app_ui <- function(request) {
         source(file.path(root_opg,'components/ui/', ui_file))
     }
 
-    # attempt to evaluate board functions
-
     board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
+    # find the function name
+    board_input <- board_input[grepl(board, board_input, ignore.case = TRUE)]
+    
     board_input_fn <- get(board_input)
 
     # to the same for ui
