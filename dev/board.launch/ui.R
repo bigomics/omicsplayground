@@ -1,15 +1,12 @@
-#' The application User-Interface
-#'
-#' @param request Internal parameter for `{shiny}`.
-#'     DO NOT REMOVE.
-#' @import shiny
-#' @noRd
-app_ui <- function(request) {
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
+app_ui <- function() {
 
     board = options()$board
     use_example_data = options()$use_example_data
-
-    root_opg <- get_opg_root()
 
     # handle pgx file input
 
@@ -21,17 +18,17 @@ app_ui <- function(request) {
 
     # handle board inputs and dependencies
 
-    directory <- file.path(root_opg, glue::glue('components/board.{board}/R/'))  # Specify the directory path
+    directory <- file.path(OPG, glue::glue('components/board.{board}/R/'))  # Specify the directory path
     file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
 
     for (file_path in file_paths) {
         source(file_path)
     }
 
-    ui_files <- list.files(path = file.path(root_opg,'components/ui/'))
+    ui_files <- list.files(path = file.path(OPG,'components/ui/'))
 
     for (ui_file in ui_files) {
-        source(file.path(root_opg,'components/ui/', ui_file))
+        source(file.path(OPG,'components/ui/', ui_file))
     }
 
     board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
@@ -51,10 +48,10 @@ app_ui <- function(request) {
      header <- shiny::tagList(
       #shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
       ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "dropdown-extra.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
-      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "favicon.ico")),
+      shiny::tags$head(shiny::tags$script(src = "www/temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "www/dropdown-extra.js")),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "www/styles.min.css")),
+      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "www/favicon.ico")),
       shinyjs::useShinyjs(),
       waiter::use_waiter(),
       sever::useSever(),
