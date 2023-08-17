@@ -41,6 +41,10 @@ upload_module_received_server <- function(id,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
           )
+
+          dbg("[upload_module_shared_server:getReceivedFiles] auth$email =",auth$email)
+          dbg("[upload_module_shared_server:getReceivedFiles] pgxfiles =",pgxfiles)        
+          
           current_ds_received <- length(pgxfiles)
           if (length(pgxfiles) > nr_ds_received()) {
             # modal that tells that user received a new dataset
@@ -62,7 +66,7 @@ upload_module_received_server <- function(id,
         valueFunc = function() {
           req(auth$logged)
           if (!auth$logged || auth$email == "") {
-            return(FALSE)
+            return(NULL)
           }
 
           # write dbg message
@@ -82,23 +86,24 @@ upload_module_received_server <- function(id,
       receivedPGXtable <- shiny::eventReactive(
         c(getReceivedFiles()),
         {
-          shared_files <- getReceivedFiles()
-          if (length(shared_files) == 0) {
+          received_files <- getReceivedFiles()
+          if (is.null(received_files) || length(received_files) == 0) {
             # write dbg message
             dbg("[loading_module_usershare:eventReactive] No datasets received")
             return(NULL)
           }
 
           # dbg message
-          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(shared_files))
+          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(received_files))
+          dbg("[loading_module_usershare:eventReactive] received_files = ", received_files)          
 
           # split the file name into user who shared and file name
-          shared_pgx <- sub("__to__.*", "", shared_files)
-          shared_from <- gsub(".*__from__|__$", "", shared_files)
+          received_pgx <- sub("__to__.*", "", received_files)
+          received_from <- gsub(".*__from__|__$", "", received_files)
 
           accept_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = ns("accept_pgx__"),
             label = "",
             width = "50px",
@@ -113,7 +118,7 @@ upload_module_received_server <- function(id,
 
           decline_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = "decline_pgx__",
             label = "",
             width = "50px",
@@ -126,8 +131,8 @@ upload_module_received_server <- function(id,
           )
 
           df <- data.frame(
-            Dataset = shared_pgx,
-            From = shared_from,
+            Dataset = received_pgx,
+            From = received_from,
             Actions = paste(accept_btns, decline_btns)
           )
 
@@ -204,8 +209,8 @@ upload_module_received_server <- function(id,
       observeEvent(input$decline_pgx,
         {
           pgx_name <- stringr::str_split(input$decline_pgx, "decline_pgx__")[[1]][2]
-          shared_file <- file.path(pgx_shared_dir, pgx_name)
-          file.remove(shared_file)
+          received_file <- file.path(pgx_shared_dir, pgx_name)
+          file.remove(received_file)
         },
         ignoreInit = TRUE
       )
