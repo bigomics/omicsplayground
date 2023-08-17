@@ -32,7 +32,7 @@ app_ui <- function(request) {
         source(file_path)
     }
 
-    ui_files <- list_files_safe(path = file.path(root_opg,'components/ui/'))
+    ui_files <- list.files(path = file.path(root_opg,'components/ui/'))
 
     for (ui_file in ui_files) {
         source(file.path(root_opg,'components/ui/', ui_file))
@@ -50,21 +50,27 @@ app_ui <- function(request) {
     board_ui_fn <- get(board_ui)
     
     # header
-    
-    header <- shiny::tagList(
-        tags$head(
-        golem::favicon(),
-        golem::bundle_resources(
-        path = file.path(root_opg,'components/app/R/www'),
-        app_title = "dev_board"
-        ),
-        shinyjs::useShinyjs(),
-        sever::useSever(),
-        bigLoaders::addBigLoaderDeps(),
-        firebase::useFirebase(firestore = TRUE, analytics = TRUE)
-    )
-    )
 
+     header <- shiny::tagList(
+      #shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
+      ##    gtag2, ## Google Tag Manager???
+      shiny::tags$head(shiny::tags$script(src = "temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "dropdown-extra.js")),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
+      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "favicon.ico")),
+      shinyjs::useShinyjs(),
+      waiter::use_waiter(),
+      sever::useSever(),
+      bigLoaders::addBigLoaderDeps(),
+      #firebase::useFirebase(firestore = TRUE, analytics = TRUE),
+      shinybusy::busy_start_up(
+        text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
+        background = "#2780e3", color = "#ffffff",
+        loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
+      )
+    )
+    
+   
     # sidebar
     sidebar <- bigdash::sidebar(
         "Menu",
@@ -77,16 +83,16 @@ app_ui <- function(request) {
         )
     )
 
-    big_theme <- bslib::bs_add_variables(
-        bigdash::big_theme(),
-        "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
-        .where = "declarations"
-    )
+   big_theme2 <- bigdash::big_theme()
+    big_theme2 <- bslib::bs_add_variables(big_theme2,
+      "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
+      .where = "declarations"
+    ) 
 
     bigdash::bigPage(
         header,
         title = "Omics Playground v3",
-        theme = big_theme,
+        theme = big_theme2,
         sidebar = sidebar,
         navbar = bigdash::navbar(
             tags$img(
