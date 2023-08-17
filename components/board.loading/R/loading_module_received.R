@@ -42,9 +42,6 @@ upload_module_received_server <- function(id,
             ignore.case = TRUE
           )
 
-          dbg("[upload_module_shared_server:getReceivedFiles] auth$email =", auth$email)
-          dbg("[upload_module_shared_server:getReceivedFiles] pgxfiles =", pgxfiles)
-
           current_ds_received <- length(pgxfiles)
           if (length(pgxfiles) > nr_ds_received()) {
             # modal that tells that user received a new dataset
@@ -69,9 +66,6 @@ upload_module_received_server <- function(id,
             return(NULL)
           }
 
-          # write dbg message
-          dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
-
           # get received pgx files
           current_user <- auth$email
           pgxfiles <- dir(
@@ -88,14 +82,8 @@ upload_module_received_server <- function(id,
         {
           received_files <- getReceivedFiles()
           if (is.null(received_files) || length(received_files) == 0) {
-            # write dbg message
-            dbg("[loading_module_usershare:eventReactive] No datasets received")
             return(NULL)
           }
-
-          # dbg message
-          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(received_files))
-          dbg("[loading_module_usershare:eventReactive] received_files = ", received_files)
 
           # split the file name into user who shared and file name
           received_pgx <- sub("__to__.*", "", received_files)
@@ -154,8 +142,6 @@ upload_module_received_server <- function(id,
       # ----------------- event when a shared pgx is accepted by a user
       observeEvent(input$accept_pgx,
         {
-          dbg("[loading_module_usershare:observeEvent(input$accept_pgx)] reacted!")
-
           # get pgx name and remove the __from__* tag
           pgx_name <- stringr::str_split(input$accept_pgx, "accept_pgx__")[[1]][2]
           new_pgx_name <- stringr::str_split(pgx_name, "__from__")[[1]][1]
@@ -191,7 +177,6 @@ upload_module_received_server <- function(id,
 
           ## Rename file to user folder. Some servers do not allow
           ## "cross-device link" and then we resort to slower copy
-          dbg("[loading_server.R] accept_pgx : renaming file from = ", file_from, "to = ", file_to)
           if (!file.rename(file_from, file_to)) {
             info("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
             ## file.rename does not allow "cross-device link"
