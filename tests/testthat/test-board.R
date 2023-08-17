@@ -25,11 +25,13 @@ test_that("example data loads with no error",{
     message(board)
     #board = "dataview"
     #board = boards[1]
-    App <- tryCatch(
+    App <- tryCatch (
       {
         shinytest2::AppDriver$new(
           normalizePath("../../components/dev"),
           timeout = 10000,
+          height = 1080,
+          width = 1920,
           options = list(
             board = board,
             use_example_data = FALSE,
@@ -45,7 +47,7 @@ test_that("example data loads with no error",{
               return(e)
             }
       )
-
+      
     withr::defer(App$stop())
 
     if(class(App)[[1]] == "rlang_error"){
