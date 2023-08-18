@@ -99,7 +99,7 @@ ExpressionUI <- function(id) {
         ),
         expression_plot_topfoldchange_ui(
           id = ns("plots_topfoldchange"),
-          title = "Gene in contrasts",
+          title = "Gene in comparison",
           info.text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the Table section.",
           caption = "Sorted barplot of the differential expression of the selected gene across all contrasts.",
           label = "d",
@@ -117,7 +117,7 @@ ExpressionUI <- function(id) {
           id = ns("topgenes"),
           title = "Expression of top differentially expressed genes",
           info.text = "Under the plot Settings, users can scale the abundance levels (counts) or ungroup the samples in the plot from the log scale and ungroup samples settings, respectively.",
-          caption = "Expression barplots of the top most differentially expressed genes for the selected contrast.",
+          caption = "Expression barplots of the top most differentially expressed genes for the selected comparison.",
           label = "a",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
@@ -125,15 +125,15 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Contrast view",
+      "Results by contrast",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
         expression_plot_volcanoAll_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
-          info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong.",
-          caption = "Simultaneous visualisation of volcano plots of genes for all contrasts.",
+          info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for genes across all comparisons. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong.",
+          caption = "Simultaneous visualisation of volcano plots of genes for all comparisons.",
           label = "a",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
@@ -141,7 +141,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Statistical view",
+      "Statistics by method",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
