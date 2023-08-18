@@ -114,6 +114,7 @@ contrast_correlation_server <- function(id,
       plotlib = "plotly",
       res = c(80, 85),
       pdf.width = 5, pdf.height = 5,
+      filename = "contrast_correlation",
       add.watermark = watermark
     )
   })

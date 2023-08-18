@@ -254,6 +254,7 @@ intersection_scatterplot_pairs_server <- function(id,
       csvFunc = plot_data,
       res = 95,
       pdf.width = 5, pdf.height = 5,
+      filename = "intersection_scatterplot_pairs",
       add.watermark = watermark
     )
   })

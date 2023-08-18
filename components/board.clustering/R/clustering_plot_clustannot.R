@@ -237,7 +237,8 @@ clustering_plot_clusterannot_server <- function(id,
       res = 80, ## resolution of plots
       remove_margins = FALSE,
       pdf.width = 8, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      filename = "clustering_plot_clusterannot"
     )
 
     return(

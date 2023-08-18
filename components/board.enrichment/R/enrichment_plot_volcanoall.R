@@ -201,6 +201,7 @@ enrichment_plot_volcanoall_server <- function(id,
       pdf.width = 10,
       pdf.height = 5,
       res = c(72, 85),
+      filename = "enrichment_plot_volcanoall",
       add.watermark = watermark
     )
   }) ## end module-server

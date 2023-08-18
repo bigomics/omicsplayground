@@ -160,6 +160,7 @@ pcsf_plot_network_server <- function(id,
       pdf.width = 10,
       pdf.height = 10,
       add.watermark = watermark,
+      filename = "pcsf_plot_network",
       vis.delay = 5 ## important! graph physics needs to settle
     )
   }) ## end of moduleServer

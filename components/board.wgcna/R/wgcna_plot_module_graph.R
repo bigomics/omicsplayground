@@ -79,6 +79,7 @@ wgcna_plot_module_graph_server <- function(id,
       func = moduleGraph.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
+      filename = "wgcna_plot_module_graph",
       add.watermark = watermark
     )
   })

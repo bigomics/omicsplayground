@@ -110,6 +110,7 @@ compare_plot_expression_server <- function(id,
       func = multibarplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 130),
+      filename = "compare_plot_expression",
       add.watermark = watermark
     )
   })

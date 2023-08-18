@@ -72,6 +72,7 @@ wgcna_plot_membership_v_trait_server <- function(id,
       func = intraScatter.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(85, 90),
+      filename = "wgcna_plot_membership_v_trait",
       add.watermark = watermark
     )
   })

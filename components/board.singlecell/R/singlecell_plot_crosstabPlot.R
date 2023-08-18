@@ -295,6 +295,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       res = c(110, 160),
       pdf.width = 12,
       pdf.height = 8,
+      filename = "singlecell_plot_crosstabPlot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

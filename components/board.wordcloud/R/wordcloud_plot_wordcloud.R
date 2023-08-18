@@ -89,6 +89,7 @@ wordcloud_plot_wordcloud_server <- function(id,
       csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = 72,
+      filename = "wordcloud_plot_wordcloud",
       add.watermark = watermark
     )
   })

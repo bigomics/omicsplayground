@@ -84,7 +84,8 @@ biomarker_plot_decisiontree_server <- function(id,
         csvFunc = plot_data,
         res = c(72, 120),
         pdf.width = 10, pdf.height = 6,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "biomarker_plot_decisiontree"
       )
     } ## end of moduleServer
   )

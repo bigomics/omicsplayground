@@ -270,7 +270,8 @@ connectivity_plot_scatterPlot_server <- function(id,
         pdf.width = 8,
         pdf.height = 8,
         res = 95,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "connectivity_plot_scatterPlot"
       )
     } ## end of moduleServer
   )

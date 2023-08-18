@@ -54,6 +54,7 @@ wgcna_plot_gclustering_server <- function(id,
       func = umap.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 80),
+      filename = "wgcna_plot_gclustering",
       add.watermark = watermark
     )
   })

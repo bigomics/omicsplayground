@@ -289,7 +289,8 @@ drugconnectivity_plot_cmap_dsea_server <- function(id,
         csvFunc = plot_data,
         res = c(80, 105),
         pdf.width = 8, pdf.height = 8,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "drugconnectivity_plot_cmap_dsea"
       )
     } ## end of moduleServer
   )

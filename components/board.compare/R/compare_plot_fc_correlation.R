@@ -98,6 +98,7 @@ compare_plot_fc_correlation_server <- function(id,
       csvFunc = plot_data,
       res = c(85, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "compare_plot_fc_correlation",
       add.watermark = watermark
     )
   }) ## end of moduleServer

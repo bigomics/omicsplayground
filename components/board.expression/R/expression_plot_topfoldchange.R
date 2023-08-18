@@ -133,7 +133,9 @@ expression_plot_topfoldchange_server <- function(id,
       remove_margins = FALSE,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 6,
+      pdf.height = 6,
+      filename = "expression_plot_topfoldchange",
       add.watermark = watermark
     )
   }) ## end of moduleServer

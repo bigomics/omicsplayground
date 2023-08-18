@@ -197,6 +197,7 @@ clustering_plot_genemodule_server <- function(id,
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
+      filename = "clustering_plot_genemodule",
       add.watermark = watermark
     )
   }) ## end of moduleServer

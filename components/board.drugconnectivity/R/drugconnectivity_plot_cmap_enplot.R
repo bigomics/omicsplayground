@@ -93,7 +93,8 @@ drugconnectivity_plot_cmap_enplot_server <- function(id,
         csvFunc = plot_data,
         res = c(80, 105),
         pdf.width = 6, pdf.height = 10,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "drugconnectivity_plot_cmap_enplot"
       )
     } ## end of moduleServer
   )

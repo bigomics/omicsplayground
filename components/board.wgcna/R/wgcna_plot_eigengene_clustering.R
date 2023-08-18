@@ -51,6 +51,7 @@ wgcna_plot_eigengene_clustering_server <- function(id,
       func = eigenClustering.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
+      filename = "wgcna_plot_eigengene_clustering",
       add.watermark = watermark
     )
   })

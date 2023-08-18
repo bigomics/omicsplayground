@@ -133,6 +133,7 @@ signature_plot_overlap_server <- function(id,
       plotlib = "plotly",
       res = c(100, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "signature_plot_overlap",
       add.watermark = watermark
     )
   }) ## end of moduleServer

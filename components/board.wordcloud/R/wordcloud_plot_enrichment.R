@@ -78,6 +78,7 @@ wordcloud_plot_enrichment_server <- function(id,
       func = gseaplots.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = 90,
+      filename = "wordcloud_plot_enrichment",
       add.watermark = watermark
     )
   })

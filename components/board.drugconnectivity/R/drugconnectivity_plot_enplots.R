@@ -171,7 +171,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         csvFunc = plot_data,
         res = c(78, 110),
         pdf.width = 6.5, pdf.height = 12.8,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "drugconnectivity_plot_enplots"
       )
     } ## end of moduleServer
   )

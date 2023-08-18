@@ -103,6 +103,7 @@ dataview_plot_phenoheatmap_server <- function(id, pgx, r.samples, watermark = FA
       renderFunc2 = shiny::renderPlot,
       res = c(60, 120), ## resolution of plots
       pdf.width = 8, pdf.height = 5,
+      filename = "dataview_plot_phenoheatmap",
       add.watermark = watermark
     )
   }) ## end of moduleServer

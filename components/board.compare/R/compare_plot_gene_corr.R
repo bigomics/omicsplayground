@@ -167,6 +167,7 @@ compare_plot_gene_corr_server <- function(id,
       func = genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
+      filename = "compare_plot_gene_corr",
       add.watermark = watermark
     )
   })

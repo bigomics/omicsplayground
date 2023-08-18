@@ -278,6 +278,7 @@ dataview_plot_tsne_server <- function(id,
       res = c(100, 300) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       ## label = label, title = "t-SNE clustering",
+      filename = "dataview_plot_tsne",
       add.watermark = watermark
     )
   }) ## end of moduleServer

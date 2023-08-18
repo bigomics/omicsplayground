@@ -107,7 +107,8 @@ biomarker_plot_importance_server <- function(id,
         csvFunc = plot_data,
         res = c(70, 140),
         pdf.width = 10, pdf.height = 5,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "biomarker_plot_importance"
       )
     } ## end of moduleServer
   )

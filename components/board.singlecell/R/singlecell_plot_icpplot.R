@@ -393,6 +393,7 @@ singlecell_plot_icpplot_server <- function(id,
       plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
+      filename = "singlecell_plot_icpplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

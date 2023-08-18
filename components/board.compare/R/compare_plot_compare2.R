@@ -76,6 +76,7 @@ compare_plot_compare2_server <- function(id,
       csvFunc = plot_data,
       res = c(90, 110), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "compare_plot_compare2",
       add.watermark = watermark
     )
   }) ## end of moduleServer

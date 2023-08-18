@@ -160,6 +160,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       func2 = volcano.RENDER2,
       pdf.width = 10, pdf.height = 5,
       res = c(75, 90),
+      filename = "enrichment_plot_volcanomethods",
       add.watermark = watermark
     )
   })

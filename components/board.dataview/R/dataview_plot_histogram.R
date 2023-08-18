@@ -142,6 +142,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
 
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "dataview_plot_histogram",
       add.watermark = watermark
     )
   }) ## end of moduleServer

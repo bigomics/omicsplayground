@@ -172,7 +172,8 @@ drugconnectivity_plot_actmap_server <- function(id,
         csvFunc = plot_data,
         res = 72,
         pdf.width = 6, pdf.height = 9,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "drugconnectivity_plot_actmap"
       )
     } ## end of moduleServer
   )

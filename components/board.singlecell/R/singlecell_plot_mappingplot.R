@@ -215,6 +215,7 @@ singlecell_plot_mappingplot_server <- function(id,
       func = plot.render,
       res = c(85, 95),
       pdf.width = 8, pdf.height = 8,
+      filename = "singlecell_plot_mappingplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

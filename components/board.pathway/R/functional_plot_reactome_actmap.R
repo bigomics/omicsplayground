@@ -112,7 +112,8 @@ functional_plot_reactome_actmap_server <- function(id,
         res = c(100, 100),
         pdf.height = 10,
         pdf.width = 10,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "functional_plot_reactome_actmap"
       )
     } ## end of moduleServer
   )

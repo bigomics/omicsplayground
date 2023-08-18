@@ -232,6 +232,7 @@ expression_plot_topgenes_server <- function(id,
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
+      filename = "expression_plot_topgenes",
       add.watermark = watermark
     )
   }) ## end of moduleServer

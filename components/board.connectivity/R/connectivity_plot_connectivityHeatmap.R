@@ -200,7 +200,8 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         csvFunc = plot_data,
         pdf.width = 14, pdf.height = 5.5,
         res = c(90, 90),
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "connectivity_plot_connectivityHeatmap"
       )
     } ## end of moduleServer
   )

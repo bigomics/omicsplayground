@@ -129,6 +129,7 @@ signature_plot_volcano_server <- function(id,
       res = c(90, 130), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
+      filename = "signature_plot_volcano",
       add.watermark = watermark
     )
   }) ## end of moduleServer

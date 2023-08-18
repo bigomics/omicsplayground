@@ -71,7 +71,7 @@ ExpressionUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1 / 4,
         style = halfH,
-        expression_plot_volcano_ui(ns("plots_volcano"),
+        expression_plot_volcano_ui(id = ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
           info.text = "A volcano plot of genes for the selected comparison under the Contrast settings plotting fold-change versus significance on the x and y axes, respectively.",

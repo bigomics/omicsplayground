@@ -121,7 +121,8 @@ drugconnectivity_plot_moa_server <- function(id,
         csvFunc = plot_data,
         res = c(70, 110),
         pdf.width = 9, pdf.height = 6,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "drugconnectivity_plot_moa"
       )
     } ## end of moduleServer
   )

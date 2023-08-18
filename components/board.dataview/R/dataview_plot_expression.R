@@ -306,6 +306,7 @@ dataview_plot_expression_server <- function(id,
       download.fmt = c("png", "pdf", "csv", "obj"),
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "dataview_plot_expression",
       add.watermark = watermark
     )
   }) ## end of moduleServer

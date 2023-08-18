@@ -203,6 +203,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         csvFunc = getLeadingEdgeGraph,
         pdf.height = 8, pdf.width = 8,
         res = c(90, 100),
+        filename = "connectivity_plot_leadingEdgeGraph",
         add.watermark = watermark
       )
       return(getLeadingEdgeGraph)

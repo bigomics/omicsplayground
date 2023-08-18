@@ -71,6 +71,7 @@ wgcna_plot_s_independence_server <- function(id,
       func = topologyPlots.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
+      filename = "wgcna_plot_s_independence",
       add.watermark = watermark
     )
   })

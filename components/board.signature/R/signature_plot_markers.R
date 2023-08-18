@@ -315,6 +315,7 @@ signature_plot_markers_server <- function(id,
       plotlib = "plotly",
       res = c(100, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "signature_plot_markers",
       add.watermark = watermark
     )
   }) ## end of moduleServer

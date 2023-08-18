@@ -176,6 +176,7 @@ clustering_plot_phenoplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(85), ## resolution of plots
       pdf.width = 6, pdf.height = 9,
+      filename = "clustering_plot_phenoplot",
       add.watermark = watermark
     )
   })

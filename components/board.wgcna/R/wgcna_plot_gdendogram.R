@@ -49,6 +49,7 @@ wgcna_plot_gdendogram_server <- function(id,
       func = geneDendro.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
+      filename = "wgcna_plot_gdendogram",
       add.watermark = watermark
     )
   })

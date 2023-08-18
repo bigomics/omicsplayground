@@ -252,6 +252,7 @@ clustering_plot_clustpca_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 8,
+      filename = "clustering_plot_clustpca",
       add.watermark = watermark
     )
   })

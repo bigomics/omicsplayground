@@ -107,6 +107,7 @@ foldchange_heatmap_server <- function(id,
       plotlib = "base",
       res = c(90, 110),
       pdf.width = 5, pdf.height = 5,
+      filename = "foldchange_heatmap",
       add.watermark = watermark
     )
   })

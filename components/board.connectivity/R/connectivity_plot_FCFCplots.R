@@ -227,7 +227,8 @@ connectivity_plot_FCFCplots_server <- function(id,
         res = c(90, 130),
         pdf.height = 4.5,
         pdf.width = 10,
-        add.watermark = watermark
+        add.watermark = watermark,
+        filename = "connectivity_plot_FCFCplots"
       )
     } ## end of moduleServer
   )

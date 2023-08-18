@@ -87,7 +87,9 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 90), ## resolution of plots
       pdf.width = 4, pdf.height = 4,
+      filename = "upload_plot_contraststats",
       add.watermark = watermark
     )
+
   }) ## end of moduleServer
 }

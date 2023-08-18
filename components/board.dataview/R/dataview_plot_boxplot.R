@@ -110,6 +110,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
 
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      filename = "dataview_plot_boxplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer
