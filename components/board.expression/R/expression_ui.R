@@ -67,7 +67,7 @@ ExpressionUI <- function(id) {
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Plot",
+      "Overview",
       bslib::layout_column_wrap(
         width = 1 / 4,
         style = halfH,
@@ -125,7 +125,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Volcano (all)",
+      "Contrast view",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
@@ -141,7 +141,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Volcano (methods)",
+      "Statistical view",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
