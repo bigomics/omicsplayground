@@ -37,6 +37,7 @@ enrichment_plot_volcano_server <- function(id,
                                            subplot.MAR,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    
     subplot_volcano.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
@@ -84,22 +85,25 @@ enrichment_plot_volcano_server <- function(id,
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
-      playbase::gx.volcanoPlot.XY(
-        x = fx, pv = qval, gene = fc.genes,
-        render = "canvas", n = 5000, nlab = 10,
-        xlim = xlim, ylim = ylim, ## hi.col="#222222",
-        use.fdr = TRUE, p.sig = fdr, lfc = lfc,
-        cex = 0.9, lab.cex = 1.3,
-        cex.main = 0.8, cex.axis = 0.9,
-        xlab = "fold change (log2)",
-        ylab = "significance (log10q)",
-        highlight = sel.genes
-      )
-      gs <- playbase::breakstring(gs, 50)
-      title(gs, cex.main = 0.85)
-      p <- grDevices::recordPlot()
-      p
-    })
+      playbase::plotlyVolcano(
+        x = fx,
+        y = -log10(qval),
+        names = fc.genes,
+        source = "plot1",
+        marker.type = "scattergl",
+        highlight = sel.genes,
+        label = sel.genes,
+        psig = fdr,
+        lfc = lfc,
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10q)",
+        marker.size = 3,
+        displayModeBar = FALSE,
+        showlegend = FALSE
+      ) %>%
+        plotly::layout(margin = list(b = 60))
+
+      })
 
     subplot_volcano.PLOTLY <- shiny::reactive({
       shiny::req(pgx$X)
@@ -178,7 +182,7 @@ enrichment_plot_volcano_server <- function(id,
     PlotModuleServer(
       "plot",
       func = subplot_volcano.RENDER,
-      func2 = subplot_volcano.PLOTLY,
+      func2 = subplot_volcano.RENDER,
       plotlib = "base",
       plotlib2 = "plotly",
       pdf.width = 5, pdf.height = 5,
