@@ -21,7 +21,7 @@ enrichment_plot_volcano_ui <- function(
     height = height,
     width = width,
     caption = caption,
-    plotlib = "base",
+    plotlib = "plotly",
     plotlib2 = "plotly",
     download.fmt = c("png", "pdf")
   )
@@ -38,7 +38,7 @@ enrichment_plot_volcano_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
-    subplot_volcano.RENDER <- shiny::reactive({
+    volcano.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
@@ -105,85 +105,11 @@ enrichment_plot_volcano_server <- function(id,
 
       })
 
-    subplot_volcano.PLOTLY <- shiny::reactive({
-      shiny::req(pgx$X)
-
-      comp <- 1
-      gs <- 1
-      comp <- gs_contrast()
-      shiny::req(pgx$X)
-
-      gxmethods <- selected_gxmethods() ## from module-expression
-      shiny::req(gxmethods)
-
-      gx.meta <- pgx$gx.meta$meta[[comp]]
-      meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max, na.rm = TRUE)
-      limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
-      gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
-      limma <- cbind(gx.annot, limma1)
-
-      gs <- gset_selected()
-      if (is.null(gs)) {
-        return(NULL)
-      }
-      gs <- gs[1]
-      gset <- playdata::getGSETS(gs)[[1]]
-      jj <- match(toupper(gset), toupper(limma$gene_name))
-      sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
-
-      fdr <- 1
-      fdr <- as.numeric(gs_fdr())
-
-      fc.genes <- as.character(limma[, grep("^gene$|gene_name", colnames(limma))])
-      fx <- limma[, grep("logFC|meta.fx|fc", colnames(limma))[1]]
-      qval <- limma[, grep("^q|adj.P.Val|meta.q|qval|padj", colnames(limma))[1]]
-
-      qval <- pmax(qval, 1e-12) ## prevent q=0
-      qval[which(is.na(qval))] <- 1
-      xlim <- c(-1, 1) * max(abs(fx), na.rm = TRUE)
-      ylim <- c(0, 12)
-      ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
-      ylim
-
-      lfc <- 0.20
-      lfc <- as.numeric(gs_lfc())
-      y <- -log10(qval + 1e-20)
-      scaled.fx <- scale(fx, center = FALSE)
-      scaled.y <- scale(y, center = FALSE)
-
-      impt <- function(g) {
-        j <- match(g, fc.genes)
-        x1 <- scaled.fx[j]
-        y1 <- scaled.y[j]
-        x <- sign(x1) * (x1**2 + 0.25 * y1**2)
-        names(x) <- g
-        x
-      }
-      lab.genes <- c(
-        head(sel.genes[order(impt(sel.genes))], 10),
-        head(sel.genes[order(-impt(sel.genes))], 10)
-      )
-
-      playbase::plotlyVolcano(
-        x = fx, y = y, names = fc.genes,
-        source = "plot1", marker.type = "scattergl",
-        highlight = sel.genes, label = lab.genes,
-        group.names = c("group1", "group0"),
-        psig = fdr, lfc = lfc,
-        xlab = "effect size (log2FC)",
-        ylab = "significance (-log10q)",
-        marker.size = 4,
-        displayModeBar = FALSE,
-        showlegend = FALSE
-      ) %>%
-        plotly::layout(margin = list(b = 60))
-    })
-
     PlotModuleServer(
       "plot",
-      func = subplot_volcano.RENDER,
-      func2 = subplot_volcano.RENDER,
-      plotlib = "base",
+      func = volcano.RENDER,
+      func2 = volcano.RENDER,
+      plotlib = "plotly",
       plotlib2 = "plotly",
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
