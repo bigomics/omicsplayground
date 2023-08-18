@@ -299,7 +299,7 @@ PlotModuleUI <- function(id,
   if (any(class(caption) == "reactive")) {
     caption <- caption()
   }
-
+  
   e <- bslib::card(
     full_screen = FALSE,
     style = paste0("height:", height.1, ";overflow: visible;"),
@@ -402,6 +402,13 @@ PlotModuleServer <- function(id,
     id,
     function(input, output, session) {
       ns <- session$ns
+            
+      filename = ns("title")
+
+      # replace empty spaces of title with underscore
+      filename <- gsub(" ", "_", filename)
+      # all caps down
+      filename <- tolower(filename)
 
       observeEvent(input$downloadOption,
         {
