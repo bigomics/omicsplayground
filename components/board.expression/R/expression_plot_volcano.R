@@ -185,9 +185,8 @@ expression_plot_volcano_server <- function(id,
         xlab = "effect size (log2FC)",
         ylab = "significance (-log10q)",
         marker.size = 3,
-        displayModeBar = FALSE,
         showlegend = FALSE
-      ) ## %>% plotly::layout(margin = list(b = 35))
+      )
       plt
     }
 
