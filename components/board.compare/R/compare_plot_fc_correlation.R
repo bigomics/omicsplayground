@@ -20,7 +20,7 @@ compare_plot_fc_correlation_ui <- function(id,
 
   PlotModuleUI(ns("plot"),
     title = "FC Correlation",
-    plotlib = "base",
+    plotlib = "plotly",
     label = "a",
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
@@ -81,19 +81,50 @@ compare_plot_fc_correlation_server <- function(id,
       return(cbind(F1, F2))
     })
 
+    plot_interactive_comp_fc0  <- function(F, F2 = NULL, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
+
+      if (is.null(F2)) F2 <- F
+      symm <- all(colnames(F) == colnames(F2))
+      gg <- intersect(rownames(F), rownames(F2))
+      F <- F[gg, , drop = FALSE]
+      F2 <- F2[gg, , drop = FALSE]
+      
+      var <- cbind(F,F2)
+      pos <- cbind(F,F2)
+
+      p <- playbase::pgx.scatterPlotXY(
+        pos,
+        var = var,
+        plotlib = "plotly", 
+        cex = cex,
+        hilight = hilight,
+        title = "SPLOM",
+        #source = ns(id),
+
+        key = colnames(var)
+      )
+      
+      return(p)
+    }
+
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
       F <- plot_data()
       indexes <- substr(colnames(F), 1, 1)
       F1 <- F[, indexes == 1, drop = FALSE]
       F2 <- F[, indexes == 2, drop = FALSE]
-      playbase::plot_SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
+      p <- plot_interactive_comp_fc0(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes) %>%
+        plotly::layout(
+          dragmode = "select",
+          margin = list(l = 5, r = 5, b = 5, t = 20)
+        )
+      #playbase::plot_SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
       p
     }
 
     PlotModuleServer(
       "plot",
-      plotlib = "base",
+      plotlib = "plotly",
       func = fcfcplot.RENDER,
       csvFunc = plot_data,
       res = c(85, 100), ## resolution of plots
