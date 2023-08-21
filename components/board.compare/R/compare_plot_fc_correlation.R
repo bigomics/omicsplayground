@@ -48,17 +48,18 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
+
+      # Require inputs
       shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(input.contrast1)
       shiny::req(input.contrast2)
       pgx1 <- pgx
       pgx2 <- dataset2()
-
-
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
 
+      # Allow only common contrats
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         shiny::validate(shiny::need(all(ct1 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
@@ -68,6 +69,7 @@ compare_plot_fc_correlation_server <- function(id,
         return(NULL)
       }
 
+      # Match matrices from both datasets
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
@@ -81,16 +83,10 @@ compare_plot_fc_correlation_server <- function(id,
       return(cbind(F1, F2))
     })
 
-    plot_interactive_comp_fc0  <- function(F, F2 = NULL, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
-
-      if (is.null(F2)) F2 <- F
-      symm <- all(colnames(F) == colnames(F2))
-      gg <- intersect(rownames(F), rownames(F2))
-      F <- F[gg, , drop = FALSE]
-      F2 <- F2[gg, , drop = FALSE]
+    plot_interactive_comp_fc0  <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
       
-      var <- cbind(F,F2)
-      pos <- cbind(F,F2)
+      var <- plot_data()
+      pos <- plot_data()
 
       p <- playbase::pgx.scatterPlotXY(
         pos,
@@ -98,9 +94,6 @@ compare_plot_fc_correlation_server <- function(id,
         plotlib = "plotly", 
         cex = cex,
         hilight = hilight,
-        title = "SPLOM",
-        #source = ns(id),
-
         key = colnames(var)
       )
       
@@ -113,13 +106,12 @@ compare_plot_fc_correlation_server <- function(id,
       indexes <- substr(colnames(F), 1, 1)
       F1 <- F[, indexes == 1, drop = FALSE]
       F2 <- F[, indexes == 2, drop = FALSE]
-      p <- plot_interactive_comp_fc0(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes) %>%
+      p <- plot_interactive_comp_fc0(plot_data = plot_data, cex = 0.6, cex.axis = 0.95, hilight = higenes) %>%
         plotly::layout(
           dragmode = "select",
           margin = list(l = 5, r = 5, b = 5, t = 20)
         )
-      #playbase::plot_SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
-      p
+      return(p)
     }
 
     PlotModuleServer(
