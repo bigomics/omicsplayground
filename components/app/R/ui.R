@@ -59,10 +59,10 @@ app_ui <- function() {
 
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
-      onClick = "logoutInApp();quit()"                               
-##      onClick = "logoutInApp()"
+      onClick = "logoutInApp();quit()"
+      ##      onClick = "logoutInApp()"
     )
-    
+
     if (opt$AUTHENTICATION == "shinyproxy") {
       ## For ShinyProxy we need to redirect to /logout for clean session
       ## logout. Then we need a redirect to the /login page.

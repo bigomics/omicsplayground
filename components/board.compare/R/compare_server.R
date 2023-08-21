@@ -94,7 +94,7 @@ CompareBoard <- function(id, pgx, pgx_dir) {
       if (input$dataset2 == "<this>") {
         pgx <- pgx
       } else {
-        file2 <- file.path(pgx_dir(), input$dataset2)          
+        file2 <- file.path(pgx_dir(), input$dataset2)
         pgx <- playbase::pgx.load(file2)
       }
       comparisons2 <- names(pgx$gx.meta$meta)
