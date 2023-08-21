@@ -358,7 +358,8 @@ app_server <- function(input, output, session) {
       if (ENABLED["cmap"]) {
         info("[SERVER] calling ConnectivityBoard module")
         ConnectivityBoard("cmap",
-          pgx = PGX, auth = auth,
+          pgx = PGX,
+          auth = auth,
           reload_pgxdir = reload_pgxdir
         )
       }
@@ -386,7 +387,7 @@ app_server <- function(input, output, session) {
 
       if (ENABLED["comp"]) {
         info("[SERVER] calling CompareBoard module")
-        CompareBoard("comp", pgx = PGX)
+        CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir) )
       }
 
       info("[SERVER] calling modules done!")
@@ -769,7 +770,8 @@ app_server <- function(input, output, session) {
     ## after exit.
     dbg("[SERVER:quit] exit session... ")
     sever::sever(sever_ciao(), bg_color = "#004c7d")
-    session$close()
+    ##session$close()
+    session$reload()    
   })
 
   ## This code will be run after the client has disconnected
