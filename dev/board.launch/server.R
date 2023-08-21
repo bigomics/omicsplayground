@@ -12,13 +12,20 @@ app_server <- function(input, output, session) {
 
   server_fn_name <- glue::glue("{board}board")
   board_server <- grep(server_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
+  length <- nchar(board) + nchar("board")
+    
+  board_server <- board_server[which(length == nchar(board_server))]
+
   board_server_fn <- get(board_server)
+
+  auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
   
   trigger_server <- reactive({
         req(input$pgx_path)
+        browser()
         pgx <- playbase::pgx.load(input$pgx_path)
-        server <- board_server_fn(board, pgx)
-    
+        server <- board_server_fn(board, pgx = pgx, auth = auth, reload_pgxdir=auth$user_dir)
+
   })
   
   observeEvent(input$pgx_path, {

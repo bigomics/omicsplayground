@@ -34,13 +34,22 @@ app_ui <- function() {
     board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
     # find the function name
     board_input <- board_input[grepl(board, board_input, ignore.case = TRUE)]
+
+    # check if the length matches the function
+    length <- nchar(board) + nchar("inputs")
     
+    board_input <- board_input[which(length == nchar(board_input))]
+
     board_input_fn <- get(board_input)
 
     # to the same for ui
     
     ui_fn_name <- glue::glue("{board}ui")
     board_ui <- grep(ui_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
+    length <- nchar(board) + nchar("ui")
+    
+    board_ui <- board_ui[which(length == nchar(board_ui))]
+
     board_ui_fn <- get(board_ui)
     
     # header
