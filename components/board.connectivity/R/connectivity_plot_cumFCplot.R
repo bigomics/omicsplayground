@@ -132,8 +132,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         csvFunc = cumulativeFCtable,
         pdf.height = 6, pdf.width = 9,
         res = c(72, 90),
-        add.watermark = watermark,
-        filename = "connectivity_plot_cumFCplot"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

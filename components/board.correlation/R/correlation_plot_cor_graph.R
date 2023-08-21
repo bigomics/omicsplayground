@@ -128,7 +128,6 @@ correlation_plot_cor_graph_server <- function(
       func = cor_graph.VISNETWORK,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "correlation_plot_cor_graph",
       add.watermark = watermark
     )
   }) ## end of moduleServer

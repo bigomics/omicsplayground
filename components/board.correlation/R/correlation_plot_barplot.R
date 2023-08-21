@@ -126,7 +126,6 @@ correlation_plot_barplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(63, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 4,
-      filename = "correlation_plot_barplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

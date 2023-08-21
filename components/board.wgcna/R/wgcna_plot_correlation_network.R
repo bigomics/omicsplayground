@@ -67,7 +67,6 @@ wgcna_plot_correlation_network_server <- function(id,
       func = corGraph.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 80),
-      filename = "wgcna_plot_correlation_network",
       add.watermark = watermark
     )
   })

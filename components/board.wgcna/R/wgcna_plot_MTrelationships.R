@@ -95,7 +95,6 @@ wgcna_plot_MTrelationships_server <- function(id,
       func = moduleTrait.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
-      filename = "wgcna_plot_MTrelationships",
       add.watermark = watermark
     )
   })

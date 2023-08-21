@@ -123,8 +123,8 @@ functional_plot_enrichmap_server <- function(id,
         plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
-        add.watermark = watermark,
-        filename = "functional_plot_enrichmap"
+        #
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

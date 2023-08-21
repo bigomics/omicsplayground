@@ -152,8 +152,7 @@ biomarker_plot_boxplots_server <- function(id,
         func2 = plot.RENDER, # no separate modal plot render
         res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
-        add.watermark = watermark,
-        filename = "biomarker_plot_boxplots",
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

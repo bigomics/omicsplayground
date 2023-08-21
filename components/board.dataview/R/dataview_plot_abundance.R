@@ -95,7 +95,6 @@ dataview_plot_abundance_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "dataview_plot_abundance",
       add.watermark = watermark
     )
   }) ## end of moduleServer

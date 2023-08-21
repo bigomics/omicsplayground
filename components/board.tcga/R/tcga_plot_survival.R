@@ -104,7 +104,6 @@ tcga_plot_survival_server <- function(id,
       func = tcga_tcgasurv_test,
       res = c(80, 85),
       pdf.width = 6, pdf.height = 6,
-      filename = "tcga_plot_survival",
       add.watermark = watermark
     )
   }) ## end of moduleServer

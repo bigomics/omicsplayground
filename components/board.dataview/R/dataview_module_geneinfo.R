@@ -98,8 +98,7 @@ dataview_module_geneinfo_server <- function(id,
       func2 = modal_info.RENDER,
       ## csvFunc = geneinfo_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderUI,
-      renderFunc2 = shiny::renderUI,
-      filename = "dataview_module_geneinfo"
+      renderFunc2 = shiny::renderUI
     )
   }) ## end of moduleServer
 }

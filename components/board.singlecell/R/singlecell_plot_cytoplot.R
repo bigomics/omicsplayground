@@ -130,7 +130,6 @@ singlecell_plot_cytoplot_server <- function(id,
       res = c(90, 130), ## resolution of plots
       pdf.width = 9,
       pdf.height = 7,
-      filename = "singlecell_plot_cytoplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

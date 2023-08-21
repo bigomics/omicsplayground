@@ -126,7 +126,6 @@ correlation_plot_correlation_UMAP_server <- function(id,
       csvFunc = cor_umap.DATA,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "correlation_plot_correlation_UMAP",
       add.watermark = watermark
     )
   }) ## end of moduleServer

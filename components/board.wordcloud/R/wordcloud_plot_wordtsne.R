@@ -109,7 +109,6 @@ wordcloud_plot_wordtsne_server <- function(id,
       func = wordtsne.PLOTLY,
       pdf.width = 5, pdf.height = 5,
       res = 72,
-      filename = "wordcloud_plot_wordtsne",
       add.watermark = watermark
     )
   })

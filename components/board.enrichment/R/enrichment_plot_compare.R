@@ -125,7 +125,6 @@ enrichment_plot_compare_server <- function(id,
       func2 = compare.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
-      filename = "enrichment_plot_compare",
       add.watermark = watermark
     )
   })

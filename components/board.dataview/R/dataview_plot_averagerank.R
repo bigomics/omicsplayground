@@ -186,7 +186,6 @@ dataview_plot_averagerank_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "dataview_plot_averagerank",
       add.watermark = watermark
     )
   }) ## end of moduleServer

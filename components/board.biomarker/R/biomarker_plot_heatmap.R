@@ -125,8 +125,7 @@ biomarker_plot_heatmap_server <- function(id,
         res = c(72, 110),
         pdf.width = 10,
         pdf.height = 10,
-        add.watermark = watermark,
-        filename = "biomarker_plot_heatmap"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

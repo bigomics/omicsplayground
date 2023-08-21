@@ -160,7 +160,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         "plotmodule",
         plotlib = "svgPanZoom",
         func = plot_RENDER,
-        filename = "functional_plot_wikipathway_graph"
       )
     } ## end of moduleServer
   )

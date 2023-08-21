@@ -277,7 +277,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       pdf.width = 5,
       pdf.height = 5,
       res = c(90, 120),
-      filename = "enrichment_plot_top_enrich_gsets",
       add.watermark = watermark
     )
   })

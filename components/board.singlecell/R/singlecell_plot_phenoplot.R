@@ -203,7 +203,6 @@ singlecell_plot_phenoplot_server <- function(id,
       res = c(85, 95),
       pdf.width = 6,
       pdf.height = 10,
-      filename = "singlecell_plot_phenoplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

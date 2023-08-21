@@ -119,7 +119,6 @@ enrichment_plot_scatter_server <- function(id,
       func = subplot_scatter.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
-      filename = "enrichment_plot_scatter",
       add.watermark = watermark
     )
   })

@@ -110,7 +110,6 @@ enrichment_plot_barplot_server <- function(id,
       func2 = subplot_barplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
-      filename = "enrichment_plot_barplot",
       add.watermark = watermark
     )
   })

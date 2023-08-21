@@ -183,7 +183,6 @@ enrichment_plot_volcano_server <- function(id,
       plotlib2 = "plotly",
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
-      filename = "enrichment_plot_volcano",
       add.watermark = watermark
     )
   })

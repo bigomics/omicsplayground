@@ -141,7 +141,6 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       pdf.height = 5,
       res = c(68, 100),
       csvFunc = plot_data,
-      filename = "enrichment_plot_freq_top_gsets",
       add.watermark = watermark
     )
   })

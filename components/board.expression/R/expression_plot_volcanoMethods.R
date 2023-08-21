@@ -204,7 +204,6 @@ expression_plot_volcanoMethods_server <- function(id,
       ## csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
-      filename = "expression_plot_volcanoMethods",
       add.watermark = watermark
     )
   }) ## end of moduleServer

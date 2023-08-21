@@ -174,7 +174,6 @@ dataview_plot_correlation_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "dataview_plot_correlation",
       add.watermark = watermark
     )
   }) ## end of moduleServer

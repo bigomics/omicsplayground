@@ -155,7 +155,6 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 4,
-      filename = "dataview_plot_tissue",
       add.watermark = watermark
     )
   }) ## end of moduleServer

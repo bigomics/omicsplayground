@@ -119,8 +119,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         remove_margins = FALSE,
         pdf.height = 11,
         pdf.width = 6,
-        add.watermark = watermark,
-        filename = "functional_plot_wikipathway_actmap"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

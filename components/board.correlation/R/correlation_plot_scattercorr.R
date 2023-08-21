@@ -215,7 +215,6 @@ correlation_plot_scattercorr_server <- function(id,
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
-      filename = "correlation_plot_scattercorr",
       add.watermark = watermark
     )
   }) ## end of moduleServer

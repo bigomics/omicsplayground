@@ -167,8 +167,7 @@ functional_plot_go_actmap_server <- function(id,
         pdf.width = 9,
         remove_margins = FALSE,
         pdf.height = 9,
-        add.watermark = watermark,
-        filename = "functional_plot_go_actmap"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

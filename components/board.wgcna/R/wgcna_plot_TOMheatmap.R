@@ -108,7 +108,6 @@ wgcna_plot_TOMheatmap_server <- function(id,
       func = TOMplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
-      filename = "wgcna_plot_TOMheatmap",
       add.watermark = watermark
     )
   })

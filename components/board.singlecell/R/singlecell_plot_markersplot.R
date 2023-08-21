@@ -355,7 +355,6 @@ singlecell_plot_markersplot_server <- function(id,
       plotlib = "ggplot",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,
-      filename = "singlecell_plot_markersplot",
       add.watermark = watermark
     )
   }) ## end of moduleServer

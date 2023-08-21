@@ -399,8 +399,7 @@ connectivity_plot_connectivityMap_server <- function(id,
         csvFunc = getThresholdedConnectivityScores,
         pdf.width = 8, pdf.height = 8,
         res = 90,
-        add.watermark = watermark,
-        filename = "connectivity_plot_connectivityMap"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

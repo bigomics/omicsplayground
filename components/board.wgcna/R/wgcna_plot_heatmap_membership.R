@@ -60,7 +60,6 @@ wgcna_plot_heatmap_membership_server <- function(id,
       func = intraHeatmap.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(85, 100),
-      filename = "wgcna_plot_heatmap_membership",
       add.watermark = watermark
     )
   })

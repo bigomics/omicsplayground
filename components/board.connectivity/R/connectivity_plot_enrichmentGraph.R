@@ -208,8 +208,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         csvFunc = getEnrichmentGraph,
         pdf.height = 8, pdf.width = 8,
         res = c(90, 100),
-        add.watermark = watermark,
-        filename = "connectivity_plot_enrichmentGraph"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

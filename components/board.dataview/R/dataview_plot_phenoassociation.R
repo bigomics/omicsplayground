@@ -81,7 +81,6 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       renderFunc2 = shiny::renderPlot,
       res = c(100, 170) * 0.85, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "dataview_plot_phenoassociation",
       add.watermark = watermark
     )
   }) ## end of moduleServer

@@ -91,7 +91,6 @@ featuremap_plot_gset_sig_server <- function(id,
       csvFunc = gsetSigPlots.plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
-      filename = "featuremap_plot_gset_sig",
       add.watermark = watermark
     )
   })

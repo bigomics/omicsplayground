@@ -185,8 +185,7 @@ functional_plot_reactome_graph_server <- function(id,
         "plotmodule",
         func = plot_RENDER,
         plotlib = "svgPanZoom",
-        add.watermark = watermark,
-        filename = "functional_plot_reactome_graph"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )

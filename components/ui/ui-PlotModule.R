@@ -389,8 +389,6 @@ PlotModuleServer <- function(id,
                              download.html = NULL,
                              download.csv = NULL,
                              download.obj = NULL,
-                             filename = "plot",
-                             filename.csv = "data",
                              pdf.width = 8,
                              pdf.height = 6,
                              pdf.pointsize = 12,
@@ -506,10 +504,10 @@ PlotModuleServer <- function(id,
       do.csv <- !is.null(csvFunc)
 
       PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- NULL
-      if (do.pdf) PDFFILE <- paste0(gsub("file", filename, tempfile()), ".pdf")
-      if (do.png) PNGFILE <- paste0(gsub("file", filename, tempfile()), ".png")
-      if (do.csv) CSVFILE <- paste0(gsub("file", filename.csv, tempfile()), ".csv")
-      HTMLFILE <- paste0(gsub("file", filename, tempfile()), ".html") ## tempory for webshot
+      if (do.pdf) PDFFILE <- paste0(gsub("file", "plot", tempfile()), ".pdf")
+      if (do.png) PNGFILE <- paste0(gsub("file", "plot", tempfile()), ".png")
+      if (do.csv) CSVFILE <- paste0(gsub("file", "data", tempfile()), ".csv")
+      HTMLFILE <- paste0(gsub("file", "plot", tempfile()), ".html") ## tempory for webshot
       HTMLFILE
       unlink(HTMLFILE)
 
@@ -519,7 +517,7 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename,".png"),
+          filename = "plot.png",
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -615,7 +613,7 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename,".pdf"),
+          filename = "plot.pdf",
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -723,7 +721,7 @@ PlotModuleServer <- function(id,
 
       if (do.html && is.null(download.html)) {
         download.html <- shiny::downloadHandler(
-          filename = paste0(filename,".html"),
+          filename = "plot.html",
           content = function(file) {
             shiny::withProgress(
               {
@@ -764,7 +762,7 @@ PlotModuleServer <- function(id,
       if (do.obj) {
         if (plotlib == "plotly") {
           download.obj <- shiny::downloadHandler(
-            filename = paste0(filename, ".rds"),
+            filename = "plot.rds",
             content = function(file) {
               shiny::withProgress(
                 {
@@ -785,7 +783,7 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename.csv,".csv"),
+          filename = "data.csv",
           content = function(file) {
             shiny::withProgress(
               {
@@ -1086,7 +1084,7 @@ PlotModuleServer <- function(id,
 colBL <- "#00448855"
 colRD <- "#88004455"
 
-plotlyExport <- function(p, file = paste0(filename,'.pdf'), format = tools::file_ext(file),
+plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
                          width = NULL, height = NULL, scale = 1, server = NULL) {
   is.docker <- file.exists("/.dockerenv")
   is.docker

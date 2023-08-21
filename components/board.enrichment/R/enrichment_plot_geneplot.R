@@ -105,7 +105,6 @@ enrichment_plot_geneplot_server <- function(id,
       func2 = subplot_geneplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(78, 100),
-      filename = "enrichment_plot_geneplot",
       add.watermark = watermark
     )
   })

@@ -91,7 +91,6 @@ pcsf_plot_heatmap_server <- function(id,
       plotlib = "base",
       pdf.width = 10,
       pdf.height = 10,
-      filename = "pcsf_plot_heatmap",
       add.watermark = watermark
     )
   }) ## end of moduleServer

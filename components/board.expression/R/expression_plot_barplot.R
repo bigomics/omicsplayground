@@ -140,8 +140,7 @@ expression_plot_barplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark,
-      filename = "expression_plot_barplot"
+      add.watermark = watermark
     )
   }) ## end of moduleServer
 }

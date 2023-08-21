@@ -289,7 +289,6 @@ clustering_plot_splitmap_server <- function(id,
         res = c(80, 95), # resolution of plots
         pdf.width = 10, pdf.height = 8,
         add.watermark = watermark,
-        filename = "clustering_plot_splitmap",
         card = x$card
       )
     })

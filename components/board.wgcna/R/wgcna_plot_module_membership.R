@@ -73,7 +73,6 @@ wgcna_plot_module_membership_server <- function(id,
       func = eigenCorrelation.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(90, 105),
-      filename = "wgcna_plot_module_membership",
       add.watermark = watermark
     )
   })

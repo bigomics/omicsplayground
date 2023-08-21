@@ -84,7 +84,6 @@ compare_plot_cum_fc2_server <- function(id,
       csvFunc = cum_fc,
       res = c(80, 98), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      filename = "compare_plot_cum_fc2",
       add.watermark = watermark
     )
   }) ## end of moduleServer

@@ -190,7 +190,6 @@ biomarker_plot_featurerank_server <- function(id,
       csvFunc = calcFeatureRanking, ##  *** downloadable data as CSV
       res = c(72, 90), ## resolution of plots
       pdf.width = 8, pdf.height = 10,
-      filename = "biomarker_plot_featurerank",
       add.watermark = watermark
     )
   })

@@ -193,8 +193,7 @@ functional_plot_go_network_server <- function(id,
         func = plot_RENDER,
         res = 72,
         pdf.width = 10, pdf.height = 8,
-        add.watermark = watermark,
-        filename = "functional_plot_go_network"
+        add.watermark = watermark
       )
     } ## end of moduleServer
   )
