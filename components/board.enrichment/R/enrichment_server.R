@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
+EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -291,8 +291,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods) {
       return(rpt)
     })
 
-
     getFilteredGeneSetTable <- shiny::reactive({
+      req(getFullGeneSetTable())
       if (is.null(input$gs_showall) || length(input$gs_showall) == 0) {
         return(NULL)
       }

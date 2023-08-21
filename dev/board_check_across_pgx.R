@@ -39,7 +39,7 @@ boards <- boards[!is.na(boards)]
 boards <- boards[!boards %in% c("upload", "loading", "user")]
 
 # remove problematic boards
-boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
+boards <- boards[!boards %in% c("pathway","connectivity","featuremap","intersection", "pcsf", "signature","wgcna")]
 
 
 # df with name as pgx_name and each column will result of be a board

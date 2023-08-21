@@ -9,7 +9,7 @@ test_that("example data loads with no error",{
   # remove upload, loading and user from boards
   boards <- boards[!boards %in% c("upload", "loading", "user")]
   # remove problematic boards
-  boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
+  boards <- boards[!boards %in% c("pathway","connectivity","featuremap","intersection", "pcsf", "signature","wgcna")]
   message(boards)
   # create folder snap is not available
   if(!dir.exists("snap")){
