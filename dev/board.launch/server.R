@@ -18,13 +18,11 @@ app_server <- function(input, output, session) {
 
   board_server_fn <- get(board_server)
 
-  auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
-  
   trigger_server <- reactive({
         req(input$pgx_path)
         browser()
         pgx <- playbase::pgx.load(input$pgx_path)
-        server <- board_server_fn(board, pgx = pgx, auth = auth, reload_pgxdir=auth$user_dir)
+        server <- board_server_fn(board, pgx = pgx)
 
   })
   
