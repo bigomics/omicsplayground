@@ -27,19 +27,13 @@ upload_module_preview_server <- function(id, uploaded) {
     id,
     function(input, output, session) {
 
-      accepted_preview <- reactiveVal(FALSE)
       # every time something is uploaded, it can be previewed
       observeEvent(uploaded$last_uploaded, {
-        accepted_preview(FALSE)
 
         has_counts <- 'counts.csv' %in% uploaded$last_uploaded
         has_samples <- 'samples.csv' %in% uploaded$last_uploaded
         has_contrasts <- ('contrasts.csv' %in% uploaded$last_uploaded) &
           (!is.null(uploaded$contrasts.csv))
-
-        print(paste('samples counts:',uploaded[['samples_counts_check']]))
-        print(paste('samples contrasts:',uploaded[['samples_contrasts_check']]))
-        print(paste('samples :',uploaded[['checklist']]$samples.csv))
 
         tabs <- list(id = session$ns('preview_panel'))
         if (has_counts) {
@@ -180,10 +174,8 @@ upload_module_preview_server <- function(id, uploaded) {
 
       observeEvent(input$ok_upload, {
         shiny::removeModal()
-        accepted_preview(TRUE)
       }, ignoreInit = TRUE)
 
-      return(accepted_preview)
     }
   )
 }
