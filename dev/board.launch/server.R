@@ -20,7 +20,6 @@ app_server <- function(input, output, session) {
 
   trigger_server <- reactive({
         req(input$pgx_path)
-        browser()
         pgx <- playbase::pgx.load(input$pgx_path)
         server <- board_server_fn(board, pgx = pgx)
 

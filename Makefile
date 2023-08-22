@@ -110,8 +110,6 @@ board:
 board2:
 	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
 
-# boards available in board3: "biomarker" "clustering" "compare" "correlation" "dataview" "drugconnectivity" "expression" "singlecell" "tcga" "wordcloud"
-
 board3:
 	R -e "options(board = '$(BOARD)'); shiny::runApp('components/dev')"
 

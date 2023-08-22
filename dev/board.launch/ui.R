@@ -57,10 +57,10 @@ app_ui <- function() {
      header <- shiny::tagList(
       #shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
       ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "www/temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "www/dropdown-extra.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "www/styles.min.css")),
-      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "www/favicon.ico")),
+      shiny::tags$head(shiny::tags$script(src = "static/temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "static/dropdown-extra.js")),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "static/styles.min.css")),
+      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "static/favicon.ico")),
       shinyjs::useShinyjs(),
       waiter::use_waiter(),
       sever::useSever(),
