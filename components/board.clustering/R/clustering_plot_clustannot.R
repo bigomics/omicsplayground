@@ -134,6 +134,7 @@ clustering_plot_clusterannot_server <- function(id,
             align = "center", showarrow = FALSE
           )
         }
+
         ## NOTE: The same plotly code (originally) as in `plot_clustannot.R`
         ##       -> Seems it uses the function from this file, not the other one
         ## TODO: clean-up; we should stick to the general setup of individual
@@ -145,11 +146,10 @@ clustering_plot_clusterannot_server <- function(id,
             type = "bar",
             orientation = "h",
             hoverinfo = "text",
+            text = colnames(rho)[i],
             hovertemplate = ~ paste0(
-              ## TODO: the cluster ID in the tooltip is assigned wrongly (it's always S4),
-              ##       needs to be fixed (or that information to be removed)
               "Annotation: <b>%{y}</b><br>",
-              "Cluster: <b>", colnames(rho)[i], "</b><br>",
+              "Cluster: <b>%{text}</b><br>",
               "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
               "<extra></extra>"
             ),

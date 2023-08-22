@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx) {
+CompareBoard <- function(id, pgx, pgx_dir) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
@@ -33,8 +33,7 @@ CompareBoard <- function(id, pgx) {
       comparisons1 <- names(pgx$gx.meta$meta)
       sel1 <- comparisons1[1]
       shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
-
-      pgx.files <- sort(dir(file.path(OPG, "data"), pattern = "pgx$"))
+      pgx.files <- sort(dir(pgx_dir(), pattern = "pgx$"))
       shiny::updateSelectInput(session, "dataset2", choices = c("<this>", pgx.files))
     })
 
@@ -95,9 +94,8 @@ CompareBoard <- function(id, pgx) {
       if (input$dataset2 == "<this>") {
         pgx <- pgx
       } else {
-        #
-        file2 <- file.path(OPG, "data", input$dataset2)
-        pgx <- local(get(load(file2, verbose = 0)))
+        file2 <- file.path(pgx_dir(), input$dataset2)
+        pgx <- playbase::pgx.load(file2)
       }
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
@@ -231,7 +229,6 @@ CompareBoard <- function(id, pgx) {
     ## ================================================================================
 
     # Dataset 1
-
     compare_plot_compare1_server(
       "dataset1",
       pgx = pgx,
@@ -244,7 +241,6 @@ CompareBoard <- function(id, pgx) {
     )
 
     # Dataset 2
-
     compare_plot_compare2_server(
       "dataset2",
       pgx = pgx,
@@ -257,7 +253,6 @@ CompareBoard <- function(id, pgx) {
     )
 
     # FC Correlation
-
     compare_plot_fc_correlation_server(
       "fcfcplot",
       pgx = pgx,

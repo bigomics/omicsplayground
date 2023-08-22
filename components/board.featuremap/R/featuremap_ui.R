@@ -15,14 +15,14 @@ FeatureMapInputs <- function(id) {
     hr(),
     withTooltip(
       shiny::selectInput(ns("filter_genes"), "Annotate genes:",
-        choices = NULL, multiple = FALSE
+        choices = NULL, multiple = TRUE
       ),
       "Filter the genes to highlight on the map.",
       placement = "right", options = list(container = "body")
     ),
     withTooltip(
       shiny::selectInput(ns("filter_gsets"), "Annotate genesets:",
-        choices = NULL, multiple = FALSE
+        choices = NULL, multiple = TRUE
       ),
       "Filter the genesets to highlight on the map.",
       placement = "right", options = list(container = "body")

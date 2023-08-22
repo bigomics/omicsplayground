@@ -28,6 +28,7 @@ upload_module_computepgx_server <- function(
     metaRT,
     lib.dir,
     auth,
+    create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
     height = 720) {
@@ -58,6 +59,9 @@ upload_module_computepgx_server <- function(
         "wordcloud", "experiment similarity", "WGCNA"
       )
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+
+      ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
+      ONESAMPLE.GENESET_METHODS <- sort(c("spearman", "gsva", "fgsea", "ssgsea", "fisher"))
 
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
@@ -221,7 +225,10 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
-      shiny::outputOptions(output, "UI", suspendWhenHidden = FALSE) ## important!!!
+      shiny::outputOptions(output,
+        "UI",
+        suspendWhenHidden = FALSE
+      ) ## important!!!
 
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
@@ -235,10 +242,42 @@ upload_module_computepgx_server <- function(
         meta <- metaRT()
 
         if (!is.null(meta[["name"]])) {
-          shiny::updateTextInput(session, "upload_name", value = meta[["name"]])
+          shiny::updateTextInput(session,
+            "upload_name",
+            value = meta[["name"]]
+          )
         }
         if (!is.null(meta[["description"]])) {
-          shiny::updateTextAreaInput(session, "upload_description", value = meta[["description"]])
+          shiny::updateTextAreaInput(session,
+            "upload_description",
+            value = meta[["description"]]
+          )
+        }
+      })
+
+      shiny::observeEvent(contrastsRT(), {
+        contrasts <- as.data.frame(contrastsRT())
+        has_one <- apply(contrasts, 2, function(x) all(table(x) == 1))
+
+        if (any(has_one)) {
+          shinyalert::shinyalert(
+            title = "WARNING",
+            text = "There are cases where there is only one samples in a group.
+                    Some of the gene tests and enrichment
+                    methods are disabled.",
+            type = "warning"
+          )
+          shiny::updateCheckboxGroupInput(
+            session,
+            "gene_methods",
+            choices = ONESAMPLE.GENE_METHODS,
+            sel = "ttest"
+          )
+          shiny::updateCheckboxGroupInput(session,
+            "gset_methods",
+            choices = ONESAMPLE.GENESET_METHODS,
+            sel = c("fisher", "fgsea", "gsva")
+          )
         }
       })
 
@@ -253,6 +292,7 @@ upload_module_computepgx_server <- function(
       process_counter <- reactiveVal(0)
       reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
       custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
+      store_error_from_process <- reactiveValues(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       shiny::observeEvent(input$upload_custom_genesets, {
         filePath <- input$upload_custom_genesets$datapath
@@ -279,7 +319,7 @@ upload_module_computepgx_server <- function(
           custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
 
           # tell user that custom genesets are "ok"
-          # we could perform an addicional check to verify that items in lists are genes
+          # we could perform an additional check to verify that items in lists are genes
           if (gmt.length > 0 && gmt.is.list) {
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
@@ -342,6 +382,7 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
+
         ## !!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
         ## batch  <- batchRT()
 
@@ -399,11 +440,15 @@ upload_module_computepgx_server <- function(
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
         # if no raw_dir (happens when we auto-load example data via
-        # button), create a temp dir. In this case we don't care it
-        # will use /tmp
+        # button), or user click compute a second time
         if (is.null(raw_dir())) {
-          raw_dir(tempfile(pattern = "pgx_"))
-          dir.create(raw_dir())
+          raw_dir(create_raw_dir(auth))
+          ## raw_dir(tempfile(pattern = "pgx_"))
+          ## dir.create(raw_dir())
+          ##
+          ## NOTE: should we save any counts/samples/contrast matrices
+          ## here?? They might be altered here but at least we have
+          ## them saved.
           dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
@@ -457,7 +502,9 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background. You can continue to play with a different dataset in the meantime. When it is ready, it will appear in your dataset library.",
+          text = "Your dataset will be computed in the background.
+          You can continue to play with a different dataset in the meantime.
+          When it is ready, it will appear in your dataset library.",
           type = "info",
           timer = 60000
         )
@@ -532,9 +579,79 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(raw_dir = raw_dir, nr = nr)
+              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
+
+              if (!auth$email == "") {
+                gmail_creds <- file.path(ETC, "gmail_creds")
+                sendSuccessMessageToUser(
+                  user_email = auth$email,
+                  pgx_name = ds_name_bold,
+                  path_to_creds = gmail_creds
+                )
+              }
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
+
+              log_pgx_compute <- ""
+
+              if (length(active_obj$stderr) > 0) {
+                ## Copy the error to the stderr of main app
+                message("Standard error from processx:")
+                err <- paste0("[processx.", nr, ":stderr] ", active_obj$stderr)
+                # save err to log_pgx_compute, separated by new lines
+                log_pgx_compute <- paste0(log_pgx_compute, "Error:", "<br>")
+                # append err to log_pgx_compute
+                err <- paste0(err, cat = "<br>")
+                log_pgx_compute <- c(log_pgx_compute, err, "<br>")
+              }
+              if (length(active_obj$stdout) > 0) {
+                ## Copy the error to the stderr of main app
+                cat("Standard output from processx:")
+                out <- paste0("[processx.", nr, ":stdout] ", active_obj$stdout)
+                out <- paste0(out, "<br>")
+                log_pgx_compute <- c(log_pgx_compute, "Output:", "<br>")
+                log_pgx_compute <- c(log_pgx_compute, out, "<br>")
+              }
+
+              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
+              title <- shiny::HTML(paste("The dataset", ds_name_bold, "could not be computed."))
+
+              # pass error data to reactive
+              store_error_from_process$error <- log_pgx_compute
+              store_error_from_process$pgx_name <- ds_name_bold
+              store_error_from_process$user_email <- auth$email
+              store_error_from_process$pgx_path <- raw_dir
+
+              # if auth$email is empty, then the user is not logged in
+              if (auth$email == "") {
+                error_popup(
+                  title = "Error:",
+                  header = title,
+                  message = "No email detected! Contact CS not possible!",
+                  error = shiny::HTML(log_pgx_compute),
+                  btn_id = "send_data_to_support__",
+                  onclick = NULL
+                )
+              } else {
+                error_popup(
+                  title = "Error:",
+                  header = title,
+                  message = "Would you like to get support from our customer service?",
+                  error = shiny::HTML(log_pgx_compute),
+                  btn_id = "send_data_to_support__",
+                  onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
+                )
+                # send error message to user
+                gmail_creds <- file.path(ETC, "gmail_creds")
+
+                sendErrorMessageToUser(
+                  user_email = store_error_from_process$user_email,
+                  pgx_name = store_error_from_process$pgx_name,
+                  error = paste0(store_error_from_process$error, collapse = ""),
+                  path_to_creds = gmail_creds
+                )
+              }
               raw_dir(NULL)
             }
             completed_indices <- c(completed_indices, i)
@@ -563,7 +680,6 @@ upload_module_computepgx_server <- function(
           active_processes <- active_processes[-completed_indices]
           process_obj(active_processes)
         }
-
         return(NULL)
       })
 
@@ -626,6 +742,35 @@ upload_module_computepgx_server <- function(
         } else {
           shinyjs::disable("compute")
         }
+      })
+
+      # observer to listed to click on send_data_to_support button
+      observeEvent(input$send_data_to_support, {
+        # write a message to console with shinyjs
+        shinyjs::runjs("console.log('send_data_to_support button clicked')")
+        message("send_data_to_support button clicked")
+
+        gmail_creds <- file.path(ETC, "gmail_creds")
+
+        sendErrorMessageToCustomerSuport(
+          user_email = store_error_from_process$user_email,
+          pgx_name = store_error_from_process$pgx_name,
+          pgx_path = store_error_from_process$pgx_path,
+          error = paste0(store_error_from_process$error, collapse = ""),
+          path_to_creds = gmail_creds
+        )
+
+        # close modal
+
+        shinyjs::runjs("document.getElementById('sendLogModal').style.display = 'none';")
+
+        # alert user that a message was sent to CS
+
+        shinyalert::shinyalert(
+          title = "Message sent",
+          text = "We are sorry you had a problem. We will get back to you as soon as possible.",
+          type = "success"
+        )
       })
 
       return(computedPGX)
