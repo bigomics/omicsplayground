@@ -81,7 +81,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.19-"$(BRANCH)""$(DATE)
+VERSION = "v3.2.22-"$(BRANCH)""$(DATE)
 
 version: 
 	@echo "new version ->" $(VERSION)

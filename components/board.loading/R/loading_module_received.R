@@ -17,45 +17,81 @@ upload_module_received_server <- function(id,
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
 
-      refresh_table <- reactiveVal(0)
+      nr_ds_received <- reactiveVal(0)
+
+      # function that listed to input new_dataset_received
+      show_shared_tab <- function() {
+        if (input$new_dataset_received) {
+          bigdash.selectTab(session, "load-tab")
+          shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
+        }
+      }
 
       ## ------------ get received files
-      getReceivedFiles <- shiny::reactive({
-        req(auth$logged)
-        if (!auth$logged) {
-          return(c())
-        }
-        if (auth$email == "") {
-          return(c())
-        }
-        ## allow trigger for when a shared pgx is accepted / decline
-        refresh_table()
+      getReceivedFiles <- shiny::reactivePoll(
+        intervalMillis = 10000,
+        session = NULL,
+        checkFunc = function() {
+          if (!auth$logged || auth$email == "") {
+            return(nr_ds_received())
+          }
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+          )
 
-        current_user <- auth$email
-        pgxfiles <- dir(
-          path = pgx_shared_dir,
-          pattern = paste0("__to__", current_user, "__from__.*__$"),
-          ignore.case = TRUE
-        )
-        return(pgxfiles)
-      })
+          current_ds_received <- length(pgxfiles)
+          if (length(pgxfiles) > nr_ds_received()) {
+            # modal that tells that user received a new dataset
+            shinyalert::shinyalert(
+              "New dataset received!",
+              paste(
+                "You have received a dataset from another user. Please accept or decline it in the Loading tab."
+              ),
+              confirmButtonText = "Go to shared datasets",
+              showCancelButton = TRUE,
+              cancelButtonText = "Stay here",
+              inputId = "new_dataset_received",
+              callbackR = show_shared_tab
+            )
+          }
+          nr_ds_received(current_ds_received)
+          return(nr_ds_received())
+        },
+        valueFunc = function() {
+          req(auth$logged)
+          if (!auth$logged || auth$email == "") {
+            return(NULL)
+          }
+
+          # get received pgx files
+          current_user <- auth$email
+          pgxfiles <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", current_user, "__from__.*__$"),
+            ignore.case = TRUE
+          )
+          return(pgxfiles)
+        }
+      )
 
       receivedPGXtable <- shiny::eventReactive(
-        c(current_page(), getReceivedFiles()),
+        c(getReceivedFiles()),
         {
-          req(current_page() == "load-tab")
-          shared_files <- getReceivedFiles()
-          if (length(shared_files) == 0) {
+          received_files <- getReceivedFiles()
+          if (is.null(received_files) || length(received_files) == 0) {
             return(NULL)
           }
 
           # split the file name into user who shared and file name
-          shared_pgx <- sub("__to__.*", "", shared_files)
-          shared_from <- gsub(".*__from__|__$", "", shared_files)
+          received_pgx <- sub("__to__.*", "", received_files)
+          received_from <- gsub(".*__from__|__$", "", received_files)
 
           accept_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = ns("accept_pgx__"),
             label = "",
             width = "50px",
@@ -70,7 +106,7 @@ upload_module_received_server <- function(id,
 
           decline_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = "decline_pgx__",
             label = "",
             width = "50px",
@@ -83,8 +119,8 @@ upload_module_received_server <- function(id,
           )
 
           df <- data.frame(
-            Dataset = shared_pgx,
-            From = shared_from,
+            Dataset = received_pgx,
+            From = received_from,
             Actions = paste(accept_btns, decline_btns)
           )
 
@@ -106,8 +142,6 @@ upload_module_received_server <- function(id,
       # ----------------- event when a shared pgx is accepted by a user
       observeEvent(input$accept_pgx,
         {
-          dbg("[loading_module_usershare:observeEvent(input$accept_pgx)] reacted!")
-
           # get pgx name and remove the __from__* tag
           pgx_name <- stringr::str_split(input$accept_pgx, "accept_pgx__")[[1]][2]
           new_pgx_name <- stringr::str_split(pgx_name, "__from__")[[1]][1]
@@ -143,7 +177,6 @@ upload_module_received_server <- function(id,
 
           ## Rename file to user folder. Some servers do not allow
           ## "cross-device link" and then we resort to slower copy
-          dbg("[loading_server.R] accept_pgx : renaming file from = ", file_from, "to = ", file_to)
           if (!file.rename(file_from, file_to)) {
             info("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
             ## file.rename does not allow "cross-device link"
@@ -153,9 +186,6 @@ upload_module_received_server <- function(id,
 
           ## reload pgx dir so the newly accepted pgx files are registered in user table
           reload_pgxdir(reload_pgxdir() + 1)
-
-          ## remove the accepted pgx from the table
-          refresh_table(refresh_table() + 1)
         },
         ignoreInit = TRUE
       )
@@ -164,11 +194,8 @@ upload_module_received_server <- function(id,
       observeEvent(input$decline_pgx,
         {
           pgx_name <- stringr::str_split(input$decline_pgx, "decline_pgx__")[[1]][2]
-          shared_file <- file.path(pgx_shared_dir, pgx_name)
-          file.remove(shared_file)
-
-          # remove the declined pgx from the table
-          refresh_table(refresh_table() + 1)
+          received_file <- file.path(pgx_shared_dir, pgx_name)
+          file.remove(received_file)
         },
         ignoreInit = TRUE
       )
