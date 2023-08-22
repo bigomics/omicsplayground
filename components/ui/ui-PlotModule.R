@@ -762,7 +762,7 @@ PlotModuleServer <- function(id,
       if (do.obj) {
         if (plotlib == "plotly") {
           download.obj <- shiny::downloadHandler(
-            filename = paste0(filename, ".rds")
+            filename = paste0(filename, ".rds"),
             content = function(file) {
               shiny::withProgress(
                 {
