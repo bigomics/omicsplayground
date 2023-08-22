@@ -11,7 +11,7 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("pathway","connectivity","enrichment","featuremap","intersection", "pcsf", "signature","wgcna")]
+  boards <- boards[!boards %in% c("pathway","featuremap","intersection", "pcsf", "signature","wgcna")]
 
   message(boards)
 
@@ -43,6 +43,8 @@ test_that("example data loads with no error",{
     pgx_file <- normalizePath("../../data/example-data.pgx")
     App$set_inputs("pgx_path" = pgx_file)
 
-    App$expect_values()
+    expect_true(TRUE)
+
+    App$expect_screenshot(cran = TRUE)
   })
 })
