@@ -783,7 +783,7 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = "data.csv",
+          filename = paste0(filename,'.csv'),
           content = function(file) {
             shiny::withProgress(
               {
