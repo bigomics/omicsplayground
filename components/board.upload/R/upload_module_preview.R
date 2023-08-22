@@ -27,12 +27,19 @@ upload_module_preview_server <- function(id, uploaded) {
     id,
     function(input, output, session) {
 
+      accepted_preview <- reactiveVal(FALSE)
       # every time something is uploaded, it can be previewed
       observeEvent(uploaded$last_uploaded, {
+        accepted_preview(FALSE)
+
         has_counts <- 'counts.csv' %in% uploaded$last_uploaded
         has_samples <- 'samples.csv' %in% uploaded$last_uploaded
         has_contrasts <- ('contrasts.csv' %in% uploaded$last_uploaded) &
           (!is.null(uploaded$contrasts.csv))
+
+        print(paste('samples counts:',uploaded[['samples_counts_check']]))
+        print(paste('samples contrasts:',uploaded[['samples_contrasts_check']]))
+        print(paste('samples :',uploaded[['checklist']]$samples.csv))
 
         tabs <- list(id = session$ns('preview_panel'))
         if (has_counts) {
@@ -52,7 +59,11 @@ upload_module_preview_server <- function(id, uploaded) {
                 ),
                 column(
                   width = 4,
-                  'Summary:'
+                  'Summary:', br(),
+                  check_to_html(uploaded$checklist$counts.csv,
+                                pass_msg = 'All counts checks passed'),
+                  check_to_html(uploaded$samples_counts_check,
+                                pass_msg = 'All samples-counts checks passed')
                 )
               )
             ))
@@ -75,7 +86,13 @@ upload_module_preview_server <- function(id, uploaded) {
                 ),
                 column(
                   width = 4,
-                  'Summary:'
+                  'Summary:', br(),
+                  check_to_html(uploaded$checklist$samples.csv,
+                                pass_msg = 'All samples checks passed'),
+                  check_to_html(uploaded$samples_counts_check,
+                                pass_msg = 'All samples-counts checks passed'),
+                  check_to_html(uploaded$samples_contrasts_check,
+                                pass_msg = 'All samples-contrasts checks passed')
                 )
               )
             ))
@@ -89,7 +106,7 @@ upload_module_preview_server <- function(id, uploaded) {
               fluidRow(
                 column(
                   width = 8,
-                  upload_table_preview_counts_ui(session$ns('contrasts_preview'),
+                  upload_table_preview_contrasts_ui(session$ns('contrasts_preview'),
                                                  height = c("100%", TABLE_HEIGHT_MODAL),
                                                  width = c("auto", "100%"),
                                                  title = "Uploaded Contrasts",
@@ -98,7 +115,11 @@ upload_module_preview_server <- function(id, uploaded) {
                 ),
                 column(
                   width = 4,
-                  'Summary:'
+                  'Summary:', br(),
+                  check_to_html(uploaded$checklist$contrasts.csv,
+                                pass_msg = 'All contrasts checks passed'),
+                  check_to_html(uploaded$samples_contrasts_check,
+                                pass_msg = 'All samples-contrasts checks passed')
                 )
               )
             ))
@@ -159,10 +180,50 @@ upload_module_preview_server <- function(id, uploaded) {
 
       observeEvent(input$ok_upload, {
         shiny::removeModal()
+        accepted_preview(TRUE)
       }, ignoreInit = TRUE)
 
+      return(accepted_preview)
     }
   )
+}
+
+# convert list of checks to html tags for display in the data preview modal
+check_to_html <- function(check, pass_msg='') {
+  error_list <- playbase::PGX_CHECKS
+
+  if (length(check) > 0) {
+    tagList(
+      lapply(1:length(check), function(idx) {
+        error_id <- names(check)[idx]
+        error_log <- check[[idx]]
+        error_detail <- error_list[error_list$error == error_id, ]
+        error_length <- length(error_log)
+        ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+        if (error_detail$warning_type == 'warning') {
+          title_color <- 'orange'
+        } else if (error_detail$warning_type == 'error') {
+          title_color <- 'red'
+        }
+        div(
+          hr(style='border-top: 1px solid black;'),
+          span(error_detail$title, style=paste('color:',title_color)),
+          br(),
+          paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+          br()
+        )
+      }),
+      hr(style='border-top: 1px solid black;')
+    )
+  } else {
+    if (pass_msg != '') {
+      tagList(
+        span(pass_msg, style='color: green'), br()
+      )
+    }
+  }
+
+
 }
 
 

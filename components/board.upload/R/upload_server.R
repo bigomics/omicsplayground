@@ -197,6 +197,7 @@ UploadBoard <- function(id,
       raw_dir
     }
 
+    upload_check_results <- reactiveVal()
     shiny::observeEvent(input$upload_files, {
       ## shiny::req(raw_dir())
       if (is.null(raw_dir())) {
@@ -213,6 +214,7 @@ UploadBoard <- function(id,
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
       matlist <- list()
+      checklist <- list()
 
       if (pgx.uploaded) {
         ## If the user uploaded a PGX file, we extract the matrix
@@ -262,30 +264,14 @@ UploadBoard <- function(id,
               write.csv(df0, file.path(raw_dir(), "raw_counts.csv"), row.names = TRUE)
 
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
+              check <- COUNTS_check$check
 
-              if (length(COUNTS_check$check) > 0) {
-                lapply(1:length(COUNTS_check$check), function(idx) {
-                  error_id <- names(COUNTS_check$check)[idx]
-                  error_log <- COUNTS_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id, ]
-                  error_length <- length(error_log)
-                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-
-                  shinyalert::shinyalert(
-                    title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-                    type = error_detail$warning_type,
-                    closeOnClickOutside = FALSE
-                  )
-                })
-              }
-
-              if (COUNTS_check$PASS && IS_COUNT) {
+              if (IS_COUNT) {
                 df <- as.matrix(COUNTS_check$df)
                 matname <- "counts.csv"
               }
 
-              if (COUNTS_check$PASS && IS_EXPRESSION) {
+              if (IS_EXPRESSION) {
                 df <- as.matrix(COUNTS_check$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
                 df <- 2**df
@@ -299,25 +285,9 @@ UploadBoard <- function(id,
               write.csv(df0, file.path(raw_dir(), "raw_samples.csv"), row.names = TRUE)
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
+              check <- SAMPLES_check$check
 
-              if (length(SAMPLES_check$check) > 0) {
-                lapply(1:length(SAMPLES_check$check), function(idx) {
-                  error_id <- names(SAMPLES_check$check)[idx]
-                  error_log <- SAMPLES_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id, ]
-                  error_length <- length(error_log)
-                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-
-                  shinyalert::shinyalert(
-                    title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-                    type = error_detail$warning_type,
-                    closeOnClickOutside = FALSE
-                  )
-                })
-              }
-
-              if (SAMPLES_check$PASS && IS_SAMPLE) {
+              if (IS_SAMPLE) {
                 df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
@@ -329,25 +299,9 @@ UploadBoard <- function(id,
               write.csv(df0, file.path(raw_dir(), "raw_contrasts.csv"), row.names = TRUE)
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
+              check <- CONTRASTS_check$check
 
-              if (length(CONTRASTS_check$check) > 0) {
-                lapply(1:length(CONTRASTS_check$check), function(idx) {
-                  error_id <- names(CONTRASTS_check$check)[idx]
-                  error_log <- CONTRASTS_check$check[[idx]]
-                  error_detail <- error_list[error_list$error == error_id, ]
-                  error_length <- length(error_log)
-                  ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-
-                  shinyalert::shinyalert(
-                    title = error_detail$title,
-                    text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-                    type = error_detail$warning_type,
-                    closeOnClickOutside = FALSE
-                  )
-                })
-              }
-
-              if (CONTRASTS_check$PASS && IS_CONTRAST) {
+              if (IS_CONTRAST) {
                 df <- as.matrix(CONTRASTS_check$df)
                 matname <- "contrasts.csv"
               }
@@ -355,6 +309,7 @@ UploadBoard <- function(id,
 
             if (!is.null(matname)) {
               matlist[[matname]] <- df
+              checklist[[matname]] <- check
             }
           }
         }
@@ -377,6 +332,7 @@ UploadBoard <- function(id,
           uploaded[[m1]] <- matlist[[i]]
         }
         uploaded[["last_uploaded"]] <- names(matlist)
+        uploaded[["checklist"]] <- checklist
       }
 
       message("[upload_files] done!\n")
@@ -445,29 +401,15 @@ UploadBoard <- function(id,
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
+        samples_counts_check <- NULL
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = uploaded[["samples.csv"]],
             COUNTS = uploaded[["counts.csv"]]
           )
-
-          if (length(FILES_check$check) > 0) {
-            lapply(1:length(FILES_check$check), function(idx) {
-              error_id <- names(FILES_check$check)[idx]
-              error_log <- FILES_check$check[[idx]]
-              error_detail <- error_list[error_list$error == error_id, ]
-              error_length <- length(error_log)
-              ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-
-              shinyalert::shinyalert(
-                title = error_detail$title,
-                text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-                type = error_detail$warning_type,
-                closeOnClickOutside = FALSE
-              )
-            })
-          }
+          samples_counts_check <- FILES_check$check
+          uploaded[['samples_counts_check']] <- samples_counts_check
 
           uploaded[["samples.csv"]] <- FILES_check$SAMPLES
           uploaded[["counts.csv"]] <- FILES_check$COUNTS
@@ -482,52 +424,23 @@ UploadBoard <- function(id,
             uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
           }
 
-          if (FILES_check$PASS == FALSE) {
-            status["samples.csv"] <- "Error, please check your samples files."
-            status["counts.csv"] <- "Error, please check your counts files."
-            uploaded[["counts.csv"]] <- NULL
-            uploaded[["samples.csv"]] <- NULL
-          }
-
-          if (FILES_check$PASS == TRUE) {
-            status["samples.csv"] <- "OK"
-            status["counts.csv"] <- "OK"
-          }
+          status["samples.csv"] <- "OK"
+          status["counts.csv"] <- "OK"
         }
       }
 
+      samples_contrasts_check <- NULL
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
         )
+        samples_contrasts_check <- FILES_check$check
+        uploaded[['samples_contrasts_check']] <- samples_contrasts_check
 
         uploaded[["samples.csv"]] <- FILES_check$SAMPLES
         uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
-        if (length(FILES_check$check) > 0) {
-          lapply(1:length(FILES_check$check), function(idx) {
-            error_id <- names(FILES_check$check)[idx]
-            error_log <- FILES_check$check[[idx]]
-            error_detail <- error_list[error_list$error == error_id, ]
-            error_length <- length(error_log)
-            ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-
-            shinyalert::shinyalert(
-              title = error_detail$title,
-              text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-              type = error_detail$warning_type,
-              closeOnClickOutside = FALSE
-            )
-          })
-        }
-
-        if (FILES_check$PASS == FALSE) {
-          status["samples.csv"] <- "Error, please check your samples files."
-          status["contrasts.csv"] <- "Error, please check your contrasts files."
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
-        }
       }
 
       MAXSAMPLES <- 25
@@ -609,7 +522,7 @@ UploadBoard <- function(id,
     })
 
     # upload data preview
-    upload_module_preview_server('upload_preview', uploaded)
+    accepted_preview <- upload_module_preview_server('upload_preview', uploaded)
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
