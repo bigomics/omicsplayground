@@ -7,6 +7,7 @@ UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
+                        nav,
                         reload_pgxdir,
                         load_uploaded_data) {
   moduleServer(id, function(input, output, session) {
@@ -696,6 +697,7 @@ UploadBoard <- function(id,
       lib.dir = FILES,
       auth = auth,
       create_raw_dir = create_raw_dir,
+      nav = nav,
       height = height
     )
 
