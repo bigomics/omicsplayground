@@ -58,6 +58,7 @@ app_ui <- function() {
       #shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
       ##    gtag2, ## Google Tag Manager???
       shiny::tags$head(shiny::tags$script(src = "static/temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "static/test_trigger.js")),
       shiny::tags$head(shiny::tags$script(src = "static/dropdown-extra.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "static/styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "static/favicon.ico")),
@@ -66,11 +67,11 @@ app_ui <- function() {
       sever::useSever(),
       bigLoaders::addBigLoaderDeps(),
       #firebase::useFirebase(firestore = TRUE, analytics = TRUE),
-      shinybusy::busy_start_up(
-        text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
-        background = "#2780e3", color = "#ffffff",
-        loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
-      )
+      #shinybusy::busy_start_up(
+      #  text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
+      #  background = "#2780e3", color = "#ffffff",
+      #  loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
+      #)
     )
 
     # sidebar
