@@ -146,6 +146,7 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
+      nav = reactive(input$nav),
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )
@@ -443,10 +444,15 @@ app_server <- function(input, output, session) {
     user
   })
 
+  welcome_detector <- reactiveVal(NULL)
+  observeEvent(input$nav, {
+    welcome_detector(input$nav == "welcome-tab")
+  })
+
   output$current_dataset <- shiny::renderText({
     shiny::req(auth$logged)
     has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    nav.welcome <- input$nav == "welcome-tab"
+    nav.welcome <- welcome_detector()
 
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
