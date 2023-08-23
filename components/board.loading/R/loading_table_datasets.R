@@ -326,7 +326,7 @@ loading_table_datasets_server <- function(id,
           )
         }
 
-        new_menu <- actionMenu( ## ui-DrowDownMenu.R
+        new_menu <- DropdownMenu(
           div(
             style = "width: 160px;",
             div(
@@ -347,7 +347,9 @@ loading_table_datasets_server <- function(id,
           ),
           size = "sm",
           icon = shiny::icon("ellipsis-vertical"),
-          status = "dark"
+          status = "outline-dark",
+          circle = FALSE,
+          border = 0
         )
         menus <- c(menus, as.character(new_menu))
       }
