@@ -9,8 +9,16 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
     tags$a(
       class = paste0(
         "btn btn-", status, " action-button",
-        if (circle){" btn-circle"} else {""},
-        if (size == "default") {" "} else {paste0("-", size, " ")},
+        if (circle) {
+          " btn-circle"
+        } else {
+          ""
+        },
+        if (size == "default") {
+          " "
+        } else {
+          paste0("-", size, " ")
+        },
         if (size != "default") paste0("btn-", size),
         if (border != "default") paste0(" border border-", border)
       ),
