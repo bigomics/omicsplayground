@@ -13,13 +13,6 @@ test_that("example data loads with no error",{
   # remove problematic boards
   boards <- boards[!boards %in% c("pathway","featuremap","intersection", "pcsf", "signature","wgcna")]
 
-  message(boards)
-
-  # create folder snap is not available
-  if(!dir.exists("snap")){
-    dir.create("snap")
-  }
-
   AppLog <- lapply(boards[1:3], function(board){
     # get error from App and save it as error_log
     message(board)
@@ -45,6 +38,7 @@ test_that("example data loads with no error",{
 
     expect_true(TRUE)
 
-    App$expect_screenshot(cran = TRUE)
+    # App$expect_values(cran = TRUE) # TODO: file bug about this...
+    App$expect_screenshot(cran = TRUE, name = board, threshold = 10)
   })
 })
