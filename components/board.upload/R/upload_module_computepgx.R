@@ -31,6 +31,7 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
+    nav,
     height = 720) {
   shiny::moduleServer(
     id,
@@ -725,7 +726,7 @@ upload_module_computepgx_server <- function(
       ## what does this do???
       observe(check_process_status())
 
-      observe({
+      observeEvent(c(process_counter(), nav()), {
         if (process_counter() > 0) {
           shiny::insertUI(
             selector = "#current_dataset",
