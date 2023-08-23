@@ -173,7 +173,6 @@ TableModuleServer <- function(id,
             if (is.list(dt) && !is.data.frame(dt)) dt <- dt[[1]]
           } else {
             dt <- func()$x$data
-            dt <- dt[,colnames(dt) != " "]
           }
           dt2 <- format(dt, digits = 4) ## round
           write.csv(dt2, file = file, row.names = FALSE)
