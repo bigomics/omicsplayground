@@ -37,7 +37,7 @@ functional_plot_go_network_ui <- function(
     title = title,
     label = label,
     plotlib = "visnetwork",
-    info.text = info_text,
+    info.text = info.text,
     caption = caption,
     options = plot_opts,
     download.fmt = c("pdf", "png"),
