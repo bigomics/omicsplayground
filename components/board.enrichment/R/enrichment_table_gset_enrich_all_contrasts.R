@@ -99,9 +99,13 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       F <- td$F
 
       ## wrap with hyperlink
+      # browser()
       geneset_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
         rownames(df)
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
 
       dt <- DT::datatable(

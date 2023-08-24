@@ -92,4 +92,14 @@ html {
 	font-weight: 600;
     }
 
+    .icon_container {
+        position: relative
+    }
+      
+    .icon_nested {
+    position: absolute;
+    left: 5px;
+    color: rgba(217, 83, 79, 1);
+    }
+
 }

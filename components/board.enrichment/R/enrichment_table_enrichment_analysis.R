@@ -71,6 +71,9 @@ enrichment_table_enrichment_analysis_server <- function(id,
       GS_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(rpt)),
         rownames(rpt)
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
       selectmode <- "single"
 

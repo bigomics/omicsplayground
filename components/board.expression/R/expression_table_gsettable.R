@@ -58,6 +58,9 @@ expression_table_gsettable_server <- function(id,
       external_links <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
         rownames(df)
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
       DT::datatable(df,
         #        class = "compact",  ## not good!

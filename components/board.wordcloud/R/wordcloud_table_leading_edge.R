@@ -49,7 +49,10 @@ wordcloud_table_leading_edge_server <- function(id,
       leading.edge_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
         df$leading.edge
-      ) ## add link
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+      )
 
       tbl <- DT::datatable(df,
         rownames = leading.edge_link,
