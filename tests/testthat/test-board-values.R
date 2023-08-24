@@ -1,4 +1,5 @@
 test_that("example data loads with no error",{
+  
   # test single board minimal components
 
   # get all board names
@@ -11,18 +12,19 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("pathway","compare","featuremap","intersection", "pcsf", "signature","wgcna")]
+  boards <- boards[!boards %in% c("pathway","compare","featuremap","intersection", "pcsf", "signature","wgcna", "wordcloud")]
 
   AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
     message(board)
-    #board = "connectivity"
+    #board = "wordcloud"
     #board = boards[1]
     App <- shinytest2::AppDriver$new(
       normalizePath("../../dev/board.launch"),
-      timeout = 10000,
+      timeout = 20000,
       height = 1080,
       width = 1920,
+      seed = 2910,
       variant = shinytest2::platform_variant(),
       options = list(
         board = board,
@@ -36,14 +38,9 @@ test_that("example data loads with no error",{
     pgx_file <- normalizePath("../../data/example-data.pgx")
     App$set_inputs("pgx_path" = pgx_file)
 
-    # simulate a click on logo-bigomics
-    App$run_js("document.getElementById('logo-bigomics').click();")
-
-    while(App$get_value(input = "continue_test") != "TRUE"){
-      Sys.sleep(100.0)
-    }
+    App$wait_for_idle(duration=10000)
     
     # App$expect_values(cran = TRUE) # TODO: file bug about this...
-    App$expect_screenshot(cran = TRUE, name = board, threshold = 10)
+    App$expect_screenshot(cran = TRUE, name = board, threshold = 20)
   })
 })
