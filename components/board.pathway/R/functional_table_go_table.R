@@ -79,12 +79,15 @@ functional_table_go_table_server <- function(id,
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
       dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
-      dt$id <- playbase::wrapHyperLink(as.character(dt$id), id2) ## add link
+      id_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(dt)),
+        id2
+      ) ## add link
 
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,
-        rownames = FALSE,
+        rownames = id_link,
         escape = c(-1, -2),
         #
         extensions = c("Scroller"),

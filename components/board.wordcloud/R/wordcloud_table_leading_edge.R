@@ -46,10 +46,14 @@ wordcloud_table_leading_edge_server <- function(id,
       rownames(df) <- ee
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
-      df$leading.edge <- playbase::wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
+      leading.edge_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        df$leading.edge
+      ) ## add link
 
       tbl <- DT::datatable(df,
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = leading.edge_link,
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",

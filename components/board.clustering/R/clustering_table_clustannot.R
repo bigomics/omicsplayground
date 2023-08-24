@@ -59,12 +59,18 @@ clustering_table_clustannot_server <- function(
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
       rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
-        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
+        feature_link <- playbase::wrapHyperLink(
+          rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+          rownames(df)
+        )
+      } else {
+        feature_link <- FALSE
       }
 
       DT::datatable(
         df,
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = feature_link,
+        escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = c(1)),

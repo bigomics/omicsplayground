@@ -32,14 +32,17 @@ signature_table_overlap_server <- function(id,
       df <- getOverlapTable()
       shiny::req(df)
 
-      df$geneset <- playbase::wrapHyperLink(df$geneset, df$geneset)
+      geneset_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        df$geneset
+      )
 
       numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       DT::datatable(df,
-        #
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = geneset_link,
+        escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = "none",

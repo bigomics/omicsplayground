@@ -68,7 +68,10 @@ enrichment_table_enrichment_analysis_server <- function(id,
       }
 
       ## wrap genesets names with known links.
-      rpt$GS <- playbase::wrapHyperLink(rpt$GS, rownames(rpt))
+      GS_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(rpt)),
+        rownames(rpt)
+      )
       selectmode <- "single"
 
       is.numcol <- sapply(rpt, is.numeric)
@@ -79,7 +82,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
-        rownames = FALSE,
+        rownames = GS_link,
         escape = c(-1, -5),
         extensions = c("Scroller"),
         plugins = "scrollResize",
