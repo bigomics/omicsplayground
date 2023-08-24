@@ -13,7 +13,7 @@
 #' @export
 expression_table_gsettable_ui <- function(
     id,
-    title,
+    title, 
     caption,
     info.text,
     width,
@@ -55,11 +55,14 @@ expression_table_gsettable_server <- function(id,
         "Please select a gene in the table."
       ))
 
-      df$geneset <- playbase::wrapHyperLink(df$geneset, rownames(df))
-
+      external_links <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        rownames(df)
+      )
       DT::datatable(df,
         #        class = "compact",  ## not good!
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = external_links, 
+        escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
@@ -91,6 +94,7 @@ expression_table_gsettable_server <- function(id,
       "datasets",
       func = gsettable.RENDER,
       func2 = gsettable.RENDER_modal,
+      csvFunc = gx_related_genesets,
       selector = "single"
     )
 
