@@ -35,7 +35,7 @@ RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 RUN R -e "devtools::install_github('JohnCoene/bsutils')"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
 RUN R -e "BiocManager::install(c('topGO','survcomp'))"
-RUN R -e "install.packages(c('BH','plsRcox','blastula'))"  
+RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"  
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
