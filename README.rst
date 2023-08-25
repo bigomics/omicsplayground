@@ -60,37 +60,41 @@ Follow the steps below to set up a running platform from the docker file:
 Run from source code
 --------------------------------------------------------------------------------
 
-Omics Playground is implemented using the
-`R/Shiny <https://shiny.rstudio.com/>`__ web application framework. You
-will need R and Shiny Server installed to run Omics Playground. The
-source code of the platform is available on `GitHub
-<https://github.com/bigomics/omicsplayground>`__. You can download the
-latest release of the software by cloning the repository here.
+Omics Playground relies on 3 basic components that do the work on the background: playbase, bigdash, bigloaders. Thus, it is necessary install them manually within the ``R`` environmnet::
 
-Below, we explain the steps required to set up the platform from
-the source code:
+    remotes::install_github('bigomics/playbase')
+    remotes::install_github('bigomics/bigdash')
+    remotes::install_github('bigomics/bigLoaders')
 
-1. Clone the GitHub repository using::
+On top of these, a python interpreter is also necessary for the interactive plots. This can be aslo easily installed all within R via::
+
+    install.packages("reticulate")
+    reticulate::install_miniconda()
+
+Then, everything is ready for installing omicsplayground::
 
     git clone https://github.com/bigomics/omicsplayground.git
    
-   Note: download version v1.0 if you want the exact version of the NAR/GAB publication, 
-   otherwise GitHub will download the latest version by default.
+Note: download version v1.0 if you want the exact version of the NAR/GAB publication, otherwise GitHub will download the latest version by default.
     
-2. Install all necessary R packages by running the script in the ``R/`` folder::
+Next, install all necessary R packages and dependencies by running from the omicsplayground folder::
 
-    Rscript requirements.R
+    cd omicsplayground
+    Rscript dev/requirements.R
     
-3. Run the following command in the ``build/`` folder to build the datasets::
+As option, you can run the following command in the ``build/`` folder to build the datasets::
 
     Rscript build-datasets.R
 
    Note: Building the datasets can vary from minutes to a couple of hours depending on their sizes.
 
-4. Change the current directory into the ``shiny/`` folder and execute the following command
-   to run the platform::
+Finally, you can run the omicsplayground platform. You can do this with the Makefile located in the root omicsplayground folder::
 
-    R -e "shiny::runApp(launch.browser=TRUE)"
+    make run
+    
+Or you can launch the platform from within an R session::
+
+   shiny::runApp('components/app/R', launch.browser=TRUE)
 
    If you have Shiny Server installed you can create a link to the
    shiny folder in the system-wide shiny-server apps folder or in your
