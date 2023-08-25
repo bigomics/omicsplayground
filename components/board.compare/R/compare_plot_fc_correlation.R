@@ -83,7 +83,7 @@ compare_plot_fc_correlation_server <- function(id,
       return(cbind(F1, F2))
     })
 
-    plot_interactive_comp_fc0  <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
+    plot_interactive_comp_fc <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
       
       var <- plot_data()
       pos <- plot_data()
@@ -102,11 +102,7 @@ compare_plot_fc_correlation_server <- function(id,
 
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
-      F <- plot_data()
-      indexes <- substr(colnames(F), 1, 1)
-      F1 <- F[, indexes == 1, drop = FALSE]
-      F2 <- F[, indexes == 2, drop = FALSE]
-      p <- plot_interactive_comp_fc0(plot_data = plot_data, cex = 0.6, cex.axis = 0.95, hilight = higenes) %>%
+      p <- plot_interactive_comp_fc(plot_data = plot_data, cex = 0.6, cex.axis = 0.95, hilight = higenes) %>%
         plotly::layout(
           dragmode = "select",
           margin = list(l = 5, r = 5, b = 5, t = 20)
