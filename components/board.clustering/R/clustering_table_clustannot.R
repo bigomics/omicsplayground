@@ -46,18 +46,22 @@ clustering_table_clustannot_server <- function(
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    table_data <- reactive({
+      rho <- getClustAnnotCorrelation()
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
+      df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
+      rownames(df) <- rownames(rho)
+      return(df)
+    })
+
     clustannot_table.RENDER <- shiny::reactive({
+      df <- table_data()
       rho <- getClustAnnotCorrelation()
       xann_level <- xann_level()
       if (is.null(rho)) {
         return(NULL)
       }
 
-      #
-      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
-      #
-      df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
-      rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
         feature_link <- playbase::wrapHyperLink(
           rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
@@ -101,6 +105,7 @@ clustering_table_clustannot_server <- function(
       "datasets",
       func = clustannot_table.RENDER,
       func2 = clustannot_table.RENDER_modal,
+      csvFunc = table_data,
       selector = "none"
     )
   }) # end module server
