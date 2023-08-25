@@ -146,7 +146,6 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
-      nav = reactive(input$nav),
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data
     )

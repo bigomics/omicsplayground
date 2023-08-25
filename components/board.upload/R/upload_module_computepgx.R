@@ -31,7 +31,6 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
-    nav,
     height = 720) {
   shiny::moduleServer(
     id,
