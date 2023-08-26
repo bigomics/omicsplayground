@@ -36,7 +36,7 @@ app_ui <- function() {
       shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
       ##    gtag2, ## Google Tag Manager???
       shiny::tags$head(shiny::tags$script(src = "temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "dropdown-extra.js")),
+      shiny::tags$head(shiny::tags$script(src = "dropdown-helper.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "favicon.ico")),
       shinyjs::useShinyjs(),
@@ -58,8 +58,9 @@ app_ui <- function() {
     )
 
     logout.tab <- bigdash::navbarDropdownItem(
-      "Exit",
-      onClick = "logoutInApp()"
+      "Logout",
+      onClick = "logoutInApp();quit()"
+      ##      onClick = "logoutInApp()"
     )
 
     if (opt$AUTHENTICATION == "shinyproxy") {

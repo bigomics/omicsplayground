@@ -61,7 +61,7 @@ EnrichmentUI <- function(id) {
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Overview",
+      "Enrichment",
       bslib::layout_column_wrap(
         width = 1 / 2,
         style = halfH,
@@ -123,7 +123,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Enrichment by contrast",
+      "Enrichment by comparison",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
@@ -138,7 +138,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Statistics by comparisons",
+      "Volcano by comparison",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
@@ -153,7 +153,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Statistics by method",
+      "Volcano by method",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,

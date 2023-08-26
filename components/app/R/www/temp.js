@@ -270,7 +270,6 @@ const logoutInApp = () => {
         $(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
         Shiny.setInputValue('userLogout', 1, {priority: 'event'});
-        Shiny.setInputValue('quit', 1, {priority: 'event'});
 };
 
 const quit = () => {
