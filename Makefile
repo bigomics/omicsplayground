@@ -108,5 +108,5 @@ push.version:
 board:
 	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
-board2:
+board_example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
