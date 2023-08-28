@@ -61,7 +61,7 @@ EnrichmentUI <- function(id) {
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Top enriched",
+      "Enrichment",
       bslib::layout_column_wrap(
         width = 1 / 2,
         style = halfH,
@@ -84,7 +84,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Plots",
+      "Geneset expression",
       bslib::layout_column_wrap(
         width = 1 / 4,
         style = halfH,
@@ -123,22 +123,22 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Compare",
+      "Enrichment by comparison",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
         enrichment_plot_compare_ui(
           ns("compare"),
-          title = "Enrichment of geneset across multiple contrasts",
-          info.text = "Under the Compare tab, enrichment profiles of the selected geneset in enrichment Table I can be visualised against all available contrasts.",
-          caption = "Enrichment plots for the selected gene set (in Table I) across multiple contrasts.",
+          title = "Enrichment of geneset across multiple comparisons",
+          info.text = "Under the Compare tab, enrichment profiles of the selected geneset in enrichment Table I can be visualised against all available comparisons.",
+          caption = "Enrichment plots for the selected gene set (in Table I) across multiple comparisons.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
       )
     ),
     shiny::tabPanel(
-      "Volcano (all)",
+      "Volcano by comparison",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
@@ -153,7 +153,7 @@ EnrichmentUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Volcano (methods)",
+      "Volcano by method",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,

@@ -41,6 +41,7 @@ upload_module_received_server <- function(id,
             pattern = paste0("__to__", current_user, "__from__.*__$"),
             ignore.case = TRUE
           )
+
           current_ds_received <- length(pgxfiles)
           if (length(pgxfiles) > nr_ds_received()) {
             # modal that tells that user received a new dataset
@@ -62,11 +63,8 @@ upload_module_received_server <- function(id,
         valueFunc = function() {
           req(auth$logged)
           if (!auth$logged || auth$email == "") {
-            return(FALSE)
+            return(NULL)
           }
-
-          # write dbg message
-          dbg("[loading_module_usershare:reactivePoll] Nr of datasets received = ", nr_ds_received())
 
           # get received pgx files
           current_user <- auth$email
@@ -82,23 +80,18 @@ upload_module_received_server <- function(id,
       receivedPGXtable <- shiny::eventReactive(
         c(getReceivedFiles()),
         {
-          shared_files <- getReceivedFiles()
-          if (length(shared_files) == 0) {
-            # write dbg message
-            dbg("[loading_module_usershare:eventReactive] No datasets received")
+          received_files <- getReceivedFiles()
+          if (is.null(received_files) || length(received_files) == 0) {
             return(NULL)
           }
 
-          # dbg message
-          dbg("[loading_module_usershare:eventReactive] Nr of datasets received = ", length(shared_files))
-
           # split the file name into user who shared and file name
-          shared_pgx <- sub("__to__.*", "", shared_files)
-          shared_from <- gsub(".*__from__|__$", "", shared_files)
+          received_pgx <- sub("__to__.*", "", received_files)
+          received_from <- gsub(".*__from__|__$", "", received_files)
 
           accept_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = ns("accept_pgx__"),
             label = "",
             width = "50px",
@@ -113,7 +106,7 @@ upload_module_received_server <- function(id,
 
           decline_btns <- makebuttonInputs2(
             FUN = actionButton,
-            len = shared_files,
+            len = received_files,
             id = "decline_pgx__",
             label = "",
             width = "50px",
@@ -126,8 +119,8 @@ upload_module_received_server <- function(id,
           )
 
           df <- data.frame(
-            Dataset = shared_pgx,
-            From = shared_from,
+            Dataset = received_pgx,
+            From = received_from,
             Actions = paste(accept_btns, decline_btns)
           )
 
@@ -149,8 +142,6 @@ upload_module_received_server <- function(id,
       # ----------------- event when a shared pgx is accepted by a user
       observeEvent(input$accept_pgx,
         {
-          dbg("[loading_module_usershare:observeEvent(input$accept_pgx)] reacted!")
-
           # get pgx name and remove the __from__* tag
           pgx_name <- stringr::str_split(input$accept_pgx, "accept_pgx__")[[1]][2]
           new_pgx_name <- stringr::str_split(pgx_name, "__from__")[[1]][1]
@@ -186,7 +177,6 @@ upload_module_received_server <- function(id,
 
           ## Rename file to user folder. Some servers do not allow
           ## "cross-device link" and then we resort to slower copy
-          dbg("[loading_server.R] accept_pgx : renaming file from = ", file_from, "to = ", file_to)
           if (!file.rename(file_from, file_to)) {
             info("[loading_server.R] accept_pgx : rename failed. trying file.copy ")
             ## file.rename does not allow "cross-device link"
@@ -204,8 +194,8 @@ upload_module_received_server <- function(id,
       observeEvent(input$decline_pgx,
         {
           pgx_name <- stringr::str_split(input$decline_pgx, "decline_pgx__")[[1]][2]
-          shared_file <- file.path(pgx_shared_dir, pgx_name)
-          file.remove(shared_file)
+          received_file <- file.path(pgx_shared_dir, pgx_name)
+          file.remove(received_file)
         },
         ignoreInit = TRUE
       )
