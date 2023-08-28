@@ -106,12 +106,7 @@ push.version:
 	docker push bigomics/omicsplayground:$(VERSION)
 
 board:
-	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
-board2:
-	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
-
-board3:
-	R -e "options(board = '$(BOARD)'); shiny::runApp('components/dev')"
+	R -e "options(board = '$(board)'); shiny::runApp('components/dev')"
 
 board4:
-	R -e "options(board = '$(BOARD)', use_example_data = TRUE); shiny::runApp('dev/board.launch')"
+	R -e "options(board = '$(board)', use_example_data = TRUE); shiny::runApp('dev/board.launch')"
