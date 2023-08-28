@@ -402,6 +402,17 @@ PlotModuleServer <- function(id,
             
       filename = ns("title")
 
+      filename_split <- strsplit(filename, "-")[[1]]
+
+      new_filename <- paste0(filename_split[-c(length(filename_split)-1, length(filename_split))], collapse = "-")
+      
+      # Check if new filename is empty
+      if (new_filename == "") {
+        filename <- filename
+      } else {
+        filename <- new_filename
+      }
+      
       # replace empty spaces of title with underscore
       filename <- gsub(" ", "_", filename)
       # all caps down
