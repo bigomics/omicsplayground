@@ -48,7 +48,6 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-
       # Require inputs
       shiny::req(pgx$X)
       shiny::req(dataset2)
@@ -84,19 +83,18 @@ compare_plot_fc_correlation_server <- function(id,
     })
 
     plot_interactive_comp_fc <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
-      
       var <- plot_data()
       pos <- plot_data()
 
       p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
-        plotlib = "plotly", 
+        plotlib = "plotly",
         cex = cex,
         hilight = hilight,
         key = colnames(var)
       )
-      
+
       return(p)
     }
 
