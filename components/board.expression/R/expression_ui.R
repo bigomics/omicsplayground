@@ -125,7 +125,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Results by contrast",
+      "Volcano by comparison",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,
@@ -141,7 +141,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Statistics by method",
+      "Volcano by method",
       bslib::layout_column_wrap(
         width = 1,
         style = halfH,

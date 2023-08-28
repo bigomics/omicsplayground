@@ -840,7 +840,7 @@ app_server <- function(input, output, session) {
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
-  if (!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE != "") {
+  if (!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE[1] != "") {
     shinyalert::shinyalert(
       title = HTML(opt$STARTUP_TITLE),
       text = HTML(opt$STARTUP_MESSAGE),
