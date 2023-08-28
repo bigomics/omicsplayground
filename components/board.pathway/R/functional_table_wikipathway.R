@@ -137,6 +137,7 @@ functional_table_wikipathway_server <- function(id,
       "tablemodule",
       func = table_RENDER,
       func2 = table_RENDER_modal,
+      csvFunc = function() {table_data()$df},
       selector = "single"
     )
 

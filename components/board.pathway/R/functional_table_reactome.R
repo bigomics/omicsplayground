@@ -118,6 +118,7 @@ functional_table_reactome_server <- function(id,
       "tablemodule",
       func = table_RENDER,
       func2 = table_RENDER_modal,
+      csvFunc = table_data,
       selector = "single"
     )
 
