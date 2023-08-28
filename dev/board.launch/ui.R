@@ -51,7 +51,7 @@ app_ui <- function() {
     board_ui <- board_ui[which(length == nchar(board_ui))]
 
     board_ui_fn <- get(board_ui)
-    
+
     # header
 
      header <- shiny::tagList(
