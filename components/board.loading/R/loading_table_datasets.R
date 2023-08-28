@@ -44,6 +44,12 @@ loading_table_datasets_ui <- function(
         icon = NULL,
         width = "0%"
       ),
+      shiny::downloadLink(
+        ns("recompute_pgx_btn"),
+        label = "",
+        icon = NULL,
+        width = "0%"
+      ),
       shiny::actionButton(
         ns("loadbutton"),
         label = "Load dataset",
@@ -313,18 +319,24 @@ loading_table_datasets_server <- function(id,
         }
 
         ## instead of disabling we grey out and have a popup message
-        ##        if(enable_delete) {
-        if (TRUE) {
-          delete_pgx_menuitem <- shiny::actionButton(
-            ns(paste0("delete_dataset_row_", i)),
-            label = "Delete dataset",
-            icon = shiny::icon("trash"),
-            class = "btn btn-outline-danger",
-            style = "border: none;",
-            width = "100%",
-            onclick = paste0('Shiny.onInputChange(\"', ns("delete_pgx"), '\",this.id,{priority: "event"});')
-          )
-        }
+        delete_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("delete_dataset_row_", i)),
+          label = "Delete dataset",
+          icon = shiny::icon("trash"),
+          class = "btn btn-outline-danger",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("delete_pgx"), '\",this.id,{priority: "event"});')
+        )
+        recompute_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("recompute_pgx_row_", i)),
+          label = "Recompute dataset",
+          icon = shiny::icon("trash"), # TODO: change icon
+          class = "btn btn-outline-info",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("recompute_pgx"), '\",this.id,{priority: "event"});')
+        )
 
         new_menu <- DropdownMenu(
           div(
@@ -342,7 +354,8 @@ loading_table_datasets_server <- function(id,
               ),
               share_public_menuitem,
               share_dataset_menuitem,
-              delete_pgx_menuitem
+              delete_pgx_menuitem,
+              recompute_pgx_menuitem
             )
           ),
           size = "sm",
@@ -533,6 +546,19 @@ loading_table_datasets_server <- function(id,
         gc()
       }
     )
+    ## ---------------- RECOMPUTE PGX -------------------  
+    shiny::observeEvent(input$recompute_pgx, {
+      {
+        shinyjs::click(id = "recompute_pgx_btn")
+      }
+      print("Just to be sure we are here")
+      #updateTabsetPanel(session, "tabset_b", selected = "B1")
+
+      updateTabsetPanel(session, "upload",selected = "makecontrast")
+      
+      #shinyjs::runjs("$('a[data-value=\"Comparisons\"]').tab('show')")
+      #shinyjs::runjs("$('div[data-value=\"Comparisons\"]').addClass('tab-pane active show')")
+    })
 
     ## ---------------- DOWNLOAD PGX FILE ----------------
     observeEvent(input$download_pgx,
