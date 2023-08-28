@@ -103,7 +103,6 @@ for (pgx_file in pgx_files) {
 
       # use the get_logs to check if we have any error
       df <- data.frame(App$get_logs())
-      App$stop()
       return(df)
     },
     error = function(e) {
@@ -131,4 +130,4 @@ pgx_check_results <- data.frame(do.call(rbind, results))
 colnames(pgx_check_results) <- boards
 
 # save results to opt$data folder
-write.csv(pgx_check_results, file = paste0(opt$data, "pgx_check_results.csv"))
+write.csv(pgx_check_results, file = file.path(opt$data, "pgx_check_results.csv"))
