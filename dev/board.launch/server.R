@@ -75,8 +75,6 @@ app_server <- function(input, output, session) {
       auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
   }
 
-  try(auth())
-
   trigger_server <- reactive({
         req(input$pgx_path)
         pgx <- playbase::pgx.load(input$pgx_path)
