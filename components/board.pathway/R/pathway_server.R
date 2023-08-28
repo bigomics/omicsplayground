@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-FunctionalBoard <- function(id, pgx, selected_gsetmethods) {
+PathwayBoard <- function(id, pgx, selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750

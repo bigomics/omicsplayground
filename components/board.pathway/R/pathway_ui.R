@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-FunctionalInputs <- function(id) {
+PathwayInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
@@ -39,7 +39,7 @@ FunctionalInputs <- function(id) {
   )
 }
 
-FunctionalUI <- function(id) {
+PathwayUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   tabs <- shiny::tabsetPanel(
