@@ -299,7 +299,7 @@ PlotModuleUI <- function(id,
   if (any(class(caption) == "reactive")) {
     caption <- caption()
   }
-  
+
   e <- bslib::card(
     full_screen = FALSE,
     style = paste0("height:", height.1, ";overflow: visible;"),
@@ -400,11 +400,12 @@ PlotModuleServer <- function(id,
     id,
     function(input, output, session) {
       ns <- session$ns
-            
+
       filename <- ns("title")
 
       # words needed to be removed
       stopwords = c('title', 'pltmod', 'plot', 'pltsrv', 'plotmodule', 'mod')
+
       x <- unlist(strsplit(filename, "-"))
       x <- x[!x %in% stopwords]
       filename <- paste(x, collapse = "-")
@@ -1090,7 +1091,7 @@ PlotModuleServer <- function(id,
 colBL <- "#00448855"
 colRD <- "#88004455"
 
-plotlyExport <- function(p, file = paste0(filename, ".pdf") , format = tools::file_ext(file),
+plotlyExport <- function(p, file = paste0(filename, ".pdf"), format = tools::file_ext(file),
                          width = NULL, height = NULL, scale = 1, server = NULL) {
   is.docker <- file.exists("/.dockerenv")
   is.docker

@@ -163,16 +163,17 @@ TableModuleServer <- function(id,
     function(input, output, session) {
       ns <- session$ns
       filename <- ns("title")
+      
       stopwords = c('title', 'datasets', 'tablemodule', 'gene_table', 'gset_table')
       x <- unlist(strsplit(filename, "-"))
       x <- x[!x %in% stopwords]
-      filename <- paste(x, collapse = "-")
+      filename <- paste0(paste(x, collapse = "-"), ".csv")
 
       # replace empty spaces of title with underscore
       filename <- gsub(" ", "_", filename)
       # all caps down
       filename <- tolower(filename)
-      print(filename)
+
 
       if (is.null(func2)) func2 <- func
 
