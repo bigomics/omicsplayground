@@ -402,7 +402,9 @@ PlotModuleServer <- function(id,
       ns <- session$ns
             
       filename <- ns("title")
-      stopwords = c('-title', '-pltmod-title', '-plot-title', '-pltsrv-title', '-plotmodule-title')
+
+      # words needed to be removed
+      stopwords = c('title', 'pltmod', 'plot', 'pltsrv', 'plotmodule', 'mod')
       x <- unlist(strsplit(filename, "-"))
       x <- x[!x %in% stopwords]
       filename <- paste(x, collapse = "-")
@@ -521,7 +523,7 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename,".png"),
+          filename = paste0(filename, ".png"),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -617,7 +619,7 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename,".pdf"),
+          filename = paste0(filename, ".pdf"),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -787,7 +789,7 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename, '.csv'),
+          filename = paste0(filename, ".csv"),
           content = function(file) {
             shiny::withProgress(
               {
