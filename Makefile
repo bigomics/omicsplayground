@@ -106,7 +106,7 @@ push.version:
 	docker push bigomics/omicsplayground:$(VERSION)
 
 board:
-	R -e "options(board = '$(board)'); shiny::runApp('components/dev')"
+	R -e "options(board = '$(board)'); shiny::runApp('dev/board.launch')"
 
-board4:
+board2:
 	R -e "options(board = '$(board)', use_example_data = TRUE); shiny::runApp('dev/board.launch')"
