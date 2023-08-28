@@ -726,7 +726,6 @@ upload_module_computepgx_server <- function(
       observe(check_process_status())
 
       observe({
-        
         if (process_counter() > 0) {
           shiny::insertUI(
             selector = "#current_dataset",

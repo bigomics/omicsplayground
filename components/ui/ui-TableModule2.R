@@ -168,8 +168,9 @@ TableModuleServer <- function(id,
       # x <- x[!x %in% stopwords]
       # filename <- paste(x, collapse = "-")
       # print(filename)
-      filename <- vapply(strsplit(filename, "-"), function(x) #remove uninformative information.
-                           paste(x[seq.int(2)], collapse = "-"), character(1L))
+      filename <- vapply(strsplit(filename, "-"), function(x) { # remove uninformative information.
+        paste(x[seq.int(2)], collapse = "-")
+      }, character(1L))
       filename <- paste0(filename, ".csv")
 
       if (is.null(func2)) func2 <- func

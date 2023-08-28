@@ -299,7 +299,7 @@ PlotModuleUI <- function(id,
   if (any(class(caption) == "reactive")) {
     caption <- caption()
   }
-  
+
   e <- bslib::card(
     full_screen = FALSE,
     style = paste0("height:", height.1, ";overflow: visible;"),
@@ -400,9 +400,9 @@ PlotModuleServer <- function(id,
     id,
     function(input, output, session) {
       ns <- session$ns
-            
+
       filename <- ns("title")
-      stopwords = c('-title', '-pltmod-title', '-plot-title', '-pltsrv-title', '-plotmodule-title')
+      stopwords <- c("-title", "-pltmod-title", "-plot-title", "-pltsrv-title", "-plotmodule-title")
       x <- unlist(strsplit(filename, "-"))
       x <- x[!x %in% stopwords]
       filename <- paste(x, collapse = "-")
@@ -521,7 +521,7 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename,".png"),
+          filename = paste0(filename, ".png"),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -617,7 +617,7 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename,".pdf"),
+          filename = paste0(filename, ".pdf"),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -787,7 +787,7 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename, '.csv'),
+          filename = paste0(filename, ".csv"),
           content = function(file) {
             shiny::withProgress(
               {
@@ -1088,7 +1088,7 @@ PlotModuleServer <- function(id,
 colBL <- "#00448855"
 colRD <- "#88004455"
 
-plotlyExport <- function(p, file = paste0(filename, ".pdf") , format = tools::file_ext(file),
+plotlyExport <- function(p, file = paste0(filename, ".pdf"), format = tools::file_ext(file),
                          width = NULL, height = NULL, scale = 1, server = NULL) {
   is.docker <- file.exists("/.dockerenv")
   is.docker
