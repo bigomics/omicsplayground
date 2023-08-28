@@ -35,7 +35,7 @@ test_that("example data loads with no error",{
       
     withr::defer(App$stop())
     
-    pgx_file <- normalizePath("../../data/example-data.pgx")
+    pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
 
     App$wait_for_idle(duration=10000)
