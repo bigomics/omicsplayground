@@ -400,7 +400,10 @@ PlotModuleServer <- function(id,
     function(input, output, session) {
       ns <- session$ns
             
-      filename = ns("title")
+      filename <- ns("title")
+      filename <- vapply(strsplit(filename, "-"), function(x)
+                         paste(x[seq.int(2)], collapse = "-"),  #remove uninformative information.
+                         character(1L))
 
       filename_split <- strsplit(filename, "-")[[1]]
 
@@ -527,7 +530,7 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename, ".png"),
+          filename = paste0(filename,".png"),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -623,7 +626,7 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename, ".pdf"),
+          filename = paste0(filename,".pdf"),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -793,7 +796,7 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename,'.csv'),
+          filename = paste0(filename, '.csv'),
           content = function(file) {
             shiny::withProgress(
               {
