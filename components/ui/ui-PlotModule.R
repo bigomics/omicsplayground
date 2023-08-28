@@ -352,7 +352,8 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modaldialog.style)),
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
-        shiny::tags$head(shiny::tags$style(modalfooter.none))
+        shiny::tags$head(shiny::tags$style(modalfooter.none)),
+        shiny::tags$script(src = "dropdown-helper.js")
       )
     ),
     bslib::card_body(
@@ -401,21 +402,11 @@ PlotModuleServer <- function(id,
       ns <- session$ns
             
       filename <- ns("title")
-      filename <- vapply(strsplit(filename, "-"), function(x)
-                         paste(x[seq.int(2)], collapse = "-"),  #remove uninformative information.
-                         character(1L))
+      stopwords = c('-title', '-pltmod-title', '-plot-title', '-pltsrv-title', '-plotmodule-title')
+      x <- unlist(strsplit(filename, "-"))
+      x <- x[!x %in% stopwords]
+      filename <- paste(x, collapse = "-")
 
-      filename_split <- strsplit(filename, "-")[[1]]
-
-      new_filename <- paste0(filename_split[-c(length(filename_split)-1, length(filename_split))], collapse = "-")
-      
-      # Check if new filename is empty
-      if (new_filename == "") {
-        filename <- filename
-      } else {
-        filename <- new_filename
-      }
-      
       # replace empty spaces of title with underscore
       filename <- gsub(" ", "_", filename)
       # all caps down
