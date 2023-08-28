@@ -12,7 +12,7 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("pathway","compare","featuremap","intersection", "pcsf", "signature","wgcna", "wordcloud")]
+  boards <- boards[!boards %in% c("featuremap","intersection", "wordcloud")]
 
   AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
