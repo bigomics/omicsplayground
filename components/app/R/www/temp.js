@@ -4,6 +4,13 @@ let user;
 
 //$(document).ready(function() {
 $(document).on('shiny:connected', function() {
+	
+	// prevent browser back and forward buttons from working
+	history.pushState(null, null, location.href);
+	window.onpopstate = function () {
+		history.go(1);
+	};
+
 
     $(document).on('change', '.card-footer-checked', function(e) {
 	// Set the "checked" property for all the card-footer-checked elements
