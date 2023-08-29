@@ -248,7 +248,7 @@ pgx.showSmallModal <- function(msg = "Please wait...") {
 }
 
 HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteString) {
-  pattern <- paste0("^",NoLinkString, "$")
+  pattern <- paste0("^", NoLinkString, "$")
   special_cases <- grepl(pattern, wrapHyperLinkOutput, perl = TRUE)
   wrapHyperLinkOutput[special_cases] <- SubstituteString
   return(wrapHyperLinkOutput)

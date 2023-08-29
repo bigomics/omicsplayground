@@ -13,7 +13,7 @@
 #' @export
 expression_table_gsettable_ui <- function(
     id,
-    title, 
+    title,
     caption,
     info.text,
     width,
@@ -64,7 +64,7 @@ expression_table_gsettable_server <- function(id,
       )
       DT::datatable(df,
         #        class = "compact",  ## not good!
-        rownames = external_links, 
+        rownames = external_links,
         escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",

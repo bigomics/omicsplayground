@@ -91,7 +91,9 @@ wordcloud_table_leading_edge_server <- function(id,
       "datasets",
       func = wordcloud_leadingEdgeTable.RENDER,
       func2 = wordcloud_leadingEdgeTable.RENDER_modal,
-      csvFunc = function(){wordcloud_leadingEdgeTable.RENDER()$x$data[,-1]},
+      csvFunc = function() {
+        wordcloud_leadingEdgeTable.RENDER()$x$data[, -1]
+      },
       selector = "none"
     )
 

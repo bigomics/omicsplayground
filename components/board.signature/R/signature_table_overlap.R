@@ -28,7 +28,6 @@ signature_table_overlap_server <- function(id,
                                            fullH,
                                            tabH) {
   moduleServer(id, function(input, output, session) {
-
     table_data <- shiny::reactive({
       df <- getOverlapTable()
       shiny::req(df)

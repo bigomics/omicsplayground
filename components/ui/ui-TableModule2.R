@@ -162,8 +162,8 @@ TableModuleServer <- function(id,
     id,
     function(input, output, session) {
       ns <- session$ns
-      filename <- paste0(sub(".csv$","",ns(filename)),".csv")
-      
+      filename <- paste0(sub(".csv$", "", ns(filename)), ".csv")
+
       if (is.null(func2)) func2 <- func
 
       # Downloader

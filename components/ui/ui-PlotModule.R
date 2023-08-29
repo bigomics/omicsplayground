@@ -399,10 +399,9 @@ PlotModuleServer <- function(id,
   moduleServer(
     id,
     function(input, output, session) {
-
       ns <- session$ns
-      filename <- sub("-$","",ns(''))  ## filename root
-      
+      filename <- sub("-$", "", ns("")) ## filename root
+
       observeEvent(input$downloadOption,
         {
           if (!input$downloadOption %in% c("pdf", "png")) {
