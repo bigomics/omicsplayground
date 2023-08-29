@@ -207,8 +207,12 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
+      uploaded[["counts.csv"]] <- NULL
+      uploaded[["samples.csv"]] <- NULL
+      uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
+      uploaded[["checklist"]] <- NULL
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
@@ -417,22 +421,6 @@ UploadBoard <- function(id,
           )
           uploaded[["checklist"]][["samples_counts"]] <- FILES_check$check
 
-          #if (length(FILES_check$check) > 0) {
-          #  lapply(1:length(FILES_check$check), function(idx) {
-          #    error_id <- names(FILES_check$check)[idx]
-          #    error_log <- FILES_check$check[[idx]]
-          #    error_detail <- error_list[error_list$error == error_id, ]
-          #    error_length <- length(error_log)
-          #    ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-#
-          #    shinyalert::shinyalert(
-          #      title = error_detail$title,
-          #      text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-          #      type = error_detail$warning_type,
-          #      closeOnClickOutside = FALSE
-          #    )
-          #  })
-          #}
 
           uploaded[["samples.csv"]] <- FILES_check$SAMPLES
           uploaded[["counts.csv"]] <- FILES_check$COUNTS
@@ -462,6 +450,7 @@ UploadBoard <- function(id,
       }
 
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+        print('GOING THROUGH CROSSCHECK')
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
@@ -471,22 +460,6 @@ UploadBoard <- function(id,
         uploaded[["samples.csv"]] <- FILES_check$SAMPLES
         uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
-        #if (length(FILES_check$check) > 0) {
-        #  lapply(1:length(FILES_check$check), function(idx) {
-        #    error_id <- names(FILES_check$check)[idx]
-        #    error_log <- FILES_check$check[[idx]]
-        #    error_detail <- error_list[error_list$error == error_id, ]
-        #    error_length <- length(error_log)
-        #    ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-#
-        #    shinyalert::shinyalert(
-        #      title = error_detail$title,
-        #      text = paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-        #      type = error_detail$warning_type,
-        #      closeOnClickOutside = FALSE
-        #    )
-        #  })
-        #}
 
         if (FILES_check$PASS == FALSE) {
           status["samples.csv"] <- "Error, please check your samples files."
