@@ -9,7 +9,7 @@ UploadBoard <- function(id,
                         auth,
                         reload_pgxdir,
                         load_uploaded_data,
-                        recompute_pgx = FALSE) {
+                        recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -148,11 +148,11 @@ UploadBoard <- function(id,
       if (all(has.upload(need3))) {
         shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
-        if (recompute_pgx ||input$advanced_mode) {
+        if (input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
-      } else if (recompute_pgx || all(has.upload(need2))) {
-        if (recompute_pgx || input$advanced_mode) {
+      } else if (all(has.upload(need2))) {
+        if (input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Comparisons")
@@ -200,7 +200,6 @@ UploadBoard <- function(id,
       raw_dir
     }
 
-    if (!recompute_pgx) {
     shiny::observeEvent(input$upload_files, {
 
       if (is.null(raw_dir())) {
@@ -386,21 +385,25 @@ UploadBoard <- function(id,
       message("[upload_files] done!\n")
     })
 
-        } else {
-        observe({
-        print("Working on it!")
-        print(names(pgx))
-        uploaded$samples.csv <- pgx$samples
-        uploaded$contrasts.csv <- pgx$contrast
-        uploaded$counts.csv <- pgx$counts
-        uploaded$pgx <- pgx
-        uploaded[["last_uploaded"]] <- c("contrasts.csv")
+    # recompute pgx
+    observeEvent(recompute_pgx(), {
+      pgx <- recompute_pgx()
+      print("Working on it!")
+      print(names(pgx))
+      uploaded$samples.csv <- pgx$samples
+      uploaded$contrasts.csv <- pgx$contrast
+      uploaded$counts.csv <- pgx$counts
+      print(pgx$samples)
 
-        #print(uploaded)
-        corrected_counts <- pgx$counts
-        print(names(uploaded))
-        })
-    }
+      # note from nick: you dont want this -- this will load the pgx and go to viewdata page
+      #uploaded$pgx <- pgx
+      uploaded[["last_uploaded"]] <- c("contrasts.csv")
+
+      #print(uploaded)
+      corrected_counts <- pgx$counts
+      print(names(uploaded))
+    })
+
 
     observe({
       print("Working on it from the outside!")

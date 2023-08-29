@@ -15,9 +15,12 @@ LoadingBoard <- function(id,
                          load_example,
                          reload_pgxdir,
                          current_page,
-                         load_uploaded_data) {
+                         load_uploaded_data,
+                         recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
+
+
 
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
@@ -175,7 +178,8 @@ LoadingBoard <- function(id,
       loadPGX = loadPGX,
       refresh_shared = refresh_shared,
       reload_pgxdir_public = reload_pgxdir_public,
-      reload_pgxdir = reload_pgxdir
+      reload_pgxdir = reload_pgxdir,
+      recompute_pgx = recompute_pgx
     )
 
     loading_tsne_server(

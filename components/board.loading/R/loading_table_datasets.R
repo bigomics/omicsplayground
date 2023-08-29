@@ -70,7 +70,8 @@ loading_table_datasets_server <- function(id,
                                           loadPGX,
                                           refresh_shared,
                                           reload_pgxdir_public,
-                                          reload_pgxdir) {
+                                          reload_pgxdir,
+                                          recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -375,6 +376,7 @@ loading_table_datasets_server <- function(id,
         ignoreInit = TRUE
       )
 
+
       DT::datatable(
         df,
         class = "compact hover",
@@ -546,20 +548,20 @@ loading_table_datasets_server <- function(id,
         gc()
       }
     )
-    ## ---------------- RECOMPUTE PGX -------------------  
+    ## ---------------- RECOMPUTE PGX -------------------
     shiny::observeEvent(input$recompute_pgx, {
-      {
-        shinyjs::click(id = "recompute_pgx_btn")
-      }
+      #{
+      #  shinyjs::click(id = "recompute_pgx_btn")
+      #}
 
       shinyalert::shinyalert(
                     title = "Recompute",
                     text = "Recomputing your data will remove the current contrasts",
-                    confirmButtonText = "OK", 
+                    confirmButtonText = "OK",
                     cancelButtonText = "Cancel",
                     callbackR = function() {
 
-                        # Load PGX 
+                        # Load PGX
                         sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
                         df <- getFilteredPGXINFO()
                         pgxfile <- as.character(df$dataset[sel])
@@ -567,23 +569,15 @@ loading_table_datasets_server <- function(id,
                         pgx <- loadPGX(pgxfile)
                         load_uploaded_data <- reactiveVal(NULL)
                         reload_pgxdir <- reactiveVal(0)
-
-                        UploadBoard(
-                          id = "upload",
-                          pgx_dir = auth$user_dir,
-                          pgx = pgx,
-                          auth = auth,
-                          reload_pgxdir = reload_pgxdir,
-                          load_uploaded_data = load_uploaded_data,
-                          recompute_pgx = TRUE
-                        )
+                        recompute_pgx(pgx)
+                        print('SETTING THE RECOMPUTE PGX')
 
                         bigdash.selectTab(session, "upload-tab")
                         shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
 
                         return(0)
                }
-                  ) 
+                  )
 
 
     })

@@ -128,6 +128,7 @@ app_server <- function(input, output, session) {
   shinyjs::runjs("sidebarClose()")
 
   ## Modules needed from the start
+  recompute_pgx <- reactiveVal(NULL)
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
@@ -136,18 +137,21 @@ app_server <- function(input, output, session) {
     load_example = load_example,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
-    load_uploaded_data = load_uploaded_data
+    load_uploaded_data = load_uploaded_data,
+    recompute_pgx = recompute_pgx
   )
 
   ## Modules needed from the start
   if (opt$ENABLE_UPLOAD) {
+
     UploadBoard(
       id = "upload",
       pgx_dir = PGX.DIR,
       pgx = PGX,
       auth = auth,
       reload_pgxdir = reload_pgxdir,
-      load_uploaded_data = load_uploaded_data
+      load_uploaded_data = load_uploaded_data,
+      recompute_pgx = recompute_pgx
     )
   }
 
