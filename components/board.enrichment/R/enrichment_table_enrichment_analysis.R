@@ -38,6 +38,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
     table_data <- shiny::reactive({
       rpt <- getFilteredGeneSetTable()
+      if (!("GS" %in% colnames(rpt))) rpt <- cbind(GS = rownames(rpt), rpt)
       rpt
     })
 
@@ -51,7 +52,6 @@ enrichment_table_enrichment_analysis_server <- function(id,
         return(NULL)
       }
 
-      if (!("GS" %in% colnames(rpt))) rpt <- cbind(GS = rownames(rpt), rpt)
       if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 72)
       if ("size" %in% colnames(rpt)) rpt$size <- as.integer(rpt$size)
 
