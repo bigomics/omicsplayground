@@ -8,7 +8,8 @@ UploadBoard <- function(id,
                         pgx,
                         auth,
                         reload_pgxdir,
-                        load_uploaded_data) {
+                        load_uploaded_data,
+                        recompute_pgx = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -137,6 +138,8 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
+      print("From the tab checker")
+      print(names(uploaded))
       has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
@@ -145,11 +148,11 @@ UploadBoard <- function(id,
       if (all(has.upload(need3))) {
         shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
-        if (input$advanced_mode) {
+        if (recompute_pgx ||input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
-      } else if (all(has.upload(need2))) {
-        if (input$advanced_mode) {
+      } else if (recompute_pgx || all(has.upload(need2))) {
+        if (recompute_pgx || input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Comparisons")
@@ -197,8 +200,9 @@ UploadBoard <- function(id,
       raw_dir
     }
 
+    if (!recompute_pgx) {
     shiny::observeEvent(input$upload_files, {
-      ## shiny::req(raw_dir())
+
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
       }
@@ -382,6 +386,29 @@ UploadBoard <- function(id,
       message("[upload_files] done!\n")
     })
 
+        } else {
+        observe({
+        print("Working on it!")
+        print(names(pgx))
+        uploaded$samples.csv <- pgx$samples
+        uploaded$contrasts.csv <- pgx$contrast
+        uploaded$counts.csv <- pgx$counts
+        uploaded$pgx <- pgx
+        uploaded[["last_uploaded"]] <- c("contrasts.csv")
+
+        #print(uploaded)
+        corrected_counts <- pgx$counts
+        print(names(uploaded))
+        })
+    }
+
+    observe({
+      print("Working on it from the outside!")
+      print(names(uploaded))
+
+    })
+
+
     ## ------------------------------------------------------------------
     ## Observer for loading from local exampledata.zip file
     ##
@@ -409,7 +436,7 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
       } else {
-        ## Remove files
+
         uploaded$counts.csv <- NULL
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL
@@ -419,7 +446,6 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
-
     checkTables <- shiny::reactive({
       ## check dimensions
       status <- rep("please upload", 3)

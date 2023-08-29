@@ -551,13 +551,41 @@ loading_table_datasets_server <- function(id,
       {
         shinyjs::click(id = "recompute_pgx_btn")
       }
-      print("Just to be sure we are here")
-      #updateTabsetPanel(session, "tabset_b", selected = "B1")
 
-      updateTabsetPanel(session, "upload",selected = "makecontrast")
-      
-      #shinyjs::runjs("$('a[data-value=\"Comparisons\"]').tab('show')")
-      #shinyjs::runjs("$('div[data-value=\"Comparisons\"]').addClass('tab-pane active show')")
+      shinyalert::shinyalert(
+                    title = "Recompute",
+                    text = "Recomputing your data will remove the current contrasts",
+                    confirmButtonText = "OK", 
+                    cancelButtonText = "Cancel",
+                    callbackR = function() {
+
+                        # Load PGX 
+                        sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
+                        df <- getFilteredPGXINFO()
+                        pgxfile <- as.character(df$dataset[sel])
+                        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+                        pgx <- loadPGX(pgxfile)
+                        load_uploaded_data <- reactiveVal(NULL)
+                        reload_pgxdir <- reactiveVal(0)
+
+                        UploadBoard(
+                          id = "upload",
+                          pgx_dir = auth$user_dir,
+                          pgx = pgx,
+                          auth = auth,
+                          reload_pgxdir = reload_pgxdir,
+                          load_uploaded_data = load_uploaded_data,
+                          recompute_pgx = TRUE
+                        )
+
+                        bigdash.selectTab(session, "upload-tab")
+                        shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
+
+                        return(0)
+               }
+                  ) 
+
+
     })
 
     ## ---------------- DOWNLOAD PGX FILE ----------------
