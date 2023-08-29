@@ -49,17 +49,17 @@ functional_table_reactome_server <- function(id,
 
       ## add hyperlink
       url <- paste0("https://reactome.org/content/detail/", df$reactome.id)
-      df[["reactome.id"]] <- paste0(
+      reactome.id_link <- paste0(
         "<a href='", url, "' target='_blank'>",
-        df[["reactome.id"]], "</a>"
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        "</a>"
       )
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
       DT::datatable(df,
-        rownames = FALSE,
+        rownames = reactome.id_link,
         escape = c(-1, -2),
-        #
         extensions = c("Scroller"),
         selection = list(
           mode = "single",
@@ -118,6 +118,7 @@ functional_table_reactome_server <- function(id,
       "tablemodule",
       func = table_RENDER,
       func2 = table_RENDER_modal,
+      csvFunc = table_data,
       selector = "single"
     )
 

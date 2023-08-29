@@ -28,18 +28,30 @@ signature_table_overlap_server <- function(id,
                                            fullH,
                                            tabH) {
   moduleServer(id, function(input, output, session) {
-    overlapTable.RENDER <- shiny::reactive({
+
+    table_data <- shiny::reactive({
       df <- getOverlapTable()
       shiny::req(df)
+      return(df)
+    })
 
-      df$geneset <- playbase::wrapHyperLink(df$geneset, df$geneset)
+    overlapTable.RENDER <- shiny::reactive({
+      df <- table_data()
 
       numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
+      geneset_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        df$geneset
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+      )
+
       DT::datatable(df,
-        #
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = geneset_link,
+        escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = "none",
@@ -72,6 +84,7 @@ signature_table_overlap_server <- function(id,
       "datasets",
       func = overlapTable.RENDER,
       func2 = overlapTable.RENDER_modal,
+      csvFunc = table_data,
       selector = "none"
     )
     return(overlapTable)

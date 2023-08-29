@@ -46,25 +46,38 @@ clustering_table_clustannot_server <- function(
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    table_data <- reactive({
+      rho <- getClustAnnotCorrelation()
+      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
+      df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
+      rownames(df) <- rownames(rho)
+      return(df)
+    })
+
     clustannot_table.RENDER <- shiny::reactive({
+      df <- table_data()
       rho <- getClustAnnotCorrelation()
       xann_level <- xann_level()
       if (is.null(rho)) {
         return(NULL)
       }
 
-      #
-      rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
-      #
-      df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
-      rownames(df) <- rownames(rho)
       if (xann_level == "geneset") {
-        df$feature <- playbase::wrapHyperLink(df$feature, rownames(df))
+        feature_link <- playbase::wrapHyperLink(
+          rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+          rownames(df)
+        ) |> HandleNoLinkFound(
+          NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+          SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        )
+      } else {
+        feature_link <- FALSE
       }
 
       DT::datatable(
         df,
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = feature_link,
+        escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = c(1)),
@@ -92,6 +105,7 @@ clustering_table_clustannot_server <- function(
       "datasets",
       func = clustannot_table.RENDER,
       func2 = clustannot_table.RENDER_modal,
+      csvFunc = table_data,
       selector = "none"
     )
   }) # end module server

@@ -46,10 +46,17 @@ wordcloud_table_leading_edge_server <- function(id,
       rownames(df) <- ee
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
-      df$leading.edge <- playbase::wrapHyperLink(df$leading.edge, df$leading.edge) ## add link
+      leading.edge_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        df$leading.edge
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+      )
 
       tbl <- DT::datatable(df,
-        rownames = FALSE, escape = c(-1, -2),
+        rownames = leading.edge_link,
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",
@@ -84,6 +91,7 @@ wordcloud_table_leading_edge_server <- function(id,
       "datasets",
       func = wordcloud_leadingEdgeTable.RENDER,
       func2 = wordcloud_leadingEdgeTable.RENDER_modal,
+      csvFunc = function(){wordcloud_leadingEdgeTable.RENDER()$x$data[,-1]},
       selector = "none"
     )
 
