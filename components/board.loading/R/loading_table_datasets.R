@@ -331,9 +331,9 @@ loading_table_datasets_server <- function(id,
         )
         recompute_pgx_menuitem <- shiny::actionButton(
           ns(paste0("recompute_pgx_row_", i)),
-          label = "Recompute dataset",
-          icon = shiny::icon("trash"), # TODO: change icon
-          class = "btn btn-outline-info",
+          label = "Reanalyse",
+          icon = shiny::icon("gears"), 
+          class = "btn btn-outline-dark",
           style = "border: none;",
           width = "100%",
           onclick = paste0('Shiny.onInputChange(\"', ns("recompute_pgx"), '\",this.id,{priority: "event"});')
@@ -353,10 +353,10 @@ loading_table_datasets_server <- function(id,
                 width = "100%",
                 onclick = paste0('Shiny.onInputChange(\"', ns("download_zip"), '\",this.id,{priority: "event"})')
               ),
+              recompute_pgx_menuitem,
               share_public_menuitem,
               share_dataset_menuitem,
-              delete_pgx_menuitem,
-              recompute_pgx_menuitem
+              delete_pgx_menuitem
             )
           ),
           size = "sm",
