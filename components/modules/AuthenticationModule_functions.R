@@ -164,14 +164,10 @@ checkAuthorizedDomain <- function(email, domain) {
   authorized
 }
 
-checkAuthorizedUser <- function(email, credentials_file = NULL) {
-  if (is.null(credentials_file) || credentials_file == FALSE) {
+checkAuthorizedUser <- function(email, CREDENTIALS = NULL) {
+  if (is.null(CREDENTIALS)) {
     return(TRUE)
   }
-  if (!file.exists(credentials_file)) {
-    return(TRUE)
-  }
-  CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
   valid_user <- tolower(email) %in% tolower(CREDENTIALS$email)
   if (!valid_user) {
     return(FALSE)
@@ -206,7 +202,7 @@ checkExistUserFolder <- function(email) {
   tolower(email) %in% tolower(user_dirs)
 }
 
-checkEmail <- function(email, domain = NULL, credentials_file = NULL,
+checkEmail <- function(email, domain = NULL, CREDENTIALS = NULL,
                        check.personal = TRUE, check.existing = FALSE) {
   chk <- list()
   if (checkMissingEmail(email)) {
@@ -218,7 +214,7 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL,
   if (!checkAuthorizedDomain(email, domain)) {
     return(list(valid = FALSE, msg = "domain not authorized"))
   }
-  if (!checkAuthorizedUser(email, credentials_file)) {
+  if (!checkAuthorizedUser(email, CREDENTIALS)) {
     return(list(valid = FALSE, msg = "user not authorized"))
   }
   if (check.personal) {

@@ -37,7 +37,7 @@ app_server <- function(input, output, session) {
   db_credentials <- mongolite::mongo(collection = "credentials",
                                       db = "omicsplayground",
                                       url = mongourl)
-  tbl_credentials <- db_credentials$find()
+  CREDENTIALS <- db_credentials$find()
 
 
   ## -------------------------------------------------------------
@@ -45,17 +45,10 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   auth <- NULL ## shared in module
-  credentials_file <- file.path(ETC, "CREDENTIALS")
-  has.credentials <- file.exists(credentials_file)
-  no.credentials <- (!isTRUE(opt$USE_CREDENTIALS) || !has.credentials)
-  if (no.credentials && authentication != "password") {
-    credentials_file <- NULL
-  }
-
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
-      credentials_file = credentials_file,
+      CREDENTIALS = CREDENTIALS,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       domain = opt$DOMAIN
     )
@@ -64,7 +57,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       domain = opt$DOMAIN,
       firebase.rds = "firebase.rds",
-      credentials_file = credentials_file,
+      CREDENTIALS = CREDENTIALS,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
@@ -74,7 +67,7 @@ app_server <- function(input, output, session) {
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
       firebase.rds = "firebase.rds",
-      credentials_file = credentials_file,
+      CREDENTIALS = CREDENTIALS,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
@@ -83,7 +76,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
-      credentials_file = credentials_file,
+      CREDENTIALS = CREDENTIALS,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )

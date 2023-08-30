@@ -81,7 +81,7 @@ NoAuthenticationModule <- function(id,
 
 FirebaseAuthenticationModule <- function(id,
                                          domain = NULL,
-                                         credentials_file = NULL,
+                                         CREDENTIALS = NULL,
                                          firebase.rds = "firebase.rds",
                                          allow_personal = TRUE,
                                          allow_new_users = TRUE) {
@@ -193,7 +193,7 @@ FirebaseAuthenticationModule <- function(id,
       check <- checkEmail(
         email = email,
         domain = domain,
-        credentials_file = credentials_file,
+        CREDENTIALS = CREDENTIALS,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
@@ -227,7 +227,7 @@ FirebaseAuthenticationModule <- function(id,
       check2 <- checkEmail(
         email = user_email,
         domain = domain,
-        credentials_file = credentials_file,
+        CREDENTIALS = CREDENTIALS,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
@@ -361,7 +361,7 @@ FirebaseAuthenticationModule <- function(id,
 EmailLinkAuthenticationModule <- function(id,
                                           pgx_dir,
                                           domain = NULL,
-                                          credentials_file = NULL,
+                                          CREDENTIALS = NULL,
                                           allow_new_users = TRUE,
                                           allow_personal = TRUE,
                                           firebase.rds = "firebase.rds") {
@@ -374,7 +374,6 @@ EmailLinkAuthenticationModule <- function(id,
       stop("[EmailLinkAuthenticationModule] FATAL ERROR : no firebase.rds file")
     }
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -421,7 +420,7 @@ EmailLinkAuthenticationModule <- function(id,
       dbg("[EmailLinkAuthenticationModule:resetUSER] *** signing out of firebase **** ")
 
       title <- HTML("Sign up <div style='font-size:0.4em;'>or</div> Log in")
-      if (!is.null(credentials_file) && file.exists(credentials_file)) {
+      if (!is.null(CREDENTIALS)) {
         title <- "Log in"
       }
 
@@ -468,7 +467,7 @@ EmailLinkAuthenticationModule <- function(id,
       check <- checkEmail(
         email = email,
         domain = domain,
-        credentials_file = credentials_file,
+        CREDENTIALS = CREDENTIALS,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
@@ -533,14 +532,13 @@ EmailLinkAuthenticationModule <- function(id,
 ## ================================================================================
 
 PasswordAuthenticationModule <- function(id,
-                                         credentials_file,
+                                         CREDENTIALS = NULL,
                                          allow_personal = TRUE,
                                          domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
     ns <- session$ns
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     USER <- shiny::reactiveValues(
       method = "password",
@@ -575,8 +573,6 @@ PasswordAuthenticationModule <- function(id,
       shiny::showModal(login_modal)
     }
 
-    CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
-
     output$showLogin <- shiny::renderUI({
       shiny::showModal(login_modal)
     })
@@ -598,7 +594,7 @@ PasswordAuthenticationModule <- function(id,
       check <- checkEmail(
         email = login_email,
         domain = domain,
-        credentials_file = credentials_file,
+        CREDENTIALS = CREDENTIALS,
         check.personal = !allow_personal,
         check.existing = FALSE
       )
@@ -679,7 +675,7 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
-                                          credentials_file = NULL,
+                                          CREDENTIALS = NULL,
                                           allow_personal = TRUE,
                                           allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
