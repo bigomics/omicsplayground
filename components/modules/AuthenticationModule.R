@@ -686,7 +686,6 @@ LoginCodeAuthenticationModule <- function(id,
       ## we continue but email is not working
       warning("[LoginCodeAuthenticationModule] ERROR : missing mail_creds file!!!")
     }
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -797,7 +796,7 @@ LoginCodeAuthenticationModule <- function(id,
           check <- checkEmail(
             email = login_email,
             domain = domain,
-            credentials_file = credentials_file,
+            CREDENTIALS = CREDENTIALS,
             check.personal = !allow_personal,
             check.existing = !allow_new_users
           )

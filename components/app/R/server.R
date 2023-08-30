@@ -33,12 +33,16 @@ app_server <- function(input, output, session) {
   ## -------------------
   mongouser <- Sys.getenv('MONGOUSER_OMP')
   mongopass <- Sys.getenv('MONGOPASS_OMP')
-  mongourl <- glue::glue('mongodb+srv://{mongouser}:{mongopass}@cluster0.pwhnvoo.mongodb.net/?retryWrites=true&w=majority')
-  db_credentials <- mongolite::mongo(collection = "credentials",
-                                      db = "omicsplayground",
-                                      url = mongourl)
-  CREDENTIALS <- db_credentials$find()
+  if (mongouser == '') {
+    CREDENTIALS <- NULL
+  } else {
+    mongourl <- glue::glue('mongodb+srv://{mongouser}:{mongopass}@cluster0.pwhnvoo.mongodb.net/?retryWrites=true&w=majority')
+    db_credentials <- mongolite::mongo(collection = "credentials",
+                                       db = "omicsplayground",
+                                       url = mongourl)
+    CREDENTIALS <- db_credentials$find()
 
+  }
 
   ## -------------------------------------------------------------
   ## Authentication
