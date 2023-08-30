@@ -110,3 +110,11 @@ board:
 
 board_example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
+
+check_pgx:
+	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
+
+
+
+	
+
