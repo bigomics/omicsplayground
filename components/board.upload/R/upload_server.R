@@ -138,8 +138,7 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
-      print("From the tab checker")
-      print(names(uploaded))
+      
       has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
@@ -388,27 +387,14 @@ UploadBoard <- function(id,
     # recompute pgx
     observeEvent(recompute_pgx(), {
       pgx <- recompute_pgx()
-      print("Working on it!")
-      print(names(pgx))
       uploaded$samples.csv <- pgx$samples
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
-      print(pgx$samples)
 
       # note from nick: you dont want this -- this will load the pgx and go to viewdata page
-      #uploaded$pgx <- pgx
       uploaded[["last_uploaded"]] <- c("contrasts.csv")
 
-      #print(uploaded)
       corrected_counts <- pgx$counts
-      print(names(uploaded))
-    })
-
-
-    observe({
-      print("Working on it from the outside!")
-      print(names(uploaded))
-
     })
 
 
