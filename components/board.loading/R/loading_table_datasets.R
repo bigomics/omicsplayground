@@ -71,7 +71,8 @@ loading_table_datasets_server <- function(id,
                                           refresh_shared,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
-                                          recompute_pgx) {
+                                          recompute_pgx
+                                          ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -550,17 +551,16 @@ loading_table_datasets_server <- function(id,
     )
     ## ---------------- RECOMPUTE PGX -------------------
     shiny::observeEvent(input$recompute_pgx, {
-      #{
-      #  shinyjs::click(id = "recompute_pgx_btn")
-      #}
 
       shinyalert::shinyalert(
                     title = "Recompute",
                     text = "Recomputing your data will remove the current contrasts",
-                    confirmButtonText = "OK",
+                    showCancelButton = TRUE,
                     cancelButtonText = "Cancel",
-                    callbackR = function() {
+                    confirmButtonText = "OK",
+                    callbackR = function(x) {
 
+                      if (x) {
                         # Load PGX
                         sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
                         df <- getFilteredPGXINFO()
@@ -570,12 +570,15 @@ loading_table_datasets_server <- function(id,
                         load_uploaded_data <- reactiveVal(NULL)
                         reload_pgxdir <- reactiveVal(0)
                         recompute_pgx(pgx)
-                        print('SETTING THE RECOMPUTE PGX')
 
                         bigdash.selectTab(session, "upload-tab")
                         shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
 
                         return(0)
+                        } else {
+                          return(0)
+                        }
+
                }
                   )
 

@@ -31,12 +31,13 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
-    height = 720) {
+    height = 720,
+    recompute_pgx
+    ) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-
       ## statistical method for GENE level testing
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
@@ -109,7 +110,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
-                      ns("upload_description"), NULL, ## "Description:",
+                      ns("upload_description"), NULL, 
                       placeholder = "Give a short description of your dataset",
                       height = 100, resize = "none"
                     ),

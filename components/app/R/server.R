@@ -152,7 +152,7 @@ app_server <- function(input, output, session) {
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx
-    )
+      )
   }
 
   ## Chatbox

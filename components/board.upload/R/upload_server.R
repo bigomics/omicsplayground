@@ -9,7 +9,8 @@ UploadBoard <- function(id,
                         auth,
                         reload_pgxdir,
                         load_uploaded_data,
-                        recompute_pgx) {
+                        recompute_pgx
+                        ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -138,7 +139,6 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
-      
       has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
@@ -384,16 +384,12 @@ UploadBoard <- function(id,
       message("[upload_files] done!\n")
     })
 
-    # recompute pgx
+    # In case the user is reanalysing the data, get the info from pgx
     observeEvent(recompute_pgx(), {
       pgx <- recompute_pgx()
       uploaded$samples.csv <- pgx$samples
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
-
-      # note from nick: you dont want this -- this will load the pgx and go to viewdata page
-      uploaded[["last_uploaded"]] <- c("contrasts.csv")
-
       corrected_counts <- pgx$counts
     })
 
