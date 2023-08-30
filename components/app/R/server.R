@@ -28,6 +28,18 @@ app_server <- function(input, output, session) {
   session.start_time <- -1
   authentication <- opt$AUTHENTICATION
 
+  ## -------------------
+  ## Database Connection
+  ## -------------------
+  mongouser <- Sys.getenv('MONGOUSER_OMP')
+  mongopass <- Sys.getenv('MONGOPASS_OMP')
+  mongourl <- glue::glue('mongodb+srv://{mongouser}:{mongopass}@cluster0.pwhnvoo.mongodb.net/?retryWrites=true&w=majority')
+  db_credentials <- mongolite::mongo(collection = "credentials",
+                                      db = "omicsplayground",
+                                      url = mongourl)
+  tbl_credentials <- db_credentials$find()
+
+
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
