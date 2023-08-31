@@ -1,7 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
 name: build Docker (latest)
-
 on:
   schedule:
     - cron:  '0 4 * * *'
@@ -12,7 +11,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
     steps:
       -
         name: Checkout 
@@ -33,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./docker/Dockerfile_mmm
           push: false
           no-cache: true
           build-args: |
@@ -44,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./docker/Dockerfile_mmm
           push: true
           no-cache: true
           build-args: |
