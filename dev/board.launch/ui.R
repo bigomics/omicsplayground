@@ -13,7 +13,7 @@ app_ui <- function() {
     pgx_file <- ""
 
     if(!is.null(use_example_data) && use_example_data == TRUE){
-        pgx_file <- normalizePath("../../data/example-data.pgx")
+        pgx_file <- file.path(OPG,"data/example-data.pgx")
     }
 
     # handle board inputs and dependencies
