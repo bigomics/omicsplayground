@@ -563,10 +563,10 @@ loading_table_datasets_server <- function(id,
                       if (x) {
                         # Load PGX
                         sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
-                        df <- playbase::getFilteredPGXINFO()
+                        df <- getFilteredPGXINFO()
                         pgxfile <- as.character(df$dataset[sel])
                         pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
-                        pgx <- playbase::loadPGX(pgxfile)
+                        pgx <- loadPGX(pgxfile)
                         load_uploaded_data <- shiny::reactiveVal(NULL)
                         reload_pgxdir <- shiny::reactiveVal(0)
                         recompute_pgx(pgx)

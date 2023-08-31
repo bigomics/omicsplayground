@@ -149,8 +149,6 @@ upload_module_computepgx_server <- function(
                       "only.proteincoding",
                       "remove.unknown",
                       "remove.notexpressed"
-                      ## "excl.immuno"
-                      ## "excl.xy"
                     ),
                   choiceNames =
                     c(
