@@ -128,8 +128,8 @@ app_server <- function(input, output, session) {
   shinyjs::runjs("sidebarClose()")
 
   ## Modules needed from the start
-  recompute_pgx <- reactiveVal(NULL)
-  recompute_info <- reactiveVal(NULL)
+  recompute_pgx <- shiny::reactiveVal(NULL)
+  recompute_info <- shiny::reactiveVal(NULL)
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
