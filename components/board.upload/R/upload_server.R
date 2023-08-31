@@ -9,7 +9,8 @@ UploadBoard <- function(id,
                         auth,
                         reload_pgxdir,
                         load_uploaded_data,
-                        recompute_pgx
+                        recompute_pgx,
+                        recompute_info
                         ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -391,6 +392,8 @@ UploadBoard <- function(id,
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
       corrected_counts <- pgx$counts
+      recompute_info(list("name" = pgx$name, "description" = pgx$description))
+
     })
 
 
@@ -707,7 +710,8 @@ UploadBoard <- function(id,
       lib.dir = FILES,
       auth = auth,
       create_raw_dir = create_raw_dir,
-      height = height
+      height = height,
+      recompute_info
     )
 
     uploaded_pgx <- shiny::reactive({

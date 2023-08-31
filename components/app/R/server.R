@@ -129,6 +129,7 @@ app_server <- function(input, output, session) {
 
   ## Modules needed from the start
   recompute_pgx <- reactiveVal(NULL)
+  recompute_info <- reactiveVal(NULL)
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
@@ -151,7 +152,8 @@ app_server <- function(input, output, session) {
       auth = auth,
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx
+      recompute_pgx = recompute_pgx,
+      recompute_info = recompute_info
       )
   }
 

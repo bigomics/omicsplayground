@@ -32,7 +32,7 @@ upload_module_computepgx_server <- function(
     enable_button = TRUE,
     alertready = TRUE,
     height = 720,
-    recompute_pgx
+    recompute_info
     ) {
   shiny::moduleServer(
     id,
@@ -238,11 +238,13 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
-
-      shiny::observeEvent(metaRT(), {
+      # Inpute name and description
+      shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
-
-        if (!is.null(meta[["name"]])) {
+        pgx_info <- recompute_info()
+        # If the user recomputes, recycle old names/description
+        if (is.null(pgx_info)) {
+          if (!is.null(meta[["name"]])) {
           shiny::updateTextInput(session,
             "upload_name",
             value = meta[["name"]]
@@ -253,6 +255,18 @@ upload_module_computepgx_server <- function(
             "upload_description",
             value = meta[["description"]]
           )
+          }
+          } else {
+
+          shiny::updateTextInput(session,
+            "upload_name",
+            value = gsub(".pgx$", "", pgx_info[["name"]])
+          )
+          shiny::updateTextAreaInput(session,
+            "upload_description",
+            value = pgx_info[["description"]]
+          )
+        
         }
       })
 
