@@ -30,6 +30,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
     })
 
     shiny::observe({
+      
       comparisons1 <- names(pgx$gx.meta$meta)
       sel1 <- comparisons1[1]
       shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
@@ -38,6 +39,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
     })
 
     shiny::observe({
+      shiny::req(input$contrast1)
+      shiny::req(input$contrast2)
+
       df <- getOmicsScoreTable()
       if (is.null(df)) {
         return(NULL)
