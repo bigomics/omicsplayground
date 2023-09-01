@@ -43,9 +43,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       shiny::req(input$contrast2)
 
       df <- getOmicsScoreTable()
-      if (is.null(df)) {
-        return(NULL)
-      }
+      req(df)
       ntop <- as.integer(input$ntop)
       higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
       higenes <- head(higenes, ntop)
@@ -70,14 +68,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       ct1 <- input$contrast1
       ct2 <- input$contrast2
 
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
-        return(NULL)
-      }
+      shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
+      shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
 
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
