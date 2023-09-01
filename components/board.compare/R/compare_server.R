@@ -29,6 +29,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       ))
     })
 
+    score_table <- reactiveVal(NULL)
+
+    shiny::observe({
+      req(score_table_temp)
+      score_table(score_table_temp)
+    })
+
     shiny::observe({
       
       comparisons1 <- names(pgx$gx.meta$meta)
@@ -279,7 +286,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
 
     # Correlation score
 
-    score_table <- compare_table_corr_score_server(
+    score_table_temp <- compare_table_corr_score_server(
       "score_table",
       getOmicsScoreTable = getOmicsScoreTable,
       watermark = WATERMARK
@@ -295,7 +302,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
-      score_table = score_table,
+      score_table = score_table(),
       watermark = WATERMARK
     )
 
@@ -309,7 +316,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
-      score_table = score_table,
+      score_table = score_table(),
       watermark = WATERMARK
     )
   })
