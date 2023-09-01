@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx, pgx_dir) {
+CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
