@@ -152,15 +152,23 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
 
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
-      shiny::req(sigdb, pgx, pgx$connectivity)
+
+      dbg("[ConnectivityBoard::cumEnrichmentTable] reacted!")
+        
+      shiny::req(sigdb, pgx$connectivity)
       if (!grepl(".h5$", sigdb)) {
         return(NULL)
       }
-
+      dbg("[ConnectivityBoard::cumEnrichmentTable] 1")
+      
       df <- getConnectivityScores()
       if (is.null(df)) {
         return(NULL)
       }
+
+
+      dbg("[ConnectivityBoard::cumEnrichmentTable] 2")
+      
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii)
 
@@ -170,12 +178,15 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       if (is.null(F)) {
         return(NULL)
       }
-
+      dbg("[ConnectivityBoard::cumEnrichmentTable] 3")
+      
       ## multiply with sign of enrichment
       rho1 <- df$rho[match(colnames(F), df$pathway)]
       F <- t(t(F) * sign(rho1))
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
 
+      dbg("[ConnectivityBoard::cumEnrichmentTable] 4")
+      
       ## add current contrast
       ct <- getCurrentContrast()
       gx <- ct$gs[match(rownames(F), names(ct$gs))]
@@ -247,12 +258,16 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
 
+      dbg("[ConnectivityBoard::getConnectivityScores] 1")
+      
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
         warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
         return(NULL)
       }
 
+      dbg("[ConnectivityBoard::getConnectivityScores] 2")
+      
       scores <- as.data.frame(all.scores[[ct]])
       if (input$abs_score == FALSE) {
         ## put sign back!!!
@@ -272,6 +287,8 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
         scores <- scores[sel, , drop = FALSE]
       }
 
+      dbg("[ConnectivityBoard::getConnectivityScores] 3")
+      
       ## only those in existing database
       sigpath <- getConnectivityPath(sigdb)
       cts <- playbase::sigdb.getConnectivityContrasts(sigdb, path = sigpath)
@@ -283,6 +300,8 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       abs_score <- input$abs_score
       ntop <- 100
 
+      dbg("[ConnectivityBoard::getConnectivityScores] 4")
+      
       if (no.le && abs_score == TRUE) {
         ## recreate "leadingEdge" list
         sig <- playbase::sigdb.getSignatureMatrix(sigdb, path = sigpath)
@@ -344,20 +363,30 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
     getTopProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
       sigdb <- input$sigdb
+
+      dbg("[ConnectivityBoard::getTopProfiles] reacted!")              
       shiny::req(sigdb)
 
+      dbg("[ConnectivityBoard::getTopProfiles] 1")
+          
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii, input$sigdb)
 
+      dbg("[ConnectivityBoard::getTopProfiles] 2")
+      
       df <- getConnectivityScores()
       pw <- head(df$pathway[ii], 100)
 
+      dbg("[ConnectivityBoard::getTopProfiles] 3")
+      
       contr <- getCurrentContrast()
       fc <- contr$fc
       ngenes <- min(500, length(fc))
       top.genes <- head(names(sort(-abs(fc))), ngenes)
       top.genes <- unique(c(top.genes, sample(names(fc), ngenes))) ## add some random
 
+      dbg("[ConnectivityBoard::getTopProfiles] 4")
+      
       F <- getConnectivityMatrix(sigdb, select = pw, genes = top.genes)
       pw <- intersect(pw, colnames(F))
       F <- F[, pw, drop = FALSE]
@@ -367,18 +396,27 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
     getSelectedProfiles <- shiny::reactive({
       ## Get profiles of top-enriched contrasts (not all genes...)
       sigdb <- input$sigdb
+
+      dbg("[ConnectivityBoard::getSelectedProfiles] reacted!")        
       shiny::req(sigdb)
 
+      dbg("[ConnectivityBoard::getSelectedProfiles] executing...")
+      dbg("[ConnectivityBoard::getSelectedProfiles] 1")
+      
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii, input$sigdb)
-
+      dbg("[ConnectivityBoard::getSelectedProfiles] 2")
+      
       df <- getConnectivityScores()
       pw <- head(df$pathway[ii], 100)
+      dbg("[ConnectivityBoard::getSelectedProfiles] 3")
 
       selected_genes <- getSelectedGenes()
       F <- getConnectivityMatrix(sigdb, select = pw, genes = selected_genes)
       pw <- intersect(pw, colnames(F))
       F <- F[, pw, drop = FALSE]
+
+      dbg("[ConnectivityBoard::getSelectedProfiles] 4")      
       return(F)
     })
 

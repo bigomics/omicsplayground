@@ -76,7 +76,10 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+          
       plot_data <- shiny::reactive({
+            
+        dbg("[connectivity_plot_connectivityHeatmap_server:plot_data] reacted!")            
         F <- getProfiles()
         F[is.na(F)] <- 0
 
@@ -87,6 +90,9 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         ## add current contrast
         cc <- getCurrentContrast()
         shiny::req(cc)
+
+        dbg("[connectivity_plot_connectivityHeatmap_server:plot_data] executing...")        
+
         fc <- cc$fc[match(rownames(F), names(cc$fc))]
         names(fc) <- rownames(F)
         #
@@ -174,7 +180,9 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         pd <- plot_data()
         F <- pd$F
         score <- pd$score
+        dbg("[connectivity_plot_connectivityHeatmap_server:plot_RENDER] reacted!")
         shiny::req(F)
+        dbg("[connectivity_plot_connectivityHeatmap_server:plot_RENDER] executing..")        
         ngenes <- as.numeric(input$ngenes)
         nsig <- as.numeric(input$nsig)
         create_iheatmap(F, score, maxfc = nsig, maxgenes = ngenes)
