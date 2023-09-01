@@ -35,12 +35,11 @@ compare_plot_gene_corr_server <- function(id,
                                           hilightgenes,
                                           getOmicsScoreTable,
                                           score_table,
-                                          contrast1,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    shiny::observeEvent(contrast1(), {
-      ct <- contrast1()
-      shiny::req(ct)
+    shiny::observeEvent(input.contrast1(), {
+      shiny::req(input.contrast1())
+      ct <- input.contrast1()
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
     })
 

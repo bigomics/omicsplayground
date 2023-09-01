@@ -318,7 +318,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
-      contrast1 = shiny::reactive(input$contrast1),
       watermark = WATERMARK
     )
   })
