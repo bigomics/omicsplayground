@@ -36,8 +36,6 @@ compare_plot_expression_server <- function(id,
       shiny::req(getOmicsScoreTable())
       shiny::req(hilightgenes())
       shiny::req(score_table())
-      shiny::req(pgx)
-      shiny::req(dataset2())
       pgx1 <- pgx
       pgx2 <- dataset2()
 
