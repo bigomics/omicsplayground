@@ -32,6 +32,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
     score_table <- reactiveVal(NULL)
 
     shiny::observe({
+      shiny::req(score_table_temp$rows_all())
       score_table(score_table_temp$rows_all())
     })
 
