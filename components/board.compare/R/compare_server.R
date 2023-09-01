@@ -37,7 +37,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
     })
 
     shiny::observe({
-      
       comparisons1 <- names(pgx$gx.meta$meta)
       sel1 <- comparisons1[1]
       shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
@@ -64,10 +63,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
 
     cum_fc <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(dataset2)
+      shiny::req(dataset2())
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
-
       pgx1 <- pgx
       pgx2 <- dataset2()
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
@@ -115,17 +113,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       pgx1 <- pgx
       pgx2 <- dataset2()
 
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
       ct2 <- input$contrast2
-
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        return(NULL)
-      }
 
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
