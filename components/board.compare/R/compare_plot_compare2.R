@@ -40,6 +40,7 @@ compare_plot_compare2_ui <- function(id,
 compare_plot_compare2_server <- function(id,
                                          pgx,
                                          input.contrast2,
+                                         input.contrast1,
                                          hilightgenes,
                                          createPlot,
                                          plottype,
@@ -57,6 +58,8 @@ compare_plot_compare2_server <- function(id,
       pgx2 <- plot_data()
       ct2 <- input.contrast2()
       shiny::req(ct2)
+      #shiny::req(input.contrast1())
+      shiny::req(input.contrast1())
       if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
