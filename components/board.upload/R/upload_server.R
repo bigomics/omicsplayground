@@ -8,7 +8,10 @@ UploadBoard <- function(id,
                         pgx,
                         auth,
                         reload_pgxdir,
-                        load_uploaded_data) {
+                        load_uploaded_data,
+                        recompute_pgx,
+                        recompute_info
+                        ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -198,7 +201,7 @@ UploadBoard <- function(id,
     }
 
     shiny::observeEvent(input$upload_files, {
-      ## shiny::req(raw_dir())
+
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
       }
@@ -382,6 +385,18 @@ UploadBoard <- function(id,
       message("[upload_files] done!\n")
     })
 
+    # In case the user is reanalysing the data, get the info from pgx
+    observeEvent(recompute_pgx(), {
+      pgx <- recompute_pgx()
+      uploaded$samples.csv <- pgx$samples
+      uploaded$contrasts.csv <- pgx$contrast
+      uploaded$counts.csv <- pgx$counts
+      corrected_counts <- pgx$counts
+      recompute_info(list("name" = pgx$name, "description" = pgx$description))
+
+    })
+
+
     ## ------------------------------------------------------------------
     ## Observer for loading from local exampledata.zip file
     ##
@@ -409,7 +424,7 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
       } else {
-        ## Remove files
+
         uploaded$counts.csv <- NULL
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL
@@ -419,7 +434,6 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
-
     checkTables <- shiny::reactive({
       ## check dimensions
       status <- rep("please upload", 3)
@@ -696,7 +710,8 @@ UploadBoard <- function(id,
       lib.dir = FILES,
       auth = auth,
       create_raw_dir = create_raw_dir,
-      height = height
+      height = height,
+      recompute_info
     )
 
     uploaded_pgx <- shiny::reactive({
