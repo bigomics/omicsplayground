@@ -43,6 +43,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       pgx.files <- sort(dir(pgx_dir(), pattern = "pgx$"))
       shiny::updateSelectInput(session, "dataset2", choices = c("<this>", pgx.files))
     })
+    hilightgenes <- reactiveVal(NULL)
 
     shiny::observe({
       shiny::req(input$contrast1)
@@ -54,7 +55,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
       higenes <- head(higenes, ntop)
       higenes <- paste(higenes, collapse = " ")
+      hilightgenes({
+      genes <- strsplit(higenes, split = "[\t, \n]")[[1]]
+      gsub("[ ]", "", genes)
+    })
       shiny::updateTextAreaInput(session, "genelist", value = higenes)
+
     })
 
     ## ================================================================================
@@ -148,14 +154,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data/"))) {
       df <- df[order(-df$score), ]
       df
     })
-
-    hilightgenes <- shiny::reactive({
-      shiny::req(input$genelist)
-      genes <- as.character(input$genelist)
-      genes <- strsplit(genes, split = "[\t, \n]")[[1]]
-      gsub("[ ]", "", genes)
-    })
-
 
     ## ============================================================================
     ## ScatterPlot 1
