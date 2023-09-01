@@ -144,7 +144,6 @@ app_server <- function(input, output, session) {
 
   ## Modules needed from the start
   if (opt$ENABLE_UPLOAD) {
-
     UploadBoard(
       id = "upload",
       pgx_dir = PGX.DIR,
@@ -154,7 +153,7 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
       recompute_info = recompute_info
-      )
+    )
   }
 
   ## Chatbox

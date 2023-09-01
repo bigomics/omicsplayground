@@ -16,8 +16,7 @@ LoadingBoard <- function(id,
                          reload_pgxdir,
                          current_page,
                          load_uploaded_data,
-                         recompute_pgx
-                         ) {
+                         recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 

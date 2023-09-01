@@ -71,8 +71,7 @@ loading_table_datasets_server <- function(id,
                                           refresh_shared,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
-                                          recompute_pgx
-                                          ) {
+                                          recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -333,7 +332,7 @@ loading_table_datasets_server <- function(id,
         recompute_pgx_menuitem <- shiny::actionButton(
           ns(paste0("recompute_pgx_row_", i)),
           label = "Reanalyse",
-          icon = shiny::icon("gears"), 
+          icon = shiny::icon("gears"),
           class = "btn btn-outline-dark",
           style = "border: none;",
           width = "100%",
@@ -551,38 +550,33 @@ loading_table_datasets_server <- function(id,
     )
     ## ---------------- RECOMPUTE PGX -------------------
     shiny::observeEvent(input$recompute_pgx, {
-
       shinyalert::shinyalert(
-                    title = "Recompute",
-                    text = "Recomputing your data will remove the current contrasts",
-                    showCancelButton = TRUE,
-                    cancelButtonText = "Cancel",
-                    confirmButtonText = "OK",
-                    callbackR = function(x) {
+        title = "Recompute",
+        text = "Recomputing your data will remove the current contrasts",
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            # Load PGX
+            sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
+            df <- getFilteredPGXINFO()
+            pgxfile <- as.character(df$dataset[sel])
+            pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+            pgx <- loadPGX(pgxfile)
+            load_uploaded_data <- shiny::reactiveVal(NULL)
+            reload_pgxdir <- shiny::reactiveVal(0)
+            recompute_pgx(pgx)
 
-                      if (x) {
-                        # Load PGX
-                        sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
-                        df <- getFilteredPGXINFO()
-                        pgxfile <- as.character(df$dataset[sel])
-                        pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
-                        pgx <- loadPGX(pgxfile)
-                        load_uploaded_data <- shiny::reactiveVal(NULL)
-                        reload_pgxdir <- shiny::reactiveVal(0)
-                        recompute_pgx(pgx)
+            bigdash.selectTab(session, "upload-tab")
+            shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
 
-                        bigdash.selectTab(session, "upload-tab")
-                        shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
-
-                        return(0)
-                        } else {
-                          return(0)
-                        }
-
-               }
-                  )
-
-
+            return(0)
+          } else {
+            return(0)
+          }
+        }
+      )
     })
 
     ## ---------------- DOWNLOAD PGX FILE ----------------

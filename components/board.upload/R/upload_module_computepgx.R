@@ -32,8 +32,7 @@ upload_module_computepgx_server <- function(
     enable_button = TRUE,
     alertready = TRUE,
     height = 720,
-    recompute_info
-    ) {
+    recompute_info) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -110,7 +109,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
-                      ns("upload_description"), NULL, 
+                      ns("upload_description"), NULL,
                       placeholder = "Give a short description of your dataset",
                       height = 100, resize = "none"
                     ),
@@ -243,19 +242,18 @@ upload_module_computepgx_server <- function(
         # If the user recomputes, recycle old names/description
         if (is.null(pgx_info)) {
           if (!is.null(meta[["name"]])) {
-          shiny::updateTextInput(session,
-            "upload_name",
-            value = meta[["name"]]
-          )
-        }
-        if (!is.null(meta[["description"]])) {
-          shiny::updateTextAreaInput(session,
-            "upload_description",
-            value = meta[["description"]]
-          )
+            shiny::updateTextInput(session,
+              "upload_name",
+              value = meta[["name"]]
+            )
           }
-          } else {
-
+          if (!is.null(meta[["description"]])) {
+            shiny::updateTextAreaInput(session,
+              "upload_description",
+              value = meta[["description"]]
+            )
+          }
+        } else {
           shiny::updateTextInput(session,
             "upload_name",
             value = gsub(".pgx$", "", pgx_info[["name"]])
@@ -264,7 +262,6 @@ upload_module_computepgx_server <- function(
             "upload_description",
             value = pgx_info[["description"]]
           )
-        
         }
       })
 

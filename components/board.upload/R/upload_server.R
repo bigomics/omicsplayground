@@ -10,8 +10,7 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        recompute_info
-                        ) {
+                        recompute_info) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -201,7 +200,6 @@ UploadBoard <- function(id,
     }
 
     shiny::observeEvent(input$upload_files, {
-
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
       }
@@ -393,7 +391,6 @@ UploadBoard <- function(id,
       uploaded$counts.csv <- pgx$counts
       corrected_counts <- pgx$counts
       recompute_info(list("name" = pgx$name, "description" = pgx$description))
-
     })
 
 
@@ -424,7 +421,6 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
       } else {
-
         uploaded$counts.csv <- NULL
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL
