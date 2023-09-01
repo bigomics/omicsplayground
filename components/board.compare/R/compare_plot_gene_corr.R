@@ -46,6 +46,10 @@ compare_plot_gene_corr_server <- function(id,
     genecorr.RENDER <- shiny::reactive({
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
+      shiny::req(hilightgenes())
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
+      shiny::req(score_table())
       
       pgx1 <- pgx
       pgx2 <- dataset2()
@@ -54,9 +58,6 @@ compare_plot_gene_corr_server <- function(id,
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
-      shiny::req(ct1)
-      shiny::req(ct2)
-
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
@@ -80,7 +81,7 @@ compare_plot_gene_corr_server <- function(id,
       df <- getOmicsScoreTable()
       
 
-      sel <- score_table$rows_all() ## from module
+      sel <- score_table() ## from module
       shiny::req(sel)
       
       higenes <- head(rownames(df)[sel], 16)
