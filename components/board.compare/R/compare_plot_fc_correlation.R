@@ -20,7 +20,7 @@ compare_plot_fc_correlation_ui <- function(id,
 
   PlotModuleUI(ns("plot"),
     title = "FC Correlation",
-    plotlib = "base",
+    plotlib = "plotly",
     label = "a",
     info.text = info_text,
     download.fmt = c("png", "pdf", "csv"),
@@ -48,17 +48,17 @@ compare_plot_fc_correlation_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
+      # Require inputs
       shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(input.contrast1)
       shiny::req(input.contrast2)
       pgx1 <- pgx
       pgx2 <- dataset2()
-
-
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
 
+      # Allow only common contrats
       if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
         shiny::validate(shiny::need(all(ct1 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
         return(NULL)
@@ -68,6 +68,7 @@ compare_plot_fc_correlation_server <- function(id,
         return(NULL)
       }
 
+      # Match matrices from both datasets
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
@@ -81,19 +82,35 @@ compare_plot_fc_correlation_server <- function(id,
       return(cbind(F1, F2))
     })
 
+    plot_interactive_comp_fc <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {
+      var <- plot_data()
+      pos <- plot_data()
+
+      p <- playbase::pgx.scatterPlotXY(
+        pos,
+        var = var,
+        plotlib = "plotly",
+        cex = cex,
+        hilight = hilight,
+        key = colnames(var)
+      )
+
+      return(p)
+    }
+
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
-      F <- plot_data()
-      indexes <- substr(colnames(F), 1, 1)
-      F1 <- F[, indexes == 1, drop = FALSE]
-      F2 <- F[, indexes == 2, drop = FALSE]
-      playbase::plot_SPLOM(F1, F2 = F2, cex = 0.3, cex.axis = 0.95, hilight = higenes)
-      p
+      p <- plot_interactive_comp_fc(plot_data = plot_data, cex = 0.6, cex.axis = 0.95, hilight = higenes) %>%
+        plotly::layout(
+          dragmode = "select",
+          margin = list(l = 5, r = 5, b = 5, t = 20)
+        )
+      return(p)
     }
 
     PlotModuleServer(
       "plot",
-      plotlib = "base",
+      plotlib = "plotly",
       func = fcfcplot.RENDER,
       csvFunc = plot_data,
       res = c(85, 100), ## resolution of plots

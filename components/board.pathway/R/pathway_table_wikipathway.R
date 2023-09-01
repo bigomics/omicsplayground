@@ -65,16 +65,18 @@ functional_table_wikipathway_server <- function(id,
       url <- paste0(
         "https://www.wikipathways.org/pathways/", df$pathway.id, ".html"
       )
-      df$pathway.id <- paste0(
-        "<a href='", url, "' target='_blank'>", df$pathway.id, "</a>"
+
+      pathway.id_link <- paste0(
+        "<a href='", url, "' target='_blank'>",
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        "</a>"
       )
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
       DT::datatable(df,
-        rownames = FALSE,
+        rownames = pathway.id_link,
         escape = c(-1, -2),
-        #
         extensions = c("Scroller"),
         selection = list(
           mode = "single",
@@ -135,6 +137,9 @@ functional_table_wikipathway_server <- function(id,
       "tablemodule",
       func = table_RENDER,
       func2 = table_RENDER_modal,
+      csvFunc = function() {
+        table_data()$df
+      },
       selector = "single"
     )
 
