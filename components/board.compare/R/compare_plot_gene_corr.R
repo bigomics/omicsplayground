@@ -44,7 +44,9 @@ compare_plot_gene_corr_server <- function(id,
     })
 
     genecorr.RENDER <- shiny::reactive({
+      shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
+      
       pgx1 <- pgx
       pgx2 <- dataset2()
 
@@ -54,12 +56,6 @@ compare_plot_gene_corr_server <- function(id,
       ct2 <- input.contrast2()
       shiny::req(ct1)
       shiny::req(ct2)
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        return(NULL)
-      }
 
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
@@ -82,7 +78,6 @@ compare_plot_gene_corr_server <- function(id,
       dset2 <- paste0("2: expression")
 
       df <- getOmicsScoreTable()
-      req(df)
       
 
       sel <- score_table$rows_all() ## from module
