@@ -114,6 +114,8 @@ board_example:
 check_pgx:
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
+test_opg:
+	R -e "shiny::runTests()"
 
 
 	
