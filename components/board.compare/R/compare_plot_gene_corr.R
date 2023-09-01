@@ -44,10 +44,6 @@ compare_plot_gene_corr_server <- function(id,
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
     })
 
-    plot_data <- shiny::reactive({
-
-    })
-
     genecorr.RENDER <- shiny::reactive({
       pgx1 <- pgx
       pgx2 <- dataset2()
