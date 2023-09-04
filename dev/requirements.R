@@ -10,14 +10,14 @@ if(basename(getwd()) != "omicsplayground") {
 }
 
 options(Ncpus = 8L)
+options(timeout = 99999)  ## download time.out
 options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
-options(timeout = 60*5)  ## download time.out
 
-if(1) {
-    ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
-    options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
-    source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
-    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/jammy/latest"))
+## Speed up installation using binary packages from RStudio.
+if(grepl("linux",R.version["os"])) {
+  options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+  source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+  options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/jammy/latest"))
 }
 
 install.packages("devtools")

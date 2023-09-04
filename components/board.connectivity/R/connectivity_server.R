@@ -3,8 +3,11 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
+ConnectivityBoard <- function(
+    id,
+    auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
+    pgx,
+    reload_pgxdir = reactive(auth$user_dir)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel

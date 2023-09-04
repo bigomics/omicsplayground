@@ -1,5 +1,6 @@
 ./.github/*
 ./docker
+!./docker/Rprofile
 ./build/*
 ./ext/*
 ./logs/*

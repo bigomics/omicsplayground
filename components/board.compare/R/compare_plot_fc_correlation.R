@@ -51,8 +51,8 @@ compare_plot_fc_correlation_server <- function(id,
       # Require inputs
       shiny::req(pgx$X)
       shiny::req(dataset2)
-      shiny::req(input.contrast1)
-      shiny::req(input.contrast2)
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
       pgx1 <- pgx
       pgx2 <- dataset2()
       ct1 <- input.contrast1()
