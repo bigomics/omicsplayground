@@ -1,8 +1,8 @@
 ## Generated automatically: do not edit by hand
 
-message('source all called from wd = ',getwd())
-if(!file.exists('00SourceAll.R')) {
-  message('WARNING: not in source folder. skipping.')
+message("source all called from wd = ", getwd())
+if (!file.exists("00SourceAll.R")) {
+  message("WARNING: not in source folder. skipping.")
 } else {
   message('Note: sourcing all code...')
   source('app/R/utils/auth.R',encoding='UTF-8')
