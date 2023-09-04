@@ -40,6 +40,7 @@ compare_plot_compare1_ui <- function(id,
 compare_plot_compare1_server <- function(id,
                                          pgx,
                                          input.contrast1,
+                                         input.contrast2,
                                          hilightgenes,
                                          createPlot,
                                          plottype,
@@ -53,6 +54,7 @@ compare_plot_compare1_server <- function(id,
     })
 
     scatter1.RENDER <- shiny::reactive({
+      req(input.contrast2())
       pgx1 <- plot_data()
       pgx2 <- dataset2()
       all.ct <- names(pgx1$gx.meta$meta)

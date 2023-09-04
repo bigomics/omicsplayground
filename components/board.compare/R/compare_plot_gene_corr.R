@@ -35,20 +35,22 @@ compare_plot_gene_corr_server <- function(id,
                                           hilightgenes,
                                           getOmicsScoreTable,
                                           score_table,
-                                          contrast1,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    shiny::observeEvent(contrast1(), {
-      ct <- contrast1()
-      shiny::req(ct)
+    shiny::observeEvent(input.contrast1(), {
+      shiny::req(input.contrast1())
+      ct <- input.contrast1()
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
     })
 
-    plot_data <- shiny::reactive({
-
-    })
-
     genecorr.RENDER <- shiny::reactive({
+      shiny::req(getOmicsScoreTable())
+      shiny::req(input$colorby)
+      shiny::req(hilightgenes())
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
+      shiny::req(score_table())
+      
       pgx1 <- pgx
       pgx2 <- dataset2()
 
@@ -56,35 +58,15 @@ compare_plot_gene_corr_server <- function(id,
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
-      shiny::req(ct1)
-      shiny::req(ct2)
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        return(NULL)
-      }
-
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
-      if (length(kk) == 0) {
-        par(mfrow = c(1, 1))
-        frame()
-        text(0.5, 0.6, "Warning: no common samples", col = "black")
-        text(0.5, 0.5, "To compute gene correlation both datasets\nneed to have common samples",
-          col = "black"
-        )
-        return()
-      }
-      if (length(kk) < 10) {
-        par(mfrow = c(1, 1))
-        frame()
-        text(0.5, 0.6, "Error: too few samples", col = "red3")
-        text(0.5, 0.5, "For gene correlation we need at least 10 common samples", col = "red3")
-        return()
-      }
-
+       shiny::validate(shiny::need(
+          length(kk) > 0,
+          "No common samples between datasets, need at least 10 samples to compute gene correlations."
+        ))
+        
+      
       ## conform matrices
       X1 <- pgx1$X[gg, kk]
       X2 <- pgx2$X[gg, kk]
@@ -97,26 +79,20 @@ compare_plot_gene_corr_server <- function(id,
       dset2 <- paste0("2: expression")
 
       df <- getOmicsScoreTable()
-      if (is.null(df)) {
-        return(NULL)
-      }
+      
 
-      sel <- score_table$rows_all() ## from module
+      sel <- score_table() ## from module
       shiny::req(sel)
-      if (is.null(sel)) {
-        return(NULL)
-      }
-
+      
       higenes <- head(rownames(df)[sel], 16)
-      if (length(higenes) == 0) {
-        return(NULL)
-      }
+      shiny::validate(shiny::need(
+          length(higenes) > 0,
+          "Not valid option."
+        ))
 
       ## Set color for points
       klrpal <- rep(1:7, 99)
       klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
-
-
 
       colorby <- input$colorby
 
