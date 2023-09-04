@@ -123,3 +123,6 @@ check_pgx:
 
 test_opg:
 	R -e "shiny::runTests()"
+
+update:
+	Rscript dev/update.R
