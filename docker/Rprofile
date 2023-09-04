@@ -1,0 +1,3 @@
+# R options for docker building
+cat("sourcing .Rprofile (docker)\n")
+options(timeout=9999)
