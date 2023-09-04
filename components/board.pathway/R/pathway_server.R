@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-PathwayBoard <- function(id, pgx, selected_gsetmethods =  reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750
