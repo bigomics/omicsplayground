@@ -42,7 +42,7 @@ RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"
 #------------------------------------------------------------
 
 WORKDIR /
-RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+RUN R -e "options(timeout=99999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
