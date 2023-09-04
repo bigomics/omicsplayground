@@ -78,7 +78,7 @@ app_ui <- function() {
     sidebar <- bigdash::sidebar(
         "Menu",
         bigdash::sidebarMenu(
-            "Signature",
+            "Single Board",
             bigdash::sidebarMenuItem(
                 board,
                 paste0(board,"-tab")
@@ -100,7 +100,7 @@ app_ui <- function() {
         navbar = bigdash::navbar(
             tags$img(
                 id = "logo-bigomics",
-                src = "static/img/bigomics.png",
+                src = "static/bigomics-logo.png",
                 width = "110"
             ),
             center = tags$div(
