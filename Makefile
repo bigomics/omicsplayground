@@ -46,6 +46,11 @@ docker: FORCE
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
+docker2: FORCE 
+	@echo building docker $(BRANCH)
+	docker build --build-arg BRANCH=$(BRANCH) \
+		-f docker/Dockerfile \
+	  	-t bigomics/omicsplayground:$(BRANCH) .
 
 docker.base: FORCE
 	@echo building docker BASE
@@ -118,7 +123,3 @@ check_pgx:
 
 test_opg:
 	R -e "shiny::runTests()"
-
-
-	
-
