@@ -327,9 +327,9 @@ app_ui <- function() {
         ),
         bigdash::sidebarTabHelp(
           "pathway-tab",
-          "Functional Analysis",
+          "Pathway Analysis",
           "Perform specialized functional analysis
-                    to understand biological functions including GO, KEGG, and drug connectivity mapping."
+                    to understand biological pathways including GO, KEGG, and drug connectivity mapping."
         ),
         bigdash::sidebarTabHelp(
           "wordcloud-tab",

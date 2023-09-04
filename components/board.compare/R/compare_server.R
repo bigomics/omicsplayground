@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx, pgx_dir) {
+CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data","mini-example"))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
     tabH <- "70vh"
-
+    
     infotext <-
       "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
          This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
