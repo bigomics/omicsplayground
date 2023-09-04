@@ -30,6 +30,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /
+COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 RUN R -e "devtools::install_github('JohnCoene/bsutils')"
@@ -42,7 +43,16 @@ RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"
 #------------------------------------------------------------
 
 WORKDIR /
-RUN R -e "options(timeout=99999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+# RUN wget -nv https://github.com/bigomics/playdata/archive/main.zip \
+#     && unzip main.zip \
+#     && mv playdata-main playdata \
+#     && chmod -R ugo+rwX /playdata \
+#     && rm $BRANCH.zip   
+
+##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+RUN git clone https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
