@@ -91,6 +91,7 @@ app_ui <- function() {
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
     )
+    browser()
 
     bigdash::bigPage(
         header,
@@ -100,9 +101,13 @@ app_ui <- function() {
         navbar = bigdash::navbar(
             tags$img(
                 id = "logo-bigomics",
-                src = "assets/img/bigomics.png",
-                width = "110",
-            )
+                src = "static/img/bigomics.png",
+                width = "110"
+            ),
+            center = tags$div(
+                shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+        )
+
             
         ),
         textInput("pgx_path", label = NULL, value = pgx_file, placeholder = "Absolute path to pgx object", width = "100%"),
