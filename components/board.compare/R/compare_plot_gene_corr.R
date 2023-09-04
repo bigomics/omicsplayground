@@ -50,7 +50,7 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(input.contrast1())
       shiny::req(input.contrast2())
       shiny::req(score_table())
-      
+
       pgx1 <- pgx
       pgx2 <- dataset2()
 
@@ -61,12 +61,12 @@ compare_plot_gene_corr_server <- function(id,
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
-       shiny::validate(shiny::need(
-          length(kk) > 0,
-          "No common samples between datasets, need at least 10 samples to compute gene correlations."
-        ))
-        
-      
+      shiny::validate(shiny::need(
+        length(kk) > 0,
+        "No common samples between datasets, need at least 10 samples to compute gene correlations."
+      ))
+
+
       ## conform matrices
       X1 <- pgx1$X[gg, kk]
       X2 <- pgx2$X[gg, kk]
@@ -79,16 +79,16 @@ compare_plot_gene_corr_server <- function(id,
       dset2 <- paste0("2: expression")
 
       df <- getOmicsScoreTable()
-      
+
 
       sel <- score_table() ## from module
       shiny::req(sel)
-      
+
       higenes <- head(rownames(df)[sel], 16)
       shiny::validate(shiny::need(
-          length(higenes) > 0,
-          "Not valid option."
-        ))
+        length(higenes) > 0,
+        "Not valid option."
+      ))
 
       ## Set color for points
       klrpal <- rep(1:7, 99)

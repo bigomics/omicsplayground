@@ -29,7 +29,6 @@ compare_plot_expression_server <- function(id,
                                            score_table,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     multibarplot.RENDER <- shiny::reactive({
       shiny::req(input.contrast1())
       shiny::req(input.contrast2())
@@ -48,7 +47,7 @@ compare_plot_expression_server <- function(id,
       genes <- hilightgenes()
 
       df <- getOmicsScoreTable()
-      
+
       sel <- score_table() ## from module
       genes <- rownames(df)[sel]
 
