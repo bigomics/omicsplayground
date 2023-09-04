@@ -96,7 +96,6 @@ connectivity_plot_connectivityMap_server <- function(id,
                                                      watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      
       #' Get the XY positions of signature points
       getConnectivityPositions <- shiny::reactive({
         sigdb <- sigdb()
@@ -131,15 +130,15 @@ connectivity_plot_connectivityMap_server <- function(id,
         rhdf5::h5ls(h5.file)
 
         pos <- NULL
-        if (method == "pca"  && dims == 2) try(pos <- rhdf5::h5read(h5.file, "clustering/pca2d"))
-        if (method == "pca"  && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/pca3d"))
+        if (method == "pca" && dims == 2) try(pos <- rhdf5::h5read(h5.file, "clustering/pca2d"))
+        if (method == "pca" && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/pca3d"))
         if (method == "tsne" && dims == 2) try(pos <- rhdf5::h5read(h5.file, "clustering/tsne2d"))
         if (method == "tsne" && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/tsne3d"))
         if (method == "umap" && dims == 2) try(pos <- rhdf5::h5read(h5.file, "clustering/umap2d"))
         if (method == "umap" && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/umap3d"))
 
-        if(is.null(pos)) {
-          return(NULL)  ## oops...
+        if (is.null(pos)) {
+          return(NULL) ## oops...
         }
 
         ## normalize
