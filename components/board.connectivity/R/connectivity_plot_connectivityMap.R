@@ -294,16 +294,19 @@ connectivity_plot_connectivityMap_server <- function(id,
 
           plt <- plotly::plot_ly(
             df,
-            x = df[, 1], y = df[, 2], z = df[, 3],
-            mode = "markers", type = "scatter3d",
-            color = colorvar, colors = colorpal,
-            size = sizevar, sizes = c(5, 35) * cex1,
-            marker = c(
-              marker.col,
-              list(
-                sizeref = sizeref,
-                line = list(color = "grey50", width = 0, opacity = 0.5)
-              )
+            x = df[, 1],
+            y = df[, 2],
+            z = df[, 3],
+            mode = "markers",
+            type = "scatter3d",
+            color = colorvar,
+            colors = colorpal,
+            marker = list(
+#              size = sizevar,
+#              sizes = c(5, 35) * cex1,
+#              color = marker.col,
+              sizeref = sizeref,
+              line = list(color = "grey50", width = 0, opacity = 0.5)
             ),
             text = tt.info
           )
@@ -322,18 +325,21 @@ connectivity_plot_connectivityMap_server <- function(id,
 
           plt <- plotly::plot_ly(
             df,
-            x = df[, 1], y = df[, 2],
-            source = "cmap2d", key = rownames(df),
-            mode = "markers", type = "scattergl",
-            color = colorvar, colors = colorpal,
-            marker = c(
-              marker.col,
-              list(
-                sizeref = sizeref,
-                line = list(color = "grey50", width = 0, opacity = 0.5)
-              )
+            x = df[, 1],
+            y = df[, 2],
+            source = "cmap2d",
+            key = rownames(df),
+            mode = "markers",
+            type = "scattergl",
+            color = colorvar,
+            colors = colorpal,
+            marker = list(
+#              size = sizevar,
+#              sizes = c(5, 30) * cex1,
+#              color = marker.col,
+              sizeref = sizeref,
+              line = list(color = "grey50", width = 0, opacity = 0.5)
             ),
-            size = sizevar, sizes = c(5, 30) * cex1,
             text = tt.info
           )
 
