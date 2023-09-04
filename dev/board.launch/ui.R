@@ -82,7 +82,11 @@ app_ui <- function() {
             bigdash::sidebarMenuItem(
                 board,
                 paste0(board,"-tab")
-            )
+            ),
+            bigdash::sidebarMenuItem(
+                "Upload PGX",
+                paste0("pgx-tab")
+                )
         )
     )
 
@@ -109,7 +113,6 @@ app_ui <- function() {
 
             
         ),
-        textInput("pgx_path", label = NULL, value = pgx_file, placeholder = "Absolute path to pgx object", width = "100%"),
         settings = bigdash::settings(
             "Settings"
         ),
@@ -118,7 +121,15 @@ app_ui <- function() {
                 paste0(board,"-tab"),
                 board_input_fn(board),
                 board_ui_fn(board)
+            ),
+        bigdash::bigTabs(
+            bigdash::bigTabItem(
+                paste0("pgx-tab"),
+                board_input_fn("hello"),
+                textInput("pgx_path", label = NULL, value = pgx_file, placeholder = "Absolute path to pgx object", width = "100%")
             )
+            
+        )
         )
     )
 }
