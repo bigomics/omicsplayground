@@ -36,6 +36,8 @@ docker.run2:
 	docker run --rm -it -p 4000:3838 \
 		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
+		-v /aws/pgx-share:/omicsplayground/data_shared \
+		-v /aws/pgx-public:/omicsplayground/data_public \
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
@@ -81,7 +83,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.23-"$(BRANCH)""$(DATE)
+VERSION = "v3.2.25-"$(BRANCH)""$(DATE)
 
 version: 
 	@echo "new version ->" $(VERSION)
