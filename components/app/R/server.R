@@ -223,8 +223,8 @@ app_server <- function(input, output, session) {
         ),
         bigdash::bigTabItem(
           "pathway-tab",
-          FunctionalInputs("pathway"),
-          FunctionalUI("pathway")
+          PathwayInputs("pathway"),
+          PathwayUI("pathway")
         ),
         bigdash::bigTabItem(
           "wordcloud-tab",
@@ -318,8 +318,8 @@ app_server <- function(input, output, session) {
         ) -> env$enrich
       }
       if (ENABLED["pathway"]) {
-        info("[SERVER] calling FunctionalBoard module")
-        FunctionalBoard("pathway",
+        info("[SERVER] calling PathwayBoard module")
+        PathwayBoard("pathway",
           pgx = PGX,
           selected_gsetmethods = env$enrich$selected_gsetmethods
         )

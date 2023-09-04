@@ -3,7 +3,4 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-library(testthat)
-library(testpackage)
-
-test_check("testpackage")
+shinytest2::test_app()
