@@ -91,7 +91,6 @@ app_ui <- function() {
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
     )
-    browser()
 
     bigdash::bigPage(
         header,
