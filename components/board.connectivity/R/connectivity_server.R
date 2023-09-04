@@ -160,12 +160,12 @@ ConnectivityBoard <- function(
       if (!grepl(".h5$", sigdb)) {
         return(NULL)
       }
-      
+
       df <- getConnectivityScores()
       if (is.null(df)) {
         return(NULL)
       }
-      
+
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii)
 
@@ -175,7 +175,7 @@ ConnectivityBoard <- function(
       if (is.null(F)) {
         return(NULL)
       }
-      
+
       ## multiply with sign of enrichment
       rho1 <- df$rho[match(colnames(F), df$pathway)]
       F <- t(t(F) * sign(rho1))
@@ -287,7 +287,7 @@ ConnectivityBoard <- function(
       no.le <- !("leadingEdge" %in% colnames(scores))
       abs_score <- input$abs_score
       ntop <- 100
-      
+
       if (no.le && abs_score == TRUE) {
         ## recreate "leadingEdge" list
         sig <- playbase::sigdb.getSignatureMatrix(sigdb, path = sigpath)
@@ -373,10 +373,10 @@ ConnectivityBoard <- function(
       ## Get profiles of top-enriched contrasts (not all genes...)
       sigdb <- input$sigdb
       shiny::req(sigdb)
-      
+
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii, input$sigdb)
-      
+
       df <- getConnectivityScores()
       pw <- head(df$pathway[ii], 100)
 
