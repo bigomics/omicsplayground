@@ -43,14 +43,9 @@ RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"
 #------------------------------------------------------------
 
 WORKDIR /
-# RUN wget -nv https://github.com/bigomics/playdata/archive/main.zip \
-#     && unzip main.zip \
-#     && mv playdata-main playdata \
-#     && chmod -R ugo+rwX /playdata \
-#     && rm $BRANCH.zip   
-
 ##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
-RUN git clone https://github.com/bigomics/playdata.git \
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
     && R CMD INSTALL playdata \
     && rm -fr playdata
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
@@ -65,18 +60,22 @@ RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 WORKDIR /
 ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-    && rm -fr /omicsplayground*  \
-    && unzip $BRANCH.zip \
-    && mv omicsplayground-$BRANCH omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground \
-    && rm $BRANCH.zip   
+# RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
+#     && rm -fr /omicsplayground*  \
+#     && unzip $BRANCH.zip \
+#     && mv omicsplayground-$BRANCH omicsplayground \
+#     && chmod -R ugo+rwX /omicsplayground \
+#     && rm $BRANCH.zip   
+
+RUN rm -fr /omicsplayground  \
+    && git clone -b $BRANCH --single-branch --depth 1 \
+       https://github.com/bigomics/omicsplayground.git \   
+    && chmod -R ugo+rwX /omicsplayground 
 
 ## tag docker version
 WORKDIR /omicsplayground
 #RUN make version
 #COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
-
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
