@@ -41,6 +41,7 @@ wordcloud_plot_enrichment_server <- function(id,
       keyword <- topFreq$word[sel.row]
 
       if (length(keyword) == 0 || keyword[1] %in% c(NA, "")) keyword <- "cell.cycle"
+      shiny::req(res$W)
       targets <- names(which(res$W[, keyword] == 1))
 
       nes <- unlist(sapply(res[["gsea"]], function(G) G[match(keyword, G$word), "NES"]))
