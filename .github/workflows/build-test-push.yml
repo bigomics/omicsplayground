@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./build-test-push/Dockerfile
+          file: ./.github/workflows/build-test-push/Dockerfile
           push: false
           no-cache: true
           build-args: |
@@ -51,5 +51,3 @@ jobs:
           build-args: |
             BRANCH=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
-        
-          
