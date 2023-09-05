@@ -28,6 +28,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
+        name: List contents of repository
+        run: ls -alR
+      -
         name: Build
         id: test
         uses: docker/build-push-action@v2
