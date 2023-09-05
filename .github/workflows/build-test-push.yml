@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (latest)
+name: build-test-push
 on:
   schedule:
     - cron:  '0 4 * * *'
