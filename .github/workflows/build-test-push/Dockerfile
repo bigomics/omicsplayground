@@ -64,15 +64,12 @@ RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 
 ## tag docker version
 WORKDIR /omicsplayground
-#RUN make version
-#COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
-
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; f
+RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 #------------------------------------------------------------
