@@ -40,6 +40,9 @@ jobs:
             BRANCH=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
       -
+        name: Print test result
+        run: echo "Test result: ${{ steps.test.outputs.test_result }}"
+      -
         name: Push
         if: steps.test.outputs.test_result == 'FALSE'
         uses: docker/build-push-action@v2
