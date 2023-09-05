@@ -66,6 +66,7 @@ featuremap_plot_gene_sig_server <- function(id,
     geneSigPlots.RENDER <- function() {
       dt <- geneSigPlots.plot_data()
       F <- dt[[1]]
+      shiny::req(F)
       pos <- dt[[2]]
 
       nc <- ceiling(sqrt(ncol(F)))
