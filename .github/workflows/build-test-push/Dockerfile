@@ -83,6 +83,7 @@ EXPOSE 3838
 CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
 
 # add entrypoint to execute when the docker container starts up
-COPY .github/workflows/build-test-push/entrypoint.sh /entrypoint.sh
+# COPY .github/workflows/build-test-push/entrypoint.sh /entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
