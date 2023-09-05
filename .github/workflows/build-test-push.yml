@@ -39,10 +39,11 @@ jobs:
           build-args: |
             BRANCH=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
-      -
-        name: Run container
+      - name: List images, print and run container
         run: |
-          docker run --rm omicsplayground:test
+          docker images | tee images.txt
+          cat images.txt
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
