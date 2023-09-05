@@ -4,6 +4,7 @@ name: build Docker (latest)
 on:
   schedule:
     - cron:  '0 4 * * *'
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -32,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile_mmm
+          file: ./.github/workflows/build-test-push/Dockerfile
           push: false
           no-cache: true
           build-args: |
@@ -44,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./.github/workflows/build-test-push/Dockerfile.test
+          file: ./.github/workflows/build-test-push/Dockerfile
           push: true
           no-cache: true
           build-args: |

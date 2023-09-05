@@ -63,6 +63,12 @@ message("[ComputePgxServer:@compute] initialize object\n")
 # Save output to a PGX file
 
 pgx_name <- paste0(params$name,".pgx")
-save(pgx, file = file.path(params$pgx.save.folder,pgx_name))
+# if pgx.save folder exists, save pgx file to it, otherwise save in temp_dir
+if (dir.exists(params$pgx.save.folder)) {
+  pgx_name <- file.path(params$pgx.save.folder,pgx_name)
+} else {
+  pgx_name <- file.path(temp_dir,pgx_name)
+}
+save(pgx, file = pgx_name)
 
 message("[compute PGX process] : process finished, pgx is saved as", pgx_name,"\n")
