@@ -19,9 +19,6 @@ FROM bigomics/omicsplayground-base:ub2204
 ENV DEBIAN_FRONTEND noninteractive
 
 #RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-RUN apt update && apt install -y locales \
-    librsvg2-dev libgsl-dev curl
-
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
@@ -33,10 +30,6 @@ WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 RUN R -e "devtools::install_github('bigomics/shinyChatR')"
-RUN R -e "devtools::install_github('JohnCoene/bsutils')"
-RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-RUN R -e "BiocManager::install(c('topGO','survcomp'))"
-RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"  
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)

@@ -30,7 +30,7 @@ RUN apt update && apt install -y \
     pandoc pandoc-citeproc imagemagick \ 
     libcairo2-dev libxt-dev xvfb \
     libfftw3-dev libglpk-dev librsvg2-dev \
-    libgsl-dev
+    libgsl-dev librsvg2-dev libgsl-dev curl
 
 # Set the locale to UTF8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -76,6 +76,14 @@ RUN Rscript dev/requirements.R
 FROM r-base2 AS r-base3
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
+RUN R -e "devtools::install_github('JohnCoene/bsutils')"
+RUN R -e "devtools::install_github('ropensci/iheatmapr')"
+RUN R -e "BiocManager::install(c('topGO','survcomp'))"
+RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "install.packages(c('RSpectra'))"
 
