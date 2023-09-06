@@ -74,12 +74,6 @@ RUN Rscript dev/requirements.R
 
 ## add any missing packages manually------------------------
 FROM r-base2 AS r-base3
-RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
-RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-RUN R -e "devtools::install_github('JohnCoene/bsutils')"
-RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-RUN R -e "BiocManager::install(c('topGO','survcomp'))"
-RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"
 RUN git clone -b main --single-branch --depth 1 \
     https://github.com/bigomics/playdata.git \
     && R CMD INSTALL playdata \

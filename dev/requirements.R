@@ -114,7 +114,8 @@ pkg.extra <- c(
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
-  'iheatmapr','RcppZiggurat','Rfast','BH','topGO'
+  'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
+  'blastula','shinytest2'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
