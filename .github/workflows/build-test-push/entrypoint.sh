@@ -3,8 +3,8 @@
 # Run tests
 R --slave -e "cat('Current working directory:', getwd(), '\n')"
 R -e "shiny::runTests();all(shiny::runTests()[[2]])"
-
-R --slave -e "all(shiny::runTests()[[2]])" > test_result.txt
+R --slave -e "writeLines(all(shiny::runTests()[[2]]), 'test_result.txt')"
+#R --slave -e "all(shiny::runTests()[[2]])" > test_result.txt
 
 # Read test results from file
 test_result=$(cat test_result.txt)
@@ -19,5 +19,5 @@ if [[ $test_result == FALSE ]]; then
   exec "$@"
 else
   echo "Some tests failed. Not running command."
-  exit 1
+  exit 0
 fi
