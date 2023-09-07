@@ -40,7 +40,7 @@ jobs:
           build-args: |
             BRANCH=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
-          run: |
+        run: |
           docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
       -
         name: Print test result
