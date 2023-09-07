@@ -35,11 +35,12 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          load: true
+          push: true
           tags: ${{ env.TEST_TAG }}
       -
-        name: Test
+        name:  Pull and run image
         run: |
+          docker pull ${{ env.TEST_TAG }}
           docker run --rm ${{ env.TEST_TAG }}
       -
         name: Print test result
