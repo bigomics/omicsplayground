@@ -185,7 +185,7 @@ if(1) {
                    'limma', 'S4Vectors', 'SingleCellExperiment',
                    'SummarizedExperiment', 'batchelor'))
     install.github('cole-trapnell-lab/leidenbase')
-    install.github('cole-trapnell-lab/monocle3')
+    #install.github('cole-trapnell-lab/monocle3')
 }
 
 ## proteus
