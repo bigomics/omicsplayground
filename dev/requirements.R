@@ -127,7 +127,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview","PCSF",
+    "infercnv","pathview",
     "mygene","diptest","edgeR","DESeq2"
   )
 
