@@ -28,19 +28,17 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
-        name: Build
+        name: Build and export to Docker
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./.github/workflows/build-test-push/Dockerfile
           load: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
-      - name: List images, print and run container
-        id: test
+      -
+        name: Test
         run: |
-          docker images | tee images.txt
-          cat images.txt
-          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test  
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
