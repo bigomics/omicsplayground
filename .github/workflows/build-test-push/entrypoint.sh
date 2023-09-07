@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Run tests
+R --slave -e "cat('Current working directory:', getwd(), '\n')"
 R --slave -e "all(shiny::runTests()[[2]])" > test_results.txt
 
 # Read test results from file

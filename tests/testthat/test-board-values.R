@@ -3,7 +3,8 @@ test_that("example data loads with no error",{
   # test single board minimal components
 
   # get all board names
-  boards <- list.dirs(path = "../../components", full.names = FALSE, recursive = FALSE)
+  boards <- list.dirs(path = "../../components", pattern = "\\.R$",  full.names = FALSE, recursive = FALSE)
+  print(boards)
   # split "." and get second name
   boards <- sapply(strsplit(boards, split = "\\."), function(x) x[2])
   boards <- boards[!is.na(boards)]
@@ -17,6 +18,7 @@ test_that("example data loads with no error",{
   AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
     message(board)
+    print(board)
     #board = "wordcloud"
     #board = boards[1]
     App <- shinytest2::AppDriver$new(
