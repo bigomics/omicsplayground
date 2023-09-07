@@ -30,7 +30,7 @@ RUN apt update && apt install -y \
     pandoc pandoc-citeproc imagemagick \ 
     libcairo2-dev libxt-dev xvfb \
     libfftw3-dev libglpk-dev librsvg2-dev \
-    libgsl-dev
+    libgsl-dev librsvg2-dev libgsl-dev curl
 
 # Set the locale to UTF8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -59,10 +59,6 @@ RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
     && unzip main.zip \
     && rm main.zip        
 
-WORKDIR /playbase-main
-RUN Rscript dev/requirements.R
-## RUN R CMD INSTALL . 
-
 ## omicsplayground ------------------------------
 FROM r-base1 AS r-base2
 WORKDIR /
@@ -74,8 +70,10 @@ RUN Rscript dev/requirements.R
 
 ## add any missing packages manually------------------------
 FROM r-base2 AS r-base3
-RUN R -e "remotes::install_github('JohnCoene/firebase@omics',force=TRUE)"
-RUN R -e "devtools::install_github('ropensci/iheatmapr')"
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "install.packages(c('RSpectra'))"
 

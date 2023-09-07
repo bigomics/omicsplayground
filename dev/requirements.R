@@ -114,7 +114,8 @@ pkg.extra <- c(
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
-  'iheatmapr','RcppZiggurat','Rfast','BH','topGO'
+  'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
+  'blastula','shinytest2'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -126,7 +127,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview","PCSF",
+    "infercnv","pathview",
     "mygene","diptest","edgeR","DESeq2"
   )
 
@@ -184,7 +185,7 @@ if(1) {
                    'limma', 'S4Vectors', 'SingleCellExperiment',
                    'SummarizedExperiment', 'batchelor'))
     install.github('cole-trapnell-lab/leidenbase')
-    install.github('cole-trapnell-lab/monocle3')
+    #install.github('cole-trapnell-lab/monocle3')
 }
 
 ## proteus
