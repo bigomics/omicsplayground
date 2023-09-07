@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Run Docker container 
-docker run --rm -it -p 4000:3838 --name test_container bigomics/omicsplayground:latest
-
-# capture test results
-docker exec -it test_container R --slave -e "all(test_results[[2]])" > test_results.txt
+# Run tests
+R --slave -e "shiny::runTests()" > test_results.txt
 # Read test results from file
 test_result=$(cat test_result.txt)
 echo "Test results: $test_result"
