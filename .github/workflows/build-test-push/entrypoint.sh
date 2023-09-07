@@ -2,8 +2,9 @@
 
 # Run tests
 R --slave -e "cat('Current working directory:', getwd(), '\n')"
-R -e "shiny::runTests()"
-R --slave -e "all(shiny::runTests()[[2]])" > test_results.txt
+R -e "shiny::runTests();all(shiny::runTests()[[2]])"
+
+R --slave -e "all(shiny::runTests()[[2]])" > test_result.txt
 
 # Read test results from file
 test_result=$(cat test_result.txt)
