@@ -7,13 +7,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-name: ci
-
-on:
-  push:
-    branches:
-      - "main"
-
 env:
   TEST_TAG: bigomics/omicsplayground:test
   LATEST_TAG: bigomics/omicsplayground:latest
