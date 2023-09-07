@@ -35,6 +35,7 @@ jobs:
           context: .
           file: ./.github/workflows/build-test-push/Dockerfile
           push: false
+          load: true # new step added to test
           no-cache: true
           build-args: |
             BRANCH=master
