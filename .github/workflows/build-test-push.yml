@@ -33,7 +33,7 @@ jobs:
       -
         name: Shinytest docker
         run: |
-          docker build -t my-image -f ./.github/workflows/build-test-push/Dockerfile .
+          docker build -t ${{ env.TEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.TEST_TAG }}
       -
         name: Print test result
