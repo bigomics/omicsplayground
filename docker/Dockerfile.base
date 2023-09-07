@@ -54,11 +54,7 @@ WORKDIR /
 FROM os-base AS r-base1
 WORKDIR /
 RUN echo Downloading Playbase
-RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
-    && rm -fr /playbase-main  \
-    && unzip main.zip \
-    && rm main.zip        
-
+RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 ## omicsplayground ------------------------------
 FROM r-base1 AS r-base2
 WORKDIR /
