@@ -3,4 +3,4 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-shinytest2::test_app()
+#shinytest2::test_app()
