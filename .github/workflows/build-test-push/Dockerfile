@@ -64,5 +64,6 @@ CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', laun
 # add entrypoint to execute when the docker container starts up
 RUN cp .github/workflows/build-test-push/entrypoint.sh .
 RUN chmod +x /omicsplayground/entrypoint.sh
+RUN cat /omicsplayground/entrypoint.sh
 
 ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
