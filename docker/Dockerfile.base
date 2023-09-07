@@ -59,10 +59,6 @@ RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
     && unzip main.zip \
     && rm main.zip        
 
-WORKDIR /playbase-main
-RUN Rscript dev/requirements.R
-## RUN R CMD INSTALL . 
-
 ## omicsplayground ------------------------------
 FROM r-base1 AS r-base2
 WORKDIR /
