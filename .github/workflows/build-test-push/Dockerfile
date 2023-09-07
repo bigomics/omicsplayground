@@ -37,7 +37,7 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 #------------------------------------------------------------
 WORKDIR /
 RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
+RUN wget -nv https://github.com/mauromiguelm/omicsplayground/archive/$BRANCH.zip \
     && rm -fr /omicsplayground*  \
     && unzip $BRANCH.zip \
     && mv omicsplayground-$BRANCH omicsplayground \
