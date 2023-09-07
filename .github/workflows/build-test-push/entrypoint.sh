@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Run tests
-R --slave -e "shiny::runTests()" > test_results.txt
+R --slave -e "all(shiny::runTests()[[2]])" > test_results.txt
+
 # Read test results from file
 test_result=$(cat test_result.txt)
 echo "Test results: $test_result"
