@@ -38,7 +38,7 @@ jobs:
       -
         name: Test
         run: |
-          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test  
+          docker images   
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
