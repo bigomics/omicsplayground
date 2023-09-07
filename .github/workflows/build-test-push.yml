@@ -32,6 +32,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN  }}
       -
         name: Shinytest docker
+        id: test
         run: |
           docker build -t ${{ env.TEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.TEST_TAG }}

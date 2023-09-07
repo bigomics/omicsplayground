@@ -11,3 +11,4 @@ echo "Test results: $test_result"
 
 # return test result as an output
 echo ::set-output name=test_result::$test_result
+echo "{test_result}={$test_result}" >> $test_result
