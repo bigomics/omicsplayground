@@ -54,13 +54,6 @@ WORKDIR /omicsplayground
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
-#------------------------------------------------------------
-# Expose port and set entry CMD
-#------------------------------------------------------------
-EXPOSE 3838
-##CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
-CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
-
 # add entrypoint to execute when the docker container starts up
 RUN cp .github/workflows/build-test-push/entrypoint.sh .
 RUN chmod +x /omicsplayground/entrypoint.sh
@@ -73,4 +66,4 @@ RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >
 RUN apt-get update && apt-get install -y google-chrome-stable
 
 WORKDIR /omicsplayground
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
