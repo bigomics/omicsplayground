@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204
+FROM masierom/omicsplayground-base:ub2204_v2
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
@@ -37,10 +37,10 @@ RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 
 WORKDIR /
 ##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
-RUN git clone -b main --single-branch --depth 1 \
-    https://github.com/bigomics/playdata.git \
-    && R CMD INSTALL playdata \
-    && rm -fr playdata
+#RUN git clone -b main --single-branch --depth 1 \
+#    https://github.com/bigomics/playdata.git \
+#    && R CMD INSTALL playdata \
+#    && rm -fr playdata
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
