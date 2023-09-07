@@ -34,7 +34,6 @@ jobs:
           context: .
           file: ./.github/workflows/build-test-push/Dockerfile
           load: true
-          push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
       - name: List images, print and run container
         id: test
