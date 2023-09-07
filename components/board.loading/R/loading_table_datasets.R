@@ -551,8 +551,8 @@ loading_table_datasets_server <- function(id,
     ## ---------------- RECOMPUTE PGX -------------------
     shiny::observeEvent(input$recompute_pgx, {
       shinyalert::shinyalert(
-        title = "Recompute",
-        text = "Recomputing your data will remove the current contrasts",
+        title = "Reanalyze",
+        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept.",
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
