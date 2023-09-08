@@ -180,12 +180,16 @@ upload_module_preview_server <- function(id, uploaded) {
         has_samples <- 'samples.csv' %in% uploaded$last_uploaded
         has_contrasts <- ('contrasts.csv' %in% uploaded$last_uploaded) &
           (!is.null(uploaded$contrasts.csv))
-        if (has_counts) { uploaded$counts.csv <- NULL }
-        if (has_samples) { uploaded$samples.csv <- NULL }
-        if (has_contrasts) { uploaded$contrasts.csv <- NULL }
+        uploaded[["counts.csv"]] <- NULL
+        uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
+        uploaded[["pgx"]] <- NULL
+        uploaded[["last_uploaded"]] <- NULL
+        uploaded[["checklist"]] <- NULL
       }, ignoreInit = TRUE)
 
       observeEvent(input$ok_upload, {
+
         shiny::removeModal()
       }, ignoreInit = TRUE)
 
