@@ -3,8 +3,6 @@
 name: build Docker base (ub2204_v2)
 
 on:
-  schedule:
-    - cron:  '0 4 * * *'
   workflow_dispatch:
 
 jobs:
