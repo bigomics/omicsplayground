@@ -56,7 +56,7 @@ ConnectivityBoard <- function(
       computed_sigdb <- NULL ## only precomputed inside PGX object??
       if (dir.exists(SIGDB.DIR) && length(pgx$connectivity) > 0) {
         ## only show if we have the libx h5 files available
-        libx_sigdb <- dir(SIGDB.DIR, pattern = "^sigdb-.*h5")
+        libx_sigdb <- dir(SIGDB.DIR, pattern = ".h5$")
         computed_sigdb <- intersect(names(pgx$connectivity), libx_sigdb)
       }
       available_sigdb <- c(my_sigdb, computed_sigdb)
