@@ -277,9 +277,6 @@ FolderLock <- R6::R6Class("FolderLock",
 ) ## end of R6 class
 
 
-## ETC = "~/Playground/omicsplayground/etc"
-## online.dir = ONLINE_DIR = file.path(ETC,"online")
-
 pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
   reactive({
     ## shiny::req(auth$email)
@@ -318,7 +315,7 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
     }
 
     ## invalidate-rinse-repeat
-    dbg("[pgx.start_heartbeat] ticking...")
+##    dbg("[pgx.start_heartbeat] ticking...")
     invalidateLater(delta * 1000)
 
     ## return filename
