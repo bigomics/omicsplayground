@@ -3,8 +3,7 @@ test_that("example data loads with no error",{
   # test single board minimal components
 
   # get all board names
-  boards <- list.dirs(path = "../../components", pattern = "\\.R$",  full.names = FALSE, recursive = FALSE)
-  print(boards)
+  boards <- list.dirs(path = "../../components", full.names = FALSE, recursive = FALSE)
   # split "." and get second name
   boards <- sapply(strsplit(boards, split = "\\."), function(x) x[2])
   boards <- boards[!is.na(boards)]
@@ -13,12 +12,11 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("featuremap","intersection", "wordcloud")]
+  boards <- boards[!boards %in% c("tcga")]
 
   AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
     message(board)
-    print(board)
     #board = "wordcloud"
     #board = boards[1]
     App <- shinytest2::AppDriver$new(
@@ -43,6 +41,6 @@ test_that("example data loads with no error",{
     App$wait_for_idle(duration=10000)
     
     # App$expect_values(cran = TRUE) # TODO: file bug about this...
-    App$expect_screenshot(cran = TRUE, name = board, threshold = 500, selector = "viewport")
+    App$expect_screenshot(cran = TRUE, name = board, threshold = 40, selector = "viewport")
   })
 })
