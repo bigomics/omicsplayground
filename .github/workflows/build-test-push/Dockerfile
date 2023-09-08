@@ -19,7 +19,6 @@ FROM masierom/omicsplayground:latest
 ARG BRANCH=gha_shinytest
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
-
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 #------------------------------------------------------------
