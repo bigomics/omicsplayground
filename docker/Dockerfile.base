@@ -32,6 +32,12 @@ RUN apt update && apt install -y \
     libfftw3-dev libglpk-dev librsvg2-dev \
     libgsl-dev librsvg2-dev libgsl-dev curl
 
+# Install Chrome
+RUN apt-get update && apt-get install -y wget gnupg2
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+RUN apt-get update && apt-get install -y google-chrome-stable
+
 # Set the locale to UTF8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
@@ -54,11 +60,8 @@ WORKDIR /
 FROM os-base AS r-base1
 WORKDIR /
 RUN echo Downloading Playbase
-RUN wget -nv https://github.com/bigomics/playbase/archive/main.zip \
-    && rm -fr /playbase-main  \
-    && unzip main.zip \
-    && rm main.zip        
-
+RUN R -e "install.packages('remotes')"
+RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 ## omicsplayground ------------------------------
 FROM r-base1 AS r-base2
 WORKDIR /
