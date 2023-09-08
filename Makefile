@@ -36,12 +36,19 @@ docker.run2:
 	docker run --rm -it -p 4000:3838 \
 		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
+		-v /aws/pgx-share:/omicsplayground/data_shared \
+		-v /aws/pgx-public:/omicsplayground/data_public \
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
 docker: FORCE 
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+		-f docker/Dockerfile \
+	  	-t bigomics/omicsplayground:$(BRANCH) .
+docker2: FORCE 
+	@echo building docker $(BRANCH)
+	docker build --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
 
@@ -81,7 +88,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.23-"$(BRANCH)""$(DATE)
+VERSION = "v3.2.25-"$(BRANCH)""$(DATE)
 
 version: 
 	@echo "new version ->" $(VERSION)
@@ -105,9 +112,17 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
-BOARD = dataview
 board:
-	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', options=list(launch.browser=TRUE))"
-board2:
-	R -e "source('components/golem_utils/run_dev.R');launch_board('board.$(BOARD)', playbase_path='../playbase', options=list(launch.browser=TRUE))"
+	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
+board_example:
+	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
+
+check_pgx:
+	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
+
+test_opg:
+	R -e "shiny::runTests()"
+
+update:
+	Rscript dev/update.R

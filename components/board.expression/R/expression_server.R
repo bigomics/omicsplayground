@@ -110,10 +110,10 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(comparison)) {
         return(NULL)
       }
-      if (length(testmethods) == 0 || testmethods == "") {
+      if (length(testmethods) == 0 || all(testmethods == "")) {
         return(NULL)
       }
-      if (length(comparison) == 0 || comparison == "") {
+      if (length(comparison) == 0 || all(comparison == "")) {
         return(NULL)
       }
 

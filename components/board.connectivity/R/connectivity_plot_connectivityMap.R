@@ -40,7 +40,7 @@ connectivity_plot_connectivityMap_ui <- function(
     hr(),
     withTooltip(
       shiny::radioButtons(
-        ns("cmapcolorby"), "Color by:", c("dataset", "score"),
+        ns("cmapcolorby"), "Color by:", c("score", "dataset"),
         inline = TRUE
       ),
       "Color the points by score or dataset",
@@ -136,6 +136,10 @@ connectivity_plot_connectivityMap_server <- function(id,
         if (method == "tsne" && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/tsne3d"))
         if (method == "umap" && dims == 2) try(pos <- rhdf5::h5read(h5.file, "clustering/umap2d"))
         if (method == "umap" && dims == 3) try(pos <- rhdf5::h5read(h5.file, "clustering/umap3d"))
+
+        if (is.null(pos)) {
+          return(NULL) ## oops...
+        }
 
         ## normalize
         pos <- scale(pos)
@@ -294,16 +298,19 @@ connectivity_plot_connectivityMap_server <- function(id,
 
           plt <- plotly::plot_ly(
             df,
-            x = df[, 1], y = df[, 2], z = df[, 3],
-            mode = "markers", type = "scatter3d",
-            color = colorvar, colors = colorpal,
-            size = sizevar, sizes = c(5, 35) * cex1,
-            marker = c(
-              marker.col,
-              list(
-                sizeref = sizeref,
-                line = list(color = "grey50", width = 0, opacity = 0.5)
-              )
+            x = df[, 1],
+            y = df[, 2],
+            z = df[, 3],
+            mode = "markers",
+            type = "scatter3d",
+            color = colorvar,
+            colors = colorpal,
+            marker = list(
+              #              size = sizevar,
+              #              sizes = c(5, 35) * cex1,
+              #              color = marker.col,
+              sizeref = sizeref,
+              line = list(color = "grey50", width = 0, opacity = 0.5)
             ),
             text = tt.info
           )
@@ -322,18 +329,21 @@ connectivity_plot_connectivityMap_server <- function(id,
 
           plt <- plotly::plot_ly(
             df,
-            x = df[, 1], y = df[, 2],
-            source = "cmap2d", key = rownames(df),
-            mode = "markers", type = "scattergl",
-            color = colorvar, colors = colorpal,
-            marker = c(
-              marker.col,
-              list(
-                sizeref = sizeref,
-                line = list(color = "grey50", width = 0, opacity = 0.5)
-              )
+            x = df[, 1],
+            y = df[, 2],
+            source = "cmap2d",
+            key = rownames(df),
+            mode = "markers",
+            type = "scattergl",
+            color = colorvar,
+            colors = colorpal,
+            marker = list(
+              #              size = sizevar,
+              #              sizes = c(5, 30) * cex1,
+              #              color = marker.col,
+              sizeref = sizeref,
+              line = list(color = "grey50", width = 0, opacity = 0.5)
             ),
-            size = sizevar, sizes = c(5, 30) * cex1,
             text = tt.info
           )
 

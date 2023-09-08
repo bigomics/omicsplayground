@@ -3,8 +3,11 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
+ConnectivityBoard <- function(
+    id,
+    auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
+    pgx,
+    reload_pgxdir = reactive(auth$user_dir)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -53,7 +56,7 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       computed_sigdb <- NULL ## only precomputed inside PGX object??
       if (dir.exists(SIGDB.DIR) && length(pgx$connectivity) > 0) {
         ## only show if we have the libx h5 files available
-        libx_sigdb <- dir(SIGDB.DIR, pattern = "^sigdb-.*h5")
+        libx_sigdb <- dir(SIGDB.DIR, pattern = ".h5$")
         computed_sigdb <- intersect(names(pgx$connectivity), libx_sigdb)
       }
       available_sigdb <- c(my_sigdb, computed_sigdb)
@@ -152,7 +155,8 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
 
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
-      shiny::req(sigdb, pgx, pgx$connectivity)
+
+      shiny::req(sigdb, pgx$connectivity)
       if (!grepl(".h5$", sigdb)) {
         return(NULL)
       }
@@ -161,6 +165,7 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       if (is.null(df)) {
         return(NULL)
       }
+
       ii <- connectivityScoreTable$rows_all()
       shiny::req(ii)
 
@@ -379,6 +384,7 @@ ConnectivityBoard <- function(id, auth, pgx, reload_pgxdir) {
       F <- getConnectivityMatrix(sigdb, select = pw, genes = selected_genes)
       pw <- intersect(pw, colnames(F))
       F <- F[, pw, drop = FALSE]
+
       return(F)
     })
 

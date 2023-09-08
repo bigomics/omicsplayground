@@ -29,11 +29,12 @@ compare_plot_expression_server <- function(id,
                                            score_table,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plot_data <- shiny::reactive({
-
-    })
-
     multibarplot.RENDER <- shiny::reactive({
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
+      shiny::req(getOmicsScoreTable())
+      shiny::req(hilightgenes())
+      shiny::req(score_table())
       pgx1 <- pgx
       pgx2 <- dataset2()
 
@@ -41,24 +42,13 @@ compare_plot_expression_server <- function(id,
       ct2 <- head(names(pgx2$gx.meta$meta), 3)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
-      shiny::req(ct1)
-      shiny::req(ct2)
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        return(NULL)
-      }
 
       genes <- rownames(pgx1$X)
       genes <- hilightgenes()
 
       df <- getOmicsScoreTable()
-      if (is.null(df)) {
-        return(NULL)
-      }
-      sel <- score_table$rows_all() ## from module
-      shiny::req(sel)
+
+      sel <- score_table() ## from module
       genes <- rownames(df)[sel]
 
       xgenes <- intersect(rownames(pgx1$X), rownames(pgx2$X))
@@ -88,7 +78,6 @@ compare_plot_expression_server <- function(id,
 
         mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
         mm.group <- c(rep(1, length(m1)), rep(2, length(m2)))
-        print(mm)
         playbase::gx.barplot(mm,
           srt = srt, main = gene, cex.main = 1.0,
           group = mm.group, cex.names = 0.85,

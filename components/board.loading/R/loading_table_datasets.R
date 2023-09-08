@@ -44,6 +44,12 @@ loading_table_datasets_ui <- function(
         icon = NULL,
         width = "0%"
       ),
+      shiny::downloadLink(
+        ns("recompute_pgx_btn"),
+        label = "",
+        icon = NULL,
+        width = "0%"
+      ),
       shiny::actionButton(
         ns("loadbutton"),
         label = "Load dataset",
@@ -64,7 +70,8 @@ loading_table_datasets_server <- function(id,
                                           loadPGX,
                                           refresh_shared,
                                           reload_pgxdir_public,
-                                          reload_pgxdir) {
+                                          reload_pgxdir,
+                                          recompute_pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -313,18 +320,24 @@ loading_table_datasets_server <- function(id,
         }
 
         ## instead of disabling we grey out and have a popup message
-        ##        if(enable_delete) {
-        if (TRUE) {
-          delete_pgx_menuitem <- shiny::actionButton(
-            ns(paste0("delete_dataset_row_", i)),
-            label = "Delete dataset",
-            icon = shiny::icon("trash"),
-            class = "btn btn-outline-danger",
-            style = "border: none;",
-            width = "100%",
-            onclick = paste0('Shiny.onInputChange(\"', ns("delete_pgx"), '\",this.id,{priority: "event"});')
-          )
-        }
+        delete_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("delete_dataset_row_", i)),
+          label = "Delete dataset",
+          icon = shiny::icon("trash"),
+          class = "btn btn-outline-danger",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("delete_pgx"), '\",this.id,{priority: "event"});')
+        )
+        recompute_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("recompute_pgx_row_", i)),
+          label = "Reanalyse",
+          icon = shiny::icon("gears"),
+          class = "btn btn-outline-dark",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("recompute_pgx"), '\",this.id,{priority: "event"});')
+        )
 
         new_menu <- DropdownMenu(
           div(
@@ -340,6 +353,7 @@ loading_table_datasets_server <- function(id,
                 width = "100%",
                 onclick = paste0('Shiny.onInputChange(\"', ns("download_zip"), '\",this.id,{priority: "event"})')
               ),
+              recompute_pgx_menuitem,
               share_public_menuitem,
               share_dataset_menuitem,
               delete_pgx_menuitem
@@ -361,6 +375,7 @@ loading_table_datasets_server <- function(id,
         },
         ignoreInit = TRUE
       )
+
 
       DT::datatable(
         df,
@@ -533,6 +548,36 @@ loading_table_datasets_server <- function(id,
         gc()
       }
     )
+    ## ---------------- RECOMPUTE PGX -------------------
+    shiny::observeEvent(input$recompute_pgx, {
+      shinyalert::shinyalert(
+        title = "Reanalyze",
+        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept.",
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            # Load PGX
+            sel <- row_idx <- as.numeric(stringr::str_split(input$recompute_pgx, "_row_")[[1]][2])
+            df <- getFilteredPGXINFO()
+            pgxfile <- as.character(df$dataset[sel])
+            pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+            pgx <- loadPGX(pgxfile)
+            load_uploaded_data <- shiny::reactiveVal(NULL)
+            reload_pgxdir <- shiny::reactiveVal(0)
+            recompute_pgx(pgx)
+
+            bigdash.selectTab(session, "upload-tab")
+            shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
+
+            return(0)
+          } else {
+            return(0)
+          }
+        }
+      )
+    })
 
     ## ---------------- DOWNLOAD PGX FILE ----------------
     observeEvent(input$download_pgx,
