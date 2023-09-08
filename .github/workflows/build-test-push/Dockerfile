@@ -43,10 +43,7 @@ RUN wget -nv https://github.com/mauromiguelm/omicsplayground/archive/$BRANCH.zip
     && mv omicsplayground-$BRANCH omicsplayground \
     && chmod -R ugo+rwX /omicsplayground \
     && rm $BRANCH.zip   
-
-## tag docker version
-WORKDIR /omicsplayground
-
+    
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
@@ -58,12 +55,6 @@ RUN make sass
 RUN cp .github/workflows/build-test-push/entrypoint.sh .
 RUN chmod +x /omicsplayground/entrypoint.sh
 RUN cat /omicsplayground/entrypoint.sh
-
-# Install Chrome
-RUN apt-get update && apt-get install -y wget gnupg2
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-RUN apt-get update && apt-get install -y google-chrome-stable
 
 WORKDIR /omicsplayground
 ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
