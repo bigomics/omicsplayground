@@ -74,6 +74,74 @@ NoAuthenticationModule <- function(id,
   )
 }
 
+NoAuthenticationModule2 <- function(id,
+                                   show_modal = TRUE,
+                                   username = "",
+                                   email = "") {
+  shiny::moduleServer(
+    id, function(input, output, session) {
+      message("[NoAuthenticationModule] >>>> no authentication -- reading user from cookie <<<<")
+      email <- extract_cookie_value(session$request$HTTP_COOKIE, "user")
+      ns <- session$ns
+      USER <- shiny::reactiveValues(
+        method = "none",
+        logged = FALSE,
+        username = "",
+        email = email,
+        level = "",
+        limit = "",
+        options = opt, ## init from global
+        user_dir = PGX.DIR ## global
+      )
+
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        title = "Sign in",
+        subtitle = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+
+      resetUSER <- function() {
+        USER$logged <- FALSE
+        USER$username <- ""
+        USER$email <- ""
+        USER$level <- ""
+        USER$limit <- ""
+        if (show_modal) {
+          shiny::showModal(m)
+        } else {
+          USER$logged <- TRUE
+        }
+        USER$username <- username
+        USER$email <- email
+      }
+
+      output$showLogin <- shiny::renderUI({
+        resetUSER()
+      })
+
+      output$login_warning <- shiny::renderText("")
+
+      shiny::observeEvent(input$login_btn, {
+        shiny::removeModal()
+        USER$logged <- TRUE
+
+        # set options
+        USER$options <- read_user_options(PGX.DIR)
+      })
+
+      ## export 'public' function
+      USER$resetUSER <- resetUSER
+
+      return(USER)
+    } ## end-of-server
+  )
+}
+
 
 ## ================================================================================
 ## FirebaseAuthenticationModule
@@ -648,6 +716,28 @@ PasswordAuthenticationModule <- function(id,
 
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
+
+
+      #browser()
+
+        key <- "your_secret_key"
+        claim <- jose::jwt_claim(
+          user = "jeroen",
+          session_key = 123456
+        )
+        key <- charToRaw("SuperSecret")
+        jwt <- jose::jwt_encode_hmac(claim, secret = key)
+        browser()
+        cookies::set_cookie_response("my_cookie", "contents of my cookie", content = "Your cookie is set.", domain = "127.0.0.1", path = "/")
+        cookies::set_cookie(
+          cookie_name = "sessionOPG",
+          cookie_value = jwt,
+          expiration = 1#,
+          #secure_only = TRUE,
+        )
+        
+
+
       } else {
         message("[PasswordAuthenticationModule::login] WARNING : login failed ")
         if (!valid.date) {
