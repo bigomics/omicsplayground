@@ -460,7 +460,7 @@ UploadBoard <- function(id,
       }
 
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
-        print('GOING THROUGH CROSSCHECK')
+        print("GOING THROUGH CROSSCHECK")
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
@@ -557,7 +557,7 @@ UploadBoard <- function(id,
       return(df)
     })
 
-    upload_module_preview_server('upload_preview', uploaded)
+    upload_module_preview_server("upload_preview", uploaded)
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
