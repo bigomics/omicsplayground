@@ -71,14 +71,14 @@ ConnectivityBoard <- function(
       meta2 <- pgx$gset.meta$meta
       has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
       shiny::req(has.contrast)
-      
+
       if (!has.contrast) {
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ", ct)
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ", names(meta1))
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ", names(meta2))
         return(NULL)
       }
-      
+
       fc <- meta1[[ct]]$meta.fx
       names(fc) <- rownames(meta1[[ct]])
       gs <- meta2[[ct]]$meta.fx
@@ -87,16 +87,16 @@ ConnectivityBoard <- function(
       list(name = ct, fc = fc, gs = gs)
     })
 
-##    observeEvent({
-##        getCurrentContrast()
-##        input$genelist_ntop
-##    },{
+    ##    observeEvent({
+    ##        getCurrentContrast()
+    ##        input$genelist_ntop
+    ##    },{
     observe({
       contr <- getCurrentContrast()
       shiny::req(contr)
       ntop <- as.integer(input$genelist_ntop)
       top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
-      top50 <- paste(top50, collapse = " ")      
+      top50 <- paste(top50, collapse = " ")
       updateTextAreaInput(session, "genelist", value = top50)
     })
 
@@ -269,8 +269,8 @@ ConnectivityBoard <- function(
       }
 
       scores <- as.data.frame(all.scores[[ct]])
-      dbg("[getConnectivityScores] dim.scores=",dim(scores))
-      
+      dbg("[getConnectivityScores] dim.scores=", dim(scores))
+
       if (input$abs_score == FALSE) {
         ## put sign back!!!
         scores$score <- scores$score * sign(scores$rho)

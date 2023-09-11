@@ -68,7 +68,7 @@ connectivity_table_foldchange_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          #dom = "lrtip",
+          # dom = "lrtip",
           pageLength = 99999,
           scrollX = TRUE,
           scrollY = height,

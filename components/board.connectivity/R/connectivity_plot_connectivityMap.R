@@ -403,7 +403,7 @@ connectivity_plot_connectivityMap_server <- function(id,
         plt <- plt %>%
           plotly::layout(
             showlegend = FALSE,
-            margin = list(l = 0, r = 0, b = 0, t = 0)            
+            margin = list(l = 0, r = 0, b = 0, t = 0)
           ) %>%
           plotly::hide_colorbar()
         return(plt)

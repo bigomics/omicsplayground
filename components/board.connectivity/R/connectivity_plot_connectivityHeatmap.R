@@ -99,7 +99,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         }
         F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
         F <- scale(F, center = FALSE)
-        
+
         list(
           F = F,
           score = rho2
@@ -124,42 +124,41 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         )
       }
 
-      reverse_negative <- function(F, k=1) {
-          ## reverse sign of negative profiles
-          fsign <- sign(cor(F, F[,k])[,1])    
-          F2 <- t( t(F) * fsign)
-          ii <- which(fsign < 0)
-          if(length(ii)) {
-              reverse_contrast_name <- function(s) {
-                  prefix <- sub(":.*","",s)
-                  if(prefix==s) {
-                      prefix=NULL
-                  } else {
-                      prefix <- paste0(prefix,":")
-                  }
-                  vs.name <- sub(".*[:]","",s)
-                  vs.name2 <- strsplit(vs.name, split="_vs_")[[1]]
-                  paste0(prefix,paste(rev(vs.name2),collapse="_vs_"))
-              }
-              rev.name <- sapply(colnames(F2)[ii], reverse_contrast_name )
-              colnames(F2)[ii] <- rev.name
+      reverse_negative <- function(F, k = 1) {
+        ## reverse sign of negative profiles
+        fsign <- sign(cor(F, F[, k])[, 1])
+        F2 <- t(t(F) * fsign)
+        ii <- which(fsign < 0)
+        if (length(ii)) {
+          reverse_contrast_name <- function(s) {
+            prefix <- sub(":.*", "", s)
+            if (prefix == s) {
+              prefix <- NULL
+            } else {
+              prefix <- paste0(prefix, ":")
+            }
+            vs.name <- sub(".*[:]", "", s)
+            vs.name2 <- strsplit(vs.name, split = "_vs_")[[1]]
+            paste0(prefix, paste(rev(vs.name2), collapse = "_vs_"))
           }
-          F2
+          rev.name <- sapply(colnames(F2)[ii], reverse_contrast_name)
+          colnames(F2)[ii] <- rev.name
+        }
+        F2
       }
-      
-      create_iheatmap <- function(F, score, maxfc = 20, maxgenes = 60) {
 
+      create_iheatmap <- function(F, score, maxfc = 20, maxgenes = 60) {
         sel <- 1:min(NCOL(F), maxfc)
         F <- F[, sel, drop = FALSE]
         score <- score[colnames(F)]
         F <- head(F, maxgenes)
-        if(input$reverse_neg) {
-            F <- reverse_negative(F, k=1)
-            score <- abs(score)
+        if (input$reverse_neg) {
+          F <- reverse_negative(F, k = 1)
+          score <- abs(score)
         }
         ii <- order(rowMeans(F, na.rm = TRUE))
         F <- F[ii, ]
-        
+
         plt <- iheatmapr::main_heatmap(
           data = t(F),
           layout = list(margin = list(r = 0))
